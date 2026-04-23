@@ -1,0 +1,35 @@
+abstract class AppConstants {
+  // Quran
+  static const int totalSurahs = 114;
+  static const int totalAyahs = 6236;
+  static const int totalJuz = 30;
+
+  // Hifz spaced repetition intervals (days)
+  static const List<int> spacedRepetitionIntervals = [1, 3, 7, 14, 30, 90];
+
+  // Storage keys
+  static const String kLastReadSurah = 'last_read_surah';
+  static const String kLastReadAyah = 'last_read_ayah';
+  static const String kStreakCount = 'streak_count';
+  static const String kLastActiveDate = 'last_active_date';
+  static const String kHifzProgress = 'hifz_progress';
+  static const String kHifzPathMode = 'hifz_path_mode';
+  static const String kAzkarDone = 'azkar_done';
+  static const String kFontSize = 'quran_font_size';
+
+  // Audio base URL (EveryAyah CDN)
+  static const String audioBaseUrl =
+      'https://cdn.islamic.network/quran/audio/128/ar.alafasy/';
+
+  // Quran API (offline fallback)
+  static const String quranDataAsset = 'assets/data/quran_simple.json';
+  static const String azkarDataAsset = 'assets/data/azkar.json';
+
+  // Font sizes
+  static const double fontSizeSmall = 18.0;
+  static const double fontSizeMedium = 22.0;
+  static const double fontSizeLarge = 26.0;
+  static const double fontSizeXLarge = 30.0;
+
+  const AppConstants._();
+}
