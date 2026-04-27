@@ -57,4 +57,21 @@ class AyahProgressModel extends AyahProgress {
       lastReviewDate: DateTime.now(),
     );
   }
+
+  /// Soft Penalty: decrease repetitions by 1 (min 0) and reschedule for tomorrow.
+  /// Unlike the old hard reset which wiped all progress, this preserves
+  /// the user's memorization history while indicating they need to review.
+  AyahProgressModel softPenalty() {
+    final newRep = (repetitions - 1).clamp(0, repetitions);
+    final newStatus = newRep == 0 ? AyahStatus.learning : AyahStatus.review;
+
+    return AyahProgressModel(
+      surahId: surahId,
+      ayahNumber: ayahNumber,
+      status: newStatus,
+      repetitions: newRep,
+      nextReviewDate: DateTime.now().add(const Duration(days: 1)),
+      lastReviewDate: DateTime.now(),
+    );
+  }
 }

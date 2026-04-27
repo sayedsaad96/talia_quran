@@ -1,6 +1,5 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/app_failure.dart';
-import '../../../../features/hifz/data/datasources/hifz_local_datasource.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 import '../../../../features/quran/domain/entities/quran_entities.dart';
 import '../../domain/entities/memorization_entities.dart';
@@ -12,15 +11,10 @@ import '../models/memorization_models.dart';
 class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   MemorizationPlusRepositoryImpl(
     this._datasource,
-    this._hifzDatasource,
     this._quranRepository,
   );
 
   final MemorizationPlusLocalDatasource _datasource;
-
-  /// Read-only access to existing hifz data (never writes to it)
-  // ignore: unused_field
-  final HifzLocalDatasource _hifzDatasource;
 
   /// For surah ayah counts
   final QuranRepository _quranRepository;

@@ -1,19 +1,28 @@
+import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../../domain/repositories/quran_repository.dart';
 import '../../../../features/progress/domain/usecases/save_read_page_usecase.dart';
 
-abstract class QuranPageState {}
+abstract class QuranPageState extends Equatable {
+  const QuranPageState();
+  @override
+  List<Object?> get props => [];
+}
 class QuranPageInitial extends QuranPageState {}
 class QuranPageLoading extends QuranPageState {}
 class QuranPageLoaded extends QuranPageState {
   final QuranPageDetail detail;
   final bool isReadConfirmed;
-  QuranPageLoaded(this.detail, {this.isReadConfirmed = false});
+  const QuranPageLoaded(this.detail, {this.isReadConfirmed = false});
+  @override
+  List<Object?> get props => [detail, isReadConfirmed];
 }
 class QuranPageError extends QuranPageState {
   final String message;
-  QuranPageError(this.message);
+  const QuranPageError(this.message);
+  @override
+  List<Object?> get props => [message];
 }
 
 class QuranPageCubit extends Cubit<QuranPageState> {

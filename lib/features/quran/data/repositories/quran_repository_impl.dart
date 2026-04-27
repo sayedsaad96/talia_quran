@@ -76,4 +76,16 @@ class QuranRepositoryImpl implements QuranRepository {
       return Left(CacheFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<Ayah>>> searchAyahs(String query) async {
+    try {
+      final results = await _datasource.searchAyahs(query);
+      return Right(results);
+    } on Failure catch (f) {
+      return Left(f);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
 }

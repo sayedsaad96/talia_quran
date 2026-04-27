@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,7 +43,7 @@ abstract class AppRouter {
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splash,
-    debugLogDiagnostics: false,
+    debugLogDiagnostics: kDebugMode,
     routes: [
       // ── Full-screen routes (push over shell, own back button) ─────────────
       GoRoute(

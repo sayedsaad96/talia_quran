@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
+import '../../../../core/utils/arabic_normalizer.dart';
 
 part 'quiz_state.dart';
 
@@ -102,8 +103,8 @@ class QuizCubit extends Cubit<QuizState> {
     final current = _items[_currentIndex];
 
     final similarity = _calculateSimilarity(
-      _normalizeArabic(userInput.trim()),
-      _normalizeArabic(current.correctText.trim()),
+      ArabicNormalizer.normalize(userInput.trim()),
+      ArabicNormalizer.normalize(current.correctText.trim()),
     );
 
     final passed = similarity >= 0.80;
@@ -172,31 +173,8 @@ class QuizCubit extends Cubit<QuizState> {
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  // Arabic text comparison utilities
+  // Arabic text comparison utilities (using centralized ArabicNormalizer)
   // ═══════════════════════════════════════════════════════════════════════════
-
-  /// Normalize Arabic text by removing diacritics (tashkeel) and normalizing
-  /// letter forms so comparison is fair.
-  String _normalizeArabic(String text) {
-    // Remove tashkeel (diacritics)
-    final diacritics = RegExp(
-      '[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06DC\u06DF-\u06E4\u06E7\u06E8\u06EA-\u06ED]',
-    );
-    var normalized = text.replaceAll(diacritics, '');
-
-    // Normalize alef forms
-    normalized = normalized.replaceAll(RegExp('[إأآا]'), 'ا');
-    // Normalize taa marbuta → haa
-    normalized = normalized.replaceAll('ة', 'ه');
-    // Normalize yaa forms
-    normalized = normalized.replaceAll('ى', 'ي');
-    // Remove tatweel
-    normalized = normalized.replaceAll('\u0640', '');
-    // Remove extra spaces
-    normalized = normalized.replaceAll(RegExp(r'\s+'), ' ').trim();
-
-    return normalized;
-  }
 
   /// Calculate similarity between two strings using longest common subsequence.
   double _calculateSimilarity(String a, String b) {

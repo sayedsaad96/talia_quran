@@ -8,7 +8,7 @@ import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'core/l10n/locale_cubit.dart';
 import 'core/di/injection.dart';
-import 'features/settings/data/profile_cubit.dart';
+import 'features/settings/presentation/cubits/profile_cubit.dart';
 
 class TaliaApp extends StatelessWidget {
   const TaliaApp({super.key});

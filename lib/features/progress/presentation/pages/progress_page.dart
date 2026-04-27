@@ -10,7 +10,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/state_widgets.dart';
-import '../../../settings/data/profile_cubit.dart';
+import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../domain/entities/progress_entities.dart';
 import '../cubits/progress_cubit.dart';
 
@@ -95,8 +95,7 @@ class _ProgressView extends StatelessWidget {
                       state.progress.readPagesCount,
                       state.progress.streakDays,
                     );
-              // ignore: deprecated_member_use
-              Share.share(text);
+              SharePlus.instance.share(ShareParams(text: text));
             },
           ),
       ],
@@ -1072,8 +1071,7 @@ class _AchievementTile extends StatelessWidget {
                             achievement.descriptionKey,
                             achievement.titleKey,
                           );
-                    // ignore: deprecated_member_use
-                    Share.share(text);
+                    SharePlus.instance.share(ShareParams(text: text));
                   },
                   icon: const Icon(Icons.share_rounded, size: 20),
                   label: Text(context.l10n.shareAchievement),

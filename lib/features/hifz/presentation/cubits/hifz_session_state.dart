@@ -25,6 +25,7 @@ class HifzSessionLoaded extends HifzSessionState {
     this.recognizedText = '',
     this.similarityScore,
     this.isEvaluating = false,
+    this.audioError,
   });
   
   final Surah surah;
@@ -38,6 +39,7 @@ class HifzSessionLoaded extends HifzSessionState {
   final String recognizedText;
   final double? similarityScore;
   final bool isEvaluating;
+  final String? audioError;
 
   HifzSessionLoaded copyWith({
     Surah? surah,
@@ -48,7 +50,10 @@ class HifzSessionLoaded extends HifzSessionState {
     bool? isPlaying,
     String? recognizedText,
     double? similarityScore,
+    bool clearScore = false,
     bool? isEvaluating,
+    String? audioError,
+    bool clearAudioError = false,
   }) {
     return HifzSessionLoaded(
       surah: surah ?? this.surah,
@@ -58,8 +63,9 @@ class HifzSessionLoaded extends HifzSessionState {
       isRecording: isRecording ?? this.isRecording,
       isPlaying: isPlaying ?? this.isPlaying,
       recognizedText: recognizedText ?? this.recognizedText,
-      similarityScore: similarityScore != null ? (similarityScore == -1 ? null : similarityScore) : this.similarityScore,
+      similarityScore: clearScore ? null : (similarityScore ?? this.similarityScore),
       isEvaluating: isEvaluating ?? this.isEvaluating,
+      audioError: clearAudioError ? null : (audioError ?? this.audioError),
     );
   }
 
@@ -74,6 +80,7 @@ class HifzSessionLoaded extends HifzSessionState {
         recognizedText,
         similarityScore,
         isEvaluating,
+        audioError,
       ];
 }
 

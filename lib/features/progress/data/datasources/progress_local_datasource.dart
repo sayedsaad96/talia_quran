@@ -33,7 +33,7 @@ class ProgressLocalDatasourceImpl implements ProgressLocalDatasource {
 
   @override
   List<int> getReadPages() {
-    final raw = _prefs.getString('read_pages');
+    final raw = _prefs.getString(AppConstants.kReadPages);
     if (raw == null) return [];
     try {
       final list = jsonDecode(raw) as List<dynamic>;
@@ -48,7 +48,7 @@ class ProgressLocalDatasourceImpl implements ProgressLocalDatasource {
     final pages = getReadPages();
     if (!pages.contains(pageNumber)) {
       pages.add(pageNumber);
-      await _prefs.setString('read_pages', jsonEncode(pages));
+      await _prefs.setString(AppConstants.kReadPages, jsonEncode(pages));
     }
   }
 }

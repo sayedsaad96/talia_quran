@@ -13,7 +13,7 @@ import '../../../../core/widgets/section_header.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
-import '../../../settings/data/profile_cubit.dart';
+import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../cubits/home_cubit.dart';
 
 class HomePage extends StatelessWidget {

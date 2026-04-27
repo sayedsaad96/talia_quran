@@ -2,12 +2,14 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../domain/entities/hifz_entities.dart';
 import '../../domain/repositories/hifz_repository.dart';
+import '../../../quran/data/datasources/quran_local_datasource.dart';
 import '../datasources/hifz_local_datasource.dart';
 import '../models/ayah_progress_model.dart';
 
 class HifzRepositoryImpl implements HifzRepository {
-  HifzRepositoryImpl(this._datasource);
+  HifzRepositoryImpl(this._datasource, this._quranDatasource);
   final HifzLocalDatasource _datasource;
+  final QuranLocalDatasource _quranDatasource;
 
   @override
   Future<Either<Failure, List<AyahProgress>>> getProgressForSurah(
@@ -77,12 +79,19 @@ class HifzRepositoryImpl implements HifzRepository {
         bySuprah.putIfAbsent(p.surahId, () => []).add(p);
       }
 
+      // Get actual surah ayah counts from Quran data
+      final surahs = await _quranDatasource.getSurahs();
+      final surahAyahCounts = <int, int>{};
+      for (final s in surahs) {
+        surahAyahCounts[s.id] = s.ayahCount;
+      }
+
       // Build progress for each surah that has any progress
       final result = bySuprah.entries.map((e) {
         final ayahs = e.value;
         return SurahHifzProgress(
           surahId: e.key,
-          totalAyahs: ayahs.length,
+          totalAyahs: surahAyahCounts[e.key] ?? ayahs.length,
           memorizedCount: ayahs
               .where((a) => a.status == AyahStatus.memorized)
               .length,

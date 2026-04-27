@@ -11,7 +11,11 @@ import '../../../quran/domain/usecases/get_surahs_usecase.dart';
 import '../../data/models/ayah_progress_model.dart';
 import '../../domain/usecases/get_hifz_progress_usecase.dart';
 import '../../domain/usecases/save_ayah_progress_usecase.dart';
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 part 'hifz_session_state.dart';
 
@@ -20,6 +24,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     this._getDetail,
     this._saveProgress,
     this._getSurahProgress,
+    this._prefs,
   ) : super(const HifzSessionInitial()) {
     _initSpeech();
     _player.playerStateStream.listen((state) {
@@ -34,6 +39,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   final GetSurahDetailUsecase _getDetail;
   final SaveAyahProgressUsecase _saveProgress;
   final GetProgressForSurahUsecase _getSurahProgress;
+  final SharedPreferences _prefs;
 
   final SpeechToText _speechToText = SpeechToText();
   final AudioPlayer _player = AudioPlayer();
@@ -45,10 +51,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   bool _speechEnabled = false;
 
   Future<void> _initSpeech() async {
-    _speechEnabled = await _speechToText.initialize(
-      onError: (val) => print('STT Error: $val'),
-      onStatus: (val) => print('STT Status: $val'),
-    );
+    _speechEnabled = await _speechToText.initialize();
   }
 
   Future<void> startSession(int surahId, int startAyah) async {
@@ -91,6 +94,12 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
           progressMap: map,
           currentIndex: startIndex,
         ));
+
+        // Prefetch audio for upcoming ayahs in the background
+        AudioCacheService.instance.prefetchSession(
+          surahId: surahId,
+          ayahNumbers: _ayahs.map((a) => a.numberInSurah).toList(),
+        );
       },
     );
   }
@@ -99,21 +108,28 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     if (state is! HifzSessionLoaded) return;
     final st = state as HifzSessionLoaded;
     
-    // Request player state update
     emit(st.copyWith(isPlaying: true));
     
     try {
       final ayah = st.ayahs[st.currentIndex];
-      // Format URLs using Mishary Alafasy offline/online source standard
-      // URL format: https://everyayah.com/data/Alafasy_128kbps/001001.mp3
-      final surahStr = st.surah.id.toString().padLeft(3, '0');
-      final ayahStr = ayah.numberInSurah.toString().padLeft(3, '0');
-      final audioUrl = "https://everyayah.com/data/Alafasy_128kbps/$surahStr$ayahStr.mp3";
+      final audioSource = await AudioCacheService.instance.getAudioSource(
+        st.surah.id,
+        ayah.numberInSurah,
+      );
       
-      await _player.setUrl(audioUrl);
+      await _player.setUrl(audioSource);
       await _player.play();
     } catch (e) {
-      emit(st.copyWith(isPlaying: false));
+      emit(st.copyWith(
+        isPlaying: false,
+        audioError: 'فشل تشغيل الصوت. تحقق من الاتصال بالإنترنت.',
+      ));
+      // Clear the error after showing it
+      Future.delayed(const Duration(seconds: 3), () {
+        if (state is HifzSessionLoaded) {
+          emit((state as HifzSessionLoaded).copyWith(clearAudioError: true));
+        }
+      });
     }
   }
 
@@ -133,7 +149,18 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     var status = await Permission.microphone.status;
     if (!status.isGranted) {
       status = await Permission.microphone.request();
-      if (!status.isGranted) return; // Must have mic permission
+      if (!status.isGranted) {
+        // UX-013: Emit error so UI can guide the user
+        emit(st.copyWith(
+          audioError: 'يحتاج التطبيق إذن الميكروفون للتسميع الصوتي. يرجى السماح من إعدادات الجهاز.',
+        ));
+        Future.delayed(const Duration(seconds: 5), () {
+          if (state is HifzSessionLoaded) {
+            emit((state as HifzSessionLoaded).copyWith(clearAudioError: true));
+          }
+        });
+        return;
+      }
     }
 
     if (!_speechEnabled) {
@@ -141,7 +168,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     }
 
     if (_speechEnabled) {
-      emit(st.copyWith(isRecording: true, similarityScore: -1, recognizedText: ''));
+      emit(st.copyWith(isRecording: true, clearScore: true, recognizedText: ''));
       await _speechToText.listen(
         onResult: (result) {
           if (state is HifzSessionLoaded) {
@@ -177,24 +204,46 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     final normalizedExpected = ArabicNormalizer.normalize(ayah.text);
     final normalizedSpoken = ArabicNormalizer.normalize(st.recognizedText);
 
-    double score = 0.0;
-    if (normalizedSpoken.isNotEmpty) {
-      // Dice's Coefficient to find similarity
-      score = normalizedExpected.similarityTo(normalizedSpoken);
+    // BUG-010: If STT returned empty, don't count as failure
+    if (normalizedSpoken.isEmpty) {
+      emit(st.copyWith(
+        isEvaluating: false,
+        clearScore: true,
+        recognizedText: '',
+      ));
+      return;
     }
 
-    final pass = score >= 0.85;
+    double score = 0.0;
+    // Dice's Coefficient to find similarity
+    score = normalizedExpected.similarityTo(normalizedSpoken);
 
-    // Output to map and calculate repetition logic
+    final threshold = _prefs.getDouble('similarity_threshold')
+        ?? AppConstants.kSimilarityThreshold;
+    final pass = score >= threshold;
+
+    // Update progress with Soft Penalty instead of Hard Reset
     var currentProgress = _progressMap[ayah.numberInSurah];
     if (currentProgress != null) {
       if (pass) {
         currentProgress = currentProgress.advanceWithSpacedRepetition();
       } else {
-        currentProgress = AyahProgressModel.initial(currentProgress.surahId, currentProgress.ayahNumber);
+        // Soft Penalty: decrease repetitions by 1 (min 0) and reschedule review
+        currentProgress = currentProgress.softPenalty();
       }
       _progressMap[ayah.numberInSurah] = currentProgress;
-      await _saveProgress(currentProgress);
+      try {
+        await _saveProgress(currentProgress);
+      } catch (_) {
+        // Silently handle save failure — don't crash the session
+      }
+    }
+
+    // Haptic feedback on evaluation result
+    if (pass) {
+      HapticFeedback.mediumImpact();
+    } else {
+      HapticFeedback.heavyImpact();
     }
 
     emit(st.copyWith(
@@ -208,9 +257,10 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     if (state is! HifzSessionLoaded) return;
     final st = state as HifzSessionLoaded;
     if (st.currentIndex < st.ayahs.length - 1) {
+      HapticFeedback.lightImpact();
       emit(st.copyWith(
         currentIndex: st.currentIndex + 1,
-        similarityScore: -1,
+        clearScore: true,
         recognizedText: '',
       ));
     }
@@ -219,7 +269,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   void retryAyah() {
     if (state is! HifzSessionLoaded) return;
     emit((state as HifzSessionLoaded).copyWith(
-      similarityScore: -1,
+      clearScore: true,
       recognizedText: '',
     ));
   }

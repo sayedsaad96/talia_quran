@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/di/injection.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -48,7 +49,8 @@ class _SplashPageState extends State<SplashPage>
     await Future.delayed(const Duration(milliseconds: 2500));
     if (!mounted) return;
 
-    final prefs = await SharedPreferences.getInstance();
+    // Use DI-injected SharedPreferences instead of creating a new instance
+    final prefs = getIt<SharedPreferences>();
     final bool isFirstTime = prefs.getBool('isFirstTimeAppOpen') ?? true;
 
     if (!mounted) return;

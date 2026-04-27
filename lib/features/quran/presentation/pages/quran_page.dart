@@ -11,6 +11,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../cubits/surah_list_cubit.dart';
 import '../../domain/entities/quran_entities.dart';
+import 'bookmarks_page.dart';
 
 class QuranPage extends StatelessWidget {
   const QuranPage({super.key});
@@ -38,7 +39,7 @@ class _QuranViewState extends State<_QuranView>
   @override
   void initState() {
     super.initState();
-    _tabCtrl = TabController(length: 2, vsync: this);
+    _tabCtrl = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -85,6 +86,7 @@ class _QuranViewState extends State<_QuranView>
                 children: [
                   _SurahListView(surahs: state.filtered),
                   _JuzGridView(surahs: state.surahs),
+                  const BookmarksTab(),
                 ],
               );
             }
@@ -166,6 +168,7 @@ class _QuranViewState extends State<_QuranView>
             tabs: [
               Tab(text: context.l10n.surahs),
               Tab(text: context.l10n.juz),
+              Tab(text: context.isArabic ? 'المرجعيات' : 'Bookmarks'),
             ],
           ),
         ),

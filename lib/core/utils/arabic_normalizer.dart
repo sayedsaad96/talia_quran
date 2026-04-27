@@ -26,6 +26,9 @@ class ArabicNormalizer {
     
     // Normalize ya with hamza
     normalized = normalized.replaceAll('ئ', 'ي');
+
+    // Remove tatweel (kashida)
+    normalized = normalized.replaceAll('\u0640', '');
     
     // Remove punctuation, zero-width spaces, and extra whitespace
     normalized = normalized.replaceAll(RegExp(r'[.,;؛؟!?\-\u200B\u200C\u200D\uFEFF]'), ' ');

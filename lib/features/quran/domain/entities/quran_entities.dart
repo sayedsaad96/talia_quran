@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import '../../../../core/services/quran_audio_service.dart';
 
 class Surah extends Equatable {
   const Surah({
@@ -43,7 +44,7 @@ class Ayah extends Equatable {
   final int? page;
 
   String get audioUrl =>
-      'https://cdn.islamic.network/quran/audio/128/ar.alafasy/$number.mp3';
+      QuranAudioService.buildUrl(surahId, numberInSurah);
 
   @override
   List<Object?> get props => [number, surahId, text, numberInSurah];

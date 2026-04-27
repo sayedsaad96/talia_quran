@@ -5,6 +5,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
+import '../../../../core/services/quran_audio_service.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 
 part 'kids_mode_state.dart';
@@ -76,10 +77,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   Future<void> _playAyah(int surahId, int ayahNumber) async {
     try {
-      final surahStr = surahId.toString().padLeft(3, '0');
-      final ayahStr = ayahNumber.toString().padLeft(3, '0');
-      final url =
-          'https://everyayah.com/data/Alafasy_128kbps/$surahStr$ayahStr.mp3';
+      final url = QuranAudioService.buildUrl(surahId, ayahNumber);
       await _player.setUrl(url);
       await _player.play();
     } catch (_) {

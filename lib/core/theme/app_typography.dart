@@ -170,6 +170,26 @@ abstract class AppTypography {
         letterSpacing: 0,
       );
 
+  /// Optimized for continuous Quranic text in the Mus'haf reader.
+  /// Uses 2.4x line height for comfortable reading of long passages.
+  static TextStyle get quranVerse => const TextStyle(
+        fontFamily: 'Amiri',
+        fontSize: 24,
+        fontWeight: FontWeight.w400,
+        height: 2.4,
+        letterSpacing: 0,
+        wordSpacing: 2.0,
+      );
+
+  /// Used for Surah name banners inside the Quran reader pages.
+  static TextStyle get quranHeader => const TextStyle(
+        fontFamily: 'Amiri',
+        fontSize: 16,
+        fontWeight: FontWeight.w700,
+        height: 1.6,
+        letterSpacing: 0.5,
+      );
+
   // ─── TextTheme builder ───────────────────────────────────────────────────────
   static TextTheme buildTextTheme(Color primaryText, Color secondaryText) {
     return TextTheme(

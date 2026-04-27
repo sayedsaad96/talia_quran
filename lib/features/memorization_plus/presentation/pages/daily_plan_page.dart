@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/percent_indicator.dart';
@@ -35,7 +36,17 @@ class _DailyPlanView extends StatelessWidget {
     final isDark = context.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
 
-    return BlocBuilder<DailyPlanCubit, DailyPlanState>(
+    return BlocConsumer<DailyPlanCubit, DailyPlanState>(
+      listener: (context, state) {
+        // UX-011: Show celebration when all items are completed
+        if (state is DailyPlanLoaded &&
+            state.plan.totalItems > 0 &&
+            state.plan.completedCount >= state.plan.totalItems &&
+            state.lastEvaluatedAyah != null) {
+          HapticFeedback.heavyImpact();
+          _showCompletionCelebration(context, isDark, primary, state.plan);
+        }
+      },
       builder: (context, state) {
         DailyPlan? currentPlan;
         if (state is DailyPlanLoaded) currentPlan = state.plan;
@@ -177,6 +188,107 @@ class _DailyPlanView extends StatelessWidget {
           }(),
         );
       },
+    );
+  }
+
+  void _showCompletionCelebration(
+      BuildContext context, bool isDark, Color primary, DailyPlan plan) {
+    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final textPrimary =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusXl),
+        ),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            const Text('🎉', style: TextStyle(fontSize: 56)),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'ما شاء الله! أكملت خطتك اليومية',
+              style: AppTypography.headlineSmall.copyWith(
+                color: textPrimary,
+                fontFamily: 'Amiri',
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              'أتممت ${plan.totalItems} عناصر بنجاح.\nثابر على هذا المستوى!',
+              style: AppTypography.bodyMedium.copyWith(
+                color: textSecondary,
+                fontFamily: 'Amiri',
+                height: 1.6,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _CelebrationStat(
+                  icon: Icons.auto_stories_rounded,
+                  label: 'آيات جديدة',
+                  value: '${plan.newAyahs.length}',
+                  color: primary,
+                  isDark: isDark,
+                ),
+                _CelebrationStat(
+                  icon: Icons.replay_rounded,
+                  label: 'مراجعة',
+                  value: '${plan.nearRevision.length + plan.farRevision.length}',
+                  color: const Color(0xFF2D8E4C),
+                  isDark: isDark,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xl),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(context),
+                style: FilledButton.styleFrom(
+                  backgroundColor: primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  ),
+                ),
+                child: Text(
+                  'بارك الله فيك ✨',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: Colors.white,
+                    fontFamily: 'Amiri',
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ),
+      ),
     );
   }
 
@@ -549,7 +661,10 @@ class _EvalButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: GestureDetector(
-        onTap: onTap,
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
@@ -670,6 +785,55 @@ class _EmptyPlan extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ─── Celebration Stat ─────────────────────────────────────────────────────────
+
+class _CelebrationStat extends StatelessWidget {
+  const _CelebrationStat({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.isDark,
+  });
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: color, size: 28),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: AppTypography.titleLarge.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            label,
+            style: AppTypography.labelSmall.copyWith(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }

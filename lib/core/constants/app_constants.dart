@@ -16,10 +16,14 @@ abstract class AppConstants {
   static const String kHifzPathMode = 'hifz_path_mode';
   static const String kAzkarDone = 'azkar_done';
   static const String kFontSize = 'quran_font_size';
+  static const String kReadPages = 'read_pages';
 
   // Audio base URL (EveryAyah CDN)
   static const String audioBaseUrl =
-      'https://cdn.islamic.network/quran/audio/128/ar.alafasy/';
+      'https://everyayah.com/data/Alafasy_128kbps/';
+
+  // Hifz evaluation
+  static const double kSimilarityThreshold = 0.85;
 
   // Quran API (offline fallback)
   static const String quranDataAsset = 'assets/data/quran_simple.json';

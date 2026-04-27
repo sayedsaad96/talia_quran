@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/services/notification_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/locale_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -51,7 +54,17 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _SettingsSection(
-                  title: 'About',
+                  title: context.isArabic ? 'دقة التسميع' : 'Recitation Accuracy',
+                  children: [_AccuracySettingTile(isDark: isDark)],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _SettingsSection(
+                  title: context.isArabic ? 'الإشعارات' : 'Notifications',
+                  children: [_NotificationSettingTile(isDark: isDark)],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _SettingsSection(
+                  title: context.isArabic ? 'حول التطبيق' : 'About',
                   children: [_AboutTile(isDark: isDark)],
                 ),
               ]),
@@ -179,7 +192,7 @@ class _ThemeSettingTile extends StatelessWidget {
               indent: 56,
             ),
             _ThemeOption(
-              label: 'System Default',
+              label: context.isArabic ? 'حسب النظام' : 'System Default',
               icon: Icons.brightness_auto_rounded,
               isSelected: themeMode == ThemeMode.system,
               color: primary,
@@ -462,7 +475,9 @@ class _AboutTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'A premium Quran memorization app',
+                  context.isArabic
+                      ? 'تطبيق متميز لحفظ ومراجعة القرآن الكريم'
+                      : 'A premium Quran memorization app',
                   style: AppTypography.labelSmall.copyWith(color: subtextColor),
                 ),
               ],
@@ -619,3 +634,172 @@ class _ProfileSettingTile extends StatelessWidget {
   }
 }
 
+// ─── Accuracy Setting ────────────────────────────────────────────────────────
+
+class _AccuracySettingTile extends StatefulWidget {
+  const _AccuracySettingTile({required this.isDark});
+  final bool isDark;
+
+  @override
+  State<_AccuracySettingTile> createState() => _AccuracySettingTileState();
+}
+
+class _AccuracySettingTileState extends State<_AccuracySettingTile> {
+  static const _key = 'similarity_threshold';
+  static const _levels = [0.70, 0.85, 0.92];
+  int _selected = 1; // default = medium (0.85)
+
+  @override
+  void initState() {
+    super.initState();
+    final prefs = getIt<SharedPreferences>();
+    final saved = prefs.getDouble(_key) ?? 0.85;
+    if (saved <= 0.70) {
+      _selected = 0;
+    } else if (saved >= 0.92) {
+      _selected = 2;
+    } else {
+      _selected = 1;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
+
+    final labels = context.isArabic
+        ? ['سهل (٧٠٪)', 'متوسط (٨٥٪)', 'صعب (٩٢٪)']
+        : ['Easy (70%)', 'Medium (85%)', 'Hard (92%)'];
+
+    return ListTile(
+      leading: Icon(Icons.mic_rounded, color: primary),
+      title: Text(
+        context.isArabic ? 'مستوى الدقة' : 'Accuracy Level',
+        style: AppTypography.bodyMedium.copyWith(color: textColor),
+      ),
+      trailing: SegmentedButton<int>(
+        segments: [
+          for (int i = 0; i < 3; i++)
+            ButtonSegment(value: i, label: Text(labels[i], style: const TextStyle(fontSize: 11))),
+        ],
+        selected: {_selected},
+        onSelectionChanged: (val) {
+          setState(() => _selected = val.first);
+          getIt<SharedPreferences>().setDouble(_key, _levels[_selected]);
+        },
+        style: ButtonStyle(
+          visualDensity: VisualDensity.compact,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Notification Settings ───────────────────────────────────────────────────
+
+class _NotificationSettingTile extends StatefulWidget {
+  const _NotificationSettingTile({required this.isDark});
+  final bool isDark;
+
+  @override
+  State<_NotificationSettingTile> createState() =>
+      _NotificationSettingTileState();
+}
+
+class _NotificationSettingTileState extends State<_NotificationSettingTile> {
+  static const _reviewKey = 'notifications_daily_review';
+  static const _streakKey = 'notifications_streak_alert';
+
+  bool _reviewEnabled = true;
+  bool _streakEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    final prefs = getIt<SharedPreferences>();
+    _reviewEnabled = prefs.getBool(_reviewKey) ?? true;
+    _streakEnabled = prefs.getBool(_streakKey) ?? true;
+  }
+
+  Future<void> _toggleReview(bool value) async {
+    setState(() => _reviewEnabled = value);
+    await getIt<SharedPreferences>().setBool(_reviewKey, value);
+    if (value) {
+      await TaliaNotificationService.instance.scheduleDailyReviewReminder();
+    } else {
+      // Cancel only the review notification (ID 1001)
+      await TaliaNotificationService.instance.cancelAll();
+      // Re-schedule streak if still enabled
+      if (_streakEnabled) {
+        await TaliaNotificationService.instance
+            .scheduleStreakProtectionAlert(currentStreak: 1);
+      }
+    }
+  }
+
+  Future<void> _toggleStreak(bool value) async {
+    setState(() => _streakEnabled = value);
+    await getIt<SharedPreferences>().setBool(_streakKey, value);
+    if (value) {
+      await TaliaNotificationService.instance
+          .scheduleStreakProtectionAlert(currentStreak: 1);
+    } else {
+      await TaliaNotificationService.instance.cancelStreakAlert();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = widget.isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+    final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
+
+    return Column(
+      children: [
+        SwitchListTile(
+          secondary: Icon(Icons.notifications_active_rounded, color: primary),
+          title: Text(
+            context.isArabic ? 'تذكير المراجعة اليومية' : 'Daily Review Reminder',
+            style: AppTypography.bodyMedium.copyWith(color: textColor),
+          ),
+          subtitle: Text(
+            context.isArabic ? 'كل يوم الساعة ٨:٠٠ مساءً' : 'Every day at 8:00 PM',
+            style: AppTypography.labelSmall.copyWith(color: subtextColor),
+          ),
+          value: _reviewEnabled,
+          onChanged: _toggleReview,
+          activeThumbColor: primary,
+        ),
+        Divider(
+          height: 0.5,
+          color: widget.isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          indent: 56,
+        ),
+        SwitchListTile(
+          secondary: Icon(Icons.shield_rounded, color: primary),
+          title: Text(
+            context.isArabic ? 'حماية السلسلة' : 'Streak Protection',
+            style: AppTypography.bodyMedium.copyWith(color: textColor),
+          ),
+          subtitle: Text(
+            context.isArabic
+                ? 'تنبيه الساعة ١٠:٠٠ مساءً إذا لم تراجع'
+                : 'Alert at 10:00 PM if no review',
+            style: AppTypography.labelSmall.copyWith(color: subtextColor),
+          ),
+          value: _streakEnabled,
+          onChanged: _toggleStreak,
+          activeThumbColor: primary,
+        ),
+      ],
+    );
+  }
+}

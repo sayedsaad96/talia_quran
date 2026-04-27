@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -36,23 +38,54 @@ class _HifzSessionView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.parchmentDark
-          : AppColors.parchmentLight,
-      body: BlocBuilder<HifzSessionCubit, HifzSessionState>(
-        builder: (context, state) {
-          if (state is HifzSessionLoading) {
-            return const Center(child: LoadingWidget());
-          }
-          if (state is HifzSessionError) {
-            return ErrorStateWidget(message: state.message);
-          }
-          if (state is HifzSessionLoaded) {
-            return _FullSurahSession(state: state, isDark: isDark);
-          }
-          return const SizedBox.shrink();
-        },
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final shouldLeave = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(context.isArabic ? 'إنهاء الجلسة؟' : 'End Session?'),
+            content: Text(context.isArabic
+                ? 'هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.'
+                : 'Do you want to leave the memorization session? Your current progress will be saved.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(context.isArabic ? 'متابعة' : 'Continue'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(
+                  context.isArabic ? 'خروج' : 'Exit',
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
+          ),
+        );
+        if (shouldLeave == true && context.mounted) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: isDark
+            ? AppColors.parchmentDark
+            : AppColors.parchmentLight,
+        body: BlocBuilder<HifzSessionCubit, HifzSessionState>(
+          builder: (context, state) {
+            if (state is HifzSessionLoading) {
+              return const Center(child: LoadingWidget());
+            }
+            if (state is HifzSessionError) {
+              return ErrorStateWidget(message: state.message);
+            }
+            if (state is HifzSessionLoaded) {
+              return _FullSurahSession(state: state, isDark: isDark);
+            }
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }
@@ -65,10 +98,11 @@ class _FullSurahSession extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('HIFZ SESSION LOADED: currentIndex=${state.currentIndex}, isRecording=${state.isRecording}');
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final ayah = state.ayahs[state.currentIndex];
+    final fontSize = getIt<SharedPreferences>()
+        .getDouble(AppConstants.kFontSize) ?? AppConstants.fontSizeLarge;
     
     return Column(
       children: [
@@ -144,10 +178,9 @@ class _FullSurahSession extends StatelessWidget {
                                 state.isRecording 
                                   ? (context.isArabic ? "يتم التسجيل، اقرأ الآية من حفظك..." : "Recording, recite from memory...")
                                   : ayah.text,
-                                style: AppTypography.quranLarge.copyWith(
+                                style: AppTypography.quranVerse.copyWith(
                                   color: textColor,
-                                  fontSize: state.isRecording ? 20 : 28,
-                                  height: 1.8,
+                                  fontSize: state.isRecording ? 20 : fontSize,
                                 ),
                                 textAlign: TextAlign.center,
                                 textDirection: TextDirection.rtl,
@@ -157,6 +190,30 @@ class _FullSurahSession extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
+
+                // Audio error banner
+                if (state.audioError != null)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.red.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                      border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.wifi_off_rounded, color: Colors.red, size: 18),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            state.audioError!,
+                            style: AppTypography.bodySmall.copyWith(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 
                 // Controls Area
                 if (state.similarityScore == null && !state.isEvaluating) ...[

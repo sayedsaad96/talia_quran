@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/utils/arabic_normalizer.dart';
 import '../models/surah_model.dart';
 import '../models/ayah_model.dart';
 
@@ -8,6 +9,7 @@ abstract class QuranLocalDatasource {
   Future<List<SurahModel>> getSurahs();
   Future<List<AyahModel>> getAyahs(int surahId);
   Future<List<AyahModel>> getAyahsByPage(int pageNumber);
+  Future<List<AyahModel>> searchAyahs(String query);
 }
 
 class QuranLocalDatasourceImpl implements QuranLocalDatasource {
@@ -86,5 +88,26 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
     } catch (e) {
       throw const CacheFailure('Failed to load Quran text data');
     }
+  }
+
+  @override
+  Future<List<AyahModel>> searchAyahs(String query) async {
+    if (query.trim().isEmpty) return [];
+    if (_cachedAyahs == null) await _loadQuranData();
+
+    final normalizedQuery = ArabicNormalizer.normalize(query);
+    final results = <AyahModel>[];
+
+    for (final ayahs in _cachedAyahs!.values) {
+      for (final ayah in ayahs) {
+        final normalizedText = ArabicNormalizer.normalize(ayah.text);
+        if (normalizedText.contains(normalizedQuery)) {
+          results.add(ayah);
+          if (results.length >= 50) return results;
+        }
+      }
+    }
+
+    return results;
   }
 }

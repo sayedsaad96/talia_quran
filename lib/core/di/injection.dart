@@ -1,6 +1,10 @@
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:isar/isar.dart';
+import 'package:path_provider/path_provider.dart';
 
+import '../services/audio_cache_service.dart';
+import '../services/notification_service.dart';
 import '../theme/theme_cubit.dart';
 import '../l10n/locale_cubit.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
@@ -12,7 +16,10 @@ import '../../features/quran/domain/usecases/get_surahs_usecase.dart';
 import '../../features/quran/presentation/cubits/surah_list_cubit.dart';
 import '../../features/quran/presentation/cubits/surah_detail_cubit.dart';
 import '../../features/quran/presentation/cubits/quran_page_cubit.dart';
+import '../../features/quran/presentation/cubits/search_quran_cubit.dart';
 import '../../features/hifz/data/datasources/hifz_local_datasource.dart';
+import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dart';
+import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/hifz/domain/usecases/get_hifz_progress_usecase.dart';
@@ -40,7 +47,7 @@ import '../../features/memorization_plus/presentation/cubits/kids_mode_cubit.dar
 import '../../features/memorization_plus/presentation/cubits/track_selection_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/custom_plan_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/quiz_cubit.dart';
-import '../../features/settings/data/profile_cubit.dart';
+import '../../features/settings/presentation/cubits/profile_cubit.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -48,6 +55,18 @@ Future<void> configureDependencies() async {
   // ─── External ───────────────────────────────────────────────────────────────
   final sharedPrefs = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPrefs);
+
+  final dir = await getApplicationDocumentsDirectory();
+  final isar = await Isar.open(
+    [IsarAyahProgressSchema],
+    directory: dir.path,
+  );
+  getIt.registerSingleton<Isar>(isar);
+
+  // Migrate old SharedPreferences Hifz data to Isar if needed
+  final hifzDatasource = IsarHifzLocalDatasourceImpl(isar, sharedPrefs);
+  await hifzDatasource.migrateFromSharedPreferencesIfNeeded();
+  getIt.registerLazySingleton<HifzLocalDatasource>(() => hifzDatasource);
 
   // ─── Core ───────────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ThemeCubit>(
@@ -59,6 +78,10 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<ProfileCubit>(
     () => ProfileCubit(getIt<SharedPreferences>()),
   );
+  getIt.registerSingleton<AudioCacheService>(AudioCacheService.instance);
+  getIt.registerSingleton<TaliaNotificationService>(
+    TaliaNotificationService.instance,
+  );
 
   // ─── Progress ───────────────────────────────────────────────────────────────
   
@@ -69,6 +92,11 @@ Future<void> configureDependencies() async {
   // Register hifz datasource here so we can satisfy progress repository dependencies early
   getIt.registerLazySingleton<HifzLocalDatasource>(
     () => HifzLocalDatasourceImpl(getIt<SharedPreferences>()),
+  );
+
+  // Register MemorizationPlus datasource early — required by ProgressRepository
+  getIt.registerLazySingleton<MemorizationPlusLocalDatasource>(
+    () => MemorizationPlusLocalDatasourceImpl(getIt<SharedPreferences>()),
   );
 
   getIt.registerLazySingleton<ProgressRepository>(
@@ -116,11 +144,14 @@ Future<void> configureDependencies() async {
       getIt<SaveReadPageUsecase>(),
     ),
   );
+  getIt.registerFactory<SearchQuranCubit>(
+    () => SearchQuranCubit(getIt<QuranRepository>()),
+  );
 
   // ─── Hifz ───────────────────────────────────────────────────────────────────
   // HifzLocalDatasource is now registered earlier above.
   getIt.registerLazySingleton<HifzRepository>(
-    () => HifzRepositoryImpl(getIt<HifzLocalDatasource>()),
+    () => HifzRepositoryImpl(getIt<HifzLocalDatasource>(), getIt<QuranLocalDatasource>()),
   );
   getIt.registerLazySingleton<GetHifzProgressUsecase>(
     () => GetHifzProgressUsecase(getIt<HifzRepository>()),
@@ -150,6 +181,7 @@ Future<void> configureDependencies() async {
       getIt<GetSurahDetailUsecase>(),
       getIt<SaveAyahProgressUsecase>(),
       getIt<GetProgressForSurahUsecase>(),
+      getIt<SharedPreferences>(),
     ),
   );
 
@@ -164,7 +196,7 @@ Future<void> configureDependencies() async {
     () => GetAzkarUsecase(getIt<AzkarRepository>()),
   );
   getIt.registerFactory<AzkarCubit>(
-    () => AzkarCubit(getIt<GetAzkarUsecase>()),
+    () => AzkarCubit(getIt<GetAzkarUsecase>(), getIt<SharedPreferences>()),
   );
 
   // ─── Home ───────────────────────────────────────────────────────────────────
@@ -178,13 +210,10 @@ Future<void> configureDependencies() async {
   );
 
   // ─── MemorizationPlus ────────────────────────────────────────────────────────
-  getIt.registerLazySingleton<MemorizationPlusLocalDatasource>(
-    () => MemorizationPlusLocalDatasourceImpl(getIt<SharedPreferences>()),
-  );
+  // NOTE: MemorizationPlusLocalDatasource is already registered in the Progress section above.
   getIt.registerLazySingleton<MemorizationPlusRepository>(
     () => MemorizationPlusRepositoryImpl(
       getIt<MemorizationPlusLocalDatasource>(),
-      getIt<HifzLocalDatasource>(),
       getIt<QuranRepository>(),
     ),
   );

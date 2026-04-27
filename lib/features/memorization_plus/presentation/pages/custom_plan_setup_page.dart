@@ -7,31 +7,9 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../quran/data/datasources/quran_local_datasource.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/custom_plan_cubit.dart';
-
-/// Surah names in Arabic (1-indexed, index 0 is placeholder)
-const List<String> _surahNames = [
-  '', // 0 placeholder
-  'الفاتحة', 'البقرة', 'آل عمران', 'النساء', 'المائدة', 'الأنعام',
-  'الأعراف', 'الأنفال', 'التوبة', 'يونس', 'هود', 'يوسف', 'الرعد',
-  'إبراهيم', 'الحجر', 'النحل', 'الإسراء', 'الكهف', 'مريم', 'طه',
-  'الأنبياء', 'الحج', 'المؤمنون', 'النور', 'الفرقان', 'الشعراء',
-  'النمل', 'القصص', 'العنكبوت', 'الروم', 'لقمان', 'السجدة', 'الأحزاب',
-  'سبأ', 'فاطر', 'يس', 'الصافات', 'ص', 'الزمر', 'غافر',
-  'فصلت', 'الشورى', 'الزخرف', 'الدخان', 'الجاثية', 'الأحقاف',
-  'محمد', 'الفتح', 'الحجرات', 'ق', 'الذاريات', 'الطور', 'النجم',
-  'القمر', 'الرحمن', 'الواقعة', 'الحديد', 'المجادلة', 'الحشر',
-  'الممتحنة', 'الصف', 'الجمعة', 'المنافقون', 'التغابن', 'الطلاق',
-  'التحريم', 'الملك', 'القلم', 'الحاقة', 'المعارج', 'نوح', 'الجن',
-  'المزمل', 'المدثر', 'القيامة', 'الإنسان', 'المرسلات', 'النبأ',
-  'النازعات', 'عبس', 'التكوير', 'الانفطار', 'المطففين', 'الانشقاق',
-  'البروج', 'الطارق', 'الأعلى', 'الغاشية', 'الفجر', 'البلد',
-  'الشمس', 'الليل', 'الضحى', 'الشرح', 'التين', 'العلق', 'القدر',
-  'البينة', 'الزلزلة', 'العاديات', 'القارعة', 'التكاثر', 'العصر',
-  'الهمزة', 'الفيل', 'قريش', 'الماعون', 'الكوثر', 'الكافرون',
-  'النصر', 'المسد', 'الإخلاص', 'الفلق', 'الناس',
-];
 
 class CustomPlanSetupPage extends StatelessWidget {
   const CustomPlanSetupPage({super.key});
@@ -67,6 +45,33 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   bool _enableFarRevision = true;
   int _nearRevisionCount = 5;
   int _farRevisionCount = 3;
+
+  /// Surah names loaded from data layer (1-indexed, index 0 is placeholder)
+  List<String> _surahNames = [''];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSurahNames();
+  }
+
+  Future<void> _loadSurahNames() async {
+    try {
+      final surahs = await getIt<QuranLocalDatasource>().getSurahs();
+      if (mounted) {
+        setState(() {
+          _surahNames = ['', ...surahs.map((s) => s.nameAr)];
+        });
+      }
+    } catch (_) {
+      // Fallback: generate placeholder names
+      if (mounted) {
+        setState(() {
+          _surahNames = List.generate(115, (i) => i == 0 ? '' : 'سورة $i');
+        });
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -561,7 +566,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
             114,
             (i) => DropdownMenuItem(
               value: i + 1,
-              child: Text('${i + 1}. ${_surahNames[i + 1]}'),
+              child: Text('${i + 1}. ${(i + 1) < _surahNames.length ? _surahNames[i + 1] : 'سورة ${i + 1}'}'),
             ),
           ),
           onChanged: (v) {

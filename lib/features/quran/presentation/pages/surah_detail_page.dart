@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -6,6 +8,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -43,15 +46,29 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
   double _fontSize = 24.0;
   bool _focusMode = false;
   Set<String> _bookmarkedKeys = {};
+  StreamSubscription<PlayerState>? _playerSubscription;
+
+  static const _fontSizeKey = 'quran_font_size';
 
   @override
   void initState() {
     super.initState();
     _loadBookmarks();
+    _loadFontSize();
+  }
+
+  void _loadFontSize() {
+    final prefs = getIt<SharedPreferences>();
+    _fontSize = prefs.getDouble(_fontSizeKey) ?? 24.0;
+  }
+
+  void _saveFontSize(double size) {
+    getIt<SharedPreferences>().setDouble(_fontSizeKey, size);
   }
 
   @override
   void dispose() {
+    _playerSubscription?.cancel();
     _player.dispose();
     super.dispose();
   }
@@ -76,7 +93,9 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
       final key = '${ayah.surahId}_${ayah.numberInSurah}';
       final isNowBookmarked = _bookmarkedKeys.contains(key);
       context.showSnackBar(
-        isNowBookmarked ? context.l10n.bookmark : context.l10n.bookmark,
+        isNowBookmarked
+            ? (context.isArabic ? 'تم إضافة علامة مرجعية' : 'Bookmark added')
+            : (context.isArabic ? 'تم إزالة العلامة المرجعية' : 'Bookmark removed'),
       );
     }
   }
@@ -92,9 +111,15 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
         _playingAyah = ayah.numberInSurah;
         _isPlaying = true;
       });
-      await _player.setUrl(ayah.audioUrl);
+      final audioSource = await AudioCacheService.instance.getAudioSource(
+        ayah.surahId,
+        ayah.numberInSurah,
+      );
+      await _player.setUrl(audioSource);
       await _player.play();
-      _player.playerStateStream.listen((state) {
+      // Cancel previous subscription before creating a new one
+      _playerSubscription?.cancel();
+      _playerSubscription = _player.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
           if (mounted) setState(() => _isPlaying = false);
         }
@@ -338,7 +363,10 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
       useRootNavigator: true,
       builder: (_) => _FontSizeSheet(
         current: _fontSize,
-        onChanged: (v) => setState(() => _fontSize = v),
+        onChanged: (v) {
+          setState(() => _fontSize = v);
+          _saveFontSize(v);
+        },
       ),
     );
   }
@@ -493,10 +521,9 @@ class _ContinuousSurahTextState extends State<_ContinuousSurahText> {
 
             return TextSpan(
               text: '${ayah.text} ﴿${_toArabicFixed(ayah.numberInSurah)}﴾ ',
-              style: AppTypography.quranMedium.copyWith(
+              style: AppTypography.quranVerse.copyWith(
                 fontSize: widget.fontSize,
                 color: isPlaying ? primary : textColor,
-                height: 2.2,
                 backgroundColor: isPlaying ? primary.withValues(alpha: 0.15) : null,
               ),
               recognizer: TapGestureRecognizer()..onTap = () {

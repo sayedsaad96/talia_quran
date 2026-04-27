@@ -7,4 +7,5 @@ abstract class QuranRepository {
   Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId);
   Future<Either<Failure, List<Surah>>> searchSurahs(String query);
   Future<Either<Failure, QuranPageDetail>> getQuranPage(int pageNumber);
+  Future<Either<Failure, List<Ayah>>> searchAyahs(String query);
 }

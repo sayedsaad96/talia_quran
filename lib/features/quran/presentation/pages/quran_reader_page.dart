@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:just_audio/just_audio.dart';
+import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -138,7 +140,13 @@ class _QuranPageViewerState extends State<_QuranPageViewer> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<QuranPageCubit>()..loadPage(widget.pageNumber),
-      child: BlocBuilder<QuranPageCubit, QuranPageState>(
+      child: BlocConsumer<QuranPageCubit, QuranPageState>(
+        // ARCH-008: Use listener to start timer instead of build()
+        listener: (context, state) {
+          if (state is QuranPageLoaded) {
+            _startTimerForPage(state.detail, context);
+          }
+        },
         builder: (context, state) {
           if (state is QuranPageLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -151,9 +159,6 @@ class _QuranPageViewerState extends State<_QuranPageViewer> {
             );
           }
           if (state is QuranPageLoaded) {
-            // Start the background timer as soon as the page is loaded
-            _startTimerForPage(state.detail, context);
-            
             return _ContinuousPageText(detail: state.detail);
           }
           return const SizedBox.shrink();
@@ -169,11 +174,16 @@ class _ContinuousPageText extends StatelessWidget {
 
   void _showAyahOptions(BuildContext context, Ayah ayah) {
     HapticFeedback.lightImpact();
+    // Get the real surah name from the detail's surahs list
+    final surah = detail.surahs.firstWhere(
+      (s) => s.id == ayah.surahId,
+      orElse: () => detail.surahs.first,
+    );
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _AyahOptionsSheet(ayah: ayah),
+      builder: (ctx) => _AyahOptionsSheet(ayah: ayah, surahName: surah.nameAr),
     );
   }
 
@@ -302,9 +312,48 @@ class _ContinuousPageText extends StatelessWidget {
   }
 }
 
-class _AyahOptionsSheet extends StatelessWidget {
-  const _AyahOptionsSheet({required this.ayah});
+class _AyahOptionsSheet extends StatefulWidget {
+  const _AyahOptionsSheet({required this.ayah, required this.surahName});
   final Ayah ayah;
+  final String surahName;
+
+  @override
+  State<_AyahOptionsSheet> createState() => _AyahOptionsSheetState();
+}
+
+class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
+  final AudioPlayer _player = AudioPlayer();
+  bool _isPlaying = false;
+
+  @override
+  void dispose() {
+    _player.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playAyah() async {
+    if (_isPlaying) {
+      await _player.pause();
+      setState(() => _isPlaying = false);
+      return;
+    }
+    try {
+      setState(() => _isPlaying = true);
+      final audioSource = await AudioCacheService.instance.getAudioSource(
+        widget.ayah.surahId,
+        widget.ayah.numberInSurah,
+      );
+      await _player.setUrl(audioSource);
+      await _player.play();
+      _player.playerStateStream.listen((state) {
+        if (state.processingState == ProcessingState.completed) {
+          if (mounted) setState(() => _isPlaying = false);
+        }
+      });
+    } catch (_) {
+      if (mounted) setState(() => _isPlaying = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -333,7 +382,7 @@ class _AyahOptionsSheet extends StatelessWidget {
               ),
             ),
             Text(
-              '${context.l10n.ayahs} ${ayah.numberInSurah}',
+              '${context.l10n.ayahs} ${widget.ayah.numberInSurah}',
               style: AppTypography.titleMedium,
             ),
             const SizedBox(height: AppSpacing.xl),
@@ -341,20 +390,17 @@ class _AyahOptionsSheet extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _OptionBtn(
-                  icon: Icons.play_circle_fill_rounded,
-                  label: context.l10n.play,
+                  icon: _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill_rounded,
+                  label: _isPlaying ? (context.isArabic ? 'إيقاف' : 'Pause') : context.l10n.play,
                   color: primary,
-                  onTap: () {
-                    // Play logic would go here
-                    Navigator.pop(context);
-                  },
+                  onTap: _playAyah,
                 ),
                 _OptionBtn(
                   icon: Icons.copy_rounded,
                   label: context.l10n.copy,
                   color: Colors.blue,
                   onTap: () async {
-                    await Clipboard.setData(ClipboardData(text: ayah.text));
+                    await Clipboard.setData(ClipboardData(text: widget.ayah.text));
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(context.l10n.copied)),
@@ -368,17 +414,19 @@ class _AyahOptionsSheet extends StatelessWidget {
                   label: context.l10n.bookmark,
                   color: Colors.orange,
                   onTap: () {
-                    // We need surahName. For now we use generic string or get it if possible.
                     getIt<BookmarkService>().toggle(
                       BookmarkEntry(
-                        surahId: ayah.surahId,
-                        surahName: "سورة",
-                        ayahNumber: ayah.numberInSurah,
-                        ayahText: ayah.text,
+                        surahId: widget.ayah.surahId,
+                        surahName: widget.surahName,
+                        ayahNumber: widget.ayah.numberInSurah,
+                        ayahText: widget.ayah.text,
                         savedAt: DateTime.now(),
                       ),
                     );
                     Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(context.isArabic ? 'تم حفظ العلامة المرجعية' : 'Bookmark saved')),
+                    );
                   },
                 ),
               ],

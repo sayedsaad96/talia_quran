@@ -52,7 +52,8 @@ class SectionHeader extends StatelessWidget {
               ],
             ),
           ),
-          ?action,
+          // ignore: use_null_aware_elements
+          if (action != null) action!,
           if (actionLabel != null && onActionTap != null)
             GestureDetector(
               onTap: onActionTap,
