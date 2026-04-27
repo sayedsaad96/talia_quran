@@ -1,174 +1,188 @@
-# تالية — Talia
-### A Premium Quran Memorization & Recitation App
+<div align="center">
+  <img src="assets/images/logo.png" alt="Talia Logo" width="120">
+
+  # تالية — Talia Quran
+
+  **A Premium, Intelligent Quran Memorization & Recitation App**
+
+  [![Flutter](https://img.shields.io/badge/Flutter-3.22+-02569B?style=flat-square&logo=flutter&logoColor=white)](https://flutter.dev)
+  [![Dart](https://img.shields.io/badge/Dart-3.4+-0175C2?style=flat-square&logo=dart&logoColor=white)](https://dart.dev)
+  [![Clean Architecture](https://img.shields.io/badge/Architecture-Clean-success?style=flat-square)](#-architecture)
+  [![BLoC](https://img.shields.io/badge/State_Management-BLoC-blue?style=flat-square)](#-tech-stack)
+
+  [English](#english) • [العربية](#العربية)
+</div>
 
 ---
 
-## 🚀 Quick Start
+<h2 id="english">📖 Overview</h2>
 
-```bash
-# 1. Install Flutter (≥3.22.0 required)
-flutter --version
+**Talia (تالية)** is a feature-rich, beautifully designed Flutter application dedicated to the Holy Quran. It provides an immersive reading experience, advanced memorization (Hifz) tools powered by spaced repetition, and intelligent recitation testing using speech recognition.
 
-# 2. Install dependencies
-flutter pub get
-
-# 3. Add fonts (download from Google Fonts)
-# Place in assets/fonts/:
-#   - Amiri-Regular.ttf
-#   - Amiri-Bold.ttf
-#   - NotoNaskhArabic-Regular.ttf
-#   - NotoNaskhArabic-Bold.ttf
-
-# 4. Run
-flutter run
-```
-
----
-
-## 📁 Architecture
-
-```
-lib/
-├── main.dart                    # Entry point
-├── app.dart                     # Root widget (theme + locale + router)
-├── core/
-│   ├── constants/               # AppSpacing, AppConstants
-│   ├── di/injection.dart        # GetIt dependency injection
-│   ├── error/app_failure.dart   # Typed failures
-│   ├── extensions/              # BuildContext extensions
-│   ├── l10n/                    # Arabic + English localization
-│   ├── router/app_router.dart   # go_router with ShellRoute
-│   ├── theme/                   # Colors, typography, themes
-│   └── widgets/                 # Design system components
-└── features/
-    ├── home/                    # Home dashboard
-    ├── quran/                   # Quran reader (114 surahs)
-    ├── hifz/                    # Memorization with spaced repetition
-    ├── azkar/                   # Morning/Evening/General dhikr
-    ├── progress/                # Stats, streaks, achievements
-    └── settings/                # Theme, language, about
-```
-
-Each feature follows **Clean Architecture**:
-```
-feature/
-├── data/
-│   ├── datasources/    # Local storage (SharedPrefs / JSON assets)
-│   ├── models/         # Data models extending domain entities
-│   └── repositories/   # Repository implementations
-├── domain/
-│   ├── entities/       # Pure Dart domain objects
-│   ├── repositories/   # Abstract repository interfaces
-│   └── usecases/       # Single-responsibility use cases
-└── presentation/
-    ├── cubits/         # BLoC Cubits + States
-    ├── pages/          # Screens
-    └── widgets/        # Feature-specific widgets
-```
-
----
-
-## 🎨 Design System
-
-| Token | Value |
-|-------|-------|
-| Primary | `#1A6B5A` (Deep teal-green) |
-| Gold accent | `#D4A843` (Warm gold) |
-| Dark background | `#0D1117` |
-| Light background | `#F7F4EF` (Warm parchment) |
-| Arabic font | Amiri (Quranic text) |
-| Display font | Cormorant Garamond |
-| Body font | DM Sans |
-| Spacing grid | 8pt |
-
----
-
-## 📦 Key Dependencies
-
-| Package | Purpose |
-|---------|---------|
-| `flutter_bloc` | State management (Cubits) |
-| `go_router` | Declarative routing with ShellRoute |
-| `get_it` | Dependency injection |
-| `dartz` | Functional Either<Failure, Success> |
-| `just_audio` | Quran audio playback |
-| `shared_preferences` | Local persistence |
-| `flutter_animate` | Page/widget animations |
-| `google_fonts` | DM Sans, Cormorant Garamond |
-| `percent_indicator` | Progress arcs |
-| `shimmer` | Loading skeletons |
+Built with **Clean Architecture** and **Domain-Driven Design**, Talia ensures a scalable, maintainable, and highly performant codebase.
 
 ---
 
 ## ✨ Features
 
 ### 📖 Quran Reader
-- All 114 Surahs with ayah counts, juz, type (Meccan/Medinan)
-- Surah list + Juz grid navigation
-- Full-text search
-- Immersive reading mode with focus toggle
-- Adjustable font size (16–36px)
-- Audio playback per ayah (EveryAyah CDN)
-- Copy ayah to clipboard
-- Persistent bookmarks
+- **Complete 114 Surahs:** Accurate texts with Ayah counts, Juz, and revelation type.
+- **Immersive Experience:** Focus mode, adjustable font sizes (16–36px), and authentic `Amiri` typography.
+- **Audio Recitation:** High-quality Ayah-by-Ayah audio playback via `just_audio`.
+- **Quick Navigation:** Grid-based Juz selection, Surah list, and full-text search.
+- **Bookmarks & Copy:** Persistent bookmarks and clipboard support.
 
-### 🧠 Hifz (Memorization)
-- Select any Surah and starting Ayah
-- Reveal/hide mode for self-testing
-- Spaced repetition: `[1, 3, 7, 14, 30, 90]` day intervals
-- Progress tracking per Surah
-- Completion celebration screen
+### 🧠 Intelligent Hifz (Memorization)
+- **Spaced Repetition System (SRS):** Smart intervals `[1, 3, 7, 14, 30, 90]` days for effective retention.
+- **Voice Recognition Testing:** Utilizes `speech_to_text` and `string_similarity` to listen to your recitation and automatically verify correctness.
+- **Self-Testing Mode:** Reveal/hide Ayahs for traditional memorization practice.
+- **Progress Tracking:** Detailed statistics per Surah.
 
-### 🌿 Azkar
-- Morning (7), Evening (5), General (7) categories
-- Haptic-feedback counter with animated ring
-- Per-category completion screens
-- Progress dots navigation
+### 🌿 Azkar (Supplications)
+- **Daily Categories:** Morning, Evening, and General Dhikr.
+- **Interactive Counters:** Haptic-feedback counters with animated progress rings.
+- **Smart Tracking:** Remembers your progress throughout the day.
 
-### 📊 Progress
-- Overall Quran % with animated circular indicator
-- Ayah + Surah memorization counts
-- Streak system (persisted, auto-calculated daily)
-- 6 unlockable achievements
+### 📊 Progress & Gamification
+- **Visual Statistics:** Animated circular indicators (`percent_indicator`) showing overall Quran progress.
+- **Streaks & Habits:** Auto-calculated daily streaks to build a consistent habit.
+- **Achievements:** 6 unlockable badges for reaching milestones.
 
-### ⚙️ Settings
-- Light / Dark / System theme
-- Arabic / English language switch
-- Persistent via SharedPreferences
+### ⚙️ Personalization & Accessibility
+- **Themes:** Light, Dark, and System modes with a premium color palette (Deep Teal-Green & Warm Gold).
+- **Localization:** Seamless RTL/LTR support (Arabic & English) without app restarts.
+- **Notifications:** Local reminders using `flutter_local_notifications`.
 
 ---
 
-## 🌐 RTL / LTR
+## 🛠 Tech Stack & Libraries
 
-- Arabic is the default locale (RTL)
-- All layouts are RTL-aware
-- go_router locale switching without restart
-- Amiri font for authentic Quranic rendering
+Talia leverages modern Flutter packages to deliver a robust experience:
+
+| Category | Technology / Package |
+|----------|----------------------|
+| **Core Framework** | Flutter, Dart |
+| **State Management** | `flutter_bloc` (Cubits for UI state) |
+| **Architecture** | Clean Architecture, `get_it` (Dependency Injection), `dartz` (Functional Error Handling) |
+| **Routing** | `go_router` (Declarative routing with ShellRoute) |
+| **Local Database** | `isar` (High-performance NoSQL DB), `shared_preferences` |
+| **Audio & Media** | `just_audio`, `flutter_cache_manager` |
+| **Speech & AI** | `speech_to_text`, `string_similarity` (Recitation verification) |
+| **UI & Animations** | `flutter_animate`, `shimmer`, `percent_indicator`, `google_fonts`, `cupertino_icons` |
+| **Utilities** | `timezone`, `path_provider`, `permission_handler`, `share_plus` |
 
 ---
 
-## 📱 Android Setup
+## 📁 Project Architecture
 
-`AndroidManifest.xml` already includes:
-- `INTERNET` — audio streaming
-- `WAKE_LOCK` — background playback
-- `FOREGROUND_SERVICE_MEDIA_PLAYBACK` — just_audio
+The app strictly follows **Clean Architecture** principles, dividing responsibilities into distinct layers for each feature:
 
----
-
-## 🔧 Extending
-
-### Add a new feature:
-```bash
-mkdir -p lib/features/my_feature/{data/{datasources,models,repositories},domain/{entities,repositories,usecases},presentation/{cubits,pages,widgets}}
+```text
+lib/
+├── main.dart                    # Application Entry Point
+├── app.dart                     # Root Widget (Theme + Locale + Router)
+├── core/                        # Shared Utilities, Constants, & Base Classes
+│   ├── constants/               # App spacing, colors, and constants
+│   ├── di/                      # Dependency Injection setup (GetIt)
+│   ├── error/                   # Failures and Exceptions handling
+│   ├── l10n/                    # Localization files (.arb)
+│   ├── router/                  # App Router configuration
+│   └── theme/                   # App Theme and Typography
+└── features/                    # Feature Modules
+    ├── quran/                   # Quran Reading Feature
+    ├── hifz/                    # Memorization & Speech Testing
+    ├── azkar/                   # Supplications Feature
+    ├── progress/                # Statistics & Achievements
+    └── settings/                # App Configuration
 ```
 
-### Add a new l10n string:
-1. Add to `lib/core/l10n/app_ar.arb`
-2. Add to `lib/core/l10n/app_en.arb`
-3. Add abstract getter + both implementations in `app_localizations.dart`
+**Inside each feature:**
+```text
+feature_name/
+├── data/                        # API calls, Local DB (Isar), Repositories Impl
+├── domain/                      # Entities, UseCases, Abstract Repositories
+└── presentation/                # Pages, Widgets, BLoC/Cubits
+```
 
-### Add a new route:
-1. Add path constant to `AppRoutes` in `app_router.dart`
-2. Add `GoRoute` to the appropriate navigator section
-3. Link via `context.go()` or `context.push()`
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Flutter SDK `^3.11.4` (or newer)
+- Dart SDK `^3.0.0`
+
+### Installation Steps
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/talia_quran.git
+   cd talia_quran
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   flutter pub get
+   ```
+
+3. **Generate Code** (For Isar database and Service Locator)
+   ```bash
+   flutter pub run build_runner build --delete-conflicting-outputs
+   ```
+
+4. **Run the App**
+   ```bash
+   flutter run
+   ```
+
+*(Note: Ensure you have the required fonts in `assets/fonts/` as defined in `pubspec.yaml`)*
+
+---
+
+## 🎨 Design System
+
+Our UI is designed to be visually stunning yet calm, reflecting the nature of the application.
+
+- **Primary Color:** `#1A6B5A` (Deep teal-green)
+- **Accent Color:** `#D4A843` (Warm gold)
+- **Backgrounds:** `#0D1117` (Dark Mode) / `#F7F4EF` (Warm parchment for Light Mode)
+- **Typography:** `Amiri` (Quranic Text), `Cormorant Garamond` (Display), `DM Sans` (Body)
+
+---
+
+<h2 id="العربية" align="right">العربية (Arabic)</h2>
+
+<div align="right" dir="rtl">
+
+**تالية (Talia)** هو تطبيق قرآني متكامل ومصمم باحترافية عالية باستخدام إطار عمل Flutter. يهدف التطبيق إلى توفير تجربة قراءة مريحة للعين، وأدوات متقدمة لتحفيظ القرآن الكريم تعتمد على التكرار المتباعد (Spaced Repetition)، بالإضافة إلى ميزة **اختبار التلاوة الذكي** باستخدام تقنيات التعرف على الصوت المدمجة.
+
+تم بناء المشروع بالاعتماد على **البنية النظيفة (Clean Architecture)** لضمان جودة الكود وقابلية التوسع والصيانة.
+
+### ✨ أبرز المميزات
+- **مصحف متكامل:** 114 سورة مع دعم كامل للبحث، العلامات المرجعية، وضبط أحجام الخطوط.
+- **تحفيظ ذكي:** نظام التكرار المتباعد للمراجعة، واختبار التلاوة الصوتي (Voice Recognition) للتأكد من صحة الحفظ بشكل تلقائي.
+- **أذكار المسلم:** أذكار الصباح والمساء وغيرها مع عداد تفاعلي (Haptic Feedback).
+- **تتبع الإنجاز:** إحصائيات دقيقة، نظام السلاسل اليومية (Streaks)، وإنجازات تفاعلية لتشجيع المستخدم.
+- **تصميم احترافي وجذاب:** دعم كامل للوضع الليلي والنهاري، مع ألوان مريحة للعين وخطوط عربية أصيلة (Amiri).
+
+### 🛠 التقنيات المستخدمة في المشروع
+- **إدارة الحالة:** `flutter_bloc`
+- **التوجيه (Routing):** `go_router`
+- **قواعد البيانات المحلية:** `isar` (قاعدة بيانات سريعة وعالية الأداء) و `shared_preferences`.
+- **الصوتيات:** `just_audio` لتشغيل التلاوات الصوتية بجودة عالية.
+- **الذكاء الاصطناعي والتعرف على الصوت:** `speech_to_text` و `string_similarity` لاختبار ومطابقة التلاوة.
+- **الرسوميات والواجهة:** `flutter_animate` لإضافة حيوية وحركة للتطبيق، و `percent_indicator` لعرض نسب الإنجاز.
+- **التنبيهات:** `flutter_local_notifications` للإشعارات والتذكيرات المحلية.
+
+### 📁 بنية المشروع
+يعتمد التطبيق على **Clean Architecture** حيث يتم تقسيم كل ميزة (Feature) إلى ثلاث طبقات أساسية:
+1. **Data Layer:** للتعامل مع قاعدة البيانات المحلية Isar والـ APIs.
+2. **Domain Layer:** تحتوي على الكيانات (Entities) وقواعد العمل (Use Cases).
+3. **Presentation Layer:** واجهة المستخدم وإدارة الحالة باستخدام BLoC/Cubit.
+
+</div>
+
+---
+<div align="center">
+  <i>Built with ❤️ using Flutter</i>
+</div>
