@@ -131,17 +131,15 @@ class _HifzView extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              context.isArabic ? "اختر مسار الحفظ المناسب لك:" : "Choose your memorization path:",
+              context.l10n.chooseMemorizationPath,
               style: AppTypography.headlineSmall.copyWith(color: primary),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),
             
             _PathCard(
-              title: context.isArabic ? "مسار الكبار" : "Adult Path",
-              subtitle: context.isArabic 
-                  ? "البدء من الفاتحة والبقرة تصاعدياً" 
-                  : "Start from Al-Fatihah and Al-Baqarah",
+              title: context.l10n.adultPath,
+              subtitle: context.l10n.adultPathDesc,
               icon: Icons.menu_book_rounded,
               primary: primary,
               isDark: isDark,
@@ -151,10 +149,8 @@ class _HifzView extends StatelessWidget {
             const SizedBox(height: AppSpacing.lg),
             
             _PathCard(
-              title: context.isArabic ? "مسار المبتدئين والأطفال" : "Beginner Path",
-              subtitle: context.isArabic 
-                  ? "البدء من جزء عم (سورة الناس) تنازلياً" 
-                  : "Start from Juz Amma (An-Nas) backwards",
+              title: context.l10n.beginnerPath,
+              subtitle: context.l10n.beginnerPathDesc,
               icon: Icons.child_care_rounded,
               primary: Colors.green, // Visual distinction
               isDark: isDark,
@@ -227,7 +223,7 @@ class _HifzView extends StatelessWidget {
                       if (state is HifzLoaded && state.selectedPath != null)
                         IconButton(
                           icon: const Icon(Icons.settings_suggest_rounded, color: Colors.white),
-                          tooltip: ctx.isArabic ? 'تغيير مسار الحفظ' : 'Change Path',
+                          tooltip: ctx.l10n.changeMemorizationPath,
                           onPressed: () {
                             // Show a bottom sheet or directly navigate back to selection
                             _showPathSelectionSheet(ctx, state.selectedPath!);
@@ -256,7 +252,7 @@ class _HifzView extends StatelessWidget {
           ),
           contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
           title: Text(
-            context.isArabic ? "تغيير مسار الحفظ" : "Change Memorization Path",
+            context.l10n.changeMemorizationPath,
             style: AppTypography.titleLarge,
             textAlign: TextAlign.center,
           ),
@@ -595,14 +591,14 @@ class _MemPlusBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'نظام الحفظ الذكي',
+                    context.l10n.smartMemorization,
                     style: AppTypography.titleMedium.copyWith(
                       color: Colors.white,
                       fontFamily: 'Amiri',
                     ),
                   ),
                   Text(
-                    'جدول تكيّفي • مراجعة ذكية • تقييم ذاتي',
+                    context.l10n.smartMemorizationSubtitle,
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white70,
                     ),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BookmarkEntry {
@@ -35,7 +36,7 @@ class BookmarkEntry {
   String get key => '${surahId}_$ayahNumber';
 }
 
-class BookmarkService {
+class BookmarkService extends ChangeNotifier {
   BookmarkService(this._prefs);
   final SharedPreferences _prefs;
 
@@ -74,7 +75,11 @@ class BookmarkService {
       _storageKey,
       jsonEncode(all.map((e) => e.toJson()).toList()),
     );
+    notifyListeners();
   }
 
-  Future<void> clear() async => _prefs.remove(_storageKey);
+  Future<void> clear() async {
+    await _prefs.remove(_storageKey);
+    notifyListeners();
+  }
 }

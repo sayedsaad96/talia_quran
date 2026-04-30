@@ -339,4 +339,69 @@ class AppLocalizationsAr extends AppLocalizations {
   ) {
     return '📊 بفضل الله وتوفيقه، هذا تقدم $name في رحلته مع القرآن عبر تطبيق \"تالية\" 🌟:\n📖 $pages صفحة مقروءة\n🧠 $ayahs آية محفوظة\n🔥 $streak أيام متتالية من الالتزام\n\n✨ حمّل تطبيق \"تالية\" الآن وابدأ رحلتك المباركة 💚';
   }
+
+  @override
+  String get viewAll => 'عرض الكل';
+
+  @override
+  String get reading => 'القراءة';
+
+  @override
+  String get page => 'صفحة';
+
+  @override
+  String get pages => 'صفحات';
+
+  @override
+  String get pagesRead => 'صفحة مقروءة';
+
+  @override
+  String get readingProgress => 'تقدم القراءة';
+
+  @override
+  String get memorizationProgressTitle => 'تقدم الحفظ';
+
+  @override
+  String get smartMemorization => 'نظام الحفظ الذكي';
+
+  @override
+  String get smartMemorizationSubtitle =>
+      'جدول تكيّفي • مراجعة ذكية • تقييم ذاتي';
+
+  @override
+  String get recitationAccuracy => 'دقة التسميع';
+
+  @override
+  String get notifications => 'الإشعارات';
+
+  @override
+  String get about => 'حول التطبيق';
+
+  @override
+  String get systemDefault => 'حسب النظام';
+
+  @override
+  String get changeMemorizationPath => 'تغيير مسار الحفظ';
+
+  @override
+  String get adultPath => 'مسار الكبار';
+
+  @override
+  String get adultPathDesc => 'البدء من الفاتحة والبقرة تصاعدياً';
+
+  @override
+  String get beginnerPath => 'مسار المبتدئين والأطفال';
+
+  @override
+  String get beginnerPathDesc => 'البدء من جزء عم (سورة الناس) تنازلياً';
+
+  @override
+  String get chooseMemorizationPath => 'اختر مسار الحفظ المناسب لك';
+
+  @override
+  String get audioPlayError => 'فشل تشغيل الصوت. تحقق من الاتصال بالإنترنت.';
+
+  @override
+  String get micPermissionError =>
+      'يحتاج التطبيق إذن الميكروفون للتسميع الصوتي. يرجى السماح من إعدادات الجهاز.';
 }

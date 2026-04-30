@@ -339,4 +339,69 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return '📊 Alhamdulillah, here is $name\'s progress on the \"Talia Quran\" app 🌟:\n📖 $pages pages read\n🧠 $ayahs ayahs memorized\n🔥 $streak days of consistent streak\n\n✨ Download \"Talia Quran\" now and start your blessed journey 💚';
   }
+
+  @override
+  String get viewAll => 'View All';
+
+  @override
+  String get reading => 'Reading';
+
+  @override
+  String get page => 'Page';
+
+  @override
+  String get pages => 'Pages';
+
+  @override
+  String get pagesRead => 'Pages Read';
+
+  @override
+  String get readingProgress => 'Reading Progress';
+
+  @override
+  String get memorizationProgressTitle => 'Memorization Progress';
+
+  @override
+  String get smartMemorization => 'Smart Memorization';
+
+  @override
+  String get smartMemorizationSubtitle =>
+      'Adaptive plan • Smart review • Self-assess';
+
+  @override
+  String get recitationAccuracy => 'Recitation Accuracy';
+
+  @override
+  String get notifications => 'Notifications';
+
+  @override
+  String get about => 'About';
+
+  @override
+  String get systemDefault => 'System Default';
+
+  @override
+  String get changeMemorizationPath => 'Change Memorization Path';
+
+  @override
+  String get adultPath => 'Adult Path';
+
+  @override
+  String get adultPathDesc => 'Start from Al-Fatihah and Al-Baqarah';
+
+  @override
+  String get beginnerPath => 'Beginner Path';
+
+  @override
+  String get beginnerPathDesc => 'Start from Juz Amma (An-Nas) backwards';
+
+  @override
+  String get chooseMemorizationPath => 'Choose your memorization path';
+
+  @override
+  String get audioPlayError => 'Failed to play audio. Check your connection.';
+
+  @override
+  String get micPermissionError =>
+      'The app needs microphone permission for voice recitation. Please allow it from device settings.';
 }

@@ -95,7 +95,9 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
       context.showSnackBar(
         isNowBookmarked
             ? (context.isArabic ? 'تم إضافة علامة مرجعية' : 'Bookmark added')
-            : (context.isArabic ? 'تم إزالة العلامة المرجعية' : 'Bookmark removed'),
+            : (context.isArabic
+                  ? 'تم إزالة العلامة المرجعية'
+                  : 'Bookmark removed'),
       );
     }
   }
@@ -118,7 +120,7 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
       await _player.setUrl(audioSource);
       await _player.play();
       // Cancel previous subscription before creating a new one
-      _playerSubscription?.cancel();
+      await _playerSubscription?.cancel();
       _playerSubscription = _player.playerStateStream.listen((state) {
         if (state.processingState == ProcessingState.completed) {
           if (mounted) setState(() => _isPlaying = false);
@@ -261,7 +263,12 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
     );
   }
 
-  void _showAyahActions(BuildContext context, Ayah ayah, String surahName, bool isDark) {
+  void _showAyahActions(
+    BuildContext context,
+    Ayah ayah,
+    String surahName,
+    bool isDark,
+  ) {
     final bKey = '${ayah.surahId}_${ayah.numberInSurah}';
     final isBookmarked = _bookmarkedKeys.contains(bKey);
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
@@ -271,7 +278,9 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
       useRootNavigator: true,
       backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusLg)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusLg),
+        ),
       ),
       builder: (BuildContext ctx) {
         return SafeArea(
@@ -280,77 +289,92 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
               padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                ),
-                Text(
-                  'آية رقم ${ayah.numberInSurah}',
-                  style: AppTypography.titleLarge.copyWith(
-                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                ListTile(
-                  leading: Icon(
-                    (_playingAyah == ayah.numberInSurah && _isPlaying)
-                        ? Icons.pause_circle_rounded
-                        : Icons.play_circle_rounded,
-                    color: primary,
-                  ),
-                  title: Text(
-                    (_playingAyah == ayah.numberInSurah && _isPlaying) ? context.l10n.pause : context.l10n.play,
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: isDark
+                          ? AppColors.darkDivider
+                          : AppColors.lightDivider,
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
                     ),
                   ),
-                  onTap: () {
-                    ctx.pop();
-                    _playAyah(ayah);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(
-                    Icons.copy_rounded,
-                    color: primary,
-                  ),
-                  title: Text(
-                    context.l10n.copy,
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  Text(
+                    'آية رقم ${ayah.numberInSurah}',
+                    style: AppTypography.titleLarge.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
                     ),
                   ),
-                  onTap: () {
-                    ctx.pop();
-                    Clipboard.setData(ClipboardData(text: ayah.text));
-                    context.showSnackBar(context.l10n.copied);
-                  },
-                ),
-                ListTile(
-                  leading: Icon(
-                    isBookmarked ? Icons.bookmark_rounded : Icons.bookmark_border_rounded,
-                    color: isBookmarked ? AppColors.gold : primary,
-                  ),
-                  title: Text(
-                    isBookmarked ? 'إزالة العلامة المرجعية' : 'إضافة علامة مرجعية',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  const SizedBox(height: AppSpacing.md),
+                  ListTile(
+                    leading: Icon(
+                      (_playingAyah == ayah.numberInSurah && _isPlaying)
+                          ? Icons.pause_circle_rounded
+                          : Icons.play_circle_rounded,
+                      color: primary,
                     ),
+                    title: Text(
+                      (_playingAyah == ayah.numberInSurah && _isPlaying)
+                          ? context.l10n.pause
+                          : context.l10n.play,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    onTap: () {
+                      ctx.pop();
+                      _playAyah(ayah);
+                    },
                   ),
-                  onTap: () {
-                    ctx.pop();
-                    _toggleBookmark(ayah, surahName);
-                  },
-                ),
-              ],
+                  ListTile(
+                    leading: Icon(Icons.copy_rounded, color: primary),
+                    title: Text(
+                      context.l10n.copy,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    onTap: () {
+                      ctx.pop();
+                      Clipboard.setData(ClipboardData(text: ayah.text));
+                      context.showSnackBar(context.l10n.copied);
+                    },
+                  ),
+                  ListTile(
+                    leading: Icon(
+                      isBookmarked
+                          ? Icons.bookmark_rounded
+                          : Icons.bookmark_border_rounded,
+                      color: isBookmarked ? AppColors.gold : primary,
+                    ),
+                    title: Text(
+                      isBookmarked
+                          ? 'إزالة العلامة المرجعية'
+                          : 'إضافة علامة مرجعية',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    onTap: () {
+                      ctx.pop();
+                      _toggleBookmark(ayah, surahName);
+                    },
+                  ),
+                ],
+              ),
             ),
-          ),
           ),
         );
       },
@@ -438,7 +462,7 @@ class _StatPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha:0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
       ),
       child: Text(
@@ -502,14 +526,16 @@ class _ContinuousSurahTextState extends State<_ContinuousSurahText> {
     final str = number.toString();
     final buffer = StringBuffer();
     for (int i = 0; i < str.length; i++) {
-        buffer.write(arabicNumbers[int.parse(str[i])]);
+      buffer.write(arabicNumbers[int.parse(str[i])]);
     }
     return buffer.toString();
   }
 
   @override
   Widget build(BuildContext context) {
-    final textColor = widget.isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
     final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
 
     return Directionality(
@@ -524,11 +550,14 @@ class _ContinuousSurahTextState extends State<_ContinuousSurahText> {
               style: AppTypography.quranVerse.copyWith(
                 fontSize: widget.fontSize,
                 color: isPlaying ? primary : textColor,
-                backgroundColor: isPlaying ? primary.withValues(alpha: 0.15) : null,
+                backgroundColor: isPlaying
+                    ? primary.withValues(alpha: 0.15)
+                    : null,
               ),
-              recognizer: TapGestureRecognizer()..onTap = () {
-                widget.onAyahTapped(ayah);
-              },
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  widget.onAyahTapped(ayah);
+                },
             );
           }).toList(),
         ),
@@ -537,7 +566,6 @@ class _ContinuousSurahTextState extends State<_ContinuousSurahText> {
     );
   }
 }
-
 
 class _FontSizeSheet extends StatefulWidget {
   const _FontSizeSheet({required this.current, required this.onChanged});
@@ -567,50 +595,50 @@ class _FontSizeSheetState extends State<_FontSizeSheet> {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 36,
-            height: 4,
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+          children: [
+            Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            context.l10n.fontSize,
-            style: AppTypography.headlineSmall.copyWith(
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              context.l10n.fontSize,
+              style: AppTypography.headlineSmall.copyWith(
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Text(
-            'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-            style: AppTypography.quranMedium.copyWith(
-              fontSize: _value,
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+              style: AppTypography.quranMedium.copyWith(
+                fontSize: _value,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+              textDirection: TextDirection.rtl,
             ),
-            textDirection: TextDirection.rtl,
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          Slider(
-            value: _value,
-            min: 16,
-            max: 36,
-            divisions: 5,
-            activeColor: primary,
-            onChanged: (v) {
-              setState(() => _value = v);
-              widget.onChanged(v);
-            },
-          ),
-          const SizedBox(height: AppSpacing.md),
-        ],
-      ),
+            const SizedBox(height: AppSpacing.lg),
+            Slider(
+              value: _value,
+              min: 16,
+              max: 36,
+              divisions: 5,
+              activeColor: primary,
+              onChanged: (v) {
+                setState(() => _value = v);
+                widget.onChanged(v);
+              },
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+        ),
       ),
     );
   }

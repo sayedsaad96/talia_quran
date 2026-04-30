@@ -11,11 +11,10 @@ import '../../../quran/domain/usecases/get_surahs_usecase.dart';
 import '../../data/models/ayah_progress_model.dart';
 import '../../domain/usecases/get_hifz_progress_usecase.dart';
 import '../../domain/usecases/save_ayah_progress_usecase.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../../settings/domain/repositories/settings_repository.dart';
 
 part 'hifz_session_state.dart';
 
@@ -24,7 +23,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     this._getDetail,
     this._saveProgress,
     this._getSurahProgress,
-    this._prefs,
+    this._settings,
   ) : super(const HifzSessionInitial()) {
     _initSpeech();
     _player.playerStateStream.listen((state) {
@@ -39,7 +38,8 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   final GetSurahDetailUsecase _getDetail;
   final SaveAyahProgressUsecase _saveProgress;
   final GetProgressForSurahUsecase _getSurahProgress;
-  final SharedPreferences _prefs;
+  // ARCH-3 FIX: SettingsRepository instead of direct SharedPreferences access.
+  final SettingsRepository _settings;
 
   final SpeechToText _speechToText = SpeechToText();
   final AudioPlayer _player = AudioPlayer();
@@ -191,11 +191,11 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
       
       // Delay slightly so the UI can show "Evaluating..."
       await Future.delayed(const Duration(milliseconds: 500));
-      _evaluateRecitation();
+      await _evaluateRecitation();
     }
   }
 
-  void _evaluateRecitation() async {
+  Future<void> _evaluateRecitation() async {
     if (state is! HifzSessionLoaded) return;
     final st = state as HifzSessionLoaded;
 
@@ -218,8 +218,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     // Dice's Coefficient to find similarity
     score = normalizedExpected.similarityTo(normalizedSpoken);
 
-    final threshold = _prefs.getDouble('similarity_threshold')
-        ?? AppConstants.kSimilarityThreshold;
+    final threshold = _settings.getSimilarityThreshold();
     final pass = score >= threshold;
 
     // Update progress with Soft Penalty instead of Hard Reset
@@ -241,9 +240,9 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
 
     // Haptic feedback on evaluation result
     if (pass) {
-      HapticFeedback.mediumImpact();
+      unawaited(HapticFeedback.mediumImpact());
     } else {
-      HapticFeedback.heavyImpact();
+      unawaited(HapticFeedback.heavyImpact());
     }
 
     emit(st.copyWith(

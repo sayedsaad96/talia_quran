@@ -9,6 +9,7 @@ import '../../features/hifz/presentation/pages/hifz_page.dart';
 import '../../features/hifz/presentation/pages/hifz_session_page.dart';
 import '../../features/azkar/presentation/pages/azkar_page.dart';
 import '../../features/azkar/presentation/pages/azkar_category_page.dart';
+import '../../features/azkar/presentation/pages/general_azkar_page.dart';
 import '../../features/progress/presentation/pages/progress_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/memorization_plus/presentation/pages/track_selection_page.dart';
@@ -37,8 +38,8 @@ abstract class AppRoutes {
 }
 
 abstract class AppRouter {
+  // UX-4 FIX: Removed _shellNavigatorKey — no longer needed with StatefulShellRoute.
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
-  static final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
@@ -90,6 +91,9 @@ abstract class AppRouter {
         path: '/azkar/:category',
         builder: (context, state) {
           final category = state.pathParameters['category'] ?? 'morning';
+          if (category == 'general') {
+            return const GeneralAzkarPage();
+          }
           return AzkarCategoryPage(category: category);
         },
       ),
@@ -141,34 +145,57 @@ abstract class AppRouter {
       ),
 
       // ── Shell (bottom nav) ─────────────────────────────────────────────────
-      ShellRoute(
-        navigatorKey: _shellNavigatorKey,
-        builder: (context, state, child) => AppShell(child: child),
-        routes: [
-          GoRoute(
-            path: AppRoutes.home,
-            pageBuilder: (_, _) =>
-                const NoTransitionPage(child: HomePage()),
+      // UX-4 FIX: StatefulShellRoute.indexedStack preserves each tab's
+      // Navigator stack independently, so scroll position and BLoC state
+      // are NOT destroyed when the user switches between bottom-nav tabs.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.home,
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: HomePage()),
+              ),
+            ],
           ),
-          GoRoute(
-            path: AppRoutes.quran,
-            pageBuilder: (_, _) =>
-                const NoTransitionPage(child: QuranPage()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.quran,
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: QuranPage()),
+              ),
+            ],
           ),
-          GoRoute(
-            path: AppRoutes.hifz,
-            pageBuilder: (_, _) =>
-                const NoTransitionPage(child: HifzPage()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.hifz,
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: HifzPage()),
+              ),
+            ],
           ),
-          GoRoute(
-            path: AppRoutes.azkar,
-            pageBuilder: (_, _) =>
-                const NoTransitionPage(child: AzkarPage()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.azkar,
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: AzkarPage()),
+              ),
+            ],
           ),
-          GoRoute(
-            path: AppRoutes.progress,
-            pageBuilder: (_, _) =>
-                const NoTransitionPage(child: ProgressPage()),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.progress,
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: ProgressPage()),
+              ),
+            ],
           ),
         ],
       ),

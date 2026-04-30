@@ -45,6 +45,37 @@ class _KidsModeView extends StatelessWidget {
           if (state is KidsModeLoading) {
             return const Center(child: CircularProgressIndicator());
           }
+          if (state is KidsModeError) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.pagePadding),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.error_outline_rounded,
+                      color: isDark ? AppColors.primaryLight : AppColors.primary,
+                      size: 48,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      state.message,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    FilledButton.icon(
+                      onPressed: () => context.pop(),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      label: Text(context.isArabic ? 'العودة' : 'Go Back'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
           if (state is KidsModeLoaded) {
             return _KidsModeBody(state: state, isDark: isDark);
           }

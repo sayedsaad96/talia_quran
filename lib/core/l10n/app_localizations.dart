@@ -736,6 +736,132 @@ abstract class AppLocalizations {
     Object pages,
     Object streak,
   );
+
+  /// No description provided for @viewAll.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض الكل'**
+  String get viewAll;
+
+  /// No description provided for @reading.
+  ///
+  /// In ar, this message translates to:
+  /// **'القراءة'**
+  String get reading;
+
+  /// No description provided for @page.
+  ///
+  /// In ar, this message translates to:
+  /// **'صفحة'**
+  String get page;
+
+  /// No description provided for @pages.
+  ///
+  /// In ar, this message translates to:
+  /// **'صفحات'**
+  String get pages;
+
+  /// No description provided for @pagesRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'صفحة مقروءة'**
+  String get pagesRead;
+
+  /// No description provided for @readingProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدم القراءة'**
+  String get readingProgress;
+
+  /// No description provided for @memorizationProgressTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدم الحفظ'**
+  String get memorizationProgressTitle;
+
+  /// No description provided for @smartMemorization.
+  ///
+  /// In ar, this message translates to:
+  /// **'نظام الحفظ الذكي'**
+  String get smartMemorization;
+
+  /// No description provided for @smartMemorizationSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'جدول تكيّفي • مراجعة ذكية • تقييم ذاتي'**
+  String get smartMemorizationSubtitle;
+
+  /// No description provided for @recitationAccuracy.
+  ///
+  /// In ar, this message translates to:
+  /// **'دقة التسميع'**
+  String get recitationAccuracy;
+
+  /// No description provided for @notifications.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإشعارات'**
+  String get notifications;
+
+  /// No description provided for @about.
+  ///
+  /// In ar, this message translates to:
+  /// **'حول التطبيق'**
+  String get about;
+
+  /// No description provided for @systemDefault.
+  ///
+  /// In ar, this message translates to:
+  /// **'حسب النظام'**
+  String get systemDefault;
+
+  /// No description provided for @changeMemorizationPath.
+  ///
+  /// In ar, this message translates to:
+  /// **'تغيير مسار الحفظ'**
+  String get changeMemorizationPath;
+
+  /// No description provided for @adultPath.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسار الكبار'**
+  String get adultPath;
+
+  /// No description provided for @adultPathDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'البدء من الفاتحة والبقرة تصاعدياً'**
+  String get adultPathDesc;
+
+  /// No description provided for @beginnerPath.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسار المبتدئين والأطفال'**
+  String get beginnerPath;
+
+  /// No description provided for @beginnerPathDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'البدء من جزء عم (سورة الناس) تنازلياً'**
+  String get beginnerPathDesc;
+
+  /// No description provided for @chooseMemorizationPath.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر مسار الحفظ المناسب لك'**
+  String get chooseMemorizationPath;
+
+  /// No description provided for @audioPlayError.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تشغيل الصوت. تحقق من الاتصال بالإنترنت.'**
+  String get audioPlayError;
+
+  /// No description provided for @micPermissionError.
+  ///
+  /// In ar, this message translates to:
+  /// **'يحتاج التطبيق إذن الميكروفون للتسميع الصوتي. يرجى السماح من إعدادات الجهاز.'**
+  String get micPermissionError;
 }
 
 class _AppLocalizationsDelegate

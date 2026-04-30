@@ -168,7 +168,7 @@ class _QuranViewState extends State<_QuranView>
             tabs: [
               Tab(text: context.l10n.surahs),
               Tab(text: context.l10n.juz),
-              Tab(text: context.isArabic ? 'المرجعيات' : 'Bookmarks'),
+              Tab(text: context.l10n.bookmark),
             ],
           ),
         ),

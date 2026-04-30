@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
@@ -49,7 +51,21 @@ class TaliaNotificationService {
   Future<void> initialize() async {
     if (_initialized) return;
 
+    if (!Platform.isAndroid && !Platform.isIOS) {
+      _initialized = true;
+      return;
+    }
+
     tz_data.initializeTimeZones();
+
+    // CODE-3 FIX: Detect and set the device's actual local timezone so that
+    // scheduled notifications fire at the correct local time, not UTC.
+    try {
+      final String localTimezone = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(localTimezone));
+    } catch (_) {
+      // Fallback: leave as UTC if detection fails (better than crashing).
+    }
 
     const androidSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -86,6 +102,7 @@ class TaliaNotificationService {
     int minute = 0,
     int pendingReviewCount = 0,
   }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _dailyReviewId);
 
     final body = pendingReviewCount > 0
@@ -110,6 +127,7 @@ class TaliaNotificationService {
   Future<void> scheduleStreakProtectionAlert({
     required int currentStreak,
   }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
     if (currentStreak <= 0) return;
 
     await _plugin.cancel(id: _streakAlertId);
@@ -127,6 +145,7 @@ class TaliaNotificationService {
 
   /// Cancel the streak alert (called when the user opens the app).
   Future<void> cancelStreakAlert() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _streakAlertId);
   }
 
@@ -134,6 +153,7 @@ class TaliaNotificationService {
 
   /// Schedules a daily morning ayah reminder at 7:00 AM.
   Future<void> scheduleDailyAyahReminder() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _dailyAyahId);
 
     await _plugin.zonedSchedule(
@@ -151,6 +171,7 @@ class TaliaNotificationService {
 
   /// Cancel all scheduled notifications.
   Future<void> cancelAll() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancelAll();
   }
 

@@ -9,8 +9,11 @@ import '../constants/app_spacing.dart';
 import '../theme/app_typography.dart';
 
 class AppShell extends StatelessWidget {
-  const AppShell({super.key, required this.child});
-  final Widget child;
+  // UX-4 FIX: AppShell now accepts StatefulNavigationShell instead of a plain
+  // child Widget. This lets each branch manage its own Navigator independently,
+  // preserving tab state (scroll position, loaded data) across tab switches.
+  const AppShell({super.key, required this.navigationShell});
+  final StatefulNavigationShell navigationShell;
 
   static const _tabs = [
     _TabItem(icon: Icons.home_rounded, route: AppRoutes.home),
@@ -20,28 +23,27 @@ class AppShell extends StatelessWidget {
     _TabItem(icon: Icons.bar_chart_rounded, route: AppRoutes.progress),
   ];
 
-  int _currentIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.path;
-    if (location.startsWith(AppRoutes.progress)) return 4;
-    if (location.startsWith(AppRoutes.azkar)) return 3;
-    if (location.startsWith(AppRoutes.hifz)) return 2;
-    if (location.startsWith(AppRoutes.quran)) return 1;
-    return 0;
+  void _onTap(int index) {
+    // goBranch with initialLocation: true re-triggers the branch's initial
+    // route if the user taps the already-selected tab (scroll-to-top UX).
+    navigationShell.goBranch(
+      index,
+      initialLocation: index == navigationShell.currentIndex,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentIndex = _currentIndex(context);
     final isDark = context.isDark;
 
     return Scaffold(
-      body: child,
+      body: navigationShell,
       extendBody: true,
       bottomNavigationBar: _TaliaBottomNav(
-        currentIndex: currentIndex,
+        currentIndex: navigationShell.currentIndex,
         isDark: isDark,
         tabs: _tabs,
-        onTap: (i) => context.go(_tabs[i].route),
+        onTap: _onTap,
       ),
     );
   }
@@ -81,8 +83,8 @@ class _TaliaBottomNav extends StatelessWidget {
         boxShadow: [
           BoxShadow(
             color: isDark
-                ? Colors.black.withValues(alpha:0.3)
-                : AppColors.primary.withValues(alpha:0.06),
+                ? Colors.black.withValues(alpha: 0.3)
+                : AppColors.primary.withValues(alpha: 0.06),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -152,7 +154,7 @@ class _NavItem extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? primary.withValues(alpha:0.1)
+                          ? primary.withValues(alpha: 0.1)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(
                         AppSpacing.radiusFull,
@@ -178,8 +180,6 @@ class _NavItem extends StatelessWidget {
     );
   }
 }
-
-
 
 class _TabItem {
   const _TabItem({required this.icon, required this.route});

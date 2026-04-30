@@ -4,7 +4,6 @@ import '../../../../core/services/notification_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -12,7 +11,7 @@ import '../../../../core/l10n/locale_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_cubit.dart';
-import '../../data/profile_cubit.dart';
+import '../cubits/profile_cubit.dart';
 import '../../data/user_profile.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -54,17 +53,17 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _SettingsSection(
-                  title: context.isArabic ? 'دقة التسميع' : 'Recitation Accuracy',
+                  title: context.l10n.recitationAccuracy,
                   children: [_AccuracySettingTile(isDark: isDark)],
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _SettingsSection(
-                  title: context.isArabic ? 'الإشعارات' : 'Notifications',
+                  title: context.l10n.notifications,
                   children: [_NotificationSettingTile(isDark: isDark)],
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _SettingsSection(
-                  title: context.isArabic ? 'حول التطبيق' : 'About',
+                  title: context.l10n.about,
                   children: [_AboutTile(isDark: isDark)],
                 ),
               ]),
@@ -192,7 +191,7 @@ class _ThemeSettingTile extends StatelessWidget {
               indent: 56,
             ),
             _ThemeOption(
-              label: context.isArabic ? 'حسب النظام' : 'System Default',
+              label: context.l10n.systemDefault,
               icon: Icons.brightness_auto_rounded,
               isSelected: themeMode == ThemeMode.system,
               color: primary,
@@ -244,7 +243,7 @@ class _ThemeOption extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: color.withValues(alpha:0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
               child: Icon(icon, color: color, size: 18),
@@ -499,8 +498,10 @@ class _ProfileSettingTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<ProfileCubit, ProfileState>(
       builder: (context, state) {
-        final profile = (state is ProfileLoaded) ? state.profile : const UserProfile();
-        
+        final profile = (state is ProfileLoaded)
+            ? state.profile
+            : const UserProfile();
+
         return InkWell(
           onTap: () => _showEditProfileDialog(context, profile, isDark),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -515,7 +516,8 @@ class _ProfileSettingTile extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: (isDark ? AppColors.primaryLight : AppColors.primary).withValues(alpha: 0.1),
+                    color: (isDark ? AppColors.primaryLight : AppColors.primary)
+                        .withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -530,24 +532,34 @@ class _ProfileSettingTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        profile.hasName ? profile.displayName : context.l10n.name,
+                        profile.hasName
+                            ? profile.displayName
+                            : context.l10n.name,
                         style: AppTypography.bodyMedium.copyWith(
-                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
-                          fontWeight: profile.hasName ? FontWeight.w600 : FontWeight.w400,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                          fontWeight: profile.hasName
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                         ),
                       ),
                       if (profile.age != null)
                         Text(
                           '${context.l10n.age}: ${profile.age}',
                           style: AppTypography.labelSmall.copyWith(
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
                           ),
                         )
-                      else 
+                      else
                         Text(
                           context.l10n.editProfile,
                           style: AppTypography.labelSmall.copyWith(
-                            color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+                            color: isDark
+                                ? AppColors.darkTextHint
+                                : AppColors.lightTextHint,
                           ),
                         ),
                     ],
@@ -566,60 +578,85 @@ class _ProfileSettingTile extends StatelessWidget {
     );
   }
 
-  void _showEditProfileDialog(BuildContext context, UserProfile profile, bool isDark) {
+  void _showEditProfileDialog(
+    BuildContext context,
+    UserProfile profile,
+    bool isDark,
+  ) {
     final nameController = TextEditingController(text: profile.name);
-    final ageController = TextEditingController(text: profile.age?.toString() ?? '');
-    
+    final ageController = TextEditingController(
+      text: profile.age?.toString() ?? '',
+    );
+
     showDialog(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          ),
           title: Text(
             context.l10n.editProfile,
             style: AppTypography.titleLarge.copyWith(
-              color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
             ),
           ),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-              TextField(
-                controller: nameController,
-                style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                decoration: InputDecoration(
-                  labelText: context.l10n.name,
-                  hintText: context.l10n.enterName,
+                TextField(
+                  controller: nameController,
+                  style: TextStyle(
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.name,
+                    hintText: context.l10n.enterName,
+                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: ageController,
-                keyboardType: TextInputType.number,
-                style: TextStyle(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                decoration: InputDecoration(
-                  labelText: context.l10n.age,
-                  hintText: context.l10n.enterAge,
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: ageController,
+                  keyboardType: TextInputType.number,
+                  style: TextStyle(
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.age,
+                    hintText: context.l10n.enterAge,
+                  ),
                 ),
-              ),
-            ],
-          ),
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(
                 context.l10n.cancel,
-                style: TextStyle(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                style: TextStyle(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
               ),
             ),
             FilledButton(
               onPressed: () {
                 final name = nameController.text.trim();
                 final age = int.tryParse(ageController.text.trim());
-                context.read<ProfileCubit>().updateProfile(name: name, age: age);
+                context.read<ProfileCubit>().updateProfile(
+                  name: name,
+                  age: age,
+                );
                 Navigator.of(dialogContext).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text(context.l10n.profileUpdated)),
@@ -680,20 +717,23 @@ class _AccuracySettingTileState extends State<_AccuracySettingTile> {
         context.isArabic ? 'مستوى الدقة' : 'Accuracy Level',
         style: AppTypography.bodyMedium.copyWith(color: textColor),
       ),
-      trailing: SegmentedButton<int>(
-        segments: [
+      trailing: DropdownButton<int>(
+        value: _selected,
+        items: [
           for (int i = 0; i < 3; i++)
-            ButtonSegment(value: i, label: Text(labels[i], style: const TextStyle(fontSize: 11))),
+            DropdownMenuItem(
+              value: i,
+              child: Text(labels[i], style: const TextStyle(fontSize: 12)),
+            ),
         ],
-        selected: {_selected},
-        onSelectionChanged: (val) {
-          setState(() => _selected = val.first);
-          getIt<SharedPreferences>().setDouble(_key, _levels[_selected]);
+        onChanged: (val) {
+          if (val != null) {
+            setState(() => _selected = val);
+            getIt<SharedPreferences>().setDouble(_key, _levels[_selected]);
+          }
         },
-        style: ButtonStyle(
-          visualDensity: VisualDensity.compact,
-          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
+        underline: const SizedBox(),
+        icon: Icon(Icons.arrow_drop_down_rounded, color: primary),
       ),
     );
   }
@@ -735,8 +775,9 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
       await TaliaNotificationService.instance.cancelAll();
       // Re-schedule streak if still enabled
       if (_streakEnabled) {
-        await TaliaNotificationService.instance
-            .scheduleStreakProtectionAlert(currentStreak: 1);
+        await TaliaNotificationService.instance.scheduleStreakProtectionAlert(
+          currentStreak: 1,
+        );
       }
     }
   }
@@ -745,8 +786,9 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     setState(() => _streakEnabled = value);
     await getIt<SharedPreferences>().setBool(_streakKey, value);
     if (value) {
-      await TaliaNotificationService.instance
-          .scheduleStreakProtectionAlert(currentStreak: 1);
+      await TaliaNotificationService.instance.scheduleStreakProtectionAlert(
+        currentStreak: 1,
+      );
     } else {
       await TaliaNotificationService.instance.cancelStreakAlert();
     }
@@ -767,11 +809,15 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         SwitchListTile(
           secondary: Icon(Icons.notifications_active_rounded, color: primary),
           title: Text(
-            context.isArabic ? 'تذكير المراجعة اليومية' : 'Daily Review Reminder',
+            context.isArabic
+                ? 'تذكير المراجعة اليومية'
+                : 'Daily Review Reminder',
             style: AppTypography.bodyMedium.copyWith(color: textColor),
           ),
           subtitle: Text(
-            context.isArabic ? 'كل يوم الساعة ٨:٠٠ مساءً' : 'Every day at 8:00 PM',
+            context.isArabic
+                ? 'كل يوم الساعة ٨:٠٠ مساءً'
+                : 'Every day at 8:00 PM',
             style: AppTypography.labelSmall.copyWith(color: subtextColor),
           ),
           value: _reviewEnabled,

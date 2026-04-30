@@ -280,7 +280,7 @@ class _HeroHeader extends StatelessWidget {
 
               const SizedBox(height: AppSpacing.xl),
 
-              // ─── Streak pill & Achievement Badges ───────────────────────
+              // ─── Achievement Badges ──────────────────────────────────
               Builder(builder: (context) {
                 final readingAchievements = state.progress.achievements.where(
                     (a) => a.isUnlocked && a.category == AchievementCategory.reading);
@@ -290,88 +290,31 @@ class _HeroHeader extends StatelessWidget {
                 final highestReading = readingAchievements.isNotEmpty ? readingAchievements.last : null;
                 final highestMem = memAchievements.isNotEmpty ? memAchievements.last : null;
 
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.end,
+                return Wrap(
+                  spacing: AppSpacing.sm,
+                  runSpacing: AppSpacing.sm,
                   children: [
-                    // Right side (RTL): Streak Pill
-                    _StreakPill(
-                      days: state.progress.streakDays,
-                      isDark: isDark,
-                    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.04),
-                    
-                    // Left side (RTL): Achievement Badges
-                    Expanded(
-                      child: Wrap(
-                        alignment: WrapAlignment.end,
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          if (highestReading != null)
-                            _AchievementBadge(
-                              achievement: highestReading,
-                              isDark: isDark,
-                            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
-                          if (highestMem != null)
-                            _AchievementBadge(
-                              achievement: highestMem,
-                              isDark: isDark,
-                            ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.04),
-                          if (highestReading == null && highestMem == null)
-                            const _AchievementBadge(
-                              achievement: null,
-                              isDark: false,
-                            ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
-                        ],
-                      ),
-                    ),
+                    if (highestReading != null)
+                      _AchievementBadge(
+                        achievement: highestReading,
+                        isDark: isDark,
+                      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
+                    if (highestMem != null)
+                      _AchievementBadge(
+                        achievement: highestMem,
+                        isDark: isDark,
+                      ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.04),
+                    if (highestReading == null && highestMem == null)
+                      const _AchievementBadge(
+                        achievement: null,
+                        isDark: false,
+                      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
                   ],
                 );
               }),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _StreakPill extends StatelessWidget {
-  const _StreakPill({required this.days, required this.isDark});
-  final int days;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(
-            Icons.local_fire_department_rounded,
-            color: Color(0xFFFF8C42),
-            size: 20,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            '$days ${context.l10n.days}',
-            style: AppTypography.titleMedium.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            context.l10n.streak,
-            style: AppTypography.bodySmall.copyWith(color: Colors.white60),
-          ),
-        ],
       ),
     );
   }

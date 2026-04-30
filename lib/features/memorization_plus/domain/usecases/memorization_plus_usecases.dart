@@ -137,8 +137,6 @@ class AwardKidsPointsUsecase
       );
 }
 
-// ─── GetCachedDailyPlanUsecase ────────────────────────────────────────────────
-
 class GetCachedDailyPlanUsecase implements UseCaseNoParams<DailyPlan?> {
   const GetCachedDailyPlanUsecase(this._repository);
   final MemorizationPlusRepository _repository;
@@ -146,4 +144,26 @@ class GetCachedDailyPlanUsecase implements UseCaseNoParams<DailyPlan?> {
   @override
   Future<Either<Failure, DailyPlan?>> call() =>
       _repository.getCachedDailyPlan();
+}
+
+// ─── GetCustomPlanUsecase ─────────────────────────────────────────────────────
+
+class GetCustomPlanUsecase implements UseCaseNoParams<CustomMemorizationPlan?> {
+  const GetCustomPlanUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, CustomMemorizationPlan?>> call() =>
+      _repository.getCustomPlan();
+}
+
+// ─── SaveDailyPlanUsecase ─────────────────────────────────────────────────────
+
+class SaveDailyPlanUsecase implements UseCase<void, DailyPlan> {
+  const SaveDailyPlanUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, void>> call(DailyPlan plan) =>
+      _repository.saveDailyPlan(plan);
 }

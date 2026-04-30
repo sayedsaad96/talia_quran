@@ -358,6 +358,7 @@
   "general": [
     {
       "id": "g1",
+      "subcategory": "أذكار منوعة",
       "text": "سُبْحَانَ اللَّهِ، وَالْحَمْدُ لِلَّهِ، وَلَا إِلَهَ إِلَّا اللَّهُ، وَاللَّهُ أَكْبَرُ.",
       "transliteration": "Subhanallah, walhamdulillah, wa la ilaha illallah, wallahu akbar.",
       "translation": "Glory is to Allah, praise is to Allah, none has the right to be worshipped but Allah, and Allah is the Most Great.",
@@ -366,6 +367,7 @@
     },
     {
       "id": "g2",
+      "subcategory": "أذكار منوعة",
       "text": "لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ.",
       "transliteration": "La hawla wa la quwwata illa billah.",
       "translation": "There is no might and no power except with Allah.",
@@ -374,6 +376,7 @@
     },
     {
       "id": "g3",
+      "subcategory": "أذكار منوعة",
       "text": "سُبْحَانَ اللَّهِ وَبِحَمْدِهِ، سُبْحَانَ اللَّهِ الْعَظِيمِ.",
       "transliteration": "Subhanallahi wa bihamdih, Subhanallahil-Azim.",
       "translation": "Glory is to Allah and praise is to Him, Glory is to Allah the Great.",
@@ -382,6 +385,7 @@
     },
     {
       "id": "g4",
+      "subcategory": "أذكار منوعة",
       "text": "اللَّهُمَّ صَلِّ وَسَلِّمْ وَبَارِكْ عَلَى نَبِيِّنَا مُحَمَّدٍ.",
       "transliteration": "Allahumma salli wa sallim wa barik 'ala nabiyyina Muhammad.",
       "translation": "O Allah, send blessings and peace upon our Prophet Muhammad.",
@@ -390,6 +394,7 @@
     },
     {
       "id": "g5",
+      "subcategory": "أذكار منوعة",
       "text": "لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.",
       "transliteration": "La ilaha illallah wahdahu la sharika lah, lahul mulku wa lahul hamd...",
       "translation": "None has the right to be worshipped but Allah alone, Who has no partner...",
@@ -398,11 +403,93 @@
     },
     {
       "id": "g6",
+      "subcategory": "أذكار منوعة",
       "text": "أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ الَّذِي لَا إِلَهَ إِلَّا هُوَ الْحَيَّ الْقَيُّومَ وَأَتُوبُ إِلَيْهِ.",
       "transliteration": "Astaghfirullahal-Azimal-ladhi la ilaha illa Huwal-Hayyul-Qayyum...",
       "translation": "I ask forgiveness of Allah the Almighty, besides Whom there is no God, the Ever-Living...",
       "count": 3,
       "reference": "سنن الترمذي"
+    },
+    {
+      "id": "q1",
+      "subcategory": "أدعية قرآنية",
+      "text": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.",
+      "transliteration": "Rabbana atina fid-dunya hasanatan wa fil-akhirati hasanatan wa qina 'adhaban-nar.",
+      "translation": "Our Lord, give us in this world [that which is] good and in the Hereafter [that which is] good and protect us from the punishment of the Fire.",
+      "count": 1,
+      "reference": "سورة البقرة - 201"
+    },
+    {
+      "id": "q2",
+      "subcategory": "أدعية قرآنية",
+      "text": "رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً ۚ إِنَّكَ أَنتَ الْوَهَّابُ.",
+      "transliteration": "Rabbana la tuzigh qulubana ba'da idh hadaytana wa hab lana min ladunka rahmatan, innaka antal-Wahhab.",
+      "translation": "Our Lord, let not our hearts deviate after You have guided us and grant us from Yourself mercy. Indeed, You are the Bestower.",
+      "count": 1,
+      "reference": "سورة آل عمران - 8"
+    },
+    {
+      "id": "q3",
+      "subcategory": "أدعية قرآنية",
+      "text": "رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي ۚ رَبَّنَا وَتَقَبَّلْ دُعَاءِ.",
+      "transliteration": "Rabbij-'alni muqimas-salati wa min dhurriyyati, Rabbana wa taqabbal du'a.",
+      "translation": "My Lord, make me an establisher of prayer, and [many] from my descendants. Our Lord, and accept my supplication.",
+      "count": 1,
+      "reference": "سورة إبراهيم - 40"
+    },
+    {
+      "id": "q4",
+      "subcategory": "أدعية قرآنية",
+      "text": "رَبِّ اشْرَحْ لِي صَدْرِي ۞ وَيَسِّرْ لِي أَمْرِي ۞ وَاحْلُلْ عُقْدَةً مِّن لِّسَانِي ۞ يَفْقَهُوا قَوْلِي.",
+      "transliteration": "Rabbish-rah li sadri, wa yassir li amri, wahlul 'uqdatan min lisani, yafqahu qawli.",
+      "translation": "My Lord, expand for me my breast [with assurance] and ease for me my task and untie the knot from my tongue that they may understand my speech.",
+      "count": 1,
+      "reference": "سورة طه - 25:28"
+    },
+    {
+      "id": "p1",
+      "subcategory": "أدعية نبوية",
+      "text": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى.",
+      "transliteration": "Allahumma inni as'alukal-huda wat-tuqa wal-'afafa wal-ghina.",
+      "translation": "O Allah, I ask You for guidance, piety, chastity, and self-sufficiency.",
+      "count": 1,
+      "reference": "صحيح مسلم"
+    },
+    {
+      "id": "p2",
+      "subcategory": "أدعية نبوية",
+      "text": "يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ.",
+      "transliteration": "Ya Muqallibal-qulubi thabbit qalbi 'ala dinik.",
+      "translation": "O Turner of the hearts, keep my heart firm upon Your religion.",
+      "count": 1,
+      "reference": "سنن الترمذي"
+    },
+    {
+      "id": "p3",
+      "subcategory": "أدعية نبوية",
+      "text": "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ.",
+      "transliteration": "Allahumma a'inni 'ala dhikrika wa shukrika wa husni 'ibadatik.",
+      "translation": "O Allah, help me to remember You, to give You thanks, and to perform Your worship in the best manner.",
+      "count": 1,
+      "reference": "سنن أبي داود"
+    },
+    {
+      "id": "s1",
+      "subcategory": "أذكار بعد الصلاة",
+      "text": "أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ. اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ.",
+      "transliteration": "Astaghfirullah (x3). Allahumma antas-salamu wa minkas-salam, tabarakta ya dhal-jalali wal-ikram.",
+      "translation": "I ask Allah for forgiveness (three times). O Allah, You are Peace and from You comes peace. Blessed are You, O Owner of majesty and honor.",
+      "count": 1,
+      "reference": "صحيح مسلم"
+    },
+    {
+      "id": "s2",
+      "subcategory": "أذكار بعد الصلاة",
+      "text": "سُبْحَانَ اللَّهِ (33)، وَالْحَمْدُ لِلَّهِ (33)، وَاللَّهُ أَكْبَرُ (33)، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ، وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ.",
+      "transliteration": "Subhanallah (33), Alhamdulillah (33), Allahu Akbar (33), La ilaha illallahu wahdahu la sharika lah...",
+      "translation": "Glory is to Allah (33 times), praise is to Allah (33 times), Allah is the Most Great (33 times). None has the right to be worshipped but Allah alone...",
+      "count": 1,
+      "reference": "صحيح مسلم"
     }
   ]
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -168,16 +169,24 @@ class _QuranPageViewerState extends State<_QuranPageViewer> {
   }
 }
 
-class _ContinuousPageText extends StatelessWidget {
+class _ContinuousPageText extends StatefulWidget {
   const _ContinuousPageText({required this.detail});
   final QuranPageDetail detail;
+
+  @override
+  State<_ContinuousPageText> createState() => _ContinuousPageTextState();
+}
+
+class _ContinuousPageTextState extends State<_ContinuousPageText> {
+  Timer? _tapTimer;
+
 
   void _showAyahOptions(BuildContext context, Ayah ayah) {
     HapticFeedback.lightImpact();
     // Get the real surah name from the detail's surahs list
-    final surah = detail.surahs.firstWhere(
+    final surah = widget.detail.surahs.firstWhere(
       (s) => s.id == ayah.surahId,
-      orElse: () => detail.surahs.first,
+      orElse: () => widget.detail.surahs.first,
     );
     showModalBottomSheet(
       context: context,
@@ -193,121 +202,258 @@ class _ContinuousPageText extends StatelessWidget {
     return chars.map((c) => arabicDigits[int.parse(c)]).join();
   }
 
+  void _handleAyahTap(BuildContext context, Ayah ayah) {
+    if (_tapTimer?.isActive ?? false) {
+      // Double tap detected
+      _tapTimer?.cancel();
+      HapticFeedback.mediumImpact();
+      
+      final surah = widget.detail.surahs.firstWhere(
+        (s) => s.id == ayah.surahId,
+        orElse: () => widget.detail.surahs.first,
+      );
+      
+      getIt<BookmarkService>().toggle(
+        BookmarkEntry(
+          surahId: ayah.surahId,
+          surahName: surah.nameAr,
+          ayahNumber: ayah.numberInSurah,
+          ayahText: ayah.text,
+          savedAt: DateTime.now(),
+        ),
+      );
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.isArabic ? 'تم حفظ العلامة المرجعية' : 'Bookmark saved')),
+      );
+    } else {
+      // Single tap, wait to see if it becomes a double tap
+      _tapTimer = Timer(const Duration(milliseconds: 250), () {
+        if (mounted) {
+          _showAyahOptions(context, ayah);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _tapTimer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final detail = widget.detail;
     final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    
+    // Mushaf specific colors
+    final mushafGold = isDark ? const Color(0xFFC8A55B) : const Color(0xFFB08930);
+    final mushafBg = isDark ? const Color(0xFF000000) : const Color(0xFFFDFBF7);
+    final textColor = isDark ? const Color(0xFFF4F4F4) : const Color(0xFF222222);
+
     final textStyle = AppTypography.bodyLarge.copyWith(
       fontFamily: 'Amiri',
-      fontSize: 26,
-      height: 1.8,
-      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+      fontSize: 24, // Slightly larger base size
+      height: 1.85, 
+      color: textColor,
     );
 
-    final spans = <InlineSpan>[];
-    for (int i = 0; i < detail.ayahs.length; i++) {
-        final ayah = detail.ayahs[i];
-        
-        // Show Bismillah if it's the first ayah of ANY Surah (except Tawbah - Surah 9)
-        // Wait, for Fatihah (Surah 1) Bismillah is the first Ayah. For others it's not counted but printed.
-        // If numberInSurah is 1 and it's not Surah 1 or 9, we usually print Bismillah before it.
-        // I will add Surah Header if numberInSurah == 1
-        if (ayah.numberInSurah == 1) {
-            final surah = detail.surahs.firstWhere((s) => s.id == ayah.surahId);
-            spans.add(
-                WidgetSpan(
-                    child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 16),
-                        padding: const EdgeInsets.all(8),
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                            border: Border.all(color: primary.withValues(alpha: 0.3)),
-                            borderRadius: BorderRadius.circular(8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return Container(
+          color: mushafBg,
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Column(
+            children: [
+              // Page Header (Juz, Surah, Grid Icon)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/');
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(4),
+                          margin: const EdgeInsets.only(left: 8),
+                          decoration: BoxDecoration(
+                            color: mushafGold.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.close_rounded, color: mushafGold, size: 16),
                         ),
-                        child: Center(
-                            child: Text(
-                                "\u0633\u0648\u0631\u0629 ${surah.nameAr}",
-                                style: AppTypography.surahTitle.copyWith(color: primary, fontSize: 24),
-                            ),
-                        ),
-                    ),
-                ),
-            );
-            if (ayah.surahId != 1 && ayah.surahId != 9) {
-                spans.add(
-                    WidgetSpan(
-                        child: Center(
-                            child: Padding(
-                                padding: const EdgeInsets.only(bottom: 16),
-                                child: Text(
-                                    "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ",
-                                    style: textStyle.copyWith(fontSize: 20),
+                      ),
+                      Text(
+                        detail.surahs.firstWhere((s) => s.id == detail.ayahs.first.surahId).nameAr,
+                        style: TextStyle(color: mushafGold, fontFamily: 'Amiri', fontSize: 16),
+                      ),
+                    ],
+                  ),
+                  Icon(Icons.grid_view_rounded, color: mushafGold, size: 20),
+                  Row(
+                    children: [
+                      Icon(Icons.bookmark_outline_rounded, color: mushafGold, size: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${context.l10n.juz} ${_toArabicNumber(detail.ayahs.first.juz ?? detail.surahs.firstWhere((s) => s.id == detail.ayahs.first.surahId).juz)}',
+                        style: TextStyle(color: mushafGold, fontFamily: 'Amiri', fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              
+              // Divider under header
+              Padding(
+                padding: const EdgeInsets.only(top: 8, bottom: 12),
+                child: Divider(color: mushafGold.withValues(alpha: 0.3), height: 1, thickness: 1),
+              ),
+              
+              // The actual page content
+              Expanded(
+                child: LayoutBuilder(
+                  builder: (context, boxConstraints) {
+                    final contentWidth = boxConstraints.maxWidth; 
+                    
+                    final spans = <InlineSpan>[];
+                    for (int i = 0; i < detail.ayahs.length; i++) {
+                      final ayah = detail.ayahs[i];
+                      
+                      if (ayah.numberInSurah == 1) {
+                        final surah = detail.surahs.firstWhere((s) => s.id == ayah.surahId);
+                        spans.add(
+                          WidgetSpan(
+                            alignment: PlaceholderAlignment.middle,
+                            child: SizedBox(
+                              width: contentWidth,
+                              child: Container(
+                                margin: const EdgeInsets.symmetric(vertical: 16),
+                                padding: const EdgeInsets.symmetric(vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: Colors.transparent,
+                                  border: Border.all(color: mushafGold, width: 1.5),
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(color: mushafGold.withValues(alpha: 0.5), width: 0.5),
+                                  ),
+                                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                                  child: Center(
+                                    child: Text(
+                                      "\u0633\u0648\u0631\u0629 ${surah.nameAr}",
+                                      style: TextStyle(color: mushafGold, fontFamily: 'Amiri', fontSize: 24, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
+                          ),
+                        );
+                        if (ayah.surahId != 1 && ayah.surahId != 9) {
+                          spans.add(
+                            WidgetSpan(
+                              alignment: PlaceholderAlignment.middle,
+                              child: SizedBox(
+                                width: contentWidth,
+                                child: Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 16),
+                                    child: Text(
+                                      "بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ",
+                                      style: textStyle.copyWith(fontSize: 22, color: textColor),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }
+                      }
+
+                      // Clean up ayah text (remove prepended Bismillah if it exists, since we already display it centered)
+                      String ayahText = ayah.text;
+                      if (ayah.numberInSurah == 1 && ayah.surahId != 1 && ayah.surahId != 9) {
+                        final normalized = ayahText
+                            .replaceAll(RegExp(r'\p{M}', unicode: true), '')
+                            .replaceAll('ٱ', 'ا');
+                        if (normalized.startsWith('بسم الله الرحمن الرحيم')) {
+                          final parts = ayahText.split(' ');
+                          if (parts.length >= 4) {
+                            ayahText = parts.sublist(4).join(' ');
+                          }
+                        }
+                      }
+
+                      spans.add(
+                        TextSpan(
+                          text: ayahText,
+                          style: textStyle,
+                          recognizer: TapGestureRecognizer()..onTap = () => _handleAyahTap(context, ayah),
                         ),
-                    ),
-                );
-            }
-        }
+                      );
+                      spans.add(
+                        TextSpan(
+                          text: ' ﴿${_toArabicNumber(ayah.numberInSurah)}﴾ ',
+                          style: textStyle.copyWith(
+                            color: mushafGold,
+                            fontSize: textStyle.fontSize! * 0.85,
+                          ),
+                          recognizer: TapGestureRecognizer()..onTap = () => _handleAyahTap(context, ayah),
+                        ),
+                      );
+                    }
 
-        spans.add(
-            TextSpan(
-              text: ayah.text,
-              style: textStyle,
-              recognizer: TapGestureRecognizer()..onTap = () => _showAyahOptions(context, ayah),
-            ),
-        );
-        spans.add(
-            TextSpan(
-              text: ' ﴿${_toArabicNumber(ayah.numberInSurah)}﴾ ',
-              style: textStyle.copyWith(
-                color: primary,
-                fontSize: textStyle.fontSize! * 0.9,
-              ),
-              recognizer: TapGestureRecognizer()..onTap = () => _showAyahOptions(context, ayah),
-            ),
-        );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-      child: Column(
-        children: [
-            // Page Header (Juz, Surah)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                  Text(
-                    '${context.l10n.juz} ${detail.ayahs.first.juz}',
-                    style: AppTypography.labelLarge.copyWith(color: primary, fontFamily: 'Amiri'),
-                  ),
-                  Text(
-                    detail.surahs.firstWhere((s) => s.id == detail.ayahs.first.surahId).nameAr,
-                    style: AppTypography.labelLarge.copyWith(color: primary, fontFamily: 'Amiri'),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Text.rich(
-                    TextSpan(children: spans),
-                    textAlign: TextAlign.justify,
-                    textDirection: TextDirection.rtl,
-                  ),
+                    return FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.center,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                          maxWidth: contentWidth,
+                        ),
+                        child: Text.rich(
+                          TextSpan(children: spans),
+                          textAlign: TextAlign.justify,
+                          textDirection: TextDirection.rtl,
+                        ),
+                      ),
+                    );
+                  }
                 ),
               ),
-            ),
-            // Page Footer (Page Number)
-            const SizedBox(height: 8),
-            Text(
-              '${detail.pageNumber}',
-              style: AppTypography.labelMedium.copyWith(color: isDark ? Colors.white54 : Colors.black54),
-            ),
-        ],
-      ),
+              
+              // Page Footer (Page Number)
+              Padding(
+                padding: const EdgeInsets.only(top: 12.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: mushafGold.withValues(alpha: 0.1),
+                        border: Border.all(color: mushafGold, width: 1),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        _toArabicNumber(detail.pageNumber),
+                        style: TextStyle(color: mushafGold, fontSize: 14, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      }
     );
   }
 }

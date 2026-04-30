@@ -8,12 +8,14 @@ import '../../domain/repositories/progress_repository.dart';
 import '../datasources/progress_local_datasource.dart';
 
 import '../../../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
+import '../../../quran/data/datasources/quran_local_datasource.dart';
 
 class ProgressRepositoryImpl implements ProgressRepository {
-  ProgressRepositoryImpl(this._progressDs, this._hifzDs, this._memPlusDs);
+  ProgressRepositoryImpl(this._progressDs, this._hifzDs, this._memPlusDs, this._quranDs);
   final ProgressLocalDatasource _progressDs;
   final HifzLocalDatasource _hifzDs;
   final MemorizationPlusLocalDatasource _memPlusDs;
+  final QuranLocalDatasource _quranDs;
 
   @override
   Future<Either<Failure, OverallProgress>> getOverallProgress() async {
@@ -62,6 +64,23 @@ class ProgressRepositoryImpl implements ProgressRepository {
       for (final p in allProgress) {
         readSurahIds.add(p.surahId);
       }
+      
+      // Map read pages to surahs
+      final surahs = await _quranDs.getSurahs();
+      for (final page in readPages) {
+        dynamic currentSurah;
+        for (final surah in surahs) {
+          if (surah.page <= page) {
+            currentSurah = surah;
+          } else {
+            break;
+          }
+        }
+        if (currentSurah != null) {
+          readSurahIds.add(currentSurah.id);
+        }
+      }
+      
       final readSurahs = readSurahIds.length;
 
       // Read ayahs: any ayah in progress (any status) is considered read

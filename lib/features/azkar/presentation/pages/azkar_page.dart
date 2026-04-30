@@ -166,7 +166,7 @@ class _AzkarCategoryCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
               boxShadow: [
                 BoxShadow(
-                  color: gradientColors[0].withValues(alpha:0.3),
+                  color: gradientColors[0].withValues(alpha: 0.3),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -181,7 +181,7 @@ class _AzkarCategoryCard extends StatelessWidget {
                   child: Icon(
                     icon,
                     size: 100,
-                    color: Colors.white.withValues(alpha:0.08),
+                    color: Colors.white.withValues(alpha: 0.08),
                   ),
                 ),
                 Padding(
@@ -192,7 +192,7 @@ class _AzkarCategoryCard extends StatelessWidget {
                         width: 52,
                         height: 52,
                         decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha:0.15),
+                          color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(
                             AppSpacing.radiusMd,
                           ),
@@ -225,7 +225,7 @@ class _AzkarCategoryCard extends StatelessWidget {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha:0.15),
+                                color: Colors.white.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(
                                   AppSpacing.radiusFull,
                                 ),
@@ -258,27 +258,64 @@ class _AzkarCategoryCard extends StatelessWidget {
   }
 }
 
-class _DailyTip extends StatelessWidget {
+class _DailyTip extends StatefulWidget {
   const _DailyTip({required this.isDark});
   final bool isDark;
 
   @override
+  State<_DailyTip> createState() => _DailyTipState();
+}
+
+class _DailyTipState extends State<_DailyTip> {
+  static const List<String> _tips = [
+    'قُلْ هُوَ اللَّهُ أَحَدٌ — قراءة المعوذتين ثلاثًا تكفيك من كل شيء',
+    'من قرأ آية الكرسي دبر كل صلاة مكتوبة لم يمنعه من دخول الجنة إلا أن يموت',
+    'أحب الكلام إلى الله أربع: سبحان الله، والحمد لله، ولا إله إلا الله، والله أكبر',
+    'كلمتان خفيفتان على اللسان ثقيلتان في الميزان: سبحان الله وبحمده، سبحان الله العظيم',
+    'من قال: سبحان الله وبحمده في يوم مائة مرة حطت خطاياه وإن كانت مثل زبد البحر',
+    'الصدقة تطفئ الخطيئة كما يطفئ الماء النار',
+    'الدعاء هو العبادة',
+    'تبسمك في وجه أخيك لك صدقة',
+    'لا تحقرن من المعروف شيئاً، ولو أن تلقى أخاك بوجه طلق',
+    'من لزم الاستغفار جعل الله له من كل هم فرجا ومن كل ضيق مخرجا',
+    'اقرأوا القرآن فإنه يأتي يوم القيامة شفيعاً لأصحابه',
+    'خيركم من تعلم القرآن وعلمه',
+    'الطهور شطر الإيمان، والحمد لله تملأ الميزان',
+    'اتق الله حيثما كنت، وأتبع السيئة الحسنة تمحها',
+  ];
+
+  late String _currentTip;
+
+  @override
+  void initState() {
+    super.initState();
+    // Use the current day of the year as a seed so it changes daily
+    final now = DateTime.now();
+    final seed = now.year * 1000 + now.month * 100 + now.day;
+    // We cannot import dart:math easily without adding it to the top.
+    // Instead, we can do a simple hash or just use the seed directly since we just need an index.
+    final index = seed % _tips.length;
+    _currentTip = _tips[index];
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = widget.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: primary.withValues(alpha:0.06),
+        color: primary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: primary.withValues(alpha:0.15)),
+        border: Border.all(color: primary.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
-          Icon(Icons.lightbulb_rounded, color: AppColors.gold, size: 22),
+          const Icon(Icons.lightbulb_rounded, color: AppColors.gold, size: 22),
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              'قُلْ هُوَ اللَّهُ أَحَدٌ — قراءة المعوذتين ثلاثًا تكفيك من كل شيء',
+              _currentTip,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark
                     ? AppColors.darkTextSecondary
@@ -294,3 +331,4 @@ class _DailyTip extends StatelessWidget {
     ).animate().fadeIn(duration: 250.ms);
   }
 }
+

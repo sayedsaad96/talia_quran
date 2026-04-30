@@ -121,5 +121,27 @@
   "shareAchievementWithName": "🏆 Alhamdulillah, {name} achieved \"{title}\" 🌟\n📖 {description}\n\n📱 Achieved via the amazing \"Talia Quran\" app!\n✨ Don't miss out on the rewards, download the app now and join us on this blessed journey 💚",
   "shareProgress": "Share Progress",
   "shareProgressText": "📊 Alhamdulillah, here is my progress on the \"Talia Quran\" app 🌟:\n📖 {pages} pages read\n🧠 {ayahs} ayahs memorized\n🔥 {streak} days of consistent streak\n\n✨ Download \"Talia Quran\" now and start your blessed journey 💚",
-  "shareProgressWithName": "📊 Alhamdulillah, here is {name}'s progress on the \"Talia Quran\" app 🌟:\n📖 {pages} pages read\n🧠 {ayahs} ayahs memorized\n🔥 {streak} days of consistent streak\n\n✨ Download \"Talia Quran\" now and start your blessed journey 💚"
+  "shareProgressWithName": "📊 Alhamdulillah, here is {name}'s progress on the \"Talia Quran\" app 🌟:\n📖 {pages} pages read\n🧠 {ayahs} ayahs memorized\n🔥 {streak} days of consistent streak\n\n✨ Download \"Talia Quran\" now and start your blessed journey 💚",
+
+  "viewAll": "View All",
+  "reading": "Reading",
+  "page": "Page",
+  "pages": "Pages",
+  "pagesRead": "Pages Read",
+  "readingProgress": "Reading Progress",
+  "memorizationProgressTitle": "Memorization Progress",
+  "smartMemorization": "Smart Memorization",
+  "smartMemorizationSubtitle": "Adaptive plan • Smart review • Self-assess",
+  "recitationAccuracy": "Recitation Accuracy",
+  "notifications": "Notifications",
+  "about": "About",
+  "systemDefault": "System Default",
+  "changeMemorizationPath": "Change Memorization Path",
+  "adultPath": "Adult Path",
+  "adultPathDesc": "Start from Al-Fatihah and Al-Baqarah",
+  "beginnerPath": "Beginner Path",
+  "beginnerPathDesc": "Start from Juz Amma (An-Nas) backwards",
+  "chooseMemorizationPath": "Choose your memorization path",
+  "audioPlayError": "Failed to play audio. Check your connection.",
+  "micPermissionError": "The app needs microphone permission for voice recitation. Please allow it from device settings."
 }

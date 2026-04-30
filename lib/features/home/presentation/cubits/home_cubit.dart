@@ -4,10 +4,10 @@ import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../progress/domain/usecases/get_progress_usecase.dart';
 import '../../../hifz/domain/usecases/get_hifz_progress_usecase.dart';
 import '../../../hifz/domain/entities/hifz_entities.dart';
-import '../../../quran/domain/repositories/quran_repository.dart';
+import '../../../quran/domain/usecases/get_surahs_usecase.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
-import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 
 part 'home_state.dart';
 
@@ -15,14 +15,14 @@ class HomeCubit extends Cubit<HomeState> {
   HomeCubit(
     this._getProgress, 
     this._getHifzProgress, 
-    this._quranRepository,
-    this._memorizationPlusRepository,
+    this._getQuranPage,
+    this._getCustomPlan,
   ) : super(const HomeInitial());
 
   final GetProgressUsecase _getProgress;
   final GetHifzProgressUsecase _getHifzProgress;
-  final QuranRepository _quranRepository;
-  final MemorizationPlusRepository _memorizationPlusRepository;
+  final GetQuranPageUsecase _getQuranPage;
+  final GetCustomPlanUsecase _getCustomPlan;
 
   Future<void> load() async {
     emit(const HomeLoading());
@@ -33,7 +33,7 @@ class HomeCubit extends Cubit<HomeState> {
     final now = DateTime.now();
     final dayOfYear = now.difference(DateTime(now.year, 1, 1)).inDays;
     final pageNumber = (dayOfYear % 604) + 1;
-    final quranPageResult = await _quranRepository.getQuranPage(pageNumber);
+    final quranPageResult = await _getQuranPage(pageNumber);
     QuranPageDetail? dailyWirdDetail;
     quranPageResult.fold(
       (l) => null,
@@ -42,7 +42,7 @@ class HomeCubit extends Cubit<HomeState> {
     
     // Fetch custom plan
     CustomMemorizationPlan? customPlan;
-    final planResult = await _memorizationPlusRepository.getCustomPlan();
+    final planResult = await _getCustomPlan();
     planResult.fold(
       (l) => null,
       (plan) => customPlan = plan,
@@ -71,3 +71,4 @@ class HomeCubit extends Cubit<HomeState> {
     return 'night';
   }
 }
+

@@ -271,13 +271,19 @@ class _FullSurahSession extends StatelessWidget {
                       
                       // Next Button (Manual overrides if needed)
                       _ControlButton(
-                        icon: Icons.skip_next_rounded,
-                        label: context.isArabic ? 'تخطي' : 'Skip',
+                        icon: state.currentIndex == state.ayahs.length - 1 ? Icons.done_all_rounded : Icons.skip_next_rounded,
+                        label: state.currentIndex == state.ayahs.length - 1 
+                            ? (context.isArabic ? 'إنهاء' : 'Finish')
+                            : (context.isArabic ? 'تخطي' : 'Skip'),
                         color: Colors.grey,
                         isDark: isDark,
                         isActive: false,
                         onTap: () {
-                           context.read<HifzSessionCubit>().nextAyah();
+                          if (state.currentIndex == state.ayahs.length - 1) {
+                            Navigator.of(context).pop();
+                          } else {
+                            context.read<HifzSessionCubit>().nextAyah();
+                          }
                         },
                       ),
                     ],
@@ -307,9 +313,17 @@ class _FullSurahSession extends StatelessWidget {
                         
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () => context.read<HifzSessionCubit>().nextAyah(),
-                          icon: const Icon(Icons.arrow_forward_rounded),
-                          label: Text(context.isArabic ? 'الآية التالية' : 'Next Ayah'),
+                          onPressed: () {
+                            if (state.currentIndex == state.ayahs.length - 1) {
+                              Navigator.of(context).pop();
+                            } else {
+                              context.read<HifzSessionCubit>().nextAyah();
+                            }
+                          },
+                          icon: Icon(state.currentIndex == state.ayahs.length - 1 ? Icons.done_all_rounded : Icons.arrow_forward_rounded),
+                          label: Text(state.currentIndex == state.ayahs.length - 1 
+                              ? (context.isArabic ? 'إنهاء الجلسة' : 'Finish Session')
+                              : (context.isArabic ? 'الآية التالية' : 'Next Ayah')),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: ((state.similarityScore ?? 0) >= 0.85) ? Colors.green : primary,
                             foregroundColor: Colors.white,

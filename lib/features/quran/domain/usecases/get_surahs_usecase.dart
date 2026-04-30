@@ -29,3 +29,12 @@ class SearchSurahsUsecase implements UseCase<List<Surah>, String> {
   Future<Either<Failure, List<Surah>>> call(String query) =>
       _repository.searchSurahs(query);
 }
+
+class GetQuranPageUsecase implements UseCase<QuranPageDetail, int> {
+  const GetQuranPageUsecase(this._repository);
+  final QuranRepository _repository;
+
+  @override
+  Future<Either<Failure, QuranPageDetail>> call(int pageNumber) =>
+      _repository.getQuranPage(pageNumber);
+}

@@ -11,6 +11,7 @@ class Zikr extends Equatable {
     required this.totalCount,
     required this.category,
     this.reference = '',
+    this.subcategory = '',
   });
 
   final String id;
@@ -20,9 +21,10 @@ class Zikr extends Equatable {
   final int totalCount;
   final AzkarCategory category;
   final String reference;
+  final String subcategory;
 
   @override
-  List<Object?> get props => [id, text, totalCount, category];
+  List<Object?> get props => [id, text, totalCount, category, subcategory];
 }
 
 class ZikrSession extends Equatable {

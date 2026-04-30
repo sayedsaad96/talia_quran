@@ -54,6 +54,7 @@ dependencies:
   speech_to_text: ^7.3.0
   string_similarity: ^2.2.0
   timezone: ^0.11.0
+  flutter_timezone: ^3.0.0
 
 dev_dependencies:
   build_runner: ^2.4.13
@@ -74,9 +75,9 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/logo.png"
+  image_path: "assets/icon/icon.png"
   adaptive_icon_background: "#061811" # لون أخضر داكن جداً يطابق خلفية الشعار
-  adaptive_icon_foreground: "assets/images/logo.png"
+  adaptive_icon_foreground: "assets/icon/icon.png"
 
 flutter_native_splash:
   color: "#ffffff"
@@ -85,7 +86,7 @@ flutter_native_splash:
   ios_content_mode: scaleAspectFit
   android_gravity: center
   android_12:
-    image: "assets/images/splash.png"
+    image: "assets/images/splash_android12.png"
     icon_background_color: "#ffffff"
 
 # For information on the generic Dart part of this file, see the

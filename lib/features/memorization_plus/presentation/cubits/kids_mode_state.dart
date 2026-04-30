@@ -14,6 +14,13 @@ class KidsModeLoading extends KidsModeState {
   const KidsModeLoading();
 }
 
+class KidsModeError extends KidsModeState {
+  const KidsModeError(this.message);
+  final String message;
+  @override
+  List<Object?> get props => [message];
+}
+
 class KidsModeLoaded extends KidsModeState {
   const KidsModeLoaded({
     required this.surahId,

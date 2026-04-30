@@ -9,6 +9,7 @@ class ZikrModel extends Zikr {
     required super.totalCount,
     required super.category,
     super.reference,
+    super.subcategory,
   });
 
   factory ZikrModel.fromJson(
@@ -21,6 +22,7 @@ class ZikrModel extends Zikr {
       totalCount: json['count'] as int? ?? 1,
       category: category,
       reference: json['reference'] as String? ?? '',
+      subcategory: json['subcategory'] as String? ?? '',
     );
   }
 }

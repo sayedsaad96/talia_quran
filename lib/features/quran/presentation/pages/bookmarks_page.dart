@@ -18,59 +18,51 @@ class BookmarksTab extends StatefulWidget {
 }
 
 class _BookmarksTabState extends State<BookmarksTab> {
-  List<BookmarkEntry> _bookmarks = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadBookmarks();
-  }
-
-  void _loadBookmarks() {
-    setState(() {
-      _bookmarks = getIt<BookmarkService>().getAll();
-    });
-  }
-
   Future<void> _removeBookmark(BookmarkEntry entry) async {
     await getIt<BookmarkService>().toggle(entry);
-    _loadBookmarks();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
 
-    if (_bookmarks.isEmpty) {
-      return _EmptyBookmarks(isDark: isDark);
-    }
+    return ListenableBuilder(
+      listenable: getIt<BookmarkService>(),
+      builder: (context, _) {
+        final bookmarks = getIt<BookmarkService>().getAll();
 
-    // Group bookmarks by surah
-    final grouped = <int, List<BookmarkEntry>>{};
-    for (final b in _bookmarks) {
-      grouped.putIfAbsent(b.surahId, () => []).add(b);
-    }
+        if (bookmarks.isEmpty) {
+          return _EmptyBookmarks(isDark: isDark);
+        }
 
-    final surahIds = grouped.keys.toList()..sort();
+        // Group bookmarks by surah
+        final grouped = <int, List<BookmarkEntry>>{};
+        for (final b in bookmarks) {
+          grouped.putIfAbsent(b.surahId, () => []).add(b);
+        }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSpacing.pagePadding),
-      itemCount: surahIds.length,
-      itemBuilder: (context, index) {
-        final surahId = surahIds[index];
-        final entries = grouped[surahId]!;
-        return _SurahBookmarkGroup(
-          surahName: entries.first.surahName,
-          entries: entries,
-          isDark: isDark,
-          onTap: (entry) {
-            context.push('/quran/surah/${entry.surahId}');
+        final surahIds = grouped.keys.toList()..sort();
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(AppSpacing.pagePadding),
+          itemCount: surahIds.length,
+          itemBuilder: (context, index) {
+            final surahId = surahIds[index];
+            final entries = grouped[surahId]!;
+            return _SurahBookmarkGroup(
+              surahName: entries.first.surahName,
+              entries: entries,
+              isDark: isDark,
+              onTap: (entry) {
+                context.push('/quran/surah/${entry.surahId}');
+              },
+              onDismissed: _removeBookmark,
+            ).animate().fadeIn(
+                  duration: 200.ms,
+                  delay: Duration(milliseconds: index * 50),
+                );
           },
-          onDismissed: _removeBookmark,
-        ).animate().fadeIn(
-              duration: 200.ms,
-              delay: Duration(milliseconds: index * 50),
-            );
+        );
       },
     );
   }
@@ -106,8 +98,8 @@ class _EmptyBookmarks extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 48),
             child: Text(
               context.isArabic
-                  ? 'اضغط مطولاً على أي آية في القارئ لحفظها كعلامة مرجعية'
-                  : 'Long-press any ayah in the reader to save it as a bookmark',
+                  ? 'اضغط مرتين على أي آية في القارئ لحفظها كعلامة مرجعية'
+                  : 'Double-tap any ayah in the reader to save it as a bookmark',
               style: AppTypography.bodySmall.copyWith(color: textColor),
               textAlign: TextAlign.center,
             ),
