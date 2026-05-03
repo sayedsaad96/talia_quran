@@ -1,4 +1,7 @@
-# Miscellaneous
+# ─── Secrets — NEVER commit these ───────────────────────────────────────────
+.env
+
+# ─── Miscellaneous ───────────────────────────────────────────────────────────
 *.class
 *.log
 *.pyc

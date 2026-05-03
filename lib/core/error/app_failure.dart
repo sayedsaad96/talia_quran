@@ -6,6 +6,10 @@ abstract class Failure extends Equatable {
 
   @override
   List<Object> get props => [message];
+
+  /// SECURITY: Only expose the human-readable message, not class internals
+  @override
+  String toString() => message;
 }
 
 class CacheFailure extends Failure {

@@ -79,26 +79,51 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
   }
 
   Future<void> _toggleBookmark(Ayah ayah, String surahName) async {
-    await _bookmarkService.toggle(
-      BookmarkEntry(
-        surahId: ayah.surahId,
-        surahName: surahName,
-        ayahNumber: ayah.numberInSurah,
-        ayahText: ayah.text,
-        savedAt: DateTime.now(),
-      ),
-    );
-    _loadBookmarks();
-    if (mounted) {
-      final key = '${ayah.surahId}_${ayah.numberInSurah}';
-      final isNowBookmarked = _bookmarkedKeys.contains(key);
-      context.showSnackBar(
-        isNowBookmarked
-            ? (context.isArabic ? 'تم إضافة علامة مرجعية' : 'Bookmark added')
-            : (context.isArabic
-                  ? 'تم إزالة العلامة المرجعية'
-                  : 'Bookmark removed'),
+    try {
+      await _bookmarkService.toggle(
+        BookmarkEntry(
+          surahId: ayah.surahId,
+          surahName: surahName,
+          ayahNumber: ayah.numberInSurah,
+          ayahText: ayah.text,
+          savedAt: DateTime.now(),
+        ),
       );
+      _loadBookmarks();
+      if (mounted) {
+        final key = '${ayah.surahId}_${ayah.numberInSurah}';
+        final isNowBookmarked = _bookmarkedKeys.contains(key);
+        context.showSnackBar(
+          isNowBookmarked
+              ? (context.isArabic ? 'تم إضافة علامة مرجعية' : 'Bookmark added')
+              : (context.isArabic
+                    ? 'تم إزالة العلامة المرجعية'
+                    : 'Bookmark removed'),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('حدث خطأ أثناء حفظ العلامة المرجعية'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
+  }
+
+  /// Plays audio from either a URL or a local file path
+  Future<void> _playAudioSource(AudioPlayer player, String source) async {
+    try {
+      if (source.startsWith('http://') || source.startsWith('https://')) {
+        await player.setUrl(source);
+      } else {
+        await player.setFilePath(source);
+      }
+      await player.play();
+    } catch (e) {
+      debugPrint('Audio error: $e');
     }
   }
 
@@ -117,8 +142,7 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
         ayah.surahId,
         ayah.numberInSurah,
       );
-      await _player.setUrl(audioSource);
-      await _player.play();
+      await _playAudioSource(_player, audioSource);
       // Cancel previous subscription before creating a new one
       await _playerSubscription?.cancel();
       _playerSubscription = _player.playerStateStream.listen((state) {
@@ -520,6 +544,21 @@ class _ContinuousSurahText extends StatefulWidget {
 }
 
 class _ContinuousSurahTextState extends State<_ContinuousSurahText> {
+  final List<TapGestureRecognizer> _recognizers = [];
+
+  void _disposeRecognizers() {
+    for (final r in _recognizers) {
+      r.dispose();
+    }
+    _recognizers.clear();
+  }
+
+  @override
+  void dispose() {
+    _disposeRecognizers();
+    super.dispose();
+  }
+
   // Convert standard digits to Arabic numerals
   String _toArabicFixed(int number) {
     const arabicNumbers = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
@@ -533,6 +572,9 @@ class _ContinuousSurahTextState extends State<_ContinuousSurahText> {
 
   @override
   Widget build(BuildContext context) {
+    // Dispose old recognizers at the start of each build
+    _disposeRecognizers();
+
     final textColor = widget.isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
@@ -545,6 +587,10 @@ class _ContinuousSurahTextState extends State<_ContinuousSurahText> {
           children: widget.ayahs.map((ayah) {
             final isPlaying = widget.playingAyah == ayah.numberInSurah;
 
+            final recognizer = TapGestureRecognizer()
+              ..onTap = () => widget.onAyahTapped(ayah);
+            _recognizers.add(recognizer);
+
             return TextSpan(
               text: '${ayah.text} ﴿${_toArabicFixed(ayah.numberInSurah)}﴾ ',
               style: AppTypography.quranVerse.copyWith(
@@ -554,10 +600,7 @@ class _ContinuousSurahTextState extends State<_ContinuousSurahText> {
                     ? primary.withValues(alpha: 0.15)
                     : null,
               ),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () {
-                  widget.onAyahTapped(ayah);
-                },
+              recognizer: recognizer,
             );
           }).toList(),
         ),

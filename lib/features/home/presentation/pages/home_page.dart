@@ -2,18 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:isar/isar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/xp_constants.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/services/xp_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_cubit.dart';
+import '../../../../core/widgets/activity_heatmap.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
+import '../../../streak/presentation/cubits/streak_cubit.dart';
 import '../cubits/home_cubit.dart';
 
 class HomePage extends StatelessWidget {
@@ -21,8 +28,12 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<HomeCubit>()..load(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => getIt<HomeCubit>()..load()),
+        BlocProvider(create: (_) => getIt<StreakCubit>()..loadStreak()),
+        BlocProvider(create: (_) => getIt<AuthCubit>()),
+      ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, _) => const _HomeView(),
       ),
@@ -76,6 +87,23 @@ class _HomeContent extends StatelessWidget {
           child: _HeroHeader(state: state, isDark: isDark),
         ),
 
+        // ─── Streak & XP Row ─────────────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pagePadding,
+              AppSpacing.lg,
+              AppSpacing.pagePadding,
+              0,
+            ),
+            child: _StreakXpRow(isDark: isDark),
+          ),
+        ),
+
+        // ─── Sign-In Nudge Banner ───────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: _SignInNudgeBanner(isDark: isDark),
+        ),
 
         // ─── Daily Wird Card ─────────────────────────────────────────────────
         SliverToBoxAdapter(
@@ -164,6 +192,19 @@ class _HomeContent extends StatelessWidget {
               0,
             ),
             child: _MemorizationPlusCard(isDark: isDark),
+          ),
+        ),
+
+        // ─── Activity Heatmap ─────────────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pagePadding,
+              AppSpacing.sectionGap,
+              AppSpacing.pagePadding,
+              0,
+            ),
+            child: ActivityHeatmap(isar: getIt<Isar>()),
           ),
         ),
 
@@ -1025,5 +1066,358 @@ class _ActiveCustomPlanCard extends StatelessWidget {
         ),
       ),
     ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.03, end: 0);
+  }
+}
+
+// ─── Streak & XP Row ──────────────────────────────────────────────────────────
+
+class _StreakXpRow extends StatelessWidget {
+  const _StreakXpRow({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        // ─── Streak Card ─────────────────────────────────────────────
+        Expanded(
+          child: BlocBuilder<StreakCubit, StreakState>(
+            builder: (context, state) {
+              int currentStreak = 0;
+              int longestStreak = 0;
+              if (state is StreakLoaded) {
+                currentStreak = state.streak.currentStreak;
+                longestStreak = state.streak.longestStreak;
+              }
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkCard
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(
+                    color: currentStreak > 0
+                        ? const Color(0xFFF59E0B).withValues(alpha: 0.4)
+                        : (isDark ? Colors.white12 : Colors.black12),
+                  ),
+                  boxShadow: [
+                    if (!isDark)
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          currentStreak > 0 ? '🔥' : '❄️',
+                          style: const TextStyle(fontSize: 24),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          '$currentStreak',
+                          style: AppTypography.headlineMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: currentStreak > 0
+                                ? const Color(0xFFF59E0B)
+                                : (isDark ? Colors.white54 : Colors.black38),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'يوم متتالي',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: isDark ? Colors.white60 : Colors.black54,
+                      ),
+                    ),
+                    if (longestStreak > 0) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        'أفضل: $longestStreak',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: isDark ? Colors.white38 : Colors.black38,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ).animate().fadeIn(duration: 200.ms).slideX(begin: -0.02);
+            },
+          ),
+        ),
+
+        const SizedBox(width: AppSpacing.md),
+
+        // ─── XP Card ─────────────────────────────────────────────────
+        Expanded(
+          child: FutureBuilder<int>(
+            future: getIt<XpService>().getTotalXp(),
+            builder: (context, snapshot) {
+              final totalXp = snapshot.data ?? 0;
+              final xpService = getIt<XpService>();
+              final level = xpService.getCurrentLevel(totalXp);
+              final levels = XpConstants.levels;
+              final currentIdx = levels.indexWhere((l) => l.name == level.name);
+              final nextLevel = currentIdx < levels.length - 1
+                  ? levels[currentIdx + 1]
+                  : null;
+              final progress = nextLevel != null
+                  ? ((totalXp - level.minXp) / (nextLevel.minXp - level.minXp))
+                      .clamp(0.0, 1.0)
+                  : 1.0;
+
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkCard
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(
+                    color: Color(level.colorHex).withValues(alpha: 0.3),
+                  ),
+                  boxShadow: [
+                    if (!isDark)
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(level.icon, style: const TextStyle(fontSize: 24)),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              level.name,
+                              style: AppTypography.labelMedium.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Color(level.colorHex),
+                              ),
+                            ),
+                            Text(
+                              '$totalXp XP',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: isDark ? Colors.white54 : Colors.black54,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // XP progress bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: isDark
+                            ? Colors.white12
+                            : Colors.black.withValues(alpha: 0.06),
+                        color: Color(level.colorHex),
+                        minHeight: 5,
+                      ),
+                    ),
+                    if (nextLevel != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '${nextLevel.minXp - totalXp} XP ← ${nextLevel.name}',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: isDark ? Colors.white38 : Colors.black38,
+                          fontSize: 10,
+                        ),
+                        textDirection: TextDirection.rtl,
+                      ),
+                    ],
+                  ],
+                ),
+              ).animate().fadeIn(duration: 200.ms).slideX(begin: 0.02);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Sign-In Nudge Banner ──────────────────────────────────────────────────────
+
+class _SignInNudgeBanner extends StatefulWidget {
+  const _SignInNudgeBanner({required this.isDark});
+  final bool isDark;
+
+  @override
+  State<_SignInNudgeBanner> createState() => _SignInNudgeBannerState();
+}
+
+class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
+  static const _dismissedKey = 'sign_in_nudge_dismissed';
+  bool _dismissed = false;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkDismissed();
+  }
+
+  Future<void> _checkDismissed() async {
+    final prefs = getIt<SharedPreferences>();
+    final dismissed = prefs.getBool(_dismissedKey) ?? false;
+    if (mounted) setState(() { _dismissed = dismissed; _loaded = true; });
+  }
+
+  Future<void> _dismiss() async {
+    final prefs = getIt<SharedPreferences>();
+    await prefs.setBool(_dismissedKey, true);
+    if (mounted) setState(() => _dismissed = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_loaded || _dismissed) return const SizedBox.shrink();
+
+    // Only show if user is not signed in
+    return BlocBuilder<AuthCubit, AuthState>(
+      builder: (context, authState) {
+        if (authState is AuthAuthenticated) return const SizedBox.shrink();
+
+        // Only show if user has made some progress (streak > 0 or XP > 0)
+        return BlocBuilder<StreakCubit, StreakState>(
+          builder: (context, streakState) {
+            final hasProgress = streakState is StreakLoaded &&
+                streakState.streak.currentStreak > 0;
+
+            if (!hasProgress) return const SizedBox.shrink();
+
+            final primary =
+                widget.isDark ? AppColors.primaryLight : AppColors.primary;
+
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.md,
+                AppSpacing.pagePadding,
+                0,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      primary.withValues(alpha: 0.12),
+                      primary.withValues(alpha: 0.06),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(color: primary.withValues(alpha: 0.25)),
+                ),
+                child: Row(
+                  children: [
+                    // Cloud icon
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: primary.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.cloud_upload_rounded,
+                          color: primary, size: 22),
+                    ),
+                    const SizedBox(width: 12),
+                    // Text
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.isArabic
+                                ? 'احفظ تقدمك الآن!'
+                                : 'Back up your progress!',
+                            style: AppTypography.labelMedium.copyWith(
+                              color: widget.isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            context.isArabic
+                                ? 'سجّل دخولك من الإعدادات لحماية تقدمك'
+                                : 'Sign in from Settings to protect your progress',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: widget.isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    // Action + Dismiss
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        GestureDetector(
+                          onTap: () => context.push(AppRoutes.settings),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: primary,
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusSm),
+                            ),
+                            child: Text(
+                              context.isArabic ? 'تسجيل' : 'Sign in',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        GestureDetector(
+                          onTap: _dismiss,
+                          child: Text(
+                            context.isArabic ? 'لاحقاً' : 'Later',
+                            style: AppTypography.labelSmall.copyWith(
+                              color: widget.isDark
+                                  ? AppColors.darkTextHint
+                                  : AppColors.lightTextHint,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.05),
+            );
+          },
+        );
+      },
+    );
   }
 }

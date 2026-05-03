@@ -19,6 +19,8 @@ import '../../features/memorization_plus/presentation/pages/custom_plan_setup_pa
 import '../../features/memorization_plus/presentation/pages/quiz_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
+import '../../features/certificate/presentation/pages/certificate_page.dart';
+import '../../features/auth/presentation/pages/login_page.dart';
 import '../widgets/app_shell.dart';
 
 abstract class AppRoutes {
@@ -35,6 +37,8 @@ abstract class AppRoutes {
   static const String memorizationPlusKids = '/memorization-plus/kids';
   static const String memorizationPlusCustomPlan = '/memorization-plus/custom-plan';
   static const String memorizationPlusQuiz = '/memorization-plus/quiz';
+  static const String login = '/login';
+  static const String certificate = '/certificate';
 }
 
 abstract class AppRouter {
@@ -56,6 +60,21 @@ abstract class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.onboarding,
         builder: (context, state) => const OnboardingPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.login,
+        builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/certificate/:juz',
+        builder: (context, state) {
+          final juz = int.tryParse(state.pathParameters['juz'] ?? '1') ?? 1;
+          final extra = state.extra as Map<String, dynamic>?;
+          final userName = extra?['userName'] as String? ?? 'مستخدم تالية';
+          return CertificatePage(juzNumber: juz, userName: userName);
+        },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

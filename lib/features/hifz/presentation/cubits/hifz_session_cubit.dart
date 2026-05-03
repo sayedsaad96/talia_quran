@@ -13,7 +13,9 @@ import '../../domain/usecases/get_hifz_progress_usecase.dart';
 import '../../domain/usecases/save_ayah_progress_usecase.dart';
 import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
-import 'package:flutter/services.dart';
+import '../../../../core/services/haptic_service.dart';
+import '../../../../core/services/streak_service.dart';
+import '../../../../core/services/xp_service.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
 
 part 'hifz_session_state.dart';
@@ -24,6 +26,8 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     this._saveProgress,
     this._getSurahProgress,
     this._settings,
+    this._streakService,
+    this._xpService,
   ) : super(const HifzSessionInitial()) {
     _initSpeech();
     _player.playerStateStream.listen((state) {
@@ -40,6 +44,8 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   final GetProgressForSurahUsecase _getSurahProgress;
   // ARCH-3 FIX: SettingsRepository instead of direct SharedPreferences access.
   final SettingsRepository _settings;
+  final StreakService _streakService;
+  final XpService _xpService;
 
   final SpeechToText _speechToText = SpeechToText();
   final AudioPlayer _player = AudioPlayer();
@@ -104,6 +110,16 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     );
   }
 
+  /// Plays audio from either a URL or a local file path
+  Future<void> _playAudioSource(AudioPlayer player, String source) async {
+    if (source.startsWith('http://') || source.startsWith('https://')) {
+      await player.setUrl(source);
+    } else {
+      await player.setFilePath(source);
+    }
+    await player.play();
+  }
+
   Future<void> playAudio() async {
     if (state is! HifzSessionLoaded) return;
     final st = state as HifzSessionLoaded;
@@ -117,8 +133,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
         ayah.numberInSurah,
       );
       
-      await _player.setUrl(audioSource);
-      await _player.play();
+      await _playAudioSource(_player, audioSource);
     } catch (e) {
       emit(st.copyWith(
         isPlaying: false,
@@ -226,6 +241,13 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     if (currentProgress != null) {
       if (pass) {
         currentProgress = currentProgress.advanceWithSpacedRepetition();
+        // Record streak and XP on successful memorization
+        try {
+          await _streakService.recordActivity();
+          await _xpService.addXp('ayah_memorized');
+        } catch (_) {
+          // Non-critical — don't crash the session
+        }
       } else {
         // Soft Penalty: decrease repetitions by 1 (min 0) and reschedule review
         currentProgress = currentProgress.softPenalty();
@@ -240,9 +262,9 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
 
     // Haptic feedback on evaluation result
     if (pass) {
-      unawaited(HapticFeedback.mediumImpact());
+      unawaited(HapticService.success());
     } else {
-      unawaited(HapticFeedback.heavyImpact());
+      unawaited(HapticService.error());
     }
 
     emit(st.copyWith(
@@ -256,7 +278,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     if (state is! HifzSessionLoaded) return;
     final st = state as HifzSessionLoaded;
     if (st.currentIndex < st.ayahs.length - 1) {
-      HapticFeedback.lightImpact();
+      HapticService.selection();
       emit(st.copyWith(
         currentIndex: st.currentIndex + 1,
         clearScore: true,

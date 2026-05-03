@@ -5,6 +5,9 @@ import 'package:path_provider/path_provider.dart';
 
 import '../services/audio_cache_service.dart';
 import '../services/notification_service.dart';
+import '../services/streak_service.dart';
+import '../services/xp_service.dart';
+import '../services/subscription_service.dart';
 import '../theme/theme_cubit.dart';
 import '../l10n/locale_cubit.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
@@ -50,6 +53,12 @@ import '../../features/memorization_plus/presentation/cubits/quiz_cubit.dart';
 import '../../features/settings/presentation/cubits/profile_cubit.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
+import '../../features/streak/data/models/streak_isar.dart';
+import '../../features/streak/presentation/cubits/streak_cubit.dart';
+import '../../features/xp/data/models/xp_isar.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/presentation/cubits/auth_cubit.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -59,10 +68,11 @@ Future<void> configureDependencies() async {
   getIt.registerSingleton<SharedPreferences>(sharedPrefs);
 
   final dir = await getApplicationDocumentsDirectory();
-  final isar = await Isar.open(
-    [IsarAyahProgressSchema],
-    directory: dir.path,
-  );
+  final isar = await Isar.open([
+    IsarAyahProgressSchema,
+    StreakIsarSchema,
+    XpIsarSchema,
+  ], directory: dir.path);
   getIt.registerSingleton<Isar>(isar);
 
   // Migrate old SharedPreferences Hifz data to Isar if needed
@@ -84,6 +94,11 @@ Future<void> configureDependencies() async {
   getIt.registerSingleton<TaliaNotificationService>(
     TaliaNotificationService.instance,
   );
+
+  // ─── New Core Services ──────────────────────────────────────────────────────
+  getIt.registerSingleton<StreakService>(StreakService(getIt<Isar>()));
+  getIt.registerSingleton<XpService>(XpService(getIt<Isar>()));
+  getIt.registerSingleton<SubscriptionService>(SubscriptionService());
 
   // ─── Datasources ────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ProgressLocalDatasource>(
@@ -120,7 +135,10 @@ Future<void> configureDependencies() async {
     () => QuranRepositoryImpl(getIt<QuranLocalDatasource>()),
   );
   getIt.registerLazySingleton<HifzRepository>(
-    () => HifzRepositoryImpl(getIt<HifzLocalDatasource>(), getIt<QuranLocalDatasource>()),
+    () => HifzRepositoryImpl(
+      getIt<HifzLocalDatasource>(),
+      getIt<QuranLocalDatasource>(),
+    ),
   );
   getIt.registerLazySingleton<AzkarRepository>(
     () => AzkarRepositoryImpl(getIt<AzkarLocalDatasource>()),
@@ -130,6 +148,9 @@ Future<void> configureDependencies() async {
       getIt<MemorizationPlusLocalDatasource>(),
       getIt<QuranRepository>(),
     ),
+  );
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(getIt<Isar>()),
   );
 
   // ─── Usecases ───────────────────────────────────────────────────────────────
@@ -199,10 +220,8 @@ Future<void> configureDependencies() async {
     () => SurahDetailCubit(getIt<GetSurahDetailUsecase>()),
   );
   getIt.registerFactory<QuranPageCubit>(
-    () => QuranPageCubit(
-      getIt<QuranRepository>(),
-      getIt<SaveReadPageUsecase>(),
-    ),
+    () =>
+        QuranPageCubit(getIt<QuranRepository>(), getIt<SaveReadPageUsecase>()),
   );
   getIt.registerFactory<SearchQuranCubit>(
     () => SearchQuranCubit(getIt<QuranRepository>()),
@@ -220,7 +239,9 @@ Future<void> configureDependencies() async {
       getIt<GetSurahDetailUsecase>(),
       getIt<SaveAyahProgressUsecase>(),
       getIt<GetProgressForSurahUsecase>(),
-      getIt<SettingsRepository>(), // ARCH-3 FIX: was SharedPreferences
+      getIt<SettingsRepository>(),
+      getIt<StreakService>(),
+      getIt<XpService>(),
     ),
   );
   getIt.registerFactory<AzkarCubit>(
@@ -261,4 +282,6 @@ Future<void> configureDependencies() async {
       getIt<GetCustomPlanUsecase>(),
     ),
   );
+  getIt.registerFactory<StreakCubit>(() => StreakCubit(getIt<StreakService>()));
+  getIt.registerFactory<AuthCubit>(() => AuthCubit(getIt<AuthRepository>()));
 }

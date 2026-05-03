@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -18,6 +19,7 @@ class ThemeCubit extends Cubit<ThemeMode> {
       _ => ThemeMode.system,
     };
     emit(mode);
+    _applyStatusBar(mode == ThemeMode.dark);
   }
 
   Future<void> setTheme(ThemeMode mode) async {
@@ -28,6 +30,7 @@ class ThemeCubit extends Cubit<ThemeMode> {
     };
     await _prefs.setString(_key, value);
     emit(mode);
+    _applyStatusBar(mode == ThemeMode.dark);
   }
 
   Future<void> toggleTheme() async {
@@ -36,4 +39,18 @@ class ThemeCubit extends Cubit<ThemeMode> {
   }
 
   bool get isDark => state == ThemeMode.dark;
+
+  /// M0-T5a: Apply status bar styling that adapts to dark/light mode
+  void _applyStatusBar(bool isDark) {
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness:
+            isDark ? Brightness.light : Brightness.dark,
+      ),
+    );
+  }
 }
