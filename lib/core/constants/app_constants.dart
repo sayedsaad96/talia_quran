@@ -25,8 +25,8 @@ abstract class AppConstants {
   // Hifz evaluation
   static const double kSimilarityThreshold = 0.85;
 
-  // Quran API (offline fallback)
-  static const String quranDataAsset = 'assets/data/quran_simple.json';
+  // ARCH-001 FIX: Was pointing to 'quran_simple.json' (non-existent). Actual file is 'quran.json'.
+  static const String quranDataAsset = 'assets/data/quran.json';
   static const String azkarDataAsset = 'assets/data/azkar.json';
 
   // Font sizes

@@ -74,6 +74,16 @@ class AuthCubit extends Cubit<AuthState> {
     );
   }
 
+  /// Resend confirmation email for unconfirmed accounts
+  Future<void> resendConfirmation(String email) async {
+    try {
+      await _authRepository.resendConfirmation(email);
+      if (!isClosed) emit(const AuthError('__resent__'));
+    } catch (_) {
+      if (!isClosed) emit(const AuthError('فشل إعادة الإرسال، حاول مرة أخرى'));
+    }
+  }
+
   @override
   Future<void> close() {
     _authSub?.cancel();

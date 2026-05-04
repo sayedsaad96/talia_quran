@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/notification_service.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -22,13 +22,10 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
 
-    return BlocProvider(
-      create: (_) => getIt<AuthCubit>(),
-      child: Builder(
-        builder: (context) => Scaffold(
-          backgroundColor: isDark
-              ? AppColors.darkBackground
-              : AppColors.lightBackground,
+    return Scaffold(
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
           body: CustomScrollView(
             slivers: [
               _buildAppBar(context, isDark),
@@ -81,8 +78,6 @@ class SettingsPage extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
     );
   }
 
@@ -926,6 +921,8 @@ class _AccountSectionState extends State<_AccountSection> {
             ),
           );
         } else if (state is AuthAuthenticated) {
+          // Update local profile automatically with the user's display name
+          context.read<ProfileCubit>().updateProfile(name: state.user.displayName);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(

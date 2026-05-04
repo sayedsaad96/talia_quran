@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import '../../../../core/services/achievement_service.dart';
 
 // ─── Painter للزخارف الإسلامية ─────────────────────────────────────────────
 
@@ -83,229 +84,282 @@ class CertificateWidget extends StatelessWidget {
   const CertificateWidget({
     super.key,
     required this.userName,
-    required this.juzNumber,
+    required this.award,
     required this.completionDate,
   });
 
   final String userName;
-  final int juzNumber;
+  final CertificateAward award;
   final DateTime completionDate;
 
   String get _arabicJuzNumber {
+    if (award.juzNumber == null) return '';
+    final juzNumber = award.juzNumber!;
     const arabic = [
-      '',
-      'الأول',
-      'الثاني',
-      'الثالث',
-      'الرابع',
-      'الخامس',
-      'السادس',
-      'السابع',
-      'الثامن',
-      'التاسع',
-      'العاشر',
-      'الحادي عشر',
-      'الثاني عشر',
-      'الثالث عشر',
-      'الرابع عشر',
-      'الخامس عشر',
-      'السادس عشر',
-      'السابع عشر',
-      'الثامن عشر',
-      'التاسع عشر',
-      'العشرون',
-      'الحادي والعشرون',
-      'الثاني والعشرون',
-      'الثالث والعشرون',
-      'الرابع والعشرون',
-      'الخامس والعشرون',
-      'السادس والعشرون',
-      'السابع والعشرون',
-      'الثامن والعشرون',
-      'التاسع والعشرون',
-      'الثلاثون',
+      '', 'الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس', 'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر',
+      'الحادي عشر', 'الثاني عشر', 'الثالث عشر', 'الرابع عشر', 'الخامس عشر', 'السادس عشر', 'السابع عشر', 'الثامن عشر', 'التاسع عشر', 'العشرون',
+      'الحادي والعشرون', 'الثاني والعشرون', 'الثالث والعشرون', 'الرابع والعشرون', 'الخامس والعشرون', 'السادس والعشرون', 'السابع والعشرون', 'الثامن والعشرون', 'التاسع والعشرون', 'الثلاثون',
     ];
     return juzNumber <= 30 ? arabic[juzNumber] : juzNumber.toString();
   }
 
+  String get _achievementText {
+    if (award.type == CertificateType.juz) {
+      return 'الجزء $_arabicJuzNumber';
+    } else {
+      return 'سورة ${award.surahNameAr ?? ""}';
+    }
+  }
+
   String get _formattedDate {
-    const months = [
-      'يناير',
-      'فبراير',
-      'مارس',
-      'إبريل',
-      'مايو',
-      'يونيو',
-      'يوليو',
-      'أغسطس',
-      'سبتمبر',
-      'أكتوبر',
-      'نوفمبر',
-      'ديسمبر',
-    ];
-    return '${completionDate.day} ${months[completionDate.month - 1]} ${completionDate.year}';
+    return '${completionDate.year}/${completionDate.month.toString().padLeft(2, '0')}/${completionDate.day.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
-    const goldLight = Color(0xFFF5D78E);
-    const goldDark = Color(0xFF8B6914);
-    const goldAccent = Color(0xFFC9A84C);
+    const darkGreen = Color(0xFF0D251C);
+    const goldAccent = Color(0xFFC09B4E);
+    const bgBeige = Color(0xFFF7F4EA);
 
     return Directionality(
       textDirection: TextDirection.rtl,
       child: AspectRatio(
-        aspectRatio: 1080 / 1350,
+        // Landscape A4 roughly
+        aspectRatio: 1.414,
         child: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF2C1810), goldDark, Color(0xFF1A0F08)],
-            ),
+          decoration: BoxDecoration(
+            color: bgBeige,
+            border: Border.all(color: darkGreen, width: 8),
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 15,
+                spreadRadius: 5,
+              )
+            ],
           ),
-          child: Stack(
-            children: [
-              // Corner ornaments
-              const Positioned.fill(
-                child: CustomPaint(
-                  painter: IslamicOrnamentPainter(color: goldAccent),
-                ),
-              ),
-
-              // Gold frame
-              Positioned.fill(
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        color: goldAccent.withValues(alpha: 0.5),
-                        width: 1.5,
-                      ),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+          child: Container(
+            margin: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              border: Border.all(color: goldAccent, width: 2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Stack(
+              children: [
+                // Corner decorations
+                const Positioned.fill(
+                  child: CustomPaint(
+                    painter: IslamicOrnamentPainter(color: goldAccent),
                   ),
                 ),
-              ),
 
-              // Content
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 48,
-                  vertical: 40,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    // Basmala
-                    Text(
-                      'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontSize: 18,
-                        color: goldLight.withValues(alpha: 0.9),
-                        height: 1.8,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    // Divider
-                    const _GoldDivider(color: goldAccent),
-
-                    // Title
-                    const Text(
-                      'شهادة إتمام',
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                        color: goldLight,
-                        letterSpacing: 2,
-                        shadows: [Shadow(color: goldDark, blurRadius: 8)],
-                      ),
-                    ),
-
-                    Text(
-                      'يُشهد بأن',
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontSize: 18,
-                        color: goldLight.withValues(alpha: 0.75),
-                      ),
-                    ),
-
-                    // User name
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 8,
-                      ),
-                      decoration: const BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(color: goldAccent, width: 1.5),
-                          top: BorderSide(color: goldAccent, width: 1.5),
-                        ),
-                      ),
-                      child: Text(
-                        userName,
-                        style: const TextStyle(
-                          fontFamily: 'Amiri',
-                          fontSize: 42,
-                          fontWeight: FontWeight.bold,
-                          color: goldLight,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-
-                    // Main text
-                    Text(
-                      'قد أتمّ بفضل الله وتوفيقه\nحفظ الجزء $_arabicJuzNumber\nمن القرآن الكريم',
-                      style: TextStyle(
-                        fontFamily: 'Amiri',
-                        fontSize: 20,
-                        color: goldLight.withValues(alpha: 0.9),
-                        height: 1.8,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-
-                    const _GoldDivider(color: goldAccent),
-
-                    // Date
-                    Text(
-                      _formattedDate,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: goldLight.withValues(alpha: 0.6),
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-
-                    // Talia logo
-                    Row(
+                // Main Content
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.menu_book_rounded,
-                          color: goldAccent,
-                          size: 18,
+                        // Logo
+                        const Column(
+                          children: [
+                            Icon(Icons.menu_book_rounded, color: darkGreen, size: 32),
+                            Text(
+                              'تالية\nTalia',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: darkGreen,
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                height: 1.2,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'تطبيق تالية لحفظ القرآن الكريم',
+                        
+                        const SizedBox(height: 12),
+                        
+                        // Title
+                        const Text(
+                          'شهادة حفظ القرآن الكريم',
                           style: TextStyle(
-                            fontSize: 12,
-                            color: goldAccent.withValues(alpha: 0.7),
+                            fontFamily: 'Amiri',
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: darkGreen,
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 8),
+                        
+                        // Subtitle
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.star_border_rounded, color: goldAccent, size: 16),
+                            const SizedBox(width: 8),
+                            Text(
+                              'تشهد منصة تالية لتحفيظ القرآن الكريم بأن',
+                              style: TextStyle(
+                                fontFamily: 'Amiri',
+                                fontSize: 16,
+                                color: darkGreen.withValues(alpha: 0.8),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(Icons.star_border_rounded, color: goldAccent, size: 16),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // User name
+                        Text(
+                          userName,
+                          style: const TextStyle(
+                            fontFamily: 'Amiri',
+                            fontSize: 36,
+                            fontWeight: FontWeight.bold,
+                            color: goldAccent,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        
+                        const SizedBox(height: 8),
+                        
+                        Text(
+                          'قد أتم بنجاح حفظ',
+                          style: TextStyle(
+                            fontFamily: 'Amiri',
+                            fontSize: 18,
+                            color: darkGreen.withValues(alpha: 0.8),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 12),
+                        
+                        // Badge / Box for achievement
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: darkGreen,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            _achievementText,
+                            style: const TextStyle(
+                              fontFamily: 'Amiri',
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: bgBeige,
+                            ),
+                          ),
+                        ),
+                        
+                        const SizedBox(height: 16),
+                        
+                        // Verse
+                        Column(
+                          children: [
+                            const Text(
+                              '﴿ إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ ﴾',
+                              style: TextStyle(
+                                fontFamily: 'Amiri',
+                                fontSize: 20,
+                                color: darkGreen,
+                              ),
+                            ),
+                            Text(
+                              '(الإسراء: 9)',
+                              style: TextStyle(
+                                fontFamily: 'Amiri',
+                                fontSize: 12,
+                                color: darkGreen.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 12),
+                        
+                        // Footer prayer
+                        Text(
+                          'نسأل الله تعالى أن يجعل القرآن الكريم ربيع قلبه\nونور صدره ورفيق دربه في الدنيا والآخرة.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Amiri',
+                            fontSize: 14,
+                            color: darkGreen.withValues(alpha: 0.8),
+                            height: 1.5,
                           ),
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                
+                // Signatures & Date
+                Positioned(
+                  bottom: 24,
+                  left: 40,
+                  right: 40,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // Signature
+                      Column(
+                        children: [
+                          const Text(
+                            'Talia',
+                            style: TextStyle(
+                              fontFamily: 'Amiri', // Or a cursive font if available
+                              fontSize: 24,
+                              fontStyle: FontStyle.italic,
+                              color: darkGreen,
+                            ),
+                          ),
+                          Container(width: 80, height: 1, color: goldAccent),
+                          const SizedBox(height: 4),
+                          Text(
+                            'التوقيع',
+                            style: TextStyle(
+                              fontFamily: 'Amiri',
+                              fontSize: 14,
+                              color: darkGreen.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                      
+                      // Date
+                      Column(
+                        children: [
+                          Text(
+                            _formattedDate,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              color: darkGreen,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Container(width: 80, height: 1, color: goldAccent),
+                          const SizedBox(height: 4),
+                          Text(
+                            'التاريخ',
+                            style: TextStyle(
+                              fontFamily: 'Amiri',
+                              fontSize: 14,
+                              color: darkGreen.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -313,19 +367,3 @@ class CertificateWidget extends StatelessWidget {
   }
 }
 
-class _GoldDivider extends StatelessWidget {
-  const _GoldDivider({required this.color});
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Expanded(child: Divider(color: color.withValues(alpha: 0.4))),
-      Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Icon(Icons.star_rounded, color: color, size: 12),
-      ),
-      Expanded(child: Divider(color: color.withValues(alpha: 0.4))),
-    ],
-  );
-}

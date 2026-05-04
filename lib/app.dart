@@ -9,6 +9,7 @@ import 'core/theme/theme_cubit.dart';
 import 'core/l10n/locale_cubit.dart';
 import 'core/di/injection.dart';
 import 'features/settings/presentation/cubits/profile_cubit.dart';
+import 'features/auth/presentation/cubits/auth_cubit.dart';
 
 class TaliaApp extends StatelessWidget {
   const TaliaApp({super.key});
@@ -20,6 +21,7 @@ class TaliaApp extends StatelessWidget {
         BlocProvider(create: (_) => getIt<ThemeCubit>()..loadTheme()),
         BlocProvider(create: (_) => getIt<LocaleCubit>()..loadLocale()),
         BlocProvider(create: (_) => getIt<ProfileCubit>()..loadProfile()),
+        BlocProvider(create: (_) => getIt<AuthCubit>()),
       ],
       child: BlocBuilder<LocaleCubit, Locale>(
         builder: (context, locale) {

@@ -15,6 +15,8 @@ abstract class QuranLocalDatasource {
 class QuranLocalDatasourceImpl implements QuranLocalDatasource {
   List<SurahModel>? _cachedSurahs;
   Map<int, List<AyahModel>>? _cachedAyahs;
+  // BUG-007: Page index for O(1) lookup instead of O(n) iteration
+  Map<int, List<AyahModel>>? _cachedByPage;
 
   @override
   Future<List<SurahModel>> getSurahs() async {
@@ -45,13 +47,13 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
 
   @override
   Future<List<AyahModel>> getAyahsByPage(int pageNumber) async {
-     if (_cachedAyahs == null) {
+    if (_cachedByPage == null) {
       await _loadQuranData();
     }
-    final allAyahs = _cachedAyahs!.values.expand((element) => element).toList();
-    final pageAyahs = allAyahs.where((a) => a.page == pageNumber).toList();
-    if (pageAyahs.isEmpty) throw const NotFoundFailure();
-    return pageAyahs;
+    // BUG-007: O(1) lookup via pre-built page index
+    final ayahs = _cachedByPage![pageNumber];
+    if (ayahs == null || ayahs.isEmpty) throw const NotFoundFailure();
+    return ayahs;
   }
 
   Future<void> _loadQuranData() async {
@@ -61,6 +63,7 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
       final surahs = await getSurahs();
       
       _cachedAyahs = {};
+      _cachedByPage = {}; // BUG-007: Initialize page index
       int globalOffset = 0;
       
       for (final surah in surahs) {
@@ -70,16 +73,21 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
         final parsedAyahs = <AyahModel>[];
         for (int i = 0; i < verseList.length; i++) {
           final verseObj = verseList[i];
-          parsedAyahs.add(
-            AyahModel(
-               number: verseObj['global'] ?? (globalOffset + i + 1),
-               surahId: surah.id,
-               text: verseObj['text'].toString(),
-               numberInSurah: verseObj['verse'] as int,
-               juz: verseObj['juz'] as int? ?? surah.juz,
-               page: verseObj['page'] as int? ?? (surah.page + (i ~/ 15)),
-            ),
+          // BUG-001: Remove BOM character (\uFEFF) from ayah text
+          final rawText = verseObj['text'].toString().replaceAll('\uFEFF', '');
+          final ayah = AyahModel(
+             number: verseObj['global'] ?? (globalOffset + i + 1),
+             surahId: surah.id,
+             text: rawText,
+             numberInSurah: verseObj['verse'] as int,
+             juz: verseObj['juz'] as int? ?? surah.juz,
+             page: verseObj['page'] as int? ?? (surah.page + (i ~/ 15)),
           );
+          parsedAyahs.add(ayah);
+          
+          // BUG-007: Build page index during load
+          final pageNum = ayah.page ?? 1;
+          _cachedByPage!.putIfAbsent(pageNum, () => []).add(ayah);
         }
         
         _cachedAyahs![surah.id] = parsedAyahs;

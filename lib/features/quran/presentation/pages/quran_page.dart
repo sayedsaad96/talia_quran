@@ -75,18 +75,19 @@ class _QuranViewState extends State<_QuranView>
               );
             }
             if (state is SurahListLoaded) {
-              if (state.filtered.isEmpty) {
-                return EmptyStateWidget(
-                  message: context.l10n.noData,
-                  icon: Icons.search_off_rounded,
-                );
-              }
+              // ARCH-003 FIX: Always show TabBarView so Juz and Bookmarks tabs
+              // remain accessible even when surah search returns no results.
               return TabBarView(
                 controller: _tabCtrl,
                 children: [
-                  _SurahListView(surahs: state.filtered),
-                  _JuzGridView(surahs: state.surahs),
-                  const BookmarksTab(),
+                  state.filtered.isEmpty
+                      ? EmptyStateWidget(
+                          message: context.l10n.noData,
+                          icon: Icons.search_off_rounded,
+                        )
+                      : _SurahListView(surahs: state.filtered),
+                  _JuzGridView(surahs: state.surahs), // Not affected by search
+                  const BookmarksTab(),               // Not affected by search
                 ],
               );
             }
@@ -370,6 +371,26 @@ class _JuzGridView extends StatelessWidget {
   const _JuzGridView({required this.surahs});
   final List<Surah> surahs;
 
+  // BUG-004 FIX: Correct start pages verified from quran.json
+  // Juz 7 was 122 → should be 121; Juz 11 was 202 → should be 201
+  static const List<int> _juzStartPages = [
+    1, 22, 42, 62, 82, 102,
+    121, // Juz 7 ← was 122
+    142, 162, 182,
+    201, // Juz 11 ← was 202
+    222, 242, 262, 282, 302, 322, 342, 362, 382,
+    402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
+  ];
+
+  static const List<String> _juzNames = [
+    'الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس',
+    'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر',
+    'الحادي عشر', 'الثاني عشر', 'الثالث عشر', 'الرابع عشر', 'الخامس عشر',
+    'السادس عشر', 'السابع عشر', 'الثامن عشر', 'التاسع عشر', 'العشرون',
+    'الحادي والعشرون', 'الثاني والعشرون', 'الثالث والعشرون', 'الرابع والعشرون', 'الخامس والعشرون',
+    'السادس والعشرون', 'السابع والعشرون', 'الثامن والعشرون', 'التاسع والعشرون', 'الثلاثون'
+  ];
+
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
@@ -380,44 +401,90 @@ class _JuzGridView extends StatelessWidget {
         AppSpacing.pagePadding,
         AppSpacing.pagePadding,
         AppSpacing.pagePadding,
-        120, // Prevent cutoff by bottom nav
+        120,
       ),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: AppSpacing.sm,
-        mainAxisSpacing: AppSpacing.sm,
-        childAspectRatio: 1.1,
+        crossAxisCount: 2, // Changed to 2 columns for better text fitting
+        crossAxisSpacing: AppSpacing.md,
+        mainAxisSpacing: AppSpacing.md,
+        childAspectRatio: 2.2, // Rectangular card
       ),
       itemCount: 30,
       itemBuilder: (context, i) {
-        final juz = i + 1;
-        // Standard start pages for all 30 Juzs in Madinah Mus'haf
-        final initialPage = juz == 1 ? 1 : 22 + (juz - 2) * 20;
+        final initialPage = _juzStartPages[i];
 
         return GestureDetector(
               onTap: () => context.push('/quran/page/$initialPage'),
               child: Container(
                 decoration: BoxDecoration(
-                  color: primary.withValues(alpha:0.06),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: primary.withValues(alpha:0.15), width: 1),
+                  color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                  border: Border.all(
+                    color: primary.withValues(alpha: 0.1),
+                    width: 1,
+                  ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Row(
                   children: [
-                    Text(
-                      '$juz',
-                      style: AppTypography.displaySmall.copyWith(
+                    Container(
+                      width: 4,
+                      decoration: BoxDecoration(
                         color: primary,
-                        fontSize: 28,
+                        borderRadius: const BorderRadius.horizontal(
+                          right: Radius.circular(AppSpacing.radiusLg),
+                        ),
                       ),
                     ),
-                    Text(
-                      '${context.l10n.juz} $juz',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.juz,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              _juzNames[i],
+                              style: AppTypography.titleMedium.copyWith(
+                                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: primary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.menu_book_rounded,
+                          size: 16,
+                          color: primary,
+                        ),
                       ),
                     ),
                   ],
@@ -425,9 +492,10 @@ class _JuzGridView extends StatelessWidget {
               ),
             )
             .animate()
-            .fadeIn(duration: 200.ms)
-            .scale(begin: const Offset(0.95, 0.95));
+            .fadeIn(duration: 200.ms, delay: (i * 20).ms)
+            .slideX(begin: 0.1, end: 0, curve: Curves.easeOut);
       },
     );
   }
 }
+

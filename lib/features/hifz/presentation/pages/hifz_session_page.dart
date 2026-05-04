@@ -9,7 +9,11 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../../../core/services/achievement_service.dart';
+import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../cubits/hifz_session_cubit.dart';
+import 'package:go_router/go_router.dart';
+import 'package:confetti/confetti.dart';
 
 class HifzSessionPage extends StatelessWidget {
   const HifzSessionPage({
@@ -72,7 +76,13 @@ class _HifzSessionView extends StatelessWidget {
         backgroundColor: isDark
             ? AppColors.parchmentDark
             : AppColors.parchmentLight,
-        body: BlocBuilder<HifzSessionCubit, HifzSessionState>(
+        body: BlocConsumer<HifzSessionCubit, HifzSessionState>(
+          listener: (context, state) {
+            if (state is CertificatesEarned) {
+              _showCertificateDialog(context, state.awards.first);
+            }
+          },
+          buildWhen: (previous, current) => current is! CertificatesEarned,
           builder: (context, state) {
             if (state is HifzSessionLoading) {
               return const Center(child: LoadingWidget());
@@ -86,6 +96,122 @@ class _HifzSessionView extends StatelessWidget {
             return const SizedBox.shrink();
           },
         ),
+      ),
+    );
+  }
+
+  void _showCertificateDialog(BuildContext context, CertificateAward award) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => _CertificateCelebrationDialog(award: award),
+    );
+  }
+}
+
+class _CertificateCelebrationDialog extends StatefulWidget {
+  const _CertificateCelebrationDialog({required this.award});
+  final CertificateAward award;
+
+  @override
+  State<_CertificateCelebrationDialog> createState() => _CertificateCelebrationDialogState();
+}
+
+class _CertificateCelebrationDialogState extends State<_CertificateCelebrationDialog> {
+  late ConfettiController _confettiController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+    _confettiController.play();
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.isDark;
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCard : AppColors.lightCard,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+              border: Border.all(color: AppColors.gold.withValues(alpha: 0.5), width: 2),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  widget.award.type == CertificateType.juz
+                      ? Icons.workspace_premium_rounded
+                      : Icons.verified_rounded,
+                  color: AppColors.gold,
+                  size: 64,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  context.isArabic ? 'مبارك!' : 'Congratulations!',
+                  style: AppTypography.headlineMedium.copyWith(color: AppColors.gold),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  context.isArabic
+                      ? 'لقد حصلت على ${widget.award.titleAr}'
+                      : 'You earned a new certificate!',
+                  textAlign: TextAlign.center,
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.xl),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.gold,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 50),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                    context.push('/certificate', extra: {
+                      'award': widget.award,
+                      'userName': context.read<ProfileCubit>().state is ProfileLoaded
+                          ? (context.read<ProfileCubit>().state as ProfileLoaded).profile.displayName
+                          : (context.isArabic ? 'مستخدم تالية' : 'Talia User'),
+                    });
+                  },
+                  child: Text(context.isArabic ? 'عرض الشهادة' : 'View Certificate'),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    context.isArabic ? 'متابعة الحفظ' : 'Continue Memorizing',
+                    style: TextStyle(
+                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ).animate().scale(curve: Curves.easeOutBack, duration: 500.ms),
+          ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: false,
+            colors: const [Colors.green, Colors.blue, Colors.pink, Colors.orange, Colors.purple],
+          ),
+        ],
       ),
     );
   }

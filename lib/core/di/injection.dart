@@ -8,6 +8,7 @@ import '../services/notification_service.dart';
 import '../services/streak_service.dart';
 import '../services/xp_service.dart';
 import '../services/subscription_service.dart';
+import '../services/achievement_service.dart';
 import '../theme/theme_cubit.dart';
 import '../l10n/locale_cubit.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
@@ -54,6 +55,7 @@ import '../../features/settings/presentation/cubits/profile_cubit.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/streak/data/models/streak_isar.dart';
+import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/presentation/cubits/streak_cubit.dart';
 import '../../features/xp/data/models/xp_isar.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
@@ -72,6 +74,7 @@ Future<void> configureDependencies() async {
     IsarAyahProgressSchema,
     StreakIsarSchema,
     XpIsarSchema,
+    DailyActivityIsarSchema, // For yearly activity heatmap
   ], directory: dir.path);
   getIt.registerSingleton<Isar>(isar);
 
@@ -99,6 +102,13 @@ Future<void> configureDependencies() async {
   getIt.registerSingleton<StreakService>(StreakService(getIt<Isar>()));
   getIt.registerSingleton<XpService>(XpService(getIt<Isar>()));
   getIt.registerSingleton<SubscriptionService>(SubscriptionService());
+  getIt.registerSingleton<AchievementService>(
+    AchievementService(
+      getIt<SharedPreferences>(),
+      hifzDatasource,
+      QuranLocalDatasourceImpl(),
+    ),
+  );
 
   // ─── Datasources ────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ProgressLocalDatasource>(
@@ -221,7 +231,7 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<QuranPageCubit>(
     () =>
-        QuranPageCubit(getIt<QuranRepository>(), getIt<SaveReadPageUsecase>()),
+        QuranPageCubit(getIt<QuranRepository>(), getIt<SaveReadPageUsecase>(), getIt<StreakService>()),
   );
   getIt.registerFactory<SearchQuranCubit>(
     () => SearchQuranCubit(getIt<QuranRepository>()),
@@ -242,6 +252,7 @@ Future<void> configureDependencies() async {
       getIt<SettingsRepository>(),
       getIt<StreakService>(),
       getIt<XpService>(),
+      getIt<AchievementService>(),
     ),
   );
   getIt.registerFactory<AzkarCubit>(

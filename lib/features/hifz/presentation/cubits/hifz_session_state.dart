@@ -90,3 +90,15 @@ class HifzSessionError extends HifzSessionState {
   @override
   List<Object?> get props => [message];
 }
+
+/// Emitted (briefly) when one or more certificates are newly earned.
+class CertificatesEarned extends HifzSessionState {
+  const CertificatesEarned({
+    required this.awards,
+    required this.previousState,
+  });
+  final List<CertificateAward> awards;
+  final HifzSessionLoaded previousState;
+  @override
+  List<Object?> get props => [awards, previousState];
+}

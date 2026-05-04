@@ -16,6 +16,7 @@ import '../../../../core/widgets/activity_heatmap.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/services/achievement_service.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
@@ -32,7 +33,6 @@ class HomePage extends StatelessWidget {
       providers: [
         BlocProvider(create: (_) => getIt<HomeCubit>()..load()),
         BlocProvider(create: (_) => getIt<StreakCubit>()..loadStreak()),
-        BlocProvider(create: (_) => getIt<AuthCubit>()),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, _) => const _HomeView(),
@@ -395,60 +395,75 @@ class _AchievementBadge extends StatelessWidget {
       }
     }
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            badgeColor.withValues(alpha: 0.25),
-            badgeColor.withValues(alpha: 0.05),
+    return GestureDetector(
+      onTap: () {
+        final dummyAward = CertificateAward(
+          id: 'test_1',
+          titleAr: 'شهادة إتمام حفظ الجزء الثلاثون',
+          type: CertificateType.juz,
+          earnedAt: DateTime.now(),
+          juzNumber: 30,
+        );
+        context.push('/certificate', extra: {
+          'award': dummyAward,
+          'userName': 'اسم تجريبي', // You can change this to anything
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              badgeColor.withValues(alpha: 0.25),
+              badgeColor.withValues(alpha: 0.05),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+          border: Border.all(color: badgeColor.withValues(alpha: 0.4), width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: badgeColor.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        border: Border.all(color: badgeColor.withValues(alpha: 0.4), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: badgeColor.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            badgeIcon,
-            color: badgeColor,
-            size: 24,
-          ),
-          const SizedBox(width: 8),
-          if (categoryLabel.isNotEmpty) ...[
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              badgeIcon,
+              color: badgeColor,
+              size: 24,
+            ),
+            const SizedBox(width: 8),
+            if (categoryLabel.isNotEmpty) ...[
+              Text(
+                categoryLabel,
+                style: AppTypography.titleSmall.copyWith(
+                  color: badgeColor.withValues(alpha: 0.9),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                height: 16,
+                width: 1.5,
+                color: badgeColor.withValues(alpha: 0.4),
+              ),
+            ],
             Text(
-              categoryLabel,
-              style: AppTypography.titleSmall.copyWith(
-                color: badgeColor.withValues(alpha: 0.9),
-                fontWeight: FontWeight.w600,
+              badgeTitle,
+              style: AppTypography.titleMedium.copyWith(
+                color: badgeColor,
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
               ),
             ),
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 8),
-              height: 16,
-              width: 1.5,
-              color: badgeColor.withValues(alpha: 0.4),
-            ),
           ],
-          Text(
-            badgeTitle,
-            style: AppTypography.titleMedium.copyWith(
-              color: badgeColor,
-              fontWeight: FontWeight.w800,
-              fontSize: 16,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

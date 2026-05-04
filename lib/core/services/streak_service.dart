@@ -1,5 +1,6 @@
 import 'package:isar/isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
+import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/domain/entities/streak_entity.dart';
 import '../../features/streak/domain/entities/streak_result.dart';
 
@@ -21,20 +22,29 @@ class StreakService {
     );
   }
 
-  Future<StreakResult> recordActivity() async {
-    final now = DateTime.now();
-    final todayDate = DateTime(now.year, now.month, now.day);
+  Future<StreakResult> recordActivity({int activityDelta = 1}) async {
+    // BUG-006 FIX: Use UTC to avoid timezone-related date comparison bugs
+    final now = DateTime.now().toUtc();
+    final todayDate = DateTime.utc(now.year, now.month, now.day);
+
+    // Compute dayKey as int YYYYMMDD for O(1) Isar lookup
+    final dayKey = todayDate.year * 10000 +
+        todayDate.month * 100 +
+        todayDate.day;
 
     return _isar.writeTxn(() async {
+      // ── 1. Update Streak record ────────────────────────────────────────────
       final data = await _isar.streakIsars.get(1) ?? StreakIsar();
       final lastDate = data.lastActivityDate;
 
       if (lastDate != null) {
         final lastNormalized =
-            DateTime(lastDate.year, lastDate.month, lastDate.day);
+            DateTime.utc(lastDate.year, lastDate.month, lastDate.day);
 
-        // Same day → no change
+        // Same day → increment daily activity but don't change streak
         if (lastNormalized == todayDate) {
+          // Still update the daily counter below
+          await _upsertDailyActivity(dayKey, activityDelta);
           return const StreakResult.sameDay();
         }
 
@@ -58,6 +68,9 @@ class StreakService {
       data.lastActivityDate = todayDate;
       await _isar.streakIsars.put(data);
 
+      // ── 2. Record into DailyActivityIsar for the heatmap ──────────────────
+      await _upsertDailyActivity(dayKey, activityDelta);
+
       return StreakResult(
         currentStreak: data.currentStreak,
         longestStreak: data.longestStreak,
@@ -68,6 +81,50 @@ class StreakService {
             : null,
       );
     });
+  }
+
+  /// Upsert a daily activity record (inside an existing write transaction).
+  Future<void> _upsertDailyActivity(int dayKey, int delta) async {
+    final existing = await _isar.dailyActivityIsars
+        .where()
+        .dayKeyEqualTo(dayKey)
+        .findFirst();
+
+    if (existing != null) {
+      existing.activityCount += delta;
+      await _isar.dailyActivityIsars.put(existing);
+    } else {
+      final entry = DailyActivityIsar()
+        ..dayKey = dayKey
+        ..activityCount = delta;
+      await _isar.dailyActivityIsars.put(entry);
+    }
+  }
+
+  /// Read activity map for the last [days] days. Returns Map<'YYYY-MM-DD', count>.
+  Future<Map<String, int>> getActivityMap({int days = 365}) async {
+    final now = DateTime.now().toUtc();
+    final since = now.subtract(Duration(days: days - 1));
+    final sinceKey = since.year * 10000 + since.month * 100 + since.day;
+
+    final records = await _isar.dailyActivityIsars
+        .where()
+        .dayKeyGreaterThan(sinceKey - 1)
+        .findAll();
+
+    final map = <String, int>{};
+    for (final r in records) {
+      final key = _dayKeyToString(r.dayKey);
+      map[key] = r.activityCount;
+    }
+    return map;
+  }
+
+  String _dayKeyToString(int dayKey) {
+    final y = dayKey ~/ 10000;
+    final m = (dayKey % 10000) ~/ 100;
+    final d = dayKey % 100;
+    return '$y-${m.toString().padLeft(2, '0')}-${d.toString().padLeft(2, '0')}';
   }
 
   Future<void> useFreeze() async {

@@ -9,6 +9,7 @@ import '../../domain/repositories/auth_repository.dart';
 import '../../../hifz/data/models/isar_ayah_progress.dart';
 import '../../../hifz/domain/entities/hifz_entities.dart';
 import '../../../streak/data/models/streak_isar.dart';
+import '../../../streak/data/models/daily_activity_isar.dart';
 import '../../../xp/data/models/xp_isar.dart';
 
 class AuthFailure extends Failure {
@@ -69,6 +70,21 @@ class AuthRepositoryImpl implements AuthRepository {
 
       if (response.user == null) {
         return const Left(AuthFailure('فشل إنشاء الحساب'));
+      }
+
+      // Supabase returns a user with an identities list.
+      // If identities is empty it means the email is already registered.
+      if (response.user!.identities != null &&
+          response.user!.identities!.isEmpty) {
+        return const Left(AuthFailure('البريد الإلكتروني مسجل بالفعل. حاول تسجيل الدخول.'));
+      }
+
+      // If email confirmation is required, the session will be null.
+      // Inform the user they need to confirm their email.
+      if (response.session == null) {
+        return const Left(AuthFailure(
+          'تم إنشاء الحساب! يرجى تفقّد بريدك الإلكتروني لتأكيد الحساب قبل تسجيل الدخول.',
+        ));
       }
 
       final user = AppUser(
@@ -135,7 +151,18 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  // ─── Resend Confirmation ─────────────────────────────────────────────────
+
+  @override
+  Future<void> resendConfirmation(String email) async {
+    await _supabase.auth.resend(
+      type: OtpType.signup,
+      email: email,
+    );
+  }
+
   // ─── Sign Out ─────────────────────────────────────────────────────────────
+
 
   @override
   Future<Either<Failure, Unit>> signOut() async {
@@ -159,6 +186,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _syncAyahProgressToCloud(user.id);
       await _syncStreakToCloud();
       await _syncXpToCloud();
+      await _syncDailyActivitiesToCloud();
 
       debugPrint('✅ Sync to cloud completed');
       return const Right(unit);
@@ -177,6 +205,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _pullAyahProgressFromCloud(user.id);
       await _pullStreakFromCloud(user.id);
       await _pullXpFromCloud(user.id);
+      await _pullDailyActivitiesFromCloud(user.id);
 
       debugPrint('✅ Pull from cloud completed');
       return const Right(unit);
@@ -321,6 +350,50 @@ class AuthRepositoryImpl implements AuthRepository {
     });
   }
 
+  // ─── Daily Activities Sync ──────────────────────────────────────────────────
+
+  Future<void> _syncDailyActivitiesToCloud() async {
+    final activities = await _isar.dailyActivityIsars.where().findAll();
+    if (activities.isEmpty) return;
+
+    for (final activity in activities) {
+      await _supabase.rpc('upsert_daily_activity', params: {
+        'p_day_key': activity.dayKey,
+        'p_activity_count': activity.activityCount,
+      });
+    }
+  }
+
+  Future<void> _pullDailyActivitiesFromCloud(String userId) async {
+    final rows = await _supabase
+        .from('daily_activities')
+        .select()
+        .eq('user_id', userId);
+
+    if (rows.isEmpty) return;
+
+    await _isar.writeTxn(() async {
+      for (final row in rows) {
+        final dayKey = row['day_key'] as int;
+        final cloudCount = row['activity_count'] as int;
+
+        final local = await _isar.dailyActivityIsars.where().dayKeyEqualTo(dayKey).findFirst();
+
+        if (local != null) {
+          if (cloudCount > local.activityCount) {
+            local.activityCount = cloudCount;
+            await _isar.dailyActivityIsars.put(local);
+          }
+        } else {
+          final newRecord = DailyActivityIsar()
+            ..dayKey = dayKey
+            ..activityCount = cloudCount;
+          await _isar.dailyActivityIsars.put(newRecord);
+        }
+      }
+    });
+  }
+
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
   AyahStatus _parseAyahStatus(String status) {
@@ -339,21 +412,53 @@ class AuthRepositoryImpl implements AuthRepository {
   /// Maps Supabase auth error messages to Arabic user-friendly messages
   String _mapAuthError(String message) {
     final lower = message.toLowerCase();
-    if (lower.contains('email') && lower.contains('already')) {
-      return 'البريد الإلكتروني مسجل بالفعل';
+
+    // Email already registered
+    if (lower.contains('already registered') ||
+        (lower.contains('email') && lower.contains('already'))) {
+      return 'البريد الإلكتروني مسجل بالفعل. حاول تسجيل الدخول.';
     }
-    if (lower.contains('invalid') && lower.contains('credentials')) {
+
+    // Email not confirmed — most common cause of "invalid credentials" confusion
+    if (lower.contains('email not confirmed') ||
+        lower.contains('email_not_confirmed') ||
+        lower.contains('not confirmed')) {
+      return 'يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد.';
+    }
+
+    // Wrong password or email
+    if (lower.contains('invalid login credentials') ||
+        (lower.contains('invalid') && lower.contains('credentials'))) {
       return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
     }
+
+    // Password too short
     if (lower.contains('password') && lower.contains('short')) {
       return 'كلمة المرور قصيرة جداً (6 أحرف على الأقل)';
     }
+
+    // Invalid email format
     if (lower.contains('email') && lower.contains('invalid')) {
       return 'صيغة البريد الإلكتروني غير صحيحة';
     }
-    if (lower.contains('network') || lower.contains('connection')) {
+
+    // Too many requests
+    if (lower.contains('too many') || lower.contains('rate limit')) {
+      return 'محاولات كثيرة. انتظر قليلاً ثم حاول مرة أخرى.';
+    }
+
+    // Network error
+    if (lower.contains('network') || lower.contains('connection') ||
+        lower.contains('socket')) {
       return 'لا يوجد اتصال بالإنترنت';
     }
+
+    // User not found
+    if (lower.contains('user not found') || lower.contains('no user')) {
+      return 'لا يوجد حساب بهذا البريد الإلكتروني';
+    }
+
+    debugPrint('⚠️ Unmapped Supabase error: $message');
     return 'حدث خطأ، حاول مرة أخرى';
   }
 }

@@ -54,6 +54,7 @@ class _BookmarksTabState extends State<BookmarksTab> {
               entries: entries,
               isDark: isDark,
               onTap: (entry) {
+                // Navigate to surah detail — the surah list will show the correct surah
                 context.push('/quran/surah/${entry.surahId}');
               },
               onDismissed: _removeBookmark,

@@ -10,9 +10,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../../../core/services/achievement_service.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../domain/entities/progress_entities.dart';
 import '../cubits/progress_cubit.dart';
+import 'package:go_router/go_router.dart';
 
 class ProgressPage extends StatelessWidget {
   const ProgressPage({super.key});
@@ -66,7 +68,11 @@ class _ProgressView extends StatelessWidget {
     );
   }
 
-  SliverAppBar _buildAppBar(BuildContext context, bool isDark, ProgressState state) {
+  SliverAppBar _buildAppBar(
+    BuildContext context,
+    bool isDark,
+    ProgressState state,
+  ) {
     return SliverAppBar(
       expandedHeight: 140,
       pinned: true,
@@ -82,7 +88,8 @@ class _ProgressView extends StatelessWidget {
             tooltip: context.l10n.shareProgress,
             onPressed: () {
               final profileState = context.read<ProfileCubit>().state;
-              final hasName = profileState is ProfileLoaded && profileState.profile.hasName;
+              final hasName =
+                  profileState is ProfileLoaded && profileState.profile.hasName;
               final text = hasName
                   ? context.l10n.shareProgressWithName(
                       state.progress.memorizedAyahs,
@@ -271,7 +278,9 @@ class _ProgressContentState extends State<_ProgressContent>
 
               // ─── Memorization Progress Section ──────────────
               SectionHeader(
-                title: context.isArabic ? 'تقدم الحفظ' : 'Memorization Progress',
+                title: context.isArabic
+                    ? 'تقدم الحفظ'
+                    : 'Memorization Progress',
                 padding: EdgeInsets.zero,
               ),
               const SizedBox(height: AppSpacing.md),
@@ -283,19 +292,25 @@ class _ProgressContentState extends State<_ProgressContent>
                 percentage: p.memorizedAyahsPercentage,
                 rows: [
                   _DetailRow(
-                    label: context.isArabic ? 'الآيات المحفوظة' : 'Ayahs Memorized',
+                    label: context.isArabic
+                        ? 'الآيات المحفوظة'
+                        : 'Ayahs Memorized',
                     current: p.memorizedAyahs,
                     total: p.totalAyahs,
                     color: AppColors.primary,
                   ),
                   _DetailRow(
-                    label: context.isArabic ? 'السور المحفوظة' : 'Surahs Memorized',
+                    label: context.isArabic
+                        ? 'السور المحفوظة'
+                        : 'Surahs Memorized',
                     current: p.memorizedSurahs,
                     total: p.totalSurahs,
                     color: AppColors.gold,
                   ),
                   _DetailRow(
-                    label: context.isArabic ? 'الأجزاء المحفوظة' : 'Juz Memorized',
+                    label: context.isArabic
+                        ? 'الأجزاء المحفوظة'
+                        : 'Juz Memorized',
                     current: p.memorizedJuz,
                     total: p.totalJuz,
                     color: AppColors.info,
@@ -320,18 +335,23 @@ class _ProgressContentState extends State<_ProgressContent>
               const SizedBox(height: AppSpacing.sectionGap),
 
               // ─── Smart Memorization Progress Section ─────────
-              if (p.smartMemorizedAyahs > 0 || p.smartReviewAyahs > 0 || p.kidsPoints > 0) ...[
+              if (p.smartMemorizedAyahs > 0 ||
+                  p.smartReviewAyahs > 0 ||
+                  p.kidsPoints > 0) ...[
                 SectionHeader(
-                  title: context.isArabic ? 'نظام الحفظ الذكي' : 'Smart Memorization',
+                  title: context.isArabic
+                      ? 'نظام الحفظ الذكي'
+                      : 'Smart Memorization',
                   padding: EdgeInsets.zero,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                _SmartMemorizationCard(
-                  progress: p,
-                  isDark: isDark,
-                ),
+                _SmartMemorizationCard(progress: p, isDark: isDark),
                 const SizedBox(height: AppSpacing.sectionGap),
               ],
+
+              // ─── Certificates Section ─────────────────────────
+              _CertificatesSection(isDark: isDark),
+              const SizedBox(height: AppSpacing.sectionGap),
 
               // ─── Achievements Section ───────────────────────
               Row(
@@ -348,14 +368,19 @@ class _ProgressContentState extends State<_ProgressContent>
                       vertical: AppSpacing.xs,
                     ),
                     decoration: BoxDecoration(
-                      color: (isDark ? AppColors.primaryLight : AppColors.primary)
-                          .withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                      color:
+                          (isDark ? AppColors.primaryLight : AppColors.primary)
+                              .withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
                     ),
                     child: Text(
                       '${p.unlockedAchievements} / ${p.achievements.length}',
                       style: AppTypography.labelSmall.copyWith(
-                        color: isDark ? AppColors.primaryLight : AppColors.primary,
+                        color: isDark
+                            ? AppColors.primaryLight
+                            : AppColors.primary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -551,8 +576,9 @@ class _DetailedProgressCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-    final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
@@ -603,10 +629,12 @@ class _DetailedProgressCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    ...rows.map((row) => Padding(
-                          padding: const EdgeInsets.only(bottom: 6),
-                          child: _ProgressBarRow(row: row, isDark: isDark),
-                        )),
+                    ...rows.map(
+                      (row) => Padding(
+                        padding: const EdgeInsets.only(bottom: 6),
+                        child: _ProgressBarRow(row: row, isDark: isDark),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -615,10 +643,7 @@ class _DetailedProgressCard extends StatelessWidget {
           // Extra info chips
           if (extraInfo != null && extraInfo!.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.md),
-            Divider(
-              color: border,
-              height: 1,
-            ),
+            Divider(color: border, height: 1),
             const SizedBox(height: AppSpacing.md),
             Row(
               children: extraInfo!.map((chip) {
@@ -631,8 +656,7 @@ class _DetailedProgressCard extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: chip.color.withValues(alpha: 0.08),
-                      borderRadius:
-                          BorderRadius.circular(AppSpacing.radiusMd),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -684,10 +708,10 @@ class _ProgressBarRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hintColor =
-        isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
-    final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final hintColor = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
 
     return Column(
       children: [
@@ -796,19 +820,14 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: selected
-                        ? primary
-                        : primary.withValues(alpha: 0.08),
+                    color: selected ? primary : primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                   ),
                   child: Text(
                     tabLabels[i],
                     style: AppTypography.labelMedium.copyWith(
-                      color: selected
-                          ? Colors.white
-                          : primary,
-                      fontWeight:
-                          selected ? FontWeight.w700 : FontWeight.w500,
+                      color: selected ? Colors.white : primary,
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     ),
                   ),
                 ),
@@ -830,10 +849,8 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
             childAspectRatio: 0.72,
           ),
           itemCount: _filtered.length,
-          itemBuilder: (context, i) => _AchievementTile(
-            achievement: _filtered[i],
-            isDark: isDark,
-          ),
+          itemBuilder: (context, i) =>
+              _AchievementTile(achievement: _filtered[i], isDark: isDark),
         ),
       ],
     );
@@ -843,10 +860,7 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
 // ─── Achievement Tile ─────────────────────────────────────────────────────────
 
 class _AchievementTile extends StatelessWidget {
-  const _AchievementTile({
-    required this.achievement,
-    required this.isDark,
-  });
+  const _AchievementTile({required this.achievement, required this.isDark});
   final Achievement achievement;
   final bool isDark;
 
@@ -876,18 +890,19 @@ class _AchievementTile extends StatelessWidget {
             // Icon
             Text(
               achievement.icon,
-              style: TextStyle(
-                fontSize: 26,
-                color: unlocked ? null : Colors.transparent,
-              ).copyWith(
-                shadows: [
-                  if (!unlocked)
-                    Shadow(
-                      color: Colors.grey.withValues(alpha: 0.5),
-                      blurRadius: 0,
-                    ),
-                ],
-              ),
+              style:
+                  TextStyle(
+                    fontSize: 26,
+                    color: unlocked ? null : Colors.transparent,
+                  ).copyWith(
+                    shadows: [
+                      if (!unlocked)
+                        Shadow(
+                          color: Colors.grey.withValues(alpha: 0.5),
+                          blurRadius: 0,
+                        ),
+                    ],
+                  ),
             ),
             const SizedBox(height: 4),
 
@@ -908,11 +923,7 @@ class _AchievementTile extends StatelessWidget {
 
             // Progress bar or lock
             if (unlocked)
-              Icon(
-                Icons.check_circle_rounded,
-                size: 14,
-                color: primary,
-              )
+              Icon(Icons.check_circle_rounded, size: 14, color: primary)
             else ...[
               // Mini progress bar
               SizedBox(
@@ -947,10 +958,12 @@ class _AchievementTile extends StatelessWidget {
     final isDark = this.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     showModalBottomSheet(
       context: context,
@@ -967,125 +980,124 @@ class _AchievementTile extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-            // Handle
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(
-              achievement.icon,
-              style: const TextStyle(fontSize: 48),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              achievement.titleKey,
-              style: AppTypography.headlineMedium.copyWith(
-                color: textPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              achievement.descriptionKey,
-              style: AppTypography.bodyMedium.copyWith(
-                color: textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            // Progress bar
-            LinearPercentIndicator(
-              lineHeight: 8,
-              percent: achievement.progressPercent,
-              progressColor: achievement.isUnlocked
-                  ? AppColors.success
-                  : primary,
-              backgroundColor: primary.withValues(alpha: 0.1),
-              barRadius: const Radius.circular(4),
-              center: Text(
-                '${(achievement.progressPercent * 100).toStringAsFixed(0)}%',
-                style: AppTypography.labelSmall.copyWith(
-                  color: Colors.white,
-                  fontSize: 7,
-                ),
-              ),
-              animation: true,
-              animationDuration: 500,
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              '${achievement.currentValue} / ${achievement.targetValue}',
-              style: AppTypography.labelMedium.copyWith(
-                color: textSecondary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            if (achievement.isUnlocked) ...[
-              const SizedBox(height: AppSpacing.md),
+              // Handle
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
+                width: 40,
+                height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.success.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      color: AppColors.success,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      context.isArabic ? 'تم الإنجاز!' : 'Achieved!',
-                      style: AppTypography.labelMedium.copyWith(
-                        color: AppColors.success,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+                  color: isDark
+                      ? AppColors.darkDivider
+                      : AppColors.lightDivider,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () {
-                    final profileState = context.read<ProfileCubit>().state;
-                    final hasName = profileState is ProfileLoaded && profileState.profile.hasName;
-                    final text = hasName
-                        ? context.l10n.shareAchievementWithName(
-                            achievement.descriptionKey,
-                            profileState.profile.displayName,
-                            achievement.titleKey,
-                          )
-                        : context.l10n.shareAchievementText(
-                            achievement.descriptionKey,
-                            achievement.titleKey,
-                          );
-                    SharePlus.instance.share(ShareParams(text: text));
-                  },
-                  icon: const Icon(Icons.share_rounded, size: 20),
-                  label: Text(context.l10n.shareAchievement),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                  ),
+              Text(achievement.icon, style: const TextStyle(fontSize: 48)),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                achievement.titleKey,
+                style: AppTypography.headlineMedium.copyWith(
+                  color: textPrimary,
                 ),
               ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                achievement.descriptionKey,
+                style: AppTypography.bodyMedium.copyWith(color: textSecondary),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              // Progress bar
+              LinearPercentIndicator(
+                lineHeight: 8,
+                percent: achievement.progressPercent,
+                progressColor: achievement.isUnlocked
+                    ? AppColors.success
+                    : primary,
+                backgroundColor: primary.withValues(alpha: 0.1),
+                barRadius: const Radius.circular(4),
+                center: Text(
+                  '${(achievement.progressPercent * 100).toStringAsFixed(0)}%',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: Colors.white,
+                    fontSize: 7,
+                  ),
+                ),
+                animation: true,
+                animationDuration: 500,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                '${achievement.currentValue} / ${achievement.targetValue}',
+                style: AppTypography.labelMedium.copyWith(
+                  color: textSecondary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              if (achievement.isUnlocked) ...[
+                const SizedBox(height: AppSpacing.md),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.success.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: AppColors.success,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        context.isArabic ? 'تم الإنجاز!' : 'Achieved!',
+                        style: AppTypography.labelMedium.copyWith(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      final profileState = context.read<ProfileCubit>().state;
+                      final hasName =
+                          profileState is ProfileLoaded &&
+                          profileState.profile.hasName;
+                      final text = hasName
+                          ? context.l10n.shareAchievementWithName(
+                              achievement.descriptionKey,
+                              profileState.profile.displayName,
+                              achievement.titleKey,
+                            )
+                          : context.l10n.shareAchievementText(
+                              achievement.descriptionKey,
+                              achievement.titleKey,
+                            );
+                      SharePlus.instance.share(ShareParams(text: text));
+                    },
+                    icon: const Icon(Icons.share_rounded, size: 20),
+                    label: Text(context.l10n.shareAchievement),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.lg),
             ],
-            const SizedBox(height: AppSpacing.lg),
-          ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -1102,7 +1114,9 @@ class _SmartMemorizationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
@@ -1115,13 +1129,14 @@ class _SmartMemorizationCard extends StatelessWidget {
             color: primary.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
-          )
+          ),
         ],
       ),
       child: Column(
         children: [
           // Adult Track Stats
-          if (progress.smartMemorizedAyahs > 0 || progress.smartReviewAyahs > 0) ...[
+          if (progress.smartMemorizedAyahs > 0 ||
+              progress.smartReviewAyahs > 0) ...[
             Row(
               children: [
                 Container(
@@ -1130,7 +1145,11 @@ class _SmartMemorizationCard extends StatelessWidget {
                     color: primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.psychology_rounded, color: primary, size: 24),
+                  child: Icon(
+                    Icons.psychology_rounded,
+                    color: primary,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Text(
@@ -1173,7 +1192,9 @@ class _SmartMemorizationCard extends StatelessWidget {
                         Text(
                           context.isArabic ? 'قيد المراجعة: ' : 'Reviewing: ',
                           style: AppTypography.labelSmall.copyWith(
-                            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
                           ),
                         ),
                         Text(
@@ -1191,7 +1212,7 @@ class _SmartMemorizationCard extends StatelessWidget {
             ),
             if (progress.kidsPoints > 0) const Divider(height: 32),
           ],
-          
+
           // Kids Track Stats
           if (progress.kidsPoints > 0) ...[
             Row(
@@ -1202,7 +1223,11 @@ class _SmartMemorizationCard extends StatelessWidget {
                     color: AppColors.gold.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.star_rounded, color: AppColors.gold, size: 24),
+                  child: const Icon(
+                    Icons.star_rounded,
+                    color: AppColors.gold,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Text(
@@ -1281,7 +1306,9 @@ class _StatBox extends StatelessWidget {
           Text(
             label,
             style: AppTypography.labelSmall.copyWith(
-              color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
             ),
           ),
         ],
@@ -1290,3 +1317,199 @@ class _StatBox extends StatelessWidget {
   }
 }
 
+// ─── Certificates Section ─────────────────────────────────────────────────────
+
+class _CertificatesSection extends StatefulWidget {
+  const _CertificatesSection({required this.isDark});
+  final bool isDark;
+
+  @override
+  State<_CertificatesSection> createState() => _CertificatesSectionState();
+}
+
+class _CertificatesSectionState extends State<_CertificatesSection> {
+  List<CertificateAward> _certificates = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCertificates();
+  }
+
+  Future<void> _loadCertificates() async {
+    final service = getIt<AchievementService>();
+    final certs = service.getEarnedCertificates();
+    if (service.hasNewCertificate) {
+      await service.markCertificatesSeen();
+    }
+    if (mounted) {
+      setState(() {
+        _certificates = certs;
+        _isLoading = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) return const SizedBox.shrink();
+
+    if (_certificates.isEmpty) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(
+            title: context.isArabic ? 'شهاداتي' : 'My Certificates',
+            padding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            decoration: BoxDecoration(
+              color: widget.isDark ? AppColors.darkCard : AppColors.lightCard,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+              border: Border.all(
+                color: widget.isDark
+                    ? AppColors.darkDivider
+                    : AppColors.lightDivider,
+              ),
+            ),
+            child: Center(
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.workspace_premium_rounded,
+                    size: 48,
+                    color: AppColors.gold.withValues(alpha: 0.3),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    context.isArabic
+                        ? 'احفظ الأجزاء والسور الكبيرة لتحصل على شهادات التميز!'
+                        : 'Memorize Juz and large Surahs to earn certificates!',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: widget.isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          title: context.isArabic ? 'شهاداتي' : 'My Certificates',
+          padding: EdgeInsets.zero,
+        ),
+        const SizedBox(height: AppSpacing.md),
+        SizedBox(
+          height: 180,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: _certificates.length,
+            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
+            itemBuilder: (context, index) {
+              final cert = _certificates[index];
+              return _CertificateCard(cert: cert, isDark: widget.isDark);
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _CertificateCard extends StatelessWidget {
+  const _CertificateCard({required this.cert, required this.isDark});
+  final CertificateAward cert;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final isJuz = cert.type == CertificateType.juz;
+    final color = isJuz ? AppColors.gold : AppColors.primary;
+    final bgGradient = LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [
+        color.withValues(alpha: isDark ? 0.2 : 0.1),
+        color.withValues(alpha: 0.05),
+      ],
+    );
+
+    return GestureDetector(
+      onTap: () {
+        context.push(
+          '/certificate',
+          extra: {
+            'award': cert,
+            'userName': context.read<ProfileCubit>().state is ProfileLoaded
+                ? (context.read<ProfileCubit>().state as ProfileLoaded)
+                      .profile
+                      .displayName
+                : (context.isArabic ? 'مستخدم تالية' : 'Talia User'),
+          },
+        );
+      },
+      child: Container(
+        width: 140,
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          gradient: bgGradient,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isJuz
+                    ? Icons.workspace_premium_rounded
+                    : Icons.verified_rounded,
+                color: color,
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              cert.titleAr,
+              textAlign: TextAlign.center,
+              style: AppTypography.labelMedium.copyWith(
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${cert.earnedAt.day}/${cert.earnedAt.month}/${cert.earnedAt.year}',
+              style: AppTypography.labelSmall.copyWith(
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

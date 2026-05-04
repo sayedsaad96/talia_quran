@@ -3,16 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
+import '../../../../core/services/achievement_service.dart';
 import '../widgets/certificate_widget.dart';
 
 class CertificatePage extends StatefulWidget {
   const CertificatePage({
     super.key,
-    required this.juzNumber,
+    required this.award,
     required this.userName,
   });
 
-  final int juzNumber;
+  final CertificateAward award;
   final String userName;
 
   @override
@@ -27,13 +28,16 @@ class _CertificatePageState extends State<CertificatePage> {
     final bytes = await _screenshotController.captureFromWidget(
       CertificateWidget(
         userName: widget.userName,
-        juzNumber: widget.juzNumber,
+        award: widget.award,
         completionDate: DateTime.now(),
       ),
       pixelRatio: 3.0,
     );
     final dir = await getTemporaryDirectory();
-    final file = File('${dir.path}/talia_certificate_juz${widget.juzNumber}.png');
+    final fileName = widget.award.type == CertificateType.juz 
+        ? 'talia_certificate_juz_${widget.award.juzNumber}.png'
+        : 'talia_certificate_surah_${widget.award.surahId}.png';
+    final file = File('${dir.path}/$fileName');
     await file.writeAsBytes(bytes);
     return file;
   }
@@ -42,12 +46,14 @@ class _CertificatePageState extends State<CertificatePage> {
     setState(() => _isSaving = true);
     try {
       final file = await _captureAsFile();
+      final shareText = widget.award.type == CertificateType.juz
+          ? 'بفضل الله أتممت حفظ الجزء ${widget.award.juzNumber} من القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙'
+          : 'بفضل الله أتممت حفظ سورة ${widget.award.surahNameAr ?? ""} من القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙';
+      
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
-          text:
-              'بفضل الله أتممت حفظ الجزء ${widget.juzNumber} من القرآن الكريم 📖\n'
-              'انضم إليّ في تطبيق تالية لحفظ القرآن 🌙',
+          text: shareText,
         ),
       );
     } catch (e) {
@@ -66,9 +72,10 @@ class _CertificatePageState extends State<CertificatePage> {
     try {
       final file = await _captureAsFile();
       final docsDir = await getApplicationDocumentsDirectory();
-      final savedFile = await file.copy(
-        '${docsDir.path}/talia_certificate_juz${widget.juzNumber}.png',
-      );
+      final fileName = widget.award.type == CertificateType.juz 
+          ? 'talia_certificate_juz_${widget.award.juzNumber}.png'
+          : 'talia_certificate_surah_${widget.award.surahId}.png';
+      final savedFile = await file.copy('${docsDir.path}/$fileName');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('تم حفظ الشهادة في: ${savedFile.path}')),
@@ -105,7 +112,7 @@ class _CertificatePageState extends State<CertificatePage> {
                   controller: _screenshotController,
                   child: CertificateWidget(
                     userName: widget.userName,
-                    juzNumber: widget.juzNumber,
+                    award: widget.award,
                     completionDate: DateTime.now(),
                   ),
                 ),

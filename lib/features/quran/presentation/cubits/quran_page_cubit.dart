@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../../domain/repositories/quran_repository.dart';
 import '../../../../features/progress/domain/usecases/save_read_page_usecase.dart';
+import '../../../../core/services/streak_service.dart';
 
 abstract class QuranPageState extends Equatable {
   const QuranPageState();
@@ -26,14 +27,16 @@ class QuranPageError extends QuranPageState {
 }
 
 class QuranPageCubit extends Cubit<QuranPageState> {
-  QuranPageCubit(this._repository, this._saveReadPage) : super(QuranPageInitial());
+  // BUG-NEW-001 FIX: Added StreakService so reading also updates the streak
+  QuranPageCubit(this._repository, this._saveReadPage, this._streakService)
+      : super(QuranPageInitial());
 
   final QuranRepository _repository;
   final SaveReadPageUsecase _saveReadPage;
+  final StreakService _streakService; // BUG-NEW-001 FIX
 
   Future<void> loadPage(int pageNumber) async {
     emit(QuranPageLoading());
-    // No longer auto-saving reading progress here
     final result = await _repository.getQuranPage(pageNumber);
     result.fold(
       (f) => emit(QuranPageError(f.message)),
@@ -45,6 +48,15 @@ class QuranPageCubit extends Cubit<QuranPageState> {
   /// to confirm they actually read it.
   Future<void> confirmRead(int pageNumber) async {
     await _saveReadPage(pageNumber);
+
+    // BUG-NEW-001 FIX: Record activity in the unified StreakService (Isar-based)
+    // so that reading the Quran counts towards the streak, not just Hifz sessions.
+    try {
+      await _streakService.recordActivity();
+    } catch (_) {
+      // Non-critical — don't crash the page if streak update fails
+    }
+
     if (state is QuranPageLoaded) {
       final loaded = state as QuranPageLoaded;
       emit(QuranPageLoaded(loaded.detail, isReadConfirmed: true));

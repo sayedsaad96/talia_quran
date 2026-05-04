@@ -16,6 +16,7 @@ import '../../../../core/utils/arabic_normalizer.dart';
 import '../../../../core/services/haptic_service.dart';
 import '../../../../core/services/streak_service.dart';
 import '../../../../core/services/xp_service.dart';
+import '../../../../core/services/achievement_service.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
 
 part 'hifz_session_state.dart';
@@ -28,9 +29,11 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     this._settings,
     this._streakService,
     this._xpService,
+    this._achievementService,
   ) : super(const HifzSessionInitial()) {
     _initSpeech();
-    _player.playerStateStream.listen((state) {
+    // BUG-NEW-004 FIX: Store subscription reference
+    _playerStateSub = _player.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
         if (this.state is HifzSessionLoaded) {
           emit((this.state as HifzSessionLoaded).copyWith(isPlaying: false));
@@ -46,9 +49,12 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   final SettingsRepository _settings;
   final StreakService _streakService;
   final XpService _xpService;
+  final AchievementService _achievementService;
 
   final SpeechToText _speechToText = SpeechToText();
   final AudioPlayer _player = AudioPlayer();
+  // BUG-NEW-004 FIX: Store subscription so it can be cancelled in close()
+  StreamSubscription<PlayerState>? _playerStateSub;
   
   List<Ayah> _ayahs = [];
   Map<int, AyahProgressModel> _progressMap = {};
@@ -243,8 +249,18 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
         currentProgress = currentProgress.advanceWithSpacedRepetition();
         // Record streak and XP on successful memorization
         try {
-          await _streakService.recordActivity();
+          // Pass activityDelta=1 per ayah successfully memorized
+          await _streakService.recordActivity(activityDelta: 1);
           await _xpService.addXp('ayah_memorized');
+          // Check if any new certificates were earned
+          final newAwards = await _achievementService.checkAndUnlockCertificates();
+          if (newAwards.isNotEmpty && state is HifzSessionLoaded) {
+            final prevState = state as HifzSessionLoaded;
+            emit(CertificatesEarned(awards: newAwards, previousState: prevState));
+            // Restore state after brief notification
+            await Future.delayed(const Duration(milliseconds: 100));
+            if (!isClosed) emit(prevState);
+          }
         } catch (_) {
           // Non-critical — don't crash the session
         }
@@ -297,6 +313,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
 
   @override
   Future<void> close() {
+    _playerStateSub?.cancel(); // BUG-NEW-004 FIX: Cancel subscription
     _player.dispose();
     _speechToText.cancel();
     return super.close();

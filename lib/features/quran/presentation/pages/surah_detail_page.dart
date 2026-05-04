@@ -80,6 +80,10 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
 
   Future<void> _toggleBookmark(Ayah ayah, String surahName) async {
     try {
+      final key = '${ayah.surahId}_${ayah.numberInSurah}';
+      // Capture the current state BEFORE the toggle to determine what it will become
+      final wasBookmarked = _bookmarkedKeys.contains(key);
+
       await _bookmarkService.toggle(
         BookmarkEntry(
           surahId: ayah.surahId,
@@ -91,11 +95,11 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
       );
       _loadBookmarks();
       if (mounted) {
-        final key = '${ayah.surahId}_${ayah.numberInSurah}';
-        final isNowBookmarked = _bookmarkedKeys.contains(key);
+        // isNowBookmarked is the opposite of what it was before the toggle
+        final isNowBookmarked = !wasBookmarked;
         context.showSnackBar(
           isNowBookmarked
-              ? (context.isArabic ? 'تم إضافة علامة مرجعية' : 'Bookmark added')
+              ? (context.isArabic ? 'تم إضافة علامة مرجعية ✓' : 'Bookmark added ✓')
               : (context.isArabic
                     ? 'تم إزالة العلامة المرجعية'
                     : 'Bookmark removed'),

@@ -21,6 +21,7 @@ import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/certificate/presentation/pages/certificate_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../services/achievement_service.dart';
 import '../widgets/app_shell.dart';
 
 abstract class AppRoutes {
@@ -68,12 +69,15 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
-        path: '/certificate/:juz',
+        path: '/certificate',
         builder: (context, state) {
-          final juz = int.tryParse(state.pathParameters['juz'] ?? '1') ?? 1;
           final extra = state.extra as Map<String, dynamic>?;
           final userName = extra?['userName'] as String? ?? 'مستخدم تالية';
-          return CertificatePage(juzNumber: juz, userName: userName);
+          final award = extra?['award'] as CertificateAward?;
+          if (award == null) {
+            return const Scaffold(body: Center(child: Text('لم يتم العثور على الشهادة')));
+          }
+          return CertificatePage(award: award, userName: userName);
         },
       ),
       GoRoute(

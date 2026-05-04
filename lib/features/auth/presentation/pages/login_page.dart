@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../presentation/cubits/auth_cubit.dart';
+import '../../../settings/presentation/cubits/profile_cubit.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -52,13 +53,43 @@ class _LoginPageState extends State<LoginPage> {
         body: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
             if (state is AuthAuthenticated) {
+              // Update local profile automatically with the user's display name
+              context.read<ProfileCubit>().updateProfile(name: state.user.displayName);
               context.go('/');
             }
             if (state is AuthError) {
+              // Special sentinel: confirmation email was re-sent successfully
+              if (state.message == '__resent__') {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('✅ تم إرسال رسالة التأكيد، تحقق من بريدك'),
+                    backgroundColor: Colors.green,
+                    duration: Duration(seconds: 4),
+                  ),
+                );
+                return;
+              }
+
+              // Email not confirmed — offer resend button
+              final isNotConfirmed = state.message.contains('تأكيد') ||
+                  state.message.contains('تفقّد') ||
+                  state.message.contains('confirmed');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(state.message),
                   backgroundColor: Colors.red.shade700,
+                  duration: const Duration(seconds: 6),
+                  action: isNotConfirmed
+                      ? SnackBarAction(
+                          label: 'إعادة إرسال',
+                          textColor: Colors.white,
+                          onPressed: () {
+                            context.read<AuthCubit>().resendConfirmation(
+                                  _emailController.text.trim(),
+                                );
+                          },
+                        )
+                      : null,
                 ),
               );
             }

@@ -25,6 +25,9 @@ abstract class AuthRepository {
   /// Pull progress from cloud
   Future<Either<Failure, Unit>> pullProgressFromCloud();
 
+  /// Resend confirmation email
+  Future<void> resendConfirmation(String email);
+
   /// Current user (null = not logged in)
   AppUser? get currentUser;
 
