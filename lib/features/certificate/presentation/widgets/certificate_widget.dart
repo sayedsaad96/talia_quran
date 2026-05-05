@@ -161,25 +161,46 @@ class CertificateWidget extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        // Logo
-                        const Column(
-                          children: [
-                            Icon(Icons.menu_book_rounded, color: darkGreen, size: 32),
-                            Text(
-                              'تالية\nTalia',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: darkGreen,
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                                height: 1.2,
+                        // ─── Logo: صورة الشعار من assets ───────────────────
+                        Image.asset(
+                          'assets/images/logo.png',
+                          width: 64,
+                          height: 64,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => Column(
+                            children: const [
+                              Icon(Icons.menu_book_rounded,
+                                  color: darkGreen, size: 40),
+                              Text(
+                                'تالية\nTalia',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: darkGreen,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.2,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                        
-                        const SizedBox(height: 12),
-                        
+
+                        const SizedBox(height: 4),
+
+                        // اسم التطبيق تحت اللوجو
+                        const Text(
+                          'تالية\nTalia',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: darkGreen,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            height: 1.2,
+                          ),
+                        ),
+
+                        const SizedBox(height: 10),
+
                         // Title
                         const Text(
                           'شهادة حفظ القرآن الكريم',
@@ -190,14 +211,15 @@ class CertificateWidget extends StatelessWidget {
                             color: darkGreen,
                           ),
                         ),
-                        
+
                         const SizedBox(height: 8),
-                        
+
                         // Subtitle
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.star_border_rounded, color: goldAccent, size: 16),
+                            const Icon(Icons.star_border_rounded,
+                                color: goldAccent, size: 16),
                             const SizedBox(width: 8),
                             Text(
                               'تشهد منصة تالية لتحفيظ القرآن الكريم بأن',
@@ -208,13 +230,14 @@ class CertificateWidget extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            const Icon(Icons.star_border_rounded, color: goldAccent, size: 16),
+                            const Icon(Icons.star_border_rounded,
+                                color: goldAccent, size: 16),
                           ],
                         ),
-                        
-                        const SizedBox(height: 16),
-                        
-                        // User name
+
+                        const SizedBox(height: 14),
+
+                        // ─── اسم المستخدم المسجَّل في التطبيق ──────────────
                         Text(
                           userName,
                           style: const TextStyle(
@@ -225,9 +248,9 @@ class CertificateWidget extends StatelessWidget {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        
+
                         const SizedBox(height: 8),
-                        
+
                         Text(
                           'قد أتم بنجاح حفظ',
                           style: TextStyle(
@@ -236,12 +259,13 @@ class CertificateWidget extends StatelessWidget {
                             color: darkGreen.withValues(alpha: 0.8),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 12),
-                        
-                        // Badge / Box for achievement
+
+                        // ─── Badge: اسم الجزء أو السورة ────────────────────
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32, vertical: 8),
                           decoration: BoxDecoration(
                             color: darkGreen,
                             borderRadius: BorderRadius.circular(20),
@@ -256,9 +280,9 @@ class CertificateWidget extends StatelessWidget {
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Verse
                         Column(
                           children: [
@@ -280,9 +304,9 @@ class CertificateWidget extends StatelessWidget {
                             ),
                           ],
                         ),
-                        
+
                         const SizedBox(height: 12),
-                        
+
                         // Footer prayer
                         Text(
                           'نسأل الله تعالى أن يجعل القرآن الكريم ربيع قلبه\nونور صدره ورفيق دربه في الدنيا والآخرة.',
@@ -298,8 +322,8 @@ class CertificateWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                
-                // Signatures & Date
+
+                // ─── Signatures & Date ──────────────────────────────────────
                 Positioned(
                   bottom: 24,
                   left: 40,
@@ -313,7 +337,7 @@ class CertificateWidget extends StatelessWidget {
                           const Text(
                             'Talia',
                             style: TextStyle(
-                              fontFamily: 'Amiri', // Or a cursive font if available
+                              fontFamily: 'Amiri',
                               fontSize: 24,
                               fontStyle: FontStyle.italic,
                               color: darkGreen,
@@ -331,7 +355,7 @@ class CertificateWidget extends StatelessWidget {
                           ),
                         ],
                       ),
-                      
+
                       // Date
                       Column(
                         children: [
@@ -366,4 +390,3 @@ class CertificateWidget extends StatelessWidget {
     );
   }
 }
-
