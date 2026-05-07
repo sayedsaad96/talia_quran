@@ -12,8 +12,9 @@ class UserProfile extends Equatable {
   /// Whether a name has been set by the user.
   bool get hasName => name.trim().isNotEmpty;
 
-  /// Display name: returns the user's name or a fallback empty string.
-  String get displayName => name.trim();
+  /// Display name: returns the user's name or a fallback default.
+  // L01 FIX: Return a meaningful fallback instead of empty string
+  String get displayName => name.trim().isNotEmpty ? name.trim() : 'مستخدم تالية';
 
   UserProfile copyWith({
     String? name,

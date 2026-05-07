@@ -20,17 +20,24 @@ class DailyPlanLoaded extends DailyPlanState {
     required this.surahId,
     this.lastEvaluatedAyah,
     this.lastRating,
+    this.newAwards = const [],
   });
   final DailyPlan plan;
   final int surahId;
   final int? lastEvaluatedAyah;
   final PerformanceRating? lastRating;
+  final List<CertificateAward> newAwards;
 
   bool get allDone => plan.completedCount >= plan.totalItems;
 
   @override
-  List<Object?> get props =>
-      [plan, surahId, lastEvaluatedAyah, lastRating];
+  List<Object?> get props => [
+    plan,
+    surahId,
+    lastEvaluatedAyah,
+    lastRating,
+    newAwards,
+  ];
 }
 
 class DailyPlanEvaluating extends DailyPlanState {

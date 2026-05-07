@@ -18,7 +18,9 @@ abstract class MemorizationPlusRepository {
 
   // ─── Review records ─────────────────────────────────────────────────────────
   Future<Either<Failure, AyahReviewRecord?>> getReviewRecord(
-      int surahId, int ayahNumber);
+    int surahId,
+    int ayahNumber,
+  );
   Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords();
   Future<Either<Failure, void>> saveReviewRecord(AyahReviewRecord record);
 
@@ -27,6 +29,10 @@ abstract class MemorizationPlusRepository {
     required int surahId,
     required int ayahNumber,
     required PerformanceRating rating,
+  });
+  Future<Either<Failure, AyahReviewRecord>> markAyahMemorized({
+    required int surahId,
+    required int ayahNumber,
   });
 
   // ─── Kids progress ──────────────────────────────────────────────────────────

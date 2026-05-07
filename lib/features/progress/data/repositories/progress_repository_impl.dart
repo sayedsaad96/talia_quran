@@ -11,7 +11,12 @@ import '../../../../features/memorization_plus/data/datasources/memorization_plu
 import '../../../quran/data/datasources/quran_local_datasource.dart';
 
 class ProgressRepositoryImpl implements ProgressRepository {
-  ProgressRepositoryImpl(this._progressDs, this._hifzDs, this._memPlusDs, this._quranDs);
+  ProgressRepositoryImpl(
+    this._progressDs,
+    this._hifzDs,
+    this._memPlusDs,
+    this._quranDs,
+  );
   final ProgressLocalDatasource _progressDs;
   final HifzLocalDatasource _hifzDs;
   final MemorizationPlusLocalDatasource _memPlusDs;
@@ -37,15 +42,24 @@ class ProgressRepositoryImpl implements ProgressRepository {
           .where((p) => p.status == AyahStatus.review)
           .length;
 
-      // Count memorized surahs (all ayahs in surah are memorized)
+      final surahs = await _quranDs.getSurahs();
+      final surahAyahCounts = {
+        for (final surah in surahs) surah.id: surah.ayahCount,
+      };
+
+      // Count memorized surahs only when every ayah in the surah is recorded as memorized.
       final bySurah = <int, List<dynamic>>{};
       for (final p in allProgress) {
         bySurah.putIfAbsent(p.surahId, () => []).add(p);
       }
 
-      final memorizedSurahs = bySurah.values
-          .where((ayahs) => ayahs.every((a) => a.status == AyahStatus.memorized))
-          .length;
+      final memorizedSurahs = bySurah.entries.where((entry) {
+        final totalAyahs = surahAyahCounts[entry.key];
+        if (totalAyahs == null || entry.value.length < totalAyahs) {
+          return false;
+        }
+        return entry.value.every((a) => a.status == AyahStatus.memorized);
+      }).length;
 
       // Read pages & reading stats
       final readPages = _progressDs.getReadPages();
@@ -53,43 +67,37 @@ class ProgressRepositoryImpl implements ProgressRepository {
 
       // Calculate read-only stats: pages read means those ayahs were read
       // Reading juz = pages read / 20 (each juz ~20 pages)
-      final readJuz = (readPagesCount / 20).floor();
+      final readJuz = (readPagesCount / 20).floor().clamp(
+        0,
+        AppConstants.totalJuz,
+      );
 
-      // Read surahs: count distinct surahs from the pages the user has actually read
-      // We approximate: each surah starts at a known page (from quran data).
-      // For now, use the hifz progress + pages read as a combined indicator.
-      // Count surahs where ANY ayah appears in hifz or ANY page was read.
+      // Reading stats are derived from pages explicitly confirmed as read.
+      final readAyahKeys = <String>{};
       final readSurahIds = <int>{};
-      // Add surahs from hifz progress (they were interacted with)
-      for (final p in allProgress) {
-        readSurahIds.add(p.surahId);
-      }
-      
-      // Map read pages to surahs
-      final surahs = await _quranDs.getSurahs();
-      for (final page in readPages) {
-        dynamic currentSurah;
-        for (final surah in surahs) {
-          if (surah.page <= page) {
-            currentSurah = surah;
-          } else {
-            break;
-          }
-        }
-        if (currentSurah != null) {
-          readSurahIds.add(currentSurah.id);
-        }
-      }
-      
-      final readSurahs = readSurahIds.length;
 
-      // Read ayahs: any ayah in progress (any status) is considered read
-      final readAyahs = allProgress.length;
+      for (final page in readPages) {
+        try {
+          final ayahs = await _quranDs.getAyahsByPage(page);
+          for (final ayah in ayahs) {
+            readAyahKeys.add('${ayah.surahId}_${ayah.numberInSurah}');
+            readSurahIds.add(ayah.surahId);
+          }
+        } catch (_) {
+          // Ignore a stale page entry rather than failing the whole progress page.
+        }
+      }
+
+      final readSurahs = readSurahIds.length;
+      final readAyahs = readAyahKeys.length;
 
       // Memorized juz count (each juz ~20 pages from [1..604])
       // We count how many complete juz sets (20 pages) are memorized
       // More accurate: count memorized ayahs as percentage of total
-      final memorizedJuz = (memorizedAyahs / (AppConstants.totalAyahs / AppConstants.totalJuz)).floor();
+      final memorizedJuz =
+          (memorizedAyahs / (AppConstants.totalAyahs / AppConstants.totalJuz))
+              .floor()
+              .clamp(0, AppConstants.totalJuz);
 
       final streak = _progressDs.getStreakDays();
       final lastActive = _progressDs.getLastActiveDate();
@@ -114,33 +122,39 @@ class ProgressRepositoryImpl implements ProgressRepository {
 
       // Smart memorization system data
       final memPlusRecords = await _memPlusDs.getAllReviewRecords();
-      final smartMemorizedAyahs = memPlusRecords.where((r) => r.strengthLevel >= 6).length;
-      final smartReviewAyahs = memPlusRecords.where((r) => r.strengthLevel < 6 && r.strengthLevel > 0).length;
+      final smartMemorizedAyahs = memPlusRecords
+          .where((r) => r.strengthLevel >= 6)
+          .length;
+      final smartReviewAyahs = memPlusRecords
+          .where((r) => r.strengthLevel < 6 && r.strengthLevel > 0)
+          .length;
 
       final kidsProgress = await _memPlusDs.getKidsProgress();
 
-      return Right(OverallProgress(
-        memorizedAyahs: memorizedAyahs,
-        totalAyahs: AppConstants.totalAyahs,
-        memorizedSurahs: memorizedSurahs,
-        totalSurahs: AppConstants.totalSurahs,
-        memorizedJuz: memorizedJuz,
-        totalJuz: AppConstants.totalJuz,
-        readAyahs: readAyahs,
-        readSurahs: readSurahs,
-        readJuz: readJuz,
-        learningAyahs: learningAyahs,
-        reviewAyahs: reviewAyahs,
-        streakDays: updatedStreak,
-        lastActiveDate: lastActive,
-        achievements: achievements,
-        readPagesCount: readPagesCount,
-        totalQuranPages: 604,
-        smartMemorizedAyahs: smartMemorizedAyahs,
-        smartReviewAyahs: smartReviewAyahs,
-        kidsPoints: kidsProgress.totalPoints,
-        kidsStars: kidsProgress.starsEarned,
-      ));
+      return Right(
+        OverallProgress(
+          memorizedAyahs: memorizedAyahs,
+          totalAyahs: AppConstants.totalAyahs,
+          memorizedSurahs: memorizedSurahs,
+          totalSurahs: AppConstants.totalSurahs,
+          memorizedJuz: memorizedJuz,
+          totalJuz: AppConstants.totalJuz,
+          readAyahs: readAyahs,
+          readSurahs: readSurahs,
+          readJuz: readJuz,
+          learningAyahs: learningAyahs,
+          reviewAyahs: reviewAyahs,
+          streakDays: updatedStreak,
+          lastActiveDate: lastActive,
+          achievements: achievements,
+          readPagesCount: readPagesCount,
+          totalQuranPages: 604,
+          smartMemorizedAyahs: smartMemorizedAyahs,
+          smartReviewAyahs: smartReviewAyahs,
+          kidsPoints: kidsProgress.totalPoints,
+          kidsStars: kidsProgress.starsEarned,
+        ),
+      );
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -172,7 +186,11 @@ class ProgressRepositoryImpl implements ProgressRepository {
 
   int _calculateStreak(int current, DateTime? lastActive, DateTime now) {
     if (lastActive == null) return 1;
-    final lastDate = DateTime(lastActive.year, lastActive.month, lastActive.day);
+    final lastDate = DateTime(
+      lastActive.year,
+      lastActive.month,
+      lastActive.day,
+    );
     final nowDate = DateTime(now.year, now.month, now.day);
     final diff = nowDate.difference(lastDate).inDays;
     if (diff == 0) return current; // Same day

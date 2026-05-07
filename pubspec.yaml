@@ -61,6 +61,9 @@ dependencies:
   flutter_dotenv: ^5.2.1
   cached_network_image: ^3.4.1
   qcf_quran: ^0.0.5
+  gal: ^2.3.2
+  pdf: ^3.12.0
+  printing: ^5.14.3
 
 dev_dependencies:
   build_runner: ^2.4.13
@@ -133,5 +136,8 @@ flutter:
         - asset: assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Regular.ttf
         - asset: assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Bold.ttf
           weight: 700
+    - family: MrsSaintDelafield
+      fonts:
+        - asset: assets/fonts/Mrs_Saint_Delafield/MrsSaintDelafield-Regular.ttf
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

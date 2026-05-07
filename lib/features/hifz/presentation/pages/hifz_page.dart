@@ -105,6 +105,9 @@ class _HifzView extends StatelessWidget {
                         (ctx, i) => _HifzSurahTile(
                           surah: state.surahs[i],
                           progress: state.progressMap[state.surahs[i].id],
+                          isUnlocked: state.isSurahUnlocked(state.surahs[i].id),
+                          requiredPreviousSurah:
+                              i > 0 ? state.surahs[i - 1] : null,
                           index: i,
                           isDark: isDark,
                           primary: primary,
@@ -433,6 +436,8 @@ class _HifzSurahTile extends StatelessWidget {
   const _HifzSurahTile({
     required this.surah,
     required this.progress,
+    required this.isUnlocked,
+    required this.requiredPreviousSurah,
     required this.index,
     required this.isDark,
     required this.primary,
@@ -440,6 +445,8 @@ class _HifzSurahTile extends StatelessWidget {
 
   final Surah surah;
   final SurahHifzProgress? progress;
+  final bool isUnlocked;
+  final Surah? requiredPreviousSurah;
   final int index;
   final bool isDark;
   final Color primary;
@@ -450,21 +457,36 @@ class _HifzSurahTile extends StatelessWidget {
     final percent = hasProgress
         ? progress!.memorizedCount / surah.ayahCount
         : 0.0;
+    final isLocked = !isUnlocked;
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final lockedText = context.isArabic
+        ? 'أكمل ${requiredPreviousSurah?.nameAr ?? 'السورة السابقة'} أولاً'
+        : 'Complete ${requiredPreviousSurah?.nameEn ?? 'the previous surah'} first';
 
     return GestureDetector(
-          onTap: () => context.push(
-            '/hifz/session',
-            extra: {'surahId': surah.id, 'startAyah': 1},
-          ),
+          onTap: () {
+            if (isLocked) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(lockedText)),
+              );
+              return;
+            }
+            context.push(
+              '/hifz/session',
+              extra: {'surahId': surah.id, 'startAyah': 1},
+            );
+          },
           child: Container(
             margin: const EdgeInsets.only(bottom: AppSpacing.sm),
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: surface,
+              color: isLocked ? surface.withValues(alpha: 0.82) : surface,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              border: Border.all(color: border, width: 0.5),
+              border: Border.all(
+                color: isLocked ? border.withValues(alpha: 0.65) : border,
+                width: 0.5,
+              ),
             ),
             child: Row(
               children: [
@@ -473,7 +495,9 @@ class _HifzSurahTile extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: hasProgress
+                    color: isLocked
+                        ? (isDark ? Colors.white10 : Colors.black12)
+                        : hasProgress
                         ? primary.withValues(alpha:0.12)
                         : primary.withValues(alpha:0.06),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
@@ -481,7 +505,13 @@ class _HifzSurahTile extends StatelessWidget {
                   child: Center(
                     child: Text(
                       '${surah.id}',
-                      style: AppTypography.labelMedium.copyWith(color: primary),
+                      style: AppTypography.labelMedium.copyWith(
+                        color: isLocked
+                            ? (isDark
+                                ? AppColors.darkTextHint
+                                : AppColors.lightTextHint)
+                            : primary,
+                      ),
                     ),
                   ),
                 ),
@@ -494,16 +524,49 @@ class _HifzSurahTile extends StatelessWidget {
                         context.isArabic ? surah.nameAr : surah.nameEn,
                         style: context.isArabic
                             ? AppTypography.surahTitle.copyWith(
-                                color: primary,
+                                color: isLocked
+                                    ? (isDark
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.lightTextSecondary)
+                                    : primary,
                                 fontSize: 18,
                               )
                             : AppTypography.titleMedium.copyWith(
-                                color: isDark
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.lightTextPrimary,
+                                color: isLocked
+                                    ? (isDark
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.lightTextSecondary)
+                                    : isDark
+                                        ? AppColors.darkTextPrimary
+                                        : AppColors.lightTextPrimary,
                               ),
                       ),
                       const SizedBox(height: 6),
+                      if (isLocked) ...[
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.lock_rounded,
+                              size: 14,
+                              color: isDark
+                                  ? AppColors.darkTextHint
+                                  : AppColors.lightTextHint,
+                            ),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                lockedText,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: isDark
+                                      ? AppColors.darkTextHint
+                                      : AppColors.lightTextHint,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                      ],
                       if (hasProgress) ...[
                         LinearPercentIndicator(
                           lineHeight: 4,
@@ -536,7 +599,7 @@ class _HifzSurahTile extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Icon(
-                  Icons.arrow_forward_ios_rounded,
+                  isLocked ? Icons.lock_rounded : Icons.arrow_forward_ios_rounded,
                   size: 14,
                   color: isDark
                       ? AppColors.darkTextHint
@@ -617,4 +680,3 @@ class _MemPlusBanner extends StatelessWidget {
     );
   }
 }
-

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
+import '../../../../core/services/achievement_service.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
@@ -14,6 +15,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   KidsModeCubit(
     this._getKidsProgress,
     this._awardPoints,
+    this._markAyahMemorized,
+    this._achievementService,
     this._quranRepository,
   ) : super(const KidsModeInitial()) {
     _player.playerStateStream.listen((ps) {
@@ -25,6 +28,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   final GetKidsProgressUsecase _getKidsProgress;
   final AwardKidsPointsUsecase _awardPoints;
+  final MarkAyahMemorizedUsecase _markAyahMemorized;
+  final AchievementService _achievementService;
   final QuranRepository _quranRepository;
   final AudioPlayer _player = AudioPlayer();
 
@@ -35,17 +40,20 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     emit(const KidsModeLoading());
 
     String resolvedText = ayahText;
-    if (resolvedText.isEmpty || resolvedText == '...' || resolvedText == 'النص غير متوفر') {
+    if (resolvedText.isEmpty ||
+        resolvedText == '...' ||
+        resolvedText == 'النص غير متوفر') {
       try {
         final result = await _quranRepository.getSurahDetail(surahId);
-        result.fold(
-          (_) {},
-          (detail) {
-            resolvedText = detail.ayahs.firstWhere((a) => a.numberInSurah == ayahNumber).text;
-          },
-        );
+        result.fold((_) {}, (detail) {
+          resolvedText = detail.ayahs
+              .firstWhere((a) => a.numberInSurah == ayahNumber)
+              .text;
+        });
       } catch (_) {}
-      if (resolvedText.isEmpty || resolvedText == '...') resolvedText = 'النص غير متوفر';
+      if (resolvedText.isEmpty || resolvedText == '...') {
+        resolvedText = 'النص غير متوفر';
+      }
     }
 
     final progressResult = await _getKidsProgress();
@@ -54,16 +62,18 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       (p) => p,
     );
 
-    emit(KidsModeLoaded(
-      surahId: surahId,
-      ayahNumber: ayahNumber,
-      ayahText: resolvedText,
-      progress: progress,
-      isPlaying: false,
-      currentLoop: 0,
-      maxLoops: _maxLoops,
-      isCompleted: false,
-    ));
+    emit(
+      KidsModeLoaded(
+        surahId: surahId,
+        ayahNumber: ayahNumber,
+        ayahText: resolvedText,
+        progress: progress,
+        isPlaying: false,
+        currentLoop: 0,
+        maxLoops: _maxLoops,
+        isCompleted: false,
+      ),
+    );
   }
 
   Future<void> playAudio() async {
@@ -111,18 +121,32 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
 
-    final result = await _awardPoints(AwardKidsPointsParams(
-      surahId: st.surahId,
-      ayahNumber: st.ayahNumber,
-      repeatsCompleted: _loopCount,
-    ));
+    final result = await _awardPoints(
+      AwardKidsPointsParams(
+        surahId: st.surahId,
+        ayahNumber: st.ayahNumber,
+        repeatsCompleted: _loopCount,
+      ),
+    );
 
-    result.fold(
-      (_) => emit(st.copyWith(isCompleted: true)),
-      (updated) => emit(st.copyWith(
-        progress: updated,
-        isCompleted: true,
-      )),
+    final updated = result.fold<KidsProgress?>((f) {
+      emit(KidsModeError(f.message));
+      return null;
+    }, (progress) => progress);
+    if (updated == null) return;
+
+    final markResult = await _markAyahMemorized(
+      MarkAyahMemorizedParams(surahId: st.surahId, ayahNumber: st.ayahNumber),
+    );
+    final markFailure = markResult.fold((f) => f, (_) => null);
+    if (markFailure != null) {
+      emit(KidsModeError(markFailure.message));
+      return;
+    }
+
+    final newAwards = await _achievementService.checkAndUnlockCertificates();
+    emit(
+      st.copyWith(progress: updated, isCompleted: true, newAwards: newAwards),
     );
   }
 

@@ -14,6 +14,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/talia_logger.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../../data/datasources/bookmark_service.dart';
@@ -126,8 +127,8 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
         await player.setFilePath(source);
       }
       await player.play();
-    } catch (e) {
-      debugPrint('Audio error: $e');
+    } catch (e, stack) {
+      TaliaLogger.w('Audio playback failed', e, stack);
     }
   }
 

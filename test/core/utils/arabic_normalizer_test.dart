@@ -4,18 +4,18 @@ import 'package:talia_quran/core/utils/arabic_normalizer.dart';
 void main() {
   group('ArabicNormalizer', () {
     test('removes tashkeel (diacritics) correctly', () {
-      expect(
-        ArabicNormalizer.normalize('بِسْمِ اللَّهِ'),
-        equals('بسم الله'),
-      );
+      expect(ArabicNormalizer.normalize('بِسْمِ اللَّهِ'), equals('بسم الله'));
     });
 
-    test('removes full tashkeel from Quranic text', () {
-      expect(
-        ArabicNormalizer.normalize('الرَّحْمَٰنِ الرَّحِيمِ'),
-        equals('الرحمن الرحيم'),
-      );
-    });
+    test(
+      'removes full tashkeel and applies phonetic Quranic normalization',
+      () {
+        expect(
+          ArabicNormalizer.normalize('الرَّحْمَٰنِ الرَّحِيمِ'),
+          equals('الرحمان الرحيم'),
+        );
+      },
+    );
 
     test('normalizes alef variations', () {
       // All alef forms should normalize to bare alef
@@ -35,22 +35,13 @@ void main() {
 
     test('normalizes hamza on carriers', () {
       // Hamza on waw
-      expect(
-        ArabicNormalizer.normalize('مؤمن'),
-        equals('مومن'),
-      );
+      expect(ArabicNormalizer.normalize('مؤمن'), equals('مومن'));
       // Hamza on ya
-      expect(
-        ArabicNormalizer.normalize('بئر'),
-        equals('بير'),
-      );
+      expect(ArabicNormalizer.normalize('بئر'), equals('بير'));
     });
 
     test('normalizes ta marbuta to ha', () {
-      expect(
-        ArabicNormalizer.normalize('رحمة'),
-        equals('رحمه'),
-      );
+      expect(ArabicNormalizer.normalize('رحمة'), equals('رحمه'));
     });
 
     test('normalizes ya and alif maksura', () {
@@ -62,10 +53,7 @@ void main() {
     });
 
     test('removes tatweel (kashida)', () {
-      expect(
-        ArabicNormalizer.normalize('اللـــه'),
-        equals('الله'),
-      );
+      expect(ArabicNormalizer.normalize('اللـــه'), equals('الله'));
     });
 
     test('handles empty string', () {
@@ -73,17 +61,11 @@ void main() {
     });
 
     test('trims and collapses whitespace', () {
-      expect(
-        ArabicNormalizer.normalize('  بسم   الله  '),
-        equals('بسم الله'),
-      );
+      expect(ArabicNormalizer.normalize('  بسم   الله  '), equals('بسم الله'));
     });
 
     test('handles punctuation removal', () {
-      expect(
-        ArabicNormalizer.normalize('قال؟ نعم!'),
-        equals('قال نعم'),
-      );
+      expect(ArabicNormalizer.normalize('قال؟ نعم!'), equals('قال نعم'));
     });
   });
 }

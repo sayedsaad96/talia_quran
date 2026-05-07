@@ -19,3 +19,11 @@ class TrackSelectionLoaded extends TrackSelectionState {
   @override
   List<Object?> get props => [track];
 }
+
+class TrackSelectionError extends TrackSelectionState {
+  const TrackSelectionError(this.message);
+  final String message;
+
+  @override
+  List<Object?> get props => [message];
+}

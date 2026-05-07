@@ -11,8 +11,49 @@ import 'core/di/injection.dart';
 import 'features/settings/presentation/cubits/profile_cubit.dart';
 import 'features/auth/presentation/cubits/auth_cubit.dart';
 
-class TaliaApp extends StatelessWidget {
+import 'core/services/notification_service.dart';
+
+class TaliaApp extends StatefulWidget {
   const TaliaApp({super.key});
+
+  @override
+  State<TaliaApp> createState() => _TaliaAppState();
+}
+
+class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    TaliaNotificationService.instance.onPayloadReceived = _openNotification;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final payload = TaliaNotificationService.instance
+          .takePendingLaunchPayload();
+      if (payload != null) {
+        _openNotification(payload);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    TaliaNotificationService.instance.onPayloadReceived = null;
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh notifications on resume to sync timezone/time
+      TaliaNotificationService.instance.refreshNotifications();
+    }
+  }
+
+  void _openNotification(String payload) {
+    if (!mounted || payload.isEmpty || !payload.startsWith('/')) return;
+    AppRouter.router.go(payload);
+  }
 
   @override
   Widget build(BuildContext context) {

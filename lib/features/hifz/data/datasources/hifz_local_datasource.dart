@@ -19,22 +19,32 @@ class HifzLocalDatasourceImpl implements HifzLocalDatasource {
   String _key(int surahId, int ayahNum) =>
       '${AppConstants.kHifzProgress}_${surahId}_$ayahNum';
 
+  AyahProgressModel? _tryReadProgress(String key) {
+    final raw = _prefs.getString(key);
+    if (raw == null) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return null;
+      return AyahProgressModel.fromJson(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _setStringOrThrow(String key, String value) async {
+    final saved = await _prefs.setString(key, value);
+    if (!saved) {
+      throw StateError('Failed to save value for $key');
+    }
+  }
+
   @override
   Future<List<AyahProgressModel>> getProgressForSurah(int surahId) async {
     final keys = _prefs
         .getKeys()
         .where((k) => k.startsWith('${AppConstants.kHifzProgress}_${surahId}_'))
         .toList();
-    return keys
-        .map((k) {
-          final raw = _prefs.getString(k);
-          if (raw == null) return null;
-          return AyahProgressModel.fromJson(
-            jsonDecode(raw) as Map<String, dynamic>,
-          );
-        })
-        .whereType<AyahProgressModel>()
-        .toList();
+    return keys.map(_tryReadProgress).whereType<AyahProgressModel>().toList();
   }
 
   @override
@@ -42,14 +52,12 @@ class HifzLocalDatasourceImpl implements HifzLocalDatasource {
     int surahId,
     int ayahNumber,
   ) async {
-    final raw = _prefs.getString(_key(surahId, ayahNumber));
-    if (raw == null) return null;
-    return AyahProgressModel.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    return _tryReadProgress(_key(surahId, ayahNumber));
   }
 
   @override
   Future<void> saveAyahProgress(AyahProgressModel progress) async {
-    await _prefs.setString(
+    await _setStringOrThrow(
       _key(progress.surahId, progress.ayahNumber),
       jsonEncode(progress.toJson()),
     );
@@ -61,16 +69,7 @@ class HifzLocalDatasourceImpl implements HifzLocalDatasource {
         .getKeys()
         .where((k) => k.startsWith(AppConstants.kHifzProgress))
         .toList();
-    return keys
-        .map((k) {
-          final raw = _prefs.getString(k);
-          if (raw == null) return null;
-          return AyahProgressModel.fromJson(
-            jsonDecode(raw) as Map<String, dynamic>,
-          );
-        })
-        .whereType<AyahProgressModel>()
-        .toList();
+    return keys.map(_tryReadProgress).whereType<AyahProgressModel>().toList();
   }
 
   @override
@@ -80,6 +79,9 @@ class HifzLocalDatasourceImpl implements HifzLocalDatasource {
 
   @override
   Future<void> saveHifzPath(String path) async {
-    await _prefs.setString(AppConstants.kHifzPathMode, path);
+    if (path != 'forward' && path != 'backward') {
+      throw ArgumentError.value(path, 'path', 'Unsupported hifz path');
+    }
+    await _setStringOrThrow(AppConstants.kHifzPathMode, path);
   }
 }

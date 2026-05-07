@@ -8,10 +8,10 @@ import 'hifz_local_datasource.dart';
 
 class IsarHifzLocalDatasourceImpl implements HifzLocalDatasource {
   IsarHifzLocalDatasourceImpl(this._isar, this._prefs);
-  
+
   final Isar _isar;
   final SharedPreferences _prefs;
-  
+
   static const _migrationKey = 'hifz_isar_migrated';
 
   /// Performs a one-time migration from SharedPreferences to Isar
@@ -34,15 +34,17 @@ class IsarHifzLocalDatasourceImpl implements HifzLocalDatasource {
       final raw = _prefs.getString(k);
       if (raw != null) {
         try {
-          modelsToMigrate.add(AyahProgressModel.fromJson(
-            jsonDecode(raw) as Map<String, dynamic>,
-          ));
+          modelsToMigrate.add(
+            AyahProgressModel.fromJson(jsonDecode(raw) as Map<String, dynamic>),
+          );
         } catch (_) {}
       }
     }
 
     if (modelsToMigrate.isNotEmpty) {
-      final isarModels = modelsToMigrate.map(IsarAyahProgress.fromModel).toList();
+      final isarModels = modelsToMigrate
+          .map(IsarAyahProgress.fromModel)
+          .toList();
       await _isar.writeTxn(() async {
         await _isar.isarAyahProgress.putAll(isarModels);
       });
@@ -62,7 +64,10 @@ class IsarHifzLocalDatasourceImpl implements HifzLocalDatasource {
   }
 
   @override
-  Future<AyahProgressModel?> getAyahProgress(int surahId, int ayahNumber) async {
+  Future<AyahProgressModel?> getAyahProgress(
+    int surahId,
+    int ayahNumber,
+  ) async {
     final compositeKey = '${surahId}_$ayahNumber';
     final result = await _isar.isarAyahProgress
         .filter()
@@ -92,6 +97,12 @@ class IsarHifzLocalDatasourceImpl implements HifzLocalDatasource {
 
   @override
   Future<void> saveHifzPath(String path) async {
-    await _prefs.setString(AppConstants.kHifzPathMode, path);
+    if (path != 'forward' && path != 'backward') {
+      throw ArgumentError.value(path, 'path', 'Unsupported hifz path');
+    }
+    final saved = await _prefs.setString(AppConstants.kHifzPathMode, path);
+    if (!saved) {
+      throw StateError('Failed to save hifz path');
+    }
   }
 }

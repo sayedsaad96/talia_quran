@@ -310,7 +310,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String shareAchievementText(Object description, Object title) {
-    return '🏆 بفضل الله، حققت إنجاز \"$title\" 🌟\n📖 $description\n\n📱 تم الإنجاز عبر تطبيق \"تالية\" المتميز!\n✨ لا تدع الأجر يفوتك، حمّل التطبيق الآن وانضم إلي في رحلة النور وحفظ كتاب الله 💚';
+    return '🏆 إنجاز جديد يُضاف في رحلتي مع القرآن: \"$title\"\n📖 $description\n\nمع تالية، كل خطوة تتحول إلى أثر يُرى وإنجاز يستحق المشاركة.';
   }
 
   @override
@@ -319,7 +319,21 @@ class AppLocalizationsAr extends AppLocalizations {
     Object name,
     Object title,
   ) {
-    return '🏆 بفضل الله، حقق $name إنجاز \"$title\" 🌟\n📖 $description\n\n📱 تم الإنجاز عبر تطبيق \"تالية\" المتميز!\n✨ لا تدع الأجر يفوتك، حمّل التطبيق الآن وانضم إلينا في رحلة النور وحفظ كتاب الله 💚';
+    return '🏆 إنجاز جديد يُضاف في رحلة $name مع القرآن: \"$title\"\n📖 $description\n\nمع تالية، كل خطوة تتحول إلى أثر يُرى وإنجاز يستحق المشاركة.';
+  }
+
+  @override
+  String shareMemorizationAchievementText(Object description, Object title) {
+    return '🌟 إنجاز مبارك في مسيرة الحفظ: \"$title\"\n🧠 $description\n\nتالية يرافق رحلة الحفظ بخطوات واضحة، وتحفيز مستمر، وإنجازات تُلهم الاستمرار.';
+  }
+
+  @override
+  String shareMemorizationAchievementWithName(
+    Object description,
+    Object name,
+    Object title,
+  ) {
+    return '🌟 إنجاز مبارك في مسيرة حفظ $name: \"$title\"\n🧠 $description\n\nتالية يرافق رحلة الحفظ بخطوات واضحة، وتحفيز مستمر، وإنجازات تُلهم الاستمرار.';
   }
 
   @override
@@ -327,7 +341,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String shareProgressText(Object ayahs, Object pages, Object streak) {
-    return '📊 بفضل الله وتوفيقه، هذا تقدمي في رحلتي مع القرآن عبر تطبيق \"تالية\" 🌟:\n📖 $pages صفحة مقروءة\n🧠 $ayahs آية محفوظة\n🔥 $streak أيام متتالية من الالتزام\n\n✨ حمّل تطبيق \"تالية\" الآن وابدأ رحلتك المباركة 💚';
+    return '📊 هذا ملخص تقدمي في رحلتي مع القرآن عبر تالية:\n📖 $pages صفحة مقروءة\n🧠 $ayahs آية محفوظة\n🔥 $streak أيام من الاستمرارية\n\nتالية يساعدني على بناء عادة قرآنية ثابتة بخطوات واضحة وتحفيز يومي.';
   }
 
   @override
@@ -337,7 +351,7 @@ class AppLocalizationsAr extends AppLocalizations {
     Object pages,
     Object streak,
   ) {
-    return '📊 بفضل الله وتوفيقه، هذا تقدم $name في رحلته مع القرآن عبر تطبيق \"تالية\" 🌟:\n📖 $pages صفحة مقروءة\n🧠 $ayahs آية محفوظة\n🔥 $streak أيام متتالية من الالتزام\n\n✨ حمّل تطبيق \"تالية\" الآن وابدأ رحلتك المباركة 💚';
+    return '📊 هذا ملخص تقدم $name في رحلته مع القرآن عبر تالية:\n📖 $pages صفحة مقروءة\n🧠 $ayahs آية محفوظة\n🔥 $streak أيام من الاستمرارية\n\nتالية يساعد على بناء عادة قرآنية ثابتة بخطوات واضحة وتحفيز يومي.';
   }
 
   @override

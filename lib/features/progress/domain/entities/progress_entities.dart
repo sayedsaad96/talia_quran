@@ -53,39 +53,40 @@ class OverallProgress extends Equatable {
   final int readPagesCount;
   final int totalQuranPages;
 
-  double get quranPercentage =>
-      totalQuranPages == 0 ? 0 : readPagesCount / totalQuranPages;
+  double get quranPercentage => totalQuranPages == 0
+      ? 0
+      : (readPagesCount / totalQuranPages).clamp(0.0, 1.0);
 
   double get surahPercentage =>
-      totalSurahs == 0 ? 0 : memorizedSurahs / totalSurahs;
+      totalSurahs == 0 ? 0 : (memorizedSurahs / totalSurahs).clamp(0.0, 1.0);
 
   double get memorizedAyahsPercentage =>
-      totalAyahs == 0 ? 0 : memorizedAyahs / totalAyahs;
+      totalAyahs == 0 ? 0 : (memorizedAyahs / totalAyahs).clamp(0.0, 1.0);
 
   double get memorizedJuzPercentage =>
-      totalJuz == 0 ? 0 : memorizedJuz / totalJuz;
+      totalJuz == 0 ? 0 : (memorizedJuz / totalJuz).clamp(0.0, 1.0);
 
   int get unlockedAchievements =>
       achievements.where((a) => a.isUnlocked).length;
 
   @override
   List<Object?> get props => [
-        memorizedAyahs,
-        memorizedSurahs,
-        memorizedJuz,
-        readAyahs,
-        readSurahs,
-        readJuz,
-        streakDays,
-        achievements,
-        readPagesCount,
-        learningAyahs,
-        reviewAyahs,
-        smartMemorizedAyahs,
-        smartReviewAyahs,
-        kidsPoints,
-        kidsStars,
-      ];
+    memorizedAyahs,
+    memorizedSurahs,
+    memorizedJuz,
+    readAyahs,
+    readSurahs,
+    readJuz,
+    streakDays,
+    achievements,
+    readPagesCount,
+    learningAyahs,
+    reviewAyahs,
+    smartMemorizedAyahs,
+    smartReviewAyahs,
+    kidsPoints,
+    kidsStars,
+  ];
 }
 
 enum AchievementCategory { reading, memorization, streak, milestone }

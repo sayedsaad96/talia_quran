@@ -42,22 +42,49 @@ class MemorizationPlusLocalDatasourceImpl
   String _reviewKey(int surahId, int ayahNumber) =>
       '${_kReviewPrefix}_${surahId}_$ayahNumber';
 
+  Map<String, dynamic>? _tryDecodeMap(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      return decoded is Map<String, dynamic> ? decoded : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  T? _tryParse<T>(String raw, T Function(Map<String, dynamic>) parser) {
+    final decoded = _tryDecodeMap(raw);
+    if (decoded == null) return null;
+    try {
+      return parser(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _setStringOrThrow(String key, String value) async {
+    final saved = await _prefs.setString(key, value);
+    if (!saved) {
+      throw StateError('Failed to save value for $key');
+    }
+  }
+
   // ─── Track ──────────────────────────────────────────────────────────────────
   @override
   String? getSelectedTrack() => _prefs.getString(_kTrack);
 
   @override
   Future<void> saveSelectedTrack(String track) =>
-      _prefs.setString(_kTrack, track);
+      _setStringOrThrow(_kTrack, track);
 
   // ─── Review records ─────────────────────────────────────────────────────────
   @override
   Future<AyahReviewRecordModel?> getReviewRecord(
-      int surahId, int ayahNumber) async {
+    int surahId,
+    int ayahNumber,
+  ) async {
     final raw = _prefs.getString(_reviewKey(surahId, ayahNumber));
     if (raw == null) return null;
-    return AyahReviewRecordModel.fromJson(
-        jsonDecode(raw) as Map<String, dynamic>);
+    return _tryParse(raw, AyahReviewRecordModel.fromJson);
   }
 
   @override
@@ -69,9 +96,9 @@ class MemorizationPlusLocalDatasourceImpl
     return keys
         .map((k) {
           final raw = _prefs.getString(k);
-          if (raw == null) return null;
-          return AyahReviewRecordModel.fromJson(
-              jsonDecode(raw) as Map<String, dynamic>);
+          return raw == null
+              ? null
+              : _tryParse(raw, AyahReviewRecordModel.fromJson);
         })
         .whereType<AyahReviewRecordModel>()
         .toList();
@@ -79,7 +106,7 @@ class MemorizationPlusLocalDatasourceImpl
 
   @override
   Future<void> saveReviewRecord(AyahReviewRecordModel record) =>
-      _prefs.setString(
+      _setStringOrThrow(
         _reviewKey(record.surahId, record.ayahNumber),
         jsonEncode(record.toJson()),
       );
@@ -89,41 +116,43 @@ class MemorizationPlusLocalDatasourceImpl
   Future<DailyPlanModel?> getCachedDailyPlan() async {
     final raw = _prefs.getString(_kDailyPlan);
     if (raw == null) return null;
-    return DailyPlanModel.fromJson(
-        jsonDecode(raw) as Map<String, dynamic>);
+    return _tryParse(raw, DailyPlanModel.fromJson);
   }
 
   @override
   Future<void> saveDailyPlan(DailyPlanModel plan) =>
-      _prefs.setString(_kDailyPlan, jsonEncode(plan.toJson()));
+      _setStringOrThrow(_kDailyPlan, jsonEncode(plan.toJson()));
 
   // ─── Kids progress ───────────────────────────────────────────────────────────
   @override
   Future<KidsProgressModel> getKidsProgress() async {
     final raw = _prefs.getString(_kKidsProgress);
     if (raw == null) return const KidsProgressModel.empty();
-    return KidsProgressModel.fromJson(
-        jsonDecode(raw) as Map<String, dynamic>);
+    return _tryParse(raw, KidsProgressModel.fromJson) ??
+        const KidsProgressModel.empty();
   }
 
   @override
   Future<void> saveKidsProgress(KidsProgressModel progress) =>
-      _prefs.setString(
-          _kKidsProgress, jsonEncode(progress.toJson()));
+      _setStringOrThrow(_kKidsProgress, jsonEncode(progress.toJson()));
 
   // ─── Custom memorization plan ───────────────────────────────────────────────
   @override
   Future<CustomMemorizationPlanModel?> getCustomPlan() async {
     final raw = _prefs.getString(_kCustomPlan);
     if (raw == null) return null;
-    return CustomMemorizationPlanModel.fromJson(
-        jsonDecode(raw) as Map<String, dynamic>);
+    return _tryParse(raw, CustomMemorizationPlanModel.fromJson);
   }
 
   @override
   Future<void> saveCustomPlan(CustomMemorizationPlanModel plan) =>
-      _prefs.setString(_kCustomPlan, jsonEncode(plan.toJson()));
+      _setStringOrThrow(_kCustomPlan, jsonEncode(plan.toJson()));
 
   @override
-  Future<void> deleteCustomPlan() => _prefs.remove(_kCustomPlan);
+  Future<void> deleteCustomPlan() async {
+    final removed = await _prefs.remove(_kCustomPlan);
+    if (!removed) {
+      throw StateError('Failed to delete custom plan');
+    }
+  }
 }

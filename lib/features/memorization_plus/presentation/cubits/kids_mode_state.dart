@@ -31,6 +31,7 @@ class KidsModeLoaded extends KidsModeState {
     required this.currentLoop,
     required this.maxLoops,
     required this.isCompleted,
+    this.newAwards = const [],
   });
 
   final int surahId;
@@ -41,25 +42,34 @@ class KidsModeLoaded extends KidsModeState {
   final int currentLoop;
   final int maxLoops;
   final bool isCompleted;
+  final List<CertificateAward> newAwards;
 
   KidsModeLoaded copyWith({
     KidsProgress? progress,
     bool? isPlaying,
     int? currentLoop,
     bool? isCompleted,
-  }) =>
-      KidsModeLoaded(
-        surahId: surahId,
-        ayahNumber: ayahNumber,
-        ayahText: ayahText,
-        progress: progress ?? this.progress,
-        isPlaying: isPlaying ?? this.isPlaying,
-        currentLoop: currentLoop ?? this.currentLoop,
-        maxLoops: maxLoops,
-        isCompleted: isCompleted ?? this.isCompleted,
-      );
+    List<CertificateAward>? newAwards,
+  }) => KidsModeLoaded(
+    surahId: surahId,
+    ayahNumber: ayahNumber,
+    ayahText: ayahText,
+    progress: progress ?? this.progress,
+    isPlaying: isPlaying ?? this.isPlaying,
+    currentLoop: currentLoop ?? this.currentLoop,
+    maxLoops: maxLoops,
+    isCompleted: isCompleted ?? this.isCompleted,
+    newAwards: newAwards ?? const [],
+  );
 
   @override
-  List<Object?> get props =>
-      [surahId, ayahNumber, progress, isPlaying, currentLoop, isCompleted];
+  List<Object?> get props => [
+    surahId,
+    ayahNumber,
+    progress,
+    isPlaying,
+    currentLoop,
+    isCompleted,
+    newAwards,
+  ];
 }

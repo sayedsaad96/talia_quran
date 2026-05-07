@@ -117,11 +117,26 @@
   "enterAge": "Enter your age",
   "profileUpdated": "Profile updated",
   "shareAchievement": "Share Achievement",
-  "shareAchievementText": "🏆 Alhamdulillah, I've achieved \"{title}\" 🌟\n📖 {description}\n\n📱 Achieved via the amazing \"Talia Quran\" app!\n✨ Don't miss out on the rewards, download the app now and join me on this blessed journey 💚",
-  "shareAchievementWithName": "🏆 Alhamdulillah, {name} achieved \"{title}\" 🌟\n📖 {description}\n\n📱 Achieved via the amazing \"Talia Quran\" app!\n✨ Don't miss out on the rewards, download the app now and join us on this blessed journey 💚",
+  "shareAchievementText": "🏆 A new milestone in my Quran journey: \"{title}\"\n📖 {description}\n\nWith Talia, every step becomes visible progress and an achievement worth sharing.",
+  "shareAchievementWithName": "🏆 A new milestone in {name}'s Quran journey: \"{title}\"\n📖 {description}\n\nWith Talia, every step becomes visible progress and an achievement worth sharing.",
+  "shareMemorizationAchievementText": "🌟 A blessed memorization milestone: \"{title}\"\n🧠 {description}\n\nTalia supports the memorization journey with clear structure, steady motivation, and progress worth celebrating.",
+  "@shareMemorizationAchievementText": {
+    "placeholders": {
+      "description": {},
+      "title": {}
+    }
+  },
+  "shareMemorizationAchievementWithName": "🌟 A blessed memorization milestone for {name}: \"{title}\"\n🧠 {description}\n\nTalia supports the memorization journey with clear structure, steady motivation, and progress worth celebrating.",
+  "@shareMemorizationAchievementWithName": {
+    "placeholders": {
+      "description": {},
+      "name": {},
+      "title": {}
+    }
+  },
   "shareProgress": "Share Progress",
-  "shareProgressText": "📊 Alhamdulillah, here is my progress on the \"Talia Quran\" app 🌟:\n📖 {pages} pages read\n🧠 {ayahs} ayahs memorized\n🔥 {streak} days of consistent streak\n\n✨ Download \"Talia Quran\" now and start your blessed journey 💚",
-  "shareProgressWithName": "📊 Alhamdulillah, here is {name}'s progress on the \"Talia Quran\" app 🌟:\n📖 {pages} pages read\n🧠 {ayahs} ayahs memorized\n🔥 {streak} days of consistent streak\n\n✨ Download \"Talia Quran\" now and start your blessed journey 💚",
+  "shareProgressText": "📊 Here is a snapshot of my Quran journey with Talia:\n📖 {pages} pages read\n🧠 {ayahs} ayahs memorized\n🔥 {streak} days of consistency\n\nTalia helps turn daily effort into a steady Quran habit with clear progress and meaningful motivation.",
+  "shareProgressWithName": "📊 Here is a snapshot of {name}'s Quran journey with Talia:\n📖 {pages} pages read\n🧠 {ayahs} ayahs memorized\n🔥 {streak} days of consistency\n\nTalia helps turn daily effort into a steady Quran habit with clear progress and meaningful motivation.",
 
   "viewAll": "View All",
   "reading": "Reading",

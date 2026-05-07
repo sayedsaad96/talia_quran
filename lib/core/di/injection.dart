@@ -99,23 +99,10 @@ Future<void> configureDependencies() async {
   );
 
   // ─── New Core Services ──────────────────────────────────────────────────────
-  getIt.registerSingleton<StreakService>(StreakService(getIt<Isar>()));
-  getIt.registerSingleton<XpService>(XpService(getIt<Isar>()));
-  getIt.registerSingleton<SubscriptionService>(SubscriptionService());
-  getIt.registerSingleton<AchievementService>(
-    AchievementService(
-      getIt<SharedPreferences>(),
-      hifzDatasource,
-      QuranLocalDatasourceImpl(),
-    ),
-  );
-
   // ─── Datasources ────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ProgressLocalDatasource>(
     () => ProgressLocalDatasourceImpl(getIt<SharedPreferences>()),
   );
-  // Note: HifzLocalDatasource was already registered above via IsarHifzLocalDatasourceImpl.
-  // The SharedPreferences one was removed because it conflicts and is outdated.
   getIt.registerLazySingleton<MemorizationPlusLocalDatasource>(
     () => MemorizationPlusLocalDatasourceImpl(getIt<SharedPreferences>()),
   );
@@ -130,6 +117,19 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<AzkarLocalDatasource>(
     () => AzkarLocalDatasourceImpl(),
+  );
+
+  // ─── Core Services ──────────────────────────────────────────────────────────
+  getIt.registerSingleton<StreakService>(StreakService(getIt<Isar>()));
+  getIt.registerSingleton<XpService>(XpService(getIt<Isar>()));
+  getIt.registerSingleton<SubscriptionService>(SubscriptionService());
+  getIt.registerSingleton<AchievementService>(
+    AchievementService(
+      getIt<SharedPreferences>(),
+      hifzDatasource,
+      getIt<MemorizationPlusLocalDatasource>(),
+      getIt<QuranLocalDatasource>(),
+    ),
   );
 
   // ─── Repositories ───────────────────────────────────────────────────────────
@@ -200,6 +200,9 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<EvaluateMemorizationUsecase>(
     () => EvaluateMemorizationUsecase(getIt<MemorizationPlusRepository>()),
   );
+  getIt.registerLazySingleton<MarkAyahMemorizedUsecase>(
+    () => MarkAyahMemorizedUsecase(getIt<MemorizationPlusRepository>()),
+  );
   getIt.registerLazySingleton<GetCachedDailyPlanUsecase>(
     () => GetCachedDailyPlanUsecase(getIt<MemorizationPlusRepository>()),
   );
@@ -230,8 +233,11 @@ Future<void> configureDependencies() async {
     () => SurahDetailCubit(getIt<GetSurahDetailUsecase>()),
   );
   getIt.registerFactory<QuranPageCubit>(
-    () =>
-        QuranPageCubit(getIt<QuranRepository>(), getIt<SaveReadPageUsecase>(), getIt<StreakService>()),
+    () => QuranPageCubit(
+      getIt<QuranRepository>(),
+      getIt<SaveReadPageUsecase>(),
+      getIt<StreakService>(),
+    ),
   );
   getIt.registerFactory<SearchQuranCubit>(
     () => SearchQuranCubit(getIt<QuranRepository>()),
@@ -246,9 +252,12 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<HifzSessionCubit>(
     () => HifzSessionCubit(
+      getIt<GetSurahsUsecase>(),
       getIt<GetSurahDetailUsecase>(),
       getIt<SaveAyahProgressUsecase>(),
       getIt<GetProgressForSurahUsecase>(),
+      getIt<GetHifzProgressUsecase>(),
+      getIt<GetHifzPathUsecase>(),
       getIt<SettingsRepository>(),
       getIt<StreakService>(),
       getIt<XpService>(),
@@ -267,12 +276,15 @@ Future<void> configureDependencies() async {
       getIt<GetCachedDailyPlanUsecase>(),
       getIt<EvaluateMemorizationUsecase>(),
       getIt<SaveDailyPlanUsecase>(),
+      getIt<AchievementService>(),
     ),
   );
   getIt.registerFactory<KidsModeCubit>(
     () => KidsModeCubit(
       getIt<GetKidsProgressUsecase>(),
       getIt<AwardKidsPointsUsecase>(),
+      getIt<MarkAyahMemorizedUsecase>(),
+      getIt<AchievementService>(),
       getIt<QuranRepository>(),
     ),
   );
@@ -283,6 +295,7 @@ Future<void> configureDependencies() async {
     () => QuizCubit(
       getIt<MemorizationPlusRepository>(),
       getIt<QuranRepository>(),
+      getIt<AchievementService>(),
     ),
   );
   getIt.registerFactory<HomeCubit>(

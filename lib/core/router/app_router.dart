@@ -73,7 +73,15 @@ abstract class AppRouter {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final userName = extra?['userName'] as String? ?? 'مستخدم تالية';
-          final award = extra?['award'] as CertificateAward?;
+          
+          CertificateAward? award;
+          final rawAward = extra?['award'];
+          if (rawAward is CertificateAward) {
+            award = rawAward;
+          } else if (rawAward is Map<String, dynamic>) {
+            award = CertificateAward.fromJson(rawAward);
+          }
+
           if (award == null) {
             return const Scaffold(body: Center(child: Text('لم يتم العثور على الشهادة')));
           }

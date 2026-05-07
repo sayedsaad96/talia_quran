@@ -1,8 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../utils/talia_logger.dart';
 import '../../features/hifz/data/datasources/hifz_local_datasource.dart';
 import '../../features/hifz/domain/entities/hifz_entities.dart';
+import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 
 /// Model for a certificate that has been earned.
@@ -26,14 +28,14 @@ class CertificateAward {
   final String? surahNameAr;
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'titleAr': titleAr,
-        'type': type.name,
-        'earnedAt': earnedAt.toIso8601String(),
-        'juzNumber': juzNumber,
-        'surahId': surahId,
-        'surahNameAr': surahNameAr,
-      };
+    'id': id,
+    'titleAr': titleAr,
+    'type': type.name,
+    'earnedAt': earnedAt.toIso8601String(),
+    'juzNumber': juzNumber,
+    'surahId': surahId,
+    'surahNameAr': surahNameAr,
+  };
 
   factory CertificateAward.fromJson(Map<String, dynamic> json) =>
       CertificateAward(
@@ -50,20 +52,14 @@ class CertificateAward {
       );
 }
 
-enum CertificateType { juz, surah }
-
-/// Minimum memorization percentage required to earn a certificate.
-const double kCertificateThreshold = 0.90;
-
-/// Surahs that are eligible for individual certificates (>100 ayahs).
-/// Determined dynamically by `AchievementService` from quran data.
-const int kMinAyahsForSurahCertificate = 100;
+enum CertificateType { juz, surah, halfQuran, fullQuran }
 
 class AchievementService extends ChangeNotifier {
-  AchievementService(this._prefs, this._hifzDs, this._quranDs);
+  AchievementService(this._prefs, this._hifzDs, this._memPlusDs, this._quranDs);
 
   final SharedPreferences _prefs;
   final HifzLocalDatasource _hifzDs;
+  final MemorizationPlusLocalDatasource _memPlusDs;
   final QuranLocalDatasource _quranDs;
 
   static const _earnedKey = 'earned_certificates_v2';
@@ -95,43 +91,46 @@ class AchievementService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Checks all progress and returns any **newly** earned certificates.
-  /// Call this after every successful ayah memorization.
+  /// Checks all memorization progress and returns any **newly** earned
+  /// certificates.
+  /// Call this after every successful ayah memorization in any memorization
+  /// path.
   Future<List<CertificateAward>> checkAndUnlockCertificates() async {
     try {
       final allProgress = await _hifzDs.getAllProgress();
+      final memPlusRecords = await _memPlusDs.getAllReviewRecords();
       final surahs = await _quranDs.getSurahs();
 
       final earned = <CertificateAward>[];
 
-      // ── 1. Juz certificates (Juz 1-30, each ~20 pages ~200 ayahs) ──────────
-      // Group progress by surah, then map surahs to juz
-      final juzAyahCounts = <int, int>{};     // juz → total ayahs in that juz
-      final juzMemorized = <int, int>{};       // juz → memorized count
+      // ── Unified memorized ayah keys from legacy Hifz and MemorizationPlus ──
+      final memorizedKeys = <String>{
+        ...allProgress
+            .where((p) => p.status == AyahStatus.memorized)
+            .map((p) => p.key),
+        ...memPlusRecords.where((r) => r.isMemorized).map((r) => r.key),
+      };
 
-      for (final surah in surahs) {
-        final juz = surah.juz;
-        juzAyahCounts[juz] = (juzAyahCounts[juz] ?? 0) + surah.ayahCount;
-      }
-
-      for (final p in allProgress) {
-        if (p.status == AyahStatus.memorized) {
-          // Find which juz this surah belongs to
-          final surah = surahs.firstWhere(
-            (s) => s.id == p.surahId,
-            orElse: () => surahs.first,
-          );
-          final juz = surah.juz;
-          juzMemorized[juz] = (juzMemorized[juz] ?? 0) + 1;
+      // ── 1. Juz certificates (Juz 1-30, accurate ayah-to-juz mapping) ───────
+      final ayahsByJuz = await _quranDs.getAyahsGroupedByJuz();
+      final ayahsBySurah = <int, List<dynamic>>{};
+      for (final ayahs in ayahsByJuz.values) {
+        for (final ayah in ayahs) {
+          ayahsBySurah.putIfAbsent(ayah.surahId, () => []).add(ayah);
         }
       }
 
       for (int juz = 1; juz <= 30; juz++) {
-        final total = juzAyahCounts[juz] ?? 200;
-        final memorized = juzMemorized[juz] ?? 0;
-        final percentage = total > 0 ? memorized / total : 0.0;
+        final ayahs = ayahsByJuz[juz] ?? const [];
+        final isComplete =
+            ayahs.isNotEmpty &&
+            ayahs.every(
+              (ayah) => memorizedKeys.contains(
+                '${ayah.surahId}_${ayah.numberInSurah}',
+              ),
+            );
 
-        if (percentage >= kCertificateThreshold) {
+        if (isComplete) {
           final id = 'cert_juz_$juz';
           if (!_isAlreadyEarned(id)) {
             final award = CertificateAward(
@@ -147,17 +146,22 @@ class AchievementService extends ChangeNotifier {
         }
       }
 
-      // ── 2. Surah certificates (>100 ayahs only) ───────────────────────────
-      final largeSurahs = surahs.where((s) => s.ayahCount > kMinAyahsForSurahCertificate);
+      // ── 2. Surah certificates (all surahs, 100% completion only) ──────────
+      for (final surah in surahs) {
+        final ayahs = ayahsBySurah[surah.id];
+        final isComplete = ayahs != null && ayahs.isNotEmpty
+            ? ayahs.every(
+                (ayah) => memorizedKeys.contains(
+                  '${ayah.surahId}_${ayah.numberInSurah}',
+                ),
+              )
+            : surah.ayahCount > 0 &&
+                  List.generate(surah.ayahCount, (index) => index + 1).every(
+                    (ayahNumber) =>
+                        memorizedKeys.contains('${surah.id}_$ayahNumber'),
+                  );
 
-      for (final surah in largeSurahs) {
-        final surahProgress = allProgress.where((p) => p.surahId == surah.id).toList();
-        final memorized = surahProgress
-            .where((p) => p.status == AyahStatus.memorized)
-            .length;
-        final percentage = surah.ayahCount > 0 ? memorized / surah.ayahCount : 0.0;
-
-        if (percentage >= kCertificateThreshold) {
+        if (isComplete) {
           final id = 'cert_surah_${surah.id}';
           if (!_isAlreadyEarned(id)) {
             final award = CertificateAward(
@@ -174,14 +178,59 @@ class AchievementService extends ChangeNotifier {
         }
       }
 
+      // ── 3. Half and Full Quran certificates (100% threshold) ──────────────
+      int fullyMemorizedJuzCount = 0;
+
+      for (int juz = 1; juz <= 30; juz++) {
+        final ayahs = ayahsByJuz[juz] ?? const [];
+        if (ayahs.isNotEmpty &&
+            ayahs.every(
+              (ayah) => memorizedKeys.contains(
+                '${ayah.surahId}_${ayah.numberInSurah}',
+              ),
+            )) {
+          fullyMemorizedJuzCount++;
+        }
+      }
+
+      // Half Quran (15+ complete Juz)
+      if (fullyMemorizedJuzCount >= 15) {
+        final id = 'cert_half_quran';
+        if (!_isAlreadyEarned(id)) {
+          final award = CertificateAward(
+            id: id,
+            titleAr: 'شهادة حفظ نصف القرآن الكريم',
+            type: CertificateType.halfQuran,
+            earnedAt: DateTime.now(),
+          );
+          earned.add(award);
+          await _saveEarned(award);
+        }
+      }
+
+      // Full Quran (30 complete Juz)
+      if (fullyMemorizedJuzCount == 30) {
+        final id = 'cert_full_quran';
+        if (!_isAlreadyEarned(id)) {
+          final award = CertificateAward(
+            id: id,
+            titleAr: 'شهادة ختم القرآن الكريم كاملاً',
+            type: CertificateType.fullQuran,
+            earnedAt: DateTime.now(),
+          );
+          earned.add(award);
+          await _saveEarned(award);
+        }
+      }
+
       if (earned.isNotEmpty) {
         await _prefs.setBool(_newBadgeKey, true);
         notifyListeners();
       }
 
       return earned;
-    } catch (e) {
-      debugPrint('⚠️ AchievementService.checkAndUnlock failed: $e');
+    } catch (e, stack) {
+      TaliaLogger.w('Achievement check failed', e, stack);
       return [];
     }
   }
@@ -202,11 +251,35 @@ class AchievementService extends ChangeNotifier {
   }
 
   static const List<String> _juzNames = [
-    'الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس',
-    'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر',
-    'الحادي عشر', 'الثاني عشر', 'الثالث عشر', 'الرابع عشر', 'الخامس عشر',
-    'السادس عشر', 'السابع عشر', 'الثامن عشر', 'التاسع عشر', 'العشرون',
-    'الحادي والعشرون', 'الثاني والعشرون', 'الثالث والعشرون', 'الرابع والعشرون', 'الخامس والعشرون',
-    'السادس والعشرون', 'السابع والعشرون', 'الثامن والعشرون', 'التاسع والعشرون', 'الثلاثون',
+    'الأول',
+    'الثاني',
+    'الثالث',
+    'الرابع',
+    'الخامس',
+    'السادس',
+    'السابع',
+    'الثامن',
+    'التاسع',
+    'العاشر',
+    'الحادي عشر',
+    'الثاني عشر',
+    'الثالث عشر',
+    'الرابع عشر',
+    'الخامس عشر',
+    'السادس عشر',
+    'السابع عشر',
+    'الثامن عشر',
+    'التاسع عشر',
+    'العشرون',
+    'الحادي والعشرون',
+    'الثاني والعشرون',
+    'الثالث والعشرون',
+    'الرابع والعشرون',
+    'الخامس والعشرون',
+    'السادس والعشرون',
+    'السابع والعشرون',
+    'الثامن والعشرون',
+    'التاسع والعشرون',
+    'الثلاثون',
   ];
 }

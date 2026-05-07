@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart';
 import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/utils/talia_logger.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../../../hifz/data/models/isar_ayah_progress.dart';
@@ -97,15 +97,15 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         await syncProgressToCloud();
       } catch (e) {
-        debugPrint('⚠️ Post-signup sync failed (non-critical): $e');
+        TaliaLogger.w('Post-signup sync failed', e);
       }
 
       return Right(user);
     } on AuthException catch (e) {
-      debugPrint('Auth error: ${e.message}');
+      TaliaLogger.w('Auth sign-up error', e);
       return Left(AuthFailure(_mapAuthError(e.message)));
     } catch (e) {
-      debugPrint('Sign-up error: $e');
+      TaliaLogger.w('Unexpected sign-up error', e);
       return const Left(AuthFailure('حدث خطأ أثناء إنشاء الحساب'));
     }
   }
@@ -138,15 +138,15 @@ class AuthRepositoryImpl implements AuthRepository {
       try {
         await syncProgressToCloud();
       } catch (e) {
-        debugPrint('⚠️ Post-sign-in sync failed (non-critical): $e');
+        TaliaLogger.w('Post-sign-in sync failed', e);
       }
 
       return Right(user);
     } on AuthException catch (e) {
-      debugPrint('Auth error: ${e.message}');
+      TaliaLogger.w('Auth sign-in error', e);
       return Left(AuthFailure(_mapAuthError(e.message)));
     } catch (e) {
-      debugPrint('Sign-in error: $e');
+      TaliaLogger.w('Unexpected sign-in error', e);
       return const Left(AuthFailure('حدث خطأ أثناء تسجيل الدخول'));
     }
   }
@@ -170,7 +170,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _supabase.auth.signOut();
       return const Right(unit);
     } catch (e) {
-      debugPrint('Sign-out error: $e');
+      TaliaLogger.w('Sign-out error', e);
       return const Left(AuthFailure('حدث خطأ أثناء تسجيل الخروج'));
     }
   }
@@ -188,10 +188,10 @@ class AuthRepositoryImpl implements AuthRepository {
       await _syncXpToCloud();
       await _syncDailyActivitiesToCloud();
 
-      debugPrint('✅ Sync to cloud completed');
+      TaliaLogger.i('Sync to cloud completed');
       return const Right(unit);
     } catch (e) {
-      debugPrint('❌ Sync to cloud failed: $e');
+      TaliaLogger.w('Sync to cloud failed', e);
       return const Left(ServerFailure('فشل المزامنة مع السحابة'));
     }
   }
@@ -207,10 +207,10 @@ class AuthRepositoryImpl implements AuthRepository {
       await _pullXpFromCloud(user.id);
       await _pullDailyActivitiesFromCloud(user.id);
 
-      debugPrint('✅ Pull from cloud completed');
+      TaliaLogger.i('Pull from cloud completed');
       return const Right(unit);
     } catch (e) {
-      debugPrint('❌ Pull from cloud failed: $e');
+      TaliaLogger.w('Pull from cloud failed', e);
       return const Left(ServerFailure('فشل استرجاع البيانات من السحابة'));
     }
   }
@@ -356,12 +356,15 @@ class AuthRepositoryImpl implements AuthRepository {
     final activities = await _isar.dailyActivityIsars.where().findAll();
     if (activities.isEmpty) return;
 
-    for (final activity in activities) {
-      await _supabase.rpc('upsert_daily_activity', params: {
-        'p_day_key': activity.dayKey,
-        'p_activity_count': activity.activityCount,
-      });
-    }
+    // C04 FIX: Batch all daily activities into a single RPC call
+    final data = activities.map((a) => {
+      'day_key': a.dayKey,
+      'activity_count': a.activityCount,
+    }).toList();
+
+    await _supabase.rpc('upsert_daily_activities_batch', params: {
+      'p_data': jsonEncode(data),
+    });
   }
 
   Future<void> _pullDailyActivitiesFromCloud(String userId) async {
@@ -458,7 +461,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return 'لا يوجد حساب بهذا البريد الإلكتروني';
     }
 
-    debugPrint('⚠️ Unmapped Supabase error: $message');
+    TaliaLogger.w('Unmapped Supabase auth error');
     return 'حدث خطأ، حاول مرة أخرى';
   }
 }

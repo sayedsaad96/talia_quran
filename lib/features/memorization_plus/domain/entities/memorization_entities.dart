@@ -63,28 +63,27 @@ class AyahReviewRecord extends Equatable {
     DateTime? nextReviewDate,
     int? totalReviews,
     PerformanceRating? lastRating,
-  }) =>
-      AyahReviewRecord(
-        surahId: surahId,
-        ayahNumber: ayahNumber,
-        strengthLevel: strengthLevel ?? this.strengthLevel,
-        intervalDays: intervalDays ?? this.intervalDays,
-        lastReviewedAt: lastReviewedAt ?? this.lastReviewedAt,
-        nextReviewDate: nextReviewDate ?? this.nextReviewDate,
-        totalReviews: totalReviews ?? this.totalReviews,
-        lastRating: lastRating ?? this.lastRating,
-      );
+  }) => AyahReviewRecord(
+    surahId: surahId,
+    ayahNumber: ayahNumber,
+    strengthLevel: strengthLevel ?? this.strengthLevel,
+    intervalDays: intervalDays ?? this.intervalDays,
+    lastReviewedAt: lastReviewedAt ?? this.lastReviewedAt,
+    nextReviewDate: nextReviewDate ?? this.nextReviewDate,
+    totalReviews: totalReviews ?? this.totalReviews,
+    lastRating: lastRating ?? this.lastRating,
+  );
 
   @override
   List<Object?> get props => [
-        surahId,
-        ayahNumber,
-        strengthLevel,
-        intervalDays,
-        nextReviewDate,
-        totalReviews,
-        lastRating,
-      ];
+    surahId,
+    ayahNumber,
+    strengthLevel,
+    intervalDays,
+    nextReviewDate,
+    totalReviews,
+    lastRating,
+  ];
 }
 
 // ─── DailyPlan ────────────────────────────────────────────────────────────────
@@ -128,24 +127,31 @@ class DailyPlan extends Equatable {
   int get totalItems =>
       newAyahs.length + nearRevision.length + farRevision.length;
   int get completedCount => completedAyahNums.length;
-  double get progress =>
-      totalItems == 0 ? 0 : completedCount / totalItems;
+  double get progress => totalItems == 0 ? 0 : completedCount / totalItems;
 
-  bool isCompleted(int ayahNumber) =>
-      completedAyahNums.contains(ayahNumber);
+  bool isCompleted(int ayahNumber) => completedAyahNums.contains(ayahNumber);
 
-  DailyPlan withCompleted(int ayahNumber) => DailyPlan(
-        generatedAt: generatedAt,
-        surahId: surahId,
-        newAyahs: newAyahs,
-        nearRevision: nearRevision,
-        farRevision: farRevision,
-        completedAyahNums: [...completedAyahNums, ayahNumber],
-      );
+  DailyPlan withCompleted(int ayahNumber) {
+    if (completedAyahNums.contains(ayahNumber)) return this;
+    return DailyPlan(
+      generatedAt: generatedAt,
+      surahId: surahId,
+      newAyahs: newAyahs,
+      nearRevision: nearRevision,
+      farRevision: farRevision,
+      completedAyahNums: [...completedAyahNums, ayahNumber],
+    );
+  }
 
   @override
-  List<Object?> get props =>
-      [generatedAt, surahId, newAyahs, nearRevision, farRevision, completedAyahNums];
+  List<Object?> get props => [
+    generatedAt,
+    surahId,
+    newAyahs,
+    nearRevision,
+    farRevision,
+    completedAyahNums,
+  ];
 }
 
 // ─── KidsProgress ─────────────────────────────────────────────────────────────
@@ -161,12 +167,12 @@ class KidsProgress extends Equatable {
   });
 
   const KidsProgress.initial()
-      : totalPoints = 0,
-        currentLevel = 1,
-        currentStreak = 0,
-        starsEarned = 0,
-        ayahsCompleted = 0,
-        lastSessionAt = null;
+    : totalPoints = 0,
+      currentLevel = 1,
+      currentStreak = 0,
+      starsEarned = 0,
+      ayahsCompleted = 0,
+      lastSessionAt = null;
 
   final int totalPoints;
   final int currentLevel;
@@ -187,14 +193,13 @@ class KidsProgress extends Equatable {
     return totalPoints - spent;
   }
 
-  double get levelProgress =>
-      pointsInCurrentLevel / pointsForNextLevel;
+  double get levelProgress => pointsInCurrentLevel / pointsForNextLevel;
 
   int get starsForLevel => switch (currentLevel) {
-        <= 3 => 1,
-        <= 7 => 2,
-        _ => 3,
-      };
+    <= 3 => 1,
+    <= 7 => 2,
+    _ => 3,
+  };
 
   KidsProgress addPoints(int points) {
     final newTotal = totalPoints + points;
@@ -222,22 +227,22 @@ class KidsProgress extends Equatable {
   int _starsForRating() => 1; // base, can be extended
 
   KidsProgress withStar() => KidsProgress(
-        totalPoints: totalPoints,
-        currentLevel: currentLevel,
-        currentStreak: currentStreak,
-        starsEarned: starsEarned + 1,
-        ayahsCompleted: ayahsCompleted,
-        lastSessionAt: lastSessionAt,
-      );
+    totalPoints: totalPoints,
+    currentLevel: currentLevel,
+    currentStreak: currentStreak,
+    starsEarned: starsEarned + 1,
+    ayahsCompleted: ayahsCompleted,
+    lastSessionAt: lastSessionAt,
+  );
 
   @override
   List<Object?> get props => [
-        totalPoints,
-        currentLevel,
-        currentStreak,
-        starsEarned,
-        ayahsCompleted,
-      ];
+    totalPoints,
+    currentLevel,
+    currentStreak,
+    starsEarned,
+    ayahsCompleted,
+  ];
 }
 
 // ─── CustomMemorizationPlan ───────────────────────────────────────────────────
@@ -325,39 +330,38 @@ class CustomMemorizationPlan extends Equatable {
     int? startAyah,
     DateTime? createdAt,
     bool? isActive,
-  }) =>
-      CustomMemorizationPlan(
-        name: name ?? this.name,
-        startSurahId: startSurahId ?? this.startSurahId,
-        endSurahId: endSurahId ?? this.endSurahId,
-        newAyahsPerDay: newAyahsPerDay ?? this.newAyahsPerDay,
-        availableDaysPerWeek: availableDaysPerWeek ?? this.availableDaysPerWeek,
-        sessionMinutes: sessionMinutes ?? this.sessionMinutes,
-        difficulty: difficulty ?? this.difficulty,
-        enableNearRevision: enableNearRevision ?? this.enableNearRevision,
-        enableFarRevision: enableFarRevision ?? this.enableFarRevision,
-        nearRevisionCount: nearRevisionCount ?? this.nearRevisionCount,
-        farRevisionCount: farRevisionCount ?? this.farRevisionCount,
-        startAyah: startAyah ?? this.startAyah,
-        createdAt: createdAt ?? this.createdAt,
-        isActive: isActive ?? this.isActive,
-      );
+  }) => CustomMemorizationPlan(
+    name: name ?? this.name,
+    startSurahId: startSurahId ?? this.startSurahId,
+    endSurahId: endSurahId ?? this.endSurahId,
+    newAyahsPerDay: newAyahsPerDay ?? this.newAyahsPerDay,
+    availableDaysPerWeek: availableDaysPerWeek ?? this.availableDaysPerWeek,
+    sessionMinutes: sessionMinutes ?? this.sessionMinutes,
+    difficulty: difficulty ?? this.difficulty,
+    enableNearRevision: enableNearRevision ?? this.enableNearRevision,
+    enableFarRevision: enableFarRevision ?? this.enableFarRevision,
+    nearRevisionCount: nearRevisionCount ?? this.nearRevisionCount,
+    farRevisionCount: farRevisionCount ?? this.farRevisionCount,
+    startAyah: startAyah ?? this.startAyah,
+    createdAt: createdAt ?? this.createdAt,
+    isActive: isActive ?? this.isActive,
+  );
 
   @override
   List<Object?> get props => [
-        name,
-        startSurahId,
-        endSurahId,
-        newAyahsPerDay,
-        availableDaysPerWeek,
-        sessionMinutes,
-        difficulty,
-        enableNearRevision,
-        enableFarRevision,
-        nearRevisionCount,
-        farRevisionCount,
-        startAyah,
-        createdAt,
-        isActive,
-      ];
+    name,
+    startSurahId,
+    endSurahId,
+    newAyahsPerDay,
+    availableDaysPerWeek,
+    sessionMinutes,
+    difficulty,
+    enableNearRevision,
+    enableFarRevision,
+    nearRevisionCount,
+    farRevisionCount,
+    startAyah,
+    createdAt,
+    isActive,
+  ];
 }

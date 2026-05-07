@@ -15,6 +15,12 @@ import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../cubits/profile_cubit.dart';
 import '../../data/user_profile.dart';
 
+void _showSettingsError(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
+  );
+}
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
@@ -26,58 +32,58 @@ class SettingsPage extends StatelessWidget {
       backgroundColor: isDark
           ? AppColors.darkBackground
           : AppColors.lightBackground,
-          body: CustomScrollView(
-            slivers: [
-              _buildAppBar(context, isDark),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.pagePadding,
-                  AppSpacing.lg,
-                  AppSpacing.pagePadding,
-                  120,
+      body: CustomScrollView(
+        slivers: [
+          _buildAppBar(context, isDark),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pagePadding,
+              AppSpacing.lg,
+              AppSpacing.pagePadding,
+              120,
+            ),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // ─── Account (Google Sign-In) ───────────────────────
+                _SettingsSection(
+                  title: context.isArabic ? 'الحساب' : 'Account',
+                  children: [_AccountSection(isDark: isDark)],
                 ),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // ─── Account (Google Sign-In) ───────────────────────
-                    _SettingsSection(
-                      title: context.isArabic ? 'الحساب' : 'Account',
-                      children: [_AccountSection(isDark: isDark)],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.profile,
-                      children: [_ProfileSettingTile(isDark: isDark)],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.theme,
-                      children: [_ThemeSettingTile(isDark: isDark)],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.language,
-                      children: [_LocaleSettingTile(isDark: isDark)],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.recitationAccuracy,
-                      children: [_AccuracySettingTile(isDark: isDark)],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.notifications,
-                      children: [_NotificationSettingTile(isDark: isDark)],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.about,
-                      children: [_AboutTile(isDark: isDark)],
-                    ),
-                  ]),
+                const SizedBox(height: AppSpacing.lg),
+                _SettingsSection(
+                  title: context.l10n.profile,
+                  children: [_ProfileSettingTile(isDark: isDark)],
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.lg),
+                _SettingsSection(
+                  title: context.l10n.theme,
+                  children: [_ThemeSettingTile(isDark: isDark)],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _SettingsSection(
+                  title: context.l10n.language,
+                  children: [_LocaleSettingTile(isDark: isDark)],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _SettingsSection(
+                  title: context.l10n.recitationAccuracy,
+                  children: [_AccuracySettingTile(isDark: isDark)],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _SettingsSection(
+                  title: context.l10n.notifications,
+                  children: [_NotificationSettingTile(isDark: isDark)],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _SettingsSection(
+                  title: context.l10n.about,
+                  children: [_AboutTile(isDark: isDark)],
+                ),
+              ]),
+            ),
           ),
+        ],
+      ),
     );
   }
 
@@ -590,90 +596,181 @@ class _ProfileSettingTile extends StatelessWidget {
     UserProfile profile,
     bool isDark,
   ) {
-    final nameController = TextEditingController(text: profile.name);
-    final ageController = TextEditingController(
-      text: profile.age?.toString() ?? '',
-    );
-
-    showDialog(
+    // Controllers are managed inside _EditProfileDialog (a StatefulWidget).
+    // This ensures dispose() is called only after the exit animation completes,
+    // preventing the "TextEditingController used after being disposed" error
+    // that occurred when .whenComplete() disposed them mid-animation.
+    showDialog<void>(
       context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          ),
-          title: Text(
-            context.l10n.editProfile,
-            style: AppTypography.titleLarge.copyWith(
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
+      builder: (dialogContext) => _EditProfileDialog(
+        profile: profile,
+        isDark: isDark,
+        outerContext: context,
+      ),
+    );
+  }
+}
+
+// ─── Edit Profile Dialog ──────────────────────────────────────────────────────
+// Manages its own TextEditingControllers as State fields so they are disposed
+// by Flutter only after the dialog's exit animation is complete.
+
+class _EditProfileDialog extends StatefulWidget {
+  const _EditProfileDialog({
+    required this.profile,
+    required this.isDark,
+    required this.outerContext,
+  });
+
+  final UserProfile profile;
+  final bool isDark;
+  final BuildContext outerContext;
+
+  @override
+  State<_EditProfileDialog> createState() => _EditProfileDialogState();
+}
+
+class _EditProfileDialogState extends State<_EditProfileDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _ageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.profile.name);
+    _ageController = TextEditingController(
+      text: widget.profile.age?.toString() ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _ageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final outerCtx = widget.outerContext;
+
+    return AlertDialog(
+      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      ),
+      title: Text(
+        outerCtx.l10n.editProfile,
+        style: AppTypography.titleLarge.copyWith(
+          color: isDark
+              ? AppColors.darkTextPrimary
+              : AppColors.lightTextPrimary,
+        ),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nameController,
+              style: TextStyle(
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+              decoration: InputDecoration(
+                labelText: outerCtx.l10n.name,
+                hintText: outerCtx.l10n.enterName,
+              ),
             ),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  style: TextStyle(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: context.l10n.name,
-                    hintText: context.l10n.enterName,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextField(
-                  controller: ageController,
-                  keyboardType: TextInputType.number,
-                  style: TextStyle(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                  ),
-                  decoration: InputDecoration(
-                    labelText: context.l10n.age,
-                    hintText: context.l10n.enterAge,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
+            Padding(
+              padding: const EdgeInsets.only(
+                top: AppSpacing.xs,
+                left: 4,
+                right: 4,
+              ),
               child: Text(
-                context.l10n.cancel,
-                style: TextStyle(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
+                outerCtx.isArabic
+                    ? '💡 يفضل إدخال الاسم باللغة العربية ليظهر بشكل أجمل في الشهادات'
+                    : '💡 Prefer entering your name in Arabic for better certificate appearance',
+                style: AppTypography.labelSmall.copyWith(
+                  color: isDark ? AppColors.primaryLight : AppColors.primary,
+                  fontSize: 10,
                 ),
               ),
             ),
-            FilledButton(
-              onPressed: () {
-                final name = nameController.text.trim();
-                final age = int.tryParse(ageController.text.trim());
-                context.read<ProfileCubit>().updateProfile(
-                  name: name,
-                  age: age,
-                );
-                Navigator.of(dialogContext).pop();
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text(context.l10n.profileUpdated)),
-                );
-              },
-              child: Text(context.l10n.save),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _ageController,
+              keyboardType: TextInputType.number,
+              style: TextStyle(
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
+              ),
+              decoration: InputDecoration(
+                labelText: outerCtx.l10n.age,
+                hintText: outerCtx.l10n.enterAge,
+              ),
             ),
           ],
-        );
-      },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            outerCtx.l10n.cancel,
+            style: TextStyle(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
+          ),
+        ),
+        FilledButton(
+          onPressed: () async {
+            final name = _nameController.text.trim();
+            final ageText = _ageController.text.trim();
+            final age = ageText.isEmpty ? null : int.tryParse(ageText);
+
+            if (ageText.isNotEmpty && (age == null || age < 1 || age > 120)) {
+              _showSettingsError(
+                outerCtx,
+                outerCtx.isArabic
+                    ? 'أدخل عمرًا صحيحًا بين 1 و120'
+                    : 'Enter a valid age between 1 and 120',
+              );
+              return;
+            }
+
+            final saved = await outerCtx.read<ProfileCubit>().updateProfile(
+              name: name,
+              age: age,
+            );
+
+            // Check both contexts after the async gap.
+            if (!outerCtx.mounted || !mounted) return;
+
+            if (!saved) {
+              _showSettingsError(
+                outerCtx,
+                outerCtx.isArabic
+                    ? 'تعذر حفظ الملف الشخصي'
+                    : 'Could not save profile',
+              );
+              return;
+            }
+
+            Navigator.of(context).pop();
+            ScaffoldMessenger.of(outerCtx).showSnackBar(
+              SnackBar(content: Text(outerCtx.l10n.profileUpdated)),
+            );
+          },
+          child: Text(outerCtx.l10n.save),
+        ),
+      ],
     );
   }
 }
@@ -733,10 +830,28 @@ class _AccuracySettingTileState extends State<_AccuracySettingTile> {
               child: Text(labels[i], style: const TextStyle(fontSize: 12)),
             ),
         ],
-        onChanged: (val) {
+        onChanged: (val) async {
           if (val != null) {
+            final previous = _selected;
+            final errorMessage = context.isArabic
+                ? 'تعذر حفظ مستوى الدقة'
+                : 'Could not save accuracy level';
+            final messenger = ScaffoldMessenger.of(context);
             setState(() => _selected = val);
-            getIt<SharedPreferences>().setDouble(_key, _levels[_selected]);
+            final saved = await getIt<SharedPreferences>().setDouble(
+              _key,
+              _levels[_selected],
+            );
+            if (!mounted) return;
+            if (!saved) {
+              setState(() => _selected = previous);
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(errorMessage),
+                  backgroundColor: Colors.red.shade700,
+                ),
+              );
+            }
           }
         },
         underline: const SizedBox(),
@@ -758,11 +873,21 @@ class _NotificationSettingTile extends StatefulWidget {
 }
 
 class _NotificationSettingTileState extends State<_NotificationSettingTile> {
-  static const _reviewKey = 'notifications_daily_review';
-  static const _streakKey = 'notifications_streak_alert';
+  static const _reviewKey = TaliaNotificationService.dailyReviewPreferenceKey;
+  static const _streakKey = TaliaNotificationService.streakAlertPreferenceKey;
+  static const _morningAzkarKey =
+      TaliaNotificationService.morningAzkarPreferenceKey;
+  static const _eveningAzkarKey =
+      TaliaNotificationService.eveningAzkarPreferenceKey;
 
   bool _reviewEnabled = true;
   bool _streakEnabled = true;
+  bool _morningAzkarEnabled = true;
+  bool _eveningAzkarEnabled = true;
+  bool _savingReview = false;
+  bool _savingStreak = false;
+  bool _savingMorningAzkar = false;
+  bool _savingEveningAzkar = false;
 
   @override
   void initState() {
@@ -770,34 +895,152 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     final prefs = getIt<SharedPreferences>();
     _reviewEnabled = prefs.getBool(_reviewKey) ?? true;
     _streakEnabled = prefs.getBool(_streakKey) ?? true;
+    _morningAzkarEnabled = prefs.getBool(_morningAzkarKey) ?? true;
+    _eveningAzkarEnabled = prefs.getBool(_eveningAzkarKey) ?? true;
   }
 
   Future<void> _toggleReview(bool value) async {
-    setState(() => _reviewEnabled = value);
-    await getIt<SharedPreferences>().setBool(_reviewKey, value);
-    if (value) {
-      await TaliaNotificationService.instance.scheduleDailyReviewReminder();
-    } else {
-      // Cancel only the review notification (ID 1001)
-      await TaliaNotificationService.instance.cancelDailyReviewReminder();
-      // Re-schedule streak if still enabled
-      if (_streakEnabled) {
-        await TaliaNotificationService.instance.scheduleStreakProtectionAlert(
-          currentStreak: 1,
-        );
+    final previous = _reviewEnabled;
+    setState(() {
+      _reviewEnabled = value;
+      _savingReview = true;
+    });
+
+    try {
+      final saved = await getIt<SharedPreferences>().setBool(_reviewKey, value);
+      if (!saved) {
+        throw StateError('Failed to save daily review notification setting');
+      }
+      if (value) {
+        await TaliaNotificationService.instance.scheduleDailyReviewReminder();
+      } else {
+        await TaliaNotificationService.instance.cancelDailyReviewReminder();
+        if (_streakEnabled) {
+          await TaliaNotificationService.instance.scheduleStreakProtectionAlert(
+            currentStreak: 1,
+          );
+        }
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _reviewEnabled = previous);
+      _showSettingsError(
+        context,
+        context.isArabic
+            ? 'تعذر تحديث تذكير المراجعة'
+            : 'Could not update review reminder',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _savingReview = false);
       }
     }
   }
 
   Future<void> _toggleStreak(bool value) async {
-    setState(() => _streakEnabled = value);
-    await getIt<SharedPreferences>().setBool(_streakKey, value);
-    if (value) {
-      await TaliaNotificationService.instance.scheduleStreakProtectionAlert(
-        currentStreak: 1,
+    final previous = _streakEnabled;
+    setState(() {
+      _streakEnabled = value;
+      _savingStreak = true;
+    });
+
+    try {
+      final saved = await getIt<SharedPreferences>().setBool(_streakKey, value);
+      if (!saved) {
+        throw StateError('Failed to save streak notification setting');
+      }
+      if (value) {
+        await TaliaNotificationService.instance.scheduleStreakProtectionAlert(
+          currentStreak: 1,
+        );
+      } else {
+        await TaliaNotificationService.instance.cancelStreakAlert();
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _streakEnabled = previous);
+      _showSettingsError(
+        context,
+        context.isArabic
+            ? 'تعذر تحديث تنبيه السلسلة'
+            : 'Could not update streak alert',
       );
-    } else {
-      await TaliaNotificationService.instance.cancelStreakAlert();
+    } finally {
+      if (mounted) {
+        setState(() => _savingStreak = false);
+      }
+    }
+  }
+
+  Future<void> _toggleMorningAzkar(bool value) async {
+    final previous = _morningAzkarEnabled;
+    setState(() {
+      _morningAzkarEnabled = value;
+      _savingMorningAzkar = true;
+    });
+
+    try {
+      final saved = await getIt<SharedPreferences>().setBool(
+        _morningAzkarKey,
+        value,
+      );
+      if (!saved) {
+        throw StateError('Failed to save morning azkar notification setting');
+      }
+      if (value) {
+        await TaliaNotificationService.instance.scheduleMorningAzkarReminder();
+      } else {
+        await TaliaNotificationService.instance.cancelMorningAzkarReminder();
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _morningAzkarEnabled = previous);
+      _showSettingsError(
+        context,
+        context.isArabic
+            ? 'تعذر تحديث تذكير أذكار الصباح'
+            : 'Could not update morning azkar reminder',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _savingMorningAzkar = false);
+      }
+    }
+  }
+
+  Future<void> _toggleEveningAzkar(bool value) async {
+    final previous = _eveningAzkarEnabled;
+    setState(() {
+      _eveningAzkarEnabled = value;
+      _savingEveningAzkar = true;
+    });
+
+    try {
+      final saved = await getIt<SharedPreferences>().setBool(
+        _eveningAzkarKey,
+        value,
+      );
+      if (!saved) {
+        throw StateError('Failed to save evening azkar notification setting');
+      }
+      if (value) {
+        await TaliaNotificationService.instance.scheduleEveningAzkarReminder();
+      } else {
+        await TaliaNotificationService.instance.cancelEveningAzkarReminder();
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _eveningAzkarEnabled = previous);
+      _showSettingsError(
+        context,
+        context.isArabic
+            ? 'تعذر تحديث تذكير أذكار المساء'
+            : 'Could not update evening azkar reminder',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _savingEveningAzkar = false);
+      }
     }
   }
 
@@ -828,7 +1071,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
             style: AppTypography.labelSmall.copyWith(color: subtextColor),
           ),
           value: _reviewEnabled,
-          onChanged: _toggleReview,
+          onChanged: _savingReview ? null : _toggleReview,
           activeThumbColor: primary,
         ),
         Divider(
@@ -849,7 +1092,49 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
             style: AppTypography.labelSmall.copyWith(color: subtextColor),
           ),
           value: _streakEnabled,
-          onChanged: _toggleStreak,
+          onChanged: _savingStreak ? null : _toggleStreak,
+          activeThumbColor: primary,
+        ),
+        Divider(
+          height: 0.5,
+          color: widget.isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          indent: 56,
+        ),
+        SwitchListTile(
+          secondary: Icon(Icons.wb_sunny_rounded, color: primary),
+          title: Text(
+            context.isArabic ? 'تذكير أذكار الصباح' : 'Morning Azkar Reminder',
+            style: AppTypography.bodyMedium.copyWith(color: textColor),
+          ),
+          subtitle: Text(
+            context.isArabic
+                ? 'كل يوم الساعة ٦:٠٠ صباحًا'
+                : 'Every day at 6:00 AM',
+            style: AppTypography.labelSmall.copyWith(color: subtextColor),
+          ),
+          value: _morningAzkarEnabled,
+          onChanged: _savingMorningAzkar ? null : _toggleMorningAzkar,
+          activeThumbColor: primary,
+        ),
+        Divider(
+          height: 0.5,
+          color: widget.isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          indent: 56,
+        ),
+        SwitchListTile(
+          secondary: Icon(Icons.nightlight_round, color: primary),
+          title: Text(
+            context.isArabic ? 'تذكير أذكار المساء' : 'Evening Azkar Reminder',
+            style: AppTypography.bodyMedium.copyWith(color: textColor),
+          ),
+          subtitle: Text(
+            context.isArabic
+                ? 'كل يوم الساعة ٦:٠٠ مساءً'
+                : 'Every day at 6:00 PM',
+            style: AppTypography.labelSmall.copyWith(color: subtextColor),
+          ),
+          value: _eveningAzkarEnabled,
+          onChanged: _savingEveningAzkar ? null : _toggleEveningAzkar,
           activeThumbColor: primary,
         ),
       ],
@@ -903,10 +1188,12 @@ class _AccountSectionState extends State<_AccountSection> {
   @override
   Widget build(BuildContext context) {
     final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor =
-        widget.isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final subtextColor =
-        widget.isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = widget.isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
     final fieldFill = widget.isDark
         ? Colors.white.withValues(alpha: 0.06)
         : Colors.black.withValues(alpha: 0.04);
@@ -922,13 +1209,19 @@ class _AccountSectionState extends State<_AccountSection> {
           );
         } else if (state is AuthAuthenticated) {
           // Update local profile automatically with the user's display name
-          context.read<ProfileCubit>().updateProfile(name: state.user.displayName);
+          context.read<ProfileCubit>().updateProfile(
+            name: state.user.displayName,
+          );
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
                 context.isArabic
-                    ? (_isSignUp ? 'تم إنشاء الحساب بنجاح ✓' : 'تم تسجيل الدخول بنجاح ✓')
-                    : (_isSignUp ? 'Account created ✓' : 'Signed in successfully ✓'),
+                    ? (_isSignUp
+                          ? 'تم إنشاء الحساب بنجاح ✓'
+                          : 'تم تسجيل الدخول بنجاح ✓')
+                    : (_isSignUp
+                          ? 'Account created ✓'
+                          : 'Signed in successfully ✓'),
               ),
               backgroundColor: Colors.green.shade700,
             ),
@@ -955,7 +1248,11 @@ class _AccountSectionState extends State<_AccountSection> {
                     CircleAvatar(
                       radius: 24,
                       backgroundColor: primary.withValues(alpha: 0.15),
-                      child: Icon(Icons.person_rounded, color: primary, size: 26),
+                      child: Icon(
+                        Icons.person_rounded,
+                        color: primary,
+                        size: 26,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
@@ -971,15 +1268,19 @@ class _AccountSectionState extends State<_AccountSection> {
                           ),
                           Text(
                             user.email,
-                            style: AppTypography.labelSmall
-                                .copyWith(color: subtextColor),
+                            style: AppTypography.labelSmall.copyWith(
+                              color: subtextColor,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                           const SizedBox(height: 2),
                           Row(
                             children: [
-                              Icon(Icons.cloud_done_rounded,
-                                  size: 12, color: Colors.green.shade500),
+                              Icon(
+                                Icons.cloud_done_rounded,
+                                size: 12,
+                                color: Colors.green.shade500,
+                              ),
                               const SizedBox(width: 4),
                               Text(
                                 context.isArabic
@@ -1000,14 +1301,17 @@ class _AccountSectionState extends State<_AccountSection> {
               ),
               Divider(
                 height: 0.5,
-                color: widget.isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                color: widget.isDark
+                    ? AppColors.darkDivider
+                    : AppColors.lightDivider,
                 indent: 16,
                 endIndent: 16,
               ),
               InkWell(
                 onTap: () => _confirmSignOut(context),
                 borderRadius: const BorderRadius.vertical(
-                    bottom: Radius.circular(AppSpacing.radiusLg)),
+                  bottom: Radius.circular(AppSpacing.radiusLg),
+                ),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
@@ -1020,17 +1324,22 @@ class _AccountSectionState extends State<_AccountSection> {
                         height: 36,
                         decoration: BoxDecoration(
                           color: Colors.red.withValues(alpha: 0.1),
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
                         ),
-                        child: const Icon(Icons.logout_rounded,
-                            color: Colors.red, size: 18),
+                        child: const Icon(
+                          Icons.logout_rounded,
+                          color: Colors.red,
+                          size: 18,
+                        ),
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Text(
                         context.isArabic ? 'تسجيل الخروج' : 'Sign Out',
-                        style:
-                            AppTypography.bodyMedium.copyWith(color: Colors.red),
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: Colors.red,
+                        ),
                       ),
                     ],
                   ),
@@ -1107,7 +1416,9 @@ class _AccountSectionState extends State<_AccountSection> {
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
-                        return context.isArabic ? 'أدخل اسمك' : 'Enter your name';
+                        return context.isArabic
+                            ? 'أدخل اسمك'
+                            : 'Enter your name';
                       }
                       return null;
                     },
@@ -1129,10 +1440,14 @@ class _AccountSectionState extends State<_AccountSection> {
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {
-                      return context.isArabic ? 'أدخل بريدك الإلكتروني' : 'Enter your email';
+                      return context.isArabic
+                          ? 'أدخل بريدك الإلكتروني'
+                          : 'Enter your email';
                     }
                     if (!v.contains('@') || !v.contains('.')) {
-                      return context.isArabic ? 'بريد إلكتروني غير صحيح' : 'Invalid email';
+                      return context.isArabic
+                          ? 'بريد إلكتروني غير صحيح'
+                          : 'Invalid email';
                     }
                     return null;
                   },
@@ -1144,28 +1459,32 @@ class _AccountSectionState extends State<_AccountSection> {
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   style: AppTypography.bodyMedium.copyWith(color: textColor),
-                  decoration: _inputDecoration(
-                    label: context.isArabic ? 'كلمة المرور' : 'Password',
-                    icon: Icons.lock_outline_rounded,
-                    primary: primary,
-                    textColor: textColor,
-                    fillColor: fieldFill,
-                  ).copyWith(
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off_rounded
-                            : Icons.visibility_rounded,
-                        color: subtextColor,
-                        size: 20,
+                  decoration:
+                      _inputDecoration(
+                        label: context.isArabic ? 'كلمة المرور' : 'Password',
+                        icon: Icons.lock_outline_rounded,
+                        primary: primary,
+                        textColor: textColor,
+                        fillColor: fieldFill,
+                      ).copyWith(
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscurePassword
+                                ? Icons.visibility_off_rounded
+                                : Icons.visibility_rounded,
+                            color: subtextColor,
+                            size: 20,
+                          ),
+                          onPressed: () => setState(
+                            () => _obscurePassword = !_obscurePassword,
+                          ),
+                        ),
                       ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
                   validator: (v) {
                     if (v == null || v.isEmpty) {
-                      return context.isArabic ? 'أدخل كلمة المرور' : 'Enter password';
+                      return context.isArabic
+                          ? 'أدخل كلمة المرور'
+                          : 'Enter password';
                     }
                     if (_isSignUp && v.length < 6) {
                       return context.isArabic
@@ -1214,7 +1533,9 @@ class _AccountSectionState extends State<_AccountSection> {
   }) {
     return InputDecoration(
       labelText: label,
-      labelStyle: AppTypography.labelMedium.copyWith(color: textColor.withValues(alpha: 0.6)),
+      labelStyle: AppTypography.labelMedium.copyWith(
+        color: textColor.withValues(alpha: 0.6),
+      ),
       prefixIcon: Icon(icon, color: primary, size: 20),
       filled: true,
       fillColor: fillColor,
@@ -1241,7 +1562,8 @@ class _AccountSectionState extends State<_AccountSection> {
       builder: (dialogCtx) => AlertDialog(
         backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
         title: Text(
           context.isArabic ? 'تسجيل الخروج' : 'Sign Out',
           style: AppTypography.titleLarge.copyWith(
@@ -1305,10 +1627,14 @@ class _TabChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? primary.withValues(alpha: 0.15) : Colors.transparent,
+          color: isSelected
+              ? primary.withValues(alpha: 0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
           border: Border.all(
-            color: isSelected ? primary : (isDark ? Colors.white12 : Colors.black12),
+            color: isSelected
+                ? primary
+                : (isDark ? Colors.white12 : Colors.black12),
           ),
         ),
         child: Text(

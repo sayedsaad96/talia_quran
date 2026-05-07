@@ -4,6 +4,8 @@
 	<dict>
 		<key>NSSpeechRecognitionUsageDescription</key>
 		<string>This app requires access to Speech Recognition to evaluate your Quran recitation.</string>
+		<key>NSPhotoLibraryAddUsageDescription</key>
+		<string>تطلب تالية الوصول إلى معرض الصور لحفظ شهادات الإنجاز الخاصة بك.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>This app requires access to the microphone to record and evaluate your Quran recitation.</string>
 		<key>CADisableMinimumFrameDurationOnPhone</key>

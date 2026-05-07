@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/services/achievement_service.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
@@ -11,12 +12,14 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
     this._getCachedPlan,
     this._evaluateUsecase,
     this._saveDailyPlan,
+    this._achievementService,
   ) : super(const DailyPlanInitial());
 
   final GenerateDailyPlanUsecase _generateDailyPlan;
   final GetCachedDailyPlanUsecase _getCachedPlan;
   final EvaluateMemorizationUsecase _evaluateUsecase;
   final SaveDailyPlanUsecase _saveDailyPlan;
+  final AchievementService _achievementService;
 
   Future<void> load({required int surahId, int newAyahsPerDay = 5}) async {
     emit(const DailyPlanLoading());
@@ -95,25 +98,29 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
       ),
     );
 
-    result.fold(
-      (f) =>
-          emit(DailyPlanLoaded(plan: current.plan, surahId: current.surahId)),
-      (updatedRecord) async {
-        final updatedPlan = current.plan.withCompleted(ayahNumber);
-        // Persist the updated plan
-        final saveResult = await _saveDailyPlan(updatedPlan);
-        saveResult.fold(
-          (f) => emit(DailyPlanError(f.message)),
-          (_) => emit(
-            DailyPlanLoaded(
-              plan: updatedPlan,
-              surahId: current.surahId,
-              lastEvaluatedAyah: ayahNumber,
-              lastRating: rating,
-            ),
-          ),
-        );
-      },
+    final evaluateFailure = result.fold((f) => f, (_) => null);
+    if (evaluateFailure != null) {
+      emit(DailyPlanError(evaluateFailure.message));
+      return;
+    }
+
+    final updatedPlan = current.plan.withCompleted(ayahNumber);
+    final saveResult = await _saveDailyPlan(updatedPlan);
+    final saveFailure = saveResult.fold((f) => f, (_) => null);
+    if (saveFailure != null) {
+      emit(DailyPlanError(saveFailure.message));
+      return;
+    }
+
+    final newAwards = await _achievementService.checkAndUnlockCertificates();
+    emit(
+      DailyPlanLoaded(
+        plan: updatedPlan,
+        surahId: current.surahId,
+        lastEvaluatedAyah: ayahNumber,
+        lastRating: rating,
+        newAwards: newAwards,
+      ),
     );
   }
 }

@@ -33,6 +33,8 @@ class ArabicNormalizer {
     normalized = normalized.replaceAll('ذلكم', 'ذالكم');
     normalized = normalized.replaceAll('كذلك', 'كذالك');
     normalized = normalized.replaceAll('اله', 'الاه');
+    normalized = normalized.replaceAll('اللهم', 'اللاههم');
+    normalized = normalized.replaceAll('السموات', 'السماوات');
     normalized = normalized.replaceAll('لكن', 'لاكن');
     normalized = normalized.replaceAll('اولئك', 'اولائك');
     

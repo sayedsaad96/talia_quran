@@ -1,4 +1,5 @@
 import '../../domain/entities/hifz_entities.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class AyahProgressModel extends AyahProgress {
   const AyahProgressModel({
@@ -34,18 +35,22 @@ class AyahProgressModel extends AyahProgress {
   }
 
   Map<String, dynamic> toJson() => {
-        'surahId': surahId,
-        'ayahNumber': ayahNumber,
-        'status': status.index,
-        'repetitions': repetitions,
-        'nextReviewDate': nextReviewDate.toIso8601String(),
-        'lastReviewDate': lastReviewDate.toIso8601String(),
-      };
+    'surahId': surahId,
+    'ayahNumber': ayahNumber,
+    'status': status.index,
+    'repetitions': repetitions,
+    'nextReviewDate': nextReviewDate.toIso8601String(),
+    'lastReviewDate': lastReviewDate.toIso8601String(),
+  };
 
   AyahProgressModel advanceWithSpacedRepetition() {
-    const intervals = [1, 3, 7, 14, 30, 90];
+    final now = DateTime.now();
     final rep = repetitions + 1;
-    final intervalDays = rep < intervals.length ? intervals[rep] : 90;
+    final intervalIndex = rep - 1;
+    final intervalDays =
+        intervalIndex < AppConstants.spacedRepetitionIntervals.length
+        ? AppConstants.spacedRepetitionIntervals[intervalIndex]
+        : AppConstants.spacedRepetitionIntervals.last;
     final nextStatus = rep >= 5 ? AyahStatus.memorized : AyahStatus.review;
 
     return AyahProgressModel(
@@ -53,8 +58,8 @@ class AyahProgressModel extends AyahProgress {
       ayahNumber: ayahNumber,
       status: nextStatus,
       repetitions: rep,
-      nextReviewDate: DateTime.now().add(Duration(days: intervalDays)),
-      lastReviewDate: DateTime.now(),
+      nextReviewDate: now.add(Duration(days: intervalDays)),
+      lastReviewDate: now,
     );
   }
 
@@ -62,6 +67,7 @@ class AyahProgressModel extends AyahProgress {
   /// Unlike the old hard reset which wiped all progress, this preserves
   /// the user's memorization history while indicating they need to review.
   AyahProgressModel softPenalty() {
+    final now = DateTime.now();
     final newRep = (repetitions - 1).clamp(0, repetitions);
     final newStatus = newRep == 0 ? AyahStatus.learning : AyahStatus.review;
 
@@ -70,8 +76,8 @@ class AyahProgressModel extends AyahProgress {
       ayahNumber: ayahNumber,
       status: newStatus,
       repetitions: newRep,
-      nextReviewDate: DateTime.now().add(const Duration(days: 1)),
-      lastReviewDate: DateTime.now(),
+      nextReviewDate: now.add(const Duration(days: 1)),
+      lastReviewDate: now,
     );
   }
 }

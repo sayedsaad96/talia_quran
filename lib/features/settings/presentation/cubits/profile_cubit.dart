@@ -23,6 +23,14 @@ class ProfileLoaded extends ProfileState {
   List<Object?> get props => [profile];
 }
 
+class ProfileError extends ProfileState {
+  const ProfileError(this.message);
+  final String message;
+
+  @override
+  List<Object?> get props => [message];
+}
+
 // ─── Cubit ───────────────────────────────────────────────────────────────────
 
 class ProfileCubit extends Cubit<ProfileState> {
@@ -32,22 +40,37 @@ class ProfileCubit extends Cubit<ProfileState> {
   static const _key = 'user_profile';
 
   void loadProfile() {
-    final json = _prefs.getString(_key);
-    if (json != null) {
-      final map = jsonDecode(json) as Map<String, dynamic>;
-      emit(ProfileLoaded(UserProfile.fromJson(map)));
-    } else {
+    try {
+      final json = _prefs.getString(_key);
+      if (json == null) {
+        emit(const ProfileLoaded(UserProfile()));
+        return;
+      }
+
+      final decoded = jsonDecode(json);
+      if (decoded is! Map<String, dynamic>) {
+        emit(const ProfileLoaded(UserProfile()));
+        return;
+      }
+
+      emit(ProfileLoaded(UserProfile.fromJson(decoded)));
+    } catch (_) {
       emit(const ProfileLoaded(UserProfile()));
     }
   }
 
-  Future<void> updateProfile({String? name, int? age}) async {
+  Future<bool> updateProfile({String? name, int? age}) async {
     final current = state is ProfileLoaded
         ? (state as ProfileLoaded).profile
         : const UserProfile();
     final updated = current.copyWith(name: name, age: age);
     final encoded = jsonEncode(updated.toJson());
-    await _prefs.setString(_key, encoded);
+    final saved = await _prefs.setString(_key, encoded);
+    if (!saved) {
+      emit(const ProfileError('Failed to save profile'));
+      return false;
+    }
     emit(ProfileLoaded(updated));
+    return true;
   }
 }

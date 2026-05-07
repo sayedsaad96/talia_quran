@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
@@ -10,6 +11,7 @@ abstract class QuranLocalDatasource {
   Future<List<AyahModel>> getAyahs(int surahId);
   Future<List<AyahModel>> getAyahsByPage(int pageNumber);
   Future<List<AyahModel>> searchAyahs(String query);
+  Future<Map<int, List<AyahModel>>> getAyahsGroupedByJuz();
 }
 
 class QuranLocalDatasourceImpl implements QuranLocalDatasource {
@@ -59,43 +61,56 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
   Future<void> _loadQuranData() async {
     try {
       final jsonStr = await rootBundle.loadString('assets/data/quran.json');
-      final Map<String, dynamic> data = jsonDecode(jsonStr);
       final surahs = await getSurahs();
-      
-      _cachedAyahs = {};
-      _cachedByPage = {}; // BUG-007: Initialize page index
-      int globalOffset = 0;
-      
-      for (final surah in surahs) {
-        final surahIdStr = surah.id.toString();
-        final List<dynamic> verseList = data[surahIdStr] ?? [];
-        
-        final parsedAyahs = <AyahModel>[];
-        for (int i = 0; i < verseList.length; i++) {
-          final verseObj = verseList[i];
-          // BUG-001: Remove BOM character (\uFEFF) from ayah text
-          final rawText = verseObj['text'].toString().replaceAll('\uFEFF', '');
-          final ayah = AyahModel(
-             number: verseObj['global'] ?? (globalOffset + i + 1),
-             surahId: surah.id,
-             text: rawText,
-             numberInSurah: verseObj['verse'] as int,
-             juz: verseObj['juz'] as int? ?? surah.juz,
-             page: verseObj['page'] as int? ?? (surah.page + (i ~/ 15)),
-          );
-          parsedAyahs.add(ayah);
-          
-          // BUG-007: Build page index during load
-          final pageNum = ayah.page ?? 1;
-          _cachedByPage!.putIfAbsent(pageNum, () => []).add(ayah);
-        }
-        
-        _cachedAyahs![surah.id] = parsedAyahs;
-        globalOffset += surah.ayahCount;
-      }
+
+      final result = await compute(_parseQuranData, {
+        'jsonStr': jsonStr,
+        'surahs': surahs,
+      });
+
+      _cachedAyahs = result.ayahs;
+      _cachedByPage = result.byPage;
     } catch (e) {
       throw const CacheFailure('Failed to load Quran text data');
     }
+  }
+
+  static _QuranParseResult _parseQuranData(Map<String, dynamic> params) {
+    final String jsonStr = params['jsonStr'];
+    final List<SurahModel> surahs = params['surahs'];
+    
+    final Map<String, dynamic> data = jsonDecode(jsonStr);
+    final cachedAyahs = <int, List<AyahModel>>{};
+    final cachedByPage = <int, List<AyahModel>>{};
+    int globalOffset = 0;
+
+    for (final surah in surahs) {
+      final surahIdStr = surah.id.toString();
+      final List<dynamic> verseList = data[surahIdStr] ?? [];
+      
+      final parsedAyahs = <AyahModel>[];
+      for (int i = 0; i < verseList.length; i++) {
+        final verseObj = verseList[i];
+        final rawText = verseObj['text'].toString().replaceAll('\uFEFF', '');
+        final ayah = AyahModel(
+          number: verseObj['global'] ?? (globalOffset + i + 1),
+          surahId: surah.id,
+          text: rawText,
+          numberInSurah: verseObj['verse'] as int,
+          juz: verseObj['juz'] as int? ?? surah.juz,
+          page: verseObj['page'] as int? ?? (surah.page + (i ~/ 15)),
+        );
+        parsedAyahs.add(ayah);
+        
+        final pageNum = ayah.page ?? 1;
+        cachedByPage.putIfAbsent(pageNum, () => []).add(ayah);
+      }
+      
+      cachedAyahs[surah.id] = parsedAyahs;
+      globalOffset += surah.ayahCount;
+    }
+
+    return _QuranParseResult(cachedAyahs, cachedByPage);
   }
 
   @override
@@ -118,4 +133,23 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
 
     return results;
   }
+
+  @override
+  Future<Map<int, List<AyahModel>>> getAyahsGroupedByJuz() async {
+    if (_cachedAyahs == null) await _loadQuranData();
+    
+    final grouped = <int, List<AyahModel>>{};
+    for (final ayahs in _cachedAyahs!.values) {
+      for (final ayah in ayahs) {
+        final juz = ayah.juz ?? 1;
+        grouped.putIfAbsent(juz, () => []).add(ayah);
+      }
+    }
+    return grouped;
+  }
+}
+class _QuranParseResult {
+  final Map<int, List<AyahModel>> ayahs;
+  final Map<int, List<AyahModel>> byPage;
+  _QuranParseResult(this.ayahs, this.byPage);
 }

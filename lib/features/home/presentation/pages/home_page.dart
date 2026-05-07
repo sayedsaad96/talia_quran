@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -208,6 +209,20 @@ class _HomeContent extends StatelessWidget {
           ),
         ),
 
+        // ─── Debug Certificate Preview (Debug Mode Only) ──────────────────
+        if (kDebugMode)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.lg,
+                AppSpacing.pagePadding,
+                0,
+              ),
+              child: _DebugCertificatePreview(isDark: isDark),
+            ),
+          ),
+
         // ─── Bottom padding (above nav bar) ──────────────────────────────────
         const SliverToBoxAdapter(child: SizedBox(height: 120)),
       ],
@@ -397,16 +412,21 @@ class _AchievementBadge extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        final dummyAward = CertificateAward(
-          id: 'test_1',
-          titleAr: 'شهادة إتمام حفظ الجزء الثلاثون',
-          type: CertificateType.juz,
-          earnedAt: DateTime.now(),
-          juzNumber: 30,
-        );
+        // C01 FIX: Show real certificates instead of dummy data
+        final earnedCerts = getIt<AchievementService>().getEarnedCertificates();
+        if (earnedCerts.isEmpty) {
+          // No certificates yet — go to progress page
+          context.go('/progress');
+          return;
+        }
+        final latestAward = earnedCerts.first; // sorted by date desc
         context.push('/certificate', extra: {
-          'award': dummyAward,
-          'userName': 'اسم تجريبي', // You can change this to anything
+          'award': latestAward,
+          'userName': context.read<ProfileCubit>().state is ProfileLoaded
+              ? (context.read<ProfileCubit>().state as ProfileLoaded)
+                    .profile
+                    .displayName
+              : (context.isArabic ? 'مستخدم تالية' : 'Talia User'),
         });
       },
       child: Container(
@@ -1434,5 +1454,110 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
         );
       },
     );
+  }
+}
+
+// ─── Debug Certificate Preview (Debug Mode Only) ──────────────────────────────
+
+class _DebugCertificatePreview extends StatelessWidget {
+  const _DebugCertificatePreview({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.5), width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.bug_report_rounded, color: Colors.orange, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                '🔧 Debug: Certificate Preview',
+                style: AppTypography.titleSmall.copyWith(
+                  color: Colors.orange,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'Test certificate rendering without earning one.',
+            style: AppTypography.bodySmall.copyWith(color: textColor.withValues(alpha: 0.7)),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              _debugCertButton(context, 'جزء 30', CertificateType.juz, juzNumber: 30),
+              _debugCertButton(context, 'سورة البقرة', CertificateType.surah, surahId: 2, surahNameAr: 'البقرة'),
+              _debugCertButton(context, 'نصف القرآن', CertificateType.halfQuran),
+              _debugCertButton(context, 'ختم القرآن', CertificateType.fullQuran),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _debugCertButton(
+    BuildContext context,
+    String label,
+    CertificateType type, {
+    int? juzNumber,
+    int? surahId,
+    String? surahNameAr,
+  }) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.orange.withValues(alpha: 0.15),
+        foregroundColor: Colors.orange,
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      onPressed: () {
+        final userName = context.read<ProfileCubit>().state is ProfileLoaded
+            ? (context.read<ProfileCubit>().state as ProfileLoaded).profile.displayName
+            : 'مستخدم تالية';
+
+        final debugAward = CertificateAward(
+          id: 'debug_${type.name}',
+          titleAr: _debugTitle(type, juzNumber, surahNameAr),
+          type: type,
+          earnedAt: DateTime.now(),
+          juzNumber: juzNumber,
+          surahId: surahId,
+          surahNameAr: surahNameAr,
+        );
+
+        context.push('/certificate', extra: {
+          'award': debugAward,
+          'userName': userName,
+        });
+      },
+      child: Text(label, style: const TextStyle(fontSize: 12)),
+    );
+  }
+
+  String _debugTitle(CertificateType type, int? juzNumber, String? surahNameAr) {
+    return switch (type) {
+      CertificateType.juz => 'شهادة حفظ الجزء ${juzNumber ?? 1}',
+      CertificateType.surah => 'شهادة حفظ سورة ${surahNameAr ?? 'البقرة'}',
+      CertificateType.halfQuran => 'شهادة حفظ نصف القرآن الكريم',
+      CertificateType.fullQuran => 'شهادة ختم القرآن الكريم كاملاً',
+    };
   }
 }

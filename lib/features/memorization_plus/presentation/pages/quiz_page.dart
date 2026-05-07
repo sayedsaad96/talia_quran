@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -9,14 +11,12 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/talia_logger.dart';
+import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../cubits/quiz_cubit.dart';
 
 class QuizPage extends StatelessWidget {
-  const QuizPage({
-    super.key,
-    required this.surahId,
-    this.ayahNumbers,
-  });
+  const QuizPage({super.key, required this.surahId, this.ayahNumbers});
 
   final int surahId;
   final List<int>? ayahNumbers;
@@ -24,8 +24,9 @@ class QuizPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<QuizCubit>()
-        ..loadQuiz(surahId: surahId, ayahNumbers: ayahNumbers),
+      create: (_) =>
+          getIt<QuizCubit>()
+            ..loadQuiz(surahId: surahId, ayahNumbers: ayahNumbers),
       child: const _QuizView(),
     );
   }
@@ -39,23 +40,35 @@ class _QuizView extends StatelessWidget {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       appBar: AppBar(
         title: Text(
           'اختبار الحفظ',
           style: AppTypography.titleLarge.copyWith(
             fontFamily: 'Amiri',
-            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
           ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: IconThemeData(
-          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+          color: isDark
+              ? AppColors.darkTextPrimary
+              : AppColors.lightTextPrimary,
         ),
       ),
-      body: BlocBuilder<QuizCubit, QuizState>(
+      body: BlocConsumer<QuizCubit, QuizState>(
+        listener: (context, state) {
+          if (state is QuizAnswerResult && state.newAwards.isNotEmpty) {
+            unawaited(
+              showCertificateCelebrationDialog(context, state.newAwards),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is QuizLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -117,7 +130,7 @@ class _QuestionViewState extends State<_QuestionView> {
         },
         onError: (val) {
           setState(() => _isListening = false);
-          debugPrint('Speech Error: $val');
+          TaliaLogger.w('Speech recognition error', val);
         },
       );
     }
@@ -127,7 +140,11 @@ class _QuestionViewState extends State<_QuestionView> {
   void _listen() async {
     if (!_speechEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('نظام التعرف على الصوت غير متاح أو لا توجد صلاحيات (الميكروفون).')),
+        const SnackBar(
+          content: Text(
+            'نظام التعرف على الصوت غير متاح أو لا توجد صلاحيات (الميكروفون).',
+          ),
+        ),
       );
       return;
     }
@@ -203,8 +220,10 @@ class _QuestionViewState extends State<_QuestionView> {
               ),
               const SizedBox(width: 12),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.green.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
@@ -235,9 +254,7 @@ class _QuestionViewState extends State<_QuestionView> {
                 ],
               ),
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              border: Border.all(
-                color: primary.withValues(alpha: 0.2),
-              ),
+              border: Border.all(color: primary.withValues(alpha: 0.2)),
             ),
             child: Column(
               children: [
@@ -283,8 +300,11 @@ class _QuestionViewState extends State<_QuestionView> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.lightbulb_rounded,
-                          color: Colors.amber, size: 18),
+                      const Icon(
+                        Icons.lightbulb_rounded,
+                        color: Colors.amber,
+                        size: 18,
+                      ),
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
@@ -324,7 +344,7 @@ class _QuestionViewState extends State<_QuestionView> {
                             color: Colors.redAccent.withValues(alpha: 0.4),
                             blurRadius: 20,
                             spreadRadius: 5,
-                          )
+                          ),
                         ]
                       : null,
                 ),
@@ -336,17 +356,21 @@ class _QuestionViewState extends State<_QuestionView> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: AppSpacing.md),
           Center(
             child: Text(
-              _isListening 
-                  ? 'جاري الاستماع...' 
-                  : (_recognizedWords.isEmpty ? 'انقر للتحدث' : 'انقر لإعادة التسجيل'),
+              _isListening
+                  ? 'جاري الاستماع...'
+                  : (_recognizedWords.isEmpty
+                        ? 'انقر للتحدث'
+                        : 'انقر لإعادة التسجيل'),
               style: AppTypography.labelMedium.copyWith(
-                color: _isListening 
-                    ? Colors.redAccent 
-                    : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                color: _isListening
+                    ? Colors.redAccent
+                    : (isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary),
                 fontWeight: _isListening ? FontWeight.bold : FontWeight.normal,
               ),
             ),
@@ -394,7 +418,9 @@ class _QuestionViewState extends State<_QuestionView> {
                       if (_recognizedWords.trim().isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: const Text('يرجى تسجيل الصوت أولاً قبل التحقق'),
+                            content: const Text(
+                              'يرجى تسجيل الصوت أولاً قبل التحقق',
+                            ),
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -464,9 +490,7 @@ class _AnswerResultView extends StatelessWidget {
                 color: color.withValues(alpha: 0.1),
               ),
               child: Icon(
-                passed
-                    ? Icons.check_circle_rounded
-                    : Icons.cancel_rounded,
+                passed ? Icons.check_circle_rounded : Icons.cancel_rounded,
                 size: 72,
                 color: color,
               ),
@@ -485,8 +509,7 @@ class _AnswerResultView extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Center(
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(20),
@@ -576,9 +599,7 @@ class _ComparisonCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

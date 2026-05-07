@@ -701,14 +701,30 @@ abstract class AppLocalizations {
   /// No description provided for @shareAchievementText.
   ///
   /// In ar, this message translates to:
-  /// **'🏆 بفضل الله، حققت إنجاز \"{title}\" 🌟\n📖 {description}\n\n📱 تم الإنجاز عبر تطبيق \"تالية\" المتميز!\n✨ لا تدع الأجر يفوتك، حمّل التطبيق الآن وانضم إلي في رحلة النور وحفظ كتاب الله 💚'**
+  /// **'🏆 إنجاز جديد يُضاف في رحلتي مع القرآن: \"{title}\"\n📖 {description}\n\nمع تالية، كل خطوة تتحول إلى أثر يُرى وإنجاز يستحق المشاركة.'**
   String shareAchievementText(Object description, Object title);
 
   /// No description provided for @shareAchievementWithName.
   ///
   /// In ar, this message translates to:
-  /// **'🏆 بفضل الله، حقق {name} إنجاز \"{title}\" 🌟\n📖 {description}\n\n📱 تم الإنجاز عبر تطبيق \"تالية\" المتميز!\n✨ لا تدع الأجر يفوتك، حمّل التطبيق الآن وانضم إلينا في رحلة النور وحفظ كتاب الله 💚'**
+  /// **'🏆 إنجاز جديد يُضاف في رحلة {name} مع القرآن: \"{title}\"\n📖 {description}\n\nمع تالية، كل خطوة تتحول إلى أثر يُرى وإنجاز يستحق المشاركة.'**
   String shareAchievementWithName(
+    Object description,
+    Object name,
+    Object title,
+  );
+
+  /// No description provided for @shareMemorizationAchievementText.
+  ///
+  /// In ar, this message translates to:
+  /// **'🌟 إنجاز مبارك في مسيرة الحفظ: \"{title}\"\n🧠 {description}\n\nتالية يرافق رحلة الحفظ بخطوات واضحة، وتحفيز مستمر، وإنجازات تُلهم الاستمرار.'**
+  String shareMemorizationAchievementText(Object description, Object title);
+
+  /// No description provided for @shareMemorizationAchievementWithName.
+  ///
+  /// In ar, this message translates to:
+  /// **'🌟 إنجاز مبارك في مسيرة حفظ {name}: \"{title}\"\n🧠 {description}\n\nتالية يرافق رحلة الحفظ بخطوات واضحة، وتحفيز مستمر، وإنجازات تُلهم الاستمرار.'**
+  String shareMemorizationAchievementWithName(
     Object description,
     Object name,
     Object title,
@@ -723,13 +739,13 @@ abstract class AppLocalizations {
   /// No description provided for @shareProgressText.
   ///
   /// In ar, this message translates to:
-  /// **'📊 بفضل الله وتوفيقه، هذا تقدمي في رحلتي مع القرآن عبر تطبيق \"تالية\" 🌟:\n📖 {pages} صفحة مقروءة\n🧠 {ayahs} آية محفوظة\n🔥 {streak} أيام متتالية من الالتزام\n\n✨ حمّل تطبيق \"تالية\" الآن وابدأ رحلتك المباركة 💚'**
+  /// **'📊 هذا ملخص تقدمي في رحلتي مع القرآن عبر تالية:\n📖 {pages} صفحة مقروءة\n🧠 {ayahs} آية محفوظة\n🔥 {streak} أيام من الاستمرارية\n\nتالية يساعدني على بناء عادة قرآنية ثابتة بخطوات واضحة وتحفيز يومي.'**
   String shareProgressText(Object ayahs, Object pages, Object streak);
 
   /// No description provided for @shareProgressWithName.
   ///
   /// In ar, this message translates to:
-  /// **'📊 بفضل الله وتوفيقه، هذا تقدم {name} في رحلته مع القرآن عبر تطبيق \"تالية\" 🌟:\n📖 {pages} صفحة مقروءة\n🧠 {ayahs} آية محفوظة\n🔥 {streak} أيام متتالية من الالتزام\n\n✨ حمّل تطبيق \"تالية\" الآن وابدأ رحلتك المباركة 💚'**
+  /// **'📊 هذا ملخص تقدم {name} في رحلته مع القرآن عبر تالية:\n📖 {pages} صفحة مقروءة\n🧠 {ayahs} آية محفوظة\n🔥 {streak} أيام من الاستمرارية\n\nتالية يساعد على بناء عادة قرآنية ثابتة بخطوات واضحة وتحفيز يومي.'**
   String shareProgressWithName(
     Object ayahs,
     Object name,

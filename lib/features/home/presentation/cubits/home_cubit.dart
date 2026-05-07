@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
@@ -31,8 +32,10 @@ class HomeCubit extends Cubit<HomeState> {
     final hifzResult = await _getHifzProgress();
 
     final now = DateTime.now();
-    final dayOfYear = now.difference(DateTime(now.year, 1, 1)).inDays;
-    final pageNumber = (dayOfYear % 604) + 1;
+    // Use date-based seed to ensure the random page stays the same for the whole day
+    final today = DateTime(now.year, now.month, now.day);
+    final random = Random(today.millisecondsSinceEpoch);
+    final pageNumber = random.nextInt(604) + 1;
     final quranPageResult = await _getQuranPage(pageNumber);
     QuranPageDetail? dailyWirdDetail;
     quranPageResult.fold(

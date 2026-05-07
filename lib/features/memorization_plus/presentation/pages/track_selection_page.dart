@@ -30,12 +30,17 @@ class _TrackSelectionView extends StatelessWidget {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       body: BlocListener<TrackSelectionCubit, TrackSelectionState>(
         listener: (context, state) {
           if (state is TrackSelectionLoaded && state.hasTrack) {
             _navigateToTrack(context, state.track!);
+          } else if (state is TrackSelectionError) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
         child: CustomScrollView(
@@ -137,10 +142,7 @@ class _TrackSelectionView extends StatelessWidget {
                     description:
                         'تعلم ممتع مع الاستماع والتكرار والمكافآت والنجوم لتشجيع الأطفال على الحفظ',
                     icon: Icons.child_care_rounded,
-                    gradient: const [
-                      Color(0xFF2D8E4C),
-                      Color(0xFF1A6B5A),
-                    ],
+                    gradient: const [Color(0xFF2D8E4C), Color(0xFF1A6B5A)],
                     features: const [
                       '🎧 استمع وكرر تلقائياً',
                       '⭐ نجوم ومكافآت',
@@ -158,17 +160,16 @@ class _TrackSelectionView extends StatelessWidget {
                         gradient: const LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            Color(0xFF6C3483),
-                            Color(0xFF4A235A),
-                          ],
+                          colors: [Color(0xFF6C3483), Color(0xFF4A235A)],
                         ),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusXl),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusXl,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                const Color(0xFF6C3483).withValues(alpha: 0.35),
+                            color: const Color(
+                              0xFF6C3483,
+                            ).withValues(alpha: 0.35),
                             blurRadius: 20,
                             offset: const Offset(0, 8),
                           ),
@@ -186,7 +187,8 @@ class _TrackSelectionView extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     color: Colors.white.withValues(alpha: 0.2),
                                     borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusMd),
+                                      AppSpacing.radiusMd,
+                                    ),
                                   ),
                                   child: const Icon(
                                     Icons.dashboard_customize_rounded,
@@ -202,17 +204,18 @@ class _TrackSelectionView extends StatelessWidget {
                                     children: [
                                       Text(
                                         'خطة مخصصة',
-                                        style:
-                                            AppTypography.titleLarge.copyWith(
-                                          color: Colors.white,
-                                          fontFamily: 'Amiri',
-                                          fontWeight: FontWeight.w700,
-                                        ),
+                                        style: AppTypography.titleLarge
+                                            .copyWith(
+                                              color: Colors.white,
+                                              fontFamily: 'Amiri',
+                                              fontWeight: FontWeight.w700,
+                                            ),
                                       ),
                                       Text(
                                         'Custom Plan',
-                                        style: AppTypography.bodySmall
-                                            .copyWith(color: Colors.white70),
+                                        style: AppTypography.bodySmall.copyWith(
+                                          color: Colors.white70,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -235,10 +238,12 @@ class _TrackSelectionView extends StatelessWidget {
                               textDirection: TextDirection.rtl,
                             ),
                             const SizedBox(height: AppSpacing.md),
-                            ...['✏️ تحكم كامل بعدد الآيات والسور',
-                                '📅 جدول مرن حسب أيامك المتاحة',
-                                '⚡ مستوى صعوبة قابل للتعديل',
-                                '🔁 إعدادات مراجعة متقدمة'].map(
+                            ...[
+                              '✏️ تحكم كامل بعدد الآيات والسور',
+                              '📅 جدول مرن حسب أيامك المتاحة',
+                              '⚡ مستوى صعوبة قابل للتعديل',
+                              '🔁 إعدادات مراجعة متقدمة',
+                            ].map(
                               (f) => Padding(
                                 padding: const EdgeInsets.only(bottom: 6),
                                 child: Text(
@@ -345,8 +350,9 @@ class _TrackCard extends StatelessWidget {
                         ),
                         Text(
                           titleEn,
-                          style: AppTypography.bodySmall
-                              .copyWith(color: Colors.white70),
+                          style: AppTypography.bodySmall.copyWith(
+                            color: Colors.white70,
+                          ),
                         ),
                       ],
                     ),

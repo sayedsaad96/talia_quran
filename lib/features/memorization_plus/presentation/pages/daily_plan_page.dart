@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +12,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/daily_plan_cubit.dart';
 
@@ -20,8 +23,7 @@ class DailyPlanPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<DailyPlanCubit>()
-        ..load(surahId: surahId),
+      create: (_) => getIt<DailyPlanCubit>()..load(surahId: surahId),
       child: _DailyPlanView(surahId: surahId),
     );
   }
@@ -38,6 +40,12 @@ class _DailyPlanView extends StatelessWidget {
 
     return BlocConsumer<DailyPlanCubit, DailyPlanState>(
       listener: (context, state) {
+        if (state is DailyPlanLoaded && state.newAwards.isNotEmpty) {
+          HapticFeedback.heavyImpact();
+          unawaited(showCertificateCelebrationDialog(context, state.newAwards));
+          return;
+        }
+
         // UX-011: Show celebration when all items are completed
         if (state is DailyPlanLoaded &&
             state.plan.totalItems > 0 &&
@@ -53,9 +61,11 @@ class _DailyPlanView extends StatelessWidget {
         if (state is DailyPlanEvaluating) currentPlan = state.plan;
 
         return Scaffold(
-          backgroundColor:
-              isDark ? AppColors.darkBackground : AppColors.lightBackground,
-          floatingActionButton: currentPlan != null && currentPlan.totalItems > 0
+          backgroundColor: isDark
+              ? AppColors.darkBackground
+              : AppColors.lightBackground,
+          floatingActionButton:
+              currentPlan != null && currentPlan.totalItems > 0
               ? FloatingActionButton.extended(
                   onPressed: () {
                     // Extract all ayahs for today
@@ -64,20 +74,24 @@ class _DailyPlanView extends StatelessWidget {
                       ...currentPlan.nearRevision,
                       ...currentPlan.farRevision,
                     ];
-                    final numbers = ayahs.map((a) => a.ayahNumber).toSet().toList();
+                    final numbers = ayahs
+                        .map((a) => a.ayahNumber)
+                        .toSet()
+                        .toList();
                     if (numbers.isNotEmpty) {
-                      context.push(
-                        '/memorization-plus/quiz',
-                        extra: {
-                          'surahId': surahId,
-                          'ayahNumbers': numbers,
-                        },
-                      ).then((_) {
-                        // Refresh plan after quiz
-                        if (context.mounted) {
-                          context.read<DailyPlanCubit>().refresh(surahId: surahId);
-                        }
-                      });
+                      context
+                          .push(
+                            '/memorization-plus/quiz',
+                            extra: {'surahId': surahId, 'ayahNumbers': numbers},
+                          )
+                          .then((_) {
+                            // Refresh plan after quiz
+                            if (context.mounted) {
+                              context.read<DailyPlanCubit>().refresh(
+                                surahId: surahId,
+                              );
+                            }
+                          });
                     }
                   },
                   backgroundColor: primary,
@@ -99,9 +113,8 @@ class _DailyPlanView extends StatelessWidget {
             if (state is DailyPlanError) {
               return ErrorStateWidget(
                 message: state.message,
-                onRetry: () => context
-                    .read<DailyPlanCubit>()
-                    .load(surahId: surahId),
+                onRetry: () =>
+                    context.read<DailyPlanCubit>().load(surahId: surahId),
               );
             }
             if (state is DailyPlanLoaded || state is DailyPlanEvaluating) {
@@ -120,9 +133,7 @@ class _DailyPlanView extends StatelessWidget {
                 slivers: [
                   _buildAppBar(context, isDark, primary, plan),
                   if (plan.totalItems == 0)
-                    SliverFillRemaining(
-                      child: _EmptyPlan(isDark: isDark),
-                    )
+                    SliverFillRemaining(child: _EmptyPlan(isDark: isDark))
                   else ...[
                     // Progress header
                     SliverToBoxAdapter(
@@ -192,12 +203,18 @@ class _DailyPlanView extends StatelessWidget {
   }
 
   void _showCompletionCelebration(
-      BuildContext context, bool isDark, Color primary, DailyPlan plan) {
+    BuildContext context,
+    bool isDark,
+    Color primary,
+    DailyPlan plan,
+  ) {
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textPrimary =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     showModalBottomSheet(
       context: context,
@@ -256,7 +273,8 @@ class _DailyPlanView extends StatelessWidget {
                 _CelebrationStat(
                   icon: Icons.replay_rounded,
                   label: 'مراجعة',
-                  value: '${plan.nearRevision.length + plan.farRevision.length}',
+                  value:
+                      '${plan.nearRevision.length + plan.farRevision.length}',
                   color: const Color(0xFF2D8E4C),
                   isDark: isDark,
                 ),
@@ -293,12 +311,17 @@ class _DailyPlanView extends StatelessWidget {
   }
 
   SliverAppBar _buildAppBar(
-      BuildContext context, bool isDark, Color primary, DailyPlan plan) {
+    BuildContext context,
+    bool isDark,
+    Color primary,
+    DailyPlan plan,
+  ) {
     return SliverAppBar(
       pinned: true,
       expandedHeight: 130,
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
@@ -308,9 +331,8 @@ class _DailyPlanView extends StatelessWidget {
         IconButton(
           icon: const Icon(Icons.refresh_rounded, color: Colors.white),
           tooltip: 'تحديث الخطة',
-          onPressed: () => context
-              .read<DailyPlanCubit>()
-              .refresh(surahId: surahId),
+          onPressed: () =>
+              context.read<DailyPlanCubit>().refresh(surahId: surahId),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -324,8 +346,11 @@ class _DailyPlanView extends StatelessWidget {
           child: SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.pagePadding, AppSpacing.lg,
-                  AppSpacing.pagePadding, AppSpacing.md),
+                AppSpacing.pagePadding,
+                AppSpacing.lg,
+                AppSpacing.pagePadding,
+                AppSpacing.md,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -338,8 +363,9 @@ class _DailyPlanView extends StatelessWidget {
                   ),
                   Text(
                     '${plan.totalItems} عنصر • ${plan.completedCount} مكتمل',
-                    style: AppTypography.bodySmall
-                        .copyWith(color: Colors.white70),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: Colors.white70,
+                    ),
                   ),
                 ],
               ),
@@ -457,8 +483,10 @@ class _AyahSection extends StatelessWidget {
       delegate: SliverChildListDelegate([
         Padding(
           padding: const EdgeInsets.fromLTRB(
-            AppSpacing.pagePadding, AppSpacing.lg,
-            AppSpacing.pagePadding, AppSpacing.sm,
+            AppSpacing.pagePadding,
+            AppSpacing.lg,
+            AppSpacing.pagePadding,
+            AppSpacing.sm,
           ),
           child: Text(
             label,
@@ -468,19 +496,21 @@ class _AyahSection extends StatelessWidget {
             ),
           ),
         ),
-        ...ayahs.map((a) => Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.pagePadding,
-                vertical: 4,
-              ),
-              child: _AyahPlanTile(
-                planAyah: a,
-                plan: plan,
-                isDark: isDark,
-                primary: primary,
-                isEvaluating: evaluatingAyah == a.ayahNumber,
-              ),
-            )),
+        ...ayahs.map(
+          (a) => Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.pagePadding,
+              vertical: 4,
+            ),
+            child: _AyahPlanTile(
+              planAyah: a,
+              plan: plan,
+              isDark: isDark,
+              primary: primary,
+              isEvaluating: evaluatingAyah == a.ayahNumber,
+            ),
+          ),
+        ),
       ]),
     );
   }
@@ -515,13 +545,11 @@ class _AyahPlanTile extends StatelessWidget {
         color: isDone
             ? primary.withValues(alpha: 0.08)
             : isEvaluating
-                ? primary.withValues(alpha: 0.05)
-                : surface,
+            ? primary.withValues(alpha: 0.05)
+            : surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         border: Border.all(
-          color: isDone
-              ? primary.withValues(alpha: 0.4)
-              : border,
+          color: isDone ? primary.withValues(alpha: 0.4) : border,
           width: isDone ? 1 : 0.5,
         ),
       ),
@@ -542,8 +570,10 @@ class _AyahPlanTile extends StatelessWidget {
                     ? Icon(Icons.check_rounded, color: primary, size: 20)
                     : Text(
                         '${planAyah.ayahNumber}',
-                        style: AppTypography.labelMedium
-                            .copyWith(color: primary, fontWeight: FontWeight.w600),
+                        style: AppTypography.labelMedium.copyWith(
+                          color: primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
               ),
             ),
@@ -588,15 +618,18 @@ class _AyahPlanTile extends StatelessWidget {
                   )
                 : Text(
                     'جديدة',
-                    style: AppTypography.bodySmall
-                        .copyWith(color: primary),
+                    style: AppTypography.bodySmall.copyWith(color: primary),
                   ),
           ),
           // Evaluation buttons (show only if not yet done)
           if (!isDone && !isEvaluating)
             Padding(
               padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
+                AppSpacing.md,
+                0,
+                AppSpacing.md,
+                AppSpacing.md,
+              ),
               child: Row(
                 children: [
                   _EvalButton(
@@ -604,10 +637,10 @@ class _AyahPlanTile extends StatelessWidget {
                     icon: Icons.sentiment_dissatisfied_rounded,
                     color: Colors.red,
                     onTap: () => context.read<DailyPlanCubit>().evaluateAyah(
-                          surahId: planAyah.surahId,
-                          ayahNumber: planAyah.ayahNumber,
-                          rating: PerformanceRating.weak,
-                        ),
+                      surahId: planAyah.surahId,
+                      ayahNumber: planAyah.ayahNumber,
+                      rating: PerformanceRating.weak,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   _EvalButton(
@@ -615,10 +648,10 @@ class _AyahPlanTile extends StatelessWidget {
                     icon: Icons.sentiment_neutral_rounded,
                     color: const Color(0xFFFF8C42),
                     onTap: () => context.read<DailyPlanCubit>().evaluateAyah(
-                          surahId: planAyah.surahId,
-                          ayahNumber: planAyah.ayahNumber,
-                          rating: PerformanceRating.average,
-                        ),
+                      surahId: planAyah.surahId,
+                      ayahNumber: planAyah.ayahNumber,
+                      rating: PerformanceRating.average,
+                    ),
                   ),
                   const SizedBox(width: 8),
                   _EvalButton(
@@ -626,10 +659,10 @@ class _AyahPlanTile extends StatelessWidget {
                     icon: Icons.sentiment_very_satisfied_rounded,
                     color: const Color(0xFF2D8E4C),
                     onTap: () => context.read<DailyPlanCubit>().evaluateAyah(
-                          surahId: planAyah.surahId,
-                          ayahNumber: planAyah.ayahNumber,
-                          rating: PerformanceRating.excellent,
-                        ),
+                      surahId: planAyah.surahId,
+                      ayahNumber: planAyah.ayahNumber,
+                      rating: PerformanceRating.excellent,
+                    ),
                   ),
                 ],
               ),
@@ -676,9 +709,10 @@ class _EvalButton extends StatelessWidget {
             children: [
               Icon(icon, color: color, size: 20),
               const SizedBox(height: 2),
-              Text(label,
-                  style:
-                      AppTypography.labelSmall.copyWith(color: color)),
+              Text(
+                label,
+                style: AppTypography.labelSmall.copyWith(color: color),
+              ),
             ],
           ),
         ),
@@ -703,17 +737,17 @@ class _RatingBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final (color, message) = switch (rating) {
       PerformanceRating.excellent => (
-          const Color(0xFF2D8E4C),
-          '✅ ممتاز! تم جدولة مراجعة الآية $ayahNumber بعد فترة أطول'
-        ),
+        const Color(0xFF2D8E4C),
+        '✅ ممتاز! تم جدولة مراجعة الآية $ayahNumber بعد فترة أطول',
+      ),
       PerformanceRating.average => (
-          const Color(0xFFFF8C42),
-          '⏰ متوسط، سيتم المراجعة خلال فترة معتدلة'
-        ),
+        const Color(0xFFFF8C42),
+        '⏰ متوسط، سيتم المراجعة خلال فترة معتدلة',
+      ),
       PerformanceRating.weak => (
-          Colors.red,
-          '🔁 ضعيف، ستتم مراجعة الآية $ayahNumber غداً'
-        ),
+        Colors.red,
+        '🔁 ضعيف، ستتم مراجعة الآية $ayahNumber غداً',
+      ),
     };
 
     return AnimatedContainer(

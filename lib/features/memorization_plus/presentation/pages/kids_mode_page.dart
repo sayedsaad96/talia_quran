@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../cubits/kids_mode_cubit.dart';
 
 class KidsModePage extends StatelessWidget {
@@ -23,8 +26,8 @@ class KidsModePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<KidsModeCubit>()
-        ..load(surahId, ayahNumber, ayahText),
+      create: (_) =>
+          getIt<KidsModeCubit>()..load(surahId, ayahNumber, ayahText),
       child: const _KidsModeView(),
     );
   }
@@ -38,9 +41,17 @@ class _KidsModeView extends StatelessWidget {
     final isDark = context.isDark;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkBackground : const Color(0xFFF0F7F4),
-      body: BlocBuilder<KidsModeCubit, KidsModeState>(
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : const Color(0xFFF0F7F4),
+      body: BlocConsumer<KidsModeCubit, KidsModeState>(
+        listener: (context, state) {
+          if (state is KidsModeLoaded && state.newAwards.isNotEmpty) {
+            unawaited(
+              showCertificateCelebrationDialog(context, state.newAwards),
+            );
+          }
+        },
         builder: (context, state) {
           if (state is KidsModeLoading) {
             return const Center(child: CircularProgressIndicator());
@@ -54,7 +65,9 @@ class _KidsModeView extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.error_outline_rounded,
-                      color: isDark ? AppColors.primaryLight : AppColors.primary,
+                      color: isDark
+                          ? AppColors.primaryLight
+                          : AppColors.primary,
                       size: 48,
                     ),
                     const SizedBox(height: AppSpacing.md),
@@ -62,7 +75,9 @@ class _KidsModeView extends StatelessWidget {
                       state.message,
                       textAlign: TextAlign.center,
                       style: AppTypography.bodyMedium.copyWith(
-                        color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
                       ),
                     ),
                     const SizedBox(height: AppSpacing.lg),
@@ -102,8 +117,7 @@ class _KidsModeBody extends StatelessWidget {
           backgroundColor: const Color(0xFF2D8E4C),
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded,
-                color: Colors.white),
+            icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
             onPressed: () => context.pop(),
           ),
           flexibleSpace: FlexibleSpaceBar(
@@ -151,9 +165,7 @@ class _KidsModeBody extends StatelessWidget {
         ),
 
         // Points bar
-        SliverToBoxAdapter(
-          child: _PointsBar(state: state),
-        ),
+        SliverToBoxAdapter(child: _PointsBar(state: state)),
 
         // Ayah card
         SliverPadding(
@@ -172,8 +184,7 @@ class _KidsModeBody extends StatelessWidget {
               const SizedBox(height: AppSpacing.lg),
 
               // Complete button
-              if (!state.isPlaying)
-                _CompleteButton(state: state),
+              if (!state.isPlaying) _CompleteButton(state: state),
 
               // Completion reward
               if (state.isCompleted)
@@ -205,8 +216,11 @@ class _LevelBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.military_tech_rounded,
-              color: Colors.amber, size: 16),
+          const Icon(
+            Icons.military_tech_rounded,
+            color: Colors.amber,
+            size: 16,
+          ),
           const SizedBox(width: 4),
           Text(
             'المستوى $level',
@@ -249,8 +263,7 @@ class _PointsBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.stars_rounded,
-              color: Color(0xFF2D8E4C), size: 18),
+          const Icon(Icons.stars_rounded, color: Color(0xFF2D8E4C), size: 18),
           const SizedBox(width: 8),
           Text(
             '${state.progress.totalPoints} نقطة',
@@ -266,7 +279,9 @@ class _PointsBar extends StatelessWidget {
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: state.progress.levelProgress,
-                backgroundColor: const Color(0xFF2D8E4C).withValues(alpha: 0.15),
+                backgroundColor: const Color(
+                  0xFF2D8E4C,
+                ).withValues(alpha: 0.15),
                 valueColor: const AlwaysStoppedAnimation<Color>(
                   Color(0xFF2D8E4C),
                 ),
@@ -317,7 +332,9 @@ class _AyahCard extends StatelessWidget {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 4),
+                  horizontal: 12,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFF2D8E4C).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
@@ -429,12 +446,18 @@ class _PlayButton extends StatelessWidget {
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
             child: state.isPlaying
-                ? const Icon(Icons.stop_rounded,
-                    color: Colors.white, size: 48,
-                    key: ValueKey('stop'))
-                : const Icon(Icons.play_arrow_rounded,
-                    color: Colors.white, size: 52,
-                    key: ValueKey('play')),
+                ? const Icon(
+                    Icons.stop_rounded,
+                    color: Colors.white,
+                    size: 48,
+                    key: ValueKey('stop'),
+                  )
+                : const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 52,
+                    key: ValueKey('play'),
+                  ),
           ),
         ),
       ),
@@ -458,7 +481,9 @@ class _CompleteButton extends StatelessWidget {
           foregroundColor: const Color(0xFF2D8E4C),
           side: const BorderSide(color: Color(0xFF2D8E4C)),
           padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.xl, vertical: AppSpacing.md),
+            horizontal: AppSpacing.xl,
+            vertical: AppSpacing.md,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
           ),
@@ -473,8 +498,7 @@ class _CompleteButton extends StatelessWidget {
 // ─── Completion Celebration ───────────────────────────────────────────────────
 
 class _CompletionCelebration extends StatelessWidget {
-  const _CompletionCelebration(
-      {required this.state, required this.isDark});
+  const _CompletionCelebration({required this.state, required this.isDark});
   final KidsModeLoaded state;
   final bool isDark;
 
@@ -492,8 +516,7 @@ class _CompletionCelebration extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Text('🎉⭐🎉',
-              style: TextStyle(fontSize: 48)),
+          const Text('🎉⭐🎉', style: TextStyle(fontSize: 48)),
           const SizedBox(height: AppSpacing.md),
           Text(
             'أحسنت! ربحت نقاط جديدة',
@@ -506,8 +529,7 @@ class _CompletionCelebration extends StatelessWidget {
           Text(
             'المستوى ${state.progress.currentLevel} • '
             '${state.progress.totalPoints} نقطة',
-            style: AppTypography.bodySmall
-                .copyWith(color: Colors.white70),
+            style: AppTypography.bodySmall.copyWith(color: Colors.white70),
           ),
           const SizedBox(height: AppSpacing.lg),
           OutlinedButton(

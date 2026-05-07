@@ -55,21 +55,29 @@ class QuranRepositoryImpl implements QuranRepository {
       return Left(CacheFailure(e.toString()));
     }
   }
+
   @override
   Future<Either<Failure, QuranPageDetail>> getQuranPage(int pageNumber) async {
     try {
+      if (pageNumber < 1 || pageNumber > 604) {
+        return const Left(
+          NotFoundFailure('Quran page must be between 1 and 604'),
+        );
+      }
       final surahs = await _datasource.getSurahs();
       final ayahs = await _datasource.getAyahsByPage(pageNumber);
-      
+
       // Determine which Surahs are present on this page
       final surahIds = ayahs.map((a) => a.surahId).toSet();
       final pageSurahs = surahs.where((s) => surahIds.contains(s.id)).toList();
-      
-      return Right(QuranPageDetail(
-        pageNumber: pageNumber,
-        ayahs: ayahs,
-        surahs: pageSurahs,
-      ));
+
+      return Right(
+        QuranPageDetail(
+          pageNumber: pageNumber,
+          ayahs: ayahs,
+          surahs: pageSurahs,
+        ),
+      );
     } on Failure catch (f) {
       return Left(f);
     } catch (e) {

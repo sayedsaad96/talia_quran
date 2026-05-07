@@ -26,9 +26,14 @@ class ProgressLocalDatasourceImpl implements ProgressLocalDatasource {
 
   @override
   Future<void> saveStreak(int days, DateTime date) async {
-    await _prefs.setInt(AppConstants.kStreakCount, days);
-    await _prefs.setString(
-        AppConstants.kLastActiveDate, date.toIso8601String());
+    final savedDays = await _prefs.setInt(AppConstants.kStreakCount, days);
+    final savedDate = await _prefs.setString(
+      AppConstants.kLastActiveDate,
+      date.toIso8601String(),
+    );
+    if (!savedDays || !savedDate) {
+      throw StateError('Failed to save streak');
+    }
   }
 
   @override
@@ -37,7 +42,13 @@ class ProgressLocalDatasourceImpl implements ProgressLocalDatasource {
     if (raw == null) return [];
     try {
       final list = jsonDecode(raw) as List<dynamic>;
-      return list.map((e) => e as int).toList();
+      final pages = <int>[];
+      for (final item in list) {
+        if (item is int && item >= 1 && item <= 604 && !pages.contains(item)) {
+          pages.add(item);
+        }
+      }
+      return pages;
     } catch (_) {
       return [];
     }
@@ -45,10 +56,19 @@ class ProgressLocalDatasourceImpl implements ProgressLocalDatasource {
 
   @override
   Future<void> saveReadPage(int pageNumber) async {
+    if (pageNumber < 1 || pageNumber > 604) {
+      throw ArgumentError.value(pageNumber, 'pageNumber', 'Must be 1..604');
+    }
     final pages = getReadPages();
     if (!pages.contains(pageNumber)) {
       pages.add(pageNumber);
-      await _prefs.setString(AppConstants.kReadPages, jsonEncode(pages));
+      final saved = await _prefs.setString(
+        AppConstants.kReadPages,
+        jsonEncode(pages),
+      );
+      if (!saved) {
+        throw StateError('Failed to save read page');
+      }
     }
   }
 }

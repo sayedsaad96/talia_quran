@@ -1073,16 +1073,31 @@ class _AchievementTile extends StatelessWidget {
                       final hasName =
                           profileState is ProfileLoaded &&
                           profileState.profile.hasName;
+                      final isMemorizationAchievement =
+                          achievement.category ==
+                          AchievementCategory.memorization;
                       final text = hasName
-                          ? context.l10n.shareAchievementWithName(
-                              achievement.descriptionKey,
-                              profileState.profile.displayName,
-                              achievement.titleKey,
-                            )
-                          : context.l10n.shareAchievementText(
-                              achievement.descriptionKey,
-                              achievement.titleKey,
-                            );
+                          ? (isMemorizationAchievement
+                                ? context.l10n
+                                      .shareMemorizationAchievementWithName(
+                                        achievement.descriptionKey,
+                                        profileState.profile.displayName,
+                                        achievement.titleKey,
+                                      )
+                                : context.l10n.shareAchievementWithName(
+                                    achievement.descriptionKey,
+                                    profileState.profile.displayName,
+                                    achievement.titleKey,
+                                  ))
+                          : (isMemorizationAchievement
+                                ? context.l10n.shareMemorizationAchievementText(
+                                    achievement.descriptionKey,
+                                    achievement.titleKey,
+                                  )
+                                : context.l10n.shareAchievementText(
+                                    achievement.descriptionKey,
+                                    achievement.titleKey,
+                                  ));
                       SharePlus.instance.share(ShareParams(text: text));
                     },
                     icon: const Icon(Icons.share_rounded, size: 20),
@@ -1386,8 +1401,8 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     context.isArabic
-                        ? 'احفظ الأجزاء والسور الكبيرة لتحصل على شهادات التميز!'
-                        : 'Memorize Juz and large Surahs to earn certificates!',
+                        ? 'احفظ السور والأجزاء كاملة لتحصل على شهادات التميز!'
+                        : 'Memorize complete Surahs and Juz to earn certificates!',
                     textAlign: TextAlign.center,
                     style: AppTypography.bodyMedium.copyWith(
                       color: widget.isDark

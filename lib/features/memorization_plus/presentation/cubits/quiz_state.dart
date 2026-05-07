@@ -33,8 +33,13 @@ class QuizQuestion extends QuizState {
   final int passedSoFar;
 
   @override
-  List<Object?> get props =>
-      [surahId, ayahNumber, hint, questionIndex, totalQuestions];
+  List<Object?> get props => [
+    surahId,
+    ayahNumber,
+    hint,
+    questionIndex,
+    totalQuestions,
+  ];
 }
 
 class QuizAnswerResult extends QuizState {
@@ -47,6 +52,7 @@ class QuizAnswerResult extends QuizState {
     required this.passed,
     required this.questionIndex,
     required this.totalQuestions,
+    this.newAwards = const [],
   });
 
   final int surahId;
@@ -57,12 +63,19 @@ class QuizAnswerResult extends QuizState {
   final bool passed;
   final int questionIndex;
   final int totalQuestions;
+  final List<CertificateAward> newAwards;
 
   int get scorePercent => (similarity * 100).round();
 
   @override
-  List<Object?> get props =>
-      [surahId, ayahNumber, similarity, passed, questionIndex];
+  List<Object?> get props => [
+    surahId,
+    ayahNumber,
+    similarity,
+    passed,
+    questionIndex,
+    newAwards,
+  ];
 }
 
 class QuizCompleted extends QuizState {

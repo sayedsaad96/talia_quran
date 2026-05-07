@@ -12,13 +12,16 @@ class TrackSelectionCubit extends Cubit<TrackSelectionState> {
   void load() {
     final result = _repository.getSelectedTrack();
     result.fold(
-      (f) => emit(const TrackSelectionLoaded(track: null)),
+      (f) => emit(TrackSelectionError(f.message)),
       (track) => emit(TrackSelectionLoaded(track: track)),
     );
   }
 
   Future<void> selectTrack(MemorizationTrack track) async {
     final result = await _repository.saveSelectedTrack(track);
-    result.fold((_) {}, (_) => emit(TrackSelectionLoaded(track: track)));
+    result.fold(
+      (f) => emit(TrackSelectionError(f.message)),
+      (_) => emit(TrackSelectionLoaded(track: track)),
+    );
   }
 }

@@ -48,14 +48,27 @@ class AudioCacheService {
 
   /// Pre-downloads audio files for an upcoming session.
   ///
-  /// This runs in the background so the user doesn't wait.
+  /// Limits concurrency to avoid network saturation.
   Future<void> prefetchSession({
     required int surahId,
     required List<int> ayahNumbers,
   }) async {
-    for (final ayahNumber in ayahNumbers) {
-      final url = QuranAudioService.buildUrl(surahId, ayahNumber);
-      unawaited(_cacheManager.getSingleFile(url));
+    const int batchSize = 5;
+    for (int i = 0; i < ayahNumbers.length; i += batchSize) {
+      final end = (i + batchSize < ayahNumbers.length)
+          ? i + batchSize
+          : ayahNumbers.length;
+      final batch = ayahNumbers.sublist(i, end);
+      
+      // Process batch concurrently
+      await Future.wait(batch.map((ayahNumber) async {
+        final url = QuranAudioService.buildUrl(surahId, ayahNumber);
+        try {
+          await _cacheManager.getSingleFile(url);
+        } catch (_) {
+          // Ignore individual download failures during prefetch
+        }
+      }));
     }
   }
 

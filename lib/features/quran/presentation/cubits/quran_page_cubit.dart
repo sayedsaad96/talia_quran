@@ -10,15 +10,24 @@ abstract class QuranPageState extends Equatable {
   @override
   List<Object?> get props => [];
 }
+
 class QuranPageInitial extends QuranPageState {}
+
 class QuranPageLoading extends QuranPageState {}
+
 class QuranPageLoaded extends QuranPageState {
   final QuranPageDetail detail;
   final bool isReadConfirmed;
-  const QuranPageLoaded(this.detail, {this.isReadConfirmed = false});
+  final String? readConfirmationError;
+  const QuranPageLoaded(
+    this.detail, {
+    this.isReadConfirmed = false,
+    this.readConfirmationError,
+  });
   @override
-  List<Object?> get props => [detail, isReadConfirmed];
+  List<Object?> get props => [detail, isReadConfirmed, readConfirmationError];
 }
+
 class QuranPageError extends QuranPageState {
   final String message;
   const QuranPageError(this.message);
@@ -29,7 +38,7 @@ class QuranPageError extends QuranPageState {
 class QuranPageCubit extends Cubit<QuranPageState> {
   // BUG-NEW-001 FIX: Added StreakService so reading also updates the streak
   QuranPageCubit(this._repository, this._saveReadPage, this._streakService)
-      : super(QuranPageInitial());
+    : super(QuranPageInitial());
 
   final QuranRepository _repository;
   final SaveReadPageUsecase _saveReadPage;
@@ -47,7 +56,18 @@ class QuranPageCubit extends Cubit<QuranPageState> {
   /// Called after the user has spent enough time on the page
   /// to confirm they actually read it.
   Future<void> confirmRead(int pageNumber) async {
-    await _saveReadPage(pageNumber);
+    if (state is! QuranPageLoaded) return;
+    final loaded = state as QuranPageLoaded;
+    if (loaded.isReadConfirmed) return;
+
+    final saveResult = await _saveReadPage(pageNumber);
+    final failure = saveResult.fold((f) => f, (_) => null);
+    if (failure != null) {
+      emit(
+        QuranPageLoaded(loaded.detail, readConfirmationError: failure.message),
+      );
+      return;
+    }
 
     // BUG-NEW-001 FIX: Record activity in the unified StreakService (Isar-based)
     // so that reading the Quran counts towards the streak, not just Hifz sessions.
@@ -57,9 +77,6 @@ class QuranPageCubit extends Cubit<QuranPageState> {
       // Non-critical — don't crash the page if streak update fails
     }
 
-    if (state is QuranPageLoaded) {
-      final loaded = state as QuranPageLoaded;
-      emit(QuranPageLoaded(loaded.detail, isReadConfirmed: true));
-    }
+    emit(QuranPageLoaded(loaded.detail, isReadConfirmed: true));
   }
 }

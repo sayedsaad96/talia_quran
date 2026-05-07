@@ -310,7 +310,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shareAchievementText(Object description, Object title) {
-    return '🏆 Alhamdulillah, I\'ve achieved \"$title\" 🌟\n📖 $description\n\n📱 Achieved via the amazing \"Talia Quran\" app!\n✨ Don\'t miss out on the rewards, download the app now and join me on this blessed journey 💚';
+    return '🏆 A new milestone in my Quran journey: \"$title\"\n📖 $description\n\nWith Talia, every step becomes visible progress and an achievement worth sharing.';
   }
 
   @override
@@ -319,7 +319,21 @@ class AppLocalizationsEn extends AppLocalizations {
     Object name,
     Object title,
   ) {
-    return '🏆 Alhamdulillah, $name achieved \"$title\" 🌟\n📖 $description\n\n📱 Achieved via the amazing \"Talia Quran\" app!\n✨ Don\'t miss out on the rewards, download the app now and join us on this blessed journey 💚';
+    return '🏆 A new milestone in $name\'s Quran journey: \"$title\"\n📖 $description\n\nWith Talia, every step becomes visible progress and an achievement worth sharing.';
+  }
+
+  @override
+  String shareMemorizationAchievementText(Object description, Object title) {
+    return '🌟 A blessed memorization milestone: \"$title\"\n🧠 $description\n\nTalia supports the memorization journey with clear structure, steady motivation, and progress worth celebrating.';
+  }
+
+  @override
+  String shareMemorizationAchievementWithName(
+    Object description,
+    Object name,
+    Object title,
+  ) {
+    return '🌟 A blessed memorization milestone for $name: \"$title\"\n🧠 $description\n\nTalia supports the memorization journey with clear structure, steady motivation, and progress worth celebrating.';
   }
 
   @override
@@ -327,7 +341,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String shareProgressText(Object ayahs, Object pages, Object streak) {
-    return '📊 Alhamdulillah, here is my progress on the \"Talia Quran\" app 🌟:\n📖 $pages pages read\n🧠 $ayahs ayahs memorized\n🔥 $streak days of consistent streak\n\n✨ Download \"Talia Quran\" now and start your blessed journey 💚';
+    return '📊 Here is a snapshot of my Quran journey with Talia:\n📖 $pages pages read\n🧠 $ayahs ayahs memorized\n🔥 $streak days of consistency\n\nTalia helps turn daily effort into a steady Quran habit with clear progress and meaningful motivation.';
   }
 
   @override
@@ -337,7 +351,7 @@ class AppLocalizationsEn extends AppLocalizations {
     Object pages,
     Object streak,
   ) {
-    return '📊 Alhamdulillah, here is $name\'s progress on the \"Talia Quran\" app 🌟:\n📖 $pages pages read\n🧠 $ayahs ayahs memorized\n🔥 $streak days of consistent streak\n\n✨ Download \"Talia Quran\" now and start your blessed journey 💚';
+    return '📊 Here is a snapshot of $name\'s Quran journey with Talia:\n📖 $pages pages read\n🧠 $ayahs ayahs memorized\n🔥 $streak days of consistency\n\nTalia helps turn daily effort into a steady Quran habit with clear progress and meaningful motivation.';
   }
 
   @override

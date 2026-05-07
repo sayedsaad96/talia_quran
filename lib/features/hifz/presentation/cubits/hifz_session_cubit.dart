@@ -6,9 +6,11 @@ import 'package:just_audio/just_audio.dart';
 import 'package:string_similarity/string_similarity.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../domain/hifz_unlock_rules.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/usecases/get_surahs_usecase.dart';
 import '../../data/models/ayah_progress_model.dart';
+import '../../domain/entities/hifz_entities.dart';
 import '../../domain/usecases/get_hifz_progress_usecase.dart';
 import '../../domain/usecases/save_ayah_progress_usecase.dart';
 import '../../../../core/services/audio_cache_service.dart';
@@ -18,14 +20,18 @@ import '../../../../core/services/streak_service.dart';
 import '../../../../core/services/xp_service.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
+import '../../../../core/utils/talia_logger.dart';
 
 part 'hifz_session_state.dart';
 
 class HifzSessionCubit extends Cubit<HifzSessionState> {
   HifzSessionCubit(
+    this._getSurahs,
     this._getDetail,
     this._saveProgress,
     this._getSurahProgress,
+    this._getAllSurahProgress,
+    this._getPath,
     this._settings,
     this._streakService,
     this._xpService,
@@ -42,9 +48,12 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     });
   }
 
+  final GetSurahsUsecase _getSurahs;
   final GetSurahDetailUsecase _getDetail;
   final SaveAyahProgressUsecase _saveProgress;
   final GetProgressForSurahUsecase _getSurahProgress;
+  final GetHifzProgressUsecase _getAllSurahProgress;
+  final GetHifzPathUsecase _getPath;
   // ARCH-3 FIX: SettingsRepository instead of direct SharedPreferences access.
   final SettingsRepository _settings;
   final StreakService _streakService;
@@ -55,65 +64,90 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   final AudioPlayer _player = AudioPlayer();
   // BUG-NEW-004 FIX: Store subscription so it can be cancelled in close()
   StreamSubscription<PlayerState>? _playerStateSub;
-  
+
   List<Ayah> _ayahs = [];
   Map<int, AyahProgressModel> _progressMap = {};
   late Surah _surah;
-  
+
   bool _speechEnabled = false;
 
   Future<void> _initSpeech() async {
     _speechEnabled = await _speechToText.initialize();
   }
 
+  AyahProgressModel _toProgressModel(AyahProgress progress) {
+    if (progress is AyahProgressModel) return progress;
+    return AyahProgressModel(
+      surahId: progress.surahId,
+      ayahNumber: progress.ayahNumber,
+      status: progress.status,
+      repetitions: progress.repetitions,
+      nextReviewDate: progress.nextReviewDate,
+      lastReviewDate: progress.lastReviewDate,
+    );
+  }
+
   Future<void> startSession(int surahId, int startAyah) async {
     emit(const HifzSessionLoading());
 
+    final unlockError = await _validateSurahAccess(surahId);
+    if (unlockError != null) {
+      emit(HifzSessionError(unlockError));
+      return;
+    }
+
     final progressResult = await _getSurahProgress(surahId);
-    final existingProgress = progressResult.fold(
-      (l) => <AyahProgressModel>[],
-      (r) => r.cast<AyahProgressModel>(),
-    );
+    final progressFailure = progressResult.fold((f) => f, (_) => null);
+    if (progressFailure != null) {
+      emit(HifzSessionError(progressFailure.message));
+      return;
+    }
+    final existingProgress = progressResult
+        .getOrElse(() => const [])
+        .map(_toProgressModel)
+        .toList();
 
     final result = await _getDetail(surahId);
-    result.fold(
-      (f) => emit(HifzSessionError(f.message)),
-      (detail) {
-        _surah = detail.surah;
-        _ayahs = detail.ayahs;
-        
-        final map = <int, AyahProgressModel>{};
-        for (final p in existingProgress) {
-          map[p.ayahNumber] = p;
-        }
-        for (final a in _ayahs) {
-          if (!map.containsKey(a.numberInSurah)) {
-            map[a.numberInSurah] = AyahProgressModel.initial(surahId, a.numberInSurah);
-          }
-        }
-        _progressMap = map;
+    result.fold((f) => emit(HifzSessionError(f.message)), (detail) {
+      _surah = detail.surah;
+      _ayahs = detail.ayahs;
 
-        // Find the index of the startAyah
-        int startIndex = 0;
-        if (startAyah > 0) {
-          final idx = _ayahs.indexWhere((a) => a.numberInSurah == startAyah);
-          if (idx != -1) startIndex = idx;
+      final map = <int, AyahProgressModel>{};
+      for (final p in existingProgress) {
+        map[p.ayahNumber] = p;
+      }
+      for (final a in _ayahs) {
+        if (!map.containsKey(a.numberInSurah)) {
+          map[a.numberInSurah] = AyahProgressModel.initial(
+            surahId,
+            a.numberInSurah,
+          );
         }
+      }
+      _progressMap = map;
 
-        emit(HifzSessionLoaded(
+      // Find the index of the startAyah
+      int startIndex = 0;
+      if (startAyah > 0) {
+        final idx = _ayahs.indexWhere((a) => a.numberInSurah == startAyah);
+        if (idx != -1) startIndex = idx;
+      }
+
+      emit(
+        HifzSessionLoaded(
           surah: _surah,
           ayahs: _ayahs,
           progressMap: map,
           currentIndex: startIndex,
-        ));
+        ),
+      );
 
-        // Prefetch audio for upcoming ayahs in the background
-        AudioCacheService.instance.prefetchSession(
-          surahId: surahId,
-          ayahNumbers: _ayahs.map((a) => a.numberInSurah).toList(),
-        );
-      },
-    );
+      // Prefetch audio for upcoming ayahs in the background
+      AudioCacheService.instance.prefetchSession(
+        surahId: surahId,
+        ayahNumbers: _ayahs.map((a) => a.numberInSurah).toList(),
+      );
+    });
   }
 
   /// Plays audio from either a URL or a local file path
@@ -129,22 +163,24 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   Future<void> playAudio() async {
     if (state is! HifzSessionLoaded) return;
     final st = state as HifzSessionLoaded;
-    
+
     emit(st.copyWith(isPlaying: true));
-    
+
     try {
       final ayah = st.ayahs[st.currentIndex];
       final audioSource = await AudioCacheService.instance.getAudioSource(
         st.surah.id,
         ayah.numberInSurah,
       );
-      
+
       await _playAudioSource(_player, audioSource);
     } catch (e) {
-      emit(st.copyWith(
-        isPlaying: false,
-        audioError: 'فشل تشغيل الصوت. تحقق من الاتصال بالإنترنت.',
-      ));
+      emit(
+        st.copyWith(
+          isPlaying: false,
+          audioError: 'فشل تشغيل الصوت. تحقق من الاتصال بالإنترنت.',
+        ),
+      );
       // Clear the error after showing it
       Future.delayed(const Duration(seconds: 3), () {
         if (state is HifzSessionLoaded) {
@@ -152,6 +188,37 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
         }
       });
     }
+  }
+
+  Future<String?> _validateSurahAccess(int surahId) async {
+    final pathResult = await _getPath();
+    final selectedPath = pathResult.fold((_) => null, (path) => path);
+    if (selectedPath == null) return null;
+
+    final surahsResult = await _getSurahs();
+    final progressResult = await _getAllSurahProgress();
+
+    final surahs = surahsResult.fold((_) => null, (items) => items);
+    final progress = progressResult.fold((_) => null, (items) => items);
+    if (surahs == null || progress == null) return null;
+
+    final orderedSurahs = sortSurahsForHifzPath(
+      surahs: surahs,
+      path: selectedPath,
+    );
+    final progressMap = {for (final item in progress) item.surahId: item};
+    final unlockedSurahIds = buildUnlockedSurahIds(
+      orderedSurahs: orderedSurahs,
+      progressMap: progressMap,
+    );
+
+    if (unlockedSurahIds.contains(surahId)) return null;
+
+    final targetIndex = orderedSurahs.indexWhere((surah) => surah.id == surahId);
+    if (targetIndex <= 0) return null;
+
+    final requiredSurah = orderedSurahs[targetIndex - 1];
+    return 'هذه السورة مقفلة حالياً. أكمل حفظ سورة ${requiredSurah.nameAr} أولاً لفتحها.';
   }
 
   Future<void> pauseAudio() async {
@@ -172,9 +239,12 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
       status = await Permission.microphone.request();
       if (!status.isGranted) {
         // UX-013: Emit error so UI can guide the user
-        emit(st.copyWith(
-          audioError: 'يحتاج التطبيق إذن الميكروفون للتسميع الصوتي. يرجى السماح من إعدادات الجهاز.',
-        ));
+        emit(
+          st.copyWith(
+            audioError:
+                'يحتاج التطبيق إذن الميكروفون للتسميع الصوتي. يرجى السماح من إعدادات الجهاز.',
+          ),
+        );
         Future.delayed(const Duration(seconds: 5), () {
           if (state is HifzSessionLoaded) {
             emit((state as HifzSessionLoaded).copyWith(clearAudioError: true));
@@ -189,15 +259,23 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     }
 
     if (_speechEnabled) {
-      emit(st.copyWith(isRecording: true, clearScore: true, recognizedText: ''));
+      emit(
+        st.copyWith(isRecording: true, clearScore: true, recognizedText: ''),
+      );
       await _speechToText.listen(
         onResult: (result) {
           if (state is HifzSessionLoaded) {
-            emit((state as HifzSessionLoaded).copyWith(recognizedText: result.recognizedWords));
+            emit(
+              (state as HifzSessionLoaded).copyWith(
+                recognizedText: result.recognizedWords,
+              ),
+            );
           }
         },
         localeId: 'ar-SA',
-        pauseFor: const Duration(seconds: 5), // auto-stop if silent for 5 seconds
+        pauseFor: const Duration(
+          seconds: 5,
+        ), // auto-stop if silent for 5 seconds
       );
     }
   }
@@ -205,11 +283,11 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   Future<void> stopRecording() async {
     if (state is! HifzSessionLoaded) return;
     final st = state as HifzSessionLoaded;
-    
+
     if (st.isRecording) {
       await _speechToText.stop();
       emit(st.copyWith(isRecording: false, isEvaluating: true));
-      
+
       // Delay slightly so the UI can show "Evaluating..."
       await Future.delayed(const Duration(milliseconds: 500));
       await _evaluateRecitation();
@@ -221,17 +299,15 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     final st = state as HifzSessionLoaded;
 
     final ayah = st.ayahs[st.currentIndex];
-    
+
     final normalizedExpected = ArabicNormalizer.normalize(ayah.text);
     final normalizedSpoken = ArabicNormalizer.normalize(st.recognizedText);
 
     // BUG-010: If STT returned empty, don't count as failure
     if (normalizedSpoken.isEmpty) {
-      emit(st.copyWith(
-        isEvaluating: false,
-        clearScore: true,
-        recognizedText: '',
-      ));
+      emit(
+        st.copyWith(isEvaluating: false, clearScore: true, recognizedText: ''),
+      );
       return;
     }
 
@@ -247,32 +323,50 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     if (currentProgress != null) {
       if (pass) {
         currentProgress = currentProgress.advanceWithSpacedRepetition();
-        // Record streak and XP on successful memorization
-        try {
-          // Pass activityDelta=1 per ayah successfully memorized
-          await _streakService.recordActivity(activityDelta: 1);
-          await _xpService.addXp('ayah_memorized');
-          // Check if any new certificates were earned
-          final newAwards = await _achievementService.checkAndUnlockCertificates();
-          if (newAwards.isNotEmpty && state is HifzSessionLoaded) {
-            final prevState = state as HifzSessionLoaded;
-            emit(CertificatesEarned(awards: newAwards, previousState: prevState));
-            // Restore state after brief notification
-            await Future.delayed(const Duration(milliseconds: 100));
-            if (!isClosed) emit(prevState);
-          }
-        } catch (_) {
-          // Non-critical — don't crash the session
-        }
       } else {
         // Soft Penalty: decrease repetitions by 1 (min 0) and reschedule review
         currentProgress = currentProgress.softPenalty();
       }
       _progressMap[ayah.numberInSurah] = currentProgress;
-      try {
-        await _saveProgress(currentProgress);
-      } catch (_) {
-        // Silently handle save failure — don't crash the session
+      final saveResult = await _saveProgress(currentProgress);
+      final failure = saveResult.fold((f) => f, (_) => null);
+      if (failure != null) {
+        TaliaLogger.e(
+          'Failed to save ayah progress in session',
+          failure,
+          StackTrace.current,
+        );
+        emit(
+          st.copyWith(
+            isEvaluating: false,
+            audioError: 'فشل حفظ تقدم الحفظ. حاول مرة أخرى.',
+          ),
+        );
+        Future.delayed(const Duration(seconds: 4), () {
+          if (state is HifzSessionLoaded) {
+            emit((state as HifzSessionLoaded).copyWith(clearAudioError: true));
+          }
+        });
+        return;
+      }
+
+      if (pass) {
+        try {
+          await _streakService.recordActivity(activityDelta: 1);
+          await _xpService.addXp('ayah_memorized');
+          final newAwards = await _achievementService
+              .checkAndUnlockCertificates();
+          if (newAwards.isNotEmpty && state is HifzSessionLoaded) {
+            final prevState = state as HifzSessionLoaded;
+            emit(
+              CertificatesEarned(awards: newAwards, previousState: prevState),
+            );
+            await Future.delayed(const Duration(milliseconds: 100));
+            if (!isClosed) emit(prevState);
+          }
+        } catch (e, stack) {
+          TaliaLogger.e('Non-critical: Failed to record streak/xp', e, stack);
+        }
       }
     }
 
@@ -283,32 +377,38 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
       unawaited(HapticService.error());
     }
 
-    emit(st.copyWith(
-      isEvaluating: false,
-      similarityScore: score,
-      progressMap: Map.from(_progressMap),
-    ));
+    emit(
+      st.copyWith(
+        isEvaluating: false,
+        similarityScore: score,
+        progressMap: Map.from(_progressMap),
+      ),
+    );
   }
-  
+
   void nextAyah() {
     if (state is! HifzSessionLoaded) return;
     final st = state as HifzSessionLoaded;
     if (st.currentIndex < st.ayahs.length - 1) {
       HapticService.selection();
-      emit(st.copyWith(
-        currentIndex: st.currentIndex + 1,
-        clearScore: true,
-        recognizedText: '',
-      ));
+      emit(
+        st.copyWith(
+          currentIndex: st.currentIndex + 1,
+          clearScore: true,
+          recognizedText: '',
+        ),
+      );
     }
   }
 
   void retryAyah() {
     if (state is! HifzSessionLoaded) return;
-    emit((state as HifzSessionLoaded).copyWith(
-      clearScore: true,
-      recognizedText: '',
-    ));
+    emit(
+      (state as HifzSessionLoaded).copyWith(
+        clearScore: true,
+        recognizedText: '',
+      ),
+    );
   }
 
   @override

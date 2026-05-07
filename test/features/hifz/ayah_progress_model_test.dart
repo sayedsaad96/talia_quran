@@ -29,6 +29,31 @@ void main() {
         expect(advanced.repetitions, equals(1));
       });
 
+      test(
+        'uses configured spaced repetition intervals without skipping first interval',
+        () {
+          var current = AyahProgressModel.initial(1, 1);
+
+          current = current.advanceWithSpacedRepetition();
+          final firstDelayMinutes = current.nextReviewDate
+              .difference(DateTime.now())
+              .inMinutes;
+          expect(
+            (firstDelayMinutes - const Duration(days: 1).inMinutes).abs(),
+            lessThan(2),
+          );
+
+          current = current.advanceWithSpacedRepetition();
+          final secondDelayMinutes = current.nextReviewDate
+              .difference(DateTime.now())
+              .inMinutes;
+          expect(
+            (secondDelayMinutes - const Duration(days: 3).inMinutes).abs(),
+            lessThan(2),
+          );
+        },
+      );
+
       test('sets status to review before 5 repetitions', () {
         final model = AyahProgressModel.initial(1, 1);
         var current = model;
@@ -52,10 +77,7 @@ void main() {
         final first = model.advanceWithSpacedRepetition();
         final second = first.advanceWithSpacedRepetition();
         // Second advancement should schedule further out than first
-        expect(
-          second.nextReviewDate.isAfter(first.nextReviewDate),
-          isTrue,
-        );
+        expect(second.nextReviewDate.isAfter(first.nextReviewDate), isTrue);
       });
 
       test('preserves surahId and ayahNumber', () {
@@ -68,9 +90,10 @@ void main() {
 
     group('softPenalty', () {
       test('decreases repetitions by 1', () {
-        final model = AyahProgressModel.initial(1, 1)
-            .advanceWithSpacedRepetition()
-            .advanceWithSpacedRepetition();
+        final model = AyahProgressModel.initial(
+          1,
+          1,
+        ).advanceWithSpacedRepetition().advanceWithSpacedRepetition();
         expect(model.repetitions, equals(2));
         final penalized = model.softPenalty();
         expect(penalized.repetitions, equals(1));
@@ -84,8 +107,10 @@ void main() {
       });
 
       test('sets status to learning when repetitions reach 0', () {
-        final model = AyahProgressModel.initial(1, 1)
-            .advanceWithSpacedRepetition(); // rep = 1
+        final model = AyahProgressModel.initial(
+          1,
+          1,
+        ).advanceWithSpacedRepetition(); // rep = 1
         final penalized = model.softPenalty(); // rep = 0
         expect(penalized.status, equals(AyahStatus.learning));
       });
@@ -99,8 +124,10 @@ void main() {
       });
 
       test('reschedules review to tomorrow', () {
-        final model = AyahProgressModel.initial(1, 1)
-            .advanceWithSpacedRepetition();
+        final model = AyahProgressModel.initial(
+          1,
+          1,
+        ).advanceWithSpacedRepetition();
         final penalized = model.softPenalty();
         final tomorrow = DateTime.now().add(const Duration(days: 1));
         // Allow 1 second tolerance for test execution time
@@ -111,8 +138,10 @@ void main() {
       });
 
       test('preserves surahId and ayahNumber', () {
-        final model = AyahProgressModel.initial(36, 7)
-            .advanceWithSpacedRepetition();
+        final model = AyahProgressModel.initial(
+          36,
+          7,
+        ).advanceWithSpacedRepetition();
         final penalized = model.softPenalty();
         expect(penalized.surahId, equals(36));
         expect(penalized.ayahNumber, equals(7));
@@ -121,8 +150,10 @@ void main() {
 
     group('JSON serialization', () {
       test('roundtrips correctly through toJson/fromJson', () {
-        final original = AyahProgressModel.initial(2, 255)
-            .advanceWithSpacedRepetition();
+        final original = AyahProgressModel.initial(
+          2,
+          255,
+        ).advanceWithSpacedRepetition();
         final json = original.toJson();
         final restored = AyahProgressModel.fromJson(json);
 

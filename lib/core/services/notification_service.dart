@@ -12,6 +12,7 @@ import 'package:timezone/data/latest.dart' as tz_data;
 /// - Daily review reminders (default 8:00 PM)
 /// - Streak protection alerts (10:00 PM if no activity)
 /// - Daily ayah notification (7:00 AM)
+/// - Morning and evening azkar reminders
 /// - Smart reminders based on user's average app-open time
 class TaliaNotificationService {
   TaliaNotificationService._();
@@ -21,11 +22,22 @@ class TaliaNotificationService {
       FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
+  String? _pendingLaunchPayload;
+  void Function(String payload)? onPayloadReceived;
+
+  static const String dailyReviewPreferenceKey = 'notifications_daily_review';
+  static const String streakAlertPreferenceKey = 'notifications_streak_alert';
+  static const String morningAzkarPreferenceKey = 'notifications_morning_azkar';
+  static const String eveningAzkarPreferenceKey = 'notifications_evening_azkar';
 
   // ─── Notification IDs ───────────────────────────────────────────────────────
   static const int _dailyReviewId = 1001;
   static const int _streakAlertId = 1002;
   static const int _dailyAyahId = 1003;
+  static const int _smartReminderId =
+      1004; // M04 FIX: Separate ID for smart reminder
+  static const int _morningAzkarId = 1005;
+  static const int _eveningAzkarId = 1006;
 
   // ─── Motivational Messages ──────────────────────────────────────────────────
   static const List<String> _motivationalMessages = [
@@ -70,14 +82,8 @@ class TaliaNotificationService {
 
     tz_data.initializeTimeZones();
 
-    // CODE-3 FIX: Detect and set the device's actual local timezone so that
-    // scheduled notifications fire at the correct local time, not UTC.
-    try {
-      final String localTimezone = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(localTimezone));
-    } catch (_) {
-      // Fallback: leave as UTC if detection fails (better than crashing).
-    }
+    // CODE-3 FIX: Detect and set the device's actual local timezone
+    await _configureLocalTimezone();
 
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
@@ -96,12 +102,67 @@ class TaliaNotificationService {
       onDidReceiveNotificationResponse: _onNotificationTapped,
     );
 
+    final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+    if (launchDetails?.didNotificationLaunchApp ?? false) {
+      _pendingLaunchPayload = launchDetails?.notificationResponse?.payload;
+    }
+
     _initialized = true;
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    // Navigation is handled by the app's root-level notification listener.
-    // The payload contains the route to navigate to.
+    final payload = response.payload;
+    if (payload == null || payload.isEmpty || !payload.startsWith('/')) {
+      return;
+    }
+    onPayloadReceived?.call(payload);
+  }
+
+  String? takePendingLaunchPayload() {
+    final payload = _pendingLaunchPayload;
+    _pendingLaunchPayload = null;
+    return payload;
+  }
+
+  Future<void> _configureLocalTimezone() async {
+    try {
+      final String localTimezone = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(localTimezone));
+    } catch (_) {
+      // Fallback
+    }
+  }
+
+  /// Re-schedules all notifications. Useful on app resume or timezone change.
+  Future<void> refreshNotifications() async {
+    if (!_initialized) return;
+    await _configureLocalTimezone();
+
+    final prefs = await SharedPreferences.getInstance();
+    final reviewEnabled = prefs.getBool(dailyReviewPreferenceKey) ?? true;
+    final morningAzkarEnabled =
+        prefs.getBool(morningAzkarPreferenceKey) ?? true;
+    final eveningAzkarEnabled =
+        prefs.getBool(eveningAzkarPreferenceKey) ?? true;
+
+    if (reviewEnabled) {
+      await scheduleDailyReviewReminder();
+    } else {
+      await cancelDailyReviewReminder();
+    }
+    await scheduleDailyAyahReminder();
+
+    if (morningAzkarEnabled) {
+      await scheduleMorningAzkarReminder();
+    } else {
+      await cancelMorningAzkarReminder();
+    }
+
+    if (eveningAzkarEnabled) {
+      await scheduleEveningAzkarReminder();
+    } else {
+      await cancelEveningAzkarReminder();
+    }
   }
 
   /// Request permissions for local notifications (iOS and Android 13+)
@@ -146,6 +207,7 @@ class TaliaNotificationService {
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
+      payload: '/hifz',
     );
   }
 
@@ -175,6 +237,7 @@ class TaliaNotificationService {
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
+      payload: '/hifz',
     );
   }
 
@@ -199,6 +262,7 @@ class TaliaNotificationService {
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
+      payload: '/quran',
     );
   }
 
@@ -206,6 +270,60 @@ class TaliaNotificationService {
   Future<void> cancelDailyAyahReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _dailyAyahId);
+  }
+
+  // ─── Azkar Notifications ──────────────────────────────────────────────────
+
+  /// Schedules a daily morning azkar reminder at 6:00 AM.
+  Future<void> scheduleMorningAzkarReminder({
+    int hour = 6,
+    int minute = 0,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.cancel(id: _morningAzkarId);
+
+    await _plugin.zonedSchedule(
+      id: _morningAzkarId,
+      title: 'أذكار الصباح ☀️',
+      body: 'ابدأ يومك بذكر الله وطمأنينة القلب',
+      scheduledDate: _nextInstanceOfTime(hour, minute),
+      notificationDetails: _notificationDetails,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: '/azkar/morning',
+    );
+  }
+
+  /// Cancel only the morning azkar reminder.
+  Future<void> cancelMorningAzkarReminder() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.cancel(id: _morningAzkarId);
+  }
+
+  /// Schedules a daily evening azkar reminder at 6:00 PM.
+  Future<void> scheduleEveningAzkarReminder({
+    int hour = 18,
+    int minute = 0,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.cancel(id: _eveningAzkarId);
+
+    await _plugin.zonedSchedule(
+      id: _eveningAzkarId,
+      title: 'أذكار المساء 🌙',
+      body: 'اختم يومك بذكر الله وحفظه',
+      scheduledDate: _nextInstanceOfTime(hour, minute),
+      notificationDetails: _notificationDetails,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: '/azkar/evening',
+    );
+  }
+
+  /// Cancel only the evening azkar reminder.
+  Future<void> cancelEveningAzkarReminder() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.cancel(id: _eveningAzkarId);
   }
 
   // ─── Smart Reminder ────────────────────────────────────────────────────────
@@ -237,7 +355,8 @@ class TaliaNotificationService {
     await prefs.setInt('last_msg_index', nextIndex);
 
     // Cancel old and schedule new
-    await _plugin.cancel(id: _dailyAyahId);
+    // M04 FIX: Use separate ID so smart reminder doesn't cancel daily ayah
+    await _plugin.cancel(id: _smartReminderId);
 
     final tzNow = tz.TZDateTime.now(tz.local);
     var scheduledTime = tz.TZDateTime(
@@ -252,7 +371,7 @@ class TaliaNotificationService {
     }
 
     await _plugin.zonedSchedule(
-      id: _dailyAyahId,
+      id: _smartReminderId, // M04 FIX
       title: 'تالية 📖',
       body: _motivationalMessages[nextIndex],
       scheduledDate: scheduledTime,
@@ -269,6 +388,7 @@ class TaliaNotificationService {
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
+      payload: '/hifz',
     );
   }
 
@@ -310,7 +430,8 @@ class TaliaNotificationService {
         ),
         iOS: DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      payload: '/hifz',
     );
   }
 

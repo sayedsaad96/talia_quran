@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/services/achievement_service.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
@@ -8,11 +9,12 @@ import '../../../../core/utils/arabic_normalizer.dart';
 part 'quiz_state.dart';
 
 class QuizCubit extends Cubit<QuizState> {
-  QuizCubit(this._repository, this._quranRepository)
-      : super(const QuizInitial());
+  QuizCubit(this._repository, this._quranRepository, this._achievementService)
+    : super(const QuizInitial());
 
   final MemorizationPlusRepository _repository;
   final QuranRepository _quranRepository;
+  final AchievementService _achievementService;
 
   List<_QuizItem> _items = [];
   int _currentIndex = 0;
@@ -22,10 +24,7 @@ class QuizCubit extends Cubit<QuizState> {
   /// Load ayahs for quiz from a surah range.
   /// [surahId] - the surah to test
   /// [ayahNumbers] - specific ayahs to test (if null, tests all reviewed ayahs)
-  Future<void> loadQuiz({
-    required int surahId,
-    List<int>? ayahNumbers,
-  }) async {
+  Future<void> loadQuiz({required int surahId, List<int>? ayahNumbers}) async {
     emit(const QuizLoading());
 
     try {
@@ -43,10 +42,7 @@ class QuizCubit extends Cubit<QuizState> {
 
       // Get review records to find which ayahs the user has studied
       final recordsResult = await _repository.getAllReviewRecords();
-      final records = recordsResult.fold(
-        (_) => <AyahReviewRecord>[],
-        (r) => r,
-      );
+      final records = recordsResult.fold((_) => <AyahReviewRecord>[], (r) => r);
 
       final surahRecords = records
           .where((r) => r.surahId == surahId && r.totalReviews > 0)
@@ -60,11 +56,13 @@ class QuizCubit extends Cubit<QuizState> {
         for (final num in ayahNumbers) {
           try {
             final ayah = ayahs.firstWhere((a) => a.numberInSurah == num);
-            _items.add(_QuizItem(
-              surahId: surahId,
-              ayahNumber: num,
-              correctText: ayah.text,
-            ));
+            _items.add(
+              _QuizItem(
+                surahId: surahId,
+                ayahNumber: num,
+                correctText: ayah.text,
+              ),
+            );
           } catch (_) {}
         }
       } else {
@@ -72,12 +70,15 @@ class QuizCubit extends Cubit<QuizState> {
         for (final record in surahRecords) {
           try {
             final ayah = ayahs.firstWhere(
-                (a) => a.numberInSurah == record.ayahNumber);
-            _items.add(_QuizItem(
-              surahId: surahId,
-              ayahNumber: record.ayahNumber,
-              correctText: ayah.text,
-            ));
+              (a) => a.numberInSurah == record.ayahNumber,
+            );
+            _items.add(
+              _QuizItem(
+                surahId: surahId,
+                ayahNumber: record.ayahNumber,
+                correctText: ayah.text,
+              ),
+            );
           } catch (_) {}
         }
       }
@@ -109,46 +110,50 @@ class QuizCubit extends Cubit<QuizState> {
 
     final passed = similarity >= 0.80;
 
+    var newAwards = <CertificateAward>[];
     if (passed) {
       _passedCount++;
-      // Update review record with excellent rating
-      await _repository.evaluateAyah(
-        surahId: current.surahId,
-        ayahNumber: current.ayahNumber,
-        rating: PerformanceRating.excellent,
-      );
     } else {
       _failedCount++;
-      // Update review record with weak rating
-      await _repository.evaluateAyah(
-        surahId: current.surahId,
-        ayahNumber: current.ayahNumber,
-        rating: PerformanceRating.weak,
-      );
     }
 
-    emit(QuizAnswerResult(
+    final result = await _repository.evaluateAyah(
       surahId: current.surahId,
       ayahNumber: current.ayahNumber,
-      correctText: current.correctText,
-      userText: userInput.trim(),
-      similarity: similarity,
-      passed: passed,
-      questionIndex: _currentIndex,
-      totalQuestions: _items.length,
-    ));
+      rating: passed ? PerformanceRating.excellent : PerformanceRating.weak,
+    );
+    final failure = result.fold((f) => f, (_) => null);
+    if (failure == null) {
+      newAwards = await _achievementService.checkAndUnlockCertificates();
+    }
+
+    emit(
+      QuizAnswerResult(
+        surahId: current.surahId,
+        ayahNumber: current.ayahNumber,
+        correctText: current.correctText,
+        userText: userInput.trim(),
+        similarity: similarity,
+        passed: passed,
+        questionIndex: _currentIndex,
+        totalQuestions: _items.length,
+        newAwards: newAwards,
+      ),
+    );
   }
 
   /// Move to the next question or show final results.
   void nextQuestion() {
     _currentIndex++;
     if (_currentIndex >= _items.length) {
-      emit(QuizCompleted(
-        totalQuestions: _items.length,
-        passedCount: _passedCount,
-        failedCount: _failedCount,
-        overallScore: _items.isEmpty ? 0 : _passedCount / _items.length,
-      ));
+      emit(
+        QuizCompleted(
+          totalQuestions: _items.length,
+          passedCount: _passedCount,
+          failedCount: _failedCount,
+          overallScore: _items.isEmpty ? 0 : _passedCount / _items.length,
+        ),
+      );
     } else {
       _emitCurrentQuestion();
     }
@@ -162,14 +167,16 @@ class QuizCubit extends Cubit<QuizState> {
         ? '${words[0]} ${words[1]} ...'
         : '${words[0]} ...';
 
-    emit(QuizQuestion(
-      surahId: item.surahId,
-      ayahNumber: item.ayahNumber,
-      hint: hint,
-      questionIndex: _currentIndex,
-      totalQuestions: _items.length,
-      passedSoFar: _passedCount,
-    ));
+    emit(
+      QuizQuestion(
+        surahId: item.surahId,
+        ayahNumber: item.ayahNumber,
+        hint: hint,
+        questionIndex: _currentIndex,
+        totalQuestions: _items.length,
+        passedSoFar: _passedCount,
+      ),
+    );
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -186,7 +193,9 @@ class QuizCubit extends Cubit<QuizState> {
 
     // Word-level LCS
     final lcsLen = _lcsLength(wordsA, wordsB);
-    final maxLen = wordsA.length > wordsB.length ? wordsA.length : wordsB.length;
+    final maxLen = wordsA.length > wordsB.length
+        ? wordsA.length
+        : wordsB.length;
 
     return lcsLen / maxLen;
   }
@@ -200,9 +209,7 @@ class QuizCubit extends Cubit<QuizState> {
         if (a[i - 1] == b[j - 1]) {
           dp[i][j] = dp[i - 1][j - 1] + 1;
         } else {
-          dp[i][j] = dp[i - 1][j] > dp[i][j - 1]
-              ? dp[i - 1][j]
-              : dp[i][j - 1];
+          dp[i][j] = dp[i - 1][j] > dp[i][j - 1] ? dp[i - 1][j] : dp[i][j - 1];
         }
       }
     }

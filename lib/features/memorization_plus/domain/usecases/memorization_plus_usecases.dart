@@ -21,8 +21,7 @@ class GenerateDailyPlanUsecase
   final MemorizationPlusRepository _repository;
 
   @override
-  Future<Either<Failure, DailyPlan>> call(
-          GenerateDailyPlanParams params) =>
+  Future<Either<Failure, DailyPlan>> call(GenerateDailyPlanParams params) =>
       _repository.generateDailyPlan(
         surahId: params.surahId,
         newAyahsPerDay: params.newAyahsPerDay,
@@ -49,12 +48,37 @@ class EvaluateMemorizationUsecase
 
   @override
   Future<Either<Failure, AyahReviewRecord>> call(
-          EvaluateMemorizationParams params) =>
-      _repository.evaluateAyah(
-        surahId: params.surahId,
-        ayahNumber: params.ayahNumber,
-        rating: params.rating,
-      );
+    EvaluateMemorizationParams params,
+  ) => _repository.evaluateAyah(
+    surahId: params.surahId,
+    ayahNumber: params.ayahNumber,
+    rating: params.rating,
+  );
+}
+
+// ─── MarkAyahMemorizedUsecase ────────────────────────────────────────────────
+
+class MarkAyahMemorizedParams {
+  const MarkAyahMemorizedParams({
+    required this.surahId,
+    required this.ayahNumber,
+  });
+  final int surahId;
+  final int ayahNumber;
+}
+
+class MarkAyahMemorizedUsecase
+    implements UseCase<AyahReviewRecord, MarkAyahMemorizedParams> {
+  const MarkAyahMemorizedUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, AyahReviewRecord>> call(
+    MarkAyahMemorizedParams params,
+  ) => _repository.markAyahMemorized(
+    surahId: params.surahId,
+    ayahNumber: params.ayahNumber,
+  );
 }
 
 // ─── ScheduleNextReviewUsecase ────────────────────────────────────────────────
@@ -105,8 +129,7 @@ class GetKidsProgressUsecase implements UseCaseNoParams<KidsProgress> {
   final MemorizationPlusRepository _repository;
 
   @override
-  Future<Either<Failure, KidsProgress>> call() =>
-      _repository.getKidsProgress();
+  Future<Either<Failure, KidsProgress>> call() => _repository.getKidsProgress();
 }
 
 // ─── AwardKidsPointsUsecase ───────────────────────────────────────────────────
@@ -128,8 +151,7 @@ class AwardKidsPointsUsecase
   final MemorizationPlusRepository _repository;
 
   @override
-  Future<Either<Failure, KidsProgress>> call(
-          AwardKidsPointsParams params) =>
+  Future<Either<Failure, KidsProgress>> call(AwardKidsPointsParams params) =>
       _repository.awardKidsPoints(
         surahId: params.surahId,
         ayahNumber: params.ayahNumber,
