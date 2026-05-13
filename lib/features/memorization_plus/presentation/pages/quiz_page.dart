@@ -39,56 +39,93 @@ class _QuizView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
 
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
-      appBar: AppBar(
-        title: Text(
-          'اختبار الحفظ',
-          style: AppTypography.titleLarge.copyWith(
-            fontFamily: 'Amiri',
+    // BUG-10 FIX: wrap with PopScope to prevent losing quiz results on back press
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        final cubit = context.read<QuizCubit>();
+        // Allow pop freely if quiz is done or not yet started
+        if (cubit.state is QuizCompleted ||
+            cubit.state is QuizInitial ||
+            cubit.state is QuizLoading ||
+            cubit.state is QuizError) {
+          if (context.mounted) context.pop();
+          return;
+        }
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (_) => AlertDialog(
+            title: const Text('الخروج من الاختبار؟'),
+            content: const Text(
+              'سيتم حفظ الآيات التي قيّمتها حتى الآن.\nهل تريد الخروج؟',
+              textDirection: TextDirection.rtl,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('البقاء'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('خروج', style: TextStyle(color: Colors.red)),
+              ),
+            ],
+          ),
+        );
+        if ((shouldPop ?? false) && context.mounted) context.pop();
+      },
+      child: Scaffold(
+        backgroundColor: isDark
+            ? AppColors.darkBackground
+            : AppColors.lightBackground,
+        appBar: AppBar(
+          title: Text(
+            'اختبار الحفظ',
+            style: AppTypography.titleLarge.copyWith(
+              fontFamily: 'Amiri',
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+            ),
+          ),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: IconThemeData(
             color: isDark
                 ? AppColors.darkTextPrimary
                 : AppColors.lightTextPrimary,
           ),
         ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        iconTheme: IconThemeData(
-          color: isDark
-              ? AppColors.darkTextPrimary
-              : AppColors.lightTextPrimary,
+        body: BlocConsumer<QuizCubit, QuizState>(
+          listener: (context, state) {
+            if (state is QuizAnswerResult && state.newAwards.isNotEmpty) {
+              unawaited(
+                showCertificateCelebrationDialog(context, state.newAwards),
+              );
+            }
+          },
+          builder: (context, state) {
+            if (state is QuizLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (state is QuizError) {
+              return _ErrorView(message: state.message, isDark: isDark);
+            }
+            if (state is QuizQuestion) {
+              return _QuestionView(state: state, isDark: isDark);
+            }
+            if (state is QuizAnswerResult) {
+              return _AnswerResultView(state: state, isDark: isDark);
+            }
+            if (state is QuizCompleted) {
+              return _CompletedView(state: state, isDark: isDark);
+            }
+            return const SizedBox.shrink();
+          },
         ),
-      ),
-      body: BlocConsumer<QuizCubit, QuizState>(
-        listener: (context, state) {
-          if (state is QuizAnswerResult && state.newAwards.isNotEmpty) {
-            unawaited(
-              showCertificateCelebrationDialog(context, state.newAwards),
-            );
-          }
-        },
-        builder: (context, state) {
-          if (state is QuizLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is QuizError) {
-            return _ErrorView(message: state.message, isDark: isDark);
-          }
-          if (state is QuizQuestion) {
-            return _QuestionView(state: state, isDark: isDark);
-          }
-          if (state is QuizAnswerResult) {
-            return _AnswerResultView(state: state, isDark: isDark);
-          }
-          if (state is QuizCompleted) {
-            return _CompletedView(state: state, isDark: isDark);
-          }
-          return const SizedBox.shrink();
-        },
-      ),
-    );
+      ), // Scaffold
+    ); // PopScope
   }
 }
 

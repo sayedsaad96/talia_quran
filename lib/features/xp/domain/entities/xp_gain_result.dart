@@ -11,13 +11,16 @@ class XpGainResult extends Equatable {
   });
 
   const XpGainResult.zero()
-      : xpAdded = 0,
-        totalXp = 0,
-        leveledUp = false,
-        currentLevel = const XpLevel(
-          name: 'مبتدئ', minXp: 0, icon: '🌱', colorHex: 0xFF6B7280,
-        ),
-        progressToNextLevel = 0.0;
+    : xpAdded = 0,
+      totalXp = 0,
+      leveledUp = false,
+      currentLevel = const XpLevel(
+        name: 'مبتدئ',
+        minXp: 0,
+        icon: '🌱',
+        colorHex: 0xFF6B7280,
+      ),
+      progressToNextLevel = 0.0;
 
   final int xpAdded;
   final int totalXp;
@@ -26,6 +29,11 @@ class XpGainResult extends Equatable {
   final double progressToNextLevel; // 0.0 → 1.0
 
   @override
-  List<Object?> get props =>
-      [xpAdded, totalXp, leveledUp, currentLevel.name, progressToNextLevel];
+  List<Object?> get props => [
+    xpAdded,
+    totalXp,
+    leveledUp,
+    currentLevel.name,
+    progressToNextLevel,
+  ];
 }

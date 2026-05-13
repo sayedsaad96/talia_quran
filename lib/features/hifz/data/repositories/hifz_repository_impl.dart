@@ -13,7 +13,8 @@ class HifzRepositoryImpl implements HifzRepository {
 
   @override
   Future<Either<Failure, List<AyahProgress>>> getProgressForSurah(
-      int surahId) async {
+    int surahId,
+  ) async {
     try {
       final models = await _datasource.getProgressForSurah(surahId);
       return Right(models);
@@ -24,7 +25,9 @@ class HifzRepositoryImpl implements HifzRepository {
 
   @override
   Future<Either<Failure, AyahProgress?>> getAyahProgress(
-      int surahId, int ayahNumber) async {
+    int surahId,
+    int ayahNumber,
+  ) async {
     try {
       final model = await _datasource.getAyahProgress(surahId, ayahNumber);
       return Right(model);
@@ -34,8 +37,7 @@ class HifzRepositoryImpl implements HifzRepository {
   }
 
   @override
-  Future<Either<Failure, void>> saveAyahProgress(
-      AyahProgress progress) async {
+  Future<Either<Failure, void>> saveAyahProgress(AyahProgress progress) async {
     try {
       final model = progress is AyahProgressModel
           ? progress
@@ -59,10 +61,12 @@ class HifzRepositoryImpl implements HifzRepository {
     try {
       final all = await _datasource.getAllProgress();
       final due = all
-          .where((p) =>
-              p.status != AyahStatus.notStarted &&
-              p.status != AyahStatus.memorized &&
-              p.isDue)
+          .where(
+            (p) =>
+                // BUG-5 FIX: allow memorized ayahs to appear in due reviews
+                // so long-term retention is maintained after the 5th repetition
+                p.status != AyahStatus.notStarted && p.isDue,
+          )
           .toList();
       return Right(due);
     } catch (e) {
@@ -95,9 +99,7 @@ class HifzRepositoryImpl implements HifzRepository {
           memorizedCount: ayahs
               .where((a) => a.status == AyahStatus.memorized)
               .length,
-          reviewCount: ayahs
-              .where((a) => a.status == AyahStatus.review)
-              .length,
+          reviewCount: ayahs.where((a) => a.status == AyahStatus.review).length,
           learningCount: ayahs
               .where((a) => a.status == AyahStatus.learning)
               .length,
@@ -105,6 +107,30 @@ class HifzRepositoryImpl implements HifzRepository {
       }).toList();
 
       return Right(result);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Set<String>>> getPassedCheckpointKeys(
+    int surahId,
+  ) async {
+    try {
+      final keys = await _datasource.getPassedCheckpointKeys(surahId);
+      return Right(keys);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> markCheckpointPassed(
+    HifzSegment segment,
+  ) async {
+    try {
+      await _datasource.markCheckpointPassed(segment.key);
+      return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }

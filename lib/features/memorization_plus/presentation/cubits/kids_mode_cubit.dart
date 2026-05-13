@@ -3,6 +3,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../../../core/services/achievement_service.dart';
+import '../../../../core/services/streak_service.dart'; // RISK-5 FIX
+import '../../../../core/services/xp_service.dart'; // RISK-5 FIX
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
@@ -16,10 +18,13 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     this._getKidsProgress,
     this._awardPoints,
     this._markAyahMemorized,
+    this._saveKidsSessionLog,
     this._achievementService,
     this._quranRepository,
+    this._streakService, // RISK-5 FIX
+    this._xpService, // RISK-5 FIX
   ) : super(const KidsModeInitial()) {
-    _player.playerStateStream.listen((ps) {
+    _playerSub = _player.playerStateStream.listen((ps) {
       if (ps.processingState == ProcessingState.completed) {
         _onPlaybackCompleted();
       }
@@ -29,9 +34,13 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final GetKidsProgressUsecase _getKidsProgress;
   final AwardKidsPointsUsecase _awardPoints;
   final MarkAyahMemorizedUsecase _markAyahMemorized;
+  final SaveKidsSessionLogUsecase _saveKidsSessionLog;
   final AchievementService _achievementService;
   final QuranRepository _quranRepository;
+  final StreakService _streakService; // RISK-5 FIX
+  final XpService _xpService; // RISK-5 FIX
   final AudioPlayer _player = AudioPlayer();
+  late final StreamSubscription<PlayerState> _playerSub;
 
   int _loopCount = 0;
   static const int _maxLoops = 3;
@@ -121,6 +130,19 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
 
+    // BUG-4 FIX: prevent completing without listening the required times
+    if (_loopCount < _maxLoops) {
+      // Emit a warning state so the UI can show a message
+      emit(st.copyWith(mustListenFirst: true));
+      // Clear the flag after 2 seconds
+      Future.delayed(const Duration(seconds: 2), () {
+        if (state is KidsModeLoaded) {
+          emit((state as KidsModeLoaded).copyWith(mustListenFirst: false));
+        }
+      });
+      return;
+    }
+
     final result = await _awardPoints(
       AwardKidsPointsParams(
         surahId: st.surahId,
@@ -144,6 +166,24 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       return;
     }
 
+    // RISK-5 FIX: record streak & XP from Kids Mode — same as Hifz & Adults
+    try {
+      await _streakService.recordActivity(activityDelta: 1);
+      await _xpService.addXp('ayah_memorized');
+    } catch (_) {
+      // Non-critical
+    }
+
+    final pointsEarned = 10 + ((_loopCount - 1) * 2).clamp(0, 20);
+    await _saveKidsSessionLog(
+      SaveKidsSessionLogParams(
+        surahId: st.surahId,
+        ayahNumber: st.ayahNumber,
+        repeatsCompleted: _loopCount,
+        pointsEarned: pointsEarned,
+      ),
+    );
+
     final newAwards = await _achievementService.checkAndUnlockCertificates();
     emit(
       st.copyWith(progress: updated, isCompleted: true, newAwards: newAwards),
@@ -151,8 +191,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   }
 
   @override
-  Future<void> close() {
-    _player.dispose();
+  Future<void> close() async {
+    await _playerSub.cancel();
+    await _player.dispose();
     return super.close();
   }
 }

@@ -87,7 +87,7 @@ class _QuranViewState extends State<_QuranView>
                         )
                       : _SurahListView(surahs: state.filtered),
                   _JuzGridView(surahs: state.surahs), // Not affected by search
-                  const BookmarksTab(),               // Not affected by search
+                  const BookmarksTab(), // Not affected by search
                 ],
               );
             }
@@ -187,9 +187,9 @@ class _SearchBar extends StatelessWidget {
     return Container(
       height: 44,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha:0.15),
+        color: Colors.white.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: Colors.white.withValues(alpha:0.2)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
       ),
       child: TextField(
         controller: controller,
@@ -250,95 +250,92 @@ class _SurahTile extends StatelessWidget {
     final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
 
     return Material(
-          color: surface,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          child: InkWell(
+      color: surface,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        onTap: () => context.push('/quran/surah/${surah.id}'),
+        splashColor: primary.withValues(alpha: 0.06),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm + 2,
+          ),
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            onTap: () => context.push('/quran/surah/${surah.id}'),
-            splashColor: primary.withValues(alpha:0.06),
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm + 2,
-              ),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                border: Border.all(color: border, width: 0.5),
-              ),
-              child: Row(
-                children: [
-                  // Number badge
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: primary.withValues(alpha:0.08),
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    ),
-                    child: Center(
-                      child: Text(
-                        '${surah.id}',
-                        style: AppTypography.labelMedium.copyWith(
-                          color: primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+            border: Border.all(color: border, width: 0.5),
+          ),
+          child: Row(
+            children: [
+              // Number badge
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.08),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Center(
+                  child: Text(
+                    '${surah.id}',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: primary,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  // Name
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              // Name
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.isArabic ? surah.nameAr : surah.nameEn,
+                      style: context.isArabic
+                          ? AppTypography.surahTitle.copyWith(
+                              color: primary,
+                              fontSize: 20,
+                            )
+                          : AppTypography.titleMedium.copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : AppColors.lightTextPrimary,
+                            ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
                       children: [
-                        Text(
-                          context.isArabic ? surah.nameAr : surah.nameEn,
-                          style: context.isArabic
-                              ? AppTypography.surahTitle.copyWith(
-                                  color: primary,
-                                  fontSize: 20,
-                                )
-                              : AppTypography.titleMedium.copyWith(
-                                  color: isDark
-                                      ? AppColors.darkTextPrimary
-                                      : AppColors.lightTextPrimary,
-                                ),
+                        _Chip(
+                          label: context.isArabic
+                              ? surah.isMeccan
+                                    ? context.l10n.meccan
+                                    : context.l10n.medinan
+                              : surah.isMeccan
+                              ? context.l10n.meccan
+                              : context.l10n.medinan,
+                          isDark: isDark,
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            _Chip(
-                              label: context.isArabic
-                                  ? surah.isMeccan
-                                        ? context.l10n.meccan
-                                        : context.l10n.medinan
-                                  : surah.isMeccan
-                                  ? context.l10n.meccan
-                                  : context.l10n.medinan,
-                              isDark: isDark,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '${surah.ayahCount} ${context.l10n.ayahs}',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: isDark
-                                    ? AppColors.darkTextHint
-                                    : AppColors.lightTextHint,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(width: 6),
+                        Text(
+                          '${surah.ayahCount} ${context.l10n.ayahs}',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: isDark
+                                ? AppColors.darkTextHint
+                                : AppColors.lightTextHint,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-        )
-        .animate()
-        .fadeIn(duration: 200.ms)
-        .slideY(begin: 0.02, end: 0);
+        ),
+      ),
+    ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.02, end: 0);
   }
 }
 
@@ -383,12 +380,36 @@ class _JuzGridView extends StatelessWidget {
   ];
 
   static const List<String> _juzNames = [
-    'الأول', 'الثاني', 'الثالث', 'الرابع', 'الخامس',
-    'السادس', 'السابع', 'الثامن', 'التاسع', 'العاشر',
-    'الحادي عشر', 'الثاني عشر', 'الثالث عشر', 'الرابع عشر', 'الخامس عشر',
-    'السادس عشر', 'السابع عشر', 'الثامن عشر', 'التاسع عشر', 'العشرون',
-    'الحادي والعشرون', 'الثاني والعشرون', 'الثالث والعشرون', 'الرابع والعشرون', 'الخامس والعشرون',
-    'السادس والعشرون', 'السابع والعشرون', 'الثامن والعشرون', 'التاسع والعشرون', 'الثلاثون'
+    'الأول',
+    'الثاني',
+    'الثالث',
+    'الرابع',
+    'الخامس',
+    'السادس',
+    'السابع',
+    'الثامن',
+    'التاسع',
+    'العاشر',
+    'الحادي عشر',
+    'الثاني عشر',
+    'الثالث عشر',
+    'الرابع عشر',
+    'الخامس عشر',
+    'السادس عشر',
+    'السابع عشر',
+    'الثامن عشر',
+    'التاسع عشر',
+    'العشرون',
+    'الحادي والعشرون',
+    'الثاني والعشرون',
+    'الثالث والعشرون',
+    'الرابع والعشرون',
+    'الخامس والعشرون',
+    'السادس والعشرون',
+    'السابع والعشرون',
+    'الثامن والعشرون',
+    'التاسع والعشرون',
+    'الثلاثون',
   ];
 
   @override
@@ -417,7 +438,9 @@ class _JuzGridView extends StatelessWidget {
               onTap: () => context.push('/quran/page/$initialPage'),
               child: Container(
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSurfaceVariant : AppColors.lightSurfaceVariant,
+                  color: isDark
+                      ? AppColors.darkSurfaceVariant
+                      : AppColors.lightSurfaceVariant,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                   boxShadow: [
                     BoxShadow(
@@ -444,7 +467,9 @@ class _JuzGridView extends StatelessWidget {
                     ),
                     Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                        ),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,7 +487,9 @@ class _JuzGridView extends StatelessWidget {
                             Text(
                               _juzNames[i],
                               style: AppTypography.titleMedium.copyWith(
-                                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
                                 fontWeight: FontWeight.w700,
                               ),
                               maxLines: 1,
@@ -498,4 +525,3 @@ class _JuzGridView extends StatelessWidget {
     );
   }
 }
-

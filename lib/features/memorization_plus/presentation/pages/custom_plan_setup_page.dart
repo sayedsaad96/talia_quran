@@ -122,8 +122,9 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     final primaryColor = Theme.of(context).primaryColor;
 
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       body: BlocConsumer<CustomPlanCubit, CustomPlanState>(
         listener: (context, state) {
           if (state is CustomPlanSaved) {
@@ -139,8 +140,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
             );
             // Navigate to daily plan with the custom plan's start surah
             context.pushReplacement(
-              '/memorization-plus/daily-plan',
-              extra: {'surahId': state.plan.startSurahId},
+              '/memorization-plus/daily-plan?surahId=${state.plan.startSurahId}',
             );
           } else if (state is CustomPlanLoaded) {
             _populateFromExisting(state.plan);
@@ -264,8 +264,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                           icon: Icons.auto_stories_rounded,
                           color: Colors.amber,
                           isDark: isDark,
-                          onChanged: (v) =>
-                              setState(() => _newAyahsPerDay = v),
+                          onChanged: (v) => setState(() => _newAyahsPerDay = v),
                         ),
 
                         const SizedBox(height: AppSpacing.md),
@@ -286,8 +285,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                           icon: Icons.date_range_rounded,
                           color: Colors.blueAccent,
                           isDark: isDark,
-                          onChanged: (v) =>
-                              setState(() => _availableDays = v),
+                          onChanged: (v) => setState(() => _availableDays = v),
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         _buildSliderCard(
@@ -299,8 +297,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                           icon: Icons.timer_rounded,
                           color: Colors.teal,
                           isDark: isDark,
-                          onChanged: (v) =>
-                              setState(() => _sessionMinutes = v),
+                          onChanged: (v) => setState(() => _sessionMinutes = v),
                           divisions: 11,
                         ),
 
@@ -343,8 +340,9 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                               foregroundColor: Colors.white,
                               elevation: 0,
                               shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusLg),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusLg,
+                                ),
                               ),
                             ),
                             child: Row(
@@ -374,7 +372,8 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                                 builder: (_) => AlertDialog(
                                   title: const Text('حذف الخطة'),
                                   content: const Text(
-                                      'هل أنت متأكد من حذف الخطة الحالية؟'),
+                                    'هل أنت متأكد من حذف الخطة الحالية؟',
+                                  ),
                                   actions: [
                                     TextButton(
                                       onPressed: () => Navigator.pop(context),
@@ -396,8 +395,10 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                                 ),
                               );
                             },
-                            icon: const Icon(Icons.delete_outline_rounded,
-                                color: Colors.redAccent),
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              color: Colors.redAccent,
+                            ),
                             label: Text(
                               'حذف الخطة الحالية',
                               style: AppTypography.bodyMedium.copyWith(
@@ -556,7 +557,9 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
         DropdownButton<int>(
           value: value,
           underline: const SizedBox.shrink(),
-          dropdownColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          dropdownColor: isDark
+              ? AppColors.darkSurface
+              : AppColors.lightSurface,
           style: AppTypography.bodyMedium.copyWith(
             color: isDark
                 ? AppColors.darkTextPrimary
@@ -566,7 +569,9 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
             114,
             (i) => DropdownMenuItem(
               value: i + 1,
-              child: Text('${i + 1}. ${(i + 1) < _surahNames.length ? _surahNames[i + 1] : 'سورة ${i + 1}'}'),
+              child: Text(
+                '${i + 1}. ${(i + 1) < _surahNames.length ? _surahNames[i + 1] : 'سورة ${i + 1}'}',
+              ),
             ),
           ),
           onChanged: (v) {
@@ -623,8 +628,10 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
               ),
               const Spacer(),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(20),
@@ -662,12 +669,24 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
 
   Widget _buildDifficultySelector(bool isDark, Color primary) {
     final items = [
-      (MemorizationDifficulty.easy, 'سهل', Icons.sentiment_satisfied_rounded,
-          Colors.green),
-      (MemorizationDifficulty.moderate, 'متوسط',
-          Icons.sentiment_neutral_rounded, Colors.amber),
-      (MemorizationDifficulty.challenging, 'صعب',
-          Icons.sentiment_dissatisfied_rounded, Colors.redAccent),
+      (
+        MemorizationDifficulty.easy,
+        'سهل',
+        Icons.sentiment_satisfied_rounded,
+        Colors.green,
+      ),
+      (
+        MemorizationDifficulty.moderate,
+        'متوسط',
+        Icons.sentiment_neutral_rounded,
+        Colors.amber,
+      ),
+      (
+        MemorizationDifficulty.challenging,
+        'صعب',
+        Icons.sentiment_dissatisfied_rounded,
+        Colors.redAccent,
+      ),
     ];
 
     return Row(
@@ -684,15 +703,15 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 color: isSelected
                     ? item.$4.withValues(alpha: 0.15)
                     : isDark
-                        ? AppColors.darkSurface
-                        : AppColors.lightSurface,
+                    ? AppColors.darkSurface
+                    : AppColors.lightSurface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                 border: Border.all(
                   color: isSelected
                       ? item.$4
                       : isDark
-                          ? Colors.white.withValues(alpha: 0.08)
-                          : Colors.black.withValues(alpha: 0.06),
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.06),
                   width: isSelected ? 2 : 1,
                 ),
               ),
@@ -706,10 +725,11 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                       color: isSelected
                           ? item.$4
                           : isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary,
-                      fontWeight:
-                          isSelected ? FontWeight.bold : FontWeight.normal,
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                 ],
@@ -827,11 +847,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
             ],
           ),
         ),
-        Switch(
-          value: value,
-          activeThumbColor: color,
-          onChanged: onChanged,
-        ),
+        Switch(value: value, activeThumbColor: color, onChanged: onChanged),
       ],
     );
   }
@@ -919,9 +935,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
           ],
         ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(
-          color: Colors.deepPurple.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: Colors.deepPurple.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

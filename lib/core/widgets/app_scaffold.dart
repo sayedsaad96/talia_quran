@@ -41,7 +41,8 @@ class AppScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final bg = backgroundColor ??
+    final bg =
+        backgroundColor ??
         (isDark ? AppColors.darkBackground : AppColors.lightBackground);
 
     return Scaffold(
@@ -52,7 +53,8 @@ class AppScaffold extends StatelessWidget {
       bottomNavigationBar: bottomBar,
       appBar: showAppBar
           ? AppBar(
-              title: titleWidget ??
+              title:
+                  titleWidget ??
                   (title != null
                       ? Text(
                           title!,
@@ -104,15 +106,14 @@ class AppSliverScaffold extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final bg = backgroundColor ??
+    final bg =
+        backgroundColor ??
         (isDark ? AppColors.darkBackground : AppColors.lightBackground);
 
     return Scaffold(
       backgroundColor: bg,
       floatingActionButton: floatingActionButton,
-      body: CustomScrollView(
-        slivers: slivers,
-      ),
+      body: CustomScrollView(slivers: slivers),
     );
   }
 }

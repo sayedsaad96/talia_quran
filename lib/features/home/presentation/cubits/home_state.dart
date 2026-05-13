@@ -30,7 +30,13 @@ class HomeLoaded extends HomeState {
   final CustomMemorizationPlan? customPlan;
 
   @override
-  List<Object?> get props => [progress, hifzSurahProgress, greeting, dailyWirdPageDetail, customPlan];
+  List<Object?> get props => [
+    progress,
+    hifzSurahProgress,
+    greeting,
+    dailyWirdPageDetail,
+    customPlan,
+  ];
 }
 
 class HomeError extends HomeState {

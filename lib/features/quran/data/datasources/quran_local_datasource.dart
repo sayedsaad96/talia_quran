@@ -24,11 +24,11 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
   Future<List<SurahModel>> getSurahs() async {
     if (_cachedSurahs != null) return _cachedSurahs!;
     try {
-      final jsonStr =
-          await rootBundle.loadString('assets/data/surahs.json');
+      final jsonStr = await rootBundle.loadString('assets/data/surahs.json');
       final list = jsonDecode(jsonStr) as List<dynamic>;
-      _cachedSurahs =
-          list.map((e) => SurahModel.fromJson(e as Map<String, dynamic>)).toList();
+      _cachedSurahs = list
+          .map((e) => SurahModel.fromJson(e as Map<String, dynamic>))
+          .toList();
       return _cachedSurahs!;
     } catch (e) {
       throw const CacheFailure('Failed to load surahs');
@@ -40,7 +40,7 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
     if (_cachedAyahs == null) {
       await _loadQuranData();
     }
-    
+
     final ayahs = _cachedAyahs![surahId];
     if (ayahs != null) return ayahs;
 
@@ -78,7 +78,7 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
   static _QuranParseResult _parseQuranData(Map<String, dynamic> params) {
     final String jsonStr = params['jsonStr'];
     final List<SurahModel> surahs = params['surahs'];
-    
+
     final Map<String, dynamic> data = jsonDecode(jsonStr);
     final cachedAyahs = <int, List<AyahModel>>{};
     final cachedByPage = <int, List<AyahModel>>{};
@@ -87,7 +87,7 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
     for (final surah in surahs) {
       final surahIdStr = surah.id.toString();
       final List<dynamic> verseList = data[surahIdStr] ?? [];
-      
+
       final parsedAyahs = <AyahModel>[];
       for (int i = 0; i < verseList.length; i++) {
         final verseObj = verseList[i];
@@ -101,11 +101,11 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
           page: verseObj['page'] as int? ?? (surah.page + (i ~/ 15)),
         );
         parsedAyahs.add(ayah);
-        
+
         final pageNum = ayah.page ?? 1;
         cachedByPage.putIfAbsent(pageNum, () => []).add(ayah);
       }
-      
+
       cachedAyahs[surah.id] = parsedAyahs;
       globalOffset += surah.ayahCount;
     }
@@ -137,7 +137,7 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
   @override
   Future<Map<int, List<AyahModel>>> getAyahsGroupedByJuz() async {
     if (_cachedAyahs == null) await _loadQuranData();
-    
+
     final grouped = <int, List<AyahModel>>{};
     for (final ayahs in _cachedAyahs!.values) {
       for (final ayah in ayahs) {
@@ -148,6 +148,7 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
     return grouped;
   }
 }
+
 class _QuranParseResult {
   final Map<int, List<AyahModel>> ayahs;
   final Map<int, List<AyahModel>> byPage;

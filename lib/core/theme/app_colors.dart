@@ -48,6 +48,7 @@ abstract class AppColors {
   // ─── Quran Reading Colors ────────────────────────────────────────────────────
   /// Warm parchment for reading surface (light)
   static const Color parchmentLight = Color(0xFFFAF6EE);
+
   /// Soft dark for reading surface (dark)
   static const Color parchmentDark = Color(0xFF141A20);
 
@@ -86,19 +87,13 @@ abstract class AppColors {
   static const LinearGradient surfaceGlassLight = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0xCCFFFFFF),
-      Color(0x99FFFFFF),
-    ],
+    colors: [Color(0xCCFFFFFF), Color(0x99FFFFFF)],
   );
 
   static const LinearGradient surfaceGlassDark = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [
-      Color(0x331C2330),
-      Color(0x1A1C2330),
-    ],
+    colors: [Color(0x331C2330), Color(0x1A1C2330)],
   );
 
   // ─── Overlay Colors ──────────────────────────────────────────────────────────

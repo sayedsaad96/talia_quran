@@ -14,8 +14,8 @@ part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit(
-    this._getProgress, 
-    this._getHifzProgress, 
+    this._getProgress,
+    this._getHifzProgress,
     this._getQuranPage,
     this._getCustomPlan,
   ) : super(const HomeInitial());
@@ -38,32 +38,25 @@ class HomeCubit extends Cubit<HomeState> {
     final pageNumber = random.nextInt(604) + 1;
     final quranPageResult = await _getQuranPage(pageNumber);
     QuranPageDetail? dailyWirdDetail;
-    quranPageResult.fold(
-      (l) => null,
-      (r) => dailyWirdDetail = r,
-    );
-    
+    quranPageResult.fold((l) => null, (r) => dailyWirdDetail = r);
+
     // Fetch custom plan
     CustomMemorizationPlan? customPlan;
     final planResult = await _getCustomPlan();
-    planResult.fold(
-      (l) => null,
-      (plan) => customPlan = plan,
-    );
+    planResult.fold((l) => null, (plan) => customPlan = plan);
 
-    progressResult.fold(
-      (f) => emit(HomeError(f.message)),
-      (progress) {
-        final hifzProgress = hifzResult.getOrElse(() => []);
-        emit(HomeLoaded(
+    progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
+      final hifzProgress = hifzResult.getOrElse(() => []);
+      emit(
+        HomeLoaded(
           progress: progress,
           hifzSurahProgress: hifzProgress,
           greeting: _greeting(),
           dailyWirdPageDetail: dailyWirdDetail,
           customPlan: customPlan,
-        ));
-      },
-    );
+        ),
+      );
+    });
   }
 
   String _greeting() {
@@ -74,4 +67,3 @@ class HomeCubit extends Cubit<HomeState> {
     return 'night';
   }
 }
-

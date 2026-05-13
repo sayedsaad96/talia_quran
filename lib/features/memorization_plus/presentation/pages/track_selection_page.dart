@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -11,19 +13,23 @@ import '../../domain/entities/memorization_entities.dart';
 import '../cubits/track_selection_cubit.dart';
 
 class TrackSelectionPage extends StatelessWidget {
-  const TrackSelectionPage({super.key});
+  const TrackSelectionPage({super.key, this.editMode = false});
+
+  final bool editMode;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => getIt<TrackSelectionCubit>()..load(),
-      child: const _TrackSelectionView(),
+      child: _TrackSelectionView(editMode: editMode),
     );
   }
 }
 
 class _TrackSelectionView extends StatelessWidget {
-  const _TrackSelectionView();
+  const _TrackSelectionView({required this.editMode});
+
+  final bool editMode;
 
   @override
   Widget build(BuildContext context) {
@@ -33,17 +39,29 @@ class _TrackSelectionView extends StatelessWidget {
       backgroundColor: isDark
           ? AppColors.darkBackground
           : AppColors.lightBackground,
-      body: BlocListener<TrackSelectionCubit, TrackSelectionState>(
+      body: BlocConsumer<TrackSelectionCubit, TrackSelectionState>(
         listener: (context, state) {
           if (state is TrackSelectionLoaded && state.hasTrack) {
-            _navigateToTrack(context, state.track!);
+            unawaited(_navigateToTrack(context, state.track!, replace: true));
           } else if (state is TrackSelectionError) {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text(state.message)));
           }
         },
-        child: CustomScrollView(
+        builder: (context, state) {
+          if (!editMode && state is TrackSelectionLoaded && state.hasTrack) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (context.mounted) {
+                unawaited(
+                  _navigateToTrack(context, state.track!, replace: true),
+                );
+              }
+            });
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          return CustomScrollView(
           slivers: [
             SliverAppBar(
               expandedHeight: 180,
@@ -72,7 +90,7 @@ class _TrackSelectionView extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'نظام الحفظ الذكي',
+                            editMode ? 'تعديل خطة الحفظ' : 'نظام الحفظ الذكي',
                             style: AppTypography.displaySmall.copyWith(
                               color: Colors.white,
                               fontFamily: 'Amiri',
@@ -80,7 +98,9 @@ class _TrackSelectionView extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Smart Memorization System',
+                            editMode
+                                ? 'يمكنك تغيير المسار أو الخطة الآن'
+                                : 'Smart Memorization System',
                             style: AppTypography.bodyMedium.copyWith(
                               color: Colors.white70,
                             ),
@@ -97,7 +117,7 @@ class _TrackSelectionView extends StatelessWidget {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   Text(
-                    'اختر مسارك',
+                    editMode ? 'اختر خطة جديدة' : 'اختر مسارك',
                     style: AppTypography.headlineSmall.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -264,16 +284,37 @@ class _TrackSelectionView extends StatelessWidget {
               ),
             ),
           ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  void _navigateToTrack(BuildContext context, MemorizationTrack track) {
+  // BUG-9 FIX: load last active surahId so user resumes from where they left off
+  Future<void> _navigateToTrack(
+    BuildContext context,
+    MemorizationTrack track,
+    {required bool replace}
+  ) async {
+    final cubit = context.read<TrackSelectionCubit>();
+    final lastSurahId = await cubit.getLastActiveSurahId();
+
+    if (!context.mounted) return;
+    final location = track == MemorizationTrack.adults
+        ? '/memorization-plus/daily-plan?surahId=$lastSurahId'
+        : '/memorization-plus/kids-journey?surahId=$lastSurahId';
+
+    if (replace) {
+      context.go(location);
+      return;
+    }
+
     if (track == MemorizationTrack.adults) {
-      context.push('/memorization-plus/daily-plan');
+      await context.push('/memorization-plus/daily-plan?surahId=$lastSurahId');
     } else {
-      context.push('/memorization-plus/kids');
+      await context.push(
+        '/memorization-plus/kids-journey?surahId=$lastSurahId',
+      );
     }
   }
 }

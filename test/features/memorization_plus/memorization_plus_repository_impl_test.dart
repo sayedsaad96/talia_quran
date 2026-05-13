@@ -38,6 +38,50 @@ void main() {
       expect(persisted, isNotNull);
       expect(persisted!.isMemorized, isTrue);
     });
+
+    test(
+      'getKidsJourney builds unlocked current stage and locked next stages',
+      () async {
+        final result = await repository.getKidsJourney(surahId: 114);
+
+        final stages = result.getOrElse(
+          () => throw StateError('Expected journey generation to succeed'),
+        );
+
+        expect(stages, hasLength(2));
+        expect(stages.first.startAyah, 1);
+        expect(stages.first.endAyah, 5);
+        expect(stages.first.status.name, 'current');
+        expect(stages.last.status.name, 'locked');
+      },
+    );
+
+    test('saveKidsSessionLog persists local kids session log', () async {
+      final result = await repository.saveKidsSessionLog(
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+        pointsEarned: 14,
+      );
+
+      final log = result.getOrElse(
+        () => throw StateError('Expected session log to save'),
+      );
+      final logs = await datasource.getKidsSessionLogs();
+
+      expect(log.ayahNumber, 1);
+      expect(logs, hasLength(1));
+      expect(logs.single.pointsEarned, 14);
+    });
+
+    test('parent settings and rewards are stored locally', () async {
+      await repository.setParentPin('1234');
+      final verified = await repository.verifyParentPin('1234');
+      final rewards = await repository.saveParentReward('نزهة قصيرة');
+
+      expect(verified.getOrElse(() => false), isTrue);
+      expect(rewards.getOrElse(() => const []), hasLength(1));
+    });
   });
 }
 
@@ -47,8 +91,31 @@ class _UnusedQuranRepository implements QuranRepository {
       throw UnimplementedError();
 
   @override
-  Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) =>
-      throw UnimplementedError();
+  Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) async =>
+      Right(
+        SurahDetail(
+          surah: const Surah(
+            id: 114,
+            nameAr: 'الناس',
+            nameEn: 'An-Nas',
+            ayahCount: 6,
+            juz: 30,
+            type: 'meccan',
+            page: 604,
+          ),
+          ayahs: List.generate(
+            6,
+            (index) => Ayah(
+              number: index + 1,
+              surahId: 114,
+              text: 'آية ${index + 1}',
+              numberInSurah: index + 1,
+              juz: 30,
+              page: 604,
+            ),
+          ),
+        ),
+      );
 
   @override
   Future<Either<Failure, List<Surah>>> getSurahs() =>

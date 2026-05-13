@@ -14,13 +14,10 @@ class SurahListCubit extends Cubit<SurahListState> {
   Future<void> loadSurahs() async {
     emit(const SurahListLoading());
     final result = await _getSurahsUsecase();
-    result.fold(
-      (f) => emit(SurahListError(f.message)),
-      (surahs) {
-        _allSurahs = surahs;
-        emit(SurahListLoaded(surahs: surahs, filtered: surahs));
-      },
-    );
+    result.fold((f) => emit(SurahListError(f.message)), (surahs) {
+      _allSurahs = surahs;
+      emit(SurahListLoaded(surahs: surahs, filtered: surahs));
+    });
   }
 
   void search(String query) {

@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum AzkarCategory { morning, evening, general }
+enum AzkarCategory { morning, evening, general, duas }
 
 class Zikr extends Equatable {
   const Zikr({
@@ -50,11 +50,8 @@ class ZikrSession extends Equatable {
     );
   }
 
-  ZikrSession reset() => ZikrSession(
-        zikr: zikr,
-        currentCount: 0,
-        isDone: false,
-      );
+  ZikrSession reset() =>
+      ZikrSession(zikr: zikr, currentCount: 0, isDone: false);
 
   @override
   List<Object?> get props => [zikr, currentCount, isDone];

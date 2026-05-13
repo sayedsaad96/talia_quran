@@ -227,9 +227,9 @@ class _ProgressContentState extends State<_ProgressContent>
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _StatCard(
-                      label: context.isArabic ? 'صفحة مقروءة' : 'Pages Read',
+                      label: context.l10n.pagesRead,
                       value: '${p.readPagesCount}',
-                      unit: context.isArabic ? 'صفحة' : 'Pages',
+                      unit: context.l10n.pages,
                       icon: Icons.auto_stories_rounded,
                       isDark: isDark,
                       color: AppColors.gold,
@@ -242,7 +242,7 @@ class _ProgressContentState extends State<_ProgressContent>
 
               // ─── Reading Progress Section ───────────────────
               SectionHeader(
-                title: context.isArabic ? 'تقدم القراءة' : 'Reading Progress',
+                title: context.l10n.readingProgress,
                 padding: EdgeInsets.zero,
               ),
               const SizedBox(height: AppSpacing.md),
@@ -250,23 +250,23 @@ class _ProgressContentState extends State<_ProgressContent>
                 isDark: isDark,
                 icon: Icons.menu_book_rounded,
                 iconColor: AppColors.info,
-                title: context.isArabic ? 'القراءة' : 'Reading',
+                title: context.l10n.reading,
                 percentage: p.quranPercentage,
                 rows: [
                   _DetailRow(
-                    label: context.isArabic ? 'الصفحات' : 'Pages',
+                    label: context.l10n.pages,
                     current: p.readPagesCount,
                     total: p.totalQuranPages,
                     color: AppColors.info,
                   ),
                   _DetailRow(
-                    label: context.isArabic ? 'الأجزاء' : 'Juz',
+                    label: context.l10n.juzCountLabel,
                     current: p.readJuz,
                     total: p.totalJuz,
                     color: AppColors.primary,
                   ),
                   _DetailRow(
-                    label: context.isArabic ? 'الآيات المقروءة' : 'Ayahs Read',
+                    label: context.l10n.ayahsRead,
                     current: p.readAyahs,
                     total: p.totalAyahs,
                     color: AppColors.gold,
@@ -288,7 +288,7 @@ class _ProgressContentState extends State<_ProgressContent>
                 isDark: isDark,
                 icon: Icons.psychology_rounded,
                 iconColor: AppColors.primary,
-                title: context.isArabic ? 'الحفظ' : 'Memorization',
+                title: context.l10n.memorization,
                 percentage: p.memorizedAyahsPercentage,
                 rows: [
                   _DetailRow(
@@ -318,13 +318,13 @@ class _ProgressContentState extends State<_ProgressContent>
                 ],
                 extraInfo: [
                   _InfoChip(
-                    label: context.isArabic ? 'قيد التعلم' : 'Learning',
+                    label: context.l10n.learning,
                     value: '${p.learningAyahs}',
                     color: AppColors.warning,
                     isDark: isDark,
                   ),
                   _InfoChip(
-                    label: context.isArabic ? 'قيد المراجعة' : 'Review',
+                    label: context.l10n.reviewing,
                     value: '${p.reviewAyahs}',
                     color: AppColors.info,
                     isDark: isDark,
@@ -791,13 +791,13 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
   Widget build(BuildContext context) {
     final isDark = widget.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final isArabic = context.isArabic;
+
 
     final tabLabels = [
-      isArabic ? 'الكل' : 'All',
-      isArabic ? 'القراءة' : 'Reading',
-      isArabic ? 'الحفظ' : 'Memorization',
-      isArabic ? 'المواظبة' : 'Streak',
+      context.l10n.all,
+      context.l10n.reading,
+      context.l10n.memorization,
+      context.l10n.streakTerm,
     ];
 
     return Column(
@@ -1055,7 +1055,7 @@ class _AchievementTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        context.isArabic ? 'تم الإنجاز!' : 'Achieved!',
+                        context.l10n.achieved,
                         style: AppTypography.labelMedium.copyWith(
                           color: AppColors.success,
                           fontWeight: FontWeight.w700,
@@ -1168,7 +1168,7 @@ class _SmartMemorizationCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Text(
-                  context.isArabic ? 'مسار الكبار' : 'Adults Track',
+                  context.l10n.adultsTrack,
                   style: AppTypography.titleMedium.copyWith(
                     color: textPrimary,
                     fontWeight: FontWeight.bold,
@@ -1182,7 +1182,7 @@ class _SmartMemorizationCard extends StatelessWidget {
                 Expanded(
                   child: _ProgressBarRow(
                     row: _DetailRow(
-                      label: context.isArabic ? 'مكتمل' : 'Memorized',
+                      label: context.l10n.memorizedTerm,
                       current: progress.smartMemorizedAyahs,
                       total: 6236,
                       color: const Color(0xFF2D8E4C),
@@ -1205,7 +1205,7 @@ class _SmartMemorizationCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          context.isArabic ? 'قيد المراجعة: ' : 'Reviewing: ',
+                          context.l10n.reviewingPrefix,
                           style: AppTypography.labelSmall.copyWith(
                             color: isDark
                                 ? AppColors.darkTextSecondary
@@ -1246,7 +1246,7 @@ class _SmartMemorizationCard extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.md),
                 Text(
-                  context.isArabic ? 'مسار الأطفال' : 'Kids Track',
+                  context.l10n.kidsTrack,
                   style: AppTypography.titleMedium.copyWith(
                     color: textPrimary,
                     fontWeight: FontWeight.bold,
@@ -1259,7 +1259,7 @@ class _SmartMemorizationCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: _StatBox(
-                    label: context.isArabic ? 'النقاط' : 'Points',
+                    label: context.l10n.points,
                     value: '${progress.kidsPoints}',
                     icon: Icons.military_tech_rounded,
                     color: AppColors.primary,
@@ -1269,7 +1269,7 @@ class _SmartMemorizationCard extends StatelessWidget {
                 const SizedBox(width: AppSpacing.md),
                 Expanded(
                   child: _StatBox(
-                    label: context.isArabic ? 'النجوم' : 'Stars',
+                    label: context.l10n.stars,
                     value: '${progress.kidsStars}',
                     icon: Icons.star_rounded,
                     color: AppColors.gold,
@@ -1375,7 +1375,7 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionHeader(
-            title: context.isArabic ? 'شهاداتي' : 'My Certificates',
+            title: context.l10n.myCertificates,
             padding: EdgeInsets.zero,
           ),
           const SizedBox(height: AppSpacing.md),
@@ -1422,7 +1422,7 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SectionHeader(
-          title: context.isArabic ? 'شهاداتي' : 'My Certificates',
+          title: context.l10n.myCertificates,
           padding: EdgeInsets.zero,
         ),
         const SizedBox(height: AppSpacing.md),

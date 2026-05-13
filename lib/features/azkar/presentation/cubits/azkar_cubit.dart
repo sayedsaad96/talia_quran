@@ -17,59 +17,79 @@ class AzkarCubit extends Cubit<AzkarState> {
   Future<void> load(AzkarCategory category) async {
     emit(const AzkarLoading());
     final result = await _getAzkar(category);
-    result.fold(
-      (f) => emit(AzkarError(f.message)),
-      (azkar) {
-        final savedDate = _prefs.getString('$_datePrefix${category.name}');
-        final todayStr = _todayKey();
-        final isToday = savedDate == todayStr;
+    result.fold((f) => emit(AzkarError(f.message)), (azkar) {
+      final savedDate = _prefs.getString('$_datePrefix${category.name}');
+      final todayStr = _todayKey();
+      final isToday = savedDate == todayStr;
 
-        final sessions = azkar.map((z) {
-          final savedCount = isToday
-              ? (_prefs.getInt('$_counterPrefix${category.name}_${z.id}') ?? 0)
-              : 0;
-          final count = savedCount.clamp(0, z.totalCount);
-          return ZikrSession(
-            zikr: z,
-            currentCount: count,
-            isDone: count >= z.totalCount,
-          );
-        }).toList();
+      final sessions = azkar.map((z) {
+        final savedCount = isToday
+            ? (_prefs.getInt('$_counterPrefix${category.name}_${z.id}') ?? 0)
+            : 0;
+        final count = savedCount.clamp(0, z.totalCount);
+        return ZikrSession(
+          zikr: z,
+          currentCount: count,
+          isDone: count >= z.totalCount,
+        );
+      }).toList();
 
-        // Update date stamp if starting fresh
-        if (!isToday) {
-          _prefs.setString('$_datePrefix${category.name}', todayStr);
-        }
+      // Update date stamp if starting fresh
+      if (!isToday) {
+        _prefs.setString('$_datePrefix${category.name}', todayStr);
+      }
 
-        final allDone = sessions.every((s) => s.isDone);
-        emit(AzkarLoaded(
+      final allDone = sessions.every((s) => s.isDone);
+      emit(
+        AzkarLoaded(
           category: category,
           sessions: sessions,
           currentIndex: 0,
           allDone: allDone,
-        ));
-      },
-    );
+        ),
+      );
+    });
   }
 
-  void increment() {
+  void increment() async {
     final state = this.state;
     if (state is! AzkarLoaded) return;
 
     final sessions = List<ZikrSession>.from(state.sessions);
     final idx = state.currentIndex;
+
+    if (sessions[idx].isDone) return;
+
     sessions[idx] = sessions[idx].increment();
 
     // Persist the updated counter
     final session = sessions[idx];
-    _prefs.setInt(
+    await _prefs.setInt(
       '$_counterPrefix${state.category.name}_${session.zikr.id}',
       session.currentCount,
     );
-    _prefs.setString('$_datePrefix${state.category.name}', _todayKey());
+    await _prefs.setString('$_datePrefix${state.category.name}', _todayKey());
 
     final allDone = sessions.every((s) => s.isDone);
     emit(state.copyWith(sessions: sessions, allDone: allDone));
+
+    // Automatically navigate to the next unfinished zikr
+    if (session.isDone && !allDone) {
+      await Future.delayed(const Duration(milliseconds: 400));
+      final latestState = this.state;
+      if (latestState is AzkarLoaded && latestState.currentIndex == idx) {
+        int nextIndex = latestState.sessions.indexWhere(
+          (s) => !s.isDone,
+          idx + 1,
+        );
+        if (nextIndex == -1) {
+          nextIndex = latestState.sessions.indexWhere((s) => !s.isDone);
+        }
+        if (nextIndex != -1) {
+          emit(latestState.copyWith(currentIndex: nextIndex));
+        }
+      }
+    }
   }
 
   void reset() {

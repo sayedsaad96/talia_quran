@@ -55,11 +55,22 @@ class AzkarPage extends StatelessWidget {
                 _AzkarCategoryCard(
                   titleAr: 'أذكار عامة',
                   titleEn: context.l10n.generalAzkar,
-                  subtitle: '6 أذكار',
+                  subtitle: '8 أذكار',
                   icon: Icons.spa_rounded,
                   gradientColors: const [Color(0xFF1A6B5A), Color(0xFF0F4A3E)],
                   route: 'general',
                   delay: 160,
+                  isDark: isDark,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _AzkarCategoryCard(
+                  titleAr: 'الأدعية',
+                  titleEn: context.l10n.duas,
+                  subtitle: '16 دعاء',
+                  icon: Icons.volunteer_activism_rounded,
+                  gradientColors: const [Color(0xFFE11D48), Color(0xFF881337)],
+                  route: 'duas',
+                  delay: 240,
                   isDark: isDark,
                 ),
                 const SizedBox(height: AppSpacing.xl),
@@ -278,7 +289,7 @@ class _DailyTipState extends State<_DailyTip> {
     'من صلى علي صلاة واحدة صلى الله عليه بها عشراً',
     'أقرب ما يكون العبد من ربه وهو ساجد فأكثروا الدعاء',
     'يا مقلب القلوب ثبت قلبي على دينك',
-    
+
     // آيات قرآنية
     '﴿وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ أُجِيبُ دَعْوَةَ الدَّاعِ إِذَا دَعَانِ﴾',
     '﴿فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ﴾',
@@ -299,7 +310,7 @@ class _DailyTipState extends State<_DailyTip> {
     'اللهم أصلح لي ديني الذي هو عصمة أمري، وأصلح لي دنياي التي فيها معاشي',
     'اللهم إني أسألك الجنة وما قرب إليها من قول أو عمل',
     'رب اشرح لي صدري ويسر لي أمري',
-    
+
     // حكم ونصائح
     'الصدقة تطفئ الخطيئة كما يطفئ الماء النار',
     'الدعاء هو العبادة',
@@ -362,4 +373,3 @@ class _DailyTipState extends State<_DailyTip> {
     ).animate().fadeIn(duration: 250.ms);
   }
 }
-

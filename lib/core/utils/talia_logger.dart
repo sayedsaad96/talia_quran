@@ -39,7 +39,7 @@ class TaliaLogger {
         time: DateTime.now(),
       );
     }
-    
+
     // TODO: Send to remote crash reporting service (e.g. Sentry/Firebase)
     // This part should run in production for critical errors.
   }

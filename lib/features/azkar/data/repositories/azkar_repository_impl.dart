@@ -9,8 +9,7 @@ class AzkarRepositoryImpl implements AzkarRepository {
   final AzkarLocalDatasource _datasource;
 
   @override
-  Future<Either<Failure, List<Zikr>>> getAzkar(
-      AzkarCategory category) async {
+  Future<Either<Failure, List<Zikr>>> getAzkar(AzkarCategory category) async {
     try {
       final models = await _datasource.getAzkar(category);
       return Right(models);

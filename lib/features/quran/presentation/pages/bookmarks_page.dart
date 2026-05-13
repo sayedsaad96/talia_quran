@@ -59,9 +59,9 @@ class _BookmarksTabState extends State<BookmarksTab> {
               },
               onDismissed: _removeBookmark,
             ).animate().fadeIn(
-                  duration: 200.ms,
-                  delay: Duration(milliseconds: index * 50),
-                );
+              duration: 200.ms,
+              delay: Duration(milliseconds: index * 50),
+            );
           },
         );
       },
@@ -75,8 +75,9 @@ class _EmptyBookmarks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     return Center(
       child: Column(
@@ -89,9 +90,7 @@ class _EmptyBookmarks extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            context.isArabic
-                ? 'لا توجد علامات مرجعية بعد'
-                : 'No bookmarks yet',
+            context.isArabic ? 'لا توجد علامات مرجعية بعد' : 'No bookmarks yet',
             style: AppTypography.titleMedium.copyWith(color: textColor),
           ),
           const SizedBox(height: AppSpacing.sm),
@@ -130,10 +129,12 @@ class _SurahBookmarkGroup extends StatelessWidget {
   Widget build(BuildContext context) {
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textColor =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final subtextColor =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.md),
@@ -142,126 +143,120 @@ class _SurahBookmarkGroup extends StatelessWidget {
         children: [
           // Surah header
           Padding(
-            padding:
-                const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
             child: Row(
               children: [
                 Icon(Icons.menu_book_rounded, size: 18, color: primary),
                 const SizedBox(width: 8),
                 Text(
                   surahName,
-                  style:
-                      AppTypography.titleMedium.copyWith(color: primary),
+                  style: AppTypography.titleMedium.copyWith(color: primary),
                 ),
                 const Spacer(),
                 Text(
-                  '${entries.length} ${context.isArabic ? "علامة" : "bookmark${entries.length > 1 ? 's' : ''}"}',
-                  style: AppTypography.labelSmall
-                      .copyWith(color: subtextColor),
+                  context.l10n.bookmarksCountItem(entries.length),
+                  style: AppTypography.labelSmall.copyWith(color: subtextColor),
                 ),
               ],
             ),
           ),
           // Bookmarked ayahs
-          ...entries.map((entry) => Dismissible(
-                key: ValueKey(entry.key),
-                direction: DismissDirection.endToStart,
-                background: Container(
-                  alignment: Alignment.centerLeft,
-                  padding: const EdgeInsets.only(left: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.red.shade400,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                  child: const Icon(Icons.delete_rounded,
-                      color: Colors.white),
+          ...entries.map(
+            (entry) => Dismissible(
+              key: ValueKey(entry.key),
+              direction: DismissDirection.endToStart,
+              background: Container(
+                alignment: Alignment.centerLeft,
+                padding: const EdgeInsets.only(left: 24),
+                decoration: BoxDecoration(
+                  color: Colors.red.shade400,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                confirmDismiss: (_) async {
-                  return await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: Text(
-                        context.isArabic ? 'حذف العلامة؟' : 'Remove bookmark?',
+                child: const Icon(Icons.delete_rounded, color: Colors.white),
+              ),
+              confirmDismiss: (_) async {
+                return await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    title: Text(context.l10n.removeBookmarkTitle),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        child: Text(context.l10n.cancel),
                       ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: Text(context.isArabic ? 'إلغاء' : 'Cancel'),
+                      TextButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        child: Text(
+                          context.l10n.delete,
+                          style: const TextStyle(color: Colors.red),
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: Text(
-                            context.isArabic ? 'حذف' : 'Delete',
-                            style: const TextStyle(color: Colors.red),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              onDismissed: (_) => onDismissed(entry),
+              child: Card(
+                color: cardColor,
+                elevation: 0,
+                margin: const EdgeInsets.only(bottom: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  side: BorderSide(color: primary.withValues(alpha: 0.1)),
+                ),
+                child: InkWell(
+                  onTap: () => onTap(entry),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: AppSpacing.sm,
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            color: primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
                           ),
+                          child: Center(
+                            child: Text(
+                              '${entry.ayahNumber}',
+                              style: AppTypography.labelMedium.copyWith(
+                                color: primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(
+                          child: Text(
+                            entry.ayahText,
+                            style: AppTypography.quranSmall.copyWith(
+                              color: textColor,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textDirection: TextDirection.rtl,
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20,
+                          color: subtextColor,
                         ),
                       ],
                     ),
-                  );
-                },
-                onDismissed: (_) => onDismissed(entry),
-                child: Card(
-                  color: cardColor,
-                  elevation: 0,
-                  margin: const EdgeInsets.only(bottom: 6),
-                  shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusMd),
-                    side: BorderSide(
-                      color: primary.withValues(alpha: 0.1),
-                    ),
-                  ),
-                  child: InkWell(
-                    onTap: () => onTap(entry),
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusMd),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.md,
-                        vertical: AppSpacing.sm,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: primary.withValues(alpha: 0.1),
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusSm),
-                            ),
-                            child: Center(
-                              child: Text(
-                                '${entry.ayahNumber}',
-                                style: AppTypography.labelMedium
-                                    .copyWith(color: primary),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.sm),
-                          Expanded(
-                            child: Text(
-                              entry.ayahText,
-                              style: AppTypography.quranSmall.copyWith(
-                                color: textColor,
-                              ),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              textDirection: TextDirection.rtl,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.xs),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            size: 20,
-                            color: subtextColor,
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ),
-              )),
+              ),
+            ),
+          ),
         ],
       ),
     );

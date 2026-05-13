@@ -8,6 +8,8 @@ abstract class HifzLocalDatasource {
   Future<AyahProgressModel?> getAyahProgress(int surahId, int ayahNumber);
   Future<void> saveAyahProgress(AyahProgressModel progress);
   Future<List<AyahProgressModel>> getAllProgress();
+  Future<Set<String>> getPassedCheckpointKeys(int surahId);
+  Future<void> markCheckpointPassed(String checkpointKey);
   String? getHifzPath();
   Future<void> saveHifzPath(String path);
 }
@@ -70,6 +72,34 @@ class HifzLocalDatasourceImpl implements HifzLocalDatasource {
         .where((k) => k.startsWith(AppConstants.kHifzProgress))
         .toList();
     return keys.map(_tryReadProgress).whereType<AyahProgressModel>().toList();
+  }
+
+  String _checkpointKey(int surahId) =>
+      '${AppConstants.kHifzCheckpointProgress}_$surahId';
+
+  @override
+  Future<Set<String>> getPassedCheckpointKeys(int surahId) async {
+    return (_prefs.getStringList(_checkpointKey(surahId)) ?? const []).toSet();
+  }
+
+  @override
+  Future<void> markCheckpointPassed(String checkpointKey) async {
+    final parts = checkpointKey.split('_');
+    if (parts.length < 3) {
+      throw ArgumentError.value(
+        checkpointKey,
+        'checkpointKey',
+        'Expected surah_start_end key',
+      );
+    }
+    final surahId = int.parse(parts.first);
+    final storageKey = _checkpointKey(surahId);
+    final keys = (_prefs.getStringList(storageKey) ?? const []).toSet()
+      ..add(checkpointKey);
+    final saved = await _prefs.setStringList(storageKey, keys.toList()..sort());
+    if (!saved) {
+      throw StateError('Failed to save checkpoint progress for $checkpointKey');
+    }
   }
 
   @override

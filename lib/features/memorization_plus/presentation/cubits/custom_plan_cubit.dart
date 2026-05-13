@@ -13,16 +13,13 @@ class CustomPlanCubit extends Cubit<CustomPlanState> {
   Future<void> load() async {
     emit(const CustomPlanLoading());
     final result = await _repository.getCustomPlan();
-    result.fold(
-      (f) => emit(CustomPlanError(f.message)),
-      (plan) {
-        if (plan != null) {
-          emit(CustomPlanLoaded(plan: plan));
-        } else {
-          emit(const CustomPlanEmpty());
-        }
-      },
-    );
+    result.fold((f) => emit(CustomPlanError(f.message)), (plan) {
+      if (plan != null) {
+        emit(CustomPlanLoaded(plan: plan));
+      } else {
+        emit(const CustomPlanEmpty());
+      }
+    });
   }
 
   Future<void> savePlan(CustomMemorizationPlan plan) async {

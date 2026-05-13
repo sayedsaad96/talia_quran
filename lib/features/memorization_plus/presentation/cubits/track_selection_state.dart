@@ -10,6 +10,10 @@ class TrackSelectionInitial extends TrackSelectionState {
   const TrackSelectionInitial();
 }
 
+class TrackSelectionSaving extends TrackSelectionState {
+  const TrackSelectionSaving();
+}
+
 class TrackSelectionLoaded extends TrackSelectionState {
   const TrackSelectionLoaded({required this.track});
   final MemorizationTrack? track;

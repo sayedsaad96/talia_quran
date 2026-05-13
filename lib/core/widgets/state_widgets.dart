@@ -131,13 +131,13 @@ class EmptyStateWidget extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: context.colorScheme.primary.withValues(alpha:0.08),
+                color: context.colorScheme.primary.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon ?? Icons.inbox_rounded,
                 size: 36,
-                color: context.colorScheme.primary.withValues(alpha:0.5),
+                color: context.colorScheme.primary.withValues(alpha: 0.5),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -194,13 +194,13 @@ class ErrorStateWidget extends StatelessWidget {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: context.colorScheme.error.withValues(alpha:0.08),
+                color: context.colorScheme.error.withValues(alpha: 0.08),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 Icons.error_outline_rounded,
                 size: 36,
-                color: context.colorScheme.error.withValues(alpha:0.7),
+                color: context.colorScheme.error.withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),

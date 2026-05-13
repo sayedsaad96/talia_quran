@@ -35,13 +35,12 @@ class AzkarLoaded extends AzkarState {
     List<ZikrSession>? sessions,
     int? currentIndex,
     bool? allDone,
-  }) =>
-      AzkarLoaded(
-        category: category ?? this.category,
-        sessions: sessions ?? this.sessions,
-        currentIndex: currentIndex ?? this.currentIndex,
-        allDone: allDone ?? this.allDone,
-      );
+  }) => AzkarLoaded(
+    category: category ?? this.category,
+    sessions: sessions ?? this.sessions,
+    currentIndex: currentIndex ?? this.currentIndex,
+    allDone: allDone ?? this.allDone,
+  );
 
   @override
   List<Object?> get props => [category, sessions, currentIndex, allDone];

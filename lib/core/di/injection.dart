@@ -4,6 +4,7 @@ import 'package:isar/isar.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../services/audio_cache_service.dart';
+import '../services/app_session_service.dart';
 import '../services/notification_service.dart';
 import '../services/streak_service.dart';
 import '../services/xp_service.dart';
@@ -47,7 +48,9 @@ import '../../features/memorization_plus/data/repositories/memorization_plus_rep
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../features/memorization_plus/presentation/cubits/daily_plan_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/parent_dashboard_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/track_selection_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/custom_plan_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/quiz_cubit.dart';
@@ -94,6 +97,9 @@ Future<void> configureDependencies() async {
     () => ProfileCubit(getIt<SharedPreferences>()),
   );
   getIt.registerSingleton<AudioCacheService>(AudioCacheService.instance);
+  getIt.registerSingleton<AppSessionService>(
+    AppSessionService(getIt<SharedPreferences>()),
+  );
   getIt.registerSingleton<TaliaNotificationService>(
     TaliaNotificationService.instance,
   );
@@ -191,6 +197,21 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<SaveHifzPathUsecase>(
     () => SaveHifzPathUsecase(getIt<HifzRepository>()),
   );
+  getIt.registerLazySingleton<GenerateHifzSegmentsUsecase>(
+    () => const GenerateHifzSegmentsUsecase(),
+  );
+  getIt.registerLazySingleton<CheckNextAyahUnlockUsecase>(
+    () => const CheckNextAyahUnlockUsecase(),
+  );
+  getIt.registerLazySingleton<GetNextRequiredReviewCheckpointUsecase>(
+    () => const GetNextRequiredReviewCheckpointUsecase(),
+  );
+  getIt.registerLazySingleton<GetPassedCheckpointKeysUsecase>(
+    () => GetPassedCheckpointKeysUsecase(getIt<HifzRepository>()),
+  );
+  getIt.registerLazySingleton<MarkCheckpointReviewPassedUsecase>(
+    () => MarkCheckpointReviewPassedUsecase(getIt<HifzRepository>()),
+  );
   getIt.registerLazySingleton<GetAzkarUsecase>(
     () => GetAzkarUsecase(getIt<AzkarRepository>()),
   );
@@ -220,6 +241,21 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<SaveDailyPlanUsecase>(
     () => SaveDailyPlanUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<GetKidsJourneyUsecase>(
+    () => GetKidsJourneyUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<SaveKidsSessionLogUsecase>(
+    () => SaveKidsSessionLogUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<GetParentDashboardUsecase>(
+    () => GetParentDashboardUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<ParentAccessUsecase>(
+    () => ParentAccessUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<ParentRemoteLinkUsecase>(
+    () => ParentRemoteLinkUsecase(getIt<MemorizationPlusRepository>()),
   );
 
   // ─── Cubits ─────────────────────────────────────────────────────────────────
@@ -258,6 +294,11 @@ Future<void> configureDependencies() async {
       getIt<GetProgressForSurahUsecase>(),
       getIt<GetHifzProgressUsecase>(),
       getIt<GetHifzPathUsecase>(),
+      getIt<GenerateHifzSegmentsUsecase>(),
+      getIt<CheckNextAyahUnlockUsecase>(),
+      getIt<GetNextRequiredReviewCheckpointUsecase>(),
+      getIt<GetPassedCheckpointKeysUsecase>(),
+      getIt<MarkCheckpointReviewPassedUsecase>(),
       getIt<SettingsRepository>(),
       getIt<StreakService>(),
       getIt<XpService>(),
@@ -277,6 +318,8 @@ Future<void> configureDependencies() async {
       getIt<EvaluateMemorizationUsecase>(),
       getIt<SaveDailyPlanUsecase>(),
       getIt<AchievementService>(),
+      getIt<StreakService>(), // RISK-5 FIX
+      getIt<XpService>(), // RISK-5 FIX
     ),
   );
   getIt.registerFactory<KidsModeCubit>(
@@ -284,12 +327,29 @@ Future<void> configureDependencies() async {
       getIt<GetKidsProgressUsecase>(),
       getIt<AwardKidsPointsUsecase>(),
       getIt<MarkAyahMemorizedUsecase>(),
+      getIt<SaveKidsSessionLogUsecase>(),
       getIt<AchievementService>(),
       getIt<QuranRepository>(),
+      getIt<StreakService>(), // RISK-5 FIX
+      getIt<XpService>(), // RISK-5 FIX
     ),
   );
   getIt.registerFactory<CustomPlanCubit>(
     () => CustomPlanCubit(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerFactory<KidsJourneyCubit>(
+    () => KidsJourneyCubit(
+      getIt<GetKidsJourneyUsecase>(),
+      getIt<GetKidsProgressUsecase>(),
+      getIt<ParentRemoteLinkUsecase>(),
+    ),
+  );
+  getIt.registerFactory<ParentDashboardCubit>(
+    () => ParentDashboardCubit(
+      getIt<GetParentDashboardUsecase>(),
+      getIt<ParentAccessUsecase>(),
+      getIt<ParentRemoteLinkUsecase>(),
+    ),
   );
   getIt.registerFactory<QuizCubit>(
     () => QuizCubit(

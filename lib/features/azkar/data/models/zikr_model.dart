@@ -13,7 +13,9 @@ class ZikrModel extends Zikr {
   });
 
   factory ZikrModel.fromJson(
-      Map<String, dynamic> json, AzkarCategory category) {
+    Map<String, dynamic> json,
+    AzkarCategory category,
+  ) {
     return ZikrModel(
       id: json['id'] as String,
       text: json['text'] as String,

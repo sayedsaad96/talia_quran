@@ -6,6 +6,10 @@ enum MemorizationTrack { adults, kids }
 
 enum PerformanceRating { excellent, average, weak }
 
+enum KidsJourneyStageStatus { locked, current, completed, needsReview }
+
+enum ParentRewardStatus { locked, unlocked, claimed }
+
 // ─── AyahReviewRecord ─────────────────────────────────────────────────────────
 
 /// Enhanced per-ayah progress record used exclusively by MemorizationPlus.
@@ -36,7 +40,7 @@ class AyahReviewRecord extends Equatable {
   final int totalReviews;
   final PerformanceRating? lastRating;
 
-  bool get isDue => DateTime.now().isAfter(nextReviewDate);
+  bool get isDue => !DateTime.now().isBefore(nextReviewDate);
   bool get isNew => totalReviews == 0;
   bool get isMemorized => strengthLevel >= 6;
 
@@ -245,6 +249,225 @@ class KidsProgress extends Equatable {
   ];
 }
 
+class KidsJourneyStage extends Equatable {
+  const KidsJourneyStage({
+    required this.stageNumber,
+    required this.surahId,
+    required this.startAyah,
+    required this.endAyah,
+    required this.completedAyahs,
+    required this.status,
+  });
+
+  final int stageNumber;
+  final int surahId;
+  final int startAyah;
+  final int endAyah;
+  final List<int> completedAyahs;
+  final KidsJourneyStageStatus status;
+
+  int get totalAyahs => endAyah - startAyah + 1;
+  int get completedCount => completedAyahs.length;
+  double get progress => totalAyahs <= 0 ? 0 : completedCount / totalAyahs;
+  bool get isUnlocked => status != KidsJourneyStageStatus.locked;
+
+  @override
+  List<Object?> get props => [
+    stageNumber,
+    surahId,
+    startAyah,
+    endAyah,
+    completedAyahs,
+    status,
+  ];
+}
+
+class KidsSessionLog extends Equatable {
+  const KidsSessionLog({
+    required this.id,
+    required this.surahId,
+    required this.ayahNumber,
+    required this.repeatsCompleted,
+    required this.pointsEarned,
+    required this.completedAt,
+    this.syncedAt,
+  });
+
+  final String id;
+  final int surahId;
+  final int ayahNumber;
+  final int repeatsCompleted;
+  final int pointsEarned;
+  final DateTime completedAt;
+  final DateTime? syncedAt;
+
+  bool get isSynced => syncedAt != null;
+
+  KidsSessionLog copyWith({DateTime? syncedAt}) => KidsSessionLog(
+    id: id,
+    surahId: surahId,
+    ayahNumber: ayahNumber,
+    repeatsCompleted: repeatsCompleted,
+    pointsEarned: pointsEarned,
+    completedAt: completedAt,
+    syncedAt: syncedAt ?? this.syncedAt,
+  );
+
+  @override
+  List<Object?> get props => [
+    id,
+    surahId,
+    ayahNumber,
+    repeatsCompleted,
+    pointsEarned,
+    completedAt,
+    syncedAt,
+  ];
+}
+
+class ParentSettings extends Equatable {
+  const ParentSettings({
+    this.pinHash,
+    this.reminderEnabled = true,
+    this.reminderHour = 18,
+    this.reminderMinute = 30,
+    this.weeklyGoalSessions = 5,
+    this.remoteLinkEnabled = false,
+  });
+
+  final String? pinHash;
+  final bool reminderEnabled;
+  final int reminderHour;
+  final int reminderMinute;
+  final int weeklyGoalSessions;
+  final bool remoteLinkEnabled;
+
+  bool get hasPin => pinHash != null && pinHash!.isNotEmpty;
+
+  ParentSettings copyWith({
+    String? pinHash,
+    bool clearPin = false,
+    bool? reminderEnabled,
+    int? reminderHour,
+    int? reminderMinute,
+    int? weeklyGoalSessions,
+    bool? remoteLinkEnabled,
+  }) => ParentSettings(
+    pinHash: clearPin ? null : (pinHash ?? this.pinHash),
+    reminderEnabled: reminderEnabled ?? this.reminderEnabled,
+    reminderHour: reminderHour ?? this.reminderHour,
+    reminderMinute: reminderMinute ?? this.reminderMinute,
+    weeklyGoalSessions: weeklyGoalSessions ?? this.weeklyGoalSessions,
+    remoteLinkEnabled: remoteLinkEnabled ?? this.remoteLinkEnabled,
+  );
+
+  @override
+  List<Object?> get props => [
+    pinHash,
+    reminderEnabled,
+    reminderHour,
+    reminderMinute,
+    weeklyGoalSessions,
+    remoteLinkEnabled,
+  ];
+}
+
+class ParentReward extends Equatable {
+  const ParentReward({
+    required this.id,
+    required this.title,
+    required this.status,
+    required this.createdAt,
+    this.unlockedAt,
+    this.claimedAt,
+  });
+
+  final String id;
+  final String title;
+  final ParentRewardStatus status;
+  final DateTime createdAt;
+  final DateTime? unlockedAt;
+  final DateTime? claimedAt;
+
+  ParentReward copyWith({
+    String? title,
+    ParentRewardStatus? status,
+    DateTime? unlockedAt,
+    DateTime? claimedAt,
+  }) => ParentReward(
+    id: id,
+    title: title ?? this.title,
+    status: status ?? this.status,
+    createdAt: createdAt,
+    unlockedAt: unlockedAt ?? this.unlockedAt,
+    claimedAt: claimedAt ?? this.claimedAt,
+  );
+
+  @override
+  List<Object?> get props => [
+    id,
+    title,
+    status,
+    createdAt,
+    unlockedAt,
+    claimedAt,
+  ];
+}
+
+class ParentDashboard extends Equatable {
+  const ParentDashboard({
+    required this.progress,
+    required this.stages,
+    required this.logs,
+    required this.rewards,
+    required this.settings,
+  });
+
+  final KidsProgress progress;
+  final List<KidsJourneyStage> stages;
+  final List<KidsSessionLog> logs;
+  final List<ParentReward> rewards;
+  final ParentSettings settings;
+
+  int get weeklyCompletedSessions {
+    final now = DateTime.now();
+    final weekStart = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: now.weekday - 1));
+    return logs.where((log) => !log.completedAt.isBefore(weekStart)).length;
+  }
+
+  @override
+  List<Object?> get props => [progress, stages, logs, rewards, settings];
+}
+
+class RemoteChildSummary extends Equatable {
+  const RemoteChildSummary({
+    required this.childUserId,
+    required this.displayName,
+    required this.progress,
+    required this.logs,
+    required this.rewards,
+  });
+
+  final String childUserId;
+  final String displayName;
+  final KidsProgress progress;
+  final List<KidsSessionLog> logs;
+  final List<ParentReward> rewards;
+
+  @override
+  List<Object?> get props => [
+    childUserId,
+    displayName,
+    progress,
+    logs,
+    rewards,
+  ];
+}
+
 // ─── CustomMemorizationPlan ───────────────────────────────────────────────────
 
 /// Difficulty level affects the spaced repetition multiplier.
@@ -302,18 +525,138 @@ class CustomMemorizationPlan extends Equatable {
   final DateTime createdAt;
   final bool isActive;
 
-  /// Estimated days to finish (rough)
+  /// Estimated days to finish based on **actual** surah ayah counts.
   int get estimatedDays {
     int totalAyahs = 0;
-    // Rough estimate — will be refined at plan generation time
-    // Using a simple heuristic: average surah ≈ 20 ayahs
     for (int s = startSurahId; s <= endSurahId; s++) {
-      totalAyahs += 20; // placeholder average
+      totalAyahs += _surahAyahCounts[s] ?? 20;
+    }
+    // Subtract ayahs before startAyah in the first surah
+    if (startAyah > 1) {
+      totalAyahs -= (startAyah - 1);
     }
     if (newAyahsPerDay == 0) return 0;
     final sessionsNeeded = (totalAyahs / newAyahsPerDay).ceil();
     return (sessionsNeeded / (availableDaysPerWeek / 7.0)).ceil();
   }
+
+  // RISK-4 FIX: actual ayah counts for all 114 surahs
+  static const Map<int, int> _surahAyahCounts = {
+    1: 7,
+    2: 286,
+    3: 200,
+    4: 176,
+    5: 120,
+    6: 165,
+    7: 206,
+    8: 75,
+    9: 129,
+    10: 109,
+    11: 123,
+    12: 111,
+    13: 43,
+    14: 52,
+    15: 99,
+    16: 128,
+    17: 111,
+    18: 110,
+    19: 98,
+    20: 135,
+    21: 112,
+    22: 78,
+    23: 118,
+    24: 64,
+    25: 77,
+    26: 227,
+    27: 93,
+    28: 88,
+    29: 69,
+    30: 60,
+    31: 34,
+    32: 30,
+    33: 73,
+    34: 54,
+    35: 45,
+    36: 83,
+    37: 182,
+    38: 88,
+    39: 75,
+    40: 85,
+    41: 54,
+    42: 53,
+    43: 89,
+    44: 59,
+    45: 37,
+    46: 35,
+    47: 38,
+    48: 29,
+    49: 18,
+    50: 45,
+    51: 60,
+    52: 49,
+    53: 62,
+    54: 55,
+    55: 78,
+    56: 96,
+    57: 29,
+    58: 22,
+    59: 24,
+    60: 13,
+    61: 14,
+    62: 11,
+    63: 11,
+    64: 18,
+    65: 12,
+    66: 12,
+    67: 30,
+    68: 52,
+    69: 52,
+    70: 44,
+    71: 28,
+    72: 28,
+    73: 20,
+    74: 56,
+    75: 40,
+    76: 31,
+    77: 50,
+    78: 40,
+    79: 46,
+    80: 42,
+    81: 29,
+    82: 19,
+    83: 36,
+    84: 25,
+    85: 22,
+    86: 17,
+    87: 19,
+    88: 26,
+    89: 30,
+    90: 20,
+    91: 15,
+    92: 21,
+    93: 11,
+    94: 8,
+    95: 8,
+    96: 19,
+    97: 5,
+    98: 8,
+    99: 8,
+    100: 11,
+    101: 11,
+    102: 8,
+    103: 3,
+    104: 9,
+    105: 5,
+    106: 4,
+    107: 7,
+    108: 3,
+    109: 6,
+    110: 3,
+    111: 5,
+    112: 4,
+    113: 5,
+    114: 6,
+  };
 
   CustomMemorizationPlan copyWith({
     String? name,

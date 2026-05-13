@@ -10,11 +10,14 @@ import '../../features/hifz/presentation/pages/hifz_session_page.dart';
 import '../../features/azkar/presentation/pages/azkar_page.dart';
 import '../../features/azkar/presentation/pages/azkar_category_page.dart';
 import '../../features/azkar/presentation/pages/general_azkar_page.dart';
+import '../../features/azkar/domain/entities/azkar_entities.dart';
 import '../../features/progress/presentation/pages/progress_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/memorization_plus/presentation/pages/track_selection_page.dart';
 import '../../features/memorization_plus/presentation/pages/daily_plan_page.dart';
+import '../../features/memorization_plus/presentation/pages/kids_journey_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_mode_page.dart';
+import '../../features/memorization_plus/presentation/pages/parent_dashboard_page.dart';
 import '../../features/memorization_plus/presentation/pages/custom_plan_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/quiz_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
@@ -32,11 +35,17 @@ abstract class AppRoutes {
   static const String hifz = '/hifz';
   static const String azkar = '/azkar';
   static const String progress = '/progress';
+  static const String hifzSession = '/hifz/session';
   static const String settings = '/settings';
   static const String memorizationPlus = '/memorization-plus';
-  static const String memorizationPlusDailyPlan = '/memorization-plus/daily-plan';
+  static const String memorizationPlusDailyPlan =
+      '/memorization-plus/daily-plan';
+  static const String memorizationPlusKidsJourney =
+      '/memorization-plus/kids-journey';
   static const String memorizationPlusKids = '/memorization-plus/kids';
-  static const String memorizationPlusCustomPlan = '/memorization-plus/custom-plan';
+  static const String parentDashboard = '/memorization-plus/parent-dashboard';
+  static const String memorizationPlusCustomPlan =
+      '/memorization-plus/custom-plan';
   static const String memorizationPlusQuiz = '/memorization-plus/quiz';
   static const String login = '/login';
   static const String certificate = '/certificate';
@@ -73,7 +82,7 @@ abstract class AppRouter {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final userName = extra?['userName'] as String? ?? 'مستخدم تالية';
-          
+
           CertificateAward? award;
           final rawAward = extra?['award'];
           if (rawAward is CertificateAward) {
@@ -83,7 +92,9 @@ abstract class AppRouter {
           }
 
           if (award == null) {
-            return const Scaffold(body: Center(child: Text('لم يتم العثور على الشهادة')));
+            return const Scaffold(
+              body: Center(child: Text('لم يتم العثور على الشهادة')),
+            );
           }
           return CertificatePage(award: award, userName: userName);
         },
@@ -108,12 +119,18 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
-        path: '/hifz/session',
+        path: AppRoutes.hifzSession,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
+          final surahId =
+              extra?['surahId'] as int? ??
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+          final startAyah =
+              extra?['startAyah'] as int? ??
+              int.tryParse(state.uri.queryParameters['startAyah'] ?? '');
           return HifzSessionPage(
-            surahId: extra?['surahId'] as int? ?? 1,
-            startAyah: extra?['startAyah'] as int? ?? 1,
+            surahId: _isValidSurahId(surahId) ? surahId! : 1,
+            startAyah: startAyah != null && startAyah > 0 ? startAyah : 1,
           );
         },
       ),
@@ -122,8 +139,12 @@ abstract class AppRouter {
         path: '/azkar/:category',
         builder: (context, state) {
           final category = state.pathParameters['category'] ?? 'morning';
-          if (category == 'general') {
-            return const GeneralAzkarPage();
+          if (category == 'general' || category == 'duas') {
+            return GeneralAzkarPage(
+              category: category == 'duas'
+                  ? AzkarCategory.duas
+                  : AzkarCategory.general,
+            );
           }
           return AzkarCategoryPage(category: category);
         },
@@ -143,8 +164,27 @@ abstract class AppRouter {
         path: AppRoutes.memorizationPlusDailyPlan,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          final surahId = extra?['surahId'] as int? ?? 1;
-          return DailyPlanPage(surahId: surahId);
+          final surahId =
+              extra?['surahId'] as int? ??
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+          if (!_isValidSurahId(surahId)) {
+            return const TrackSelectionPage();
+          }
+          return DailyPlanPage(surahId: surahId!);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationPlusKidsJourney,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final surahId =
+              extra?['surahId'] as int? ??
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+          if (!_isValidSurahId(surahId)) {
+            return const TrackSelectionPage();
+          }
+          return KidsJourneyPage(surahId: surahId!);
         },
       ),
       GoRoute(
@@ -152,10 +192,32 @@ abstract class AppRouter {
         path: AppRoutes.memorizationPlusKids,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
+          final surahId =
+              extra?['surahId'] as int? ??
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+          final ayahNumber =
+              extra?['ayahNumber'] as int? ??
+              int.tryParse(state.uri.queryParameters['ayahNumber'] ?? '');
+          if (!_isValidSurahId(surahId) ||
+              ayahNumber == null ||
+              ayahNumber < 1) {
+            return const TrackSelectionPage();
+          }
           return KidsModePage(
-            surahId: extra?['surahId'] as int? ?? 1,
-            ayahNumber: extra?['ayahNumber'] as int? ?? 1,
+            surahId: surahId!,
+            ayahNumber: ayahNumber,
             ayahText: extra?['ayahText'] as String? ?? '',
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.parentDashboard,
+        builder: (context, state) {
+          final surahId =
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '') ?? 1;
+          return ParentDashboardPage(
+            surahId: _isValidSurahId(surahId) ? surahId : 1,
           );
         },
       ),
@@ -169,9 +231,19 @@ abstract class AppRouter {
         path: AppRoutes.memorizationPlusQuiz,
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          final surahId = extra?['surahId'] as int? ?? 1;
-          final ayahNumbers = extra?['ayahNumbers'] as List<int>?;
-          return QuizPage(surahId: surahId, ayahNumbers: ayahNumbers);
+          final surahId =
+              extra?['surahId'] as int? ??
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+          if (!_isValidSurahId(surahId)) {
+            return const TrackSelectionPage();
+          }
+          final rawAyahNumbers = extra?['ayahNumbers'];
+          final ayahNumbers = rawAyahNumbers is List<int>
+              ? rawAyahNumbers
+              : rawAyahNumbers is List
+              ? rawAyahNumbers.whereType<int>().toList()
+              : _parseAyahNumbers(state.uri.queryParameters['ayahNumbers']);
+          return QuizPage(surahId: surahId!, ayahNumbers: ayahNumbers);
         },
       ),
 
@@ -234,4 +306,18 @@ abstract class AppRouter {
   );
 
   const AppRouter._();
+
+  static bool _isValidSurahId(int? surahId) =>
+      surahId != null && surahId >= 1 && surahId <= 114;
+
+  static List<int>? _parseAyahNumbers(String? value) {
+    if (value == null || value.trim().isEmpty) return null;
+    final numbers = value
+        .split(',')
+        .map((item) => int.tryParse(item.trim()))
+        .whereType<int>()
+        .where((number) => number > 0)
+        .toList();
+    return numbers.isEmpty ? null : numbers;
+  }
 }

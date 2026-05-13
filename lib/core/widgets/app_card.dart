@@ -49,8 +49,8 @@ class AppCard extends StatelessWidget {
           ? [
               BoxShadow(
                 color: isDark
-                    ? Colors.black.withValues(alpha:0.2)
-                    : AppColors.primary.withValues(alpha:0.06),
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : AppColors.primary.withValues(alpha: 0.06),
                 blurRadius: elevation * 4,
                 offset: Offset(0, elevation),
               ),
@@ -73,8 +73,8 @@ class AppCard extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: radius as BorderRadius?,
-            splashColor: AppColors.primary.withValues(alpha:0.06),
-            highlightColor: AppColors.primary.withValues(alpha:0.03),
+            splashColor: AppColors.primary.withValues(alpha: 0.06),
+            highlightColor: AppColors.primary.withValues(alpha: 0.03),
             child: card,
           ),
         ),
@@ -116,8 +116,8 @@ class GlassCard extends StatelessWidget {
           : AppColors.surfaceGlassLight,
       border: Border.all(
         color: isDark
-            ? Colors.white.withValues(alpha:0.05)
-            : Colors.white.withValues(alpha:0.6),
+            ? Colors.white.withValues(alpha: 0.05)
+            : Colors.white.withValues(alpha: 0.6),
         width: 1,
       ),
       child: padding != null ? Padding(padding: padding!, child: child) : child,

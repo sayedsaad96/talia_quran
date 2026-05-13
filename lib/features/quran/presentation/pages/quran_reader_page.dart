@@ -5,11 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:flutter/gestures.dart';
+import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/services/app_session_service.dart';
 import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -20,12 +21,9 @@ import '../../domain/entities/quran_entities.dart';
 import '../cubits/quran_page_cubit.dart';
 import '../cubits/surah_detail_cubit.dart';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// QuranReaderPage — Entry Point (unchanged architecture)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 class QuranReaderPage extends StatefulWidget {
   const QuranReaderPage({super.key, this.surahId, this.pageNumber});
+
   final int? surahId;
   final int? pageNumber;
 
@@ -34,18 +32,28 @@ class QuranReaderPage extends StatefulWidget {
 }
 
 class _QuranReaderPageState extends State<QuranReaderPage> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _highlights = const <qcf.HighlightVerse>[];
+
+  late final QuranPageCubit _quranPageCubit;
   PageController? _pageController;
   SurahDetailCubit? _surahDetailCubit;
+  Timer? _readTimer;
+  QuranPageDetail? _currentDetail;
   int? _currentPageNumber;
+
+  final Set<int> _confirmedReadPages = {};
 
   int _normalizePageNumber(int pageNumber) => pageNumber.clamp(1, 604);
 
   @override
   void initState() {
     super.initState();
+    _quranPageCubit = getIt<QuranPageCubit>();
+
     if (widget.pageNumber != null) {
-      _currentPageNumber = _normalizePageNumber(widget.pageNumber!);
-      _pageController = PageController(initialPage: _currentPageNumber! - 1);
+      final initialPage = _normalizePageNumber(widget.pageNumber!);
+      _openAtPage(initialPage);
     } else if (widget.surahId != null) {
       _surahDetailCubit = getIt<SurahDetailCubit>()..loadSurah(widget.surahId!);
     }
@@ -53,9 +61,94 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
 
   @override
   void dispose() {
+    _readTimer?.cancel();
     _pageController?.dispose();
     _surahDetailCubit?.close();
+    _quranPageCubit.close();
     super.dispose();
+  }
+
+  void _openAtPage(int pageNumber) {
+    _currentPageNumber = pageNumber;
+    _pageController ??= PageController(initialPage: pageNumber - 1);
+    _saveCurrentPage(pageNumber);
+    _loadPage(pageNumber);
+  }
+
+  void _saveCurrentPage(int pageNumber) {
+    unawaited(
+      getIt<AppSessionService>().saveLocation(
+        '/quran/page/${_normalizePageNumber(pageNumber)}',
+      ),
+    );
+  }
+
+  void _loadPage(int pageNumber) {
+    _readTimer?.cancel();
+    _readTimer = null;
+    unawaited(_quranPageCubit.loadPage(pageNumber));
+  }
+
+  void _startReadTimer(QuranPageDetail detail, BuildContext context) {
+    final pageNumber = detail.pageNumber;
+    if (_currentPageNumber != pageNumber ||
+        _confirmedReadPages.contains(pageNumber) ||
+        _readTimer != null) {
+      return;
+    }
+
+    final totalChars = detail.ayahs.fold<int>(
+      0,
+      (sum, ayah) => sum + ayah.text.length,
+    );
+    final requiredSeconds = (totalChars / 20).ceil().clamp(5, 60);
+
+    _readTimer = Timer(Duration(seconds: requiredSeconds), () {
+      _readTimer = null;
+      if (!mounted || !context.mounted || _currentPageNumber != pageNumber) {
+        return;
+      }
+      unawaited(context.read<QuranPageCubit>().confirmRead(pageNumber));
+    });
+  }
+
+  Ayah _resolveAyah(int surahNumber, int verseNumber) {
+    final detail = _currentDetail;
+    if (detail != null) {
+      for (final ayah in detail.ayahs) {
+        if (ayah.surahId == surahNumber && ayah.numberInSurah == verseNumber) {
+          return ayah;
+        }
+      }
+    }
+
+    return Ayah(
+      number: 0,
+      surahId: surahNumber,
+      text: qcf.getVerse(surahNumber, verseNumber),
+      numberInSurah: verseNumber,
+      juz: qcf.getJuzNumber(surahNumber, verseNumber),
+      page: qcf.getPageNumber(surahNumber, verseNumber),
+    );
+  }
+
+  void _showAyahOptions(
+    BuildContext context,
+    int surahNumber,
+    int verseNumber,
+    LongPressStartDetails _,
+  ) {
+    HapticFeedback.lightImpact();
+    final ayah = _resolveAyah(surahNumber, verseNumber);
+    showModalBottomSheet(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _AyahOptionsSheet(
+        ayah: ayah,
+        surahName: qcf.getSurahNameArabic(surahNumber),
+      ),
+    );
   }
 
   @override
@@ -73,12 +166,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                 final initialPage = _normalizePageNumber(
                   state.detail.surah.page,
                 );
-                setState(() {
-                  _currentPageNumber = initialPage;
-                  _pageController = PageController(
-                    initialPage: initialPage - 1,
-                  );
-                });
+                setState(() => _openAtPage(initialPage));
               }
             },
             builder: (context, state) {
@@ -94,7 +182,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                 );
               }
               if (state is SurahDetailLoaded && _pageController != null) {
-                return _buildPageView(context);
+                return _buildMushafReader(context);
               }
               return const SizedBox.shrink();
             },
@@ -103,102 +191,23 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
       );
     }
 
-    if (_pageController != null) return _buildPageView(context);
+    if (_pageController != null) return _buildMushafReader(context);
     return const SizedBox.shrink();
   }
 
-  Widget _buildPageView(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: context.isDark
-            ? AppColors.darkBackground
-            : AppColors.lightBackground,
-        body: SafeArea(
-          child: PageView.builder(
-            controller: _pageController,
-            itemCount: 604,
-            onPageChanged: (index) {
-              setState(() => _currentPageNumber = index + 1);
-            },
-            itemBuilder: (context, index) {
-              final pageNumber = index + 1;
-              return _QuranPageViewer(
-                pageNumber: pageNumber,
-                isCurrentPage: _currentPageNumber == pageNumber,
-              );
-            },
-          ),
-        ),
-      ),
-    );
-  }
-}
+  Widget _buildMushafReader(BuildContext context) {
+    final isDark = context.isDark;
+    final bg = isDark ? const Color(0xFF0D1117) : const Color(0xFFFDF5E6);
+    final gold = isDark ? const Color(0xFFC8A55B) : const Color(0xFFB08930);
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// _QuranPageViewer — Loads page data + read timer
-// ═══════════════════════════════════════════════════════════════════════════════
-
-class _QuranPageViewer extends StatefulWidget {
-  const _QuranPageViewer({
-    required this.pageNumber,
-    required this.isCurrentPage,
-  });
-  final int pageNumber;
-  final bool isCurrentPage;
-
-  @override
-  State<_QuranPageViewer> createState() => _QuranPageViewerState();
-}
-
-class _QuranPageViewerState extends State<_QuranPageViewer> {
-  Timer? _readTimer;
-  bool _readConfirmed = false;
-
-  void _startReadTimer(QuranPageDetail detail, BuildContext context) {
-    if (!widget.isCurrentPage || _readTimer != null || _readConfirmed) return;
-    final totalChars = detail.ayahs.fold<int>(
-      0,
-      (sum, a) => sum + a.text.length,
-    );
-    final requiredSeconds = (totalChars / 20).ceil().clamp(5, 60);
-    _readTimer = Timer(Duration(seconds: requiredSeconds), () {
-      _readTimer = null;
-      if (mounted &&
-          context.mounted &&
-          widget.isCurrentPage &&
-          !_readConfirmed) {
-        unawaited(
-          context.read<QuranPageCubit>().confirmRead(widget.pageNumber),
-        );
-      }
-    });
-  }
-
-  @override
-  void didUpdateWidget(covariant _QuranPageViewer oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!widget.isCurrentPage && _readTimer != null) {
-      _readTimer?.cancel();
-      _readTimer = null;
-    }
-  }
-
-  @override
-  void dispose() {
-    _readTimer?.cancel();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<QuranPageCubit>()..loadPage(widget.pageNumber),
+    return BlocProvider.value(
+      value: _quranPageCubit,
       child: BlocConsumer<QuranPageCubit, QuranPageState>(
         listener: (context, state) {
           if (state is QuranPageLoaded) {
+            _currentDetail = state.detail;
             if (state.isReadConfirmed) {
-              _readConfirmed = true;
+              _confirmedReadPages.add(state.detail.pageNumber);
               _readTimer?.cancel();
               _readTimer = null;
             } else {
@@ -213,347 +222,78 @@ class _QuranPageViewerState extends State<_QuranPageViewer> {
           }
         },
         builder: (context, state) {
-          if (state is QuranPageLoading) {
+          final detail = state is QuranPageLoaded
+              ? state.detail
+              : _currentDetail;
+          if (detail == null && state is QuranPageLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (state is QuranPageError) {
+          if (detail == null && state is QuranPageError) {
             return ErrorStateWidget(
               message: state.message,
-              onRetry: () =>
-                  context.read<QuranPageCubit>().loadPage(widget.pageNumber),
+              onRetry: () => _loadPage(_currentPageNumber ?? 1),
             );
           }
-          if (state is QuranPageLoaded) {
-            _startReadTimer(state.detail, context);
-            return _MushafPageContent(detail: state.detail);
-          }
-          return const SizedBox.shrink();
+
+          final firstAyah = detail?.ayahs.firstOrNull;
+          final firstSurah = firstAyah == null
+              ? null
+              : detail!.surahs
+                    .where((surah) => surah.id == firstAyah.surahId)
+                    .firstOrNull ??
+                detail.surahs.firstOrNull;
+          final juzNumber = firstAyah?.juz ?? firstSurah?.juz ?? 1;
+          final pageNumber = detail?.pageNumber ?? _currentPageNumber ?? 1;
+
+          return Scaffold(
+            key: _scaffoldKey,
+            backgroundColor: bg,
+            body: SafeArea(
+              child: qcf.QuranPageView(
+                pageController: _pageController!,
+                highlights: _highlights,
+                isDarkMode: isDark,
+                isTajweed: true,
+                pageBackgroundColor: bg,
+                onPageChanged: (page) {
+                  setState(() => _currentPageNumber = page);
+                  _saveCurrentPage(page);
+                  _loadPage(page);
+                },
+                onLongPress: (surahNumber, verseNumber, details) =>
+                    _showAyahOptions(
+                      context,
+                      surahNumber,
+                      verseNumber,
+                      details,
+                    ),
+                topBar: _MushafTopBar(
+                  surahName: firstSurah?.nameAr ?? '',
+                  juzNumber: juzNumber,
+                  gold: gold,
+                  bg: bg,
+                  onClose: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/');
+                    }
+                  },
+                ),
+                bottomBar: _MushafFooter(
+                  pageNumber: pageNumber,
+                  hizbNumber: MushafHizbHelper.getHizb(pageNumber),
+                  gold: gold,
+                  bg: bg,
+                ),
+              ),
+            ),
+          );
         },
       ),
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// _MushafPageContent — Core Mushaf UI using QcfPage
-// ═══════════════════════════════════════════════════════════════════════════════
-
-class _MushafPageContent extends StatefulWidget {
-  const _MushafPageContent({required this.detail});
-  final QuranPageDetail detail;
-
-  @override
-  State<_MushafPageContent> createState() => _MushafPageContentState();
-}
-
-class _MushafPageContentState extends State<_MushafPageContent> {
-  Timer? _tapTimer;
-  final List<TapGestureRecognizer> _recognizers = [];
-
-  QuranPageDetail get detail => widget.detail;
-
-  void _disposeRecognizers() {
-    for (final r in _recognizers) {
-      r.dispose();
-    }
-    _recognizers.clear();
-  }
-
-  // ── Helpers ──────────────────────────────────────────────────────────────────
-
-  void _showAyahOptions(BuildContext context, Ayah ayah) {
-    HapticFeedback.lightImpact();
-    final surah = detail.surahs.cast<Surah>().firstWhere(
-      (s) => s.id == ayah.surahId,
-      orElse: () => detail.surahs.first,
-    );
-    showModalBottomSheet(
-      context: context,
-      useRootNavigator: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => _AyahOptionsSheet(ayah: ayah, surahName: surah.nameAr),
-    );
-  }
-
-  Future<void> _handleAyahTap(BuildContext context, Ayah ayah) async {
-    if (_tapTimer?.isActive ?? false) {
-      // Double tap → bookmark
-      _tapTimer?.cancel();
-      unawaited(HapticFeedback.mediumImpact());
-      final surah = detail.surahs.cast<Surah>().firstWhere(
-        (s) => s.id == ayah.surahId,
-        orElse: () => detail.surahs.first,
-      );
-      await getIt<BookmarkService>().toggle(
-        BookmarkEntry(
-          surahId: ayah.surahId,
-          surahName: surah.nameAr,
-          ayahNumber: ayah.numberInSurah,
-          ayahText: ayah.text,
-          savedAt: DateTime.now(),
-        ),
-      );
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              context.isArabic ? 'تم حفظ العلامة المرجعية' : 'Bookmark saved',
-            ),
-          ),
-        );
-      }
-    } else {
-      // Single tap → wait for possible double tap
-      _tapTimer = Timer(const Duration(milliseconds: 250), () {
-        if (mounted) _showAyahOptions(context, ayah);
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _tapTimer?.cancel();
-    _disposeRecognizers();
-    super.dispose();
-  }
-
-  // ── Quran Text Builder ────────────────────────────────────────────────────────
-
-  static const _basmala = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
-
-  String _stripBasmala(String text) {
-    final trimmed = text.trim();
-    if (trimmed.startsWith(_basmala)) {
-      return trimmed.substring(_basmala.length).trim();
-    }
-    final normalized = trimmed
-        .replaceAll(RegExp(r'\p{M}', unicode: true), '')
-        .replaceAll('ٱ', 'ا');
-    if (normalized.startsWith('بسم الله الرحمن الرحيم')) {
-      final parts = trimmed.split(' ');
-      if (parts.length >= 4) {
-        return parts.sublist(4).join(' ');
-      }
-    }
-    return trimmed;
-  }
-
-  List<InlineSpan> _buildQuranSpans(
-    Color gold,
-    Color textColor,
-    double baseFontSize,
-    Color bg,
-  ) {
-    _disposeRecognizers();
-    final spans = <InlineSpan>[];
-
-    for (int i = 0; i < detail.ayahs.length; i++) {
-      final ayah = detail.ayahs[i];
-
-      // If it's the first ayah of a surah, add Surah Banner and Basmala
-      if (ayah.numberInSurah == 1) {
-        final surah = detail.surahs.cast<Surah>().firstWhere(
-          (s) => s.id == ayah.surahId,
-          orElse: () => detail.surahs.first,
-        );
-
-        // Add Surah Banner
-        spans.add(
-          WidgetSpan(
-            alignment: PlaceholderAlignment.middle,
-            child: _SurahBannerWidget(surah: surah, gold: gold, bg: bg),
-          ),
-        );
-
-        // Add Basmala if not Al-Fatihah or At-Tawbah
-        if (ayah.surahId != 1 && ayah.surahId != 9) {
-          spans.add(
-            WidgetSpan(
-              alignment: PlaceholderAlignment.middle,
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 16, top: 8),
-                child: Center(
-                  child: Text(
-                    'بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ',
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(
-                      fontFamily: 'Amiri',
-                      fontSize: baseFontSize * 0.9,
-                      color: gold,
-                      height: 2.2,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-      }
-
-      // Add the actual Ayah text
-      String ayahText = ayah.text;
-
-      if (ayah.numberInSurah == 1 && ayah.surahId != 1 && ayah.surahId != 9) {
-        ayahText = _stripBasmala(ayahText);
-      }
-
-      final recognizer = TapGestureRecognizer()
-        ..onTap = () => _handleAyahTap(context, ayah);
-      _recognizers.add(recognizer);
-
-      spans.add(
-        TextSpan(
-          text: ayahText,
-          style: TextStyle(
-            fontFamily: 'Amiri',
-            fontSize: baseFontSize,
-            color: textColor,
-            height: 2.2,
-          ),
-          recognizer: recognizer,
-        ),
-      );
-
-      // Add Ayah Number
-      final numRecognizer = TapGestureRecognizer()
-        ..onTap = () => _handleAyahTap(context, ayah);
-      _recognizers.add(numRecognizer);
-
-      spans.add(
-        TextSpan(
-          text:
-              ' \u06DD${MushafHizbHelper.toArabicNumber(ayah.numberInSurah)} ',
-          style: TextStyle(
-            fontFamily: 'Amiri',
-            fontSize: baseFontSize * 0.8,
-            color: gold,
-            height: 2.2,
-          ),
-          recognizer: numRecognizer,
-        ),
-      );
-    }
-
-    return spans;
-  }
-
-  // ── Build ─────────────────────────────────────────────────────────────────────
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final gold = isDark ? const Color(0xFFC8A55B) : const Color(0xFFB08930);
-    final bg = isDark ? const Color(0xFF0D1117) : const Color(0xFFFDF5E6);
-    final textColor = isDark
-        ? const Color(0xFFF2EFE9)
-        : const Color(0xFF1A1209);
-
-    // Responsive font size based on screen width
-    final sw = context.screenWidth;
-    final baseFontSize = sw < 360
-        ? 20.0
-        : sw < 400
-        ? 22.0
-        : sw < 480
-        ? 24.0
-        : 28.0;
-
-    final firstAyah = detail.ayahs.first;
-    final firstSurah = detail.surahs.cast<Surah>().firstWhere(
-      (s) => s.id == firstAyah.surahId,
-      orElse: () => detail.surahs.first,
-    );
-    final juzNumber = firstAyah.juz ?? firstSurah.juz;
-    final hizbNumber = MushafHizbHelper.getHizb(detail.pageNumber);
-
-    return Container(
-      color: bg,
-      child: Column(
-        children: [
-          // ── Header Row ────────────────────────────────────────────────────────
-          _MushafTopBar(
-            surahName: firstSurah.nameAr,
-            juzNumber: juzNumber,
-            gold: gold,
-            bg: bg,
-            onClose: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/');
-              }
-            },
-          ),
-
-          Divider(color: gold.withValues(alpha: 0.35), height: 1, thickness: 1),
-
-          // ── Quran Text ────────────────────────────────────────────────────────
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isCenteredPage =
-                    detail.pageNumber == 1 || detail.pageNumber == 2;
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: Container(
-                    constraints: BoxConstraints(
-                      minHeight: constraints.maxHeight - 24, // subtract padding
-                    ),
-                    alignment: isCenteredPage
-                        ? Alignment.center
-                        : Alignment.topCenter,
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: isCenteredPage
-                          ? Alignment.center
-                          : Alignment.topCenter,
-                      child: SizedBox(
-                        width: constraints.maxWidth > 600
-                            ? 600
-                            : constraints.maxWidth - 32,
-                        child: Text.rich(
-                          TextSpan(
-                            children: _buildQuranSpans(
-                              gold,
-                              textColor,
-                              baseFontSize,
-                              bg,
-                            ),
-                          ),
-                          textAlign: isCenteredPage
-                              ? TextAlign.center
-                              : TextAlign.justify,
-                          textDirection: TextDirection.rtl,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-
-          Divider(color: gold.withValues(alpha: 0.35), height: 1, thickness: 1),
-
-          // ── Footer Row ────────────────────────────────────────────────────────
-          _MushafFooter(
-            pageNumber: detail.pageNumber,
-            hizbNumber: hizbNumber,
-            gold: gold,
-            bg: bg,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// _MushafTopBar — Header: surah name | decorative icon | juz
-// ═══════════════════════════════════════════════════════════════════════════════
 
 class _MushafTopBar extends StatelessWidget {
   const _MushafTopBar({
@@ -578,7 +318,6 @@ class _MushafTopBar extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // ── Left: Juz info ────────────────────────────────────────────────
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -595,11 +334,7 @@ class _MushafTopBar extends StatelessWidget {
               ),
             ],
           ),
-
-          // ── Center: Decorative icon ───────────────────────────────────────
           Icon(Icons.grid_view_rounded, color: gold, size: 18),
-
-          // ── Right: Surah name + close button ─────────────────────────────
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -633,74 +368,6 @@ class _MushafTopBar extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// _SurahBannerWidget — Decorative Surah title (used in customHeaderBuilder)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-class _SurahBannerWidget extends StatelessWidget {
-  const _SurahBannerWidget({
-    required this.surah,
-    required this.gold,
-    required this.bg,
-  });
-
-  final Surah surah;
-  final Color gold;
-  final Color bg;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          color: bg,
-          border: Border.all(color: gold, width: 1.5),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
-        child: Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: gold.withValues(alpha: 0.45), width: 0.8),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'سُورَةُ ${surah.nameAr}',
-                textDirection: TextDirection.rtl,
-                style: TextStyle(
-                  fontFamily: 'Amiri',
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: gold,
-                  height: 1.6,
-                ),
-              ),
-              Text(
-                '${surah.isMeccan ? 'مَكِّيَّة' : 'مَدَنِيَّة'}  •  ${MushafHizbHelper.toArabicNumber(surah.ayahCount)} آيَة',
-                textDirection: TextDirection.rtl,
-                style: TextStyle(
-                  fontFamily: 'Amiri',
-                  fontSize: 13,
-                  color: gold.withValues(alpha: 0.8),
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// _MushafFooter — Page number + Hizb info
-// ═══════════════════════════════════════════════════════════════════════════════
-
 class _MushafFooter extends StatelessWidget {
   const _MushafFooter({
     required this.pageNumber,
@@ -722,7 +389,6 @@ class _MushafFooter extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Left: Hizb info
           Text(
             'الحزب ${MushafHizbHelper.toArabicNumber(hizbNumber)}',
             style: TextStyle(
@@ -732,8 +398,6 @@ class _MushafFooter extends StatelessWidget {
               height: 1.5,
             ),
           ),
-
-          // Center: Page number in decorative pill
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
             decoration: BoxDecoration(
@@ -752,8 +416,6 @@ class _MushafFooter extends StatelessWidget {
               ),
             ),
           ),
-
-          // Right: spacing mirror
           const SizedBox(width: 60),
         ],
       ),
@@ -761,12 +423,9 @@ class _MushafFooter extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// _AyahOptionsSheet — Bottom sheet for ayah actions (play / copy / bookmark)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 class _AyahOptionsSheet extends StatefulWidget {
   const _AyahOptionsSheet({required this.ayah, required this.surahName});
+
   final Ayah ayah;
   final String surahName;
 
@@ -792,6 +451,7 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
       setState(() => _isPlaying = false);
       return;
     }
+
     try {
       setState(() => _isPlaying = true);
       final url = await AudioCacheService.instance.getAudioSource(
@@ -802,8 +462,8 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
       await _player.play();
       unawaited(_playerSub?.cancel() ?? Future.value());
       _playerSub = _player.playerStateStream.listen((ps) {
-        if (ps.processingState == ProcessingState.completed) {
-          if (mounted) setState(() => _isPlaying = false);
+        if (ps.processingState == ProcessingState.completed && mounted) {
+          setState(() => _isPlaying = false);
         }
       });
     } catch (_) {
@@ -828,7 +488,6 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Handle bar
               Container(
                 width: 40,
                 height: 4,
@@ -838,13 +497,11 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-
               Text(
                 '${context.l10n.ayahs} ${widget.ayah.numberInSurah}',
                 style: AppTypography.titleMedium,
               ),
               const SizedBox(height: AppSpacing.xl),
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -852,9 +509,7 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                     icon: _isPlaying
                         ? Icons.pause_circle_filled
                         : Icons.play_circle_fill_rounded,
-                    label: _isPlaying
-                        ? (context.isArabic ? 'إيقاف' : 'Pause')
-                        : context.l10n.play,
+                    label: _isPlaying ? context.l10n.pause : context.l10n.play,
                     color: primary,
                     onTap: _playAyah,
                   ),
@@ -912,10 +567,6 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// _OptionBtn — Action button used in _AyahOptionsSheet
-// ═══════════════════════════════════════════════════════════════════════════════
 
 class _OptionBtn extends StatelessWidget {
   const _OptionBtn({

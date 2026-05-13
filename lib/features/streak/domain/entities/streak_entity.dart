@@ -18,15 +18,18 @@ class StreakEntity extends Equatable {
     int? longestStreak,
     DateTime? lastActivityDate,
     int? freezesAvailable,
-  }) =>
-      StreakEntity(
-        currentStreak: currentStreak ?? this.currentStreak,
-        longestStreak: longestStreak ?? this.longestStreak,
-        lastActivityDate: lastActivityDate ?? this.lastActivityDate,
-        freezesAvailable: freezesAvailable ?? this.freezesAvailable,
-      );
+  }) => StreakEntity(
+    currentStreak: currentStreak ?? this.currentStreak,
+    longestStreak: longestStreak ?? this.longestStreak,
+    lastActivityDate: lastActivityDate ?? this.lastActivityDate,
+    freezesAvailable: freezesAvailable ?? this.freezesAvailable,
+  );
 
   @override
-  List<Object?> get props =>
-      [currentStreak, longestStreak, lastActivityDate, freezesAvailable];
+  List<Object?> get props => [
+    currentStreak,
+    longestStreak,
+    lastActivityDate,
+    freezesAvailable,
+  ];
 }

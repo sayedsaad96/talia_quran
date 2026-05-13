@@ -43,18 +43,14 @@ class Ayah extends Equatable {
   final int? juz;
   final int? page;
 
-  String get audioUrl =>
-      QuranAudioService.buildUrl(surahId, numberInSurah);
+  String get audioUrl => QuranAudioService.buildUrl(surahId, numberInSurah);
 
   @override
   List<Object?> get props => [number, surahId, text, numberInSurah];
 }
 
 class SurahDetail extends Equatable {
-  const SurahDetail({
-    required this.surah,
-    required this.ayahs,
-  });
+  const SurahDetail({required this.surah, required this.ayahs});
 
   final Surah surah;
   final List<Ayah> ayahs;

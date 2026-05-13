@@ -14,20 +14,20 @@ class AzkarLocalDatasourceImpl implements AzkarLocalDatasource {
   @override
   Future<List<ZikrModel>> getAzkar(AzkarCategory category) async {
     try {
-      _cache ??= jsonDecode(
-        await rootBundle.loadString('assets/data/azkar.json'),
-      ) as Map<String, dynamic>;
+      _cache ??=
+          jsonDecode(await rootBundle.loadString('assets/data/azkar.json'))
+              as Map<String, dynamic>;
 
       final key = switch (category) {
         AzkarCategory.morning => 'morning',
         AzkarCategory.evening => 'evening',
         AzkarCategory.general => 'general',
+        AzkarCategory.duas => 'duas',
       };
 
       final list = _cache![key] as List<dynamic>;
       return list
-          .map((e) =>
-              ZikrModel.fromJson(e as Map<String, dynamic>, category))
+          .map((e) => ZikrModel.fromJson(e as Map<String, dynamic>, category))
           .toList();
     } catch (e) {
       throw CacheFailure('Failed to load azkar: $e');

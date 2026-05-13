@@ -119,6 +119,12 @@ class _FakeHifzDatasource implements HifzLocalDatasource {
   String? getHifzPath() => null;
 
   @override
+  Future<Set<String>> getPassedCheckpointKeys(int surahId) async => {};
+
+  @override
+  Future<void> markCheckpointPassed(String checkpointKey) async {}
+
+  @override
   Future<List<AyahProgressModel>> getProgressForSurah(int surahId) async =>
       progress.where((p) => p.surahId == surahId).toList();
 
@@ -163,6 +169,28 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
 
   @override
   Future<void> saveKidsProgress(KidsProgressModel progress) async {}
+
+  @override
+  Future<List<KidsSessionLogModel>> getKidsSessionLogs() async => const [];
+
+  @override
+  Future<void> saveKidsSessionLog(KidsSessionLogModel log) async {}
+
+  @override
+  Future<void> saveKidsSessionLogs(List<KidsSessionLogModel> logs) async {}
+
+  @override
+  Future<ParentSettingsModel> getParentSettings() async =>
+      const ParentSettingsModel.defaults();
+
+  @override
+  Future<void> saveParentSettings(ParentSettingsModel settings) async {}
+
+  @override
+  Future<List<ParentRewardModel>> getParentRewards() async => const [];
+
+  @override
+  Future<void> saveParentRewards(List<ParentRewardModel> rewards) async {}
 
   @override
   Future<void> saveReviewRecord(AyahReviewRecordModel record) async {}

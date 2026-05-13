@@ -24,12 +24,12 @@ class SurahModel extends Surah {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'nameAr': nameAr,
-        'nameEn': nameEn,
-        'ayahCount': ayahCount,
-        'juz': juz,
-        'type': type,
-        'page': page,
-      };
+    'id': id,
+    'nameAr': nameAr,
+    'nameEn': nameEn,
+    'ayahCount': ayahCount,
+    'juz': juz,
+    'type': type,
+    'page': page,
+  };
 }

@@ -29,10 +29,10 @@ class XpConstants {
   };
 
   static const List<XpLevel> levels = [
-    XpLevel(name: 'مبتدئ',  minXp: 0,     icon: '🌱', colorHex: 0xFF6B7280),
-    XpLevel(name: 'طالب',   minXp: 100,   icon: '📚', colorHex: 0xFF3B82F6),
-    XpLevel(name: 'حافظ',   minXp: 500,   icon: '⭐', colorHex: 0xFF8B5CF6),
-    XpLevel(name: 'شيخ',    minXp: 2000,  icon: '🏆', colorHex: 0xFFF59E0B),
-    XpLevel(name: 'إمام',   minXp: 10000, icon: '👑', colorHex: 0xFFEF4444),
+    XpLevel(name: 'مبتدئ', minXp: 0, icon: '🌱', colorHex: 0xFF6B7280),
+    XpLevel(name: 'طالب', minXp: 100, icon: '📚', colorHex: 0xFF3B82F6),
+    XpLevel(name: 'حافظ', minXp: 500, icon: '⭐', colorHex: 0xFF8B5CF6),
+    XpLevel(name: 'شيخ', minXp: 2000, icon: '🏆', colorHex: 0xFFF59E0B),
+    XpLevel(name: 'إمام', minXp: 10000, icon: '👑', colorHex: 0xFFEF4444),
   ];
 }

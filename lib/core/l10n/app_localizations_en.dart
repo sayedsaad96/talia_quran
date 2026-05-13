@@ -120,6 +120,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get generalAzkar => 'General Azkar';
 
   @override
+  String get duas => 'Duas';
+
+  @override
   String get count => 'Count';
 
   @override
@@ -418,4 +421,294 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get micPermissionError =>
       'The app needs microphone permission for voice recitation. Please allow it from device settings.';
+
+  @override
+  String get account => 'Account';
+
+  @override
+  String get accuracyLevel => 'Accuracy Level';
+
+  @override
+  String get streakProtection => 'Streak Protection';
+
+  @override
+  String get morningAzkarReminder => 'Morning Azkar Reminder';
+
+  @override
+  String get eveningAzkarReminder => 'Evening Azkar Reminder';
+
+  @override
+  String get dailyDuaReminder => 'Daily Dua';
+
+  @override
+  String get signOut => 'Sign Out';
+
+  @override
+  String get signIn => 'Sign In';
+
+  @override
+  String get signUp => 'Sign Up';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get createAccount => 'Create Account';
+
+  @override
+  String get invalidEmail => 'Invalid email';
+
+  @override
+  String get passwordTooShort => 'At least 6 characters';
+
+  @override
+  String get enterEmail => 'Enter your email';
+
+  @override
+  String get enterPassword => 'Enter your password';
+
+  @override
+  String get loginSuccess => 'Signed in successfully ✓';
+
+  @override
+  String get signupSuccess => 'Account created successfully ✓';
+
+  @override
+  String get profileSavedToCloud => 'Your progress is saved to the cloud';
+
+  @override
+  String get guestModeWarning =>
+      'Sign in to save your progress across all devices.';
+
+  @override
+  String get signOutWarning =>
+      'Do you want to sign out? Your cloud progress will not be deleted.';
+
+  @override
+  String get dailyReviewReminder => 'Daily Review Reminder';
+
+  @override
+  String get dailyReviewTime => 'Everyday at 8:00 PM';
+
+  @override
+  String get streakProtectionDesc => 'Alert at 10:00 PM if no review';
+
+  @override
+  String get morningAzkarTime => 'Everyday at 6:00 AM';
+
+  @override
+  String get eveningAzkarTime => 'Everyday at 6:00 PM';
+
+  @override
+  String get taliaDescription =>
+      'A premium app for memorizing and reviewing the Holy Quran';
+
+  @override
+  String get arabicNameHint =>
+      '💡 It is better to enter the name in Arabic to appear nicely in certificates';
+
+  @override
+  String get invalidAge => 'Enter a valid age between 1 and 120';
+
+  @override
+  String get profileSaveError => 'Failed to save profile';
+
+  @override
+  String get accuracySaveError => 'Failed to save accuracy level';
+
+  @override
+  String get reviewReminderSaveError => 'Failed to update review reminder';
+
+  @override
+  String get streakReminderSaveError => 'Failed to update streak alert';
+
+  @override
+  String get morningAzkarSaveError => 'Failed to update morning Azkar reminder';
+
+  @override
+  String get eveningAzkarSaveError => 'Failed to update evening Azkar reminder';
+
+  @override
+  String get difficultyEasy => 'Easy (70%)';
+
+  @override
+  String get difficultyMedium => 'Medium (85%)';
+
+  @override
+  String get difficultyHard => 'Hard (92%)';
+
+  @override
+  String get bookmarkSaved => 'Bookmark saved';
+
+  @override
+  String get bookmarkAdded => 'Bookmark added ✓';
+
+  @override
+  String get bookmarkRemoved => 'Bookmark removed';
+
+  @override
+  String get levelBeginner => 'Beginner';
+
+  @override
+  String get levelStudent => 'Student';
+
+  @override
+  String get levelHafez => 'Hafez';
+
+  @override
+  String get levelSheikh => 'Sheikh';
+
+  @override
+  String get levelImam => 'Imam';
+
+  @override
+  String get juzCountLabel => 'Juz';
+
+  @override
+  String get ayahsRead => 'Ayahs Read';
+
+  @override
+  String get learning => 'Learning';
+
+  @override
+  String get reviewing => 'Review';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get streakTerm => 'Streak';
+
+  @override
+  String get achieved => 'Achieved!';
+
+  @override
+  String get adultsTrack => 'Adults Track';
+
+  @override
+  String get memorizedTerm => 'Memorized';
+
+  @override
+  String get reviewingPrefix => 'Reviewing: ';
+
+  @override
+  String get kidsTrack => 'Kids Track';
+
+  @override
+  String get points => 'Points';
+
+  @override
+  String get stars => 'Stars';
+
+  @override
+  String get myCertificates => 'My Certificates';
+
+  @override
+  String get juzSaved => 'Memorized Juz';
+
+  @override
+  String get removeBookmarkTitle => 'Remove bookmark?';
+
+  @override
+  String get goBack => 'Go Back';
+
+  @override
+  String get taliaUser => 'Talia User';
+
+  @override
+  String get startFatihah => 'Start reading Surah Al-Fatihah';
+
+  @override
+  String surahAyahFormat(Object surahName, Object ayahNumber) {
+    return 'Surah $surahName, Ayah $ayahNumber';
+  }
+
+  @override
+  String get saveProgress => 'Save your progress';
+
+  @override
+  String get syncProgressDesc =>
+      'Sign in to save and sync your progress across all devices';
+
+  @override
+  String get later => 'Later';
+
+  @override
+  String get congratulations => 'Congratulations!';
+
+  @override
+  String get completedJuzAmma => 'You have successfully memorized Juz Amma.';
+
+  @override
+  String get completedQuran =>
+      'You have successfully memorized the entire Holy Quran.';
+
+  @override
+  String get continueMemorizing => 'Continue Memorizing';
+
+  @override
+  String get view => 'View';
+
+  @override
+  String get endSessionTitle => 'End Session?';
+
+  @override
+  String get endSessionDesc =>
+      'Are you sure you want to end the session? Your current progress will be lost.';
+
+  @override
+  String get continueAction => 'Continue';
+
+  @override
+  String get exitAction => 'Exit';
+
+  @override
+  String get listen => 'Listen';
+
+  @override
+  String get finish => 'Finish';
+
+  @override
+  String get skip => 'Skip';
+
+  @override
+  String get tryAgainAction => 'Try Again';
+
+  @override
+  String get youRecited => 'You recited:';
+
+  @override
+  String get listeningInProgress => 'Listening...';
+
+  @override
+  String get tapToRecord => 'Tap to recite';
+
+  @override
+  String get adultPathTitle => 'Adult Path (Forward)';
+
+  @override
+  String get adultPathSubtitle => 'Al-Fatihah to An-Nas';
+
+  @override
+  String get beginnerPathTitle => 'Beginner Path (Backward)';
+
+  @override
+  String get beginnerPathSubtitle => 'An-Nas to Al-Fatihah';
+
+  @override
+  String get lockedSurahText => 'Complete the previous Surah to unlock';
+
+  @override
+  String bookmarksCountItem(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'bookmarks',
+      one: 'bookmark',
+    );
+    return '$count $_temp0';
+  }
 }

@@ -47,9 +47,7 @@ class _HifzView extends StatelessWidget {
               _buildAppBar(context, isDark, primary, state),
               // ─── MemorizationPlus entry banner ─────────────────────────────
               if (state is HifzLoaded && state.selectedPath != null)
-                SliverToBoxAdapter(
-                  child: _MemPlusBanner(isDark: isDark),
-                ),
+                SliverToBoxAdapter(child: _MemPlusBanner(isDark: isDark)),
               if (state is HifzLoading)
                 const SliverFillRemaining(child: LoadingWidget()),
               if (state is HifzError)
@@ -72,7 +70,8 @@ class _HifzView extends StatelessWidget {
                         ),
                         child: SectionHeader(
                           title: context.l10n.hifzProgress,
-                          subtitle: '${state.progressMap.length} ${context.l10n.surahs}',
+                          subtitle:
+                              '${state.progressMap.length} ${context.l10n.surahs}',
                         ),
                       ),
                     ),
@@ -106,8 +105,9 @@ class _HifzView extends StatelessWidget {
                           surah: state.surahs[i],
                           progress: state.progressMap[state.surahs[i].id],
                           isUnlocked: state.isSurahUnlocked(state.surahs[i].id),
-                          requiredPreviousSurah:
-                              i > 0 ? state.surahs[i - 1] : null,
+                          requiredPreviousSurah: i > 0
+                              ? state.surahs[i - 1]
+                              : null,
                           index: i,
                           isDark: isDark,
                           primary: primary,
@@ -116,7 +116,7 @@ class _HifzView extends StatelessWidget {
                       ),
                     ),
                   ),
-                ]
+                ],
               ],
             ],
           );
@@ -139,7 +139,7 @@ class _HifzView extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.xl),
-            
+
             _PathCard(
               title: context.l10n.adultPath,
               subtitle: context.l10n.adultPathDesc,
@@ -148,9 +148,9 @@ class _HifzView extends StatelessWidget {
               isDark: isDark,
               onTap: () => context.read<HifzCubit>().selectPath('forward'),
             ),
-            
+
             const SizedBox(height: AppSpacing.lg),
-            
+
             _PathCard(
               title: context.l10n.beginnerPath,
               subtitle: context.l10n.beginnerPathDesc,
@@ -165,7 +165,12 @@ class _HifzView extends StatelessWidget {
     );
   }
 
-  SliverAppBar _buildAppBar(BuildContext ctx, bool isDark, Color primary, HifzState state) {
+  SliverAppBar _buildAppBar(
+    BuildContext ctx,
+    bool isDark,
+    Color primary,
+    HifzState state,
+  ) {
     return SliverAppBar(
       expandedHeight: 140,
       pinned: true,
@@ -225,7 +230,10 @@ class _HifzView extends StatelessWidget {
                       ),
                       if (state is HifzLoaded && state.selectedPath != null)
                         IconButton(
-                          icon: const Icon(Icons.settings_suggest_rounded, color: Colors.white),
+                          icon: const Icon(
+                            Icons.settings_suggest_rounded,
+                            color: Colors.white,
+                          ),
                           tooltip: ctx.l10n.changeMemorizationPath,
                           onPressed: () {
                             // Show a bottom sheet or directly navigate back to selection
@@ -249,7 +257,9 @@ class _HifzView extends StatelessWidget {
       builder: (dialogContext) {
         final isDark = context.isDark;
         return AlertDialog(
-          backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+          backgroundColor: isDark
+              ? AppColors.darkBackground
+              : AppColors.lightBackground,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
           ),
@@ -263,29 +273,39 @@ class _HifzView extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-              ListTile(
-                leading: const Icon(Icons.menu_book_rounded, color: AppColors.primary),
-                title: Text(context.isArabic ? "مسار الكبار (تصاعدي)" : "Adult Path (Forward)"),
-                subtitle: Text(context.isArabic ? "من الفاتحة إلى الناس" : "Al-Fatihah to An-Nas"),
-                trailing: currentPath == 'forward' ? const Icon(Icons.check_circle, color: Colors.green) : null,
-                onTap: () {
-                  context.read<HifzCubit>().selectPath('forward');
-                  Navigator.pop(dialogContext);
-                },
-              ),
-              const Divider(),
-              ListTile(
-                leading: const Icon(Icons.child_care_rounded, color: Colors.green),
-                title: Text(context.isArabic ? "مسار المبتدئين (تنازلي)" : "Beginner Path (Backward)"),
-                subtitle: Text(context.isArabic ? "من الناس إلى الفاتحة" : "An-Nas to Al-Fatihah"),
-                trailing: currentPath == 'backward' ? const Icon(Icons.check_circle, color: Colors.green) : null,
-                onTap: () {
-                  context.read<HifzCubit>().selectPath('backward');
-                  Navigator.pop(dialogContext);
-                },
-              ),
-            ],
-          ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.menu_book_rounded,
+                    color: AppColors.primary,
+                  ),
+                  title: Text(context.l10n.adultPathTitle),
+                  subtitle: Text(context.l10n.adultPathSubtitle),
+                  trailing: currentPath == 'forward'
+                      ? const Icon(Icons.check_circle, color: Colors.green)
+                      : null,
+                  onTap: () {
+                    context.read<HifzCubit>().selectPath('forward');
+                    Navigator.pop(dialogContext);
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(
+                    Icons.child_care_rounded,
+                    color: Colors.green,
+                  ),
+                  title: Text(context.l10n.beginnerPathTitle),
+                  subtitle: Text(context.l10n.beginnerPathSubtitle),
+                  trailing: currentPath == 'backward'
+                      ? const Icon(Icons.check_circle, color: Colors.green)
+                      : null,
+                  onTap: () {
+                    context.read<HifzCubit>().selectPath('backward');
+                    Navigator.pop(dialogContext);
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -343,18 +363,27 @@ class _PathCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTypography.titleLarge.copyWith(color: primary)),
+                  Text(
+                    title,
+                    style: AppTypography.titleLarge.copyWith(color: primary),
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                    subtitle, 
+                    subtitle,
                     style: AppTypography.bodySmall.copyWith(
-                      color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+                      color: isDark
+                          ? AppColors.darkTextHint
+                          : AppColors.lightTextHint,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey, size: 16),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.grey,
+              size: 16,
+            ),
           ],
         ),
       ),
@@ -423,7 +452,7 @@ class _ProgressOverviewCard extends StatelessWidget {
               ),
             ),
             progressColor: AppColors.gold,
-            backgroundColor: Colors.white.withValues(alpha:0.2),
+            backgroundColor: Colors.white.withValues(alpha: 0.2),
             circularStrokeCap: CircularStrokeCap.round,
           ),
         ],
@@ -465,153 +494,145 @@ class _HifzSurahTile extends StatelessWidget {
         : 'Complete ${requiredPreviousSurah?.nameEn ?? 'the previous surah'} first';
 
     return GestureDetector(
-          onTap: () {
-            if (isLocked) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(lockedText)),
-              );
-              return;
-            }
-            context.push(
-              '/hifz/session',
-              extra: {'surahId': surah.id, 'startAyah': 1},
-            );
-          },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: AppSpacing.sm),
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              color: isLocked ? surface.withValues(alpha: 0.82) : surface,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              border: Border.all(
-                color: isLocked ? border.withValues(alpha: 0.65) : border,
-                width: 0.5,
+      onTap: () {
+        if (isLocked) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(lockedText)));
+          return;
+        }
+        context.push('/hifz/session?surahId=${surah.id}&startAyah=1');
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: isLocked ? surface.withValues(alpha: 0.82) : surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+            color: isLocked ? border.withValues(alpha: 0.65) : border,
+            width: 0.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            // Number
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: isLocked
+                    ? (isDark ? Colors.white10 : Colors.black12)
+                    : hasProgress
+                    ? primary.withValues(alpha: 0.12)
+                    : primary.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
-            ),
-            child: Row(
-              children: [
-                // Number
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
+              child: Center(
+                child: Text(
+                  '${surah.id}',
+                  style: AppTypography.labelMedium.copyWith(
                     color: isLocked
-                        ? (isDark ? Colors.white10 : Colors.black12)
-                        : hasProgress
-                        ? primary.withValues(alpha:0.12)
-                        : primary.withValues(alpha:0.06),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${surah.id}',
-                      style: AppTypography.labelMedium.copyWith(
-                        color: isLocked
-                            ? (isDark
-                                ? AppColors.darkTextHint
-                                : AppColors.lightTextHint)
-                            : primary,
-                      ),
-                    ),
+                        ? (isDark
+                              ? AppColors.darkTextHint
+                              : AppColors.lightTextHint)
+                        : primary,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.isArabic ? surah.nameAr : surah.nameEn,
-                        style: context.isArabic
-                            ? AppTypography.surahTitle.copyWith(
-                                color: isLocked
-                                    ? (isDark
-                                        ? AppColors.darkTextSecondary
-                                        : AppColors.lightTextSecondary)
-                                    : primary,
-                                fontSize: 18,
-                              )
-                            : AppTypography.titleMedium.copyWith(
-                                color: isLocked
-                                    ? (isDark
-                                        ? AppColors.darkTextSecondary
-                                        : AppColors.lightTextSecondary)
-                                    : isDark
-                                        ? AppColors.darkTextPrimary
-                                        : AppColors.lightTextPrimary,
-                              ),
-                      ),
-                      const SizedBox(height: 6),
-                      if (isLocked) ...[
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.lock_rounded,
-                              size: 14,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.isArabic ? surah.nameAr : surah.nameEn,
+                    style: context.isArabic
+                        ? AppTypography.surahTitle.copyWith(
+                            color: isLocked
+                                ? (isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary)
+                                : primary,
+                            fontSize: 18,
+                          )
+                        : AppTypography.titleMedium.copyWith(
+                            color: isLocked
+                                ? (isDark
+                                      ? AppColors.darkTextSecondary
+                                      : AppColors.lightTextSecondary)
+                                : isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                          ),
+                  ),
+                  const SizedBox(height: 6),
+                  if (isLocked) ...[
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.lock_rounded,
+                          size: 14,
+                          color: isDark
+                              ? AppColors.darkTextHint
+                              : AppColors.lightTextHint,
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            lockedText,
+                            style: AppTypography.bodySmall.copyWith(
                               color: isDark
                                   ? AppColors.darkTextHint
                                   : AppColors.lightTextHint,
                             ),
-                            const SizedBox(width: 4),
-                            Expanded(
-                              child: Text(
-                                lockedText,
-                                style: AppTypography.bodySmall.copyWith(
-                                  color: isDark
-                                      ? AppColors.darkTextHint
-                                      : AppColors.lightTextHint,
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                        const SizedBox(height: 4),
                       ],
-                      if (hasProgress) ...[
-                        LinearPercentIndicator(
-                          lineHeight: 4,
-                          percent: percent.clamp(0.0, 1.0),
-                          progressColor: AppColors.gold,
-                          backgroundColor: primary.withValues(alpha:0.1),
-                          barRadius: const Radius.circular(4),
-                          padding: EdgeInsets.zero,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${progress!.memorizedCount} / ${surah.ayahCount} ${context.l10n.ayahs}',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextHint
-                                : AppColors.lightTextHint,
-                          ),
-                        ),
-                      ] else
-                        Text(
-                          '${surah.ayahCount} ${context.l10n.ayahs}',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextHint
-                                : AppColors.lightTextHint,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Icon(
-                  isLocked ? Icons.lock_rounded : Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: isDark
-                      ? AppColors.darkTextHint
-                      : AppColors.lightTextHint,
-                ),
-              ],
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                  if (hasProgress) ...[
+                    LinearPercentIndicator(
+                      lineHeight: 4,
+                      percent: percent.clamp(0.0, 1.0),
+                      progressColor: AppColors.gold,
+                      backgroundColor: primary.withValues(alpha: 0.1),
+                      barRadius: const Radius.circular(4),
+                      padding: EdgeInsets.zero,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${progress!.memorizedCount} / ${surah.ayahCount} ${context.l10n.ayahs}',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextHint
+                            : AppColors.lightTextHint,
+                      ),
+                    ),
+                  ] else
+                    Text(
+                      '${surah.ayahCount} ${context.l10n.ayahs}',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextHint
+                            : AppColors.lightTextHint,
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ),
-        )
-        .animate()
-        .fadeIn(duration: 200.ms)
-        .slideX(begin: 0.02, end: 0);
+            const SizedBox(width: AppSpacing.sm),
+            Icon(
+              isLocked ? Icons.lock_rounded : Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 200.ms).slideX(begin: 0.02, end: 0);
   }
 }
 
@@ -646,8 +667,7 @@ class _MemPlusBanner extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.psychology_rounded,
-                color: Colors.white, size: 22),
+            const Icon(Icons.psychology_rounded, color: Colors.white, size: 22),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(

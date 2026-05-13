@@ -26,12 +26,18 @@ class HifzSessionLoaded extends HifzSessionState {
     this.similarityScore,
     this.isEvaluating = false,
     this.audioError,
+    this.passThreshold = 0.85, // BUG-2 FIX: dynamic threshold from settings
+    this.segments = const [],
+    this.passedCheckpointKeys = const {},
+    this.requiredCheckpoint,
+    this.completedCheckpoint,
+    this.isCheckpointReviewActive = false,
   });
-  
+
   final Surah surah;
   final List<Ayah> ayahs;
   final Map<int, AyahProgressModel> progressMap;
-  
+
   // Single Ayah interaction states
   final int currentIndex; // points to the index in the `ayahs` list
   final bool isRecording;
@@ -40,6 +46,12 @@ class HifzSessionLoaded extends HifzSessionState {
   final double? similarityScore;
   final bool isEvaluating;
   final String? audioError;
+  final double passThreshold;
+  final List<HifzSegment> segments;
+  final Set<String> passedCheckpointKeys;
+  final HifzSegment? requiredCheckpoint;
+  final HifzSegment? completedCheckpoint;
+  final bool isCheckpointReviewActive;
 
   HifzSessionLoaded copyWith({
     Surah? surah,
@@ -54,6 +66,14 @@ class HifzSessionLoaded extends HifzSessionState {
     bool? isEvaluating,
     String? audioError,
     bool clearAudioError = false,
+    double? passThreshold,
+    List<HifzSegment>? segments,
+    Set<String>? passedCheckpointKeys,
+    HifzSegment? requiredCheckpoint,
+    bool clearRequiredCheckpoint = false,
+    HifzSegment? completedCheckpoint,
+    bool clearCompletedCheckpoint = false,
+    bool? isCheckpointReviewActive,
   }) {
     return HifzSessionLoaded(
       surah: surah ?? this.surah,
@@ -63,25 +83,44 @@ class HifzSessionLoaded extends HifzSessionState {
       isRecording: isRecording ?? this.isRecording,
       isPlaying: isPlaying ?? this.isPlaying,
       recognizedText: recognizedText ?? this.recognizedText,
-      similarityScore: clearScore ? null : (similarityScore ?? this.similarityScore),
+      similarityScore: clearScore
+          ? null
+          : (similarityScore ?? this.similarityScore),
       isEvaluating: isEvaluating ?? this.isEvaluating,
       audioError: clearAudioError ? null : (audioError ?? this.audioError),
+      passThreshold: passThreshold ?? this.passThreshold,
+      segments: segments ?? this.segments,
+      passedCheckpointKeys: passedCheckpointKeys ?? this.passedCheckpointKeys,
+      requiredCheckpoint: clearRequiredCheckpoint
+          ? null
+          : (requiredCheckpoint ?? this.requiredCheckpoint),
+      completedCheckpoint: clearCompletedCheckpoint
+          ? null
+          : (completedCheckpoint ?? this.completedCheckpoint),
+      isCheckpointReviewActive:
+          isCheckpointReviewActive ?? this.isCheckpointReviewActive,
     );
   }
 
   @override
   List<Object?> get props => [
-        surah,
-        ayahs,
-        progressMap,
-        currentIndex,
-        isRecording,
-        isPlaying,
-        recognizedText,
-        similarityScore,
-        isEvaluating,
-        audioError,
-      ];
+    surah,
+    ayahs,
+    progressMap,
+    currentIndex,
+    isRecording,
+    isPlaying,
+    recognizedText,
+    similarityScore,
+    isEvaluating,
+    audioError,
+    passThreshold,
+    segments,
+    passedCheckpointKeys,
+    requiredCheckpoint,
+    completedCheckpoint,
+    isCheckpointReviewActive,
+  ];
 }
 
 class HifzSessionError extends HifzSessionState {
@@ -93,10 +132,7 @@ class HifzSessionError extends HifzSessionState {
 
 /// Emitted (briefly) when one or more certificates are newly earned.
 class CertificatesEarned extends HifzSessionState {
-  const CertificatesEarned({
-    required this.awards,
-    required this.previousState,
-  });
+  const CertificatesEarned({required this.awards, required this.previousState});
   final List<CertificateAward> awards;
   final HifzSessionLoaded previousState;
   @override

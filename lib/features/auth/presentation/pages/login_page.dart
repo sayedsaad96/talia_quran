@@ -54,7 +54,9 @@ class _LoginPageState extends State<LoginPage> {
           listener: (context, state) {
             if (state is AuthAuthenticated) {
               // Update local profile automatically with the user's display name
-              context.read<ProfileCubit>().updateProfile(name: state.user.displayName);
+              context.read<ProfileCubit>().updateProfile(
+                name: state.user.displayName,
+              );
               context.go('/');
             }
             if (state is AuthError) {
@@ -71,7 +73,8 @@ class _LoginPageState extends State<LoginPage> {
               }
 
               // Email not confirmed — offer resend button
-              final isNotConfirmed = state.message.contains('تأكيد') ||
+              final isNotConfirmed =
+                  state.message.contains('تأكيد') ||
                   state.message.contains('تفقّد') ||
                   state.message.contains('confirmed');
               ScaffoldMessenger.of(context).showSnackBar(
@@ -85,8 +88,8 @@ class _LoginPageState extends State<LoginPage> {
                           textColor: Colors.white,
                           onPressed: () {
                             context.read<AuthCubit>().resendConfirmation(
-                                  _emailController.text.trim(),
-                                );
+                              _emailController.text.trim(),
+                            );
                           },
                         )
                       : null,
@@ -105,22 +108,23 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     children: [
                       const SizedBox(height: 60),
-                      Icon(Icons.menu_book_rounded, size: 80, color: cs.primary),
+                      Icon(
+                        Icons.menu_book_rounded,
+                        size: 80,
+                        color: cs.primary,
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'تالية',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineLarge
+                        style: Theme.of(context).textTheme.headlineLarge
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'سجّل دخولك لحفظ تقدمك على جميع أجهزتك',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(color: cs.onSurfaceVariant),
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
@@ -142,13 +146,16 @@ class _LoginPageState extends State<LoginPage> {
                           controller: _nameController,
                           decoration: InputDecoration(
                             labelText: 'الاسم',
-                            prefixIcon: const Icon(Icons.person_outline_rounded),
+                            prefixIcon: const Icon(
+                              Icons.person_outline_rounded,
+                            ),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          validator: (v) =>
-                              (v == null || v.trim().isEmpty) ? 'أدخل اسمك' : null,
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'أدخل اسمك'
+                              : null,
                         ),
                         const SizedBox(height: 14),
                       ],
@@ -165,8 +172,12 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         validator: (v) {
-                          if (v == null || v.trim().isEmpty) return 'أدخل بريدك الإلكتروني';
-                          if (!v.contains('@') || !v.contains('.')) return 'بريد إلكتروني غير صحيح';
+                          if (v == null || v.trim().isEmpty) {
+                            return 'أدخل بريدك الإلكتروني';
+                          }
+                          if (!v.contains('@') || !v.contains('.')) {
+                            return 'بريد إلكتروني غير صحيح';
+                          }
                           return null;
                         },
                       ),
@@ -180,11 +191,14 @@ class _LoginPageState extends State<LoginPage> {
                           labelText: 'كلمة المرور',
                           prefixIcon: const Icon(Icons.lock_outline_rounded),
                           suffixIcon: IconButton(
-                            icon: Icon(_obscurePassword
-                                ? Icons.visibility_off_rounded
-                                : Icons.visibility_rounded),
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_rounded
+                                  : Icons.visibility_rounded,
+                            ),
                             onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword),
+                              () => _obscurePassword = !_obscurePassword,
+                            ),
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -192,7 +206,9 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         validator: (v) {
                           if (v == null || v.isEmpty) return 'أدخل كلمة المرور';
-                          if (_isSignUp && v.length < 6) return '6 أحرف على الأقل';
+                          if (_isSignUp && v.length < 6) {
+                            return '6 أحرف على الأقل';
+                          }
                           return null;
                         },
                       ),
@@ -253,7 +269,9 @@ class _LoginPageState extends State<LoginPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? cs.primary.withValues(alpha: 0.12) : Colors.transparent,
+          color: isActive
+              ? cs.primary.withValues(alpha: 0.12)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isActive ? cs.primary : cs.outline.withValues(alpha: 0.3),

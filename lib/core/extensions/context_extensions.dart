@@ -28,14 +28,27 @@ extension BuildContextX on BuildContext {
     ScaffoldMessenger.of(this).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError
-            ? colorScheme.error
-            : colorScheme.primary,
+        backgroundColor: isError ? colorScheme.error : colorScheme.primary,
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
+  }
+
+  String localizeLevelName(String name) {
+    switch (name) {
+      case 'مبتدئ':
+        return l10n.levelBeginner;
+      case 'طالب':
+        return l10n.levelStudent;
+      case 'حافظ':
+        return l10n.levelHafez;
+      case 'شيخ':
+        return l10n.levelSheikh;
+      case 'إمام':
+        return l10n.levelImam;
+      default:
+        return name;
+    }
   }
 }

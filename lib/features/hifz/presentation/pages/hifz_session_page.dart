@@ -8,6 +8,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
@@ -48,7 +49,7 @@ class _HifzSessionView extends StatelessWidget {
         final shouldLeave = await showDialog<bool>(
           context: context,
           builder: (ctx) => AlertDialog(
-            title: Text(context.isArabic ? 'إنهاء الجلسة؟' : 'End Session?'),
+            title: Text(context.l10n.endSessionTitle),
             content: Text(
               context.isArabic
                   ? 'هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.'
@@ -57,12 +58,12 @@ class _HifzSessionView extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
-                child: Text(context.isArabic ? 'متابعة' : 'Continue'),
+                child: Text(context.l10n.continueAction),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 child: Text(
-                  context.isArabic ? 'خروج' : 'Exit',
+                  context.l10n.exitAction,
                   style: const TextStyle(color: Colors.red),
                 ),
               ),
@@ -79,7 +80,11 @@ class _HifzSessionView extends StatelessWidget {
             : AppColors.parchmentLight,
         body: BlocConsumer<HifzSessionCubit, HifzSessionState>(
           listener: (context, state) {
+            if (state is HifzSessionLoaded) {
+              _saveSessionLocation(state);
+            }
             if (state is CertificatesEarned) {
+              _saveSessionLocation(state.previousState);
               unawaited(
                 showCertificateCelebrationDialog(context, state.awards),
               );
@@ -102,6 +107,15 @@ class _HifzSessionView extends StatelessWidget {
       ),
     );
   }
+
+  void _saveSessionLocation(HifzSessionLoaded state) {
+    final ayah = state.ayahs[state.currentIndex];
+    unawaited(
+      getIt<AppSessionService>().saveLocation(
+        '/hifz/session?surahId=${state.surah.id}&startAyah=${ayah.numberInSurah}',
+      ),
+    );
+  }
 }
 
 class _FullSurahSession extends StatelessWidget {
@@ -116,6 +130,8 @@ class _FullSurahSession extends StatelessWidget {
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
     final ayah = state.ayahs[state.currentIndex];
+    final hasCheckpoint =
+        state.requiredCheckpoint != null || state.completedCheckpoint != null;
     final fontSize =
         getIt<SharedPreferences>().getDouble(AppConstants.kFontSize) ??
         AppConstants.fontSizeLarge;
@@ -182,7 +198,12 @@ class _FullSurahSession extends StatelessWidget {
                     ),
                     child: Center(
                       child: SingleChildScrollView(
-                        child: state.isEvaluating
+                        child: hasCheckpoint
+                            ? _CheckpointReviewCard(
+                                state: state,
+                                isDark: isDark,
+                              )
+                            : state.isEvaluating
                             ? Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -263,7 +284,9 @@ class _FullSurahSession extends StatelessWidget {
                   ),
 
                 // Controls Area
-                if (state.similarityScore == null && !state.isEvaluating) ...[
+                if (!hasCheckpoint &&
+                    state.similarityScore == null &&
+                    !state.isEvaluating) ...[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -272,7 +295,7 @@ class _FullSurahSession extends StatelessWidget {
                         icon: state.isPlaying
                             ? Icons.pause_rounded
                             : Icons.headphones_rounded,
-                        label: context.isArabic ? 'استماع' : 'Listen',
+                        label: context.l10n.listen,
                         color: Colors.blue,
                         isDark: isDark,
                         isActive: state.isPlaying,
@@ -320,14 +343,15 @@ class _FullSurahSession extends StatelessWidget {
                         ),
                       ),
 
-                      // Next Button (Manual overrides if needed)
+                      // BUG-1 FIX: Skip now calls skipAyah() which applies
+                      // a soft penalty so skipped ayahs are rescheduled
                       _ControlButton(
                         icon: state.currentIndex == state.ayahs.length - 1
                             ? Icons.done_all_rounded
                             : Icons.skip_next_rounded,
                         label: state.currentIndex == state.ayahs.length - 1
-                            ? (context.isArabic ? 'إنهاء' : 'Finish')
-                            : (context.isArabic ? 'تخطي' : 'Skip'),
+                            ? (context.l10n.finish)
+                            : (context.l10n.skip),
                         color: Colors.grey,
                         isDark: isDark,
                         isActive: false,
@@ -335,7 +359,7 @@ class _FullSurahSession extends StatelessWidget {
                           if (state.currentIndex == state.ayahs.length - 1) {
                             Navigator.of(context).pop();
                           } else {
-                            context.read<HifzSessionCubit>().nextAyah();
+                            context.read<HifzSessionCubit>().skipAyah();
                           }
                         },
                       ),
@@ -344,19 +368,20 @@ class _FullSurahSession extends StatelessWidget {
                 ],
 
                 // Result Controls
-                if (state.similarityScore != null && !state.isEvaluating) ...[
+                if (!hasCheckpoint &&
+                    state.similarityScore != null &&
+                    !state.isEvaluating) ...[
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      if ((state.similarityScore ?? 0) < 0.85)
+                      // BUG-2 FIX: use state.passThreshold instead of hardcoded 0.85
+                      if ((state.similarityScore ?? 0) < state.passThreshold)
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: () =>
                                 context.read<HifzSessionCubit>().retryAyah(),
                             icon: const Icon(Icons.refresh_rounded),
-                            label: Text(
-                              context.isArabic ? 'حاول مجدداً' : 'Try Again',
-                            ),
+                            label: Text(context.l10n.tryAgainAction),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.orange,
                               foregroundColor: Colors.white,
@@ -364,7 +389,7 @@ class _FullSurahSession extends StatelessWidget {
                             ),
                           ),
                         ),
-                      if ((state.similarityScore ?? 0) < 0.85)
+                      if ((state.similarityScore ?? 0) < state.passThreshold)
                         const SizedBox(width: AppSpacing.md),
 
                       Expanded(
@@ -392,7 +417,9 @@ class _FullSurahSession extends StatelessWidget {
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
-                                ((state.similarityScore ?? 0) >= 0.85)
+                                // BUG-2 FIX: use state.passThreshold
+                                ((state.similarityScore ?? 0) >=
+                                    state.passThreshold)
                                 ? Colors.green
                                 : primary,
                             foregroundColor: Colors.white,
@@ -427,7 +454,8 @@ class _EvaluationResult extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final score = (state.similarityScore ?? 0) * 100;
-    final pass = score >= 85;
+    // BUG-2 FIX: use state.passThreshold instead of hardcoded 85
+    final pass = (state.similarityScore ?? 0) >= state.passThreshold;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -460,7 +488,7 @@ class _EvaluationResult extends StatelessWidget {
         ),
         const Divider(height: 40),
         Text(
-          context.isArabic ? "ما قرأته:" : "You recited:",
+          context.l10n.youRecited,
           style: AppTypography.labelSmall.copyWith(color: Colors.grey),
         ),
         const SizedBox(height: 8),
@@ -476,6 +504,130 @@ class _EvaluationResult extends StatelessWidget {
           textAlign: TextAlign.center,
           textDirection: TextDirection.rtl,
         ),
+      ],
+    );
+  }
+}
+
+class _CheckpointReviewCard extends StatelessWidget {
+  const _CheckpointReviewCard({required this.state, required this.isDark});
+
+  final HifzSessionLoaded state;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final checkpoint = state.completedCheckpoint ?? state.requiredCheckpoint!;
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final passed = state.completedCheckpoint != null;
+    final failed =
+        state.similarityScore != null &&
+        (state.similarityScore ?? 0) < state.passThreshold;
+    final isSmallFullSurah =
+        state.surah.ayahCount <= 20 && checkpoint.isFullSurah;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          passed ? Icons.verified_rounded : Icons.assignment_turned_in_rounded,
+          color: passed ? Colors.green : AppColors.gold,
+          size: 64,
+        ).animate().scale(duration: 200.ms),
+        const SizedBox(height: AppSpacing.md),
+        Text(
+          passed ? 'تم اجتياز المراجعة' : 'حان وقت المراجعة',
+          style: AppTypography.titleLarge.copyWith(
+            color: passed ? Colors.green : primary,
+            fontWeight: FontWeight.w700,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          isSmallFullSurah
+              ? 'راجع السورة كاملة قبل إنهائها'
+              : 'راجع الآيات من ${checkpoint.startAyah} إلى ${checkpoint.endAyah} قبل الانتقال للآية التالية',
+          style: AppTypography.bodyLarge.copyWith(color: textColor),
+          textAlign: TextAlign.center,
+          textDirection: TextDirection.rtl,
+        ),
+        if (state.isEvaluating) ...[
+          const SizedBox(height: AppSpacing.lg),
+          const CircularProgressIndicator(),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            'جارِ تقييم المراجعة...',
+            style: AppTypography.bodyMedium.copyWith(color: textColor),
+          ),
+        ] else if (state.isRecording) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Text(
+            'يتم التسجيل، اقرأ المقطع من حفظك...',
+            style: AppTypography.bodyMedium.copyWith(color: textColor),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ElevatedButton.icon(
+            onPressed: () => context.read<HifzSessionCubit>().stopRecording(),
+            icon: const Icon(Icons.stop_rounded),
+            label: const Text('إنهاء التسميع'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            ),
+          ),
+        ] else if (passed) ...[
+          const SizedBox(height: AppSpacing.lg),
+          ElevatedButton.icon(
+            onPressed: () {
+              if (state.currentIndex == state.ayahs.length - 1) {
+                Navigator.of(context).pop();
+              } else {
+                context.read<HifzSessionCubit>().nextAyah();
+              }
+            },
+            icon: Icon(
+              state.currentIndex == state.ayahs.length - 1
+                  ? Icons.done_all_rounded
+                  : Icons.arrow_forward_rounded,
+            ),
+            label: Text(
+              state.currentIndex == state.ayahs.length - 1
+                  ? 'إنهاء الجلسة'
+                  : 'الآية التالية',
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            ),
+          ),
+        ] else ...[
+          if (failed) ...[
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              'لم يتم اجتياز المراجعة. حاول مرة أخرى.',
+              style: AppTypography.bodyMedium.copyWith(color: Colors.redAccent),
+              textAlign: TextAlign.center,
+            ),
+          ],
+          const SizedBox(height: AppSpacing.lg),
+          ElevatedButton.icon(
+            onPressed: () => context.read<HifzSessionCubit>().startRecording(),
+            icon: const Icon(Icons.mic_rounded),
+            label: const Text('ابدأ التسميع'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            ),
+          ),
+        ],
       ],
     );
   }

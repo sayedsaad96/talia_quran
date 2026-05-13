@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/l10n/app_localizations.dart';
 import 'core/router/app_router.dart';
+import 'core/services/app_session_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'core/l10n/locale_cubit.dart';
@@ -26,6 +29,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     TaliaNotificationService.instance.onPayloadReceived = _openNotification;
+    AppRouter.router.routerDelegate.addListener(_saveCurrentLocation);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final payload = TaliaNotificationService.instance
           .takePendingLaunchPayload();
@@ -39,6 +43,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     TaliaNotificationService.instance.onPayloadReceived = null;
+    AppRouter.router.routerDelegate.removeListener(_saveCurrentLocation);
     super.dispose();
   }
 
@@ -47,12 +52,23 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       // Refresh notifications on resume to sync timezone/time
       TaliaNotificationService.instance.refreshNotifications();
+    } else if (state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached) {
+      _saveCurrentLocation();
     }
   }
 
   void _openNotification(String payload) {
     if (!mounted || payload.isEmpty || !payload.startsWith('/')) return;
     AppRouter.router.go(payload);
+  }
+
+  void _saveCurrentLocation() {
+    final location = AppRouter.router.routerDelegate.currentConfiguration.uri
+        .toString();
+    unawaited(getIt<AppSessionService>().saveLocation(location));
   }
 
   @override

@@ -10,7 +10,9 @@ class ArabicNormalizer {
     normalized = normalized.replaceAll('\u06E6', 'ي'); // Small Yaa
 
     // Remove Arabic diacritics (Tashkeel)
-    final tashkeelRegex = RegExp(r'[\u0610-\u061A\u064B-\u065F\u06D6-\u06DC\u06DF-\u06E4\u06E7-\u06E8\u06EA-\u06ED]');
+    final tashkeelRegex = RegExp(
+      r'[\u0610-\u061A\u064B-\u065F\u06D6-\u06DC\u06DF-\u06E4\u06E7-\u06E8\u06EA-\u06ED]',
+    );
     normalized = normalized.replaceAll(tashkeelRegex, '');
 
     // Normalize letters
@@ -37,7 +39,7 @@ class ArabicNormalizer {
     normalized = normalized.replaceAll('السموات', 'السماوات');
     normalized = normalized.replaceAll('لكن', 'لاكن');
     normalized = normalized.replaceAll('اولئك', 'اولائك');
-    
+
     // Fix Uthmani expanded Waw seats
     normalized = normalized.replaceAll('صلواه', 'صلاه');
     normalized = normalized.replaceAll('زكواه', 'زكاه');
@@ -49,20 +51,25 @@ class ArabicNormalizer {
 
     // Fix Uthmani expanded Yaa seats at the end of words (موسيا -> موسي)
     // Dart regex \b does not work well with Arabic, using (?=\s|$) instead
-    normalized = normalized.replaceAllMapped(RegExp(r'(\S+)يا(?=\s|$)'), (match) {
+    normalized = normalized.replaceAllMapped(RegExp(r'(\S+)يا(?=\s|$)'), (
+      match,
+    ) {
       return '${match[1]}ي';
     });
 
     normalized = normalized.replaceAll('داوود', 'داود');
-    
+
     // Remove punctuation, zero-width spaces, and extra whitespace
-    normalized = normalized.replaceAll(RegExp(r'[.,;؛؟!?\-\u200B\u200C\u200D\uFEFF]'), ' ');
-    
+    normalized = normalized.replaceAll(
+      RegExp(r'[.,;؛؟!?\-\u200B\u200C\u200D\uFEFF]'),
+      ' ',
+    );
+
     // Replace multiple spaces with a single space and trim
     normalized = normalized.replaceAll(RegExp(r'\s+'), ' ').trim();
 
     // specific multi-word mapping after spaces are normalized
-    normalized = normalized.replaceAll('يا ايها', 'ياايها'); 
+    normalized = normalized.replaceAll('يا ايها', 'ياايها');
 
     return normalized;
   }

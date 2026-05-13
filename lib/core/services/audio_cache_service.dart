@@ -59,16 +59,18 @@ class AudioCacheService {
           ? i + batchSize
           : ayahNumbers.length;
       final batch = ayahNumbers.sublist(i, end);
-      
+
       // Process batch concurrently
-      await Future.wait(batch.map((ayahNumber) async {
-        final url = QuranAudioService.buildUrl(surahId, ayahNumber);
-        try {
-          await _cacheManager.getSingleFile(url);
-        } catch (_) {
-          // Ignore individual download failures during prefetch
-        }
-      }));
+      await Future.wait(
+        batch.map((ayahNumber) async {
+          final url = QuranAudioService.buildUrl(surahId, ayahNumber);
+          try {
+            await _cacheManager.getSingleFile(url);
+          } catch (_) {
+            // Ignore individual download failures during prefetch
+          }
+        }),
+      );
     }
   }
 

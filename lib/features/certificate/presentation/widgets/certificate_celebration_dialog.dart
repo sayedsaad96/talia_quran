@@ -56,7 +56,7 @@ String _resolveUserName(BuildContext context) {
     // Dependency injection may not be ready in widget tests.
   }
 
-  return context.isArabic ? 'مستخدم تالية' : 'Talia User';
+  return context.l10n.taliaUser;
 }
 
 class CertificateCelebrationDialog extends StatefulWidget {
@@ -96,7 +96,7 @@ class _CertificateCelebrationDialogState
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final multiple = widget.awards.length > 1;
-    final title = context.isArabic ? 'مبارك!' : 'Congratulations!';
+    final title = context.l10n.congratulations;
     final subtitle = multiple
         ? (context.isArabic
               ? 'لقد حصلت على ${widget.awards.length} شهادات جديدة'
@@ -170,7 +170,7 @@ class _CertificateCelebrationDialogState
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
                   child: Text(
-                    context.isArabic ? 'متابعة الحفظ' : 'Continue Memorizing',
+                    context.l10n.continueMemorizing,
                     style: TextStyle(
                       color: isDark
                           ? AppColors.darkTextSecondary
@@ -249,7 +249,7 @@ class _AwardTile extends StatelessWidget {
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 12),
             ),
-            child: Text(context.isArabic ? 'عرض' : 'View'),
+            child: Text(context.l10n.view),
           ),
         ],
       ),

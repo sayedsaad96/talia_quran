@@ -32,13 +32,12 @@ class SurahListLoaded extends SurahListState {
     List<Surah>? filtered,
     String? query,
     int? selectedJuz,
-  }) =>
-      SurahListLoaded(
-        surahs: surahs ?? this.surahs,
-        filtered: filtered ?? this.filtered,
-        query: query ?? this.query,
-        selectedJuz: selectedJuz,
-      );
+  }) => SurahListLoaded(
+    surahs: surahs ?? this.surahs,
+    filtered: filtered ?? this.filtered,
+    query: query ?? this.query,
+    selectedJuz: selectedJuz,
+  );
 
   @override
   List<Object?> get props => [surahs, filtered, query, selectedJuz];

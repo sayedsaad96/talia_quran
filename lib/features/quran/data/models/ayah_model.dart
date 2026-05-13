@@ -22,11 +22,11 @@ class AyahModel extends Ayah {
   }
 
   Map<String, dynamic> toJson() => {
-        'number': number,
-        'surahId': surahId,
-        'text': text,
-        'numberInSurah': numberInSurah,
-        'juz': juz,
-        'page': page,
-      };
+    'number': number,
+    'surahId': surahId,
+    'text': text,
+    'numberInSurah': numberInSurah,
+    'juz': juz,
+    'page': page,
+  };
 }

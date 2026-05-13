@@ -48,10 +48,10 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
   }
 
   String _getMessage() => switch (widget.type) {
-        CelebrationType.ayah => 'أحسنت! +${widget.xpGained} XP ⭐',
-        CelebrationType.page => 'اكتملت الصفحة! +${widget.xpGained} XP 🎯',
-        CelebrationType.juz  => 'مبارك! أتممت الجزء 🏆',
-      };
+    CelebrationType.ayah => 'أحسنت! +${widget.xpGained} XP ⭐',
+    CelebrationType.page => 'اكتملت الصفحة! +${widget.xpGained} XP 🎯',
+    CelebrationType.juz => 'مبارك! أتممت الجزء 🏆',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -84,27 +84,40 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
         // XP Badge appears and slides up
         Positioned(
           top: 100,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF59E0B),
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: const [
-                BoxShadow(color: Colors.black26, blurRadius: 16, offset: Offset(0, 4)),
-              ],
-            ),
-            child: Text(
-              _getMessage(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          )
-              .animate()
-              .fadeIn(duration: 300.ms)
-              .slideY(begin: 0.5, end: 0, duration: 400.ms, curve: Curves.easeOut),
+          child:
+              Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B),
+                      borderRadius: BorderRadius.circular(30),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          blurRadius: 16,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      _getMessage(),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 18,
+                      ),
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 300.ms)
+                  .slideY(
+                    begin: 0.5,
+                    end: 0,
+                    duration: 400.ms,
+                    curve: Curves.easeOut,
+                  ),
         ),
 
         // Full celebration screen for Juz completion
@@ -116,9 +129,10 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('🏆', style: TextStyle(fontSize: 80))
-                      .animate()
-                      .scale(duration: 500.ms, curve: Curves.elasticOut),
+                  const Text(
+                    '🏆',
+                    style: TextStyle(fontSize: 80),
+                  ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
                   const SizedBox(height: 16),
                   Text(
                     'مبارك!',
@@ -130,9 +144,9 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
                   const SizedBox(height: 8),
                   Text(
                     'أتممت الجزء كاملاً بإذن الله',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white70,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(color: Colors.white70),
                   ).animate().fadeIn(delay: 500.ms),
                   const SizedBox(height: 24),
                   Text(

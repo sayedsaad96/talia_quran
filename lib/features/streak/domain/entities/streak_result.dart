@@ -11,11 +11,11 @@ class StreakResult extends Equatable {
 
   /// Used when same day — no change in Streak
   const StreakResult.sameDay()
-      : currentStreak = 0,
-        longestStreak = 0,
-        isNewActivity = false,
-        isNewRecord = false,
-        milestoneReached = null;
+    : currentStreak = 0,
+      longestStreak = 0,
+      isNewActivity = false,
+      isNewRecord = false,
+      milestoneReached = null;
 
   final int currentStreak;
   final int longestStreak;
@@ -24,6 +24,11 @@ class StreakResult extends Equatable {
   final int? milestoneReached; // null or milestone number (3, 7, 14, 30 ...)
 
   @override
-  List<Object?> get props =>
-      [currentStreak, longestStreak, isNewActivity, isNewRecord, milestoneReached];
+  List<Object?> get props => [
+    currentStreak,
+    longestStreak,
+    isNewActivity,
+    isNewRecord,
+    milestoneReached,
+  ];
 }

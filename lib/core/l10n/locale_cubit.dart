@@ -3,17 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class LocaleCubit extends Cubit<Locale> {
   LocaleCubit(this._prefs) : super(const Locale('ar'));
 
   final SharedPreferences _prefs;
   static const _key = 'app_locale';
 
-  static const supportedLocales = [
-    Locale('ar'),
-    Locale('en'),
-  ];
+  static const supportedLocales = [Locale('ar'), Locale('en')];
 
   void loadLocale() {
     final saved = _prefs.getString(_key) ?? 'ar';

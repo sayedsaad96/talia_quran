@@ -32,6 +32,7 @@ class KidsModeLoaded extends KidsModeState {
     required this.maxLoops,
     required this.isCompleted,
     this.newAwards = const [],
+    this.mustListenFirst = false, // BUG-4 FIX: guard for listen-before-complete
   });
 
   final int surahId;
@@ -43,6 +44,7 @@ class KidsModeLoaded extends KidsModeState {
   final int maxLoops;
   final bool isCompleted;
   final List<CertificateAward> newAwards;
+  final bool mustListenFirst;
 
   KidsModeLoaded copyWith({
     KidsProgress? progress,
@@ -50,6 +52,7 @@ class KidsModeLoaded extends KidsModeState {
     int? currentLoop,
     bool? isCompleted,
     List<CertificateAward>? newAwards,
+    bool? mustListenFirst,
   }) => KidsModeLoaded(
     surahId: surahId,
     ayahNumber: ayahNumber,
@@ -60,6 +63,7 @@ class KidsModeLoaded extends KidsModeState {
     maxLoops: maxLoops,
     isCompleted: isCompleted ?? this.isCompleted,
     newAwards: newAwards ?? const [],
+    mustListenFirst: mustListenFirst ?? this.mustListenFirst,
   );
 
   @override
@@ -71,5 +75,6 @@ class KidsModeLoaded extends KidsModeState {
     currentLoop,
     isCompleted,
     newAwards,
+    mustListenFirst,
   ];
 }

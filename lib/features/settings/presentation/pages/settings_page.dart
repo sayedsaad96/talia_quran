@@ -46,13 +46,18 @@ class SettingsPage extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 // ─── Account (Google Sign-In) ───────────────────────
                 _SettingsSection(
-                  title: context.isArabic ? 'الحساب' : 'Account',
+                  title: context.l10n.account,
                   children: [_AccountSection(isDark: isDark)],
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _SettingsSection(
                   title: context.l10n.profile,
                   children: [_ProfileSettingTile(isDark: isDark)],
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _SettingsSection(
+                  title: 'الأطفال وولي الأمر',
+                  children: [_ParentDashboardTile(isDark: isDark)],
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 _SettingsSection(
@@ -160,6 +165,68 @@ class _SettingsSection extends StatelessWidget {
         ),
       ],
     ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04);
+  }
+}
+
+class _ParentDashboardTile extends StatelessWidget {
+  const _ParentDashboardTile({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () =>
+          context.push('/memorization-plus/parent-dashboard?surahId=1'),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: const Color(0xFF2D8E4C).withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.family_restroom_rounded,
+                color: Color(0xFF2D8E4C),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'لوحة ولي الأمر',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    'تابع حفظ الطفل والمكافآت والربط عن بعد',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -736,12 +803,7 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
             final age = ageText.isEmpty ? null : int.tryParse(ageText);
 
             if (ageText.isNotEmpty && (age == null || age < 1 || age > 120)) {
-              _showSettingsError(
-                outerCtx,
-                outerCtx.isArabic
-                    ? 'أدخل عمرًا صحيحًا بين 1 و120'
-                    : 'Enter a valid age between 1 and 120',
-              );
+              _showSettingsError(outerCtx, outerCtx.l10n.invalidAge);
               return;
             }
 
@@ -811,14 +873,16 @@ class _AccuracySettingTileState extends State<_AccuracySettingTile> {
         : AppColors.lightTextPrimary;
     final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
 
-    final labels = context.isArabic
-        ? ['سهل (٧٠٪)', 'متوسط (٨٥٪)', 'صعب (٩٢٪)']
-        : ['Easy (70%)', 'Medium (85%)', 'Hard (92%)'];
+    final labels = [
+      context.l10n.difficultyEasy,
+      context.l10n.difficultyMedium,
+      context.l10n.difficultyHard,
+    ];
 
     return ListTile(
       leading: Icon(Icons.mic_rounded, color: primary),
       title: Text(
-        context.isArabic ? 'مستوى الدقة' : 'Accuracy Level',
+        context.l10n.accuracyLevel,
         style: AppTypography.bodyMedium.copyWith(color: textColor),
       ),
       trailing: DropdownButton<int>(
@@ -879,15 +943,18 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
       TaliaNotificationService.morningAzkarPreferenceKey;
   static const _eveningAzkarKey =
       TaliaNotificationService.eveningAzkarPreferenceKey;
+  static const _dailyDuaKey = TaliaNotificationService.dailyDuaPreferenceKey;
 
   bool _reviewEnabled = true;
   bool _streakEnabled = true;
   bool _morningAzkarEnabled = true;
   bool _eveningAzkarEnabled = true;
+  bool _dailyDuaEnabled = true;
   bool _savingReview = false;
   bool _savingStreak = false;
   bool _savingMorningAzkar = false;
   bool _savingEveningAzkar = false;
+  bool _savingDailyDua = false;
 
   @override
   void initState() {
@@ -897,6 +964,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     _streakEnabled = prefs.getBool(_streakKey) ?? true;
     _morningAzkarEnabled = prefs.getBool(_morningAzkarKey) ?? true;
     _eveningAzkarEnabled = prefs.getBool(_eveningAzkarKey) ?? true;
+    _dailyDuaEnabled = prefs.getBool(_dailyDuaKey) ?? true;
   }
 
   Future<void> _toggleReview(bool value) async {
@@ -1044,6 +1112,42 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     }
   }
 
+  Future<void> _toggleDailyDua(bool value) async {
+    final previous = _dailyDuaEnabled;
+    setState(() {
+      _dailyDuaEnabled = value;
+      _savingDailyDua = true;
+    });
+
+    try {
+      final saved = await getIt<SharedPreferences>().setBool(
+        _dailyDuaKey,
+        value,
+      );
+      if (!saved) {
+        throw StateError('Failed to save daily dua notification setting');
+      }
+      if (value) {
+        await TaliaNotificationService.instance.scheduleDailyDuaReminder();
+      } else {
+        await TaliaNotificationService.instance.cancelDailyDuaReminder();
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _dailyDuaEnabled = previous);
+      _showSettingsError(
+        context,
+        context.isArabic
+            ? 'تعذر تحديث دعاء اليوم'
+            : 'Could not update daily dua reminder',
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _savingDailyDua = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final textColor = widget.isDark
@@ -1059,9 +1163,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         SwitchListTile(
           secondary: Icon(Icons.notifications_active_rounded, color: primary),
           title: Text(
-            context.isArabic
-                ? 'تذكير المراجعة اليومية'
-                : 'Daily Review Reminder',
+            context.l10n.dailyReviewReminder,
             style: AppTypography.bodyMedium.copyWith(color: textColor),
           ),
           subtitle: Text(
@@ -1082,13 +1184,11 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         SwitchListTile(
           secondary: Icon(Icons.shield_rounded, color: primary),
           title: Text(
-            context.isArabic ? 'حماية السلسلة' : 'Streak Protection',
+            context.l10n.streakProtection,
             style: AppTypography.bodyMedium.copyWith(color: textColor),
           ),
           subtitle: Text(
-            context.isArabic
-                ? 'تنبيه الساعة ١٠:٠٠ مساءً إذا لم تراجع'
-                : 'Alert at 10:00 PM if no review',
+            context.l10n.streakProtectionDesc,
             style: AppTypography.labelSmall.copyWith(color: subtextColor),
           ),
           value: _streakEnabled,
@@ -1103,7 +1203,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         SwitchListTile(
           secondary: Icon(Icons.wb_sunny_rounded, color: primary),
           title: Text(
-            context.isArabic ? 'تذكير أذكار الصباح' : 'Morning Azkar Reminder',
+            context.l10n.morningAzkarReminder,
             style: AppTypography.bodyMedium.copyWith(color: textColor),
           ),
           subtitle: Text(
@@ -1124,7 +1224,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         SwitchListTile(
           secondary: Icon(Icons.nightlight_round, color: primary),
           title: Text(
-            context.isArabic ? 'تذكير أذكار المساء' : 'Evening Azkar Reminder',
+            context.l10n.eveningAzkarReminder,
             style: AppTypography.bodyMedium.copyWith(color: textColor),
           ),
           subtitle: Text(
@@ -1135,6 +1235,27 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
           ),
           value: _eveningAzkarEnabled,
           onChanged: _savingEveningAzkar ? null : _toggleEveningAzkar,
+          activeThumbColor: primary,
+        ),
+        Divider(
+          height: 0.5,
+          color: widget.isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          indent: 56,
+        ),
+        SwitchListTile(
+          secondary: Icon(Icons.volunteer_activism_rounded, color: primary),
+          title: Text(
+            context.l10n.dailyDuaReminder,
+            style: AppTypography.bodyMedium.copyWith(color: textColor),
+          ),
+          subtitle: Text(
+            context.isArabic
+                ? 'كل يوم الساعة ٩:٠٠ صباحًا'
+                : 'Every day at 9:00 AM',
+            style: AppTypography.labelSmall.copyWith(color: subtextColor),
+          ),
+          value: _dailyDuaEnabled,
+          onChanged: _savingDailyDua ? null : _toggleDailyDua,
           activeThumbColor: primary,
         ),
       ],
@@ -1336,7 +1457,7 @@ class _AccountSectionState extends State<_AccountSection> {
                       ),
                       const SizedBox(width: AppSpacing.md),
                       Text(
-                        context.isArabic ? 'تسجيل الخروج' : 'Sign Out',
+                        context.l10n.signOut,
                         style: AppTypography.bodyMedium.copyWith(
                           color: Colors.red,
                         ),
@@ -1382,7 +1503,7 @@ class _AccountSectionState extends State<_AccountSection> {
                 Row(
                   children: [
                     _TabChip(
-                      label: context.isArabic ? 'تسجيل دخول' : 'Sign In',
+                      label: context.l10n.signIn,
                       isSelected: !_isSignUp,
                       primary: primary,
                       textColor: textColor,
@@ -1391,7 +1512,7 @@ class _AccountSectionState extends State<_AccountSection> {
                     ),
                     const SizedBox(width: 8),
                     _TabChip(
-                      label: context.isArabic ? 'حساب جديد' : 'Sign Up',
+                      label: context.l10n.signUp,
                       isSelected: _isSignUp,
                       primary: primary,
                       textColor: textColor,
@@ -1408,7 +1529,7 @@ class _AccountSectionState extends State<_AccountSection> {
                     controller: _nameController,
                     style: AppTypography.bodyMedium.copyWith(color: textColor),
                     decoration: _inputDecoration(
-                      label: context.isArabic ? 'الاسم' : 'Name',
+                      label: context.l10n.name,
                       icon: Icons.person_outline_rounded,
                       primary: primary,
                       textColor: textColor,
@@ -1416,9 +1537,7 @@ class _AccountSectionState extends State<_AccountSection> {
                     ),
                     validator: (v) {
                       if (v == null || v.trim().isEmpty) {
-                        return context.isArabic
-                            ? 'أدخل اسمك'
-                            : 'Enter your name';
+                        return context.l10n.enterName;
                       }
                       return null;
                     },
@@ -1432,7 +1551,7 @@ class _AccountSectionState extends State<_AccountSection> {
                   keyboardType: TextInputType.emailAddress,
                   style: AppTypography.bodyMedium.copyWith(color: textColor),
                   decoration: _inputDecoration(
-                    label: context.isArabic ? 'البريد الإلكتروني' : 'Email',
+                    label: context.l10n.email,
                     icon: Icons.email_outlined,
                     primary: primary,
                     textColor: textColor,
@@ -1440,14 +1559,10 @@ class _AccountSectionState extends State<_AccountSection> {
                   ),
                   validator: (v) {
                     if (v == null || v.trim().isEmpty) {
-                      return context.isArabic
-                          ? 'أدخل بريدك الإلكتروني'
-                          : 'Enter your email';
+                      return context.l10n.enterEmail;
                     }
                     if (!v.contains('@') || !v.contains('.')) {
-                      return context.isArabic
-                          ? 'بريد إلكتروني غير صحيح'
-                          : 'Invalid email';
+                      return context.l10n.invalidEmail;
                     }
                     return null;
                   },
@@ -1461,7 +1576,7 @@ class _AccountSectionState extends State<_AccountSection> {
                   style: AppTypography.bodyMedium.copyWith(color: textColor),
                   decoration:
                       _inputDecoration(
-                        label: context.isArabic ? 'كلمة المرور' : 'Password',
+                        label: context.l10n.password,
                         icon: Icons.lock_outline_rounded,
                         primary: primary,
                         textColor: textColor,
@@ -1487,9 +1602,7 @@ class _AccountSectionState extends State<_AccountSection> {
                           : 'Enter password';
                     }
                     if (_isSignUp && v.length < 6) {
-                      return context.isArabic
-                          ? '6 أحرف على الأقل'
-                          : 'At least 6 characters';
+                      return context.l10n.passwordTooShort;
                     }
                     return null;
                   },
@@ -1508,8 +1621,8 @@ class _AccountSectionState extends State<_AccountSection> {
                   ),
                   child: Text(
                     _isSignUp
-                        ? (context.isArabic ? 'إنشاء حساب' : 'Create Account')
-                        : (context.isArabic ? 'تسجيل الدخول' : 'Sign In'),
+                        ? (context.l10n.createAccount)
+                        : (context.l10n.signIn),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 15,
@@ -1565,7 +1678,7 @@ class _AccountSectionState extends State<_AccountSection> {
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
         title: Text(
-          context.isArabic ? 'تسجيل الخروج' : 'Sign Out',
+          context.l10n.signOut,
           style: AppTypography.titleLarge.copyWith(
             color: isDark
                 ? AppColors.darkTextPrimary
@@ -1585,7 +1698,7 @@ class _AccountSectionState extends State<_AccountSection> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogCtx).pop(),
-            child: Text(context.isArabic ? 'إلغاء' : 'Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -1593,7 +1706,7 @@ class _AccountSectionState extends State<_AccountSection> {
               Navigator.of(dialogCtx).pop();
               context.read<AuthCubit>().signOut();
             },
-            child: Text(context.isArabic ? 'خروج' : 'Sign Out'),
+            child: Text(context.l10n.signOut),
           ),
         ],
       ),

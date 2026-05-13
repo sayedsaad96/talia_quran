@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -102,16 +104,14 @@ class _HomeContent extends StatelessWidget {
         ),
 
         // ─── Sign-In Nudge Banner ───────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: _SignInNudgeBanner(isDark: isDark),
-        ),
+        SliverToBoxAdapter(child: _SignInNudgeBanner(isDark: isDark)),
 
-        // ─── Daily Wird Card ─────────────────────────────────────────────────
+        // ─── Daily Wird Card ────────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.pagePadding,
-              AppSpacing.lg,
+              AppSpacing.sectionGap,
               AppSpacing.pagePadding,
               0,
             ),
@@ -124,7 +124,7 @@ class _HomeContent extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.pagePadding,
-              AppSpacing.sectionGap,
+              AppSpacing.lg,
               AppSpacing.pagePadding,
               AppSpacing.sm,
             ),
@@ -253,122 +253,227 @@ class _HeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: isDark
-            ? AppColors.heroGradientDark
-            : AppColors.heroGradientLight,
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.pagePadding,
-            AppSpacing.lg,
-            AppSpacing.pagePadding,
-            AppSpacing.xl,
+    final bottomColor = isDark
+        ? AppColors.darkBackground
+        : AppColors.lightBackground;
+
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(30)),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/mosque_bg.png',
+              fit: BoxFit.cover,
+              alignment: Alignment.centerLeft,
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ─── Top row ────────────────────────────────────────────────
-              Row(
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    const Color(0xFF020A08).withValues(alpha: 0.88),
+                    const Color(0xFF0D3F34).withValues(alpha: 0.54),
+                    bottomColor.withValues(alpha: 0.98),
+                  ],
+                  stops: const [0, 0.55, 1],
+                ),
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: const Alignment(-0.3, 0.05),
+                  radius: 0.92,
+                  colors: [
+                    AppColors.primaryLight.withValues(alpha: 0.28),
+                    Colors.transparent,
+                  ],
+                ),
+              ),
+            ),
+          ),
+          SafeArea(
+            bottom: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.md,
+                AppSpacing.pagePadding,
+                AppSpacing.lg,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(_greetingIcon(), color: AppColors.goldLight, size: 22),
-                  const SizedBox(width: 8),
-                  BlocBuilder<ProfileCubit, ProfileState>(
-                    builder: (context, profileState) {
-                      final hasName = profileState is ProfileLoaded && profileState.profile.hasName;
-                      final nameStr = hasName ? ', ${profileState.profile.displayName}' : '';
-                      return Text(
-                        '${_greetingText(context)}$nameStr',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: Colors.white70,
+                  // ─── Top row ────────────────────────────────────────────────
+                  Row(
+                    children: [
+                      Icon(
+                        _greetingIcon(),
+                        color: AppColors.goldLight,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: BlocBuilder<ProfileCubit, ProfileState>(
+                          builder: (context, profileState) {
+                            final hasName =
+                                profileState is ProfileLoaded &&
+                                profileState.profile.hasName;
+                            final nameStr = hasName
+                                ? ', ${profileState.profile.displayName}'
+                                : '';
+                            return Text(
+                              '${_greetingText(context)}$nameStr',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: Colors.white.withValues(alpha: 0.78),
+                                fontWeight: FontWeight.w600,
+                              ),
+                            );
+                          },
                         ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      _HeroIconButton(
+                        icon: Icons.settings_rounded,
+                        onTap: () => context.push(AppRoutes.settings),
+                      ),
+                    ],
+                  ).animate().fadeIn(duration: 350.ms),
+
+                  const SizedBox(height: AppSpacing.md),
+
+                  // ─── App name + Bismillah ────────────────────────────────────
+                  Text(
+                    'تالية',
+                    style: AppTypography.displayMedium.copyWith(
+                      fontFamily: 'Amiri',
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      shadows: const [
+                        Shadow(
+                          color: Color(0x99000000),
+                          blurRadius: 18,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                  ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
+
+                  const SizedBox(height: 2),
+
+                  Text(
+                    'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: Colors.white.withValues(alpha: 0.68),
+                      fontFamily: 'Amiri',
+                      fontSize: 14,
+                    ),
+                    textDirection: TextDirection.rtl,
+                  ).animate().fadeIn(duration: 460.ms),
+
+                  const SizedBox(height: AppSpacing.lg),
+
+                  // ─── Achievement Badges ──────────────────────────────────
+                  Builder(
+                    builder: (context) {
+                      final readingAchievements = state.progress.achievements
+                          .where(
+                            (a) =>
+                                a.isUnlocked &&
+                                a.category == AchievementCategory.reading,
+                          );
+                      final memAchievements = state.progress.achievements.where(
+                        (a) =>
+                            a.isUnlocked &&
+                            a.category == AchievementCategory.memorization,
+                      );
+
+                      final highestReading = readingAchievements.isNotEmpty
+                          ? readingAchievements.last
+                          : null;
+                      final highestMem = memAchievements.isNotEmpty
+                          ? memAchievements.last
+                          : null;
+
+                      return Wrap(
+                        spacing: AppSpacing.sm,
+                        runSpacing: AppSpacing.sm,
+                        children: [
+                          if (highestReading != null)
+                            _AchievementBadge(
+                                  achievement: highestReading,
+                                  isDark: true,
+                                )
+                                .animate()
+                                .fadeIn(duration: 300.ms)
+                                .slideY(begin: 0.04),
+                          if (highestMem != null)
+                            _AchievementBadge(
+                                  achievement: highestMem,
+                                  isDark: true,
+                                )
+                                .animate()
+                                .fadeIn(duration: 350.ms)
+                                .slideY(begin: 0.04),
+                          if (highestReading == null && highestMem == null)
+                            const _AchievementBadge(
+                                  achievement: null,
+                                  isDark: true,
+                                )
+                                .animate()
+                                .fadeIn(duration: 300.ms)
+                                .slideY(begin: 0.04),
+                        ],
                       );
                     },
                   ),
-                  const Spacer(),
-                  // Settings button
-                  GestureDetector(
-                    onTap: () => context.push(AppRoutes.settings),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusSm,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.settings_rounded,
-                        color: Colors.white70,
-                        size: 20,
-                      ),
-                    ),
-                  ),
                 ],
-              ).animate().fadeIn(duration: 200.ms),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 420.ms, curve: Curves.easeOut);
+  }
+}
 
-              const SizedBox(height: AppSpacing.lg),
+class _HeroIconButton extends StatelessWidget {
+  const _HeroIconButton({required this.icon, required this.onTap});
 
-              // ─── App name + Bismillah ────────────────────────────────────
-              Text(
-                'تالية',
-                style: AppTypography.displayMedium.copyWith(
-                  fontFamily: 'Amiri',
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                ),
-              ).animate().fadeIn(duration: 200.ms).slideX(begin: -0.02),
+  final IconData icon;
+  final VoidCallback onTap;
 
-              const SizedBox(height: 4),
-
-              Text(
-                'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
-                style: AppTypography.bodySmall.copyWith(
-                  color: Colors.white60,
-                  fontFamily: 'Amiri',
-                  fontSize: 14,
-                ),
-                textDirection: TextDirection.rtl,
-              ).animate().fadeIn(duration: 200.ms),
-
-              const SizedBox(height: AppSpacing.xl),
-
-              // ─── Achievement Badges ──────────────────────────────────
-              Builder(builder: (context) {
-                final readingAchievements = state.progress.achievements.where(
-                    (a) => a.isUnlocked && a.category == AchievementCategory.reading);
-                final memAchievements = state.progress.achievements.where(
-                    (a) => a.isUnlocked && a.category == AchievementCategory.memorization);
-
-                final highestReading = readingAchievements.isNotEmpty ? readingAchievements.last : null;
-                final highestMem = memAchievements.isNotEmpty ? memAchievements.last : null;
-
-                return Wrap(
-                  spacing: AppSpacing.sm,
-                  runSpacing: AppSpacing.sm,
-                  children: [
-                    if (highestReading != null)
-                      _AchievementBadge(
-                        achievement: highestReading,
-                        isDark: isDark,
-                      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
-                    if (highestMem != null)
-                      _AchievementBadge(
-                        achievement: highestMem,
-                        isDark: isDark,
-                      ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.04),
-                    if (highestReading == null && highestMem == null)
-                      const _AchievementBadge(
-                        achievement: null,
-                        isDark: false,
-                      ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04),
-                  ],
-                );
-              }),
-            ],
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+        child: Material(
+          color: Colors.white.withValues(alpha: 0.1),
+          child: InkWell(
+            onTap: onTap,
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+              ),
+              child: Icon(
+                icon,
+                color: Colors.white.withValues(alpha: 0.82),
+                size: 20,
+              ),
+            ),
           ),
         ),
       ),
@@ -390,8 +495,9 @@ class _AchievementBadge extends StatelessWidget {
 
     if (achievement != null) {
       final best = achievement!;
-      badgeTitle = best.titleKey; // The titles are already translated strings (e.g., 'نصف القرآن')
-      
+      badgeTitle = best
+          .titleKey; // The titles are already translated strings (e.g., 'نصف القرآن')
+
       // Determine color, icon, and label based on category
       if (best.category == AchievementCategory.memorization) {
         badgeColor = const Color(0xFFFFD700); // Gold for memorization
@@ -402,7 +508,7 @@ class _AchievementBadge extends StatelessWidget {
         badgeIcon = Icons.menu_book_rounded;
         categoryLabel = 'قراءة';
       }
-      
+
       // Special override for highest achievements
       if (badgeTitle.contains('ختم') || badgeTitle.contains('حافظ')) {
         badgeColor = const Color(0xFFE5C158); // Premium gold
@@ -420,14 +526,17 @@ class _AchievementBadge extends StatelessWidget {
           return;
         }
         final latestAward = earnedCerts.first; // sorted by date desc
-        context.push('/certificate', extra: {
-          'award': latestAward,
-          'userName': context.read<ProfileCubit>().state is ProfileLoaded
-              ? (context.read<ProfileCubit>().state as ProfileLoaded)
-                    .profile
-                    .displayName
-              : (context.isArabic ? 'مستخدم تالية' : 'Talia User'),
-        });
+        context.push(
+          '/certificate',
+          extra: {
+            'award': latestAward,
+            'userName': context.read<ProfileCubit>().state is ProfileLoaded
+                ? (context.read<ProfileCubit>().state as ProfileLoaded)
+                      .profile
+                      .displayName
+                : (context.l10n.taliaUser),
+          },
+        );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -441,7 +550,10 @@ class _AchievementBadge extends StatelessWidget {
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          border: Border.all(color: badgeColor.withValues(alpha: 0.4), width: 1.5),
+          border: Border.all(
+            color: badgeColor.withValues(alpha: 0.4),
+            width: 1.5,
+          ),
           boxShadow: [
             BoxShadow(
               color: badgeColor.withValues(alpha: 0.1),
@@ -453,11 +565,7 @@ class _AchievementBadge extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              badgeIcon,
-              color: badgeColor,
-              size: 24,
-            ),
+            Icon(badgeIcon, color: badgeColor, size: 24),
             const SizedBox(width: 8),
             if (categoryLabel.isNotEmpty) ...[
               Text(
@@ -489,7 +597,6 @@ class _AchievementBadge extends StatelessWidget {
   }
 }
 
-
 // ─── Daily Wird Card ──────────────────────────────────────────────────────────
 
 class _DailyWirdCard extends StatelessWidget {
@@ -513,10 +620,14 @@ class _DailyWirdCard extends StatelessWidget {
           : 'Surah $surahName — Page $pageNumber';
     }
 
+    final primaryText = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+
     return GestureDetector(
       onTap: () => context.push('/quran/page/$pageNumber'),
       child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -555,17 +666,18 @@ class _DailyWirdCard extends StatelessWidget {
                     context.l10n.dailyWird,
                     style: AppTypography.labelMedium.copyWith(
                       color: AppColors.primary,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     wird,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: AppTypography.titleMedium.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
+                      color: primaryText,
                       fontFamily: context.isArabic ? 'Amiri' : null,
+                      height: 1.35,
                     ),
                     textDirection: context.isArabic
                         ? TextDirection.rtl
@@ -620,8 +732,11 @@ class _ProgressSection extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.local_fire_department_rounded,
-                  color: Colors.white, size: 22),
+              const Icon(
+                Icons.local_fire_department_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
               const SizedBox(width: 8),
               Text(
                 '${progress.streakDays}',
@@ -1015,14 +1130,13 @@ class _ActiveCustomPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push(
-        '/memorization-plus/daily-plan',
-        extra: {'surahId': plan.startSurahId},
-      ).then((_) {
-        if (context.mounted) {
-          context.read<HomeCubit>().load();
-        }
-      }),
+      onTap: () => context
+          .push('/memorization-plus/daily-plan?surahId=${plan.startSurahId}')
+          .then((_) {
+            if (context.mounted) {
+              context.read<HomeCubit>().load();
+            }
+          }),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
@@ -1127,9 +1241,7 @@ class _StreakXpRow extends StatelessWidget {
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkCard
-                      : Colors.white,
+                  color: isDark ? AppColors.darkCard : Colors.white,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   border: Border.all(
                     color: currentStreak > 0
@@ -1207,15 +1319,13 @@ class _StreakXpRow extends StatelessWidget {
                   : null;
               final progress = nextLevel != null
                   ? ((totalXp - level.minXp) / (nextLevel.minXp - level.minXp))
-                      .clamp(0.0, 1.0)
+                        .clamp(0.0, 1.0)
                   : 1.0;
 
               return Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDark
-                      ? AppColors.darkCard
-                      : Colors.white,
+                  color: isDark ? AppColors.darkCard : Colors.white,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   border: Border.all(
                     color: Color(level.colorHex).withValues(alpha: 0.3),
@@ -1240,7 +1350,7 @@ class _StreakXpRow extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              level.name,
+                              context.localizeLevelName(level.name),
                               style: AppTypography.labelMedium.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Color(level.colorHex),
@@ -1272,7 +1382,7 @@ class _StreakXpRow extends StatelessWidget {
                     if (nextLevel != null) ...[
                       const SizedBox(height: 2),
                       Text(
-                        '${nextLevel.minXp - totalXp} XP ← ${nextLevel.name}',
+                        ' XP ← ',
                         style: AppTypography.labelSmall.copyWith(
                           color: isDark ? Colors.white38 : Colors.black38,
                           fontSize: 10,
@@ -1315,7 +1425,12 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
   Future<void> _checkDismissed() async {
     final prefs = getIt<SharedPreferences>();
     final dismissed = prefs.getBool(_dismissedKey) ?? false;
-    if (mounted) setState(() { _dismissed = dismissed; _loaded = true; });
+    if (mounted) {
+      setState(() {
+        _dismissed = dismissed;
+        _loaded = true;
+      });
+    }
   }
 
   Future<void> _dismiss() async {
@@ -1336,13 +1451,15 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
         // Only show if user has made some progress (streak > 0 or XP > 0)
         return BlocBuilder<StreakCubit, StreakState>(
           builder: (context, streakState) {
-            final hasProgress = streakState is StreakLoaded &&
+            final hasProgress =
+                streakState is StreakLoaded &&
                 streakState.streak.currentStreak > 0;
 
             if (!hasProgress) return const SizedBox.shrink();
 
-            final primary =
-                widget.isDark ? AppColors.primaryLight : AppColors.primary;
+            final primary = widget.isDark
+                ? AppColors.primaryLight
+                : AppColors.primary;
 
             return Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -1373,8 +1490,11 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
                         color: primary.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.cloud_upload_rounded,
-                          color: primary, size: 22),
+                      child: Icon(
+                        Icons.cloud_upload_rounded,
+                        color: primary,
+                        size: 22,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     // Text
@@ -1415,14 +1535,17 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
                           onTap: () => context.push(AppRoutes.settings),
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 6),
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: primary,
-                              borderRadius:
-                                  BorderRadius.circular(AppSpacing.radiusSm),
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusSm,
+                              ),
                             ),
                             child: Text(
-                              context.isArabic ? 'تسجيل' : 'Sign in',
+                              context.l10n.signIn,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 11,
@@ -1435,7 +1558,7 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
                         GestureDetector(
                           onTap: _dismiss,
                           child: Text(
-                            context.isArabic ? 'لاحقاً' : 'Later',
+                            context.l10n.later,
                             style: AppTypography.labelSmall.copyWith(
                               color: widget.isDark
                                   ? AppColors.darkTextHint
@@ -1466,21 +1589,30 @@ class _DebugCertificatePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(color: Colors.orange.withValues(alpha: 0.5), width: 1.5),
+        border: Border.all(
+          color: Colors.orange.withValues(alpha: 0.5),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.bug_report_rounded, color: Colors.orange, size: 20),
+              const Icon(
+                Icons.bug_report_rounded,
+                color: Colors.orange,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 '🔧 Debug: Certificate Preview',
@@ -1494,17 +1626,38 @@ class _DebugCertificatePreview extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             'Test certificate rendering without earning one.',
-            style: AppTypography.bodySmall.copyWith(color: textColor.withValues(alpha: 0.7)),
+            style: AppTypography.bodySmall.copyWith(
+              color: textColor.withValues(alpha: 0.7),
+            ),
           ),
           const SizedBox(height: AppSpacing.md),
           Wrap(
             spacing: AppSpacing.sm,
             runSpacing: AppSpacing.sm,
             children: [
-              _debugCertButton(context, 'جزء 30', CertificateType.juz, juzNumber: 30),
-              _debugCertButton(context, 'سورة البقرة', CertificateType.surah, surahId: 2, surahNameAr: 'البقرة'),
-              _debugCertButton(context, 'نصف القرآن', CertificateType.halfQuran),
-              _debugCertButton(context, 'ختم القرآن', CertificateType.fullQuran),
+              _debugCertButton(
+                context,
+                'جزء 30',
+                CertificateType.juz,
+                juzNumber: 30,
+              ),
+              _debugCertButton(
+                context,
+                'سورة البقرة',
+                CertificateType.surah,
+                surahId: 2,
+                surahNameAr: 'البقرة',
+              ),
+              _debugCertButton(
+                context,
+                'نصف القرآن',
+                CertificateType.halfQuran,
+              ),
+              _debugCertButton(
+                context,
+                'ختم القرآن',
+                CertificateType.fullQuran,
+              ),
             ],
           ),
         ],
@@ -1530,7 +1683,9 @@ class _DebugCertificatePreview extends StatelessWidget {
       ),
       onPressed: () {
         final userName = context.read<ProfileCubit>().state is ProfileLoaded
-            ? (context.read<ProfileCubit>().state as ProfileLoaded).profile.displayName
+            ? (context.read<ProfileCubit>().state as ProfileLoaded)
+                  .profile
+                  .displayName
             : 'مستخدم تالية';
 
         final debugAward = CertificateAward(
@@ -1543,16 +1698,20 @@ class _DebugCertificatePreview extends StatelessWidget {
           surahNameAr: surahNameAr,
         );
 
-        context.push('/certificate', extra: {
-          'award': debugAward,
-          'userName': userName,
-        });
+        context.push(
+          '/certificate',
+          extra: {'award': debugAward, 'userName': userName},
+        );
       },
       child: Text(label, style: const TextStyle(fontSize: 12)),
     );
   }
 
-  String _debugTitle(CertificateType type, int? juzNumber, String? surahNameAr) {
+  String _debugTitle(
+    CertificateType type,
+    int? juzNumber,
+    String? surahNameAr,
+  ) {
     return switch (type) {
       CertificateType.juz => 'شهادة حفظ الجزء ${juzNumber ?? 1}',
       CertificateType.surah => 'شهادة حفظ سورة ${surahNameAr ?? 'البقرة'}',

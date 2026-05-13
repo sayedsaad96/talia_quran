@@ -47,13 +47,37 @@ class QuizCubit extends Cubit<QuizState> {
       final surahRecords = records
           .where((r) => r.surahId == surahId && r.totalReviews > 0)
           .toList();
+      final reviewedAyahNumbers = surahRecords.map((r) => r.ayahNumber).toSet();
+
+      final cachedPlanResult = await _repository.getCachedDailyPlan();
+      final cachedPlan = cachedPlanResult.getOrElse(() => null);
+      final plannedAyahNumbers =
+          cachedPlan != null && cachedPlan.surahId == surahId
+          ? {
+              ...cachedPlan.newAyahs.map((a) => a.ayahNumber),
+              ...cachedPlan.nearRevision.map((a) => a.ayahNumber),
+              ...cachedPlan.farRevision.map((a) => a.ayahNumber),
+            }
+          : <int>{};
 
       // Build quiz items
       _items = [];
 
       if (ayahNumbers != null && ayahNumbers.isNotEmpty) {
-        // Test specific ayahs
-        for (final num in ayahNumbers) {
+        final allowedAyahNumbers = ayahNumbers
+            .where(
+              (ayahNumber) =>
+                  reviewedAyahNumbers.contains(ayahNumber) ||
+                  plannedAyahNumbers.contains(ayahNumber),
+            )
+            .toSet();
+
+        if (allowedAyahNumbers.isEmpty) {
+          emit(const QuizError('لا يمكن اختبار آيات خارج خطتك أو سجلاتك'));
+          return;
+        }
+
+        for (final num in allowedAyahNumbers) {
           try {
             final ayah = ayahs.firstWhere((a) => a.numberInSurah == num);
             _items.add(
@@ -108,19 +132,29 @@ class QuizCubit extends Cubit<QuizState> {
       ArabicNormalizer.normalize(current.correctText.trim()),
     );
 
-    final passed = similarity >= 0.80;
-
-    var newAwards = <CertificateAward>[];
-    if (passed) {
+    // BUG-8 FIX: three-tier grading instead of binary pass/fail
+    // This prevents a 1% difference from swinging between best and worst outcome
+    final PerformanceRating rating;
+    final bool passed;
+    if (similarity >= 0.80) {
+      rating = PerformanceRating.excellent;
+      passed = true;
+      _passedCount++;
+    } else if (similarity >= 0.60) {
+      rating = PerformanceRating.average;
+      passed = true; // counted as "passed" in quiz summary
       _passedCount++;
     } else {
+      rating = PerformanceRating.weak;
+      passed = false;
       _failedCount++;
     }
 
+    var newAwards = <CertificateAward>[];
     final result = await _repository.evaluateAyah(
       surahId: current.surahId,
       ayahNumber: current.ayahNumber,
-      rating: passed ? PerformanceRating.excellent : PerformanceRating.weak,
+      rating: rating,
     );
     final failure = result.fold((f) => f, (_) => null);
     if (failure == null) {

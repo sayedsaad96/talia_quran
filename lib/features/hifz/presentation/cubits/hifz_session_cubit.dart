@@ -32,6 +32,11 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     this._getSurahProgress,
     this._getAllSurahProgress,
     this._getPath,
+    this._generateSegments,
+    this._checkNextAyahUnlock,
+    this._getNextRequiredCheckpoint,
+    this._getPassedCheckpointKeys,
+    this._markCheckpointPassed,
     this._settings,
     this._streakService,
     this._xpService,
@@ -54,6 +59,11 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   final GetProgressForSurahUsecase _getSurahProgress;
   final GetHifzProgressUsecase _getAllSurahProgress;
   final GetHifzPathUsecase _getPath;
+  final GenerateHifzSegmentsUsecase _generateSegments;
+  final CheckNextAyahUnlockUsecase _checkNextAyahUnlock;
+  final GetNextRequiredReviewCheckpointUsecase _getNextRequiredCheckpoint;
+  final GetPassedCheckpointKeysUsecase _getPassedCheckpointKeys;
+  final MarkCheckpointReviewPassedUsecase _markCheckpointPassed;
   // ARCH-3 FIX: SettingsRepository instead of direct SharedPreferences access.
   final SettingsRepository _settings;
   final StreakService _streakService;
@@ -67,6 +77,8 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
 
   List<Ayah> _ayahs = [];
   Map<int, AyahProgressModel> _progressMap = {};
+  List<HifzSegment> _segments = [];
+  Set<String> _passedCheckpointKeys = {};
   late Surah _surah;
 
   bool _speechEnabled = false;
@@ -108,9 +120,23 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
         .toList();
 
     final result = await _getDetail(surahId);
-    result.fold((f) => emit(HifzSessionError(f.message)), (detail) {
+    await result.fold((f) async => emit(HifzSessionError(f.message)), (
+      detail,
+    ) async {
       _surah = detail.surah;
       _ayahs = detail.ayahs;
+      _segments = _generateSegments(
+        surahId: _surah.id,
+        totalAyahs: _surah.ayahCount,
+      );
+
+      final checkpointResult = await _getPassedCheckpointKeys(surahId);
+      final checkpointFailure = checkpointResult.fold((f) => f, (_) => null);
+      if (checkpointFailure != null) {
+        emit(HifzSessionError(checkpointFailure.message));
+        return;
+      }
+      _passedCheckpointKeys = checkpointResult.getOrElse(() => const {});
 
       final map = <int, AyahProgressModel>{};
       for (final p in existingProgress) {
@@ -133,21 +159,71 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
         if (idx != -1) startIndex = idx;
       }
 
+      final blockedCheckpoint = _firstBlockingCheckpointBeforeStart(
+        _ayahs[startIndex].numberInSurah,
+      );
+      if (blockedCheckpoint != null) {
+        final idx = _ayahs.indexWhere(
+          (a) => a.numberInSurah == blockedCheckpoint.endAyah,
+        );
+        if (idx != -1) startIndex = idx;
+      }
+      final requiredCheckpoint =
+          blockedCheckpoint ??
+          _requiredCheckpointAfterAyah(_ayahs[startIndex].numberInSurah);
+
       emit(
         HifzSessionLoaded(
           surah: _surah,
           ayahs: _ayahs,
           progressMap: map,
           currentIndex: startIndex,
+          passThreshold: _settings.getSimilarityThreshold(), // BUG-2 FIX
+          segments: _segments,
+          passedCheckpointKeys: _passedCheckpointKeys,
+          requiredCheckpoint: requiredCheckpoint,
         ),
       );
 
       // Prefetch audio for upcoming ayahs in the background
-      AudioCacheService.instance.prefetchSession(
-        surahId: surahId,
-        ayahNumbers: _ayahs.map((a) => a.numberInSurah).toList(),
+      unawaited(
+        AudioCacheService.instance.prefetchSession(
+          surahId: surahId,
+          ayahNumbers: _ayahs.map((a) => a.numberInSurah).toList(),
+        ),
       );
     });
+  }
+
+  HifzSegment? _firstBlockingCheckpointBeforeStart(int ayahNumber) {
+    for (final segment in _segments) {
+      if (segment.endAyah < ayahNumber &&
+          !_passedCheckpointKeys.contains(segment.key)) {
+        return segment;
+      }
+    }
+    return null;
+  }
+
+  HifzSegment? _requiredCheckpointAfterAyah(int ayahNumber) {
+    final checkpoint = _getNextRequiredCheckpoint(
+      segments: _segments,
+      passedSegmentKeys: _passedCheckpointKeys,
+      progressMap: Map<int, AyahProgress>.from(_progressMap),
+    );
+    if (checkpoint == null) return null;
+    return checkpoint.endAyah == ayahNumber ? checkpoint : null;
+  }
+
+  String _checkpointExpectedText(HifzSegment checkpoint) {
+    return _ayahs
+        .where(
+          (ayah) =>
+              ayah.numberInSurah >= checkpoint.startAyah &&
+              ayah.numberInSurah <= checkpoint.endAyah,
+        )
+        .map((ayah) => ayah.text)
+        .join(' ');
   }
 
   /// Plays audio from either a URL or a local file path
@@ -214,7 +290,9 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
 
     if (unlockedSurahIds.contains(surahId)) return null;
 
-    final targetIndex = orderedSurahs.indexWhere((surah) => surah.id == surahId);
+    final targetIndex = orderedSurahs.indexWhere(
+      (surah) => surah.id == surahId,
+    );
     if (targetIndex <= 0) return null;
 
     final requiredSurah = orderedSurahs[targetIndex - 1];
@@ -260,7 +338,13 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
 
     if (_speechEnabled) {
       emit(
-        st.copyWith(isRecording: true, clearScore: true, recognizedText: ''),
+        st.copyWith(
+          isRecording: true,
+          clearScore: true,
+          recognizedText: '',
+          clearCompletedCheckpoint: true,
+          isCheckpointReviewActive: st.requiredCheckpoint != null,
+        ),
       );
       await _speechToText.listen(
         onResult: (result) {
@@ -299,8 +383,14 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     final st = state as HifzSessionLoaded;
 
     final ayah = st.ayahs[st.currentIndex];
+    final checkpoint = st.isCheckpointReviewActive
+        ? st.requiredCheckpoint
+        : null;
 
-    final normalizedExpected = ArabicNormalizer.normalize(ayah.text);
+    final expectedText = checkpoint == null
+        ? ayah.text
+        : _checkpointExpectedText(checkpoint);
+    final normalizedExpected = ArabicNormalizer.normalize(expectedText);
     final normalizedSpoken = ArabicNormalizer.normalize(st.recognizedText);
 
     // BUG-010: If STT returned empty, don't count as failure
@@ -318,42 +408,32 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     final threshold = _settings.getSimilarityThreshold();
     final pass = score >= threshold;
 
-    // Update progress with Soft Penalty instead of Hard Reset
-    var currentProgress = _progressMap[ayah.numberInSurah];
-    if (currentProgress != null) {
+    if (checkpoint != null) {
       if (pass) {
-        currentProgress = currentProgress.advanceWithSpacedRepetition();
-      } else {
-        // Soft Penalty: decrease repetitions by 1 (min 0) and reschedule review
-        currentProgress = currentProgress.softPenalty();
-      }
-      _progressMap[ayah.numberInSurah] = currentProgress;
-      final saveResult = await _saveProgress(currentProgress);
-      final failure = saveResult.fold((f) => f, (_) => null);
-      if (failure != null) {
-        TaliaLogger.e(
-          'Failed to save ayah progress in session',
-          failure,
-          StackTrace.current,
-        );
-        emit(
-          st.copyWith(
-            isEvaluating: false,
-            audioError: 'فشل حفظ تقدم الحفظ. حاول مرة أخرى.',
-          ),
-        );
-        Future.delayed(const Duration(seconds: 4), () {
-          if (state is HifzSessionLoaded) {
-            emit((state as HifzSessionLoaded).copyWith(clearAudioError: true));
-          }
-        });
-        return;
+        final saveResult = await _markCheckpointPassed(checkpoint);
+        final failure = saveResult.fold((f) => f, (_) => null);
+        if (failure != null) {
+          TaliaLogger.e(
+            'Failed to save checkpoint progress in session',
+            failure,
+            StackTrace.current,
+          );
+          emit(
+            st.copyWith(
+              isEvaluating: false,
+              audioError: 'فشل حفظ تقدم المراجعة. حاول مرة أخرى.',
+              isCheckpointReviewActive: false,
+            ),
+          );
+          return;
+        }
+        _passedCheckpointKeys = {..._passedCheckpointKeys, checkpoint.key};
       }
 
       if (pass) {
         try {
           await _streakService.recordActivity(activityDelta: 1);
-          await _xpService.addXp('ayah_memorized');
+          await _xpService.addXp('daily_review');
           final newAwards = await _achievementService
               .checkAndUnlockCertificates();
           if (newAwards.isNotEmpty && state is HifzSessionLoaded) {
@@ -366,6 +446,60 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
           }
         } catch (e, stack) {
           TaliaLogger.e('Non-critical: Failed to record streak/xp', e, stack);
+        }
+      }
+    } else {
+      // Update progress with Soft Penalty instead of Hard Reset
+      var currentProgress = _progressMap[ayah.numberInSurah];
+      if (currentProgress != null) {
+        if (pass) {
+          currentProgress = currentProgress.advanceWithSpacedRepetition();
+        } else {
+          // Soft Penalty: decrease repetitions by 1 (min 0) and reschedule review
+          currentProgress = currentProgress.softPenalty();
+        }
+        _progressMap[ayah.numberInSurah] = currentProgress;
+        final saveResult = await _saveProgress(currentProgress);
+        final failure = saveResult.fold((f) => f, (_) => null);
+        if (failure != null) {
+          TaliaLogger.e(
+            'Failed to save ayah progress in session',
+            failure,
+            StackTrace.current,
+          );
+          emit(
+            st.copyWith(
+              isEvaluating: false,
+              audioError: 'فشل حفظ تقدم الحفظ. حاول مرة أخرى.',
+            ),
+          );
+          Future.delayed(const Duration(seconds: 4), () {
+            if (state is HifzSessionLoaded) {
+              emit(
+                (state as HifzSessionLoaded).copyWith(clearAudioError: true),
+              );
+            }
+          });
+          return;
+        }
+
+        if (pass) {
+          try {
+            await _streakService.recordActivity(activityDelta: 1);
+            await _xpService.addXp('ayah_memorized');
+            final newAwards = await _achievementService
+                .checkAndUnlockCertificates();
+            if (newAwards.isNotEmpty && state is HifzSessionLoaded) {
+              final prevState = state as HifzSessionLoaded;
+              emit(
+                CertificatesEarned(awards: newAwards, previousState: prevState),
+              );
+              await Future.delayed(const Duration(milliseconds: 100));
+              if (!isClosed) emit(prevState);
+            }
+          } catch (e, stack) {
+            TaliaLogger.e('Non-critical: Failed to record streak/xp', e, stack);
+          }
         }
       }
     }
@@ -382,6 +516,14 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
         isEvaluating: false,
         similarityScore: score,
         progressMap: Map.from(_progressMap),
+        passedCheckpointKeys: _passedCheckpointKeys,
+        requiredCheckpoint: pass && checkpoint == null
+            ? _requiredCheckpointAfterAyah(ayah.numberInSurah)
+            : null,
+        clearRequiredCheckpoint: pass && checkpoint != null,
+        completedCheckpoint: pass && checkpoint != null ? checkpoint : null,
+        isCheckpointReviewActive: false,
+        passThreshold: threshold, // BUG-2 FIX: keep threshold in sync
       ),
     );
   }
@@ -390,12 +532,31 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     if (state is! HifzSessionLoaded) return;
     final st = state as HifzSessionLoaded;
     if (st.currentIndex < st.ayahs.length - 1) {
+      final currentAyah = st.ayahs[st.currentIndex].numberInSurah;
+      final canUnlock = _checkNextAyahUnlock(
+        currentAyah: currentAyah,
+        totalAyahs: st.surah.ayahCount,
+        segments: _segments,
+        passedSegmentKeys: _passedCheckpointKeys,
+      );
+      if (!canUnlock) {
+        emit(
+          st.copyWith(
+            requiredCheckpoint: _requiredCheckpointAfterAyah(currentAyah),
+            clearCompletedCheckpoint: true,
+          ),
+        );
+        return;
+      }
+
       HapticService.selection();
       emit(
         st.copyWith(
           currentIndex: st.currentIndex + 1,
           clearScore: true,
           recognizedText: '',
+          clearRequiredCheckpoint: true,
+          clearCompletedCheckpoint: true,
         ),
       );
     }
@@ -409,6 +570,57 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
         recognizedText: '',
       ),
     );
+  }
+
+  /// BUG-1 FIX: skipAyah applies a softPenalty to the current ayah so skips
+  /// are not silently ignored — they are rescheduled without a full reset.
+  Future<void> skipAyah() async {
+    if (state is! HifzSessionLoaded) return;
+    final st = state as HifzSessionLoaded;
+    final ayah = st.ayahs[st.currentIndex];
+
+    var currentProgress = _progressMap[ayah.numberInSurah];
+    if (currentProgress != null &&
+        currentProgress.status != AyahStatus.notStarted) {
+      // Apply soft penalty: moves ayah back one rep & schedules review tomorrow
+      currentProgress = currentProgress.softPenalty();
+      _progressMap[ayah.numberInSurah] = currentProgress;
+      await _saveProgress(currentProgress);
+    }
+
+    unawaited(HapticService.selection());
+
+    if (st.currentIndex < st.ayahs.length - 1) {
+      final canUnlock = _checkNextAyahUnlock(
+        currentAyah: ayah.numberInSurah,
+        totalAyahs: st.surah.ayahCount,
+        segments: _segments,
+        passedSegmentKeys: _passedCheckpointKeys,
+      );
+      if (!canUnlock) {
+        emit(
+          st.copyWith(
+            requiredCheckpoint: _requiredCheckpointAfterAyah(
+              ayah.numberInSurah,
+            ),
+            progressMap: Map.from(_progressMap),
+          ),
+        );
+        return;
+      }
+
+      emit(
+        st.copyWith(
+          currentIndex: st.currentIndex + 1,
+          clearScore: true,
+          recognizedText: '',
+          progressMap: Map.from(_progressMap),
+          clearRequiredCheckpoint: true,
+          clearCompletedCheckpoint: true,
+        ),
+      );
+    }
+    // If last ayah, just let the UI handle navigation via the finish button
   }
 
   @override

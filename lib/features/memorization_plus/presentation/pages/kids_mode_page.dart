@@ -84,7 +84,7 @@ class _KidsModeView extends StatelessWidget {
                     FilledButton.icon(
                       onPressed: () => context.pop(),
                       icon: const Icon(Icons.arrow_back_rounded),
-                      label: Text(context.isArabic ? 'العودة' : 'Go Back'),
+                      label: Text(context.l10n.goBack),
                     ),
                   ],
                 ),
@@ -474,23 +474,58 @@ class _CompleteButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.isCompleted) return const SizedBox.shrink();
-    return Center(
-      child: OutlinedButton.icon(
-        onPressed: () => context.read<KidsModeCubit>().markCompleted(),
-        style: OutlinedButton.styleFrom(
-          foregroundColor: const Color(0xFF2D8E4C),
-          side: const BorderSide(color: Color(0xFF2D8E4C)),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.xl,
-            vertical: AppSpacing.md,
+    return Column(
+      children: [
+        // BUG-4 FIX: show warning if user tries to complete before listening
+        if (state.mustListenFirst)
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: Colors.orange.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.orange.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.headphones_rounded,
+                  color: Colors.orange,
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'استمع للآية ${state.maxLoops} مرات أولاً 🎧',
+                  style: const TextStyle(
+                    color: Colors.orange,
+                    fontFamily: 'Amiri',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        Center(
+          child: OutlinedButton.icon(
+            onPressed: () => context.read<KidsModeCubit>().markCompleted(),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: const Color(0xFF2D8E4C),
+              side: const BorderSide(color: Color(0xFF2D8E4C)),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xl,
+                vertical: AppSpacing.md,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
+            ),
+            icon: const Icon(Icons.check_circle_outline_rounded),
+            label: const Text('أنهيت المراجعة'),
           ),
         ),
-        icon: const Icon(Icons.check_circle_outline_rounded),
-        label: const Text('أنهيت المراجعة'),
-      ),
+      ],
     );
   }
 }
@@ -532,13 +567,32 @@ class _CompletionCelebration extends StatelessWidget {
             style: AppTypography.bodySmall.copyWith(color: Colors.white70),
           ),
           const SizedBox(height: AppSpacing.lg),
-          OutlinedButton(
-            onPressed: () => context.pop(),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: const BorderSide(color: Colors.white60),
-            ),
-            child: const Text('العودة للقائمة'),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => context.pop(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    side: const BorderSide(color: Colors.white60),
+                  ),
+                  child: const Text('العودة للرحلة'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () => context.pushReplacement(
+                    '/memorization-plus/kids?surahId=${state.surahId}&ayahNumber=${state.ayahNumber + 1}',
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF2D8E4C),
+                  ),
+                  child: const Text('الآية التالية'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

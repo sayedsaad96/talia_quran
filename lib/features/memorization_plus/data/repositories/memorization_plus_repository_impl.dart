@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:crypto/crypto.dart';
 import 'package:dartz/dartz.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 import '../../../../features/quran/domain/entities/quran_entities.dart';
@@ -17,6 +22,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   final QuranRepository _quranRepository;
 
   final _scheduler = const ScheduleNextReviewUsecase();
+  SupabaseClient get _supabase => Supabase.instance.client;
 
   // ─── Track ──────────────────────────────────────────────────────────────────
   @override
@@ -55,10 +61,21 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     try {
       final allRecords = await _datasource.getAllReviewRecords();
 
-      int currentSurahId = surahId;
+      // BUG-7 FIX: Read custom plan settings and apply them
+      final customPlan = await _datasource.getCustomPlan();
+      final effectiveNewPerDay = customPlan?.newAyahsPerDay ?? newAyahsPerDay;
+      final nearRevisionLimit = customPlan?.nearRevisionCount ?? 10;
+      final farRevisionLimit = customPlan?.farRevisionCount ?? 5;
+      // Respect the custom plan's endSurahId boundary
+      final maxSurahId = customPlan?.endSurahId ?? 114;
+
+      int currentSurahId = customPlan?.startSurahId ?? surahId;
+      if (surahId > currentSurahId) {
+        currentSurahId = surahId;
+      }
       DailyPlan? bestPlan;
 
-      while (currentSurahId <= 114) {
+      while (currentSurahId <= maxSurahId) {
         final surahRecords = {
           for (final r in allRecords.where((r) => r.surahId == currentSurahId))
             r.ayahNumber: r,
@@ -78,7 +95,12 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         final List<DailyPlanAyah> nearRevision = [];
         final List<DailyPlanAyah> farRevision = [];
 
-        for (int i = 1; i <= totalAyahs; i++) {
+        final firstAyah =
+            customPlan != null && currentSurahId == customPlan.startSurahId
+            ? customPlan.startAyah.clamp(1, totalAyahs)
+            : 1;
+
+        for (int i = firstAyah; i <= totalAyahs; i++) {
           final record = surahRecords[i];
 
           String ayahText = 'النص غير متوفر';
@@ -87,7 +109,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
           } catch (_) {}
 
           if (record == null || record.isNew) {
-            if (newAyahs.length < newAyahsPerDay) {
+            if (newAyahs.length < effectiveNewPerDay) {
               newAyahs.add(
                 DailyPlanAyah(
                   surahId: currentSurahId,
@@ -104,9 +126,14 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
               ayahText: ayahText,
               record: record,
             );
-            if (record.isNearRevision) {
+            // BUG-7 FIX: apply custom plan revision limits
+            if (customPlan?.enableNearRevision != false &&
+                record.isNearRevision &&
+                nearRevision.length < nearRevisionLimit) {
               nearRevision.add(planAyah);
-            } else if (record.isFarRevision) {
+            } else if (customPlan?.enableFarRevision != false &&
+                record.isFarRevision &&
+                farRevision.length < farRevisionLimit) {
               farRevision.add(planAyah);
             }
           }
@@ -130,7 +157,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
 
       bestPlan ??= DailyPlan(
         generatedAt: DateTime.now(),
-        surahId: 114,
+        surahId: maxSurahId,
         newAyahs: const [],
         nearRevision: const [],
         farRevision: const [],
@@ -293,6 +320,431 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   }
 
   @override
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    required int surahId,
+  }) async {
+    try {
+      final logs = await _datasource.getKidsSessionLogs();
+      final completed = logs
+          .where((log) => log.surahId == surahId)
+          .map((log) => log.ayahNumber)
+          .toSet();
+
+      var totalAyahs = 7;
+      final detailResult = await _quranRepository.getSurahDetail(surahId);
+      detailResult.fold(
+        (_) {},
+        (detail) => totalAyahs = detail.surah.ayahCount,
+      );
+
+      const stageSize = 5;
+      final stages = <KidsJourneyStage>[];
+      var foundCurrent = false;
+      for (var start = 1; start <= totalAyahs; start += stageSize) {
+        final end = min(start + stageSize - 1, totalAyahs);
+        final ayahRange = List<int>.generate(end - start + 1, (i) => start + i);
+        final stageCompleted = ayahRange
+            .where((ayah) => completed.contains(ayah))
+            .toList();
+
+        KidsJourneyStageStatus status;
+        if (stageCompleted.length == ayahRange.length) {
+          status = KidsJourneyStageStatus.completed;
+        } else if (!foundCurrent) {
+          status = KidsJourneyStageStatus.current;
+          foundCurrent = true;
+        } else {
+          status = KidsJourneyStageStatus.locked;
+        }
+
+        stages.add(
+          KidsJourneyStage(
+            stageNumber: stages.length + 1,
+            surahId: surahId,
+            startAyah: start,
+            endAyah: end,
+            completedAyahs: stageCompleted,
+            status: status,
+          ),
+        );
+      }
+      return Right(stages);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs() async {
+    try {
+      return Right(await _datasource.getKidsSessionLogs());
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, KidsSessionLog>> saveKidsSessionLog({
+    required int surahId,
+    required int ayahNumber,
+    required int repeatsCompleted,
+    required int pointsEarned,
+  }) async {
+    try {
+      final now = DateTime.now();
+      final log = KidsSessionLogModel(
+        id: '${now.microsecondsSinceEpoch}_${surahId}_$ayahNumber',
+        surahId: surahId,
+        ayahNumber: ayahNumber,
+        repeatsCompleted: repeatsCompleted,
+        pointsEarned: pointsEarned,
+        completedAt: now,
+      );
+      await _datasource.saveKidsSessionLog(log);
+      await _unlockWeeklyRewardIfNeeded();
+      await syncKidsProgressToCloud();
+      return Right(log);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ParentDashboard>> getParentDashboard({
+    required int surahId,
+  }) async {
+    try {
+      final progress = await _datasource.getKidsProgress();
+      final logs = await _datasource.getKidsSessionLogs();
+      final settings = await _datasource.getParentSettings();
+      final rewards = await _datasource.getParentRewards();
+      final journey = await getKidsJourney(surahId: surahId);
+      return journey.fold(
+        Left.new,
+        (stages) => Right(
+          ParentDashboard(
+            progress: progress,
+            stages: stages,
+            logs: logs,
+            rewards: rewards,
+            settings: settings,
+          ),
+        ),
+      );
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ParentSettings>> getParentSettings() async {
+    try {
+      return Right(await _datasource.getParentSettings());
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> saveParentSettings(
+    ParentSettings settings,
+  ) async {
+    try {
+      await _datasource.saveParentSettings(
+        ParentSettingsModel.fromEntity(settings),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> verifyParentPin(String pin) async {
+    try {
+      final settings = await _datasource.getParentSettings();
+      return Right(settings.pinHash == _hashPin(pin));
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> setParentPin(String pin) async {
+    try {
+      final settings = await _datasource.getParentSettings();
+      await _datasource.saveParentSettings(
+        ParentSettingsModel.fromEntity(
+          settings.copyWith(pinHash: _hashPin(pin)),
+        ),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resetParentAccess() async {
+    try {
+      final settings = await _datasource.getParentSettings();
+      await _datasource.saveParentSettings(
+        ParentSettingsModel.fromEntity(
+          settings.copyWith(clearPin: true, remoteLinkEnabled: false),
+        ),
+      );
+      await _datasource.saveParentRewards(const []);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ParentReward>>> saveParentReward(
+    String title,
+  ) async {
+    try {
+      final trimmed = title.trim();
+      if (trimmed.isEmpty) {
+        return const Left(CacheFailure('اكتب اسم المكافأة أولاً'));
+      }
+      final rewards = await _datasource.getParentRewards();
+      if (rewards.length >= 3) {
+        return const Left(CacheFailure('يمكن إضافة 3 مكافآت فقط'));
+      }
+      final reward = ParentRewardModel(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        title: trimmed,
+        status: ParentRewardStatus.locked,
+        createdAt: DateTime.now(),
+      );
+      final next = [...rewards, reward];
+      await _datasource.saveParentRewards(next);
+      return Right(next);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ParentReward>>> claimParentReward(
+    String id,
+  ) async {
+    try {
+      final rewards = await _datasource.getParentRewards();
+      final next = rewards
+          .map(
+            (reward) => reward.id == id
+                ? ParentRewardModel.fromEntity(
+                    reward.copyWith(
+                      status: ParentRewardStatus.claimed,
+                      claimedAt: DateTime.now(),
+                    ),
+                  )
+                : reward,
+          )
+          .toList();
+      await _datasource.saveParentRewards(next);
+      return Right(next);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> createChildLinkToken() async {
+    try {
+      if (_supabase.auth.currentUser == null) {
+        return const Left(NetworkFailure('سجّل الدخول أولاً على جهاز الطفل'));
+      }
+
+      // Generate random 12-char uppercase hex token (no pgcrypto needed)
+      final rng = Random.secure();
+      final bytes = List<int>.generate(16, (_) => rng.nextInt(256));
+      final token = bytes
+          .map((b) => b.toRadixString(16).padLeft(2, '0'))
+          .join()
+          .substring(0, 12)
+          .toUpperCase();
+
+      // Hash the token with SHA-256 (matches what the DB used to do)
+      final tokenHash = sha256.convert(utf8.encode(token)).toString();
+
+      await _supabase.rpc(
+        'create_child_link_request_with_hash',
+        params: {'p_token_hash': tokenHash},
+      );
+
+      return Right(token);
+    } catch (e) {
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> acceptChildLinkToken(String token) async {
+    try {
+      if (_supabase.auth.currentUser == null) {
+        return const Left(
+          NetworkFailure('سجّل الدخول أولاً على جهاز ولي الأمر'),
+        );
+      }
+      // Hash the token client-side (no pgcrypto needed)
+      final rawToken = _extractToken(token).toUpperCase().trim();
+      final tokenHash = sha256.convert(utf8.encode(rawToken)).toString();
+      await _supabase.rpc(
+        'accept_child_link_token_with_hash',
+        params: {'p_token_hash': tokenHash},
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> syncKidsProgressToCloud() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) return const Right(null);
+
+      final progress = await _datasource.getKidsProgress();
+      await _supabase.rpc(
+        'upsert_kids_progress_cloud',
+        params: {
+          'p_total_points': progress.totalPoints,
+          'p_current_level': progress.currentLevel,
+          'p_current_streak': progress.currentStreak,
+          'p_stars_earned': progress.starsEarned,
+          'p_ayahs_completed': progress.ayahsCompleted,
+          'p_last_session_at': progress.lastSessionAt
+              ?.toUtc()
+              .toIso8601String(),
+        },
+      );
+
+      final logs = await _datasource.getKidsSessionLogs();
+      final synced = <KidsSessionLogModel>[];
+      for (final log in logs) {
+        if (log.isSynced) {
+          synced.add(log);
+          continue;
+        }
+        await _supabase.rpc(
+          'insert_kids_session_log',
+          params: {
+            'p_local_id': log.id,
+            'p_surah_id': log.surahId,
+            'p_ayah_number': log.ayahNumber,
+            'p_repeats_completed': log.repeatsCompleted,
+            'p_points_earned': log.pointsEarned,
+            'p_completed_at': log.completedAt.toUtc().toIso8601String(),
+          },
+        );
+        synced.add(
+          KidsSessionLogModel.fromEntity(
+            log.copyWith(syncedAt: DateTime.now()),
+          ),
+        );
+      }
+      await _datasource.saveKidsSessionLogs(synced);
+      return const Right(null);
+    } catch (e) {
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<RemoteChildSummary>>> getRemoteChildren() async {
+    try {
+      final user = _supabase.auth.currentUser;
+      if (user == null) {
+        return const Left(NetworkFailure('سجّل الدخول أولاً'));
+      }
+
+      final links = await _supabase
+          .from('parent_child_links')
+          .select('child_user_id')
+          .eq('parent_user_id', user.id)
+          .eq('status', 'active');
+
+      final children = <RemoteChildSummary>[];
+      for (final link in links) {
+        final childId = link['child_user_id'] as String;
+        final profileRows = await _supabase
+            .from('profiles')
+            .select('display_name')
+            .eq('id', childId)
+            .limit(1);
+        final progressRows = await _supabase
+            .from('kids_progress_cloud')
+            .select()
+            .eq('child_user_id', childId)
+            .limit(1);
+        final logRows = await _supabase
+            .from('kids_session_logs')
+            .select()
+            .eq('child_user_id', childId)
+            .order('completed_at', ascending: false)
+            .limit(30);
+        final rewardRows = await _supabase
+            .from('parent_rewards')
+            .select()
+            .eq('child_user_id', childId)
+            .order('created_at', ascending: false);
+
+        children.add(
+          RemoteChildSummary(
+            childUserId: childId,
+            displayName: profileRows.isEmpty
+                ? 'طفل تالية'
+                : profileRows.first['display_name'] as String? ?? 'طفل تالية',
+            progress: _progressFromCloud(
+              progressRows.isEmpty ? null : progressRows.first,
+            ),
+            logs: logRows.map(_logFromCloud).toList(),
+            rewards: rewardRows.map(_rewardFromCloud).toList(),
+          ),
+        );
+      }
+      return Right(children);
+    } catch (e) {
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
+    required String childUserId,
+    required String title,
+  }) async {
+    try {
+      final trimmed = title.trim();
+      if (trimmed.isEmpty) {
+        return const Left(CacheFailure('اكتب اسم المكافأة أولاً'));
+      }
+      final user = _supabase.auth.currentUser;
+      if (user == null) {
+        return const Left(NetworkFailure('سجّل الدخول أولاً'));
+      }
+      await _supabase.from('parent_rewards').insert({
+        'parent_user_id': user.id,
+        'child_user_id': childUserId,
+        'title': trimmed,
+      });
+      final rows = await _supabase
+          .from('parent_rewards')
+          .select()
+          .eq('child_user_id', childUserId)
+          .order('created_at', ascending: false);
+      return Right(rows.map(_rewardFromCloud).toList());
+    } catch (e) {
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, KidsProgress>> awardKidsPoints({
     required int surahId,
     required int ayahNumber,
@@ -309,6 +761,88 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       return Left(CacheFailure(e.toString()));
     }
   }
+
+  String _hashPin(String pin) => sha256.convert(utf8.encode(pin)).toString();
+
+  String _extractToken(String raw) {
+    const prefix = 'talia-kids-link:';
+    return raw.startsWith(prefix) ? raw.substring(prefix.length) : raw;
+  }
+
+  Future<void> _unlockWeeklyRewardIfNeeded() async {
+    final logs = await _datasource.getKidsSessionLogs();
+    final settings = await _datasource.getParentSettings();
+    final rewards = await _datasource.getParentRewards();
+    if (rewards.isEmpty ||
+        rewards.every((r) => r.status != ParentRewardStatus.locked)) {
+      return;
+    }
+    final now = DateTime.now();
+    final weekStart = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: now.weekday - 1));
+    final sessionsThisWeek = logs
+        .where((log) => !log.completedAt.isBefore(weekStart))
+        .length;
+    if (sessionsThisWeek < settings.weeklyGoalSessions) return;
+
+    var unlockedOne = false;
+    final next = rewards.map((reward) {
+      if (!unlockedOne && reward.status == ParentRewardStatus.locked) {
+        unlockedOne = true;
+        return ParentRewardModel.fromEntity(
+          reward.copyWith(
+            status: ParentRewardStatus.unlocked,
+            unlockedAt: DateTime.now(),
+          ),
+        );
+      }
+      return reward;
+    }).toList();
+    await _datasource.saveParentRewards(next);
+  }
+
+  KidsProgress _progressFromCloud(Map<String, dynamic>? row) {
+    if (row == null) return const KidsProgress.initial();
+    return KidsProgress(
+      totalPoints: row['total_points'] as int? ?? 0,
+      currentLevel: row['current_level'] as int? ?? 1,
+      currentStreak: row['current_streak'] as int? ?? 0,
+      starsEarned: row['stars_earned'] as int? ?? 0,
+      ayahsCompleted: row['ayahs_completed'] as int? ?? 0,
+      lastSessionAt: row['last_session_at'] == null
+          ? null
+          : DateTime.parse(row['last_session_at'] as String),
+    );
+  }
+
+  KidsSessionLog _logFromCloud(Map<String, dynamic> row) => KidsSessionLog(
+    id: row['local_id'] as String? ?? row['id'].toString(),
+    surahId: row['surah_id'] as int,
+    ayahNumber: row['ayah_number'] as int,
+    repeatsCompleted: row['repeats_completed'] as int? ?? 0,
+    pointsEarned: row['points_earned'] as int? ?? 0,
+    completedAt: DateTime.parse(row['completed_at'] as String),
+    syncedAt: DateTime.now(),
+  );
+
+  ParentReward _rewardFromCloud(Map<String, dynamic> row) => ParentReward(
+    id: row['id'].toString(),
+    title: row['title'] as String,
+    status: ParentRewardStatus.values.firstWhere(
+      (status) => status.name == (row['status'] as String? ?? 'locked'),
+      orElse: () => ParentRewardStatus.locked,
+    ),
+    createdAt: DateTime.parse(row['created_at'] as String),
+    unlockedAt: row['unlocked_at'] == null
+        ? null
+        : DateTime.parse(row['unlocked_at'] as String),
+    claimedAt: row['claimed_at'] == null
+        ? null
+        : DateTime.parse(row['claimed_at'] as String),
+  );
 
   // ─── Custom memorization plan ──────────────────────────────────────────────
 

@@ -13,10 +13,10 @@ class IsarAyahProgress {
 
   late int surahId;
   late int ayahNumber;
-  
+
   @enumerated
   late AyahStatus status;
-  
+
   late int repetitions;
   late DateTime nextReviewDate;
   late DateTime lastReviewDate;

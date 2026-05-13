@@ -91,13 +91,32 @@ class ProgressRepositoryImpl implements ProgressRepository {
       final readSurahs = readSurahIds.length;
       final readAyahs = readAyahKeys.length;
 
-      // Memorized juz count (each juz ~20 pages from [1..604])
-      // We count how many complete juz sets (20 pages) are memorized
-      // More accurate: count memorized ayahs as percentage of total
-      final memorizedJuz =
-          (memorizedAyahs / (AppConstants.totalAyahs / AppConstants.totalJuz))
-              .floor()
-              .clamp(0, AppConstants.totalJuz);
+      // BUG-6 FIX: Accurate memorizedJuz — check each juz individually
+      // instead of dividing total memorized ayahs by average juz size.
+      final memorizedKeys = allProgress
+          .where((p) => p.status == AyahStatus.memorized)
+          .map((p) => '${p.surahId}_${p.ayahNumber}')
+          .toSet();
+
+      int memorizedJuz = 0;
+      try {
+        final ayahsByJuz = await _quranDs.getAyahsGroupedByJuz();
+        for (int juz = 1; juz <= AppConstants.totalJuz; juz++) {
+          final juzAyahs = ayahsByJuz[juz];
+          if (juzAyahs != null &&
+              juzAyahs.isNotEmpty &&
+              juzAyahs.every((a) =>
+                  memorizedKeys.contains('${a.surahId}_${a.numberInSurah}'))) {
+            memorizedJuz++;
+          }
+        }
+      } catch (_) {
+        // Fallback to approximate calculation if juz data unavailable
+        memorizedJuz =
+            (memorizedAyahs / (AppConstants.totalAyahs / AppConstants.totalJuz))
+                .floor()
+                .clamp(0, AppConstants.totalJuz);
+      }
 
       final streak = _progressDs.getStreakDays();
       final lastActive = _progressDs.getLastActiveDate();

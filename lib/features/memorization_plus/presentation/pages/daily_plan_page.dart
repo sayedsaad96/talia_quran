@@ -79,19 +79,21 @@ class _DailyPlanView extends StatelessWidget {
                         .toSet()
                         .toList();
                     if (numbers.isNotEmpty) {
-                      context
-                          .push(
-                            '/memorization-plus/quiz',
-                            extra: {'surahId': surahId, 'ayahNumbers': numbers},
-                          )
-                          .then((_) {
-                            // Refresh plan after quiz
-                            if (context.mounted) {
-                              context.read<DailyPlanCubit>().refresh(
-                                surahId: surahId,
-                              );
-                            }
-                          });
+                      final quizLocation = Uri(
+                        path: '/memorization-plus/quiz',
+                        queryParameters: {
+                          'surahId': '$surahId',
+                          'ayahNumbers': numbers.join(','),
+                        },
+                      ).toString();
+                      context.push(quizLocation).then((_) {
+                        // Refresh plan after quiz
+                        if (context.mounted) {
+                          context.read<DailyPlanCubit>().refresh(
+                            surahId: surahId,
+                          );
+                        }
+                      });
                     }
                   },
                   backgroundColor: primary,

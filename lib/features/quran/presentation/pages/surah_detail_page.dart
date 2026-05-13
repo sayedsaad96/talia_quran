@@ -100,10 +100,8 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
         final isNowBookmarked = !wasBookmarked;
         context.showSnackBar(
           isNowBookmarked
-              ? (context.isArabic ? 'تم إضافة علامة مرجعية ✓' : 'Bookmark added ✓')
-              : (context.isArabic
-                    ? 'تم إزالة العلامة المرجعية'
-                    : 'Bookmark removed'),
+              ? context.l10n.bookmarkAdded
+              : context.l10n.bookmarkRemoved,
         );
       }
     } catch (e) {

@@ -76,15 +76,19 @@ class AuthRepositoryImpl implements AuthRepository {
       // If identities is empty it means the email is already registered.
       if (response.user!.identities != null &&
           response.user!.identities!.isEmpty) {
-        return const Left(AuthFailure('البريد الإلكتروني مسجل بالفعل. حاول تسجيل الدخول.'));
+        return const Left(
+          AuthFailure('البريد الإلكتروني مسجل بالفعل. حاول تسجيل الدخول.'),
+        );
       }
 
       // If email confirmation is required, the session will be null.
       // Inform the user they need to confirm their email.
       if (response.session == null) {
-        return const Left(AuthFailure(
-          'تم إنشاء الحساب! يرجى تفقّد بريدك الإلكتروني لتأكيد الحساب قبل تسجيل الدخول.',
-        ));
+        return const Left(
+          AuthFailure(
+            'تم إنشاء الحساب! يرجى تفقّد بريدك الإلكتروني لتأكيد الحساب قبل تسجيل الدخول.',
+          ),
+        );
       }
 
       final user = AppUser(
@@ -155,14 +159,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> resendConfirmation(String email) async {
-    await _supabase.auth.resend(
-      type: OtpType.signup,
-      email: email,
-    );
+    await _supabase.auth.resend(type: OtpType.signup, email: email);
   }
 
   // ─── Sign Out ─────────────────────────────────────────────────────────────
-
 
   @override
   Future<Either<Failure, Unit>> signOut() async {
@@ -218,23 +218,27 @@ class AuthRepositoryImpl implements AuthRepository {
   // ─── Ayah Progress Sync ─────────────────────────────────────────────────────
 
   Future<void> _syncAyahProgressToCloud(String userId) async {
-    final allProgress =
-        await _isar.isarAyahProgress.where().findAll();
+    final allProgress = await _isar.isarAyahProgress.where().findAll();
 
     if (allProgress.isEmpty) return;
 
-    final data = allProgress.map((p) => {
-          'surah_id': p.surahId,
-          'ayah_number': p.ayahNumber,
-          'status': p.status.name,
-          'repetitions': p.repetitions,
-          'next_review_date': p.nextReviewDate.toUtc().toIso8601String(),
-          'last_review_date': p.lastReviewDate.toUtc().toIso8601String(),
-        }).toList();
+    final data = allProgress
+        .map(
+          (p) => {
+            'surah_id': p.surahId,
+            'ayah_number': p.ayahNumber,
+            'status': p.status.name,
+            'repetitions': p.repetitions,
+            'next_review_date': p.nextReviewDate.toUtc().toIso8601String(),
+            'last_review_date': p.lastReviewDate.toUtc().toIso8601String(),
+          },
+        )
+        .toList();
 
-    await _supabase.rpc('upsert_ayah_progress', params: {
-      'p_data': jsonEncode(data),
-    });
+    await _supabase.rpc(
+      'upsert_ayah_progress',
+      params: {'p_data': jsonEncode(data)},
+    );
   }
 
   Future<void> _pullAyahProgressFromCloud(String userId) async {
@@ -255,7 +259,9 @@ class AuthRepositoryImpl implements AuthRepository {
         final cloudDate = DateTime.parse(row['last_review_date'] as String);
         final localDate = existing?.lastReviewDate;
 
-        if (existing == null || localDate == null || cloudDate.isAfter(localDate)) {
+        if (existing == null ||
+            localDate == null ||
+            cloudDate.isAfter(localDate)) {
           final isar = IsarAyahProgress()
             ..compositeKey = '${row['surah_id']}_${row['ayah_number']}'
             ..surahId = row['surah_id'] as int
@@ -278,19 +284,22 @@ class AuthRepositoryImpl implements AuthRepository {
     final streak = await _isar.streakIsars.get(1);
     if (streak == null) return;
 
-    await _supabase.rpc('upsert_streak', params: {
-      'p_current_streak': streak.currentStreak,
-      'p_longest_streak': streak.longestStreak,
-      'p_last_activity_date': streak.lastActivityDate?.toIso8601String().split('T').first,
-      'p_freezes_available': streak.freezesAvailable,
-    });
+    await _supabase.rpc(
+      'upsert_streak',
+      params: {
+        'p_current_streak': streak.currentStreak,
+        'p_longest_streak': streak.longestStreak,
+        'p_last_activity_date': streak.lastActivityDate
+            ?.toIso8601String()
+            .split('T')
+            .first,
+        'p_freezes_available': streak.freezesAvailable,
+      },
+    );
   }
 
   Future<void> _pullStreakFromCloud(String userId) async {
-    final rows = await _supabase
-        .from('streaks')
-        .select()
-        .eq('user_id', userId);
+    final rows = await _supabase.from('streaks').select().eq('user_id', userId);
 
     if (rows.isEmpty) return;
     final cloud = rows.first;
@@ -300,12 +309,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
       local.currentStreak =
           local.currentStreak > (cloud['current_streak'] as int)
-              ? local.currentStreak
-              : cloud['current_streak'] as int;
+          ? local.currentStreak
+          : cloud['current_streak'] as int;
       local.longestStreak =
           local.longestStreak > (cloud['longest_streak'] as int)
-              ? local.longestStreak
-              : cloud['longest_streak'] as int;
+          ? local.longestStreak
+          : cloud['longest_streak'] as int;
       local.freezesAvailable = cloud['freezes_available'] as int;
 
       if (cloud['last_activity_date'] != null) {
@@ -326,16 +335,11 @@ class AuthRepositoryImpl implements AuthRepository {
     final xp = await _isar.xpIsars.get(1);
     if (xp == null) return;
 
-    await _supabase.rpc('upsert_xp', params: {
-      'p_total_xp': xp.totalXp,
-    });
+    await _supabase.rpc('upsert_xp', params: {'p_total_xp': xp.totalXp});
   }
 
   Future<void> _pullXpFromCloud(String userId) async {
-    final rows = await _supabase
-        .from('xp')
-        .select()
-        .eq('user_id', userId);
+    final rows = await _supabase.from('xp').select().eq('user_id', userId);
 
     if (rows.isEmpty) return;
     final cloud = rows.first;
@@ -357,14 +361,14 @@ class AuthRepositoryImpl implements AuthRepository {
     if (activities.isEmpty) return;
 
     // C04 FIX: Batch all daily activities into a single RPC call
-    final data = activities.map((a) => {
-      'day_key': a.dayKey,
-      'activity_count': a.activityCount,
-    }).toList();
+    final data = activities
+        .map((a) => {'day_key': a.dayKey, 'activity_count': a.activityCount})
+        .toList();
 
-    await _supabase.rpc('upsert_daily_activities_batch', params: {
-      'p_data': jsonEncode(data),
-    });
+    await _supabase.rpc(
+      'upsert_daily_activities_batch',
+      params: {'p_data': jsonEncode(data)},
+    );
   }
 
   Future<void> _pullDailyActivitiesFromCloud(String userId) async {
@@ -380,7 +384,10 @@ class AuthRepositoryImpl implements AuthRepository {
         final dayKey = row['day_key'] as int;
         final cloudCount = row['activity_count'] as int;
 
-        final local = await _isar.dailyActivityIsars.where().dayKeyEqualTo(dayKey).findFirst();
+        final local = await _isar.dailyActivityIsars
+            .where()
+            .dayKeyEqualTo(dayKey)
+            .findFirst();
 
         if (local != null) {
           if (cloudCount > local.activityCount) {
@@ -451,7 +458,8 @@ class AuthRepositoryImpl implements AuthRepository {
     }
 
     // Network error
-    if (lower.contains('network') || lower.contains('connection') ||
+    if (lower.contains('network') ||
+        lower.contains('connection') ||
         lower.contains('socket')) {
       return 'لا يوجد اتصال بالإنترنت';
     }

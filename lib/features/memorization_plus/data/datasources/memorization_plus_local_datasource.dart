@@ -19,6 +19,15 @@ abstract class MemorizationPlusLocalDatasource {
   // Kids progress
   Future<KidsProgressModel> getKidsProgress();
   Future<void> saveKidsProgress(KidsProgressModel progress);
+  Future<List<KidsSessionLogModel>> getKidsSessionLogs();
+  Future<void> saveKidsSessionLog(KidsSessionLogModel log);
+  Future<void> saveKidsSessionLogs(List<KidsSessionLogModel> logs);
+
+  // Parent dashboard
+  Future<ParentSettingsModel> getParentSettings();
+  Future<void> saveParentSettings(ParentSettingsModel settings);
+  Future<List<ParentRewardModel>> getParentRewards();
+  Future<void> saveParentRewards(List<ParentRewardModel> rewards);
 
   // Custom memorization plan
   Future<CustomMemorizationPlanModel?> getCustomPlan();
@@ -37,6 +46,9 @@ class MemorizationPlusLocalDatasourceImpl
   static const _kReviewPrefix = 'mem_plus_review';
   static const _kDailyPlan = 'mem_plus_daily_plan';
   static const _kKidsProgress = 'mem_plus_kids_progress';
+  static const _kKidsSessionLogs = 'mem_plus_kids_session_logs';
+  static const _kParentSettings = 'mem_plus_parent_settings';
+  static const _kParentRewards = 'mem_plus_parent_rewards';
   static const _kCustomPlan = 'mem_plus_custom_plan';
 
   String _reviewKey(int surahId, int ayahNumber) =>
@@ -135,6 +147,73 @@ class MemorizationPlusLocalDatasourceImpl
   @override
   Future<void> saveKidsProgress(KidsProgressModel progress) =>
       _setStringOrThrow(_kKidsProgress, jsonEncode(progress.toJson()));
+
+  @override
+  Future<List<KidsSessionLogModel>> getKidsSessionLogs() async {
+    final raw = _prefs.getString(_kKidsSessionLogs);
+    if (raw == null) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return decoded
+          .whereType<Map<String, dynamic>>()
+          .map(KidsSessionLogModel.fromJson)
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> saveKidsSessionLog(KidsSessionLogModel log) async {
+    final logs = await getKidsSessionLogs();
+    final next = [...logs.where((item) => item.id != log.id), log]
+      ..sort((a, b) => b.completedAt.compareTo(a.completedAt));
+    await saveKidsSessionLogs(next);
+  }
+
+  @override
+  Future<void> saveKidsSessionLogs(List<KidsSessionLogModel> logs) =>
+      _setStringOrThrow(
+        _kKidsSessionLogs,
+        jsonEncode(logs.map((log) => log.toJson()).toList()),
+      );
+
+  // ─── Parent dashboard ──────────────────────────────────────────────────────
+  @override
+  Future<ParentSettingsModel> getParentSettings() async {
+    final raw = _prefs.getString(_kParentSettings);
+    if (raw == null) return const ParentSettingsModel.defaults();
+    return _tryParse(raw, ParentSettingsModel.fromJson) ??
+        const ParentSettingsModel.defaults();
+  }
+
+  @override
+  Future<void> saveParentSettings(ParentSettingsModel settings) =>
+      _setStringOrThrow(_kParentSettings, jsonEncode(settings.toJson()));
+
+  @override
+  Future<List<ParentRewardModel>> getParentRewards() async {
+    final raw = _prefs.getString(_kParentRewards);
+    if (raw == null) return const [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+      return decoded
+          .whereType<Map<String, dynamic>>()
+          .map(ParentRewardModel.fromJson)
+          .toList();
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  @override
+  Future<void> saveParentRewards(List<ParentRewardModel> rewards) =>
+      _setStringOrThrow(
+        _kParentRewards,
+        jsonEncode(rewards.map((reward) => reward.toJson()).toList()),
+      );
 
   // ─── Custom memorization plan ───────────────────────────────────────────────
   @override

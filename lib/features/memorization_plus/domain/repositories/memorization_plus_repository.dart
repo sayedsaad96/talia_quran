@@ -38,6 +38,34 @@ abstract class MemorizationPlusRepository {
   // ─── Kids progress ──────────────────────────────────────────────────────────
   Future<Either<Failure, KidsProgress>> getKidsProgress();
   Future<Either<Failure, void>> saveKidsProgress(KidsProgress progress);
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    required int surahId,
+  });
+  Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs();
+  Future<Either<Failure, KidsSessionLog>> saveKidsSessionLog({
+    required int surahId,
+    required int ayahNumber,
+    required int repeatsCompleted,
+    required int pointsEarned,
+  });
+  Future<Either<Failure, ParentDashboard>> getParentDashboard({
+    required int surahId,
+  });
+  Future<Either<Failure, ParentSettings>> getParentSettings();
+  Future<Either<Failure, void>> saveParentSettings(ParentSettings settings);
+  Future<Either<Failure, bool>> verifyParentPin(String pin);
+  Future<Either<Failure, void>> setParentPin(String pin);
+  Future<Either<Failure, void>> resetParentAccess();
+  Future<Either<Failure, List<ParentReward>>> saveParentReward(String title);
+  Future<Either<Failure, List<ParentReward>>> claimParentReward(String id);
+  Future<Either<Failure, String>> createChildLinkToken();
+  Future<Either<Failure, void>> acceptChildLinkToken(String token);
+  Future<Either<Failure, void>> syncKidsProgressToCloud();
+  Future<Either<Failure, List<RemoteChildSummary>>> getRemoteChildren();
+  Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
+    required String childUserId,
+    required String title,
+  });
   Future<Either<Failure, KidsProgress>> awardKidsPoints({
     required int surahId,
     required int ayahNumber,

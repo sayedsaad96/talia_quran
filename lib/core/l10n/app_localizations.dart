@@ -320,6 +320,12 @@ abstract class AppLocalizations {
   /// **'أذكار عامة'**
   String get generalAzkar;
 
+  /// No description provided for @duas.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأدعية'**
+  String get duas;
+
   /// No description provided for @count.
   ///
   /// In ar, this message translates to:
@@ -878,6 +884,552 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'يحتاج التطبيق إذن الميكروفون للتسميع الصوتي. يرجى السماح من إعدادات الجهاز.'**
   String get micPermissionError;
+
+  /// No description provided for @account.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحساب'**
+  String get account;
+
+  /// No description provided for @accuracyLevel.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستوى الدقة'**
+  String get accuracyLevel;
+
+  /// No description provided for @streakProtection.
+  ///
+  /// In ar, this message translates to:
+  /// **'حماية السلسلة'**
+  String get streakProtection;
+
+  /// No description provided for @morningAzkarReminder.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير أذكار الصباح'**
+  String get morningAzkarReminder;
+
+  /// No description provided for @eveningAzkarReminder.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير أذكار المساء'**
+  String get eveningAzkarReminder;
+
+  /// No description provided for @dailyDuaReminder.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعاء اليوم'**
+  String get dailyDuaReminder;
+
+  /// No description provided for @signOut.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الخروج'**
+  String get signOut;
+
+  /// No description provided for @signIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الدخول'**
+  String get signIn;
+
+  /// No description provided for @signUp.
+  ///
+  /// In ar, this message translates to:
+  /// **'حساب جديد'**
+  String get signUp;
+
+  /// No description provided for @email.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني'**
+  String get email;
+
+  /// No description provided for @password.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة المرور'**
+  String get password;
+
+  /// No description provided for @createAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء حساب'**
+  String get createAccount;
+
+  /// No description provided for @invalidEmail.
+  ///
+  /// In ar, this message translates to:
+  /// **'بريد إلكتروني غير صحيح'**
+  String get invalidEmail;
+
+  /// No description provided for @passwordTooShort.
+  ///
+  /// In ar, this message translates to:
+  /// **'6 أحرف على الأقل'**
+  String get passwordTooShort;
+
+  /// No description provided for @enterEmail.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل بريدك الإلكتروني'**
+  String get enterEmail;
+
+  /// No description provided for @enterPassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل كلمة المرور'**
+  String get enterPassword;
+
+  /// No description provided for @loginSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تسجيل الدخول بنجاح ✓'**
+  String get loginSuccess;
+
+  /// No description provided for @signupSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إنشاء الحساب بنجاح ✓'**
+  String get signupSuccess;
+
+  /// No description provided for @profileSavedToCloud.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدمك محفوظ على السحابة'**
+  String get profileSavedToCloud;
+
+  /// No description provided for @guestModeWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل دخولك لحفظ تقدمك على جميع أجهزتك وعدم فقدانه عند مسح التطبيق.'**
+  String get guestModeWarning;
+
+  /// No description provided for @signOutWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تريد تسجيل الخروج؟ تقدمك المحفوظ على السحابة لن يُحذف.'**
+  String get signOutWarning;
+
+  /// No description provided for @dailyReviewReminder.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير المراجعة اليومية'**
+  String get dailyReviewReminder;
+
+  /// No description provided for @dailyReviewTime.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل يوم الساعة ٨:٠٠ مساءً'**
+  String get dailyReviewTime;
+
+  /// No description provided for @streakProtectionDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيه الساعة ١٠:٠٠ مساءً إذا لم تراجع'**
+  String get streakProtectionDesc;
+
+  /// No description provided for @morningAzkarTime.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل يوم الساعة ٦:٠٠ صباحًا'**
+  String get morningAzkarTime;
+
+  /// No description provided for @eveningAzkarTime.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل يوم الساعة ٦:٠٠ مساءً'**
+  String get eveningAzkarTime;
+
+  /// No description provided for @taliaDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تطبيق متميز لحفظ ومراجعة القرآن الكريم'**
+  String get taliaDescription;
+
+  /// No description provided for @arabicNameHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'💡 يفضل إدخال الاسم باللغة العربية ليظهر بشكل أجمل في الشهادات'**
+  String get arabicNameHint;
+
+  /// No description provided for @invalidAge.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل عمرًا صحيحًا بين 1 و120'**
+  String get invalidAge;
+
+  /// No description provided for @profileSaveError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر حفظ الملف الشخصي'**
+  String get profileSaveError;
+
+  /// No description provided for @accuracySaveError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر حفظ مستوى الدقة'**
+  String get accuracySaveError;
+
+  /// No description provided for @reviewReminderSaveError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحديث تذكير المراجعة'**
+  String get reviewReminderSaveError;
+
+  /// No description provided for @streakReminderSaveError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحديث تنبيه السلسلة'**
+  String get streakReminderSaveError;
+
+  /// No description provided for @morningAzkarSaveError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحديث تذكير أذكار الصباح'**
+  String get morningAzkarSaveError;
+
+  /// No description provided for @eveningAzkarSaveError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحديث تذكير أذكار المساء'**
+  String get eveningAzkarSaveError;
+
+  /// No description provided for @difficultyEasy.
+  ///
+  /// In ar, this message translates to:
+  /// **'سهل (٧٠٪)'**
+  String get difficultyEasy;
+
+  /// No description provided for @difficultyMedium.
+  ///
+  /// In ar, this message translates to:
+  /// **'متوسط (٨٥٪)'**
+  String get difficultyMedium;
+
+  /// No description provided for @difficultyHard.
+  ///
+  /// In ar, this message translates to:
+  /// **'صعب (٩٢٪)'**
+  String get difficultyHard;
+
+  /// No description provided for @bookmarkSaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حفظ العلامة المرجعية'**
+  String get bookmarkSaved;
+
+  /// No description provided for @bookmarkAdded.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إضافة علامة مرجعية ✓'**
+  String get bookmarkAdded;
+
+  /// No description provided for @bookmarkRemoved.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إزالة العلامة المرجعية'**
+  String get bookmarkRemoved;
+
+  /// No description provided for @levelBeginner.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبتدئ'**
+  String get levelBeginner;
+
+  /// No description provided for @levelStudent.
+  ///
+  /// In ar, this message translates to:
+  /// **'طالب'**
+  String get levelStudent;
+
+  /// No description provided for @levelHafez.
+  ///
+  /// In ar, this message translates to:
+  /// **'حافظ'**
+  String get levelHafez;
+
+  /// No description provided for @levelSheikh.
+  ///
+  /// In ar, this message translates to:
+  /// **'شيخ'**
+  String get levelSheikh;
+
+  /// No description provided for @levelImam.
+  ///
+  /// In ar, this message translates to:
+  /// **'إمام'**
+  String get levelImam;
+
+  /// No description provided for @juzCountLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأجزاء'**
+  String get juzCountLabel;
+
+  /// No description provided for @ayahsRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآيات المقروءة'**
+  String get ayahsRead;
+
+  /// No description provided for @learning.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيد التعلم'**
+  String get learning;
+
+  /// No description provided for @reviewing.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيد المراجعة'**
+  String get reviewing;
+
+  /// No description provided for @all.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكل'**
+  String get all;
+
+  /// No description provided for @streakTerm.
+  ///
+  /// In ar, this message translates to:
+  /// **'المواظبة'**
+  String get streakTerm;
+
+  /// No description provided for @achieved.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم الإنجاز!'**
+  String get achieved;
+
+  /// No description provided for @adultsTrack.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسار الكبار'**
+  String get adultsTrack;
+
+  /// No description provided for @memorizedTerm.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكتمل'**
+  String get memorizedTerm;
+
+  /// No description provided for @reviewingPrefix.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيد المراجعة: '**
+  String get reviewingPrefix;
+
+  /// No description provided for @kidsTrack.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسار الأطفال'**
+  String get kidsTrack;
+
+  /// No description provided for @points.
+  ///
+  /// In ar, this message translates to:
+  /// **'النقاط'**
+  String get points;
+
+  /// No description provided for @stars.
+  ///
+  /// In ar, this message translates to:
+  /// **'النجوم'**
+  String get stars;
+
+  /// No description provided for @myCertificates.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهاداتي'**
+  String get myCertificates;
+
+  /// No description provided for @juzSaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأجزاء المحفوظة'**
+  String get juzSaved;
+
+  /// No description provided for @removeBookmarkTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حذف العلامة؟'**
+  String get removeBookmarkTitle;
+
+  /// No description provided for @goBack.
+  ///
+  /// In ar, this message translates to:
+  /// **'العودة'**
+  String get goBack;
+
+  /// No description provided for @taliaUser.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستخدم تالية'**
+  String get taliaUser;
+
+  /// No description provided for @startFatihah.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ قراءة سورة الفاتحة'**
+  String get startFatihah;
+
+  /// No description provided for @surahAyahFormat.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surahName}، آية {ayahNumber}'**
+  String surahAyahFormat(Object surahName, Object ayahNumber);
+
+  /// No description provided for @saveProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ تقدمك'**
+  String get saveProgress;
+
+  /// No description provided for @syncProgressDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'قم بتسجيل الدخول لحفظ تقدمك ومزامنته على جميع أجهزتك'**
+  String get syncProgressDesc;
+
+  /// No description provided for @later.
+  ///
+  /// In ar, this message translates to:
+  /// **'لاحقاً'**
+  String get later;
+
+  /// No description provided for @congratulations.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبارك!'**
+  String get congratulations;
+
+  /// No description provided for @completedJuzAmma.
+  ///
+  /// In ar, this message translates to:
+  /// **'لقد أتممت حفظ جزء عم بنجاح.'**
+  String get completedJuzAmma;
+
+  /// No description provided for @completedQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'لقد أتممت حفظ القرآن الكريم كاملاً بنجاح.'**
+  String get completedQuran;
+
+  /// No description provided for @continueMemorizing.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة الحفظ'**
+  String get continueMemorizing;
+
+  /// No description provided for @view.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض'**
+  String get view;
+
+  /// No description provided for @endSessionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنهاء الجلسة؟'**
+  String get endSessionTitle;
+
+  /// No description provided for @endSessionDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل أنت متأكد من رغبتك في إنهاء جلسة الحفظ؟ لن يتم حفظ تقدمك الحالي.'**
+  String get endSessionDesc;
+
+  /// No description provided for @continueAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة'**
+  String get continueAction;
+
+  /// No description provided for @exitAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'خروج'**
+  String get exitAction;
+
+  /// No description provided for @listen.
+  ///
+  /// In ar, this message translates to:
+  /// **'استماع'**
+  String get listen;
+
+  /// No description provided for @finish.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنهاء'**
+  String get finish;
+
+  /// No description provided for @skip.
+  ///
+  /// In ar, this message translates to:
+  /// **'تخطي'**
+  String get skip;
+
+  /// No description provided for @tryAgainAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاول مجدداً'**
+  String get tryAgainAction;
+
+  /// No description provided for @youRecited.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما قرأته:'**
+  String get youRecited;
+
+  /// No description provided for @listeningInProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري الاستماع...'**
+  String get listeningInProgress;
+
+  /// No description provided for @tapToRecord.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط للتسميع'**
+  String get tapToRecord;
+
+  /// No description provided for @adultPathTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسار الكبار (تصاعدي)'**
+  String get adultPathTitle;
+
+  /// No description provided for @adultPathSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'من الفاتحة إلى الناس'**
+  String get adultPathSubtitle;
+
+  /// No description provided for @beginnerPathTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسار المبتدئين (تنازلي)'**
+  String get beginnerPathTitle;
+
+  /// No description provided for @beginnerPathSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'من الناس إلى الفاتحة'**
+  String get beginnerPathSubtitle;
+
+  /// No description provided for @lockedSurahText.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل السورة السابقة لفتح هذه السورة'**
+  String get lockedSurahText;
+
+  /// No description provided for @bookmarksCountItem.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} {count, plural, =1{علامة} other{علامات}}'**
+  String bookmarksCountItem(int count);
 }
 
 class _AppLocalizationsDelegate

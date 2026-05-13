@@ -13,6 +13,7 @@ abstract class AppConstants {
   static const String kStreakCount = 'streak_count';
   static const String kLastActiveDate = 'last_active_date';
   static const String kHifzProgress = 'hifz_progress';
+  static const String kHifzCheckpointProgress = 'hifz_checkpoint_progress';
   static const String kHifzPathMode = 'hifz_path_mode';
   static const String kAzkarDone = 'azkar_done';
   static const String kFontSize = 'quran_font_size';

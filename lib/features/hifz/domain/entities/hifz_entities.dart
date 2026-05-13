@@ -26,15 +26,14 @@ class AyahProgress extends Equatable {
     int? repetitions,
     DateTime? nextReviewDate,
     DateTime? lastReviewDate,
-  }) =>
-      AyahProgress(
-        surahId: surahId,
-        ayahNumber: ayahNumber,
-        status: status ?? this.status,
-        repetitions: repetitions ?? this.repetitions,
-        nextReviewDate: nextReviewDate ?? this.nextReviewDate,
-        lastReviewDate: lastReviewDate ?? this.lastReviewDate,
-      );
+  }) => AyahProgress(
+    surahId: surahId,
+    ayahNumber: ayahNumber,
+    status: status ?? this.status,
+    repetitions: repetitions ?? this.repetitions,
+    nextReviewDate: nextReviewDate ?? this.nextReviewDate,
+    lastReviewDate: lastReviewDate ?? this.lastReviewDate,
+  );
 
   String get key => '${surahId}_$ayahNumber';
 
@@ -57,12 +56,37 @@ class SurahHifzProgress extends Equatable {
   final int reviewCount;
   final int learningCount;
 
-  double get percentage =>
-      totalAyahs == 0 ? 0 : memorizedCount / totalAyahs;
+  double get percentage => totalAyahs == 0 ? 0 : memorizedCount / totalAyahs;
 
   bool get isComplete => memorizedCount == totalAyahs;
 
   @override
-  List<Object?> get props =>
-      [surahId, totalAyahs, memorizedCount, reviewCount, learningCount];
+  List<Object?> get props => [
+    surahId,
+    totalAyahs,
+    memorizedCount,
+    reviewCount,
+    learningCount,
+  ];
+}
+
+class HifzSegment extends Equatable {
+  const HifzSegment({
+    required this.surahId,
+    required this.startAyah,
+    required this.endAyah,
+    required this.totalAyahs,
+  });
+
+  final int surahId;
+  final int startAyah;
+  final int endAyah;
+  final int totalAyahs;
+
+  bool get isFullSurah => startAyah == 1 && endAyah == totalAyahs;
+
+  String get key => '${surahId}_${startAyah}_$endAyah';
+
+  @override
+  List<Object?> get props => [surahId, startAyah, endAyah, totalAyahs];
 }

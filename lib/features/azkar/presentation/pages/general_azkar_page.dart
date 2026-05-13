@@ -15,19 +15,23 @@ import '../../domain/entities/azkar_entities.dart';
 import '../cubits/azkar_cubit.dart';
 
 class GeneralAzkarPage extends StatelessWidget {
-  const GeneralAzkarPage({super.key});
+  const GeneralAzkarPage({super.key, this.category = AzkarCategory.general});
+
+  final AzkarCategory category;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<AzkarCubit>()..load(AzkarCategory.general),
-      child: const _GeneralAzkarView(),
+      create: (_) => getIt<AzkarCubit>()..load(category),
+      child: _GeneralAzkarView(category: category),
     );
   }
 }
 
 class _GeneralAzkarView extends StatefulWidget {
-  const _GeneralAzkarView();
+  const _GeneralAzkarView({required this.category});
+
+  final AzkarCategory category;
 
   @override
   State<_GeneralAzkarView> createState() => _GeneralAzkarViewState();
@@ -39,9 +43,11 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    
+
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       body: BlocBuilder<AzkarCubit, AzkarState>(
         builder: (context, state) {
           if (state is AzkarLoading) {
@@ -66,21 +72,21 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
         .where((sub) => sub.isNotEmpty)
         .toSet()
         .toList();
-    
+
     final tabs = ['الكل', ...allSubcategories];
 
     // Filter sessions
     final filteredSessions = _selectedSubcategory == 'الكل'
         ? state.sessions
-        : state.sessions.where((s) => s.zikr.subcategory == _selectedSubcategory).toList();
+        : state.sessions
+              .where((s) => s.zikr.subcategory == _selectedSubcategory)
+              .toList();
 
     return CustomScrollView(
       slivers: [
         _buildAppBar(context, isDark),
         if (allSubcategories.isNotEmpty)
-          SliverToBoxAdapter(
-            child: _buildCategoriesFilter(tabs, isDark),
-          ),
+          SliverToBoxAdapter(child: _buildCategoriesFilter(tabs, isDark)),
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.pagePadding,
@@ -89,19 +95,16 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
             120,
           ),
           sliver: SliverList(
-            delegate: SliverChildBuilderDelegate(
-              (context, index) {
-                final session = filteredSessions[index];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                  child: _ZikrCard(
-                    zikr: session.zikr,
-                    isDark: isDark,
-                  ).animate().fadeIn(duration: 300.ms, delay: (index * 50).ms).slideY(begin: 0.1, end: 0),
-                );
-              },
-              childCount: filteredSessions.length,
-            ),
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final session = filteredSessions[index];
+              return Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: _ZikrCard(zikr: session.zikr, isDark: isDark)
+                    .animate()
+                    .fadeIn(duration: 300.ms, delay: (index * 50).ms)
+                    .slideY(begin: 0.1, end: 0),
+              );
+            }, childCount: filteredSessions.length),
           ),
         ),
       ],
@@ -113,7 +116,10 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
     return SizedBox(
       height: 56,
       child: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding, vertical: AppSpacing.sm),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.pagePadding,
+          vertical: AppSpacing.sm,
+        ),
         scrollDirection: Axis.horizontal,
         itemCount: tabs.length,
         separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
@@ -136,7 +142,9 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                 border: Border.all(
                   color: selected
                       ? primary
-                      : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
+                      : (isDark
+                            ? AppColors.darkDivider
+                            : AppColors.lightDivider),
                 ),
               ),
               alignment: Alignment.center,
@@ -145,7 +153,9 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                 style: AppTypography.labelMedium.copyWith(
                   color: selected
                       ? Colors.white
-                      : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                      : (isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary),
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
@@ -157,11 +167,17 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
   }
 
   SliverAppBar _buildAppBar(BuildContext context, bool isDark) {
+    final isDuas = widget.category == AzkarCategory.duas;
+
     return SliverAppBar(
       expandedHeight: 140,
       pinned: true,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 20),
+        icon: const Icon(
+          Icons.arrow_back_ios_rounded,
+          color: Colors.white,
+          size: 20,
+        ),
         onPressed: () {
           if (context.canPop()) {
             context.pop();
@@ -170,7 +186,9 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
           }
         },
       ),
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       elevation: 0,
       scrolledUnderElevation: 0,
       flexibleSpace: FlexibleSpaceBar(
@@ -178,15 +196,19 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
         background: Container(
           decoration: BoxDecoration(
             gradient: isDark
-                ? const LinearGradient(
+                ? LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF1A6B5A), Color(0xFF0D362D)],
+                    colors: isDuas
+                        ? const [Color(0xFF881337), Color(0xFF3F0717)]
+                        : const [Color(0xFF1A6B5A), Color(0xFF0D362D)],
                   )
-                : const LinearGradient(
+                : LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF1A6B5A), Color(0xFF0F4A3E)],
+                    colors: isDuas
+                        ? const [Color(0xFFE11D48), Color(0xFF881337)]
+                        : const [Color(0xFF1A6B5A), Color(0xFF0F4A3E)],
                   ),
           ),
           child: SafeArea(
@@ -202,7 +224,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    context.l10n.generalAzkar,
+                    isDuas ? context.l10n.duas : context.l10n.generalAzkar,
                     style: AppTypography.headlineLarge.copyWith(
                       color: Colors.white,
                       fontFamily: 'Amiri',
@@ -210,7 +232,9 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'مجموعة من الأذكار والأدعية الشاملة',
+                    isDuas
+                        ? 'أدعية من القرآن والسنة ودعاء ختم القرآن'
+                        : 'مجموعة من الأذكار الشاملة',
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white70,
                     ),
@@ -226,10 +250,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
 }
 
 class _ZikrCard extends StatelessWidget {
-  const _ZikrCard({
-    required this.zikr,
-    required this.isDark,
-  });
+  const _ZikrCard({required this.zikr, required this.isDark});
 
   final Zikr zikr;
   final bool isDark;
@@ -238,8 +259,12 @@ class _ZikrCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-    final textPrimary = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final textSecondary = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     return Container(
       decoration: BoxDecoration(
@@ -294,7 +319,8 @@ class _ZikrCard extends StatelessWidget {
                   ),
                   onPressed: () {
                     HapticFeedback.lightImpact();
-                    final shareText = '${zikr.text}\n\n${zikr.reference}\n\nتمت المشاركة من تطبيق تالية للقرآن';
+                    final shareText =
+                        '${zikr.text}\n\n${zikr.reference}\n\nتمت المشاركة من تطبيق تالية للقرآن';
                     SharePlus.instance.share(ShareParams(text: shareText));
                   },
                 ),

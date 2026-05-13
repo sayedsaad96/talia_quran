@@ -1,10 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class UserProfile extends Equatable {
-  const UserProfile({
-    this.name = '',
-    this.age,
-  });
+  const UserProfile({this.name = '', this.age});
 
   final String name;
   final int? age;
@@ -14,22 +11,14 @@ class UserProfile extends Equatable {
 
   /// Display name: returns the user's name or a fallback default.
   // L01 FIX: Return a meaningful fallback instead of empty string
-  String get displayName => name.trim().isNotEmpty ? name.trim() : 'مستخدم تالية';
+  String get displayName =>
+      name.trim().isNotEmpty ? name.trim() : 'مستخدم تالية';
 
-  UserProfile copyWith({
-    String? name,
-    int? age,
-  }) {
-    return UserProfile(
-      name: name ?? this.name,
-      age: age ?? this.age,
-    );
+  UserProfile copyWith({String? name, int? age}) {
+    return UserProfile(name: name ?? this.name, age: age ?? this.age);
   }
 
-  Map<String, dynamic> toJson() => {
-        'name': name,
-        'age': age,
-      };
+  Map<String, dynamic> toJson() => {'name': name, 'age': age};
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(

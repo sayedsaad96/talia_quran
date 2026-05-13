@@ -120,6 +120,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get generalAzkar => 'أذكار عامة';
 
   @override
+  String get duas => 'الأدعية';
+
+  @override
   String get count => 'العدد';
 
   @override
@@ -418,4 +421,292 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get micPermissionError =>
       'يحتاج التطبيق إذن الميكروفون للتسميع الصوتي. يرجى السماح من إعدادات الجهاز.';
+
+  @override
+  String get account => 'الحساب';
+
+  @override
+  String get accuracyLevel => 'مستوى الدقة';
+
+  @override
+  String get streakProtection => 'حماية السلسلة';
+
+  @override
+  String get morningAzkarReminder => 'تذكير أذكار الصباح';
+
+  @override
+  String get eveningAzkarReminder => 'تذكير أذكار المساء';
+
+  @override
+  String get dailyDuaReminder => 'دعاء اليوم';
+
+  @override
+  String get signOut => 'تسجيل الخروج';
+
+  @override
+  String get signIn => 'تسجيل الدخول';
+
+  @override
+  String get signUp => 'حساب جديد';
+
+  @override
+  String get email => 'البريد الإلكتروني';
+
+  @override
+  String get password => 'كلمة المرور';
+
+  @override
+  String get createAccount => 'إنشاء حساب';
+
+  @override
+  String get invalidEmail => 'بريد إلكتروني غير صحيح';
+
+  @override
+  String get passwordTooShort => '6 أحرف على الأقل';
+
+  @override
+  String get enterEmail => 'أدخل بريدك الإلكتروني';
+
+  @override
+  String get enterPassword => 'أدخل كلمة المرور';
+
+  @override
+  String get loginSuccess => 'تم تسجيل الدخول بنجاح ✓';
+
+  @override
+  String get signupSuccess => 'تم إنشاء الحساب بنجاح ✓';
+
+  @override
+  String get profileSavedToCloud => 'تقدمك محفوظ على السحابة';
+
+  @override
+  String get guestModeWarning =>
+      'سجّل دخولك لحفظ تقدمك على جميع أجهزتك وعدم فقدانه عند مسح التطبيق.';
+
+  @override
+  String get signOutWarning =>
+      'هل تريد تسجيل الخروج؟ تقدمك المحفوظ على السحابة لن يُحذف.';
+
+  @override
+  String get dailyReviewReminder => 'تذكير المراجعة اليومية';
+
+  @override
+  String get dailyReviewTime => 'كل يوم الساعة ٨:٠٠ مساءً';
+
+  @override
+  String get streakProtectionDesc => 'تنبيه الساعة ١٠:٠٠ مساءً إذا لم تراجع';
+
+  @override
+  String get morningAzkarTime => 'كل يوم الساعة ٦:٠٠ صباحًا';
+
+  @override
+  String get eveningAzkarTime => 'كل يوم الساعة ٦:٠٠ مساءً';
+
+  @override
+  String get taliaDescription => 'تطبيق متميز لحفظ ومراجعة القرآن الكريم';
+
+  @override
+  String get arabicNameHint =>
+      '💡 يفضل إدخال الاسم باللغة العربية ليظهر بشكل أجمل في الشهادات';
+
+  @override
+  String get invalidAge => 'أدخل عمرًا صحيحًا بين 1 و120';
+
+  @override
+  String get profileSaveError => 'تعذر حفظ الملف الشخصي';
+
+  @override
+  String get accuracySaveError => 'تعذر حفظ مستوى الدقة';
+
+  @override
+  String get reviewReminderSaveError => 'تعذر تحديث تذكير المراجعة';
+
+  @override
+  String get streakReminderSaveError => 'تعذر تحديث تنبيه السلسلة';
+
+  @override
+  String get morningAzkarSaveError => 'تعذر تحديث تذكير أذكار الصباح';
+
+  @override
+  String get eveningAzkarSaveError => 'تعذر تحديث تذكير أذكار المساء';
+
+  @override
+  String get difficultyEasy => 'سهل (٧٠٪)';
+
+  @override
+  String get difficultyMedium => 'متوسط (٨٥٪)';
+
+  @override
+  String get difficultyHard => 'صعب (٩٢٪)';
+
+  @override
+  String get bookmarkSaved => 'تم حفظ العلامة المرجعية';
+
+  @override
+  String get bookmarkAdded => 'تم إضافة علامة مرجعية ✓';
+
+  @override
+  String get bookmarkRemoved => 'تم إزالة العلامة المرجعية';
+
+  @override
+  String get levelBeginner => 'مبتدئ';
+
+  @override
+  String get levelStudent => 'طالب';
+
+  @override
+  String get levelHafez => 'حافظ';
+
+  @override
+  String get levelSheikh => 'شيخ';
+
+  @override
+  String get levelImam => 'إمام';
+
+  @override
+  String get juzCountLabel => 'الأجزاء';
+
+  @override
+  String get ayahsRead => 'الآيات المقروءة';
+
+  @override
+  String get learning => 'قيد التعلم';
+
+  @override
+  String get reviewing => 'قيد المراجعة';
+
+  @override
+  String get all => 'الكل';
+
+  @override
+  String get streakTerm => 'المواظبة';
+
+  @override
+  String get achieved => 'تم الإنجاز!';
+
+  @override
+  String get adultsTrack => 'مسار الكبار';
+
+  @override
+  String get memorizedTerm => 'مكتمل';
+
+  @override
+  String get reviewingPrefix => 'قيد المراجعة: ';
+
+  @override
+  String get kidsTrack => 'مسار الأطفال';
+
+  @override
+  String get points => 'النقاط';
+
+  @override
+  String get stars => 'النجوم';
+
+  @override
+  String get myCertificates => 'شهاداتي';
+
+  @override
+  String get juzSaved => 'الأجزاء المحفوظة';
+
+  @override
+  String get removeBookmarkTitle => 'حذف العلامة؟';
+
+  @override
+  String get goBack => 'العودة';
+
+  @override
+  String get taliaUser => 'مستخدم تالية';
+
+  @override
+  String get startFatihah => 'ابدأ قراءة سورة الفاتحة';
+
+  @override
+  String surahAyahFormat(Object surahName, Object ayahNumber) {
+    return 'سورة $surahName، آية $ayahNumber';
+  }
+
+  @override
+  String get saveProgress => 'احفظ تقدمك';
+
+  @override
+  String get syncProgressDesc =>
+      'قم بتسجيل الدخول لحفظ تقدمك ومزامنته على جميع أجهزتك';
+
+  @override
+  String get later => 'لاحقاً';
+
+  @override
+  String get congratulations => 'مبارك!';
+
+  @override
+  String get completedJuzAmma => 'لقد أتممت حفظ جزء عم بنجاح.';
+
+  @override
+  String get completedQuran => 'لقد أتممت حفظ القرآن الكريم كاملاً بنجاح.';
+
+  @override
+  String get continueMemorizing => 'متابعة الحفظ';
+
+  @override
+  String get view => 'عرض';
+
+  @override
+  String get endSessionTitle => 'إنهاء الجلسة؟';
+
+  @override
+  String get endSessionDesc =>
+      'هل أنت متأكد من رغبتك في إنهاء جلسة الحفظ؟ لن يتم حفظ تقدمك الحالي.';
+
+  @override
+  String get continueAction => 'متابعة';
+
+  @override
+  String get exitAction => 'خروج';
+
+  @override
+  String get listen => 'استماع';
+
+  @override
+  String get finish => 'إنهاء';
+
+  @override
+  String get skip => 'تخطي';
+
+  @override
+  String get tryAgainAction => 'حاول مجدداً';
+
+  @override
+  String get youRecited => 'ما قرأته:';
+
+  @override
+  String get listeningInProgress => 'جاري الاستماع...';
+
+  @override
+  String get tapToRecord => 'اضغط للتسميع';
+
+  @override
+  String get adultPathTitle => 'مسار الكبار (تصاعدي)';
+
+  @override
+  String get adultPathSubtitle => 'من الفاتحة إلى الناس';
+
+  @override
+  String get beginnerPathTitle => 'مسار المبتدئين (تنازلي)';
+
+  @override
+  String get beginnerPathSubtitle => 'من الناس إلى الفاتحة';
+
+  @override
+  String get lockedSurahText => 'أكمل السورة السابقة لفتح هذه السورة';
+
+  @override
+  String bookmarksCountItem(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'علامات',
+      one: 'علامة',
+    );
+    return '$count $_temp0';
+  }
 }

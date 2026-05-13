@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/achievement_service.dart';
+import '../../../../core/services/streak_service.dart';
+import '../../../../core/services/xp_service.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
@@ -13,6 +15,8 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
     this._evaluateUsecase,
     this._saveDailyPlan,
     this._achievementService,
+    this._streakService, // RISK-5 FIX
+    this._xpService, // RISK-5 FIX
   ) : super(const DailyPlanInitial());
 
   final GenerateDailyPlanUsecase _generateDailyPlan;
@@ -20,6 +24,8 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
   final EvaluateMemorizationUsecase _evaluateUsecase;
   final SaveDailyPlanUsecase _saveDailyPlan;
   final AchievementService _achievementService;
+  final StreakService _streakService; // RISK-5 FIX
+  final XpService _xpService; // RISK-5 FIX
 
   Future<void> load({required int surahId, int newAyahsPerDay = 5}) async {
     emit(const DailyPlanLoading());
@@ -104,15 +110,31 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
       return;
     }
 
-    final updatedPlan = current.plan.withCompleted(ayahNumber);
-    final saveResult = await _saveDailyPlan(updatedPlan);
-    final saveFailure = saveResult.fold((f) => f, (_) => null);
-    if (saveFailure != null) {
-      emit(DailyPlanError(saveFailure.message));
-      return;
+    final isSuccessfulRating = rating != PerformanceRating.weak;
+    final updatedPlan = isSuccessfulRating
+        ? current.plan.withCompleted(ayahNumber)
+        : current.plan;
+
+    if (isSuccessfulRating) {
+      // RISK-5 FIX: record streak & XP from MemorizationPlus — same as Hifz
+      try {
+        await _streakService.recordActivity(activityDelta: 1);
+        await _xpService.addXp('ayah_memorized');
+      } catch (_) {
+        // Non-critical: don't block evaluation on streak/xp failure
+      }
+
+      final saveResult = await _saveDailyPlan(updatedPlan);
+      final saveFailure = saveResult.fold((f) => f, (_) => null);
+      if (saveFailure != null) {
+        emit(DailyPlanError(saveFailure.message));
+        return;
+      }
     }
 
-    final newAwards = await _achievementService.checkAndUnlockCertificates();
+    final newAwards = isSuccessfulRating
+        ? await _achievementService.checkAndUnlockCertificates()
+        : <CertificateAward>[];
     emit(
       DailyPlanLoaded(
         plan: updatedPlan,

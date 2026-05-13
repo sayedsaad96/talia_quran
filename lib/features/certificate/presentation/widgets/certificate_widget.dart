@@ -360,56 +360,12 @@ class CertificateWidget extends StatelessWidget {
 
                                 const SizedBox(height: 24),
 
-                                // ─── التوقيع والتاريخ ─────────────────
-                                // في الاتجاه RTL: أول عنصر يظهر على اليمين (التوقيع)، وثاني عنصر على اليسار (التاريخ)
+                                // ─── التاريخ والختم ─────────────────
+                                // في الاتجاه RTL: أول عنصر يظهر على اليمين (التاريخ)، وثاني عنصر على اليسار (الختم)
                                 Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    // التوقيع (يمين)
-                                    Column(
-                                      children: [
-                                        const Text(
-                                          ' Talia',
-                                          style: TextStyle(
-                                            fontFamily: 'MrsSaintDelafield',
-                                            fontSize: 48,
-                                            fontWeight: FontWeight.w700,
-                                            color: darkGreen,
-                                            height: 0.8,
-                                            shadows: [
-                                              BoxShadow(
-                                                color: Colors.black12,
-                                                blurRadius: 2,
-                                                offset: Offset(0, 2),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Container(
-                                          width: 90,
-                                          height: 1,
-                                          color: darkGreen.withValues(
-                                            alpha: 0.5,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'التوقيع',
-                                          style: TextStyle(
-                                            fontFamily: 'Amiri',
-                                            fontSize: 14,
-                                            color: darkGreen.withValues(
-                                              alpha: 0.8,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(width: 200),
-
-                                    // التاريخ (يسار)
+                                    // التاريخ (يمين)
                                     Column(
                                       children: [
                                         Text(
@@ -441,6 +397,16 @@ class CertificateWidget extends StatelessWidget {
                                           ),
                                         ),
                                       ],
+                                    ),
+
+                                    const SizedBox(width: 190),
+
+                                    // ختم التطبيق (يسار)
+                                    const _AppSeal(
+                                      size: 108,
+                                      darkGreen: darkGreen,
+                                      goldAccent: goldAccent,
+                                      bgBeige: bgBeige,
                                     ),
                                   ],
                                 ),
@@ -509,5 +475,284 @@ class CertificateWidget extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _AppSeal extends StatelessWidget {
+  const _AppSeal({
+    required this.size,
+    required this.darkGreen,
+    required this.goldAccent,
+    required this.bgBeige,
+  });
+
+  final double size;
+  final Color darkGreen;
+  final Color goldAccent;
+  final Color bgBeige;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Outer shadow and base
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: bgBeige,
+              boxShadow: [
+                BoxShadow(
+                  color: goldAccent.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+          ),
+
+          // The Islamic Ornament Painter
+          CustomPaint(
+            size: Size.square(size),
+            painter: _AppSealPainter(
+              darkGreen: darkGreen,
+              goldAccent: goldAccent,
+              bgBeige: bgBeige,
+            ),
+          ),
+
+          // Inner Circle for Text
+          Container(
+            width: size * 0.58,
+            height: size * 0.58,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: darkGreen,
+              border: Border.all(color: goldAccent, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+          ),
+
+          // Content
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.menu_book_rounded,
+                color: goldAccent,
+                size: size * 0.16,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'تالية القرآن',
+                style: TextStyle(
+                  fontFamily: 'Amiri',
+                  fontSize: size * 0.13,
+                  fontWeight: FontWeight.bold,
+                  color: goldAccent,
+                  height: 1.1,
+                ),
+              ),
+              Container(
+                width: size * 0.35,
+                height: 1,
+                margin: const EdgeInsets.symmetric(vertical: 3),
+                color: goldAccent.withValues(alpha: 0.6),
+              ),
+              Text(
+                'ختم الإنجاز',
+                style: TextStyle(
+                  fontFamily: 'Amiri',
+                  fontSize: size * 0.08,
+                  fontWeight: FontWeight.w600,
+                  color: bgBeige,
+                  height: 1,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AppSealPainter extends CustomPainter {
+  const _AppSealPainter({
+    required this.darkGreen,
+    required this.goldAccent,
+    required this.bgBeige,
+  });
+
+  final Color darkGreen;
+  final Color goldAccent;
+  final Color bgBeige;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    // 1. Outer decorative border (Scalloped / Sunburst)
+    final outerPath = Path();
+    final int petals = 32;
+    for (var i = 0; i < petals * 2; i++) {
+      final angle = (math.pi * 2 * i) / (petals * 2);
+      final r = i.isEven ? radius : radius - 3.5;
+      final p = Offset(
+        center.dx + math.cos(angle) * r,
+        center.dy + math.sin(angle) * r,
+      );
+      if (i == 0) {
+        outerPath.moveTo(p.dx, p.dy);
+      } else {
+        outerPath.lineTo(p.dx, p.dy);
+      }
+    }
+    outerPath.close();
+
+    canvas.drawPath(
+      outerPath,
+      Paint()
+        ..color = goldAccent
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawPath(
+      outerPath,
+      Paint()
+        ..color = darkGreen.withValues(alpha: 0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.5,
+    );
+
+    // Inner background
+    canvas.drawCircle(center, radius - 5, Paint()..color = bgBeige);
+    canvas.drawCircle(
+      center,
+      radius - 5,
+      Paint()
+        ..color = darkGreen
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0,
+    );
+
+    // 2. The Rub el Hizb (8-point star formed by 2 overlapping squares)
+    final starRadius = radius - 12;
+    final rectWidth = starRadius * math.sqrt(2);
+
+    final goldStroke = Paint()
+      ..color = goldAccent
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.8;
+
+    final greenStroke = Paint()
+      ..color = darkGreen
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    for (int i = 0; i < 2; i++) {
+      canvas.save();
+      canvas.translate(center.dx, center.dy);
+      canvas.rotate(i * math.pi / 4);
+      final rect = Rect.fromCenter(
+        center: Offset.zero,
+        width: rectWidth,
+        height: rectWidth,
+      );
+      // Fill
+      canvas.drawRect(
+        rect,
+        Paint()
+          ..color = goldAccent.withValues(alpha: 0.15)
+          ..style = PaintingStyle.fill,
+      );
+      // Stroke
+      canvas.drawRect(rect, goldStroke);
+      canvas.drawRect(
+        Rect.fromCenter(
+          center: Offset.zero,
+          width: rectWidth - 6,
+          height: rectWidth - 6,
+        ),
+        greenStroke,
+      );
+      canvas.restore();
+    }
+
+    // 3. Ornaments at the 8 vertices
+    for (var i = 0; i < 8; i++) {
+      final angle = (math.pi * 2 * i) / 8;
+      // Slightly extending past the star radius for aesthetics
+      final p = Offset(
+        center.dx + math.cos(angle) * (starRadius + 2.5),
+        center.dy + math.sin(angle) * (starRadius + 2.5),
+      );
+      canvas.drawCircle(
+        p,
+        3.0,
+        Paint()
+          ..color = bgBeige
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawCircle(
+        p,
+        3.0,
+        Paint()
+          ..color = goldAccent
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5,
+      );
+      canvas.drawCircle(
+        p,
+        1.2,
+        Paint()
+          ..color = darkGreen
+          ..style = PaintingStyle.fill,
+      );
+    }
+
+    // 4. Subtle inner 16-point star (geometry lines)
+    final innerStar = Path();
+    for (var i = 0; i < 16; i++) {
+      final angle = (math.pi * 2 * i) / 16;
+      final r = i.isEven ? starRadius - 5 : starRadius - 16;
+      final p = Offset(
+        center.dx + math.cos(angle) * r,
+        center.dy + math.sin(angle) * r,
+      );
+      if (i == 0) {
+        innerStar.moveTo(p.dx, p.dy);
+      } else {
+        innerStar.lineTo(p.dx, p.dy);
+      }
+    }
+    innerStar.close();
+    canvas.drawPath(
+      innerStar,
+      Paint()
+        ..color = goldAccent.withValues(alpha: 0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0,
+    );
+  }
+
+  @override
+  bool shouldRepaint(_AppSealPainter oldDelegate) {
+    return oldDelegate.darkGreen != darkGreen ||
+        oldDelegate.goldAccent != goldAccent ||
+        oldDelegate.bgBeige != bgBeige;
   }
 }

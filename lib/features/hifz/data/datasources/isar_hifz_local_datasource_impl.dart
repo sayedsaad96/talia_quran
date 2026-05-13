@@ -90,6 +90,34 @@ class IsarHifzLocalDatasourceImpl implements HifzLocalDatasource {
     return results.map((e) => e.toModel()).toList();
   }
 
+  String _checkpointKey(int surahId) =>
+      '${AppConstants.kHifzCheckpointProgress}_$surahId';
+
+  @override
+  Future<Set<String>> getPassedCheckpointKeys(int surahId) async {
+    return (_prefs.getStringList(_checkpointKey(surahId)) ?? const []).toSet();
+  }
+
+  @override
+  Future<void> markCheckpointPassed(String checkpointKey) async {
+    final parts = checkpointKey.split('_');
+    if (parts.length < 3) {
+      throw ArgumentError.value(
+        checkpointKey,
+        'checkpointKey',
+        'Expected surah_start_end key',
+      );
+    }
+    final surahId = int.parse(parts.first);
+    final storageKey = _checkpointKey(surahId);
+    final keys = (_prefs.getStringList(storageKey) ?? const []).toSet()
+      ..add(checkpointKey);
+    final saved = await _prefs.setStringList(storageKey, keys.toList()..sort());
+    if (!saved) {
+      throw StateError('Failed to save checkpoint progress for $checkpointKey');
+    }
+  }
+
   @override
   String? getHifzPath() {
     return _prefs.getString(AppConstants.kHifzPathMode);

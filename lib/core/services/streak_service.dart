@@ -13,7 +13,9 @@ class StreakService {
 
   Future<StreakEntity> getStreak() async {
     final data = await _isar.streakIsars.get(1);
-    if (data == null) return const StreakEntity(currentStreak: 0, longestStreak: 0);
+    if (data == null) {
+      return const StreakEntity(currentStreak: 0, longestStreak: 0);
+    }
     return StreakEntity(
       currentStreak: data.currentStreak,
       longestStreak: data.longestStreak,
@@ -28,9 +30,8 @@ class StreakService {
     final todayDate = DateTime.utc(now.year, now.month, now.day);
 
     // Compute dayKey as int YYYYMMDD for O(1) Isar lookup
-    final dayKey = todayDate.year * 10000 +
-        todayDate.month * 100 +
-        todayDate.day;
+    final dayKey =
+        todayDate.year * 10000 + todayDate.month * 100 + todayDate.day;
 
     return _isar.writeTxn(() async {
       // ── 1. Update Streak record ────────────────────────────────────────────
@@ -38,8 +39,11 @@ class StreakService {
       final lastDate = data.lastActivityDate;
 
       if (lastDate != null) {
-        final lastNormalized =
-            DateTime.utc(lastDate.year, lastDate.month, lastDate.day);
+        final lastNormalized = DateTime.utc(
+          lastDate.year,
+          lastDate.month,
+          lastDate.day,
+        );
 
         // Same day → increment daily activity but don't change streak
         if (lastNormalized == todayDate) {
@@ -133,8 +137,9 @@ class StreakService {
       if (data == null || data.freezesAvailable <= 0) return;
       data.freezesAvailable -= 1;
       if (data.lastActivityDate != null) {
-        data.lastActivityDate =
-            data.lastActivityDate!.add(const Duration(days: 1));
+        data.lastActivityDate = data.lastActivityDate!.add(
+          const Duration(days: 1),
+        );
       }
       await _isar.streakIsars.put(data);
     });

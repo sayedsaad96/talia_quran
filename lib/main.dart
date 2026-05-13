@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:qcf_quran_plus/qcf_quran_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
@@ -65,6 +66,8 @@ Future<void> _bootstrapAndRun() async {
   // Prevent Google Fonts from fetching fonts at runtime — all fonts are bundled as assets
   GoogleFonts.config.allowRuntimeFetching = false;
 
+  await QcfFontLoader.setupFontsAtStartup(onProgress: (_) {});
+
   // Lock to portrait
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -116,6 +119,7 @@ Future<void> _bootstrapAndRun() async {
     await notificationService.scheduleDailyAyahReminder(); // 7:00 AM
     await notificationService.scheduleMorningAzkarReminder(); // 6:00 AM
     await notificationService.scheduleEveningAzkarReminder(); // 6:00 PM
+    await notificationService.scheduleDailyDuaReminder(); // 9:00 AM
     await prefs.setBool('notifications_initialized', true);
   }
 
@@ -128,6 +132,8 @@ Future<void> _bootstrapAndRun() async {
     final eveningAzkarEnabled =
         prefs.getBool(TaliaNotificationService.eveningAzkarPreferenceKey) ??
         true;
+    final dailyDuaEnabled =
+        prefs.getBool(TaliaNotificationService.dailyDuaPreferenceKey) ?? true;
 
     await prefs.setBool(
       TaliaNotificationService.morningAzkarPreferenceKey,
@@ -137,12 +143,19 @@ Future<void> _bootstrapAndRun() async {
       TaliaNotificationService.eveningAzkarPreferenceKey,
       eveningAzkarEnabled,
     );
+    await prefs.setBool(
+      TaliaNotificationService.dailyDuaPreferenceKey,
+      dailyDuaEnabled,
+    );
 
     if (morningAzkarEnabled) {
       await notificationService.scheduleMorningAzkarReminder();
     }
     if (eveningAzkarEnabled) {
       await notificationService.scheduleEveningAzkarReminder();
+    }
+    if (dailyDuaEnabled) {
+      await notificationService.scheduleDailyDuaReminder();
     }
     await prefs.setBool('notifications_azkar_initialized', true);
   }

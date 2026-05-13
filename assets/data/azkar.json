@@ -411,69 +411,6 @@
       "reference": "سنن الترمذي"
     },
     {
-      "id": "q1",
-      "subcategory": "أدعية قرآنية",
-      "text": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.",
-      "transliteration": "Rabbana atina fid-dunya hasanatan wa fil-akhirati hasanatan wa qina 'adhaban-nar.",
-      "translation": "Our Lord, give us in this world [that which is] good and in the Hereafter [that which is] good and protect us from the punishment of the Fire.",
-      "count": 1,
-      "reference": "سورة البقرة - 201"
-    },
-    {
-      "id": "q2",
-      "subcategory": "أدعية قرآنية",
-      "text": "رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً ۚ إِنَّكَ أَنتَ الْوَهَّابُ.",
-      "transliteration": "Rabbana la tuzigh qulubana ba'da idh hadaytana wa hab lana min ladunka rahmatan, innaka antal-Wahhab.",
-      "translation": "Our Lord, let not our hearts deviate after You have guided us and grant us from Yourself mercy. Indeed, You are the Bestower.",
-      "count": 1,
-      "reference": "سورة آل عمران - 8"
-    },
-    {
-      "id": "q3",
-      "subcategory": "أدعية قرآنية",
-      "text": "رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي ۚ رَبَّنَا وَتَقَبَّلْ دُعَاءِ.",
-      "transliteration": "Rabbij-'alni muqimas-salati wa min dhurriyyati, Rabbana wa taqabbal du'a.",
-      "translation": "My Lord, make me an establisher of prayer, and [many] from my descendants. Our Lord, and accept my supplication.",
-      "count": 1,
-      "reference": "سورة إبراهيم - 40"
-    },
-    {
-      "id": "q4",
-      "subcategory": "أدعية قرآنية",
-      "text": "رَبِّ اشْرَحْ لِي صَدْرِي ۞ وَيَسِّرْ لِي أَمْرِي ۞ وَاحْلُلْ عُقْدَةً مِّن لِّسَانِي ۞ يَفْقَهُوا قَوْلِي.",
-      "transliteration": "Rabbish-rah li sadri, wa yassir li amri, wahlul 'uqdatan min lisani, yafqahu qawli.",
-      "translation": "My Lord, expand for me my breast [with assurance] and ease for me my task and untie the knot from my tongue that they may understand my speech.",
-      "count": 1,
-      "reference": "سورة طه - 25:28"
-    },
-    {
-      "id": "p1",
-      "subcategory": "أدعية نبوية",
-      "text": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى.",
-      "transliteration": "Allahumma inni as'alukal-huda wat-tuqa wal-'afafa wal-ghina.",
-      "translation": "O Allah, I ask You for guidance, piety, chastity, and self-sufficiency.",
-      "count": 1,
-      "reference": "صحيح مسلم"
-    },
-    {
-      "id": "p2",
-      "subcategory": "أدعية نبوية",
-      "text": "يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ.",
-      "transliteration": "Ya Muqallibal-qulubi thabbit qalbi 'ala dinik.",
-      "translation": "O Turner of the hearts, keep my heart firm upon Your religion.",
-      "count": 1,
-      "reference": "سنن الترمذي"
-    },
-    {
-      "id": "p3",
-      "subcategory": "أدعية نبوية",
-      "text": "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ.",
-      "transliteration": "Allahumma a'inni 'ala dhikrika wa shukrika wa husni 'ibadatik.",
-      "translation": "O Allah, help me to remember You, to give You thanks, and to perform Your worship in the best manner.",
-      "count": 1,
-      "reference": "سنن أبي داود"
-    },
-    {
       "id": "s1",
       "subcategory": "أذكار بعد الصلاة",
       "text": "أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ، أَسْتَغْفِرُ اللَّهَ. اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ.",
@@ -490,6 +427,152 @@
       "translation": "Glory is to Allah (33 times), praise is to Allah (33 times), Allah is the Most Great (33 times). None has the right to be worshipped but Allah alone...",
       "count": 1,
       "reference": "صحيح مسلم"
+    }
+  ],
+  "duas": [
+    {
+      "id": "dq1",
+      "subcategory": "أدعية من القرآن",
+      "text": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.",
+      "transliteration": "Rabbana atina fid-dunya hasanatan wa fil-akhirati hasanatan wa qina 'adhaban-nar.",
+      "translation": "Our Lord, give us good in this world and good in the Hereafter, and protect us from the punishment of the Fire.",
+      "count": 1,
+      "reference": "سورة البقرة - 201"
+    },
+    {
+      "id": "dq2",
+      "subcategory": "أدعية من القرآن",
+      "text": "رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً ۚ إِنَّكَ أَنتَ الْوَهَّابُ.",
+      "transliteration": "Rabbana la tuzigh qulubana ba'da idh hadaytana wa hab lana min ladunka rahmatan, innaka antal-Wahhab.",
+      "translation": "Our Lord, do not let our hearts deviate after You have guided us, and grant us mercy from Yourself.",
+      "count": 1,
+      "reference": "سورة آل عمران - 8"
+    },
+    {
+      "id": "dq3",
+      "subcategory": "أدعية من القرآن",
+      "text": "رَبِّ اجْعَلْنِي مُقِيمَ الصَّلَاةِ وَمِن ذُرِّيَّتِي ۚ رَبَّنَا وَتَقَبَّلْ دُعَاءِ.",
+      "transliteration": "Rabbij-'alni muqimas-salati wa min dhurriyyati, Rabbana wa taqabbal du'a.",
+      "translation": "My Lord, make me an establisher of prayer, and from my descendants. Our Lord, accept my supplication.",
+      "count": 1,
+      "reference": "سورة إبراهيم - 40"
+    },
+    {
+      "id": "dq4",
+      "subcategory": "أدعية من القرآن",
+      "text": "رَبِّ اشْرَحْ لِي صَدْرِي ۞ وَيَسِّرْ لِي أَمْرِي ۞ وَاحْلُلْ عُقْدَةً مِّن لِّسَانِي ۞ يَفْقَهُوا قَوْلِي.",
+      "transliteration": "Rabbish-rah li sadri, wa yassir li amri, wahlul 'uqdatan min lisani, yafqahu qawli.",
+      "translation": "My Lord, expand my chest, ease my task, and untie the knot from my tongue.",
+      "count": 1,
+      "reference": "سورة طه - 25:28"
+    },
+    {
+      "id": "dq5",
+      "subcategory": "أدعية من القرآن",
+      "text": "رَبَّنَا ظَلَمْنَا أَنفُسَنَا وَإِن لَّمْ تَغْفِرْ لَنَا وَتَرْحَمْنَا لَنَكُونَنَّ مِنَ الْخَاسِرِينَ.",
+      "transliteration": "Rabbana zalamna anfusana wa in lam taghfir lana wa tarhamna lanakunanna minal-khasirin.",
+      "translation": "Our Lord, we have wronged ourselves, and if You do not forgive us and have mercy upon us, we will surely be among the losers.",
+      "count": 1,
+      "reference": "سورة الأعراف - 23"
+    },
+    {
+      "id": "dq6",
+      "subcategory": "أدعية من القرآن",
+      "text": "رَبَّنَا أَفْرِغْ عَلَيْنَا صَبْرًا وَتَوَفَّنَا مُسْلِمِينَ.",
+      "transliteration": "Rabbana afrigh 'alayna sabran wa tawaffana muslimin.",
+      "translation": "Our Lord, pour patience upon us and let us die as Muslims.",
+      "count": 1,
+      "reference": "سورة الأعراف - 126"
+    },
+    {
+      "id": "dq7",
+      "subcategory": "أدعية من القرآن",
+      "text": "رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا.",
+      "transliteration": "Rabbana hab lana min azwajina wa dhurriyyatina qurrata a'yunin waj'alna lil-muttaqina imama.",
+      "translation": "Our Lord, grant us comfort from our spouses and descendants, and make us leaders for the righteous.",
+      "count": 1,
+      "reference": "سورة الفرقان - 74"
+    },
+    {
+      "id": "dp1",
+      "subcategory": "أدعية نبوية",
+      "text": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى.",
+      "transliteration": "Allahumma inni as'alukal-huda wat-tuqa wal-'afafa wal-ghina.",
+      "translation": "O Allah, I ask You for guidance, piety, chastity, and self-sufficiency.",
+      "count": 1,
+      "reference": "صحيح مسلم"
+    },
+    {
+      "id": "dp2",
+      "subcategory": "أدعية نبوية",
+      "text": "يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ.",
+      "transliteration": "Ya Muqallibal-qulubi thabbit qalbi 'ala dinik.",
+      "translation": "O Turner of the hearts, keep my heart firm upon Your religion.",
+      "count": 1,
+      "reference": "سنن الترمذي"
+    },
+    {
+      "id": "dp3",
+      "subcategory": "أدعية نبوية",
+      "text": "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ.",
+      "transliteration": "Allahumma a'inni 'ala dhikrika wa shukrika wa husni 'ibadatik.",
+      "translation": "O Allah, help me remember You, thank You, and worship You well.",
+      "count": 1,
+      "reference": "سنن أبي داود"
+    },
+    {
+      "id": "dp4",
+      "subcategory": "أدعية نبوية",
+      "text": "اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي.",
+      "transliteration": "Allahumma innaka 'afuwwun tuhibbul-'afwa fa'fu 'anni.",
+      "translation": "O Allah, You are Pardoning and love pardon, so pardon me.",
+      "count": 1,
+      "reference": "سنن الترمذي"
+    },
+    {
+      "id": "dp5",
+      "subcategory": "أدعية نبوية",
+      "text": "اللَّهُمَّ مُصَرِّفَ الْقُلُوبِ صَرِّفْ قُلُوبَنَا عَلَى طَاعَتِكَ.",
+      "transliteration": "Allahumma musarrifal-qulubi sarrif qulubana 'ala ta'atik.",
+      "translation": "O Allah, Controller of the hearts, direct our hearts to Your obedience.",
+      "count": 1,
+      "reference": "صحيح مسلم"
+    },
+    {
+      "id": "dp6",
+      "subcategory": "أدعية نبوية",
+      "text": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ، وَالْعَجْزِ وَالْكَسَلِ، وَالْبُخْلِ وَالْجُبْنِ، وَضَلَعِ الدَّيْنِ وَغَلَبَةِ الرِّجَالِ.",
+      "transliteration": "Allahumma inni a'udhu bika minal-hammi wal-hazan, wal-'ajzi wal-kasal...",
+      "translation": "O Allah, I seek refuge in You from anxiety, grief, incapacity, laziness, miserliness, cowardice, heavy debt, and being overpowered by people.",
+      "count": 1,
+      "reference": "صحيح البخاري"
+    },
+    {
+      "id": "dp7",
+      "subcategory": "أدعية نبوية",
+      "text": "اللَّهُمَّ أَصْلِحْ لِي دِينِي الَّذِي هُوَ عِصْمَةُ أَمْرِي، وَأَصْلِحْ لِي دُنْيَايَ الَّتِي فِيهَا مَعَاشِي، وَأَصْلِحْ لِي آخِرَتِي الَّتِي فِيهَا مَعَادِي.",
+      "transliteration": "Allahumma aslih li dini alladhi huwa 'ismatu amri...",
+      "translation": "O Allah, set right my religion, my worldly life, and my Hereafter.",
+      "count": 1,
+      "reference": "صحيح مسلم"
+    },
+    {
+      "id": "dp8",
+      "subcategory": "أدعية نبوية",
+      "text": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْجَنَّةَ وَمَا قَرَّبَ إِلَيْهَا مِنْ قَوْلٍ أَوْ عَمَلٍ، وَأَعُوذُ بِكَ مِنَ النَّارِ وَمَا قَرَّبَ إِلَيْهَا مِنْ قَوْلٍ أَوْ عَمَلٍ.",
+      "transliteration": "Allahumma inni as'alukal-jannata wa ma qarraba ilayha min qawlin aw 'amal...",
+      "translation": "O Allah, I ask You for Paradise and what brings one near to it, and I seek refuge in You from the Fire and what brings one near to it.",
+      "count": 1,
+      "reference": "سنن ابن ماجه"
+    },
+    {
+      "id": "dk1",
+      "subcategory": "دعاء ختم القرآن",
+      "text": "اللَّهُمَّ ارْحَمْنِي بِالْقُرْآنِ، وَاجْعَلْهُ لِي إِمَامًا وَنُورًا وَهُدًى وَرَحْمَةً. اللَّهُمَّ ذَكِّرْنِي مِنْهُ مَا نُسِّيتُ، وَعَلِّمْنِي مِنْهُ مَا جَهِلْتُ، وَارْزُقْنِي تِلَاوَتَهُ آنَاءَ اللَّيْلِ وَأَطْرَافَ النَّهَارِ، وَاجْعَلْهُ لِي حُجَّةً يَا رَبَّ الْعَالَمِينَ.",
+      "transliteration": "Allahummarhamni bil-Quran, waj'alhu li imaman wa nuran wa hudan wa rahmah...",
+      "translation": "O Allah, have mercy on me through the Quran, make it a leader, light, guidance, and mercy for me, and grant me its recitation by night and day.",
+      "count": 1,
+      "reference": "دعاء مشهور عند ختم القرآن"
     }
   ]
 }

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/router/app_router.dart';
+import '../../../../core/services/app_session_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -26,12 +28,10 @@ class _SplashPageState extends State<SplashPage>
       duration: const Duration(milliseconds: 1500),
     );
 
-    _scaleAnimation = Tween<double>(begin: 0.5, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.elasticOut,
-      ),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 0.5,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.elasticOut));
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
@@ -48,17 +48,22 @@ class _SplashPageState extends State<SplashPage>
   Future<void> _navigateAfterDelay() async {
     await Future.delayed(const Duration(milliseconds: 2500));
     if (!mounted) return;
+    if (AppRouter.router.routerDelegate.currentConfiguration.uri.path !=
+        AppRoutes.splash) {
+      return;
+    }
 
     // Use DI-injected SharedPreferences instead of creating a new instance
     final prefs = getIt<SharedPreferences>();
     final bool isFirstTime = prefs.getBool('isFirstTimeAppOpen') ?? true;
+    final lastLocation = getIt<AppSessionService>().getLastRestorableLocation();
 
     if (!mounted) return;
 
     if (isFirstTime) {
       context.go('/onboarding');
     } else {
-      context.go('/');
+      context.go(lastLocation ?? '/');
     }
   }
 
@@ -74,7 +79,9 @@ class _SplashPageState extends State<SplashPage>
     final primaryColor = Theme.of(context).primaryColor;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
@@ -130,7 +137,9 @@ class _SplashPageState extends State<SplashPage>
                           fontFamily: 'Amiri',
                           fontSize: 48,
                           fontWeight: FontWeight.bold,
-                          color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -139,7 +148,9 @@ class _SplashPageState extends State<SplashPage>
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
-                          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
                         ),
                       ),
                     ],

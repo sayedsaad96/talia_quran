@@ -37,21 +37,13 @@ const HifzProgressIsarSchema = CollectionSchema(
       name: r'repetitions',
       type: IsarType.long,
     ),
-    r'status': PropertySchema(
-      id: 4,
-      name: r'status',
-      type: IsarType.long,
-    ),
-    r'surahId': PropertySchema(
-      id: 5,
-      name: r'surahId',
-      type: IsarType.long,
-    ),
+    r'status': PropertySchema(id: 4, name: r'status', type: IsarType.long),
+    r'surahId': PropertySchema(id: 5, name: r'surahId', type: IsarType.long),
     r'uniqueKey': PropertySchema(
       id: 6,
       name: r'uniqueKey',
       type: IsarType.string,
-    )
+    ),
   },
   estimateSize: _hifzProgressIsarEstimateSize,
   serialize: _hifzProgressIsarSerialize,
@@ -69,9 +61,9 @@ const HifzProgressIsarSchema = CollectionSchema(
           name: r'uniqueKey',
           type: IndexType.hash,
           caseSensitive: true,
-        )
+        ),
       ],
-    )
+    ),
   },
   links: {},
   embeddedSchemas: {},
@@ -159,7 +151,10 @@ List<IsarLinkBase<dynamic>> _hifzProgressIsarGetLinks(HifzProgressIsar object) {
 }
 
 void _hifzProgressIsarAttach(
-    IsarCollection<dynamic> col, Id id, HifzProgressIsar object) {
+  IsarCollection<dynamic> col,
+  Id id,
+  HifzProgressIsar object,
+) {
   object.id = id;
 }
 
@@ -181,7 +176,8 @@ extension HifzProgressIsarByIndex on IsarCollection<HifzProgressIsar> {
   }
 
   Future<List<HifzProgressIsar?>> getAllByUniqueKey(
-      List<String> uniqueKeyValues) {
+    List<String> uniqueKeyValues,
+  ) {
     final values = uniqueKeyValues.map((e) => [e]).toList();
     return getAllByIndex(r'uniqueKey', values);
   }
@@ -213,8 +209,10 @@ extension HifzProgressIsarByIndex on IsarCollection<HifzProgressIsar> {
     return putAllByIndex(r'uniqueKey', objects);
   }
 
-  List<Id> putAllByUniqueKeySync(List<HifzProgressIsar> objects,
-      {bool saveLinks = true}) {
+  List<Id> putAllByUniqueKeySync(
+    List<HifzProgressIsar> objects, {
+    bool saveLinks = true,
+  }) {
     return putAllByIndexSync(r'uniqueKey', objects, saveLinks: saveLinks);
   }
 }
@@ -231,17 +229,15 @@ extension HifzProgressIsarQueryWhereSort
 extension HifzProgressIsarQueryWhere
     on QueryBuilder<HifzProgressIsar, HifzProgressIsar, QWhereClause> {
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterWhereClause> idEqualTo(
-      Id id) {
+    Id id,
+  ) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: id,
-        upper: id,
-      ));
+      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterWhereClause>
-      idNotEqualTo(Id id) {
+  idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -264,7 +260,7 @@ extension HifzProgressIsarQueryWhere
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterWhereClause>
-      idGreaterThan(Id id, {bool include = false}) {
+  idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -273,7 +269,7 @@ extension HifzProgressIsarQueryWhere
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterWhereClause>
-      idLessThan(Id id, {bool include = false}) {
+  idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -288,56 +284,65 @@ extension HifzProgressIsarQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(
-        lower: lowerId,
-        includeLower: includeLower,
-        upper: upperId,
-        includeUpper: includeUpper,
-      ));
+      return query.addWhereClause(
+        IdWhereClause.between(
+          lower: lowerId,
+          includeLower: includeLower,
+          upper: upperId,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterWhereClause>
-      uniqueKeyEqualTo(String uniqueKey) {
+  uniqueKeyEqualTo(String uniqueKey) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'uniqueKey',
-        value: [uniqueKey],
-      ));
+      return query.addWhereClause(
+        IndexWhereClause.equalTo(indexName: r'uniqueKey', value: [uniqueKey]),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterWhereClause>
-      uniqueKeyNotEqualTo(String uniqueKey) {
+  uniqueKeyNotEqualTo(String uniqueKey) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'uniqueKey',
-              lower: [],
-              upper: [uniqueKey],
-              includeUpper: false,
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'uniqueKey',
-              lower: [uniqueKey],
-              includeLower: false,
-              upper: [],
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'uniqueKey',
+                lower: [],
+                upper: [uniqueKey],
+                includeUpper: false,
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'uniqueKey',
+                lower: [uniqueKey],
+                includeLower: false,
+                upper: [],
+              ),
+            );
       } else {
         return query
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'uniqueKey',
-              lower: [uniqueKey],
-              includeLower: false,
-              upper: [],
-            ))
-            .addWhereClause(IndexWhereClause.between(
-              indexName: r'uniqueKey',
-              lower: [],
-              upper: [uniqueKey],
-              includeUpper: false,
-            ));
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'uniqueKey',
+                lower: [uniqueKey],
+                includeLower: false,
+                upper: [],
+              ),
+            )
+            .addWhereClause(
+              IndexWhereClause.between(
+                indexName: r'uniqueKey',
+                lower: [],
+                upper: [uniqueKey],
+                includeUpper: false,
+              ),
+            );
       }
     });
   }
@@ -346,445 +351,441 @@ extension HifzProgressIsarQueryWhere
 extension HifzProgressIsarQueryFilter
     on QueryBuilder<HifzProgressIsar, HifzProgressIsar, QFilterCondition> {
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      ayahNumberEqualTo(int value) {
+  ayahNumberEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'ayahNumber',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'ayahNumber', value: value),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      ayahNumberGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  ayahNumberGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'ayahNumber',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'ayahNumber',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      ayahNumberLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  ayahNumberLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'ayahNumber',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'ayahNumber',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      ayahNumberBetween(
+  ayahNumberBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'ayahNumber',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'ayahNumber',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      idEqualTo(Id value) {
+  idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'id', value: value),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      idGreaterThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idGreaterThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      idLessThan(
-    Id value, {
-    bool include = false,
-  }) {
+  idLessThan(Id value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'id',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'id',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      idBetween(
+  idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'id',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'id',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      lastReviewDateEqualTo(DateTime value) {
+  lastReviewDateEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'lastReviewDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'lastReviewDate', value: value),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      lastReviewDateGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  lastReviewDateGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'lastReviewDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'lastReviewDate',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      lastReviewDateLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  lastReviewDateLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'lastReviewDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'lastReviewDate',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      lastReviewDateBetween(
+  lastReviewDateBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'lastReviewDate',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'lastReviewDate',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      nextReviewDateEqualTo(DateTime value) {
+  nextReviewDateEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'nextReviewDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'nextReviewDate', value: value),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      nextReviewDateGreaterThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  nextReviewDateGreaterThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'nextReviewDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'nextReviewDate',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      nextReviewDateLessThan(
-    DateTime value, {
-    bool include = false,
-  }) {
+  nextReviewDateLessThan(DateTime value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'nextReviewDate',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'nextReviewDate',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      nextReviewDateBetween(
+  nextReviewDateBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'nextReviewDate',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'nextReviewDate',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      repetitionsEqualTo(int value) {
+  repetitionsEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'repetitions',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'repetitions', value: value),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      repetitionsGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  repetitionsGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'repetitions',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'repetitions',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      repetitionsLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  repetitionsLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'repetitions',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'repetitions',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      repetitionsBetween(
+  repetitionsBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'repetitions',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'repetitions',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      statusEqualTo(int value) {
+  statusEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'status',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'status', value: value),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      statusGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  statusGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'status',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'status',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      statusLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  statusLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'status',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'status',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      statusBetween(
+  statusBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'status',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'status',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      surahIdEqualTo(int value) {
+  surahIdEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'surahId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'surahId', value: value),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      surahIdGreaterThan(
-    int value, {
-    bool include = false,
-  }) {
+  surahIdGreaterThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'surahId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'surahId',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      surahIdLessThan(
-    int value, {
-    bool include = false,
-  }) {
+  surahIdLessThan(int value, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'surahId',
-        value: value,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'surahId',
+          value: value,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      surahIdBetween(
+  surahIdBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'surahId',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'surahId',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      uniqueKeyEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  uniqueKeyEqualTo(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'uniqueKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(
+          property: r'uniqueKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      uniqueKeyGreaterThan(
-    String value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'uniqueKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      uniqueKeyLessThan(
+  uniqueKeyGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'uniqueKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'uniqueKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      uniqueKeyBetween(
+  uniqueKeyLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'uniqueKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
+  uniqueKeyBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -792,84 +793,86 @@ extension HifzProgressIsarQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'uniqueKey',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'uniqueKey',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      uniqueKeyStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  uniqueKeyStartsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'uniqueKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.startsWith(
+          property: r'uniqueKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      uniqueKeyEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  uniqueKeyEndsWith(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'uniqueKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.endsWith(
+          property: r'uniqueKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      uniqueKeyContains(String value, {bool caseSensitive = true}) {
+  uniqueKeyContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'uniqueKey',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.contains(
+          property: r'uniqueKey',
+          value: value,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      uniqueKeyMatches(String pattern, {bool caseSensitive = true}) {
+  uniqueKeyMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'uniqueKey',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
+      return query.addFilterCondition(
+        FilterCondition.matches(
+          property: r'uniqueKey',
+          wildcard: pattern,
+          caseSensitive: caseSensitive,
+        ),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      uniqueKeyIsEmpty() {
+  uniqueKeyIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'uniqueKey',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'uniqueKey', value: ''),
+      );
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterFilterCondition>
-      uniqueKeyIsNotEmpty() {
+  uniqueKeyIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'uniqueKey',
-        value: '',
-      ));
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(property: r'uniqueKey', value: ''),
+      );
     });
   }
 }
@@ -883,98 +886,98 @@ extension HifzProgressIsarQueryLinks
 extension HifzProgressIsarQuerySortBy
     on QueryBuilder<HifzProgressIsar, HifzProgressIsar, QSortBy> {
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByAyahNumber() {
+  sortByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByAyahNumberDesc() {
+  sortByAyahNumberDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByLastReviewDate() {
+  sortByLastReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewDate', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByLastReviewDateDesc() {
+  sortByLastReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewDate', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByNextReviewDate() {
+  sortByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByNextReviewDateDesc() {
+  sortByNextReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByRepetitions() {
+  sortByRepetitions() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'repetitions', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByRepetitionsDesc() {
+  sortByRepetitionsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'repetitions', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByStatus() {
+  sortByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByStatusDesc() {
+  sortByStatusDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortBySurahId() {
+  sortBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortBySurahIdDesc() {
+  sortBySurahIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByUniqueKey() {
+  sortByUniqueKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uniqueKey', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      sortByUniqueKeyDesc() {
+  sortByUniqueKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uniqueKey', Sort.desc);
     });
@@ -984,14 +987,14 @@ extension HifzProgressIsarQuerySortBy
 extension HifzProgressIsarQuerySortThenBy
     on QueryBuilder<HifzProgressIsar, HifzProgressIsar, QSortThenBy> {
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByAyahNumber() {
+  thenByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByAyahNumberDesc() {
+  thenByAyahNumberDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.desc);
     });
@@ -1004,91 +1007,91 @@ extension HifzProgressIsarQuerySortThenBy
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByIdDesc() {
+  thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByLastReviewDate() {
+  thenByLastReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewDate', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByLastReviewDateDesc() {
+  thenByLastReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewDate', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByNextReviewDate() {
+  thenByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByNextReviewDateDesc() {
+  thenByNextReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByRepetitions() {
+  thenByRepetitions() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'repetitions', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByRepetitionsDesc() {
+  thenByRepetitionsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'repetitions', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByStatus() {
+  thenByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByStatusDesc() {
+  thenByStatusDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenBySurahId() {
+  thenBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenBySurahIdDesc() {
+  thenBySurahIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.desc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByUniqueKey() {
+  thenByUniqueKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uniqueKey', Sort.asc);
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QAfterSortBy>
-      thenByUniqueKeyDesc() {
+  thenByUniqueKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uniqueKey', Sort.desc);
     });
@@ -1098,49 +1101,49 @@ extension HifzProgressIsarQuerySortThenBy
 extension HifzProgressIsarQueryWhereDistinct
     on QueryBuilder<HifzProgressIsar, HifzProgressIsar, QDistinct> {
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QDistinct>
-      distinctByAyahNumber() {
+  distinctByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'ayahNumber');
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QDistinct>
-      distinctByLastReviewDate() {
+  distinctByLastReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastReviewDate');
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QDistinct>
-      distinctByNextReviewDate() {
+  distinctByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'nextReviewDate');
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QDistinct>
-      distinctByRepetitions() {
+  distinctByRepetitions() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'repetitions');
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QDistinct>
-      distinctByStatus() {
+  distinctByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'status');
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QDistinct>
-      distinctBySurahId() {
+  distinctBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'surahId');
     });
   }
 
   QueryBuilder<HifzProgressIsar, HifzProgressIsar, QDistinct>
-      distinctByUniqueKey({bool caseSensitive = true}) {
+  distinctByUniqueKey({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'uniqueKey', caseSensitive: caseSensitive);
     });
@@ -1162,14 +1165,14 @@ extension HifzProgressIsarQueryProperty
   }
 
   QueryBuilder<HifzProgressIsar, DateTime, QQueryOperations>
-      lastReviewDateProperty() {
+  lastReviewDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastReviewDate');
     });
   }
 
   QueryBuilder<HifzProgressIsar, DateTime, QQueryOperations>
-      nextReviewDateProperty() {
+  nextReviewDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nextReviewDate');
     });
