@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:just_audio/just_audio.dart';
 import 'quran_audio_service.dart';
 
 /// Intelligent audio caching service for Quran audio files.
@@ -72,6 +73,20 @@ class AudioCacheService {
         }),
       );
     }
+  }
+
+  /// Plays an audio source on the given [player], correctly handling both
+  /// network URLs and cached local file paths.
+  ///
+  /// Use this instead of calling [AudioPlayer.setUrl] directly so that cached
+  /// file paths (returned by [getAudioSource]) are handled properly.
+  static Future<void> playFromSource(AudioPlayer player, String source) async {
+    if (source.startsWith('http://') || source.startsWith('https://')) {
+      await player.setUrl(source);
+    } else {
+      await player.setFilePath(source);
+    }
+    await player.play();
   }
 
   /// Clears the entire audio cache.

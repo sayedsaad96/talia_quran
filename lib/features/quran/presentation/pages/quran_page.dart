@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
@@ -139,7 +140,7 @@ class _QuranViewState extends State<_QuranView>
                   ).animate().fadeIn(duration: 200.ms).slideX(begin: -0.03),
                   const SizedBox(height: 4),
                   Text(
-                    '١١٤ ${context.l10n.surahs} • ٦٢٣٦ ${context.l10n.ayahs}',
+                    context.l10n.totalSurahsAyahs(6236, 114),
                     style: AppTypography.bodyMedium.copyWith(
                       color: Colors.white70,
                     ),
@@ -184,32 +185,34 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 44,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
-      ),
-      child: TextField(
-        controller: controller,
-        onChanged: (q) => context.read<SurahListCubit>().search(q),
-        style: AppTypography.bodyMedium.copyWith(color: Colors.white),
-        decoration: InputDecoration(
-          hintText: context.l10n.searchSurah,
-          hintStyle: AppTypography.bodyMedium.copyWith(color: Colors.white60),
-          prefixIcon: const Icon(
-            Icons.search_rounded,
-            color: Colors.white60,
-            size: 20,
-          ),
-          filled: false,
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 44),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+        ),
+        child: TextField(
+          controller: controller,
+          onChanged: (q) => context.read<SurahListCubit>().search(q),
+          style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: context.l10n.searchSurah,
+            hintStyle: AppTypography.bodyMedium.copyWith(color: Colors.white60),
+            prefixIcon: const Icon(
+              Icons.search_rounded,
+              color: Colors.white60,
+              size: 20,
+            ),
+            filled: false,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            contentPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
           ),
         ),
       ),
@@ -379,39 +382,6 @@ class _JuzGridView extends StatelessWidget {
     402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
   ];
 
-  static const List<String> _juzNames = [
-    'الأول',
-    'الثاني',
-    'الثالث',
-    'الرابع',
-    'الخامس',
-    'السادس',
-    'السابع',
-    'الثامن',
-    'التاسع',
-    'العاشر',
-    'الحادي عشر',
-    'الثاني عشر',
-    'الثالث عشر',
-    'الرابع عشر',
-    'الخامس عشر',
-    'السادس عشر',
-    'السابع عشر',
-    'الثامن عشر',
-    'التاسع عشر',
-    'العشرون',
-    'الحادي والعشرون',
-    'الثاني والعشرون',
-    'الثالث والعشرون',
-    'الرابع والعشرون',
-    'الخامس والعشرون',
-    'السادس والعشرون',
-    'السابع والعشرون',
-    'الثامن والعشرون',
-    'التاسع والعشرون',
-    'الثلاثون',
-  ];
-
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
@@ -485,7 +455,7 @@ class _JuzGridView extends StatelessWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              _juzNames[i],
+                              context.localizedJuzName(i + 1),
                               style: AppTypography.titleMedium.copyWith(
                                 color: isDark
                                     ? AppColors.darkTextPrimary

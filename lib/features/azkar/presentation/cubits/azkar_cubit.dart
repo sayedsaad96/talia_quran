@@ -119,6 +119,25 @@ class AzkarCubit extends Cubit<AzkarState> {
     }
   }
 
+  void goNextUnfinished() {
+    final state = this.state;
+    if (state is! AzkarLoaded) return;
+    
+    int nextIndex = state.sessions.indexWhere(
+      (s) => !s.isDone,
+      state.currentIndex + 1,
+    );
+    if (nextIndex == -1) {
+      nextIndex = state.sessions.indexWhere((s) => !s.isDone);
+    }
+    if (nextIndex != -1 && nextIndex != state.currentIndex) {
+      emit(state.copyWith(currentIndex: nextIndex));
+    } else if (state.currentIndex < state.sessions.length - 1) {
+      emit(state.copyWith(currentIndex: state.currentIndex + 1));
+    }
+  }
+
+
   String _todayKey() {
     final now = DateTime.now();
     return '${now.year}-${now.month}-${now.day}';

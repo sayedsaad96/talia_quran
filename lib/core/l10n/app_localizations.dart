@@ -993,6 +993,78 @@ abstract class AppLocalizations {
   /// **'تم إنشاء الحساب بنجاح ✓'**
   String get signupSuccess;
 
+  /// No description provided for @confirmationEmailSent.
+  ///
+  /// In ar, this message translates to:
+  /// **'✅ تم إرسال رسالة التأكيد، تحقق من بريدك'**
+  String get confirmationEmailSent;
+
+  /// No description provided for @resendConfirmation.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة إرسال'**
+  String get resendConfirmation;
+
+  /// No description provided for @authEmailAlreadyRegistered.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني مسجل بالفعل. حاول تسجيل الدخول.'**
+  String get authEmailAlreadyRegistered;
+
+  /// No description provided for @authConfirmEmailFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد.'**
+  String get authConfirmEmailFirst;
+
+  /// No description provided for @authInvalidCredentials.
+  ///
+  /// In ar, this message translates to:
+  /// **'البريد الإلكتروني أو كلمة المرور غير صحيحة'**
+  String get authInvalidCredentials;
+
+  /// No description provided for @authTooManyRequests.
+  ///
+  /// In ar, this message translates to:
+  /// **'محاولات كثيرة. انتظر قليلاً ثم حاول مرة أخرى.'**
+  String get authTooManyRequests;
+
+  /// No description provided for @authNoInternet.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد اتصال بالإنترنت'**
+  String get authNoInternet;
+
+  /// No description provided for @authAccountNotFound.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد حساب بهذا البريد الإلكتروني'**
+  String get authAccountNotFound;
+
+  /// No description provided for @authSignupFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل إنشاء الحساب'**
+  String get authSignupFailed;
+
+  /// No description provided for @authSigninFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'فشل تسجيل الدخول'**
+  String get authSigninFailed;
+
+  /// No description provided for @authSignoutFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء تسجيل الخروج'**
+  String get authSignoutFailed;
+
+  /// No description provided for @authGenericError.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ، حاول مرة أخرى'**
+  String get authGenericError;
+
   /// No description provided for @profileSavedToCloud.
   ///
   /// In ar, this message translates to:
@@ -1424,6 +1496,636 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أكمل السورة السابقة لفتح هذه السورة'**
   String get lockedSurahText;
+
+  /// No description provided for @bestStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'أفضل: {count}'**
+  String bestStreak(Object count);
+
+  /// No description provided for @consecutiveDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'يوم متتالي'**
+  String get consecutiveDays;
+
+  /// No description provided for @miniProgressOf.
+  ///
+  /// In ar, this message translates to:
+  /// **'{unit} من {total}'**
+  String miniProgressOf(Object total, Object unit);
+
+  /// No description provided for @dailyPlanSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'{ayahs} آيات يومياً • {minutes} دقيقة'**
+  String dailyPlanSummary(Object ayahs, Object minutes);
+
+  /// No description provided for @debugCertificatePreview.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاينة الشهادات للتجربة'**
+  String get debugCertificatePreview;
+
+  /// No description provided for @debugCertificatePreviewDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختبار عرض الشهادة دون الحصول عليها فعلياً.'**
+  String get debugCertificatePreviewDesc;
+
+  /// No description provided for @debugCertJuz30.
+  ///
+  /// In ar, this message translates to:
+  /// **'جزء 30'**
+  String get debugCertJuz30;
+
+  /// No description provided for @debugCertSurahBaqarah.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة البقرة'**
+  String get debugCertSurahBaqarah;
+
+  /// No description provided for @debugCertHalfQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'نصف القرآن'**
+  String get debugCertHalfQuran;
+
+  /// No description provided for @debugCertFullQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختم القرآن'**
+  String get debugCertFullQuran;
+
+  /// No description provided for @backupProgressTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ تقدمك الآن!'**
+  String get backupProgressTitle;
+
+  /// No description provided for @backupProgressDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل دخولك من الإعدادات لحماية تقدمك'**
+  String get backupProgressDesc;
+
+  /// No description provided for @azkarSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اذكر الله كثيراً'**
+  String get azkarSubtitle;
+
+  /// No description provided for @zikrCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} ذكر'**
+  String zikrCount(Object count);
+
+  /// No description provided for @azkarCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} أذكار'**
+  String azkarCount(Object count);
+
+  /// No description provided for @duaCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} دعاء'**
+  String duaCount(Object count);
+
+  /// No description provided for @azkarIndex.
+  ///
+  /// In ar, this message translates to:
+  /// **'فهرس الأذكار'**
+  String get azkarIndex;
+
+  /// No description provided for @zikrNumber.
+  ///
+  /// In ar, this message translates to:
+  /// **'ذكر رقم {number}'**
+  String zikrNumber(Object number);
+
+  /// No description provided for @completedCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{completed} من {total} مكتمل'**
+  String completedCount(Object completed, Object total);
+
+  /// No description provided for @zikrCopied.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم نسخ الذكر'**
+  String get zikrCopied;
+
+  /// No description provided for @sharedFromTalia.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت المشاركة من تطبيق تالية للقرآن'**
+  String get sharedFromTalia;
+
+  /// No description provided for @zikrCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتمل الذكر'**
+  String get zikrCompleted;
+
+  /// No description provided for @tapToTasbeeh.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط للتسبيح (من {total})'**
+  String tapToTasbeeh(Object total);
+
+  /// No description provided for @azkarCompletedTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم بحمد الله'**
+  String get azkarCompletedTitle;
+
+  /// No description provided for @azkarCompletedDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتملت جميع الأذكار في هذه الفئة'**
+  String get azkarCompletedDesc;
+
+  /// No description provided for @generalAzkarSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مجموعة من الأذكار الشاملة'**
+  String get generalAzkarSubtitle;
+
+  /// No description provided for @duasSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدعية من القرآن والسنة ودعاء ختم القرآن'**
+  String get duasSubtitle;
+
+  /// No description provided for @totalSurahsAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'{surahs} سورة • {ayahs} آية'**
+  String totalSurahsAyahs(Object ayahs, Object surahs);
+
+  /// No description provided for @yearActivity.
+  ///
+  /// In ar, this message translates to:
+  /// **'نشاط السنة'**
+  String get yearActivity;
+
+  /// No description provided for @activityTooltip.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} نشاط'**
+  String activityTooltip(Object count);
+
+  /// No description provided for @less.
+  ///
+  /// In ar, this message translates to:
+  /// **'أقل'**
+  String get less;
+
+  /// No description provided for @more.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكثر'**
+  String get more;
+
+  /// No description provided for @memorizedAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآيات المحفوظة'**
+  String get memorizedAyahs;
+
+  /// No description provided for @memorizedSurahsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'السور المحفوظة'**
+  String get memorizedSurahsLabel;
+
+  /// No description provided for @memorizedJuzLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأجزاء المحفوظة'**
+  String get memorizedJuzLabel;
+
+  /// No description provided for @earnCertificatesHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ السور والأجزاء كاملة لتحصل على شهادات التميز!'**
+  String get earnCertificatesHint;
+
+  /// No description provided for @certificateTitleJuz.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهادة حفظ الجزء {juz}'**
+  String certificateTitleJuz(Object juz);
+
+  /// No description provided for @certificateTitleSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهادة حفظ سورة'**
+  String get certificateTitleSurah;
+
+  /// No description provided for @certificateTitleSurahNamed.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهادة حفظ سورة {surahName}'**
+  String certificateTitleSurahNamed(Object surahName);
+
+  /// No description provided for @certificateTitleHalfQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهادة حفظ نصف القرآن الكريم'**
+  String get certificateTitleHalfQuran;
+
+  /// No description provided for @certificateTitleFullQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهادة ختم القرآن الكريم كاملاً'**
+  String get certificateTitleFullQuran;
+
+  /// No description provided for @saveFormatTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر صيغة الحفظ'**
+  String get saveFormatTitle;
+
+  /// No description provided for @saveAsImage.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ كصورة (في الاستوديو)'**
+  String get saveAsImage;
+
+  /// No description provided for @saveAsPdf.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ كملف PDF'**
+  String get saveAsPdf;
+
+  /// No description provided for @certificateShareError.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء المشاركة'**
+  String get certificateShareError;
+
+  /// No description provided for @certificateGalleryPermissionError.
+  ///
+  /// In ar, this message translates to:
+  /// **'يجب منح صلاحية الوصول للاستوديو لحفظ الشهادة'**
+  String get certificateGalleryPermissionError;
+
+  /// No description provided for @certificateGallerySaveSuccess.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حفظ الشهادة في الاستوديو بنجاح ✓'**
+  String get certificateGallerySaveSuccess;
+
+  /// No description provided for @certificateSaveError.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء الحفظ'**
+  String get certificateSaveError;
+
+  /// No description provided for @certificatePdfError.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ أثناء إنشاء ملف PDF'**
+  String get certificatePdfError;
+
+  /// No description provided for @shareCertificateJuz.
+  ///
+  /// In ar, this message translates to:
+  /// **'بفضل الله أتممت حفظ الجزء {juz} من القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙'**
+  String shareCertificateJuz(Object juz);
+
+  /// No description provided for @shareCertificateSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'بفضل الله أتممت حفظ سورة {surahName} من القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙'**
+  String shareCertificateSurah(Object surahName);
+
+  /// No description provided for @shareCertificateHalfQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'بفضل الله أتممت حفظ نصف القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙'**
+  String get shareCertificateHalfQuran;
+
+  /// No description provided for @shareCertificateFullQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'بفضل الله أتممت حفظ القرآن الكريم كاملاً 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙'**
+  String get shareCertificateFullQuran;
+
+  /// No description provided for @achievementTitleFirstPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصفحة الأولى'**
+  String get achievementTitleFirstPage;
+
+  /// No description provided for @achievementDescFirstPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ أول صفحة من القرآن'**
+  String get achievementDescFirstPage;
+
+  /// No description provided for @achievementTitleTenPages.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٠ صفحات'**
+  String get achievementTitleTenPages;
+
+  /// No description provided for @achievementDescTenPages.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ ١٠ صفحات من القرآن'**
+  String get achievementDescTenPages;
+
+  /// No description provided for @achievementTitleFiftyPages.
+  ///
+  /// In ar, this message translates to:
+  /// **'٥٠ صفحة'**
+  String get achievementTitleFiftyPages;
+
+  /// No description provided for @achievementDescFiftyPages.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ ٥٠ صفحة من القرآن'**
+  String get achievementDescFiftyPages;
+
+  /// No description provided for @achievementTitleJuzRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'جزء كامل'**
+  String get achievementTitleJuzRead;
+
+  /// No description provided for @achievementDescJuzRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ جزءاً كاملاً (٢٠ صفحة)'**
+  String get achievementDescJuzRead;
+
+  /// No description provided for @achievementTitleFiveJuzRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'٥ أجزاء'**
+  String get achievementTitleFiveJuzRead;
+
+  /// No description provided for @achievementDescFiveJuzRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ ٥ أجزاء من القرآن'**
+  String get achievementDescFiveJuzRead;
+
+  /// No description provided for @achievementTitleHalfQuranRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'نصف القرآن'**
+  String get achievementTitleHalfQuranRead;
+
+  /// No description provided for @achievementDescHalfQuranRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ نصف القرآن الكريم'**
+  String get achievementDescHalfQuranRead;
+
+  /// No description provided for @achievementTitleFullQuranRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختم القرآن'**
+  String get achievementTitleFullQuranRead;
+
+  /// No description provided for @achievementDescFullQuranRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ القرآن الكريم كاملاً'**
+  String get achievementDescFullQuranRead;
+
+  /// No description provided for @achievementTitleFirstAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'أول آية'**
+  String get achievementTitleFirstAyah;
+
+  /// No description provided for @achievementDescFirstAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ أول آية من القرآن'**
+  String get achievementDescFirstAyah;
+
+  /// No description provided for @achievementTitleTenAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٠ آيات'**
+  String get achievementTitleTenAyahs;
+
+  /// No description provided for @achievementDescTenAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ ١٠ آيات'**
+  String get achievementDescTenAyahs;
+
+  /// No description provided for @achievementTitleFiftyAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'٥٠ آية'**
+  String get achievementTitleFiftyAyahs;
+
+  /// No description provided for @achievementDescFiftyAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ ٥٠ آية'**
+  String get achievementDescFiftyAyahs;
+
+  /// No description provided for @achievementTitleHundredAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٠٠ آية'**
+  String get achievementTitleHundredAyahs;
+
+  /// No description provided for @achievementDescHundredAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ ١٠٠ آية'**
+  String get achievementDescHundredAyahs;
+
+  /// No description provided for @achievementTitleFirstSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'أول سورة'**
+  String get achievementTitleFirstSurah;
+
+  /// No description provided for @achievementDescFirstSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ سورة كاملة'**
+  String get achievementDescFirstSurah;
+
+  /// No description provided for @achievementTitleFiveSurahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'٥ سور'**
+  String get achievementTitleFiveSurahs;
+
+  /// No description provided for @achievementDescFiveSurahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ ٥ سور كاملة'**
+  String get achievementDescFiveSurahs;
+
+  /// No description provided for @achievementTitleTenSurahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٠ سور'**
+  String get achievementTitleTenSurahs;
+
+  /// No description provided for @achievementDescTenSurahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ ١٠ سور كاملة'**
+  String get achievementDescTenSurahs;
+
+  /// No description provided for @achievementTitleJuzAmma.
+  ///
+  /// In ar, this message translates to:
+  /// **'جزء عمّ'**
+  String get achievementTitleJuzAmma;
+
+  /// No description provided for @achievementDescJuzAmma.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ ٥٦٤ آية (جزء عمّ)'**
+  String get achievementDescJuzAmma;
+
+  /// No description provided for @achievementTitleOneJuzMemorized.
+  ///
+  /// In ar, this message translates to:
+  /// **'جزء محفوظ'**
+  String get achievementTitleOneJuzMemorized;
+
+  /// No description provided for @achievementDescOneJuzMemorized.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ جزءاً كاملاً'**
+  String get achievementDescOneJuzMemorized;
+
+  /// No description provided for @achievementTitleFiveJuzMemorized.
+  ///
+  /// In ar, this message translates to:
+  /// **'٥ أجزاء محفوظة'**
+  String get achievementTitleFiveJuzMemorized;
+
+  /// No description provided for @achievementDescFiveJuzMemorized.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ ٥ أجزاء من القرآن'**
+  String get achievementDescFiveJuzMemorized;
+
+  /// No description provided for @achievementTitleTenJuzMemorized.
+  ///
+  /// In ar, this message translates to:
+  /// **'١٠ أجزاء'**
+  String get achievementTitleTenJuzMemorized;
+
+  /// No description provided for @achievementDescTenJuzMemorized.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ ١٠ أجزاء من القرآن'**
+  String get achievementDescTenJuzMemorized;
+
+  /// No description provided for @achievementTitleHalfQuranMemorized.
+  ///
+  /// In ar, this message translates to:
+  /// **'نصف القرآن'**
+  String get achievementTitleHalfQuranMemorized;
+
+  /// No description provided for @achievementDescHalfQuranMemorized.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ نصف القرآن الكريم'**
+  String get achievementDescHalfQuranMemorized;
+
+  /// No description provided for @achievementTitleFullQuranMemorized.
+  ///
+  /// In ar, this message translates to:
+  /// **'حافظ القرآن'**
+  String get achievementTitleFullQuranMemorized;
+
+  /// No description provided for @achievementDescFullQuranMemorized.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ القرآن الكريم كاملاً'**
+  String get achievementDescFullQuranMemorized;
+
+  /// No description provided for @achievementTitleThreeDayStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'٣ أيام متتالية'**
+  String get achievementTitleThreeDayStreak;
+
+  /// No description provided for @achievementDescThreeDayStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'حافظ على ٣ أيام متتالية'**
+  String get achievementDescThreeDayStreak;
+
+  /// No description provided for @achievementTitleWeekStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'أسبوع كامل'**
+  String get achievementTitleWeekStreak;
+
+  /// No description provided for @achievementDescWeekStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'حافظ على ٧ أيام متتالية'**
+  String get achievementDescWeekStreak;
+
+  /// No description provided for @achievementTitleTwoWeekStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'أسبوعان'**
+  String get achievementTitleTwoWeekStreak;
+
+  /// No description provided for @achievementDescTwoWeekStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'حافظ على ١٤ يوماً متتالية'**
+  String get achievementDescTwoWeekStreak;
+
+  /// No description provided for @achievementTitleMonthStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهر كامل'**
+  String get achievementTitleMonthStreak;
+
+  /// No description provided for @achievementDescMonthStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'حافظ على ٣٠ يوماً متتالية'**
+  String get achievementDescMonthStreak;
+
+  /// No description provided for @achievementTitleNinetyDayStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'٩٠ يوماً'**
+  String get achievementTitleNinetyDayStreak;
+
+  /// No description provided for @achievementDescNinetyDayStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'حافظ على ٩٠ يوماً متتالية'**
+  String get achievementDescNinetyDayStreak;
+
+  /// No description provided for @achievementTitleYearStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'سنة كاملة'**
+  String get achievementTitleYearStreak;
+
+  /// No description provided for @achievementDescYearStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'حافظ على ٣٦٥ يوماً متتالياً'**
+  String get achievementDescYearStreak;
 
   /// No description provided for @bookmarksCountItem.
   ///

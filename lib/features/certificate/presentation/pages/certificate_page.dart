@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../widgets/certificate_widget.dart';
 
@@ -75,27 +76,31 @@ class _CertificatePageState extends State<CertificatePage> {
   Future<void> _share() async {
     setState(() => _isSaving = true);
     try {
+      final l10n = context.l10n;
+      final isArabic = context.isArabic;
+      final shareText = switch (widget.award.type) {
+        CertificateType.juz => l10n.shareCertificateJuz(
+          widget.award.juzNumber ?? 1,
+        ),
+        CertificateType.surah => l10n.shareCertificateSurah(
+          isArabic
+              ? widget.award.surahNameAr ?? ''
+              : widget.award.surahNameEn ?? widget.award.surahNameAr ?? '',
+        ),
+        CertificateType.halfQuran => l10n.shareCertificateHalfQuran,
+        CertificateType.fullQuran => l10n.shareCertificateFullQuran,
+      };
       // Always share as a high-quality image
       final file = await _captureAsFile();
-      final shareText = switch (widget.award.type) {
-        CertificateType.juz =>
-          'بفضل الله أتممت حفظ الجزء ${widget.award.juzNumber} من القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙',
-        CertificateType.surah =>
-          'بفضل الله أتممت حفظ سورة ${widget.award.surahNameAr ?? ""} من القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙',
-        CertificateType.halfQuran =>
-          'بفضل الله أتممت حفظ نصف القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙',
-        CertificateType.fullQuran =>
-          'بفضل الله أتممت حفظ القرآن الكريم كاملاً 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙',
-      };
 
       await SharePlus.instance.share(
         ShareParams(files: [XFile(file.path)], text: shareText),
       );
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('حدث خطأ أثناء المشاركة')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.certificateShareError)),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -111,8 +116,8 @@ class _CertificatePageState extends State<CertificatePage> {
         if (!granted) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('يجب منح صلاحية الوصول للاستوديو لحفظ الشهادة'),
+              SnackBar(
+                content: Text(context.l10n.certificateGalleryPermissionError),
               ),
             );
             // M06 FIX: Reset saving state before returning
@@ -127,14 +132,14 @@ class _CertificatePageState extends State<CertificatePage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تم حفظ الشهادة في الاستوديو بنجاح ✓')),
+          SnackBar(content: Text(context.l10n.certificateGallerySaveSuccess)),
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('حدث خطأ أثناء الحفظ')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.l10n.certificateSaveError)),
+        );
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -175,7 +180,7 @@ class _CertificatePageState extends State<CertificatePage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('حدث خطأ أثناء إنشاء ملف PDF')),
+          SnackBar(content: Text(context.l10n.certificatePdfError)),
         );
       }
     } finally {
@@ -195,9 +200,9 @@ class _CertificatePageState extends State<CertificatePage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'اختر صيغة الحفظ',
-              style: TextStyle(
+            Text(
+              context.l10n.saveFormatTitle,
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
@@ -207,9 +212,9 @@ class _CertificatePageState extends State<CertificatePage> {
             const SizedBox(height: 24),
             ListTile(
               leading: const Icon(Icons.image_rounded, color: Colors.blue),
-              title: const Text(
-                'حفظ كصورة (في الاستوديو)',
-                style: TextStyle(color: Colors.white),
+              title: Text(
+                context.l10n.saveAsImage,
+                style: const TextStyle(color: Colors.white),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -222,9 +227,9 @@ class _CertificatePageState extends State<CertificatePage> {
                 Icons.picture_as_pdf_rounded,
                 color: Colors.red,
               ),
-              title: const Text(
-                'حفظ كملف PDF',
-                style: TextStyle(color: Colors.white),
+              title: Text(
+                context.l10n.saveAsPdf,
+                style: const TextStyle(color: Colors.white),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -310,9 +315,9 @@ class _CertificatePageState extends State<CertificatePage> {
                           ElevatedButton.icon(
                             onPressed: _share,
                             icon: const Icon(Icons.share_rounded),
-                            label: const Text(
-                              'مشاركة',
-                              style: TextStyle(
+                            label: Text(
+                              context.l10n.share,
+                              style: const TextStyle(
                                 fontFamily: 'Amiri',
                                 fontSize: 16,
                               ),
@@ -333,9 +338,9 @@ class _CertificatePageState extends State<CertificatePage> {
                           ElevatedButton.icon(
                             onPressed: _showSaveOptions,
                             icon: const Icon(Icons.download_rounded),
-                            label: const Text(
-                              'حفظ',
-                              style: TextStyle(
+                            label: Text(
+                              context.l10n.save,
+                              style: const TextStyle(
                                 fontFamily: 'Amiri',
                                 fontSize: 16,
                               ),

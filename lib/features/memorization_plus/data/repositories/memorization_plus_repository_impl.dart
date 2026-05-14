@@ -46,6 +46,9 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   ) async {
     try {
       await _datasource.saveSelectedTrack(track.name);
+      if (track == MemorizationTrack.kids) {
+        await _datasource.setIsParentMode(true);
+      }
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -874,6 +877,26 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   Future<Either<Failure, void>> deleteCustomPlan() async {
     try {
       await _datasource.deleteCustomPlan();
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  // ─── Parent mode toggle ──────────────────────────────────────────────────
+  @override
+  Either<Failure, bool> getIsParentMode() {
+    try {
+      return Right(_datasource.getIsParentMode());
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> setIsParentMode(bool value) async {
+    try {
+      await _datasource.setIsParentMode(value);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

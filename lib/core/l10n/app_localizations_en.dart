@@ -477,6 +477,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signupSuccess => 'Account created successfully ✓';
 
   @override
+  String get confirmationEmailSent =>
+      '✅ Confirmation email sent. Check your inbox';
+
+  @override
+  String get resendConfirmation => 'Resend';
+
+  @override
+  String get authEmailAlreadyRegistered =>
+      'This email is already registered. Try signing in.';
+
+  @override
+  String get authConfirmEmailFirst =>
+      'Please confirm your email first. Check your inbox.';
+
+  @override
+  String get authInvalidCredentials => 'Email or password is incorrect';
+
+  @override
+  String get authTooManyRequests =>
+      'Too many attempts. Please wait and try again.';
+
+  @override
+  String get authNoInternet => 'No internet connection';
+
+  @override
+  String get authAccountNotFound => 'No account found for this email';
+
+  @override
+  String get authSignupFailed => 'Failed to create account';
+
+  @override
+  String get authSigninFailed => 'Failed to sign in';
+
+  @override
+  String get authSignoutFailed => 'Failed to sign out';
+
+  @override
+  String get authGenericError => 'Something went wrong. Try again.';
+
+  @override
   String get profileSavedToCloud => 'Your progress is saved to the cloud';
 
   @override
@@ -700,6 +740,360 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get lockedSurahText => 'Complete the previous Surah to unlock';
+
+  @override
+  String bestStreak(Object count) {
+    return 'Best: $count';
+  }
+
+  @override
+  String get consecutiveDays => 'Consecutive days';
+
+  @override
+  String miniProgressOf(Object total, Object unit) {
+    return '$unit of $total';
+  }
+
+  @override
+  String dailyPlanSummary(Object ayahs, Object minutes) {
+    return '$ayahs ayahs daily • $minutes min';
+  }
+
+  @override
+  String get debugCertificatePreview => 'Debug: Certificate Preview';
+
+  @override
+  String get debugCertificatePreviewDesc =>
+      'Test certificate rendering without earning one.';
+
+  @override
+  String get debugCertJuz30 => 'Juz 30';
+
+  @override
+  String get debugCertSurahBaqarah => 'Surah Al-Baqarah';
+
+  @override
+  String get debugCertHalfQuran => 'Half Quran';
+
+  @override
+  String get debugCertFullQuran => 'Full Quran';
+
+  @override
+  String get backupProgressTitle => 'Back up your progress!';
+
+  @override
+  String get backupProgressDesc =>
+      'Sign in from Settings to protect your progress';
+
+  @override
+  String get azkarSubtitle => 'Remember Allah often';
+
+  @override
+  String zikrCount(Object count) {
+    return '$count zikr';
+  }
+
+  @override
+  String azkarCount(Object count) {
+    return '$count azkar';
+  }
+
+  @override
+  String duaCount(Object count) {
+    return '$count duas';
+  }
+
+  @override
+  String get azkarIndex => 'Azkar Index';
+
+  @override
+  String zikrNumber(Object number) {
+    return 'Zikr #$number';
+  }
+
+  @override
+  String completedCount(Object completed, Object total) {
+    return '$completed of $total completed';
+  }
+
+  @override
+  String get zikrCopied => 'Zikr copied';
+
+  @override
+  String get sharedFromTalia => 'Shared from Talia Quran';
+
+  @override
+  String get zikrCompleted => 'Zikr completed';
+
+  @override
+  String tapToTasbeeh(Object total) {
+    return 'Tap to count (of $total)';
+  }
+
+  @override
+  String get azkarCompletedTitle => 'Completed, by Allah\'s grace';
+
+  @override
+  String get azkarCompletedDesc => 'All azkar in this category are complete';
+
+  @override
+  String get generalAzkarSubtitle => 'A collection of comprehensive azkar';
+
+  @override
+  String get duasSubtitle => 'Duas from the Quran and Sunnah';
+
+  @override
+  String totalSurahsAyahs(Object ayahs, Object surahs) {
+    return '$surahs Surahs • $ayahs Ayahs';
+  }
+
+  @override
+  String get yearActivity => 'Year activity';
+
+  @override
+  String activityTooltip(Object count) {
+    return '$count activities';
+  }
+
+  @override
+  String get less => 'Less';
+
+  @override
+  String get more => 'More';
+
+  @override
+  String get memorizedAyahs => 'Ayahs Memorized';
+
+  @override
+  String get memorizedSurahsLabel => 'Surahs Memorized';
+
+  @override
+  String get memorizedJuzLabel => 'Juz Memorized';
+
+  @override
+  String get earnCertificatesHint =>
+      'Memorize complete Surahs and Juz to earn certificates!';
+
+  @override
+  String certificateTitleJuz(Object juz) {
+    return 'Juz $juz Certificate';
+  }
+
+  @override
+  String get certificateTitleSurah => 'Surah Certificate';
+
+  @override
+  String certificateTitleSurahNamed(Object surahName) {
+    return 'Surah $surahName Certificate';
+  }
+
+  @override
+  String get certificateTitleHalfQuran => 'Half Quran Certificate';
+
+  @override
+  String get certificateTitleFullQuran => 'Full Quran Certificate';
+
+  @override
+  String get saveFormatTitle => 'Choose save format';
+
+  @override
+  String get saveAsImage => 'Save as image (Gallery)';
+
+  @override
+  String get saveAsPdf => 'Save as PDF';
+
+  @override
+  String get certificateShareError => 'An error occurred while sharing';
+
+  @override
+  String get certificateGalleryPermissionError =>
+      'Gallery permission is required to save the certificate';
+
+  @override
+  String get certificateGallerySaveSuccess => 'Certificate saved to gallery ✓';
+
+  @override
+  String get certificateSaveError => 'An error occurred while saving';
+
+  @override
+  String get certificatePdfError => 'An error occurred while creating the PDF';
+
+  @override
+  String shareCertificateJuz(Object juz) {
+    return 'By Allah\'s grace, I memorized Juz $juz of the Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙';
+  }
+
+  @override
+  String shareCertificateSurah(Object surahName) {
+    return 'By Allah\'s grace, I memorized Surah $surahName of the Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙';
+  }
+
+  @override
+  String get shareCertificateHalfQuran =>
+      'By Allah\'s grace, I memorized half of the Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙';
+
+  @override
+  String get shareCertificateFullQuran =>
+      'By Allah\'s grace, I memorized the entire Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙';
+
+  @override
+  String get achievementTitleFirstPage => 'First Page';
+
+  @override
+  String get achievementDescFirstPage => 'Read your first page of the Quran';
+
+  @override
+  String get achievementTitleTenPages => '10 Pages';
+
+  @override
+  String get achievementDescTenPages => 'Read 10 pages of the Quran';
+
+  @override
+  String get achievementTitleFiftyPages => '50 Pages';
+
+  @override
+  String get achievementDescFiftyPages => 'Read 50 pages of the Quran';
+
+  @override
+  String get achievementTitleJuzRead => 'Complete Juz';
+
+  @override
+  String get achievementDescJuzRead => 'Read one complete Juz (20 pages)';
+
+  @override
+  String get achievementTitleFiveJuzRead => '5 Juz';
+
+  @override
+  String get achievementDescFiveJuzRead => 'Read 5 Juz of the Quran';
+
+  @override
+  String get achievementTitleHalfQuranRead => 'Half Quran';
+
+  @override
+  String get achievementDescHalfQuranRead => 'Read half of the Holy Quran';
+
+  @override
+  String get achievementTitleFullQuranRead => 'Complete Quran';
+
+  @override
+  String get achievementDescFullQuranRead => 'Read the entire Holy Quran';
+
+  @override
+  String get achievementTitleFirstAyah => 'First Ayah';
+
+  @override
+  String get achievementDescFirstAyah =>
+      'Memorize your first ayah of the Quran';
+
+  @override
+  String get achievementTitleTenAyahs => '10 Ayahs';
+
+  @override
+  String get achievementDescTenAyahs => 'Memorize 10 ayahs';
+
+  @override
+  String get achievementTitleFiftyAyahs => '50 Ayahs';
+
+  @override
+  String get achievementDescFiftyAyahs => 'Memorize 50 ayahs';
+
+  @override
+  String get achievementTitleHundredAyahs => '100 Ayahs';
+
+  @override
+  String get achievementDescHundredAyahs => 'Memorize 100 ayahs';
+
+  @override
+  String get achievementTitleFirstSurah => 'First Surah';
+
+  @override
+  String get achievementDescFirstSurah => 'Memorize a complete Surah';
+
+  @override
+  String get achievementTitleFiveSurahs => '5 Surahs';
+
+  @override
+  String get achievementDescFiveSurahs => 'Memorize 5 complete Surahs';
+
+  @override
+  String get achievementTitleTenSurahs => '10 Surahs';
+
+  @override
+  String get achievementDescTenSurahs => 'Memorize 10 complete Surahs';
+
+  @override
+  String get achievementTitleJuzAmma => 'Juz Amma';
+
+  @override
+  String get achievementDescJuzAmma => 'Memorize 564 ayahs (Juz Amma)';
+
+  @override
+  String get achievementTitleOneJuzMemorized => 'Memorized Juz';
+
+  @override
+  String get achievementDescOneJuzMemorized => 'Memorize one complete Juz';
+
+  @override
+  String get achievementTitleFiveJuzMemorized => '5 Memorized Juz';
+
+  @override
+  String get achievementDescFiveJuzMemorized => 'Memorize 5 Juz of the Quran';
+
+  @override
+  String get achievementTitleTenJuzMemorized => '10 Juz';
+
+  @override
+  String get achievementDescTenJuzMemorized => 'Memorize 10 Juz of the Quran';
+
+  @override
+  String get achievementTitleHalfQuranMemorized => 'Half Quran';
+
+  @override
+  String get achievementDescHalfQuranMemorized =>
+      'Memorize half of the Holy Quran';
+
+  @override
+  String get achievementTitleFullQuranMemorized => 'Hafiz of Quran';
+
+  @override
+  String get achievementDescFullQuranMemorized =>
+      'Memorize the entire Holy Quran';
+
+  @override
+  String get achievementTitleThreeDayStreak => '3-Day Streak';
+
+  @override
+  String get achievementDescThreeDayStreak => 'Keep a 3-day streak';
+
+  @override
+  String get achievementTitleWeekStreak => 'Full Week';
+
+  @override
+  String get achievementDescWeekStreak => 'Keep a 7-day streak';
+
+  @override
+  String get achievementTitleTwoWeekStreak => 'Two Weeks';
+
+  @override
+  String get achievementDescTwoWeekStreak => 'Keep a 14-day streak';
+
+  @override
+  String get achievementTitleMonthStreak => 'Full Month';
+
+  @override
+  String get achievementDescMonthStreak => 'Keep a 30-day streak';
+
+  @override
+  String get achievementTitleNinetyDayStreak => '90 Days';
+
+  @override
+  String get achievementDescNinetyDayStreak => 'Keep a 90-day streak';
+
+  @override
+  String get achievementTitleYearStreak => 'Full Year';
+
+  @override
+  String get achievementDescYearStreak => 'Keep a 365-day streak';
 
   @override
   String bookmarksCountItem(int count) {

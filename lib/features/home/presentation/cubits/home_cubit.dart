@@ -9,21 +9,27 @@ import '../../../quran/domain/usecases/get_surahs_usecase.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/usecases/memorization_plus_usecases.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../../core/services/app_session_service.dart';
 
 part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
+  final GetProgressUsecase _getProgress;
+  final GetHifzProgressUsecase _getHifzProgress;
+  final GetQuranPageUsecase _getQuranPage;
+  final GetCustomPlanUsecase _getCustomPlan;
+  final MemorizationPlusRepository _memorizationRepository;
+  final AppSessionService _sessionService;
+
   HomeCubit(
     this._getProgress,
     this._getHifzProgress,
     this._getQuranPage,
     this._getCustomPlan,
+    this._memorizationRepository,
+    this._sessionService,
   ) : super(const HomeInitial());
-
-  final GetProgressUsecase _getProgress;
-  final GetHifzProgressUsecase _getHifzProgress;
-  final GetQuranPageUsecase _getQuranPage;
-  final GetCustomPlanUsecase _getCustomPlan;
 
   Future<void> load() async {
     emit(const HomeLoading());
@@ -45,6 +51,15 @@ class HomeCubit extends Cubit<HomeState> {
     final planResult = await _getCustomPlan();
     planResult.fold((l) => null, (plan) => customPlan = plan);
 
+    // Load last restorable location for "Continue Reading" chip
+    final lastLocation = _sessionService.getLastRestorableLocation();
+
+    // Load parent tracking preferences
+    MemorizationTrack? selectedTrack;
+    _memorizationRepository.getSelectedTrack().fold((_) {}, (t) => selectedTrack = t);
+    bool isParentMode = false;
+    _memorizationRepository.getIsParentMode().fold((_) {}, (m) => isParentMode = m);
+
     progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
       final hifzProgress = hifzResult.getOrElse(() => []);
       emit(
@@ -54,6 +69,9 @@ class HomeCubit extends Cubit<HomeState> {
           greeting: _greeting(),
           dailyWirdPageDetail: dailyWirdDetail,
           customPlan: customPlan,
+          selectedTrack: selectedTrack,
+          isParentMode: isParentMode,
+          lastRestorableLocation: lastLocation,
         ),
       );
     });

@@ -227,7 +227,7 @@ class CertificateWidget extends StatelessWidget {
                                   errorBuilder: (_, _, _) => const Icon(
                                     Icons.menu_book_rounded,
                                     color: darkGreen,
-                                    size: 50,
+                                    size: 80,
                                   ),
                                 ),
 
@@ -564,22 +564,6 @@ class _AppSeal extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: goldAccent,
                   height: 1.1,
-                ),
-              ),
-              Container(
-                width: size * 0.35,
-                height: 1,
-                margin: const EdgeInsets.symmetric(vertical: 3),
-                color: goldAccent.withValues(alpha: 0.6),
-              ),
-              Text(
-                'ختم الإنجاز',
-                style: TextStyle(
-                  fontFamily: 'Amiri',
-                  fontSize: size * 0.08,
-                  fontWeight: FontWeight.w600,
-                  color: bgBeige,
-                  height: 1,
                 ),
               ),
             ],

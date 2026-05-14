@@ -21,6 +21,9 @@ class HomeLoaded extends HomeState {
     required this.greeting,
     this.dailyWirdPageDetail,
     this.customPlan,
+    this.selectedTrack,
+    this.isParentMode = false,
+    this.lastRestorableLocation,
   });
 
   final OverallProgress progress;
@@ -28,6 +31,11 @@ class HomeLoaded extends HomeState {
   final String greeting; // 'morning' | 'afternoon' | 'evening' | 'night'
   final QuranPageDetail? dailyWirdPageDetail;
   final CustomMemorizationPlan? customPlan;
+  final MemorizationTrack? selectedTrack;
+  final bool isParentMode;
+  /// Last restorable GoRouter path, e.g. `/quran/page/42`.
+  /// Null when the user has never read anything.
+  final String? lastRestorableLocation;
 
   @override
   List<Object?> get props => [
@@ -36,6 +44,9 @@ class HomeLoaded extends HomeState {
     greeting,
     dailyWirdPageDetail,
     customPlan,
+    selectedTrack,
+    isParentMode,
+    lastRestorableLocation,
   ];
 }
 

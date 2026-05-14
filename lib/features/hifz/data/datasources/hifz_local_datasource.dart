@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../models/ayah_progress_model.dart';
@@ -14,6 +15,9 @@ abstract class HifzLocalDatasource {
   Future<void> saveHifzPath(String path);
 }
 
+/// SharedPreferences-based implementation, superseded in production by
+/// [IsarHifzLocalDatasourceImpl]. Retained here for test coverage only.
+@visibleForTesting
 class HifzLocalDatasourceImpl implements HifzLocalDatasource {
   HifzLocalDatasourceImpl(this._prefs);
   final SharedPreferences _prefs;

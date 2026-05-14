@@ -76,4 +76,8 @@ abstract class MemorizationPlusRepository {
   Future<Either<Failure, CustomMemorizationPlan?>> getCustomPlan();
   Future<Either<Failure, void>> saveCustomPlan(CustomMemorizationPlan plan);
   Future<Either<Failure, void>> deleteCustomPlan();
+
+  // ─── Parent mode toggle ───────────────────────────────────────────────────
+  Either<Failure, bool> getIsParentMode();
+  Future<Either<Failure, void>> setIsParentMode(bool value);
 }

@@ -33,6 +33,10 @@ abstract class MemorizationPlusLocalDatasource {
   Future<CustomMemorizationPlanModel?> getCustomPlan();
   Future<void> saveCustomPlan(CustomMemorizationPlanModel plan);
   Future<void> deleteCustomPlan();
+
+  // Parent mode toggle (for adults track)
+  bool getIsParentMode();
+  Future<void> setIsParentMode(bool value);
 }
 
 class MemorizationPlusLocalDatasourceImpl
@@ -50,6 +54,7 @@ class MemorizationPlusLocalDatasourceImpl
   static const _kParentSettings = 'mem_plus_parent_settings';
   static const _kParentRewards = 'mem_plus_parent_rewards';
   static const _kCustomPlan = 'mem_plus_custom_plan';
+  static const _kIsParentMode = 'mem_plus_is_parent_mode';
 
   String _reviewKey(int surahId, int ayahNumber) =>
       '${_kReviewPrefix}_${surahId}_$ayahNumber';
@@ -232,6 +237,18 @@ class MemorizationPlusLocalDatasourceImpl
     final removed = await _prefs.remove(_kCustomPlan);
     if (!removed) {
       throw StateError('Failed to delete custom plan');
+    }
+  }
+
+  // ─── Parent mode toggle ─────────────────────────────────────────────────────
+  @override
+  bool getIsParentMode() => _prefs.getBool(_kIsParentMode) ?? false;
+
+  @override
+  Future<void> setIsParentMode(bool value) async {
+    final saved = await _prefs.setBool(_kIsParentMode, value);
+    if (!saved) {
+      throw StateError('Failed to save parent mode');
     }
   }
 }

@@ -105,27 +105,16 @@ Future<void> _bootstrapAndRun() async {
 
   final prefs = getIt<SharedPreferences>();
 
-  // M03 FIX: Only schedule default notifications on first launch
-  // so we don't accidentally cancel/reschedule them every time the app opens
+  // M03 FIX: Only schedule default notifications on first launch.
+  // Both flags are merged to prevent the old double-scheduling bug where
+  // morning/evening azkar and daily dua were scheduled in both blocks.
   final notificationsInitialized =
       prefs.getBool('notifications_initialized') ?? false;
   if (!notificationsInitialized) {
+    // Read (or default) all per-type preferences before first scheduling
     final reviewEnabled =
         prefs.getBool(TaliaNotificationService.dailyReviewPreferenceKey) ??
         true;
-    if (reviewEnabled) {
-      await notificationService.scheduleDailyReviewReminder(); // 8:00 PM
-    }
-    await notificationService.scheduleDailyAyahReminder(); // 7:00 AM
-    await notificationService.scheduleMorningAzkarReminder(); // 6:00 AM
-    await notificationService.scheduleEveningAzkarReminder(); // 6:00 PM
-    await notificationService.scheduleDailyDuaReminder(); // 9:00 AM
-    await prefs.setBool('notifications_initialized', true);
-  }
-
-  final azkarNotificationsInitialized =
-      prefs.getBool('notifications_azkar_initialized') ?? false;
-  if (!azkarNotificationsInitialized) {
     final morningAzkarEnabled =
         prefs.getBool(TaliaNotificationService.morningAzkarPreferenceKey) ??
         true;
@@ -135,6 +124,7 @@ Future<void> _bootstrapAndRun() async {
     final dailyDuaEnabled =
         prefs.getBool(TaliaNotificationService.dailyDuaPreferenceKey) ?? true;
 
+    // Persist defaults so Settings page reads them correctly
     await prefs.setBool(
       TaliaNotificationService.morningAzkarPreferenceKey,
       morningAzkarEnabled,
@@ -148,15 +138,23 @@ Future<void> _bootstrapAndRun() async {
       dailyDuaEnabled,
     );
 
+    // Schedule each notification exactly once, respecting the defaults above
+    if (reviewEnabled) {
+      await notificationService.scheduleDailyReviewReminder(); // 8:00 PM
+    }
+    await notificationService.scheduleDailyAyahReminder(); // 7:00 AM
     if (morningAzkarEnabled) {
-      await notificationService.scheduleMorningAzkarReminder();
+      await notificationService.scheduleMorningAzkarReminder(); // 6:00 AM
     }
     if (eveningAzkarEnabled) {
-      await notificationService.scheduleEveningAzkarReminder();
+      await notificationService.scheduleEveningAzkarReminder(); // 6:00 PM
     }
     if (dailyDuaEnabled) {
-      await notificationService.scheduleDailyDuaReminder();
+      await notificationService.scheduleDailyDuaReminder(); // 9:00 AM
     }
+
+    await prefs.setBool('notifications_initialized', true);
+    // Mark the old azkar flag too so existing installs don't re-run the old block
     await prefs.setBool('notifications_azkar_initialized', true);
   }
 

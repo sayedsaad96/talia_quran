@@ -38,7 +38,7 @@ class _GeneralAzkarView extends StatefulWidget {
 }
 
 class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
-  String _selectedSubcategory = 'الكل';
+  String _selectedSubcategory = '';
 
   @override
   Widget build(BuildContext context) {
@@ -73,10 +73,10 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
         .toSet()
         .toList();
 
-    final tabs = ['الكل', ...allSubcategories];
+    final tabs = ['', ...allSubcategories];
 
     // Filter sessions
-    final filteredSessions = _selectedSubcategory == 'الكل'
+    final filteredSessions = _selectedSubcategory.isEmpty
         ? state.sessions
         : state.sessions
               .where((s) => s.zikr.subcategory == _selectedSubcategory)
@@ -149,7 +149,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
               ),
               alignment: Alignment.center,
               child: Text(
-                tab,
+                tab.isEmpty ? context.l10n.all : tab,
                 style: AppTypography.labelMedium.copyWith(
                   color: selected
                       ? Colors.white
@@ -233,8 +233,8 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                   const SizedBox(height: 4),
                   Text(
                     isDuas
-                        ? 'أدعية من القرآن والسنة ودعاء ختم القرآن'
-                        : 'مجموعة من الأذكار الشاملة',
+                        ? context.l10n.duasSubtitle
+                        : context.l10n.generalAzkarSubtitle,
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white70,
                     ),
@@ -320,7 +320,7 @@ class _ZikrCard extends StatelessWidget {
                   onPressed: () {
                     HapticFeedback.lightImpact();
                     final shareText =
-                        '${zikr.text}\n\n${zikr.reference}\n\nتمت المشاركة من تطبيق تالية للقرآن';
+                        '${zikr.text}\n\n${zikr.reference}\n\n${context.l10n.sharedFromTalia}';
                     SharePlus.instance.share(ShareParams(text: shareText));
                   },
                 ),

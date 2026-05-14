@@ -364,6 +364,8 @@ Future<void> configureDependencies() async {
       getIt<GetHifzProgressUsecase>(),
       getIt<GetQuranPageUsecase>(),
       getIt<GetCustomPlanUsecase>(),
+      getIt<MemorizationPlusRepository>(),
+      getIt<AppSessionService>(),
     ),
   );
   getIt.registerFactory<StreakCubit>(() => StreakCubit(getIt<StreakService>()));

@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 
@@ -81,6 +82,14 @@ void main() {
 
       expect(verified.getOrElse(() => false), isTrue);
       expect(rewards.getOrElse(() => const []), hasLength(1));
+    });
+
+    test('selecting kids track enables parent mode for pairing', () async {
+      final result = await repository.saveSelectedTrack(MemorizationTrack.kids);
+
+      expect(result.isRight(), isTrue);
+      expect(datasource.getSelectedTrack(), MemorizationTrack.kids.name);
+      expect(datasource.getIsParentMode(), isTrue);
     });
   });
 }

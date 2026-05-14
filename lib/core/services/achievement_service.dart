@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/talia_logger.dart';
 import '../../features/hifz/data/datasources/hifz_local_datasource.dart';
@@ -17,6 +16,7 @@ class CertificateAward {
     this.juzNumber,
     this.surahId,
     this.surahNameAr,
+    this.surahNameEn,
   });
 
   final String id;
@@ -26,6 +26,7 @@ class CertificateAward {
   final int? juzNumber;
   final int? surahId;
   final String? surahNameAr;
+  final String? surahNameEn;
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -35,6 +36,7 @@ class CertificateAward {
     'juzNumber': juzNumber,
     'surahId': surahId,
     'surahNameAr': surahNameAr,
+    'surahNameEn': surahNameEn,
   };
 
   factory CertificateAward.fromJson(Map<String, dynamic> json) =>
@@ -49,12 +51,13 @@ class CertificateAward {
         juzNumber: json['juzNumber'] as int?,
         surahId: json['surahId'] as int?,
         surahNameAr: json['surahNameAr'] as String?,
+        surahNameEn: json['surahNameEn'] as String?,
       );
 }
 
 enum CertificateType { juz, surah, halfQuran, fullQuran }
 
-class AchievementService extends ChangeNotifier {
+class AchievementService {
   AchievementService(this._prefs, this._hifzDs, this._memPlusDs, this._quranDs);
 
   final SharedPreferences _prefs;
@@ -86,9 +89,8 @@ class AchievementService extends ChangeNotifier {
   bool get hasNewCertificate => _prefs.getBool(_newBadgeKey) ?? false;
 
   /// Call this after the user opens the certificates section.
-  Future<void> markCertificatesSeen() async {
-    await _prefs.setBool(_newBadgeKey, false);
-    notifyListeners();
+  void markCertificatesSeen() {
+    _prefs.setBool(_newBadgeKey, false);
   }
 
   /// Checks all memorization progress and returns any **newly** earned
@@ -171,6 +173,7 @@ class AchievementService extends ChangeNotifier {
               earnedAt: DateTime.now(),
               surahId: surah.id,
               surahNameAr: surah.nameAr,
+              surahNameEn: surah.nameEn,
             );
             earned.add(award);
             await _saveEarned(award);
@@ -225,7 +228,6 @@ class AchievementService extends ChangeNotifier {
 
       if (earned.isNotEmpty) {
         await _prefs.setBool(_newBadgeKey, true);
-        notifyListeners();
       }
 
       return earned;

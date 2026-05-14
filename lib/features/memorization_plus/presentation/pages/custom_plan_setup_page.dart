@@ -45,6 +45,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   bool _enableFarRevision = true;
   int _nearRevisionCount = 5;
   int _farRevisionCount = 3;
+  PlanTargetUser _targetUser = PlanTargetUser.adult;
 
   /// Surah names loaded from data layer (1-indexed, index 0 is placeholder)
   List<String> _surahNames = [''];
@@ -92,6 +93,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     _enableFarRevision = plan.enableFarRevision;
     _nearRevisionCount = plan.nearRevisionCount;
     _farRevisionCount = plan.farRevisionCount;
+    _targetUser = plan.targetUser;
   }
 
   void _save() {
@@ -111,6 +113,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
       nearRevisionCount: _nearRevisionCount,
       farRevisionCount: _farRevisionCount,
       createdAt: DateTime.now(),
+      targetUser: _targetUser,
     );
 
     context.read<CustomPlanCubit>().savePlan(plan);
@@ -234,6 +237,53 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                             return null;
                           },
                         ),
+
+                        const SizedBox(height: AppSpacing.xl),
+
+                        // ── Target User (Child/Adult) ──
+                        _SectionTitle(
+                          icon: Icons.people_alt_rounded,
+                          title: 'الخطة لمن؟',
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: AppSpacing.sm),
+                        _buildTargetUserSelector(isDark),
+                        if (_targetUser == PlanTargetUser.child)
+                          Padding(
+                            padding: const EdgeInsets.only(top: AppSpacing.sm),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF2D8E4C).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFF2D8E4C).withValues(alpha: 0.3),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.info_outline_rounded,
+                                    color: Color(0xFF2D8E4C),
+                                    size: 18,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      'سيتم تفعيل ميزات ولي الأمر والمتابعة تلقائياً 👨\u200d👧',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: const Color(0xFF2D8E4C),
+                                        fontFamily: 'Amiri',
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
 
                         const SizedBox(height: AppSpacing.xl),
 
@@ -664,6 +714,73 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
           ),
         ],
       ),
+    );
+  }
+  Widget _buildTargetUserSelector(bool isDark) {
+    final items = [
+      (
+        PlanTargetUser.adult,
+        'كبير',
+        Icons.person_rounded,
+        AppColors.primary,
+      ),
+      (
+        PlanTargetUser.child,
+        'طفل',
+        Icons.child_care_rounded,
+        const Color(0xFF2D8E4C),
+      ),
+    ];
+
+    return Row(
+      children: items.map((item) {
+        final isSelected = _targetUser == item.$1;
+        return Expanded(
+          child: GestureDetector(
+            onTap: () => setState(() => _targetUser = item.$1),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? item.$4.withValues(alpha: 0.15)
+                    : isDark
+                    ? AppColors.darkSurface
+                    : AppColors.lightSurface,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                border: Border.all(
+                  color: isSelected
+                      ? item.$4
+                      : isDark
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.black.withValues(alpha: 0.06),
+                  width: isSelected ? 2 : 1,
+                ),
+              ),
+              child: Column(
+                children: [
+                  Icon(item.$3, color: item.$4, size: 28),
+                  const SizedBox(height: 8),
+                  Text(
+                    item.$2,
+                    style: AppTypography.labelMedium.copyWith(
+                      color: isSelected
+                          ? item.$4
+                          : isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 

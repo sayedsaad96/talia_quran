@@ -708,3 +708,67 @@ GRANT EXECUTE ON FUNCTION public.upsert_xp(INTEGER) TO authenticated;
 --    ✅ Batch size limit on bulk upsert (max 6236 = total Quran ayahs)
 --    ✅ ON DELETE CASCADE: user deletion cleans all related data
 -- ═══════════════════════════════════════════════════════════════════════════════
+
+
+-- ---------------------------------------------------------------------------
+--  Daily Activities (Streak Activity Log)
+--  Mirrors DailyActivityIsar -- one row per user per UTC calendar day
+--  day_key is stored as YYYYMMDD integer (e.g. 20260504) for fast lookup
+-- ---------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS public.daily_activities (
+  user_id     UUID    NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  day_key     INTEGER NOT NULL
+    CHECK (day_key >= 20200101 AND day_key <= 20991231),
+  activity_count INTEGER NOT NULL DEFAULT 0
+    CHECK (activity_count >= 0 AND activity_count <= 100000),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  PRIMARY KEY (user_id, day_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_daily_activities_user
+  ON public.daily_activities(user_id, day_key DESC);
+
+ALTER TABLE public.daily_activities ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "daily_activities_all_own"
+  ON public.daily_activities FOR ALL
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- Batch upsert daily activities (called during cloud sync).
+-- Takes a max of GREATEST(local, cloud) to prevent data loss from both sides.
+CREATE OR REPLACE FUNCTION public.upsert_daily_activities_batch(
+  p_data JSONB  -- Array of { day_key: int, activity_count: int }
+)
+RETURNS VOID AS $$
+DECLARE
+  v_uid UUID := auth.uid();
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  IF jsonb_array_length(p_data) > 3650 THEN
+    RAISE EXCEPTION 'Batch too large (max 3650 days = 10 years)';
+  END IF;
+
+  INSERT INTO public.daily_activities (user_id, day_key, activity_count)
+  SELECT
+    v_uid,
+    (item->>'day_key')::INTEGER,
+    (item->>'activity_count')::INTEGER
+  FROM jsonb_array_elements(p_data) AS item
+  ON CONFLICT (user_id, day_key)
+  DO UPDATE SET
+    activity_count = GREATEST(
+      daily_activities.activity_count,
+      EXCLUDED.activity_count
+    ),
+    updated_at = NOW();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE EXECUTE ON FUNCTION public.upsert_daily_activities_batch(JSONB) FROM anon;
+GRANT  EXECUTE ON FUNCTION public.upsert_daily_activities_batch(JSONB) TO authenticated;

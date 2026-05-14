@@ -276,6 +276,12 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
 
   @override
   Future<void> deleteCustomPlan() async {}
+
+  @override
+  bool getIsParentMode() => false;
+
+  @override
+  Future<void> setIsParentMode(bool value) async {}
 }
 
 class _FakeQuranDatasource implements QuranLocalDatasource {

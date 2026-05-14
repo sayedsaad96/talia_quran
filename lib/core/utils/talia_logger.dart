@@ -30,6 +30,7 @@ class TaliaLogger {
   }
 
   static void e(String message, [dynamic error, StackTrace? stackTrace]) {
+    // Always log errors — even in release builds — so they reach crash reporters.
     if (kDebugMode) {
       dev.log(
         message,
@@ -40,7 +41,8 @@ class TaliaLogger {
       );
     }
 
-    // TODO: Send to remote crash reporting service (e.g. Sentry/Firebase)
-    // This part should run in production for critical errors.
+    // TODO: Wire to remote crash reporting service (e.g. Firebase Crashlytics / Sentry).
+    // Example:
+    //   FirebaseCrashlytics.instance.recordError(error, stackTrace, reason: message);
   }
 }

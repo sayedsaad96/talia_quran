@@ -19,10 +19,9 @@ class TrackSelectionCubit extends Cubit<TrackSelectionState> {
 
   Future<void> selectTrack(MemorizationTrack track) async {
     final result = await _repository.saveSelectedTrack(track);
-    result.fold(
-      (f) => emit(TrackSelectionError(f.message)),
-      (_) => emit(TrackSelectionLoaded(track: track)),
-    );
+    result.fold((f) => emit(TrackSelectionError(f.message)), (_) {
+      emit(TrackSelectionLoaded(track: track));
+    });
   }
 
   /// BUG-9 FIX: get the last reviewed surahId so navigation can resume from

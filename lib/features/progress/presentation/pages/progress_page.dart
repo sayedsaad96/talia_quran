@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/section_header.dart';
@@ -278,9 +279,7 @@ class _ProgressContentState extends State<_ProgressContent>
 
               // ─── Memorization Progress Section ──────────────
               SectionHeader(
-                title: context.isArabic
-                    ? 'تقدم الحفظ'
-                    : 'Memorization Progress',
+                title: context.l10n.memorizationProgressTitle,
                 padding: EdgeInsets.zero,
               ),
               const SizedBox(height: AppSpacing.md),
@@ -292,25 +291,19 @@ class _ProgressContentState extends State<_ProgressContent>
                 percentage: p.memorizedAyahsPercentage,
                 rows: [
                   _DetailRow(
-                    label: context.isArabic
-                        ? 'الآيات المحفوظة'
-                        : 'Ayahs Memorized',
+                    label: context.l10n.memorizedAyahs,
                     current: p.memorizedAyahs,
                     total: p.totalAyahs,
                     color: AppColors.primary,
                   ),
                   _DetailRow(
-                    label: context.isArabic
-                        ? 'السور المحفوظة'
-                        : 'Surahs Memorized',
+                    label: context.l10n.memorizedSurahsLabel,
                     current: p.memorizedSurahs,
                     total: p.totalSurahs,
                     color: AppColors.gold,
                   ),
                   _DetailRow(
-                    label: context.isArabic
-                        ? 'الأجزاء المحفوظة'
-                        : 'Juz Memorized',
+                    label: context.l10n.memorizedJuzLabel,
                     current: p.memorizedJuz,
                     total: p.totalJuz,
                     color: AppColors.info,
@@ -339,9 +332,7 @@ class _ProgressContentState extends State<_ProgressContent>
                   p.smartReviewAyahs > 0 ||
                   p.kidsPoints > 0) ...[
                 SectionHeader(
-                  title: context.isArabic
-                      ? 'نظام الحفظ الذكي'
-                      : 'Smart Memorization',
+                  title: context.l10n.smartMemorization,
                   padding: EdgeInsets.zero,
                 ),
                 const SizedBox(height: AppSpacing.md),
@@ -792,7 +783,6 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
     final isDark = widget.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
 
-
     final tabLabels = [
       context.l10n.all,
       context.l10n.reading,
@@ -803,36 +793,45 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
     return Column(
       children: [
         // Tab bar
-        SizedBox(
-          height: 36,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: tabLabels.length,
-            separatorBuilder: (_, _) => const SizedBox(width: 8),
-            itemBuilder: (context, i) {
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: Row(
+            children: List.generate(tabLabels.length, (i) {
               final selected = _selectedTab == i;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedTab = i),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: selected ? primary : primary.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  ),
-                  child: Text(
-                    tabLabels[i],
-                    style: AppTypography.labelMedium.copyWith(
-                      color: selected ? Colors.white : primary,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              return Padding(
+                padding: EdgeInsets.only(
+                  right: i < tabLabels.length - 1 ? 8.0 : 0,
+                ),
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedTab = i),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? primary
+                          : primary.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
+                    ),
+                    child: Text(
+                      tabLabels[i],
+                      style: AppTypography.labelMedium.copyWith(
+                        color: selected ? Colors.white : primary,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                      ),
                     ),
                   ),
                 ),
               );
-            },
+            }),
           ),
         ),
 
@@ -871,6 +870,7 @@ class _AchievementTile extends StatelessWidget {
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
     final hintColor = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
+    final title = context.localizedAchievementTitle(achievement);
 
     return GestureDetector(
       onTap: () => _showAchievementDetail(context),
@@ -908,7 +908,7 @@ class _AchievementTile extends StatelessWidget {
 
             // Title
             Text(
-              achievement.titleKey,
+              title,
               style: AppTypography.labelSmall.copyWith(
                 color: unlocked ? primary : hintColor,
                 fontWeight: unlocked ? FontWeight.w600 : FontWeight.w400,
@@ -958,6 +958,8 @@ class _AchievementTile extends StatelessWidget {
     final isDark = this.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final title = context.localizedAchievementTitle(achievement);
+    final description = context.localizedAchievementDescription(achievement);
     final textPrimary = isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
@@ -995,14 +997,14 @@ class _AchievementTile extends StatelessWidget {
               Text(achievement.icon, style: const TextStyle(fontSize: 48)),
               const SizedBox(height: AppSpacing.md),
               Text(
-                achievement.titleKey,
+                title,
                 style: AppTypography.headlineMedium.copyWith(
                   color: textPrimary,
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
               Text(
-                achievement.descriptionKey,
+                description,
                 style: AppTypography.bodyMedium.copyWith(color: textSecondary),
                 textAlign: TextAlign.center,
               ),
@@ -1080,23 +1082,23 @@ class _AchievementTile extends StatelessWidget {
                           ? (isMemorizationAchievement
                                 ? context.l10n
                                       .shareMemorizationAchievementWithName(
-                                        achievement.descriptionKey,
+                                        description,
                                         profileState.profile.displayName,
-                                        achievement.titleKey,
+                                        title,
                                       )
                                 : context.l10n.shareAchievementWithName(
-                                    achievement.descriptionKey,
+                                    description,
                                     profileState.profile.displayName,
-                                    achievement.titleKey,
+                                    title,
                                   ))
                           : (isMemorizationAchievement
                                 ? context.l10n.shareMemorizationAchievementText(
-                                    achievement.descriptionKey,
-                                    achievement.titleKey,
+                                    description,
+                                    title,
                                   )
                                 : context.l10n.shareAchievementText(
-                                    achievement.descriptionKey,
-                                    achievement.titleKey,
+                                    description,
+                                    title,
                                   ));
                       SharePlus.instance.share(ShareParams(text: text));
                     },
@@ -1356,7 +1358,7 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
     final service = getIt<AchievementService>();
     final certs = service.getEarnedCertificates();
     if (service.hasNewCertificate) {
-      await service.markCertificatesSeen();
+      service.markCertificatesSeen();
     }
     if (mounted) {
       setState(() {
@@ -1400,9 +1402,7 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    context.isArabic
-                        ? 'احفظ السور والأجزاء كاملة لتحصل على شهادات التميز!'
-                        : 'Memorize complete Surahs and Juz to earn certificates!',
+                    context.l10n.earnCertificatesHint,
                     textAlign: TextAlign.center,
                     style: AppTypography.bodyMedium.copyWith(
                       color: widget.isDark
@@ -1426,16 +1426,24 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
           padding: EdgeInsets.zero,
         ),
         const SizedBox(height: AppSpacing.md),
-        SizedBox(
-          height: 180,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _certificates.length,
-            separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.md),
-            itemBuilder: (context, index) {
-              final cert = _certificates[index];
-              return _CertificateCard(cert: cert, isDark: widget.isDark);
-            },
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          child: IntrinsicHeight(
+            child: Row(
+              children: List.generate(_certificates.length, (index) {
+                final cert = _certificates[index];
+                return Padding(
+                  padding: EdgeInsets.only(
+                    right: index < _certificates.length - 1 ? AppSpacing.md : 0,
+                  ),
+                  child: SizedBox(
+                    width: 240,
+                    child: _CertificateCard(cert: cert, isDark: widget.isDark),
+                  ),
+                );
+              }),
+            ),
           ),
         ),
       ],
@@ -1471,7 +1479,7 @@ class _CertificateCard extends StatelessWidget {
                 ? (context.read<ProfileCubit>().state as ProfileLoaded)
                       .profile
                       .displayName
-                : (context.isArabic ? 'مستخدم تالية' : 'Talia User'),
+                : context.l10n.taliaUser,
           },
         );
       },
@@ -1502,7 +1510,7 @@ class _CertificateCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              cert.titleAr,
+              context.localizedCertificateTitle(cert),
               textAlign: TextAlign.center,
               style: AppTypography.labelMedium.copyWith(
                 color: isDark

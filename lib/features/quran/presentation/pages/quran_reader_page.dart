@@ -239,9 +239,9 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
           final firstSurah = firstAyah == null
               ? null
               : detail!.surahs
-                    .where((surah) => surah.id == firstAyah.surahId)
-                    .firstOrNull ??
-                detail.surahs.firstOrNull;
+                        .where((surah) => surah.id == firstAyah.surahId)
+                        .firstOrNull ??
+                    detail.surahs.firstOrNull;
           final juzNumber = firstAyah?.juz ?? firstSurah?.juz ?? 1;
           final pageNumber = detail?.pageNumber ?? _currentPageNumber ?? 1;
 
@@ -334,7 +334,6 @@ class _MushafTopBar extends StatelessWidget {
               ),
             ],
           ),
-          Icon(Icons.grid_view_rounded, color: gold, size: 18),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -454,11 +453,11 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
 
     try {
       setState(() => _isPlaying = true);
-      final url = await AudioCacheService.instance.getAudioSource(
+      final source = await AudioCacheService.instance.getAudioSource(
         widget.ayah.surahId,
         widget.ayah.numberInSurah,
       );
-      await _player.setUrl(url);
+      await AudioCacheService.playFromSource(_player, source);
       await _player.play();
       unawaited(_playerSub?.cancel() ?? Future.value());
       _playerSub = _player.playerStateStream.listen((ps) {

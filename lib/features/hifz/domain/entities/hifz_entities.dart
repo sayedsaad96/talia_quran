@@ -19,7 +19,7 @@ class AyahProgress extends Equatable {
   final DateTime nextReviewDate;
   final DateTime lastReviewDate;
 
-  bool get isDue => DateTime.now().isAfter(nextReviewDate);
+  bool get isDue => DateTime.now().toUtc().isAfter(nextReviewDate);
 
   AyahProgress copyWith({
     AyahStatus? status,

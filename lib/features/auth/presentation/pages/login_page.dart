@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/extensions/context_extensions.dart';
 import '../../presentation/cubits/auth_cubit.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 
@@ -48,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: context.textDirection,
       child: Scaffold(
         body: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
@@ -63,10 +64,10 @@ class _LoginPageState extends State<LoginPage> {
               // Special sentinel: confirmation email was re-sent successfully
               if (state.message == '__resent__') {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('✅ تم إرسال رسالة التأكيد، تحقق من بريدك'),
+                  SnackBar(
+                    content: Text(context.l10n.confirmationEmailSent),
                     backgroundColor: Colors.green,
-                    duration: Duration(seconds: 4),
+                    duration: const Duration(seconds: 4),
                   ),
                 );
                 return;
@@ -79,12 +80,12 @@ class _LoginPageState extends State<LoginPage> {
                   state.message.contains('confirmed');
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.message),
+                  content: Text(_localizedAuthMessage(context, state.message)),
                   backgroundColor: Colors.red.shade700,
                   duration: const Duration(seconds: 6),
                   action: isNotConfirmed
                       ? SnackBarAction(
-                          label: 'إعادة إرسال',
+                          label: context.l10n.resendConfirmation,
                           textColor: Colors.white,
                           onPressed: () {
                             context.read<AuthCubit>().resendConfirmation(
@@ -115,13 +116,13 @@ class _LoginPageState extends State<LoginPage> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'تالية',
+                        context.l10n.appName,
                         style: Theme.of(context).textTheme.headlineLarge
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'سجّل دخولك لحفظ تقدمك على جميع أجهزتك',
+                        context.l10n.syncProgressDesc,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -133,9 +134,19 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          _buildToggle('تسجيل دخول', !_isSignUp, cs),
+                          _buildToggle(
+                            context.l10n.signIn,
+                            !_isSignUp,
+                            cs,
+                            () => setState(() => _isSignUp = false),
+                          ),
                           const SizedBox(width: 8),
-                          _buildToggle('حساب جديد', _isSignUp, cs),
+                          _buildToggle(
+                            context.l10n.signUp,
+                            _isSignUp,
+                            cs,
+                            () => setState(() => _isSignUp = true),
+                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
@@ -145,7 +156,7 @@ class _LoginPageState extends State<LoginPage> {
                         TextFormField(
                           controller: _nameController,
                           decoration: InputDecoration(
-                            labelText: 'الاسم',
+                            labelText: context.l10n.name,
                             prefixIcon: const Icon(
                               Icons.person_outline_rounded,
                             ),
@@ -154,7 +165,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           validator: (v) => (v == null || v.trim().isEmpty)
-                              ? 'أدخل اسمك'
+                              ? context.l10n.enterName
                               : null,
                         ),
                         const SizedBox(height: 14),
@@ -165,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
                         decoration: InputDecoration(
-                          labelText: 'البريد الإلكتروني',
+                          labelText: context.l10n.email,
                           prefixIcon: const Icon(Icons.email_outlined),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -173,10 +184,10 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         validator: (v) {
                           if (v == null || v.trim().isEmpty) {
-                            return 'أدخل بريدك الإلكتروني';
+                            return context.l10n.enterEmail;
                           }
                           if (!v.contains('@') || !v.contains('.')) {
-                            return 'بريد إلكتروني غير صحيح';
+                            return context.l10n.invalidEmail;
                           }
                           return null;
                         },
@@ -188,7 +199,7 @@ class _LoginPageState extends State<LoginPage> {
                         controller: _passwordController,
                         obscureText: _obscurePassword,
                         decoration: InputDecoration(
-                          labelText: 'كلمة المرور',
+                          labelText: context.l10n.password,
                           prefixIcon: const Icon(Icons.lock_outline_rounded),
                           suffixIcon: IconButton(
                             icon: Icon(
@@ -205,9 +216,11 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         validator: (v) {
-                          if (v == null || v.isEmpty) return 'أدخل كلمة المرور';
+                          if (v == null || v.isEmpty) {
+                            return context.l10n.enterPassword;
+                          }
                           if (_isSignUp && v.length < 6) {
-                            return '6 أحرف على الأقل';
+                            return context.l10n.passwordTooShort;
                           }
                           return null;
                         },
@@ -235,7 +248,9 @@ class _LoginPageState extends State<LoginPage> {
                                   ),
                                 )
                               : Text(
-                                  _isSignUp ? 'إنشاء حساب' : 'تسجيل الدخول',
+                                  _isSignUp
+                                      ? context.l10n.createAccount
+                                      : context.l10n.signIn,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 15,
@@ -247,7 +262,7 @@ class _LoginPageState extends State<LoginPage> {
                       TextButton(
                         onPressed: () => context.go('/'),
                         child: Text(
-                          'تخطي الآن',
+                          context.l10n.skip,
                           style: TextStyle(color: cs.onSurfaceVariant),
                         ),
                       ),
@@ -263,9 +278,14 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  Widget _buildToggle(String label, bool isActive, ColorScheme cs) {
+  Widget _buildToggle(
+    String label,
+    bool isActive,
+    ColorScheme cs,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
-      onTap: () => setState(() => _isSignUp = label == 'حساب جديد'),
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
@@ -286,5 +306,34 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  String _localizedAuthMessage(BuildContext context, String message) {
+    final l10n = context.l10n;
+    if (message.contains('مسجل بالفعل')) {
+      return l10n.authEmailAlreadyRegistered;
+    }
+    if (message.contains('تأكيد') ||
+        message.contains('تفقّد') ||
+        message.contains('confirmed')) {
+      return l10n.authConfirmEmailFirst;
+    }
+    if (message.contains('غير صحيحة')) return l10n.authInvalidCredentials;
+    if (message.contains('قصيرة')) return l10n.passwordTooShort;
+    if (message.contains('صيغة البريد')) return l10n.invalidEmail;
+    if (message.contains('محاولات كثيرة')) return l10n.authTooManyRequests;
+    if (message.contains('اتصال بالإنترنت')) return l10n.authNoInternet;
+    if (message.contains('لا يوجد حساب')) return l10n.authAccountNotFound;
+    if (message.contains('فشل إنشاء الحساب') ||
+        message.contains('أثناء إنشاء الحساب')) {
+      return l10n.authSignupFailed;
+    }
+    if (message.contains('فشل تسجيل الدخول') ||
+        message.contains('أثناء تسجيل الدخول')) {
+      return l10n.authSigninFailed;
+    }
+    if (message.contains('تسجيل الخروج')) return l10n.authSignoutFailed;
+    if (message.contains('حدث خطأ')) return l10n.authGenericError;
+    return message;
   }
 }

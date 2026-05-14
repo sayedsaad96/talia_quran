@@ -24,6 +24,7 @@ import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/certificate/presentation/pages/certificate_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/tutorial_guide/presentation/pages/tutorial_guide_page.dart';
 import '../services/achievement_service.dart';
 import '../widgets/app_shell.dart';
 
@@ -49,6 +50,7 @@ abstract class AppRoutes {
   static const String memorizationPlusQuiz = '/memorization-plus/quiz';
   static const String login = '/login';
   static const String certificate = '/certificate';
+  static const String tutorialGuide = '/tutorial-guide';
 }
 
 abstract class AppRouter {
@@ -75,6 +77,11 @@ abstract class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.tutorialGuide,
+        builder: (context, state) => const TutorialGuidePage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

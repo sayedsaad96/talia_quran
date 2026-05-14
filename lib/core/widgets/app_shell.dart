@@ -92,24 +92,29 @@ class _TaliaBottomNav extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: SizedBox(
-          height: AppSpacing.bottomNavHeight,
-          child: Row(
-            children: [
-              // 5 nav tabs
-              ...List.generate(tabs.length, (i) {
-                final isSelected = i == currentIndex;
-                return Expanded(
-                  child: _NavItem(
-                    icon: tabs[i].icon,
-                    label: labels[i],
-                    isSelected: isSelected,
-                    isDark: isDark,
-                    onTap: () => onTap(i),
-                  ),
-                );
-              }),
-            ],
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(
+            minHeight: AppSpacing.bottomNavHeight,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                // 5 nav tabs
+                ...List.generate(tabs.length, (i) {
+                  final isSelected = i == currentIndex;
+                  return Expanded(
+                    child: _NavItem(
+                      icon: tabs[i].icon,
+                      label: labels[i],
+                      isSelected: isSelected,
+                      isDark: isDark,
+                      onTap: () => onTap(i),
+                    ),
+                  );
+                }),
+              ],
+            ),
           ),
         ),
       ),
@@ -143,6 +148,7 @@ class _NavItem extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child:
           Column(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   AnimatedContainer(

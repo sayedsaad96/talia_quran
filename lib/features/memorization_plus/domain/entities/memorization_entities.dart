@@ -10,6 +10,8 @@ enum KidsJourneyStageStatus { locked, current, completed, needsReview }
 
 enum ParentRewardStatus { locked, unlocked, claimed }
 
+enum PlanTargetUser { adult, child }
+
 // ─── AyahReviewRecord ─────────────────────────────────────────────────────────
 
 /// Enhanced per-ayah progress record used exclusively by MemorizationPlus.
@@ -490,6 +492,7 @@ class CustomMemorizationPlan extends Equatable {
     required this.startAyah,
     required this.createdAt,
     this.isActive = true,
+    this.targetUser = PlanTargetUser.adult,
   });
 
   /// User-given plan name, e.g. "خطتي لحفظ جزء عمّ"
@@ -524,6 +527,9 @@ class CustomMemorizationPlan extends Equatable {
 
   final DateTime createdAt;
   final bool isActive;
+  final PlanTargetUser targetUser;
+
+  bool get isForChild => targetUser == PlanTargetUser.child;
 
   /// Estimated days to finish based on **actual** surah ayah counts.
   int get estimatedDays {
@@ -673,6 +679,7 @@ class CustomMemorizationPlan extends Equatable {
     int? startAyah,
     DateTime? createdAt,
     bool? isActive,
+    PlanTargetUser? targetUser,
   }) => CustomMemorizationPlan(
     name: name ?? this.name,
     startSurahId: startSurahId ?? this.startSurahId,
@@ -688,6 +695,7 @@ class CustomMemorizationPlan extends Equatable {
     startAyah: startAyah ?? this.startAyah,
     createdAt: createdAt ?? this.createdAt,
     isActive: isActive ?? this.isActive,
+    targetUser: targetUser ?? this.targetUser,
   );
 
   @override
@@ -706,5 +714,6 @@ class CustomMemorizationPlan extends Equatable {
     startAyah,
     createdAt,
     isActive,
+    targetUser,
   ];
 }

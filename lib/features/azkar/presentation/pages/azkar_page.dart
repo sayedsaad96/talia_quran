@@ -31,9 +31,8 @@ class AzkarPage extends StatelessWidget {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 _AzkarCategoryCard(
-                  titleAr: 'أذكار الصباح',
-                  titleEn: context.l10n.morningAzkar,
-                  subtitle: '12 ذكر',
+                  title: context.l10n.morningAzkar,
+                  subtitle: context.l10n.zikrCount(12),
                   icon: Icons.wb_sunny_rounded,
                   gradientColors: const [Color(0xFFFF8C42), Color(0xFFFF6B00)],
                   route: 'morning',
@@ -42,9 +41,8 @@ class AzkarPage extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _AzkarCategoryCard(
-                  titleAr: 'أذكار المساء',
-                  titleEn: context.l10n.eveningAzkar,
-                  subtitle: '13 ذكر',
+                  title: context.l10n.eveningAzkar,
+                  subtitle: context.l10n.zikrCount(13),
                   icon: Icons.nightlight_round,
                   gradientColors: const [Color(0xFF2D5A8E), Color(0xFF1A3A5C)],
                   route: 'evening',
@@ -53,9 +51,8 @@ class AzkarPage extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _AzkarCategoryCard(
-                  titleAr: 'أذكار عامة',
-                  titleEn: context.l10n.generalAzkar,
-                  subtitle: '8 أذكار',
+                  title: context.l10n.generalAzkar,
+                  subtitle: context.l10n.azkarCount(8),
                   icon: Icons.spa_rounded,
                   gradientColors: const [Color(0xFF1A6B5A), Color(0xFF0F4A3E)],
                   route: 'general',
@@ -64,9 +61,8 @@ class AzkarPage extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 _AzkarCategoryCard(
-                  titleAr: 'الأدعية',
-                  titleEn: context.l10n.duas,
-                  subtitle: '16 دعاء',
+                  title: context.l10n.duas,
+                  subtitle: context.l10n.duaCount(16),
                   icon: Icons.volunteer_activism_rounded,
                   gradientColors: const [Color(0xFFE11D48), Color(0xFF881337)],
                   route: 'duas',
@@ -127,7 +123,7 @@ class AzkarPage extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'اذكر الله كثيراً',
+                    context.l10n.azkarSubtitle,
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white70,
                     ),
@@ -144,8 +140,7 @@ class AzkarPage extends StatelessWidget {
 
 class _AzkarCategoryCard extends StatelessWidget {
   const _AzkarCategoryCard({
-    required this.titleAr,
-    required this.titleEn,
+    required this.title,
     required this.subtitle,
     required this.icon,
     required this.gradientColors,
@@ -154,8 +149,7 @@ class _AzkarCategoryCard extends StatelessWidget {
     required this.isDark,
   });
 
-  final String titleAr;
-  final String titleEn;
+  final String title;
   final String subtitle;
   final IconData icon;
   final List<Color> gradientColors;
@@ -217,16 +211,10 @@ class _AzkarCategoryCard extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              titleAr,
-                              style: AppTypography.surahTitle.copyWith(
+                              title,
+                              style: AppTypography.titleLarge.copyWith(
                                 color: Colors.white,
-                                fontSize: 20,
-                              ),
-                            ),
-                            Text(
-                              titleEn,
-                              style: AppTypography.bodySmall.copyWith(
-                                color: Colors.white70,
+                                fontFamily: context.isArabic ? 'Amiri' : null,
                               ),
                             ),
                             const SizedBox(height: 4),

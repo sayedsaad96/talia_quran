@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
+import '../extensions/context_extensions.dart';
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
 
@@ -131,7 +132,7 @@ class _ActivityHeatmapState extends State<ActivityHeatmap> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'نشاط السنة',
+          context.l10n.yearActivity,
           style: Theme.of(
             context,
           ).textTheme.titleSmall?.copyWith(color: cs.onSurfaceVariant),
@@ -145,7 +146,7 @@ class _ActivityHeatmapState extends State<ActivityHeatmap> {
                 '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
             final count = _activityMap[key] ?? 0;
             return Tooltip(
-              message: '$key\n$count ${count == 1 ? 'نشاط' : 'أنشطة'}',
+              message: '$key\n${context.l10n.activityTooltip(count)}',
               child: Container(
                 width: 10,
                 height: 10,
@@ -163,7 +164,7 @@ class _ActivityHeatmapState extends State<ActivityHeatmap> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             Text(
-              'أقل',
+              context.l10n.less,
               style: Theme.of(
                 context,
               ).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),
@@ -182,7 +183,7 @@ class _ActivityHeatmapState extends State<ActivityHeatmap> {
               ),
             ),
             Text(
-              'أكثر',
+              context.l10n.more,
               style: Theme.of(
                 context,
               ).textTheme.labelSmall?.copyWith(color: cs.onSurfaceVariant),

@@ -338,6 +338,7 @@ class CustomMemorizationPlanModel extends CustomMemorizationPlan {
     required super.startAyah,
     required super.createdAt,
     super.isActive = true,
+    super.targetUser = PlanTargetUser.adult,
   });
 
   factory CustomMemorizationPlanModel.fromJson(Map<String, dynamic> json) =>
@@ -356,6 +357,9 @@ class CustomMemorizationPlanModel extends CustomMemorizationPlan {
         startAyah: json['startAyah'] as int? ?? 1,
         createdAt: DateTime.parse(json['createdAt'] as String),
         isActive: json['isActive'] as bool? ?? true,
+        targetUser: json['targetUser'] != null
+            ? PlanTargetUser.values[json['targetUser'] as int]
+            : PlanTargetUser.adult,
       );
 
   Map<String, dynamic> toJson() => {
@@ -373,6 +377,7 @@ class CustomMemorizationPlanModel extends CustomMemorizationPlan {
     'startAyah': startAyah,
     'createdAt': createdAt.toIso8601String(),
     'isActive': isActive,
+    'targetUser': targetUser.index,
   };
 
   factory CustomMemorizationPlanModel.fromEntity(CustomMemorizationPlan p) =>
@@ -391,5 +396,6 @@ class CustomMemorizationPlanModel extends CustomMemorizationPlan {
         startAyah: p.startAyah,
         createdAt: p.createdAt,
         isActive: p.isActive,
+        targetUser: p.targetUser,
       );
 }

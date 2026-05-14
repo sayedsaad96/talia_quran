@@ -46,7 +46,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     // BUG-NEW-004 FIX: Store subscription reference
     _playerStateSub = _player.playerStateStream.listen((state) {
       if (state.processingState == ProcessingState.completed) {
-        if (this.state is HifzSessionLoaded) {
+        if (!isClosed && this.state is HifzSessionLoaded) {
           emit((this.state as HifzSessionLoaded).copyWith(isPlaying: false));
         }
       }
@@ -226,16 +226,6 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
         .join(' ');
   }
 
-  /// Plays audio from either a URL or a local file path
-  Future<void> _playAudioSource(AudioPlayer player, String source) async {
-    if (source.startsWith('http://') || source.startsWith('https://')) {
-      await player.setUrl(source);
-    } else {
-      await player.setFilePath(source);
-    }
-    await player.play();
-  }
-
   Future<void> playAudio() async {
     if (state is! HifzSessionLoaded) return;
     final st = state as HifzSessionLoaded;
@@ -249,7 +239,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
         ayah.numberInSurah,
       );
 
-      await _playAudioSource(_player, audioSource);
+      await AudioCacheService.playFromSource(_player, audioSource);
     } catch (e) {
       emit(
         st.copyWith(
@@ -259,6 +249,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
       );
       // Clear the error after showing it
       Future.delayed(const Duration(seconds: 3), () {
+        if (isClosed) return;
         if (state is HifzSessionLoaded) {
           emit((state as HifzSessionLoaded).copyWith(clearAudioError: true));
         }
@@ -324,6 +315,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
           ),
         );
         Future.delayed(const Duration(seconds: 5), () {
+          if (isClosed) return;
           if (state is HifzSessionLoaded) {
             emit((state as HifzSessionLoaded).copyWith(clearAudioError: true));
           }
@@ -474,6 +466,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
             ),
           );
           Future.delayed(const Duration(seconds: 4), () {
+            if (isClosed) return;
             if (state is HifzSessionLoaded) {
               emit(
                 (state as HifzSessionLoaded).copyWith(clearAudioError: true),
