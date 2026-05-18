@@ -1,8 +1,10 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/constants/app_constants.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
+import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -12,10 +14,11 @@ void main() {
   group('MemorizationPlusRepositoryImpl', () {
     late MemorizationPlusLocalDatasourceImpl datasource;
     late MemorizationPlusRepositoryImpl repository;
+    late SharedPreferences prefs;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
+      prefs = await SharedPreferences.getInstance();
       datasource = MemorizationPlusLocalDatasourceImpl(prefs);
       repository = MemorizationPlusRepositoryImpl(
         datasource,
@@ -84,13 +87,159 @@ void main() {
       expect(rewards.getOrElse(() => const []), hasLength(1));
     });
 
-    test('selecting kids track enables parent mode for pairing', () async {
-      final result = await repository.saveSelectedTrack(MemorizationTrack.kids);
+    test(
+      'selectMemorizationPath(adult) stores profile and legacy track',
+      () async {
+        final result = await repository.selectMemorizationPath(
+          MemorizationPath.adult,
+        );
 
-      expect(result.isRight(), isTrue);
-      expect(datasource.getSelectedTrack(), MemorizationTrack.kids.name);
-      expect(datasource.getIsParentMode(), isTrue);
-    });
+        final profile = result.getOrElse(
+          () => throw StateError('Expected adult profile selection to succeed'),
+        );
+
+        expect(profile.selectedPath, MemorizationPath.adult);
+        expect(
+          profile.guardianOnboardingStatus,
+          GuardianOnboardingStatus.completed,
+        );
+        expect(profile.guardianLinkStatus, GuardianLinkStatus.none);
+        expect(datasource.getSelectedTrack(), MemorizationTrack.adults.name);
+      },
+    );
+
+    test(
+      'selecting kids track creates a child profile without parent mode',
+      () async {
+        final result = await repository.saveSelectedTrack(
+          MemorizationTrack.kids,
+        );
+
+        expect(result.isRight(), isTrue);
+        expect(datasource.getSelectedTrack(), MemorizationTrack.kids.name);
+        expect(datasource.getIsParentMode(), isFalse);
+
+        final profile = await datasource.getMemorizationProfile();
+        expect(profile.selectedPath, MemorizationPath.child);
+        expect(
+          profile.guardianOnboardingStatus,
+          GuardianOnboardingStatus.required,
+        );
+      },
+    );
+
+    test(
+      'migrates legacy Hifz backward path to skipped child profile',
+      () async {
+        await prefs.setString(AppConstants.kHifzPathMode, 'backward');
+
+        final result = await repository.getMemorizationProfile();
+        final profile = result.getOrElse(
+          () =>
+              throw StateError('Expected legacy profile migration to succeed'),
+        );
+
+        expect(profile.selectedPath, MemorizationPath.child);
+        expect(
+          profile.guardianOnboardingStatus,
+          GuardianOnboardingStatus.skipped,
+        );
+        expect(
+          (await datasource.getMemorizationProfile()).selectedPath,
+          profile.selectedPath,
+        );
+      },
+    );
+
+    test(
+      'continueWithoutGuardian preserves child path and skips re-prompting',
+      () async {
+        await repository.selectMemorizationPath(MemorizationPath.child);
+
+        final result = await repository.continueWithoutGuardian();
+        final profile = result.getOrElse(
+          () => throw StateError('Expected guardian skip to succeed'),
+        );
+
+        expect(profile.selectedPath, MemorizationPath.child);
+        expect(profile.guardianLinkStatus, GuardianLinkStatus.none);
+        expect(
+          profile.guardianOnboardingStatus,
+          GuardianOnboardingStatus.skipped,
+        );
+      },
+    );
+
+    test(
+      'refreshPairingSession expires stale pending sessions locally',
+      () async {
+        final now = DateTime.now();
+        await datasource.saveMemorizationProfile(
+          MemorizationProfileModel(
+            schemaVersion: 1,
+            selectedPath: MemorizationPath.child,
+            guardianLinkStatus: GuardianLinkStatus.pending,
+            guardianOnboardingStatus: GuardianOnboardingStatus.required,
+            isParentGuardian: false,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+        await datasource.savePairingSession(
+          PairingSessionModel(
+            id: 'expired',
+            pairingCode: '111222',
+            qrData: 'talia-kids-link:111222',
+            createdAt: now.subtract(const Duration(minutes: 20)),
+            expiresAt: now.subtract(const Duration(minutes: 5)),
+            status: PairingSessionStatus.pending,
+            isUsed: false,
+          ),
+        );
+
+        final result = await repository.refreshPairingSession();
+        final session = result.getOrElse(
+          () => throw StateError('Expected pairing refresh to succeed'),
+        );
+        final profile = await datasource.getMemorizationProfile();
+
+        expect(session?.status, PairingSessionStatus.expired);
+        expect(profile.guardianLinkStatus, GuardianLinkStatus.none);
+        expect(
+          profile.guardianOnboardingStatus,
+          GuardianOnboardingStatus.required,
+        );
+      },
+    );
+
+    test(
+      'reset identity preserves smart settings and review records',
+      () async {
+        await repository.selectMemorizationPath(MemorizationPath.child);
+        await repository.saveSmartSettings(
+          const SmartMemorizationSettings(
+            dailySchedule: 'after-fajr',
+            reviewDays: [1, 3],
+            ayahIsolationEnabled: true,
+          ),
+        );
+        await repository.markAyahMemorized(surahId: 114, ayahNumber: 1);
+        await prefs.setString(AppConstants.kHifzPathMode, 'backward');
+
+        final result = await repository.resetMemorizationIdentity();
+        final profile = result.getOrElse(
+          () => throw StateError('Expected identity reset to succeed'),
+        );
+        final settings = await datasource.getSmartSettings();
+        final record = await datasource.getReviewRecord(114, 1);
+
+        expect(profile.selectedPath, isNull);
+        expect(datasource.getSelectedTrack(), isNull);
+        expect(prefs.getString(AppConstants.kHifzPathMode), isNull);
+        expect(settings.dailySchedule, 'after-fajr');
+        expect(record, isNotNull);
+      },
+    );
   });
 }
 

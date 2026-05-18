@@ -85,15 +85,24 @@ Future<void> _bootstrapAndRun() async {
 
   final supabaseUrl = dotenv.env['SUPABASE_URL']?.trim();
   final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim();
-  if (supabaseUrl == null ||
-      supabaseUrl.isEmpty ||
-      supabaseAnonKey == null ||
-      supabaseAnonKey.isEmpty) {
-    throw StateError('Missing Supabase configuration');
-  }
 
-  // Initialize Supabase — credentials loaded from .env (never hardcoded)
-  await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+  // OFFLINE-FIRST FIX (FIND-STAB01): If Supabase credentials are absent or
+  // incomplete, continue in offline mode rather than crashing the app.
+  // Auth-dependent features will be unavailable, but core Quran/Hifz/Azkar
+  // functionality is fully offline and remains accessible.
+  final hasSupabaseConfig =
+      supabaseUrl != null &&
+      supabaseUrl.isNotEmpty &&
+      supabaseAnonKey != null &&
+      supabaseAnonKey.isNotEmpty;
+
+  if (hasSupabaseConfig) {
+    // Initialize Supabase — credentials loaded from .env (never hardcoded)
+    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+  }
+  // Note: if hasSupabaseConfig is false, the app starts in offline mode.
+  // Auth features (LoginPage) will show an appropriate error when Supabase
+  // client is accessed, but all local features remain fully functional.
 
   // Initialize dependency injection
   await configureDependencies();
@@ -101,7 +110,11 @@ Future<void> _bootstrapAndRun() async {
   // Initialize notifications with sensible defaults
   final notificationService = TaliaNotificationService.instance;
   await notificationService.initialize();
-  await notificationService.requestPermissions();
+  // M05 FIX: Do not await requestPermissions() before runApp.
+  // Awaiting this before runApp() on Android 13+ blocks the main isolate
+  // while the OS permission dialog is active. If the dialog is hidden behind
+  // the splash screen, the app will appear to hang infinitely.
+  unawaited(notificationService.requestPermissions()); // intentionally not awaited
 
   final prefs = getIt<SharedPreferences>();
 

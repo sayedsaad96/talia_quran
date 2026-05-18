@@ -13,6 +13,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../memorization_plus/domain/entities/memorization_entities.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../cubits/profile_cubit.dart';
 import '../../data/user_profile.dart';
 
@@ -35,6 +37,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String? _selectedTrack;
   String? _selectedHifzPath;
   bool _isParentMode = false;
+  MemorizationProfile? _memorizationProfile;
 
   @override
   void initState() {
@@ -44,19 +47,48 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _loadTrackAndParentMode() async {
     final prefs = await SharedPreferences.getInstance();
+    final profileResult = await getIt<MemorizationPlusRepository>()
+        .getMemorizationProfile();
+    final profile = profileResult.fold((_) => null, (profile) => profile);
     if (!mounted) return;
     setState(() {
-      _selectedTrack = prefs.getString('mem_plus_track');
+      _memorizationProfile = profile;
+      _selectedTrack =
+          profile?.legacyTrack?.name ?? prefs.getString('mem_plus_track');
       _selectedHifzPath = prefs.getString(AppConstants.kHifzPathMode);
-      _isParentMode = prefs.getBool('mem_plus_is_parent_mode') ?? false;
+      _isParentMode =
+          profile?.isParentGuardian ??
+          prefs.getBool('mem_plus_is_parent_mode') ??
+          false;
     });
   }
 
   Future<void> _toggleParentMode(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('mem_plus_is_parent_mode', value);
+    final result = await getIt<MemorizationPlusRepository>()
+        .setParentGuardianMode(value);
+    final failure = result.fold((failure) => failure, (_) => null);
+    if (failure != null && mounted) {
+      _showSettingsError(context, failure.message);
+      return;
+    }
+    await _loadTrackAndParentMode();
     if (!mounted) return;
     setState(() => _isParentMode = value);
+  }
+
+  Future<void> _resetMemorizationIdentity() async {
+    final result = await getIt<MemorizationPlusRepository>()
+        .resetMemorizationIdentity();
+    final failure = result.fold((failure) => failure, (_) => null);
+    if (failure != null && mounted) {
+      _showSettingsError(context, failure.message);
+      return;
+    }
+    await _loadTrackAndParentMode();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Memorization path has been reset')),
+    );
   }
 
   /// Show parent section if:
@@ -110,6 +142,19 @@ class _SettingsPageState extends State<SettingsPage> {
                         isDark: isDark,
                         isParentMode: _isParentMode,
                         onChanged: _toggleParentMode,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                ],
+
+                if (_memorizationProfile?.hasSelectedPath == true) ...[
+                  _SettingsSection(
+                    title: 'مسار الحفظ',
+                    children: [
+                      _ResetMemorizationPathTile(
+                        isDark: isDark,
+                        onReset: _resetMemorizationIdentity,
                       ),
                     ],
                   ),

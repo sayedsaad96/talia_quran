@@ -12,6 +12,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/talia_logger.dart';
+import '../../../../core/widgets/qcf_hifz_verse_view.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../cubits/quiz_cubit.dart';
 
@@ -563,13 +564,23 @@ class _AnswerResultView extends StatelessWidget {
 
           const SizedBox(height: AppSpacing.xl),
 
-          // Correct text
+          // T017: correct Quran text rendered through QcfHifzVerseView.
+          // userText stays as normal recognized speech text (unchanged).
           _ComparisonCard(
             title: 'النص الصحيح',
             text: state.correctText,
             icon: Icons.auto_stories_rounded,
             color: Colors.green,
             isDark: isDark,
+            child: QcfHifzVerseView(
+              surahNumber: state.surahId,
+              verseNumber: state.ayahNumber,
+              fallbackText: state.correctText,
+              isUnlocked: true,
+              isMemorized: false,
+              displayMode: HifzVerseDisplayMode.comparison,
+              textAlign: TextAlign.right,
+            ),
           ),
 
           const SizedBox(height: AppSpacing.md),
@@ -622,12 +633,16 @@ class _ComparisonCard extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.isDark,
+    this.child,
   });
   final String title;
   final String text;
   final IconData icon;
   final Color color;
   final bool isDark;
+
+  /// Optional content override. When provided, renders instead of Text(text).
+  final Widget? child;
 
   @override
   Widget build(BuildContext context) {
@@ -655,18 +670,20 @@ class _ComparisonCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(
-            text,
-            style: AppTypography.bodyLarge.copyWith(
-              fontFamily: 'Amiri',
-              fontSize: 20,
-              height: 2.0,
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
-            ),
-            textDirection: TextDirection.rtl,
-          ),
+          // T017: render child (QcfHifzVerseView) when provided, else fallback Text.
+          child ??
+              Text(
+                text,
+                style: AppTypography.bodyLarge.copyWith(
+                  fontFamily: 'Amiri',
+                  fontSize: 20,
+                  height: 2.0,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                ),
+                textDirection: TextDirection.rtl,
+              ),
         ],
       ),
     );

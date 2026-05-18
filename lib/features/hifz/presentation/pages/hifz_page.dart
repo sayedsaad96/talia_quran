@@ -15,6 +15,7 @@ import '../../domain/entities/hifz_entities.dart';
 import '../cubits/hifz_cubit.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
 class HifzPage extends StatelessWidget {
   const HifzPage({super.key});
@@ -57,10 +58,24 @@ class _HifzView extends StatelessWidget {
                     onRetry: () => context.read<HifzCubit>().load(),
                   ),
                 ),
-              if (state is HifzLoaded) ...[
-                if (state.selectedPath == null)
-                  _buildPathSelection(context, primary, isDark)
-                else ...[
+              if (state is HifzLoaded)
+                // T028: When no path is set, delegate to the authoritative
+                // MemorizationPlus identity gate rather than showing the
+                // duplicate inline path-chooser.
+                if (state.selectedPath == null) ...[
+                  SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Builder(
+                      builder: (ctx) {
+                        // Redirect after frame to avoid calling push during build.
+                        WidgetsBinding.instance.addPostFrameCallback((_) {
+                          if (ctx.mounted) ctx.go(AppRoutes.memorizationPlus);
+                        });
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ),
+                ] else ...[
                   if (state.progressMap.isNotEmpty) ...[
                     SliverToBoxAdapter(
                       child: Padding(
@@ -117,50 +132,9 @@ class _HifzView extends StatelessWidget {
                     ),
                   ),
                 ],
-              ],
             ],
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildPathSelection(BuildContext context, Color primary, bool isDark) {
-    return SliverFillRemaining(
-      hasScrollBody: false,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.pagePadding),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              context.l10n.chooseMemorizationPath,
-              style: AppTypography.headlineSmall.copyWith(color: primary),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xl),
-
-            _PathCard(
-              title: context.l10n.adultPath,
-              subtitle: context.l10n.adultPathDesc,
-              icon: Icons.menu_book_rounded,
-              primary: primary,
-              isDark: isDark,
-              onTap: () => context.read<HifzCubit>().selectPath('forward'),
-            ),
-
-            const SizedBox(height: AppSpacing.lg),
-
-            _PathCard(
-              title: context.l10n.beginnerPath,
-              subtitle: context.l10n.beginnerPathDesc,
-              icon: Icons.child_care_rounded,
-              primary: Colors.green, // Visual distinction
-              isDark: isDark,
-              onTap: () => context.read<HifzCubit>().selectPath('backward'),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -228,17 +202,18 @@ class _HifzView extends StatelessWidget {
                           ),
                         ],
                       ),
-                      if (state is HifzLoaded && state.selectedPath != null)
+                       if (state is HifzLoaded && state.selectedPath != null)
                         IconButton(
                           icon: const Icon(
                             Icons.settings_suggest_rounded,
                             color: Colors.white,
                           ),
                           tooltip: ctx.l10n.changeMemorizationPath,
-                          onPressed: () {
-                            // Show a bottom sheet or directly navigate back to selection
-                            _showPathSelectionSheet(ctx, state.selectedPath!);
-                          },
+                          // T028: Path changes are managed exclusively through
+                          // the Settings page (Reset / Change path control)
+                          // to preserve shared identity integrity.
+                          // UPDATE: User requested to not go to the main settings page.
+                          onPressed: () => _showMemorizationSettingsSheet(ctx, isDark),
                         ),
                     ],
                   ),
@@ -246,145 +221,6 @@ class _HifzView extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  void _showPathSelectionSheet(BuildContext context, String currentPath) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        final isDark = context.isDark;
-        return AlertDialog(
-          backgroundColor: isDark
-              ? AppColors.darkBackground
-              : AppColors.lightBackground,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          ),
-          contentPadding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-          title: Text(
-            context.l10n.changeMemorizationPath,
-            style: AppTypography.titleLarge,
-            textAlign: TextAlign.center,
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ListTile(
-                  leading: const Icon(
-                    Icons.menu_book_rounded,
-                    color: AppColors.primary,
-                  ),
-                  title: Text(context.l10n.adultPathTitle),
-                  subtitle: Text(context.l10n.adultPathSubtitle),
-                  trailing: currentPath == 'forward'
-                      ? const Icon(Icons.check_circle, color: Colors.green)
-                      : null,
-                  onTap: () {
-                    context.read<HifzCubit>().selectPath('forward');
-                    Navigator.pop(dialogContext);
-                  },
-                ),
-                const Divider(),
-                ListTile(
-                  leading: const Icon(
-                    Icons.child_care_rounded,
-                    color: Colors.green,
-                  ),
-                  title: Text(context.l10n.beginnerPathTitle),
-                  subtitle: Text(context.l10n.beginnerPathSubtitle),
-                  trailing: currentPath == 'backward'
-                      ? const Icon(Icons.check_circle, color: Colors.green)
-                      : null,
-                  onTap: () {
-                    context.read<HifzCubit>().selectPath('backward');
-                    Navigator.pop(dialogContext);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _PathCard extends StatelessWidget {
-  const _PathCard({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.primary,
-    required this.isDark,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color primary;
-  final bool isDark;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.xl),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : AppColors.lightCard,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border.all(color: primary.withValues(alpha: 0.3), width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: isDark ? Colors.black26 : Colors.black12,
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: primary, size: 36),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTypography.titleLarge.copyWith(color: primary),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextHint
-                          : AppColors.lightTextHint,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: Colors.grey,
-              size: 16,
-            ),
-          ],
         ),
       ),
     );
@@ -699,4 +535,86 @@ class _MemPlusBanner extends StatelessWidget {
       ),
     );
   }
+}
+
+void _showMemorizationSettingsSheet(BuildContext context, bool isDark) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
+    ),
+    builder: (ctx) => SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              ctx.l10n.changeMemorizationPath,
+              style: AppTypography.headlineSmall.copyWith(
+                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                fontFamily: 'Amiri',
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            ListTile(
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: Colors.orange.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.restart_alt_rounded, color: Colors.orange),
+              ),
+              title: Text(
+                'إعادة ضبط المسار',
+                style: AppTypography.bodyMedium.copyWith(
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                'تغيير مسار الحفظ بين مسار الكبار والأطفال، مع الاحتفاظ ببيانات الحفظ.',
+                style: AppTypography.labelSmall.copyWith(
+                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                ),
+              ),
+              onTap: () async {
+                Navigator.pop(ctx);
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    title: const Text('إعادة ضبط مسار الحفظ؟', style: TextStyle(fontFamily: 'Amiri')),
+                    content: const Text(
+                      'هذا سيقوم بإلغاء مسار الحفظ الحالي لتتمكن من اختيار مسار جديد. لن تفقد آياتك المحفوظة.',
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext, false),
+                        child: const Text('إلغاء'),
+                      ),
+                      FilledButton(
+                        style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+                        onPressed: () => Navigator.pop(dialogContext, true),
+                        child: const Text('إعادة ضبط'),
+                      ),
+                    ],
+                  ),
+                );
+                if (confirmed == true) {
+                  await getIt<MemorizationPlusRepository>().resetMemorizationIdentity();
+                  if (context.mounted) {
+                    context.pushReplacement(AppRoutes.memorizationPlus);
+                  }
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
 }

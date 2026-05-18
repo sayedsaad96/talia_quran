@@ -137,6 +137,27 @@ class _FakeHifzDatasource implements HifzLocalDatasource {
 
 class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   @override
+  Future<MemorizationProfileModel> getMemorizationProfile() async =>
+      MemorizationProfileModel.empty();
+
+  @override
+  Future<void> saveMemorizationProfile(
+    MemorizationProfileModel profile,
+  ) async {}
+
+  @override
+  Future<void> clearMemorizationProfile() async {}
+
+  @override
+  Future<PairingSessionModel?> getPairingSession() async => null;
+
+  @override
+  Future<void> savePairingSession(PairingSessionModel session) async {}
+
+  @override
+  Future<void> clearPairingSession() async {}
+
+  @override
   Future<void> deleteCustomPlan() async {}
 
   @override
@@ -199,10 +220,25 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   Future<void> saveSelectedTrack(String track) async {}
 
   @override
+  Future<void> clearSelectedTrack() async {}
+
+  @override
   bool getIsParentMode() => false;
 
   @override
   Future<void> setIsParentMode(bool value) async {}
+
+  @override
+  Future<void> clearIsParentMode() async {}
+
+  @override
+  Future<SmartMemorizationSettingsModel> getSmartSettings() async =>
+      const SmartMemorizationSettingsModel();
+
+  @override
+  Future<void> saveSmartSettings(
+    SmartMemorizationSettingsModel settings,
+  ) async {}
 }
 
 class _FakeQuranDatasource implements QuranLocalDatasource {

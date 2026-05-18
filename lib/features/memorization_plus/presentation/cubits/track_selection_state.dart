@@ -15,7 +15,48 @@ class TrackSelectionSaving extends TrackSelectionState {
 }
 
 class TrackSelectionLoaded extends TrackSelectionState {
-  const TrackSelectionLoaded({required this.track});
+  const TrackSelectionLoaded({required this.profile});
+  final MemorizationProfile profile;
+
+  MemorizationTrack? get track => profile.legacyTrack;
+  bool get hasTrack => profile.hasSelectedPath;
+  bool get needsPathSelection => !profile.hasSelectedPath;
+  bool get needsGuardianOnboarding => profile.needsGuardianOnboarding;
+
+  @override
+  List<Object?> get props => [profile];
+}
+
+class TrackSelectionNeedsPath extends TrackSelectionState {
+  const TrackSelectionNeedsPath();
+}
+
+class TrackSelectionAdultReady extends TrackSelectionState {
+  const TrackSelectionAdultReady({required this.profile});
+  final MemorizationProfile profile;
+
+  @override
+  List<Object?> get props => [profile];
+}
+
+class TrackSelectionGuardianOnboardingRequired extends TrackSelectionState {
+  const TrackSelectionGuardianOnboardingRequired({required this.profile});
+  final MemorizationProfile profile;
+
+  @override
+  List<Object?> get props => [profile];
+}
+
+class TrackSelectionChildReady extends TrackSelectionState {
+  const TrackSelectionChildReady({required this.profile});
+  final MemorizationProfile profile;
+
+  @override
+  List<Object?> get props => [profile];
+}
+
+class TrackSelectionLegacyLoaded extends TrackSelectionState {
+  const TrackSelectionLegacyLoaded({required this.track});
   final MemorizationTrack? track;
 
   bool get hasTrack => track != null;

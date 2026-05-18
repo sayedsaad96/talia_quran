@@ -154,6 +154,7 @@ class _LoginPageState extends State<LoginPage> {
                       // Name field (sign up only)
                       if (_isSignUp) ...[
                         TextFormField(
+                          textCapitalization: TextCapitalization.words,
                           controller: _nameController,
                           decoration: InputDecoration(
                             labelText: context.l10n.name,

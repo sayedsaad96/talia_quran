@@ -9,19 +9,40 @@ class TrackSelectionCubit extends Cubit<TrackSelectionState> {
   TrackSelectionCubit(this._repository) : super(const TrackSelectionInitial());
   final MemorizationPlusRepository _repository;
 
-  void load() {
-    final result = _repository.getSelectedTrack();
-    result.fold(
-      (f) => emit(TrackSelectionError(f.message)),
-      (track) => emit(TrackSelectionLoaded(track: track)),
-    );
+  Future<void> load() async {
+    final result = await _repository.getMemorizationProfile();
+    result.fold((f) => emit(TrackSelectionError(f.message)), _emitProfileState);
   }
 
   Future<void> selectTrack(MemorizationTrack track) async {
-    final result = await _repository.saveSelectedTrack(track);
-    result.fold((f) => emit(TrackSelectionError(f.message)), (_) {
-      emit(TrackSelectionLoaded(track: track));
-    });
+    final path = track == MemorizationTrack.kids
+        ? MemorizationPath.child
+        : MemorizationPath.adult;
+    await selectPath(path);
+  }
+
+  Future<void> selectPath(MemorizationPath path) async {
+    emit(const TrackSelectionSaving());
+    final result = await _repository.selectMemorizationPath(path);
+    result.fold((f) => emit(TrackSelectionError(f.message)), _emitProfileState);
+  }
+
+  Future<void> refreshChildGuardianLink() async {
+    final result = await _repository.refreshChildGuardianLink();
+    result.fold((f) => emit(TrackSelectionError(f.message)), _emitProfileState);
+  }
+
+  void _emitProfileState(MemorizationProfile profile) {
+    emit(TrackSelectionLoaded(profile: profile));
+    if (!profile.hasSelectedPath) {
+      emit(const TrackSelectionNeedsPath());
+    } else if (profile.isAdult) {
+      emit(TrackSelectionAdultReady(profile: profile));
+    } else if (profile.needsGuardianOnboarding) {
+      emit(TrackSelectionGuardianOnboardingRequired(profile: profile));
+    } else {
+      emit(TrackSelectionChildReady(profile: profile));
+    }
   }
 
   /// BUG-9 FIX: get the last reviewed surahId so navigation can resume from

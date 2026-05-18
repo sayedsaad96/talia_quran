@@ -3,16 +3,16 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/qcf_hifz_verse_view.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
+import '../../domain/entities/hifz_entities.dart';
 import '../cubits/hifz_session_cubit.dart';
 
 class HifzSessionPage extends StatelessWidget {
@@ -132,9 +132,6 @@ class _FullSurahSession extends StatelessWidget {
     final ayah = state.ayahs[state.currentIndex];
     final hasCheckpoint =
         state.requiredCheckpoint != null || state.completedCheckpoint != null;
-    final fontSize =
-        getIt<SharedPreferences>().getDouble(AppConstants.kFontSize) ??
-        AppConstants.fontSizeLarge;
 
     return Column(
       children: [
@@ -225,23 +222,33 @@ class _FullSurahSession extends StatelessWidget {
                                 ayahText: ayah.text,
                                 isDark: isDark,
                               )
-                            : Text(
-                                    state.isRecording
-                                        ? (context.isArabic
-                                              ? "يتم التسجيل، اقرأ الآية من حفظك..."
-                                              : "Recording, recite from memory...")
-                                        : ayah.text,
-                                    style: AppTypography.quranVerse.copyWith(
-                                      color: textColor,
-                                      fontSize: state.isRecording
-                                          ? 20
-                                          : fontSize,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                    textDirection: TextDirection.rtl,
-                                  )
-                                  .animate(target: state.isRecording ? 1 : 0)
-                                  .fade(end: 0.5),
+                            // T013/T014: Show recording prompt while recording
+                            // (correct text must not be revealed during recall).
+                            // Show QcfHifzVerseView when verse is displayed normally.
+                            : state.isRecording
+                            ? Text(
+                                context.isArabic
+                                    ? "يتم التسجيل، اقرأ الآية من حفظك..."
+                                    : "Recording, recite from memory...",
+                                style: AppTypography.bodyLarge.copyWith(
+                                  color: textColor,
+                                  fontSize: 20,
+                                ),
+                                textAlign: TextAlign.center,
+                              ).animate(target: 1).fade(end: 0.5)
+                            : QcfHifzVerseView(
+                                surahNumber: state.surah.id,
+                                verseNumber: ayah.numberInSurah,
+                                fallbackText: ayah.text,
+                                isUnlocked: true,
+                                isMemorized:
+                                    state
+                                        .progressMap[ayah.numberInSurah]
+                                        ?.status ==
+                                    AyahStatus.memorized,
+                                displayMode: HifzVerseDisplayMode.single,
+                                textAlign: TextAlign.center,
+                              ),
                       ),
                     ),
                   ),

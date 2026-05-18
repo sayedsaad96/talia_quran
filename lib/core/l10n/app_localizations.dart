@@ -2132,6 +2132,186 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'{count} {count, plural, =1{علامة} other{علامات}}'**
   String bookmarksCountItem(int count);
+
+  /// No description provided for @memorizationPathReset.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت إعادة ضبط مسار الحفظ'**
+  String get memorizationPathReset;
+
+  /// No description provided for @resetMemorizationPath.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة ضبط / تغيير المسار'**
+  String get resetMemorizationPath;
+
+  /// No description provided for @linkGuardianNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'ربط ولي الأمر الآن'**
+  String get linkGuardianNow;
+
+  /// No description provided for @continueWithoutGuardian.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتابعة بدون ولي أمر'**
+  String get continueWithoutGuardian;
+
+  /// No description provided for @guardianCodeExpired.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهت صلاحية الرمز'**
+  String get guardianCodeExpired;
+
+  /// No description provided for @guardianCodeAlreadyUsed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم استخدام الرمز مسبقاً'**
+  String get guardianCodeAlreadyUsed;
+
+  /// No description provided for @parentGuardianMode.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنا ولي أمر'**
+  String get parentGuardianMode;
+
+  /// No description provided for @qcfPocTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تجربة عرض QCF'**
+  String get qcfPocTitle;
+
+  /// No description provided for @qcfPocIntro.
+  ///
+  /// In ar, this message translates to:
+  /// **'شاشة مؤقتة لاختبار العرض البصري للقرآن داخل منطقة الحفظ.'**
+  String get qcfPocIntro;
+
+  /// No description provided for @qcfPocNoProduction.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذه الشاشة لا تغيّر منطق الحفظ أو حالة الحفظ أو التقدم أو القفل أو نقاط التحقق.'**
+  String get qcfPocNoProduction;
+
+  /// No description provided for @qcfPocVisualOnly.
+  ///
+  /// In ar, this message translates to:
+  /// **'يُستخدم qcf_quran_plus هنا لعرض آيات القرآن بصرياً فقط.'**
+  String get qcfPocVisualOnly;
+
+  /// No description provided for @qcfPocSingleVerse.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية واحدة'**
+  String get qcfPocSingleVerse;
+
+  /// No description provided for @qcfPocMultipleVerses.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدة آيات'**
+  String get qcfPocMultipleVerses;
+
+  /// No description provided for @qcfPocLastVerse.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر آية'**
+  String get qcfPocLastVerse;
+
+  /// No description provided for @qcfPocFullPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'صفحة مصحف كاملة'**
+  String get qcfPocFullPage;
+
+  /// No description provided for @qcfPocFindings.
+  ///
+  /// In ar, this message translates to:
+  /// **'النتائج'**
+  String get qcfPocFindings;
+
+  /// No description provided for @qcfPocSupported.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدعوم'**
+  String get qcfPocSupported;
+
+  /// No description provided for @qcfPocLimited.
+  ///
+  /// In ar, this message translates to:
+  /// **'محدود'**
+  String get qcfPocLimited;
+
+  /// No description provided for @qcfPocUnsupported.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير مدعوم'**
+  String get qcfPocUnsupported;
+
+  /// No description provided for @qcfPocStatus.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحالة'**
+  String get qcfPocStatus;
+
+  /// No description provided for @qcfPocAlBaqarah255.
+  ///
+  /// In ar, this message translates to:
+  /// **'البقرة ٢٥٥'**
+  String get qcfPocAlBaqarah255;
+
+  /// No description provided for @qcfPocAlFatihah.
+  ///
+  /// In ar, this message translates to:
+  /// **'الفاتحة ١-٧'**
+  String get qcfPocAlFatihah;
+
+  /// No description provided for @qcfPocAlIkhlas.
+  ///
+  /// In ar, this message translates to:
+  /// **'الإخلاص ١-٤'**
+  String get qcfPocAlIkhlas;
+
+  /// No description provided for @qcfPocAshSharh8.
+  ///
+  /// In ar, this message translates to:
+  /// **'الشرح ٨'**
+  String get qcfPocAshSharh8;
+
+  /// No description provided for @qcfPocFullPageSample.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاينة صفحة المصحف ١'**
+  String get qcfPocFullPageSample;
+
+  /// No description provided for @qcfPocVerseSupported.
+  ///
+  /// In ar, this message translates to:
+  /// **'تظهر الآية بصرياً باستخدام أدوات QCF.'**
+  String get qcfPocVerseSupported;
+
+  /// No description provided for @qcfPocMultiVerseSupported.
+  ///
+  /// In ar, this message translates to:
+  /// **'تظهر الآيات المجموعة بصرياً من السورة نفسها.'**
+  String get qcfPocMultiVerseSupported;
+
+  /// No description provided for @qcfPocFullPageSupported.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض الصفحة الكاملة متاح داخل معاينة محددة.'**
+  String get qcfPocFullPageSupported;
+
+  /// No description provided for @qcfPocNoLimitations.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تظهر قيود في هذه التجربة المعزولة.'**
+  String get qcfPocNoLimitations;
+
+  /// No description provided for @qcfPocLimitationInstruction.
+  ///
+  /// In ar, this message translates to:
+  /// **'يجب مراجعة أي قيد يظهر هنا قبل تغيير شاشات الحفظ الفعلية.'**
+  String get qcfPocLimitationInstruction;
 }
 
 class _AppLocalizationsDelegate

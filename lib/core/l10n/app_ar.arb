@@ -365,5 +365,35 @@
         "type": "int"
       }
     }
-  }
+  },
+  "memorizationPathReset": "تمت إعادة ضبط مسار الحفظ",
+  "resetMemorizationPath": "إعادة ضبط / تغيير المسار",
+  "linkGuardianNow": "ربط ولي الأمر الآن",
+  "continueWithoutGuardian": "المتابعة بدون ولي أمر",
+  "guardianCodeExpired": "انتهت صلاحية الرمز",
+  "guardianCodeAlreadyUsed": "تم استخدام الرمز مسبقاً",
+  "parentGuardianMode": "أنا ولي أمر",
+  "qcfPocTitle": "تجربة عرض QCF",
+  "qcfPocIntro": "شاشة مؤقتة لاختبار العرض البصري للقرآن داخل منطقة الحفظ.",
+  "qcfPocNoProduction": "هذه الشاشة لا تغيّر منطق الحفظ أو حالة الحفظ أو التقدم أو القفل أو نقاط التحقق.",
+  "qcfPocVisualOnly": "يُستخدم qcf_quran_plus هنا لعرض آيات القرآن بصرياً فقط.",
+  "qcfPocSingleVerse": "آية واحدة",
+  "qcfPocMultipleVerses": "عدة آيات",
+  "qcfPocLastVerse": "آخر آية",
+  "qcfPocFullPage": "صفحة مصحف كاملة",
+  "qcfPocFindings": "النتائج",
+  "qcfPocSupported": "مدعوم",
+  "qcfPocLimited": "محدود",
+  "qcfPocUnsupported": "غير مدعوم",
+  "qcfPocStatus": "الحالة",
+  "qcfPocAlBaqarah255": "البقرة ٢٥٥",
+  "qcfPocAlFatihah": "الفاتحة ١-٧",
+  "qcfPocAlIkhlas": "الإخلاص ١-٤",
+  "qcfPocAshSharh8": "الشرح ٨",
+  "qcfPocFullPageSample": "معاينة صفحة المصحف ١",
+  "qcfPocVerseSupported": "تظهر الآية بصرياً باستخدام أدوات QCF.",
+  "qcfPocMultiVerseSupported": "تظهر الآيات المجموعة بصرياً من السورة نفسها.",
+  "qcfPocFullPageSupported": "عرض الصفحة الكاملة متاح داخل معاينة محددة.",
+  "qcfPocNoLimitations": "لم تظهر قيود في هذه التجربة المعزولة.",
+  "qcfPocLimitationInstruction": "يجب مراجعة أي قيد يظهر هنا قبل تغيير شاشات الحفظ الفعلية."
 }

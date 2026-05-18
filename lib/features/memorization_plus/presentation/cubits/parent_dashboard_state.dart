@@ -69,3 +69,27 @@ class ParentDashboardError extends ParentDashboardState {
   @override
   List<Object?> get props => [message];
 }
+
+// ─── T054: New states for typed feedback during linking / unlinking ────────────
+
+/// Emitted while the parent is entering or scanning a child pairing code.
+/// Replaces the generic [ParentDashboardLoading] for this specific action so
+/// the UI can show targeted progress feedback (e.g. "Verifying pairing code…").
+class ParentDashboardLinking extends ParentDashboardState {
+  const ParentDashboardLinking({required this.surahId});
+  final int surahId;
+
+  @override
+  List<Object?> get props => [surahId];
+}
+
+/// Emitted while parent mode is being disabled and the child link is severed.
+/// Replaces the generic [ParentDashboardLoading] for this specific action so
+/// the UI can show targeted feedback (e.g. "Removing guardian link…").
+class ParentDashboardUnlinking extends ParentDashboardState {
+  const ParentDashboardUnlinking({required this.surahId});
+  final int surahId;
+
+  @override
+  List<Object?> get props => [surahId];
+}

@@ -112,7 +112,7 @@ class _HeroHeader extends StatelessWidget {
                       ),
                       const SizedBox(width: AppSpacing.sm),
                       _HeroIconButton(
-                        icon: Icons.settings_rounded,
+                        icon: Icons.settings_suggest_rounded,
                         onTap: () => context.push(AppRoutes.settings),
                       ),
                     ],
@@ -1123,10 +1123,7 @@ class _StreakXpRow extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          level.icon,
-                          style: const TextStyle(fontSize: 24),
-                        ),
+                        Text(level.icon, style: const TextStyle(fontSize: 24)),
                         const SizedBox(width: 8),
                         Text(
                           level.name,
@@ -1154,7 +1151,9 @@ class _StreakXpRow extends StatelessWidget {
                         backgroundColor: isDark
                             ? Colors.white12
                             : Colors.black12,
-                        valueColor: AlwaysStoppedAnimation(Color(level.colorHex)),
+                        valueColor: AlwaysStoppedAnimation(
+                          Color(level.colorHex),
+                        ),
                       ),
                     ),
                   ],
@@ -1254,7 +1253,6 @@ class _ParentDashboardShortcutCard extends StatelessWidget {
     ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.03, end: 0);
   }
 }
-
 
 // ─── Sign-In Nudge Banner ──────────────────────────────────────────────────────
 

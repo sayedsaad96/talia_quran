@@ -3,9 +3,20 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/memorization_models.dart';
 
 abstract class MemorizationPlusLocalDatasource {
+  // Identity profile
+  Future<MemorizationProfileModel> getMemorizationProfile();
+  Future<void> saveMemorizationProfile(MemorizationProfileModel profile);
+  Future<void> clearMemorizationProfile();
+
+  // Pairing
+  Future<PairingSessionModel?> getPairingSession();
+  Future<void> savePairingSession(PairingSessionModel session);
+  Future<void> clearPairingSession();
+
   // Track
   String? getSelectedTrack();
   Future<void> saveSelectedTrack(String track);
+  Future<void> clearSelectedTrack();
 
   // Review records
   Future<AyahReviewRecordModel?> getReviewRecord(int surahId, int ayahNumber);
@@ -34,9 +45,14 @@ abstract class MemorizationPlusLocalDatasource {
   Future<void> saveCustomPlan(CustomMemorizationPlanModel plan);
   Future<void> deleteCustomPlan();
 
+  // Smart memorization settings
+  Future<SmartMemorizationSettingsModel> getSmartSettings();
+  Future<void> saveSmartSettings(SmartMemorizationSettingsModel settings);
+
   // Parent mode toggle (for adults track)
   bool getIsParentMode();
   Future<void> setIsParentMode(bool value);
+  Future<void> clearIsParentMode();
 }
 
 class MemorizationPlusLocalDatasourceImpl
@@ -46,6 +62,8 @@ class MemorizationPlusLocalDatasourceImpl
   final SharedPreferences _prefs;
 
   // ─── Key namespace (isolated from existing features) ────────────────────────
+  static const _kProfile = 'mem_plus_profile';
+  static const _kPairingSession = 'mem_plus_pairing_session';
   static const _kTrack = 'mem_plus_track';
   static const _kReviewPrefix = 'mem_plus_review';
   static const _kDailyPlan = 'mem_plus_daily_plan';
@@ -54,6 +72,7 @@ class MemorizationPlusLocalDatasourceImpl
   static const _kParentSettings = 'mem_plus_parent_settings';
   static const _kParentRewards = 'mem_plus_parent_rewards';
   static const _kCustomPlan = 'mem_plus_custom_plan';
+  static const _kSmartSettings = 'mem_plus_smart_settings';
   static const _kIsParentMode = 'mem_plus_is_parent_mode';
 
   String _reviewKey(int surahId, int ayahNumber) =>
@@ -85,6 +104,44 @@ class MemorizationPlusLocalDatasourceImpl
     }
   }
 
+  Future<void> _removeOrThrow(String key) async {
+    final removed = await _prefs.remove(key);
+    if (!removed && _prefs.containsKey(key)) {
+      throw StateError('Failed to remove value for $key');
+    }
+  }
+
+  // ─── Identity profile ──────────────────────────────────────────────────────
+  @override
+  Future<MemorizationProfileModel> getMemorizationProfile() async {
+    final raw = _prefs.getString(_kProfile);
+    if (raw == null) return MemorizationProfileModel.empty();
+    return _tryParse(raw, MemorizationProfileModel.fromJson) ??
+        MemorizationProfileModel.empty();
+  }
+
+  @override
+  Future<void> saveMemorizationProfile(MemorizationProfileModel profile) =>
+      _setStringOrThrow(_kProfile, jsonEncode(profile.toJson()));
+
+  @override
+  Future<void> clearMemorizationProfile() => _removeOrThrow(_kProfile);
+
+  // ─── Pairing ────────────────────────────────────────────────────────────────
+  @override
+  Future<PairingSessionModel?> getPairingSession() async {
+    final raw = _prefs.getString(_kPairingSession);
+    if (raw == null) return null;
+    return _tryParse(raw, PairingSessionModel.fromJson);
+  }
+
+  @override
+  Future<void> savePairingSession(PairingSessionModel session) =>
+      _setStringOrThrow(_kPairingSession, jsonEncode(session.toJson()));
+
+  @override
+  Future<void> clearPairingSession() => _removeOrThrow(_kPairingSession);
+
   // ─── Track ──────────────────────────────────────────────────────────────────
   @override
   String? getSelectedTrack() => _prefs.getString(_kTrack);
@@ -92,6 +149,9 @@ class MemorizationPlusLocalDatasourceImpl
   @override
   Future<void> saveSelectedTrack(String track) =>
       _setStringOrThrow(_kTrack, track);
+
+  @override
+  Future<void> clearSelectedTrack() => _removeOrThrow(_kTrack);
 
   // ─── Review records ─────────────────────────────────────────────────────────
   @override
@@ -233,12 +293,24 @@ class MemorizationPlusLocalDatasourceImpl
       _setStringOrThrow(_kCustomPlan, jsonEncode(plan.toJson()));
 
   @override
-  Future<void> deleteCustomPlan() async {
-    final removed = await _prefs.remove(_kCustomPlan);
-    if (!removed) {
-      throw StateError('Failed to delete custom plan');
+  Future<void> deleteCustomPlan() => _removeOrThrow(_kCustomPlan);
+
+  // ─── Smart memorization settings ───────────────────────────────────────────
+  @override
+  Future<SmartMemorizationSettingsModel> getSmartSettings() async {
+    final raw = _prefs.getString(_kSmartSettings);
+    if (raw == null) {
+      final customPlan = await getCustomPlan();
+      return SmartMemorizationSettingsModel(customPlan: customPlan);
     }
+    final parsed = _tryParse(raw, SmartMemorizationSettingsModel.fromJson);
+    if (parsed != null) return parsed;
+    return const SmartMemorizationSettingsModel();
   }
+
+  @override
+  Future<void> saveSmartSettings(SmartMemorizationSettingsModel settings) =>
+      _setStringOrThrow(_kSmartSettings, jsonEncode(settings.toJson()));
 
   // ─── Parent mode toggle ─────────────────────────────────────────────────────
   @override
@@ -251,4 +323,7 @@ class MemorizationPlusLocalDatasourceImpl
       throw StateError('Failed to save parent mode');
     }
   }
+
+  @override
+  Future<void> clearIsParentMode() => _removeOrThrow(_kIsParentMode);
 }

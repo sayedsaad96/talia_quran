@@ -1100,4 +1100,100 @@ class AppLocalizationsAr extends AppLocalizations {
     );
     return '$count $_temp0';
   }
+
+  @override
+  String get memorizationPathReset => 'تمت إعادة ضبط مسار الحفظ';
+
+  @override
+  String get resetMemorizationPath => 'إعادة ضبط / تغيير المسار';
+
+  @override
+  String get linkGuardianNow => 'ربط ولي الأمر الآن';
+
+  @override
+  String get continueWithoutGuardian => 'المتابعة بدون ولي أمر';
+
+  @override
+  String get guardianCodeExpired => 'انتهت صلاحية الرمز';
+
+  @override
+  String get guardianCodeAlreadyUsed => 'تم استخدام الرمز مسبقاً';
+
+  @override
+  String get parentGuardianMode => 'أنا ولي أمر';
+
+  @override
+  String get qcfPocTitle => 'تجربة عرض QCF';
+
+  @override
+  String get qcfPocIntro =>
+      'شاشة مؤقتة لاختبار العرض البصري للقرآن داخل منطقة الحفظ.';
+
+  @override
+  String get qcfPocNoProduction =>
+      'هذه الشاشة لا تغيّر منطق الحفظ أو حالة الحفظ أو التقدم أو القفل أو نقاط التحقق.';
+
+  @override
+  String get qcfPocVisualOnly =>
+      'يُستخدم qcf_quran_plus هنا لعرض آيات القرآن بصرياً فقط.';
+
+  @override
+  String get qcfPocSingleVerse => 'آية واحدة';
+
+  @override
+  String get qcfPocMultipleVerses => 'عدة آيات';
+
+  @override
+  String get qcfPocLastVerse => 'آخر آية';
+
+  @override
+  String get qcfPocFullPage => 'صفحة مصحف كاملة';
+
+  @override
+  String get qcfPocFindings => 'النتائج';
+
+  @override
+  String get qcfPocSupported => 'مدعوم';
+
+  @override
+  String get qcfPocLimited => 'محدود';
+
+  @override
+  String get qcfPocUnsupported => 'غير مدعوم';
+
+  @override
+  String get qcfPocStatus => 'الحالة';
+
+  @override
+  String get qcfPocAlBaqarah255 => 'البقرة ٢٥٥';
+
+  @override
+  String get qcfPocAlFatihah => 'الفاتحة ١-٧';
+
+  @override
+  String get qcfPocAlIkhlas => 'الإخلاص ١-٤';
+
+  @override
+  String get qcfPocAshSharh8 => 'الشرح ٨';
+
+  @override
+  String get qcfPocFullPageSample => 'معاينة صفحة المصحف ١';
+
+  @override
+  String get qcfPocVerseSupported => 'تظهر الآية بصرياً باستخدام أدوات QCF.';
+
+  @override
+  String get qcfPocMultiVerseSupported =>
+      'تظهر الآيات المجموعة بصرياً من السورة نفسها.';
+
+  @override
+  String get qcfPocFullPageSupported =>
+      'عرض الصفحة الكاملة متاح داخل معاينة محددة.';
+
+  @override
+  String get qcfPocNoLimitations => 'لم تظهر قيود في هذه التجربة المعزولة.';
+
+  @override
+  String get qcfPocLimitationInstruction =>
+      'يجب مراجعة أي قيد يظهر هنا قبل تغيير شاشات الحفظ الفعلية.';
 }

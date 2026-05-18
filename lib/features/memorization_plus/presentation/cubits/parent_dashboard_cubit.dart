@@ -148,11 +148,22 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
   }
 
   Future<void> acceptRemoteToken(String token, {required int surahId}) async {
-    emit(const ParentDashboardLoading());
-    final result = await _remoteLink.acceptChildLinkToken(token);
+    // T054: Emit typed linking state so the UI can show targeted feedback.
+    emit(ParentDashboardLinking(surahId: surahId));
+    final result = await _remoteLink.acceptGuardianPairingCode(token);
     await result.fold(
       (failure) async => emit(ParentDashboardError(failure.message)),
       (_) async => refresh(surahId: surahId),
+    );
+  }
+
+  Future<void> disableParentMode({required int surahId}) async {
+    // T054: Emit typed unlinking state so the UI can show targeted feedback.
+    emit(ParentDashboardUnlinking(surahId: surahId));
+    final result = await _parentAccess.setParentGuardianMode(false);
+    await result.fold(
+      (failure) async => emit(ParentDashboardError(failure.message)),
+      (_) async => load(surahId: surahId),
     );
   }
 

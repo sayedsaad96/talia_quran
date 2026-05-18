@@ -41,8 +41,20 @@ class _TrackSelectionView extends StatelessWidget {
           : AppColors.lightBackground,
       body: BlocConsumer<TrackSelectionCubit, TrackSelectionState>(
         listener: (context, state) {
-          if (state is TrackSelectionLoaded && state.hasTrack) {
-            unawaited(_navigateToTrack(context, state.track!, replace: true));
+          if (state is TrackSelectionAdultReady) {
+            unawaited(
+              _navigateToTrack(
+                context,
+                MemorizationTrack.adults,
+                replace: true,
+              ),
+            );
+          } else if (state is TrackSelectionChildReady) {
+            unawaited(
+              _navigateToTrack(context, MemorizationTrack.kids, replace: true),
+            );
+          } else if (state is TrackSelectionGuardianOnboardingRequired) {
+            context.go('/memorization-plus/guardian-linking');
           } else if (state is TrackSelectionError) {
             ScaffoldMessenger.of(
               context,
@@ -50,228 +62,56 @@ class _TrackSelectionView extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          if (!editMode && state is TrackSelectionLoaded && state.hasTrack) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (context.mounted) {
-                unawaited(
-                  _navigateToTrack(context, state.track!, replace: true),
-                );
-              }
-            });
+          if (state is TrackSelectionInitial ||
+              state is TrackSelectionSaving ||
+              state is TrackSelectionAdultReady ||
+              state is TrackSelectionChildReady ||
+              state is TrackSelectionGuardianOnboardingRequired) {
             return const Center(child: CircularProgressIndicator());
           }
 
           return CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              expandedHeight: 180,
-              pinned: true,
-              backgroundColor: isDark
-                  ? AppColors.darkBackground
-                  : AppColors.lightBackground,
-              elevation: 0,
-              flexibleSpace: FlexibleSpaceBar(
-                collapseMode: CollapseMode.pin,
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: isDark
-                        ? AppColors.heroGradientDark
-                        : AppColors.heroGradientLight,
-                  ),
-                  child: SafeArea(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.pagePadding,
-                        AppSpacing.xl,
-                        AppSpacing.pagePadding,
-                        AppSpacing.md,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            editMode ? 'تعديل خطة الحفظ' : 'نظام الحفظ الذكي',
-                            style: AppTypography.displaySmall.copyWith(
-                              color: Colors.white,
-                              fontFamily: 'Amiri',
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            editMode
-                                ? 'يمكنك تغيير المسار أو الخطة الآن'
-                                : 'Smart Memorization System',
-                            style: AppTypography.bodyMedium.copyWith(
-                              color: Colors.white70,
-                            ),
-                          ),
-                        ],
-                      ),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 180,
+                pinned: true,
+                backgroundColor: isDark
+                    ? AppColors.darkBackground
+                    : AppColors.lightBackground,
+                elevation: 0,
+                flexibleSpace: FlexibleSpaceBar(
+                  collapseMode: CollapseMode.pin,
+                  background: Container(
+                    decoration: BoxDecoration(
+                      gradient: isDark
+                          ? AppColors.heroGradientDark
+                          : AppColors.heroGradientLight,
                     ),
-                  ),
-                ),
-              ),
-            ),
-            SliverPadding(
-              padding: const EdgeInsets.all(AppSpacing.pagePadding),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  Text(
-                    editMode ? 'اختر خطة جديدة' : 'اختر مسارك',
-                    style: AppTypography.headlineSmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextPrimary
-                          : AppColors.lightTextPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'يمكنك التغيير في أي وقت من الإعدادات',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  _TrackCard(
-                    track: MemorizationTrack.adults,
-                    isDark: isDark,
-                    titleAr: 'مسار الكبار',
-                    titleEn: 'Adults Track',
-                    description:
-                        'خطة يومية مدروسة: حفظ جديد + مراجعة قريبة + مراجعة بعيدة مع تقييم ذاتي وجدولة تكيّفية',
-                    icon: Icons.school_rounded,
-                    gradient: [
-                      AppColors.primary.withValues(alpha: 0.9),
-                      const Color(0xFF1A3A5C),
-                    ],
-                    features: const [
-                      '📚 3–5 آيات جديدة يومياً',
-                      '🔄 مراجعة قريبة (آخر 5 أيام)',
-                      '📅 مراجعة بعيدة (تكرار ذكي)',
-                      '⭐ تقييم ذاتي: ممتاز / متوسط / ضعيف',
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  _TrackCard(
-                    track: MemorizationTrack.kids,
-                    isDark: isDark,
-                    titleAr: 'مسار الأطفال والمبتدئين',
-                    titleEn: 'Kids & Beginners Track',
-                    description:
-                        'تعلم ممتع مع الاستماع والتكرار والمكافآت والنجوم لتشجيع الأطفال على الحفظ',
-                    icon: Icons.child_care_rounded,
-                    gradient: const [Color(0xFF2D8E4C), Color(0xFF1A6B5A)],
-                    features: const [
-                      '🎧 استمع وكرر تلقائياً',
-                      '⭐ نجوم ومكافآت',
-                      '🎮 مستويات ونقاط',
-                      '🔊 تشغيل تلقائي للآية',
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // ── Custom Plan Card ──
-                  GestureDetector(
-                    onTap: () => context.push('/memorization-plus/custom-plan'),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [Color(0xFF6C3483), Color(0xFF4A235A)],
-                        ),
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusXl,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(
-                              0xFF6C3483,
-                            ).withValues(alpha: 0.35),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                      ),
+                    child: SafeArea(
                       child: Padding(
-                        padding: const EdgeInsets.all(AppSpacing.xl),
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.pagePadding,
+                          AppSpacing.xl,
+                          AppSpacing.pagePadding,
+                          AppSpacing.md,
+                        ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
-                                    borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusMd,
-                                    ),
-                                  ),
-                                  child: const Icon(
-                                    Icons.dashboard_customize_rounded,
-                                    color: Colors.white,
-                                    size: 28,
-                                  ),
-                                ),
-                                const SizedBox(width: AppSpacing.md),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'خطة مخصصة',
-                                        style: AppTypography.titleLarge
-                                            .copyWith(
-                                              color: Colors.white,
-                                              fontFamily: 'Amiri',
-                                              fontWeight: FontWeight.w700,
-                                            ),
-                                      ),
-                                      Text(
-                                        'Custom Plan',
-                                        style: AppTypography.bodySmall.copyWith(
-                                          color: Colors.white70,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const Icon(
-                                  Icons.arrow_forward_ios_rounded,
-                                  color: Colors.white70,
-                                  size: 16,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppSpacing.md),
                             Text(
-                              'صمّم خطة حفظ تناسب قدراتك وجدولك الزمني: حدد السور والآيات ومستوى الصعوبة وأيام الحفظ والمراجعة بكل حرية',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: Colors.white.withValues(alpha: 0.85),
-                                height: 1.6,
+                              editMode ? 'تعديل خطة الحفظ' : 'نظام الحفظ الذكي',
+                              style: AppTypography.displaySmall.copyWith(
+                                color: Colors.white,
                                 fontFamily: 'Amiri',
                               ),
-                              textDirection: TextDirection.rtl,
                             ),
-                            const SizedBox(height: AppSpacing.md),
-                            ...[
-                              '✏️ تحكم كامل بعدد الآيات والسور',
-                              '📅 جدول مرن حسب أيامك المتاحة',
-                              '⚡ مستوى صعوبة قابل للتعديل',
-                              '🔁 إعدادات مراجعة متقدمة',
-                            ].map(
-                              (f) => Padding(
-                                padding: const EdgeInsets.only(bottom: 6),
-                                child: Text(
-                                  f,
-                                  style: AppTypography.labelMedium.copyWith(
-                                    color: Colors.white,
-                                  ),
-                                ),
+                            const SizedBox(height: 4),
+                            Text(
+                              editMode
+                                  ? 'يمكنك تغيير المسار أو الخطة الآن'
+                                  : 'Smart Memorization System',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: Colors.white70,
                               ),
                             ),
                           ],
@@ -279,11 +119,186 @@ class _TrackSelectionView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 100),
-                ]),
+                ),
               ),
-            ),
-          ],
+              SliverPadding(
+                padding: const EdgeInsets.all(AppSpacing.pagePadding),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    Text(
+                      editMode ? 'اختر خطة جديدة' : 'اختر مسارك',
+                      style: AppTypography.headlineSmall.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'يمكنك التغيير في أي وقت من الإعدادات',
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    _TrackCard(
+                      track: MemorizationTrack.adults,
+                      isDark: isDark,
+                      titleAr: 'مسار الكبار',
+                      titleEn: 'Adults Track',
+                      description:
+                          'خطة يومية مدروسة: حفظ جديد + مراجعة قريبة + مراجعة بعيدة مع تقييم ذاتي وجدولة تكيّفية',
+                      icon: Icons.school_rounded,
+                      gradient: [
+                        AppColors.primary.withValues(alpha: 0.9),
+                        const Color(0xFF1A3A5C),
+                      ],
+                      features: const [
+                        '📚 3–5 آيات جديدة يومياً',
+                        '🔄 مراجعة قريبة (آخر 5 أيام)',
+                        '📅 مراجعة بعيدة (تكرار ذكي)',
+                        '⭐ تقييم ذاتي: ممتاز / متوسط / ضعيف',
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _TrackCard(
+                      track: MemorizationTrack.kids,
+                      isDark: isDark,
+                      titleAr: 'مسار الأطفال والمبتدئين',
+                      titleEn: 'Kids & Beginners Track',
+                      description:
+                          'تعلم ممتع مع الاستماع والتكرار والمكافآت والنجوم لتشجيع الأطفال على الحفظ',
+                      icon: Icons.child_care_rounded,
+                      gradient: const [Color(0xFF2D8E4C), Color(0xFF1A6B5A)],
+                      features: const [
+                        '🎧 استمع وكرر تلقائياً',
+                        '⭐ نجوم ومكافآت',
+                        '🎮 مستويات ونقاط',
+                        '🔊 تشغيل تلقائي للآية',
+                      ],
+                    ),
+                    if (editMode) ...[
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // ── Custom Plan Card ──
+                      GestureDetector(
+                        onTap: () =>
+                            context.push('/memorization-plus/custom-plan'),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF6C3483), Color(0xFF4A235A)],
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusXl,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFF6C3483,
+                                ).withValues(alpha: 0.35),
+                                blurRadius: 20,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.xl),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.2,
+                                        ),
+                                        borderRadius: BorderRadius.circular(
+                                          AppSpacing.radiusMd,
+                                        ),
+                                      ),
+                                      child: const Icon(
+                                        Icons.dashboard_customize_rounded,
+                                        color: Colors.white,
+                                        size: 28,
+                                      ),
+                                    ),
+                                    const SizedBox(width: AppSpacing.md),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'خطة مخصصة',
+                                            style: AppTypography.titleLarge
+                                                .copyWith(
+                                                  color: Colors.white,
+                                                  fontFamily: 'Amiri',
+                                                  fontWeight: FontWeight.w700,
+                                                ),
+                                          ),
+                                          Text(
+                                            'Custom Plan',
+                                            style: AppTypography.bodySmall
+                                                .copyWith(
+                                                  color: Colors.white70,
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      color: Colors.white70,
+                                      size: 16,
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                Text(
+                                  'صمّم خطة حفظ تناسب قدراتك وجدولك الزمني: حدد السور والآيات ومستوى الصعوبة وأيام الحفظ والمراجعة بكل حرية',
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.85),
+                                    height: 1.6,
+                                    fontFamily: 'Amiri',
+                                  ),
+                                  textDirection: TextDirection.rtl,
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                ...[
+                                  '✏️ تحكم كامل بعدد الآيات والسور',
+                                  '📅 جدول مرن حسب أيامك المتاحة',
+                                  '⚡ مستوى صعوبة قابل للتعديل',
+                                  '🔁 إعدادات مراجعة متقدمة',
+                                ].map(
+                                  (f) => Padding(
+                                    padding: const EdgeInsets.only(bottom: 6),
+                                    child: Text(
+                                      f,
+                                      style: AppTypography.labelMedium.copyWith(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 100),
+                  ]),
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -293,9 +308,9 @@ class _TrackSelectionView extends StatelessWidget {
   // BUG-9 FIX: load last active surahId so user resumes from where they left off
   Future<void> _navigateToTrack(
     BuildContext context,
-    MemorizationTrack track,
-    {required bool replace}
-  ) async {
+    MemorizationTrack track, {
+    required bool replace,
+  }) async {
     final cubit = context.read<TrackSelectionCubit>();
     final lastSurahId = await cubit.getLastActiveSurahId();
 

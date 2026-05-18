@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/qcf_hifz_verse_view.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../cubits/kids_mode_cubit.dart';
 
@@ -355,18 +356,15 @@ class _AyahCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text(
-            state.ayahText,
-            style: AppTypography.displaySmall.copyWith(
-              color: isDark
-                  ? AppColors.darkTextPrimary
-                  : AppColors.lightTextPrimary,
-              fontFamily: 'Amiri',
-              height: 1.8,
-              fontSize: 26,
-            ),
+          // T016: replaced with QcfHifzVerseView (single mode)
+          QcfHifzVerseView(
+            surahNumber: state.surahId,
+            verseNumber: state.ayahNumber,
+            fallbackText: state.ayahText,
+            isUnlocked: true,
+            isMemorized: state.isCompleted,
+            displayMode: HifzVerseDisplayMode.single,
             textAlign: TextAlign.right,
-            textDirection: TextDirection.rtl,
           ),
         ],
       ),

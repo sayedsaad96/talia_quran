@@ -22,7 +22,11 @@ const DailyActivityIsarSchema = CollectionSchema(
       name: r'activityCount',
       type: IsarType.long,
     ),
-    r'dayKey': PropertySchema(id: 1, name: r'dayKey', type: IsarType.long),
+    r'dayKey': PropertySchema(
+      id: 1,
+      name: r'dayKey',
+      type: IsarType.long,
+    )
   },
   estimateSize: _dailyActivityIsarEstimateSize,
   serialize: _dailyActivityIsarSerialize,
@@ -40,9 +44,9 @@ const DailyActivityIsarSchema = CollectionSchema(
           name: r'dayKey',
           type: IndexType.value,
           caseSensitive: false,
-        ),
+        )
       ],
-    ),
+    )
   },
   links: {},
   embeddedSchemas: {},
@@ -105,16 +109,12 @@ Id _dailyActivityIsarGetId(DailyActivityIsar object) {
 }
 
 List<IsarLinkBase<dynamic>> _dailyActivityIsarGetLinks(
-  DailyActivityIsar object,
-) {
+    DailyActivityIsar object) {
   return [];
 }
 
 void _dailyActivityIsarAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  DailyActivityIsar object,
-) {
+    IsarCollection<dynamic> col, Id id, DailyActivityIsar object) {
   object.id = id;
 }
 
@@ -167,10 +167,8 @@ extension DailyActivityIsarByIndex on IsarCollection<DailyActivityIsar> {
     return putAllByIndex(r'dayKey', objects);
   }
 
-  List<Id> putAllByDayKeySync(
-    List<DailyActivityIsar> objects, {
-    bool saveLinks = true,
-  }) {
+  List<Id> putAllByDayKeySync(List<DailyActivityIsar> objects,
+      {bool saveLinks = true}) {
     return putAllByIndexSync(r'dayKey', objects, saveLinks: saveLinks);
   }
 }
@@ -195,14 +193,17 @@ extension DailyActivityIsarQueryWhereSort
 extension DailyActivityIsarQueryWhere
     on QueryBuilder<DailyActivityIsar, DailyActivityIsar, QWhereClause> {
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterWhereClause>
-  idEqualTo(Id id) {
+      idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterWhereClause>
-  idNotEqualTo(Id id) {
+      idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -225,7 +226,7 @@ extension DailyActivityIsarQueryWhere
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterWhereClause>
-  idGreaterThan(Id id, {bool include = false}) {
+      idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -234,7 +235,7 @@ extension DailyActivityIsarQueryWhere
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterWhereClause>
-  idLessThan(Id id, {bool include = false}) {
+      idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -243,121 +244,112 @@ extension DailyActivityIsarQueryWhere
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterWhereClause>
-  idBetween(
+      idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterWhereClause>
-  dayKeyEqualTo(int dayKey) {
+      dayKeyEqualTo(int dayKey) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'dayKey', value: [dayKey]),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'dayKey',
+        value: [dayKey],
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterWhereClause>
-  dayKeyNotEqualTo(int dayKey) {
+      dayKeyNotEqualTo(int dayKey) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'dayKey',
-                lower: [],
-                upper: [dayKey],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'dayKey',
-                lower: [dayKey],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'dayKey',
+              lower: [],
+              upper: [dayKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'dayKey',
+              lower: [dayKey],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'dayKey',
-                lower: [dayKey],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'dayKey',
-                lower: [],
-                upper: [dayKey],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'dayKey',
+              lower: [dayKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'dayKey',
+              lower: [],
+              upper: [dayKey],
+              includeUpper: false,
+            ));
       }
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterWhereClause>
-  dayKeyGreaterThan(int dayKey, {bool include = false}) {
+      dayKeyGreaterThan(
+    int dayKey, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'dayKey',
-          lower: [dayKey],
-          includeLower: include,
-          upper: [],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'dayKey',
+        lower: [dayKey],
+        includeLower: include,
+        upper: [],
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterWhereClause>
-  dayKeyLessThan(int dayKey, {bool include = false}) {
+      dayKeyLessThan(
+    int dayKey, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'dayKey',
-          lower: [],
-          upper: [dayKey],
-          includeUpper: include,
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'dayKey',
+        lower: [],
+        upper: [dayKey],
+        includeUpper: include,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterWhereClause>
-  dayKeyBetween(
+      dayKeyBetween(
     int lowerDayKey,
     int upperDayKey, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'dayKey',
-          lower: [lowerDayKey],
-          includeLower: includeLower,
-          upper: [upperDayKey],
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'dayKey',
+        lower: [lowerDayKey],
+        includeLower: includeLower,
+        upper: [upperDayKey],
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -365,167 +357,170 @@ extension DailyActivityIsarQueryWhere
 extension DailyActivityIsarQueryFilter
     on QueryBuilder<DailyActivityIsar, DailyActivityIsar, QFilterCondition> {
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  activityCountEqualTo(int value) {
+      activityCountEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'activityCount', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'activityCount',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  activityCountGreaterThan(int value, {bool include = false}) {
+      activityCountGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'activityCount',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'activityCount',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  activityCountLessThan(int value, {bool include = false}) {
+      activityCountLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'activityCount',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'activityCount',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  activityCountBetween(
+      activityCountBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'activityCount',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'activityCount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  dayKeyEqualTo(int value) {
+      dayKeyEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'dayKey', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dayKey',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  dayKeyGreaterThan(int value, {bool include = false}) {
+      dayKeyGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'dayKey',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dayKey',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  dayKeyLessThan(int value, {bool include = false}) {
+      dayKeyLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'dayKey',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dayKey',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  dayKeyBetween(
+      dayKeyBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'dayKey',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dayKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  idEqualTo(Id value) {
+      idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  idGreaterThan(Id value, {bool include = false}) {
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  idLessThan(Id value, {bool include = false}) {
+      idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
-  idBetween(
+      idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -539,28 +534,28 @@ extension DailyActivityIsarQueryLinks
 extension DailyActivityIsarQuerySortBy
     on QueryBuilder<DailyActivityIsar, DailyActivityIsar, QSortBy> {
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
-  sortByActivityCount() {
+      sortByActivityCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'activityCount', Sort.asc);
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
-  sortByActivityCountDesc() {
+      sortByActivityCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'activityCount', Sort.desc);
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
-  sortByDayKey() {
+      sortByDayKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dayKey', Sort.asc);
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
-  sortByDayKeyDesc() {
+      sortByDayKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dayKey', Sort.desc);
     });
@@ -570,28 +565,28 @@ extension DailyActivityIsarQuerySortBy
 extension DailyActivityIsarQuerySortThenBy
     on QueryBuilder<DailyActivityIsar, DailyActivityIsar, QSortThenBy> {
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
-  thenByActivityCount() {
+      thenByActivityCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'activityCount', Sort.asc);
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
-  thenByActivityCountDesc() {
+      thenByActivityCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'activityCount', Sort.desc);
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
-  thenByDayKey() {
+      thenByDayKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dayKey', Sort.asc);
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
-  thenByDayKeyDesc() {
+      thenByDayKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dayKey', Sort.desc);
     });
@@ -604,7 +599,7 @@ extension DailyActivityIsarQuerySortThenBy
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
-  thenByIdDesc() {
+      thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
@@ -614,14 +609,14 @@ extension DailyActivityIsarQuerySortThenBy
 extension DailyActivityIsarQueryWhereDistinct
     on QueryBuilder<DailyActivityIsar, DailyActivityIsar, QDistinct> {
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QDistinct>
-  distinctByActivityCount() {
+      distinctByActivityCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'activityCount');
     });
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QDistinct>
-  distinctByDayKey() {
+      distinctByDayKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'dayKey');
     });
@@ -637,7 +632,7 @@ extension DailyActivityIsarQueryProperty
   }
 
   QueryBuilder<DailyActivityIsar, int, QQueryOperations>
-  activityCountProperty() {
+      activityCountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'activityCount');
     });

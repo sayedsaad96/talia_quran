@@ -1105,4 +1105,102 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return '$count $_temp0';
   }
+
+  @override
+  String get memorizationPathReset => 'Memorization path has been reset';
+
+  @override
+  String get resetMemorizationPath => 'Reset / Change path';
+
+  @override
+  String get linkGuardianNow => 'Link guardian now';
+
+  @override
+  String get continueWithoutGuardian => 'Continue without guardian';
+
+  @override
+  String get guardianCodeExpired => 'Code expired';
+
+  @override
+  String get guardianCodeAlreadyUsed => 'Code already used';
+
+  @override
+  String get parentGuardianMode => 'I am a parent/guardian';
+
+  @override
+  String get qcfPocTitle => 'QCF rendering proof of concept';
+
+  @override
+  String get qcfPocIntro =>
+      'Temporary visual test screen for Quran rendering inside the memorization area.';
+
+  @override
+  String get qcfPocNoProduction =>
+      'This screen does not change Hifz logic, memorization state, progress, locks, unlocks, or checkpoints.';
+
+  @override
+  String get qcfPocVisualOnly =>
+      'qcf_quran_plus is used here only for visual Quran rendering.';
+
+  @override
+  String get qcfPocSingleVerse => 'Single verse';
+
+  @override
+  String get qcfPocMultipleVerses => 'Multiple verses';
+
+  @override
+  String get qcfPocLastVerse => 'Last verse';
+
+  @override
+  String get qcfPocFullPage => 'Full mushaf page';
+
+  @override
+  String get qcfPocFindings => 'Findings';
+
+  @override
+  String get qcfPocSupported => 'Supported';
+
+  @override
+  String get qcfPocLimited => 'Limited';
+
+  @override
+  String get qcfPocUnsupported => 'Unsupported';
+
+  @override
+  String get qcfPocStatus => 'Status';
+
+  @override
+  String get qcfPocAlBaqarah255 => 'Al-Baqarah 255';
+
+  @override
+  String get qcfPocAlFatihah => 'Al-Fatiha 1-7';
+
+  @override
+  String get qcfPocAlIkhlas => 'Al-Ikhlas 1-4';
+
+  @override
+  String get qcfPocAshSharh8 => 'Ash-Sharh 8';
+
+  @override
+  String get qcfPocFullPageSample => 'Mushaf page 1 preview';
+
+  @override
+  String get qcfPocVerseSupported =>
+      'Verse text renders visually with QCF helpers.';
+
+  @override
+  String get qcfPocMultiVerseSupported =>
+      'Grouped verses render visually from the same surah.';
+
+  @override
+  String get qcfPocFullPageSupported =>
+      'Full page rendering is available in a constrained preview.';
+
+  @override
+  String get qcfPocNoLimitations =>
+      'No limitation observed in this isolated POC.';
+
+  @override
+  String get qcfPocLimitationInstruction =>
+      'Any limitation listed here must be reviewed before production Hifz screens change.';
 }

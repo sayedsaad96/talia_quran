@@ -4,6 +4,126 @@ import '../../../../core/utils/usecase.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/memorization_plus_repository.dart';
 
+// ─── Memorization identity use-cases ─────────────────────────────────────────
+
+class GetMemorizationProfileUsecase
+    implements UseCaseNoParams<MemorizationProfile> {
+  const GetMemorizationProfileUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> call() =>
+      _repository.getMemorizationProfile();
+}
+
+class SelectMemorizationPathUsecase
+    implements UseCase<MemorizationProfile, MemorizationPath> {
+  const SelectMemorizationPathUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> call(MemorizationPath params) =>
+      _repository.selectMemorizationPath(params);
+}
+
+class ContinueWithoutGuardianUsecase
+    implements UseCaseNoParams<MemorizationProfile> {
+  const ContinueWithoutGuardianUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> call() =>
+      _repository.continueWithoutGuardian();
+}
+
+class CreateGuardianPairingSessionUsecase
+    implements UseCaseNoParams<PairingSession> {
+  const CreateGuardianPairingSessionUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, PairingSession>> call() =>
+      _repository.createGuardianPairingSession();
+}
+
+class AcceptGuardianPairingCodeUsecase
+    implements UseCase<MemorizationProfile, String> {
+  const AcceptGuardianPairingCodeUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> call(String params) =>
+      _repository.acceptGuardianPairingCode(params);
+}
+
+class RefreshPairingSessionUsecase implements UseCaseNoParams<PairingSession?> {
+  const RefreshPairingSessionUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, PairingSession?>> call() =>
+      _repository.refreshPairingSession();
+}
+
+class UnlinkGuardianUsecase implements UseCaseNoParams<MemorizationProfile> {
+  const UnlinkGuardianUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> call() =>
+      _repository.unlinkGuardian();
+}
+
+class SetParentGuardianModeUsecase
+    implements UseCase<MemorizationProfile, bool> {
+  const SetParentGuardianModeUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> call(bool params) =>
+      _repository.setParentGuardianMode(params);
+}
+
+class RefreshChildGuardianLinkUsecase
+    implements UseCaseNoParams<MemorizationProfile> {
+  const RefreshChildGuardianLinkUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> call() =>
+      _repository.refreshChildGuardianLink();
+}
+
+class ResetMemorizationIdentityUsecase
+    implements UseCaseNoParams<MemorizationProfile> {
+  const ResetMemorizationIdentityUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> call() =>
+      _repository.resetMemorizationIdentity();
+}
+
+class GetSmartMemorizationSettingsUsecase
+    implements UseCaseNoParams<SmartMemorizationSettings> {
+  const GetSmartMemorizationSettingsUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, SmartMemorizationSettings>> call() =>
+      _repository.getSmartSettings();
+}
+
+class SaveSmartMemorizationSettingsUsecase
+    implements UseCase<void, SmartMemorizationSettings> {
+  const SaveSmartMemorizationSettingsUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, void>> call(SmartMemorizationSettings params) =>
+      _repository.saveSmartSettings(params);
+}
+
 // ─── GenerateDailyPlanUsecase ─────────────────────────────────────────────────
 
 class GenerateDailyPlanParams {
@@ -238,6 +358,10 @@ class ParentAccessUsecase {
 
   Future<Either<Failure, void>> reset() => _repository.resetParentAccess();
 
+  Future<Either<Failure, MemorizationProfile>> setParentGuardianMode(
+    bool value,
+  ) => _repository.setParentGuardianMode(value);
+
   Future<Either<Failure, List<ParentReward>>> saveReward(String title) =>
       _repository.saveParentReward(title);
 
@@ -254,6 +378,10 @@ class ParentRemoteLinkUsecase {
 
   Future<Either<Failure, void>> acceptChildLinkToken(String token) =>
       _repository.acceptChildLinkToken(token);
+
+  Future<Either<Failure, MemorizationProfile>> acceptGuardianPairingCode(
+    String token,
+  ) => _repository.acceptGuardianPairingCode(token);
 
   Future<Either<Failure, void>> syncKidsProgressToCloud() =>
       _repository.syncKidsProgressToCloud();

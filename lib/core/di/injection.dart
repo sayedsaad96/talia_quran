@@ -48,11 +48,13 @@ import '../../features/memorization_plus/data/repositories/memorization_plus_rep
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../features/memorization_plus/presentation/cubits/daily_plan_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/guardian_linking_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/parent_dashboard_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/track_selection_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/custom_plan_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/memorization_identity_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/quiz_cubit.dart';
 import '../../features/settings/presentation/cubits/profile_cubit.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
@@ -257,6 +259,48 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<ParentRemoteLinkUsecase>(
     () => ParentRemoteLinkUsecase(getIt<MemorizationPlusRepository>()),
   );
+  getIt.registerLazySingleton<GetMemorizationProfileUsecase>(
+    () => GetMemorizationProfileUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<SelectMemorizationPathUsecase>(
+    () => SelectMemorizationPathUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<ContinueWithoutGuardianUsecase>(
+    () => ContinueWithoutGuardianUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<CreateGuardianPairingSessionUsecase>(
+    () => CreateGuardianPairingSessionUsecase(
+      getIt<MemorizationPlusRepository>(),
+    ),
+  );
+  getIt.registerLazySingleton<AcceptGuardianPairingCodeUsecase>(
+    () => AcceptGuardianPairingCodeUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<RefreshPairingSessionUsecase>(
+    () => RefreshPairingSessionUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<UnlinkGuardianUsecase>(
+    () => UnlinkGuardianUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<SetParentGuardianModeUsecase>(
+    () => SetParentGuardianModeUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<RefreshChildGuardianLinkUsecase>(
+    () => RefreshChildGuardianLinkUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<ResetMemorizationIdentityUsecase>(
+    () => ResetMemorizationIdentityUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<GetSmartMemorizationSettingsUsecase>(
+    () => GetSmartMemorizationSettingsUsecase(
+      getIt<MemorizationPlusRepository>(),
+    ),
+  );
+  getIt.registerLazySingleton<SaveSmartMemorizationSettingsUsecase>(
+    () => SaveSmartMemorizationSettingsUsecase(
+      getIt<MemorizationPlusRepository>(),
+    ),
+  );
 
   // ─── Cubits ─────────────────────────────────────────────────────────────────
   getIt.registerFactory<ProgressCubit>(
@@ -284,6 +328,7 @@ Future<void> configureDependencies() async {
       getIt<GetHifzProgressUsecase>(),
       getIt<GetHifzPathUsecase>(),
       getIt<SaveHifzPathUsecase>(),
+      getIt<MemorizationPlusRepository>(),
     ),
   );
   getIt.registerFactory<HifzSessionCubit>(
@@ -310,6 +355,12 @@ Future<void> configureDependencies() async {
   );
   getIt.registerFactory<TrackSelectionCubit>(
     () => TrackSelectionCubit(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerFactory<GuardianLinkingCubit>(
+    () => GuardianLinkingCubit(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerFactory<MemorizationIdentityCubit>(
+    () => MemorizationIdentityCubit(repository: getIt<MemorizationPlusRepository>()),
   );
   getIt.registerFactory<DailyPlanCubit>(
     () => DailyPlanCubit(

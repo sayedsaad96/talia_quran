@@ -1,5 +1,157 @@
 import '../../domain/entities/memorization_entities.dart';
 
+// ─── MemorizationProfileModel ────────────────────────────────────────────────
+
+class MemorizationProfileModel extends MemorizationProfile {
+  const MemorizationProfileModel({
+    required super.schemaVersion,
+    required super.selectedPath,
+    required super.guardianLinkStatus,
+    required super.guardianOnboardingStatus,
+    required super.isParentGuardian,
+    required super.createdAt,
+    required super.updatedAt,
+    super.linkedChildId,
+    super.guardianId,
+  });
+
+  factory MemorizationProfileModel.empty() {
+    final profile = MemorizationProfile.empty();
+    return MemorizationProfileModel.fromEntity(profile);
+  }
+
+  factory MemorizationProfileModel.fromJson(Map<String, dynamic> json) {
+    T enumByName<T extends Enum>(List<T> values, Object? raw, T fallback) {
+      if (raw is String) {
+        return values.firstWhere((v) => v.name == raw, orElse: () => fallback);
+      }
+      if (raw is int && raw >= 0 && raw < values.length) return values[raw];
+      return fallback;
+    }
+
+    MemorizationPath? selectedPath;
+    final rawPath = json['selectedPath'];
+    if (rawPath is String) {
+      for (final path in MemorizationPath.values) {
+        if (path.name == rawPath) {
+          selectedPath = path;
+          break;
+        }
+      }
+    } else if (rawPath is int &&
+        rawPath >= 0 &&
+        rawPath < MemorizationPath.values.length) {
+      selectedPath = MemorizationPath.values[rawPath];
+    }
+
+    final now = DateTime.now();
+    return MemorizationProfileModel(
+      schemaVersion: json['schemaVersion'] as int? ?? 1,
+      selectedPath: selectedPath,
+      guardianLinkStatus: enumByName(
+        GuardianLinkStatus.values,
+        json['guardianLinkStatus'],
+        GuardianLinkStatus.none,
+      ),
+      guardianOnboardingStatus: enumByName(
+        GuardianOnboardingStatus.values,
+        json['guardianOnboardingStatus'],
+        GuardianOnboardingStatus.required,
+      ),
+      isParentGuardian: json['isParentGuardian'] as bool? ?? false,
+      linkedChildId: json['linkedChildId'] as String?,
+      guardianId: json['guardianId'] as String?,
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? now,
+      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? now,
+    );
+  }
+
+  factory MemorizationProfileModel.fromEntity(MemorizationProfile profile) =>
+      MemorizationProfileModel(
+        schemaVersion: profile.schemaVersion,
+        selectedPath: profile.selectedPath,
+        guardianLinkStatus: profile.guardianLinkStatus,
+        guardianOnboardingStatus: profile.guardianOnboardingStatus,
+        isParentGuardian: profile.isParentGuardian,
+        linkedChildId: profile.linkedChildId,
+        guardianId: profile.guardianId,
+        createdAt: profile.createdAt,
+        updatedAt: profile.updatedAt,
+      );
+
+  Map<String, dynamic> toJson() => {
+    'schemaVersion': schemaVersion,
+    'selectedPath': selectedPath?.name,
+    'guardianLinkStatus': guardianLinkStatus.name,
+    'guardianOnboardingStatus': guardianOnboardingStatus.name,
+    'isParentGuardian': isParentGuardian,
+    'linkedChildId': linkedChildId,
+    'guardianId': guardianId,
+    'createdAt': createdAt.toIso8601String(),
+    'updatedAt': updatedAt.toIso8601String(),
+  };
+}
+
+// ─── PairingSessionModel ─────────────────────────────────────────────────────
+
+class PairingSessionModel extends PairingSession {
+  const PairingSessionModel({
+    required super.id,
+    required super.pairingCode,
+    required super.qrData,
+    required super.createdAt,
+    required super.expiresAt,
+    required super.status,
+    required super.isUsed,
+    super.guardianId,
+    super.failureReason,
+  });
+
+  factory PairingSessionModel.fromJson(Map<String, dynamic> json) {
+    final status = PairingSessionStatus.values.firstWhere(
+      (value) => value.name == (json['status'] as String? ?? 'pending'),
+      orElse: () => PairingSessionStatus.pending,
+    );
+    final now = DateTime.now();
+    return PairingSessionModel(
+      id: json['id'] as String? ?? now.microsecondsSinceEpoch.toString(),
+      pairingCode: json['pairingCode'] as String? ?? '',
+      qrData: json['qrData'] as String? ?? '',
+      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? now,
+      expiresAt: DateTime.tryParse(json['expiresAt'] as String? ?? '') ?? now,
+      status: status,
+      isUsed: json['isUsed'] as bool? ?? false,
+      guardianId: json['guardianId'] as String?,
+      failureReason: json['failureReason'] as String?,
+    );
+  }
+
+  factory PairingSessionModel.fromEntity(PairingSession session) =>
+      PairingSessionModel(
+        id: session.id,
+        pairingCode: session.pairingCode,
+        qrData: session.qrData,
+        createdAt: session.createdAt,
+        expiresAt: session.expiresAt,
+        status: session.status,
+        isUsed: session.isUsed,
+        guardianId: session.guardianId,
+        failureReason: session.failureReason,
+      );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'pairingCode': pairingCode,
+    'qrData': qrData,
+    'createdAt': createdAt.toIso8601String(),
+    'expiresAt': expiresAt.toIso8601String(),
+    'status': status.name,
+    'isUsed': isUsed,
+    'guardianId': guardianId,
+    'failureReason': failureReason,
+  };
+}
+
 // ─── AyahReviewRecordModel ────────────────────────────────────────────────────
 
 class AyahReviewRecordModel extends AyahReviewRecord {
@@ -398,4 +550,47 @@ class CustomMemorizationPlanModel extends CustomMemorizationPlan {
         isActive: p.isActive,
         targetUser: p.targetUser,
       );
+}
+
+// ─── SmartMemorizationSettingsModel ─────────────────────────────────────────
+
+class SmartMemorizationSettingsModel extends SmartMemorizationSettings {
+  const SmartMemorizationSettingsModel({
+    super.dailySchedule,
+    super.reviewDays,
+    super.ayahIsolationEnabled,
+    super.customPlan,
+  });
+
+  factory SmartMemorizationSettingsModel.fromJson(Map<String, dynamic> json) =>
+      SmartMemorizationSettingsModel(
+        dailySchedule: json['dailySchedule'] as String?,
+        reviewDays: (json['reviewDays'] as List<dynamic>? ?? const [])
+            .whereType<int>()
+            .toList(),
+        ayahIsolationEnabled: json['ayahIsolationEnabled'] as bool? ?? false,
+        customPlan: json['customPlan'] is Map<String, dynamic>
+            ? CustomMemorizationPlanModel.fromJson(
+                json['customPlan'] as Map<String, dynamic>,
+              )
+            : null,
+      );
+
+  factory SmartMemorizationSettingsModel.fromEntity(
+    SmartMemorizationSettings settings,
+  ) => SmartMemorizationSettingsModel(
+    dailySchedule: settings.dailySchedule,
+    reviewDays: settings.reviewDays,
+    ayahIsolationEnabled: settings.ayahIsolationEnabled,
+    customPlan: settings.customPlan,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'dailySchedule': dailySchedule,
+    'reviewDays': reviewDays,
+    'ayahIsolationEnabled': ayahIsolationEnabled,
+    'customPlan': customPlan == null
+        ? null
+        : CustomMemorizationPlanModel.fromEntity(customPlan!).toJson(),
+  };
 }

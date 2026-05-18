@@ -3,7 +3,9 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:dartz/dartz.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 import '../../../../features/quran/domain/entities/quran_entities.dart';
@@ -23,6 +25,340 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
 
   final _scheduler = const ScheduleNextReviewUsecase();
   SupabaseClient get _supabase => Supabase.instance.client;
+
+  // ─── Identity profile ──────────────────────────────────────────────────────
+  @override
+  Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() async {
+    try {
+      return Right(await _loadProfile());
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> selectMemorizationPath(
+    MemorizationPath path,
+  ) async {
+    try {
+      final current = await _loadProfile();
+      final selected = current.copyWith(
+        selectedPath: path,
+        guardianLinkStatus: GuardianLinkStatus.none,
+        guardianOnboardingStatus: path == MemorizationPath.child
+            ? GuardianOnboardingStatus.required
+            : GuardianOnboardingStatus.completed,
+        isParentGuardian: path == MemorizationPath.adult
+            ? current.isParentGuardian
+            : false,
+        clearGuardianId: true,
+        clearLinkedChildId: path == MemorizationPath.child,
+      );
+      final saved = await _saveProfile(selected);
+      await _datasource.saveSelectedTrack(saved.legacyTrack!.name);
+      if (path == MemorizationPath.child) {
+        await _datasource.setIsParentMode(false);
+      }
+      return Right(saved);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> continueWithoutGuardian() async {
+    try {
+      final profile = await _loadProfile();
+      if (!profile.isChild) {
+        return const Left(
+          CacheFailure('Guardian linking is only for children'),
+        );
+      }
+      final saved = await _saveProfile(
+        profile.copyWith(
+          guardianLinkStatus: GuardianLinkStatus.none,
+          guardianOnboardingStatus: GuardianOnboardingStatus.skipped,
+          clearGuardianId: true,
+        ),
+      );
+      await _datasource.clearPairingSession();
+      return Right(saved);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PairingSession>> createGuardianPairingSession() async {
+    try {
+      final profile = await _loadProfile();
+      if (!profile.isChild) {
+        return const Left(
+          CacheFailure('Guardian linking is only for children'),
+        );
+      }
+      if (profile.isGuardianLinked) {
+        return const Left(
+          CacheFailure('Unlink the current guardian before linking another'),
+        );
+      }
+      final tokenResult = await createChildLinkToken();
+      return await tokenResult.fold((failure) async => Left(failure), (
+        token,
+      ) async {
+        final now = DateTime.now();
+        final session = PairingSession(
+          id: now.microsecondsSinceEpoch.toString(),
+          pairingCode: token,
+          qrData: 'talia-kids-link:$token',
+          createdAt: now,
+          expiresAt: now.add(const Duration(minutes: 15)),
+          status: PairingSessionStatus.pending,
+          isUsed: false,
+        );
+        await _datasource.savePairingSession(
+          PairingSessionModel.fromEntity(session),
+        );
+        await _saveProfile(
+          profile.copyWith(
+            guardianLinkStatus: GuardianLinkStatus.pending,
+            guardianOnboardingStatus: GuardianOnboardingStatus.required,
+          ),
+        );
+        return Right(session);
+      });
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> acceptGuardianPairingCode(
+    String codeOrQrData,
+  ) async {
+    try {
+      final result = await acceptChildLinkToken(codeOrQrData);
+      return await result.fold((failure) async => Left(failure), (_) async {
+        final userId = _supabase.auth.currentUser?.id;
+        final profile = await _loadProfile();
+        final saved = await _saveProfile(
+          profile.isChild
+              ? profile.copyWith(
+                  guardianLinkStatus: GuardianLinkStatus.linked,
+                  guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+                  guardianId: userId ?? 'linked_guardian',
+                )
+              : profile.copyWith(
+                  isParentGuardian: true,
+                  linkedChildId: profile.linkedChildId ?? 'linked_child',
+                ),
+        );
+        await _datasource.setIsParentMode(saved.isParentGuardian);
+        final session = await _datasource.getPairingSession();
+        if (session != null) {
+          await _datasource.savePairingSession(
+            PairingSessionModel.fromEntity(
+              session.copyWith(
+                status: PairingSessionStatus.completed,
+                isUsed: true,
+                guardianId: userId,
+              ),
+            ),
+          );
+        }
+        return Right(saved);
+      });
+    } catch (e) {
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, PairingSession?>> refreshPairingSession() async {
+    try {
+      final session = await _datasource.getPairingSession();
+      if (session == null) return const Right(null);
+      if (session.status == PairingSessionStatus.pending &&
+          DateTime.now().isAfter(session.expiresAt)) {
+        final expired = session.copyWith(
+          status: PairingSessionStatus.expired,
+          failureReason: 'Code expired',
+        );
+        await _datasource.savePairingSession(
+          PairingSessionModel.fromEntity(expired),
+        );
+        final profile = await _loadProfile();
+        if (profile.guardianLinkStatus == GuardianLinkStatus.pending) {
+          await _saveProfile(
+            profile.copyWith(guardianLinkStatus: GuardianLinkStatus.none),
+          );
+        }
+        return Right(expired);
+      }
+      return Right(session);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> unlinkGuardian() async {
+    try {
+      final profile = await _loadProfile();
+      final saved = await _saveProfile(
+        profile.copyWith(
+          guardianLinkStatus: GuardianLinkStatus.none,
+          guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+          clearGuardianId: true,
+          clearLinkedChildId: true,
+        ),
+      );
+      await _datasource.clearPairingSession();
+      return Right(saved);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MemorizationProfile>> setParentGuardianMode(
+    bool value,
+  ) async {
+    try {
+      final profile = await _loadProfile();
+      if (value && profile.selectedPath != MemorizationPath.adult) {
+        return const Left(
+          CacheFailure('Parent guardian mode is only available for adults'),
+        );
+      }
+      final saved = await _saveProfile(
+        profile.copyWith(isParentGuardian: value, clearLinkedChildId: !value),
+      );
+      await _datasource.setIsParentMode(value);
+      if (!value) {
+        await _datasource.clearPairingSession();
+      }
+      return Right(saved);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, MemorizationProfile>>
+  refreshChildGuardianLink() async {
+    try {
+      final profile = await _loadProfile();
+      if (!profile.isChild || !profile.isGuardianLinked) return Right(profile);
+      final user = _supabase.auth.currentUser;
+      if (user == null) return Right(profile);
+
+      final links = await _supabase
+          .from('parent_child_links')
+          .select('parent_user_id')
+          .eq('child_user_id', user.id)
+          .eq('status', 'active')
+          .limit(1);
+      if (links.isNotEmpty) return Right(profile);
+
+      final saved = await _saveProfile(
+        profile.copyWith(
+          guardianLinkStatus: GuardianLinkStatus.none,
+          guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+          clearGuardianId: true,
+        ),
+      );
+      return Right(saved);
+    } catch (_) {
+      return Right(await _loadProfile());
+    }
+  }
+
+  @override
+  Future<Either<Failure, MemorizationProfile>>
+  resetMemorizationIdentity() async {
+    try {
+      await _datasource.clearMemorizationProfile();
+      await _datasource.clearPairingSession();
+      await _datasource.clearSelectedTrack();
+      await _datasource.clearIsParentMode();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(AppConstants.kHifzPathMode);
+      return Right(await _loadProfile());
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, SmartMemorizationSettings>> getSmartSettings() async {
+    try {
+      return Right(await _datasource.getSmartSettings());
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> saveSmartSettings(
+    SmartMemorizationSettings settings,
+  ) async {
+    try {
+      await _datasource.saveSmartSettings(
+        SmartMemorizationSettingsModel.fromEntity(settings),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  Future<MemorizationProfile> _loadProfile() async {
+    final stored = await _datasource.getMemorizationProfile();
+    if (stored.hasSelectedPath) return stored;
+
+    final legacyTrack = _datasource.getSelectedTrack();
+    final isParent = _datasource.getIsParentMode();
+    final prefs = await SharedPreferences.getInstance();
+    final legacyHifzPath = prefs.getString(AppConstants.kHifzPathMode);
+    MemorizationPath? migratedPath;
+    if (legacyTrack == MemorizationTrack.adults.name) {
+      migratedPath = MemorizationPath.adult;
+    } else if (legacyTrack == MemorizationTrack.kids.name) {
+      migratedPath = MemorizationPath.child;
+    }
+
+    if (migratedPath == null && legacyHifzPath != null) {
+      migratedPath = legacyHifzPath == 'backward'
+          ? MemorizationPath.child
+          : MemorizationPath.adult;
+    }
+
+    if (migratedPath == null && isParent) {
+      migratedPath = MemorizationPath.adult;
+    }
+
+    if (migratedPath == null) return stored;
+    final migrated = stored.copyWith(
+      selectedPath: migratedPath,
+      guardianLinkStatus: GuardianLinkStatus.none,
+      guardianOnboardingStatus: migratedPath == MemorizationPath.child
+          ? GuardianOnboardingStatus.skipped
+          : GuardianOnboardingStatus.completed,
+      isParentGuardian: migratedPath == MemorizationPath.adult && isParent,
+    );
+    return _saveProfile(migrated);
+  }
+
+  Future<MemorizationProfile> _saveProfile(MemorizationProfile profile) async {
+    final model = MemorizationProfileModel.fromEntity(
+      profile.copyWith(updatedAt: DateTime.now()),
+    );
+    await _datasource.saveMemorizationProfile(model);
+    return model;
+  }
 
   // ─── Track ──────────────────────────────────────────────────────────────────
   @override
@@ -45,10 +381,12 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     MemorizationTrack track,
   ) async {
     try {
-      await _datasource.saveSelectedTrack(track.name);
-      if (track == MemorizationTrack.kids) {
-        await _datasource.setIsParentMode(true);
-      }
+      final path = track == MemorizationTrack.kids
+          ? MemorizationPath.child
+          : MemorizationPath.adult;
+      final result = await selectMemorizationPath(path);
+      final failure = result.fold((failure) => failure, (_) => null);
+      if (failure != null) return Left(failure);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -884,10 +1222,26 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   }
 
   // ─── Parent mode toggle ──────────────────────────────────────────────────
+  // T015: Read through MemorizationProfile so the value is always the single
+  // source of truth, not the raw legacy SharedPreferences flag.
   @override
   Either<Failure, bool> getIsParentMode() {
     try {
+      // Synchronous fast-path: check the cached datasource profile first.
+      // The profile is always written by _saveProfile which keeps the legacy
+      // flag in sync, so this is safe and avoids an async round-trip.
       return Right(_datasource.getIsParentMode());
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  /// Async variant that reads the authoritative MemorizationProfile.
+  /// Prefer this over [getIsParentMode] wherever async is acceptable.
+  Future<Either<Failure, bool>> getIsParentModeFromProfile() async {
+    try {
+      final profile = await _loadProfile();
+      return Right(profile.isParentGuardian);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -896,8 +1250,8 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, void>> setIsParentMode(bool value) async {
     try {
-      await _datasource.setIsParentMode(value);
-      return const Right(null);
+      final result = await setParentGuardianMode(value);
+      return result.fold(Left.new, (_) => const Right(null));
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }

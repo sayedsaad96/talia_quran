@@ -5,31 +5,43 @@ import '../../../quran/domain/usecases/get_surahs_usecase.dart';
 import '../../domain/hifz_unlock_rules.dart';
 import '../../domain/entities/hifz_entities.dart';
 import '../../domain/usecases/get_hifz_progress_usecase.dart';
+import '../../../memorization_plus/domain/entities/memorization_entities.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
 part 'hifz_state.dart';
 
 class HifzCubit extends Cubit<HifzState> {
-  HifzCubit(this._getSurahs, this._getProgress, this._getPath, this._savePath)
-    : super(const HifzInitial());
+  HifzCubit(
+    this._getSurahs,
+    this._getProgress,
+    this._getPath,
+    this._savePath,
+    this._memorizationRepository,
+  ) : super(const HifzInitial());
 
   final GetSurahsUsecase _getSurahs;
   final GetHifzProgressUsecase _getProgress;
   final GetHifzPathUsecase _getPath;
   final SaveHifzPathUsecase _savePath;
+  final MemorizationPlusRepository _memorizationRepository;
 
   Future<void> load() async {
     emit(const HifzLoading());
     final surahsResult = await _getSurahs();
     final progressResult = await _getProgress();
     final pathResult = await _getPath();
+    final profileResult = await _memorizationRepository
+        .getMemorizationProfile();
 
     surahsResult.fold((f) => emit(HifzError(f.message)), (surahs) {
       progressResult.fold((f) => emit(HifzError(f.message)), (progress) {
         pathResult.fold((f) => emit(HifzError(f.message)), (path) {
+          final profile = profileResult.fold((_) => null, (profile) => profile);
+          final effectivePath = profile?.hifzPathValue ?? path;
           final progressMap = {for (final p in progress) p.surahId: p};
           final sortedSurahs = sortSurahsForHifzPath(
             surahs: surahs,
-            path: path,
+            path: effectivePath,
           );
           final unlockedSurahIds = buildUnlockedSurahIds(
             orderedSurahs: sortedSurahs,
@@ -40,7 +52,7 @@ class HifzCubit extends Cubit<HifzState> {
             HifzLoaded(
               surahs: sortedSurahs,
               progressMap: progressMap,
-              selectedPath: path,
+              selectedPath: effectivePath,
               unlockedSurahIds: unlockedSurahIds,
             ),
           );
@@ -76,6 +88,10 @@ class HifzCubit extends Cubit<HifzState> {
           unlockedSurahIds: unlockedSurahIds,
         ),
       );
+      final memPath = path == 'backward'
+          ? MemorizationPath.child
+          : MemorizationPath.adult;
+      await _memorizationRepository.selectMemorizationPath(memPath);
     }
   }
 }

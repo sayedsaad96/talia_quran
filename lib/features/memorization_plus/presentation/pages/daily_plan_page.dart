@@ -11,7 +11,9 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/qcf_hifz_verse_view.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/daily_plan_cubit.dart';
@@ -327,9 +329,20 @@ class _DailyPlanView extends StatelessWidget {
       elevation: 0,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
-        onPressed: () => context.pop(),
+        onPressed: () {
+          if (context.canPop()) {
+            context.pop();
+          } else {
+            context.go('/');
+          }
+        },
       ),
       actions: [
+        IconButton(
+          icon: const Icon(Icons.settings_suggest_rounded, color: Colors.white),
+          tooltip: 'إعدادات مسار الحفظ الذكي',
+          onPressed: () => context.push(AppRoutes.memorizationPlusCustomPlan),
+        ),
         IconButton(
           icon: const Icon(Icons.refresh_rounded, color: Colors.white),
           tooltip: 'تحديث الخطة',
@@ -593,17 +606,15 @@ class _AyahPlanTile extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  planAyah.ayahText,
-                  style: AppTypography.bodyLarge.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                    fontFamily: 'Amiri',
-                    height: 1.8,
-                  ),
+                // T015: replaced with QcfHifzVerseView (compact mode)
+                QcfHifzVerseView(
+                  surahNumber: planAyah.surahId,
+                  verseNumber: planAyah.ayahNumber,
+                  fallbackText: planAyah.ayahText,
+                  isUnlocked: true,
+                  isMemorized: planAyah.record?.isMemorized ?? false,
+                  displayMode: HifzVerseDisplayMode.compact,
                   textAlign: TextAlign.justify,
-                  textDirection: TextDirection.rtl,
                 ),
                 const SizedBox(height: 4),
               ],

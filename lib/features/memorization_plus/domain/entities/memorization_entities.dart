@@ -1,5 +1,9 @@
 import 'package:equatable/equatable.dart';
 
+export 'memorization_profile.dart';
+export 'pairing_session.dart';
+export 'smart_memorization_settings.dart';
+
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
 enum MemorizationTrack { adults, kids }
@@ -11,6 +15,8 @@ enum KidsJourneyStageStatus { locked, current, completed, needsReview }
 enum ParentRewardStatus { locked, unlocked, claimed }
 
 enum PlanTargetUser { adult, child }
+
+// ─── Memorization Identity (Moved to separate files) ──────────
 
 // ─── AyahReviewRecord ─────────────────────────────────────────────────────────
 

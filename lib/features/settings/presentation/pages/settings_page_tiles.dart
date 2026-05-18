@@ -171,6 +171,93 @@ class _ParentModeToggle extends StatelessWidget {
   }
 }
 
+class _ResetMemorizationPathTile extends StatelessWidget {
+  const _ResetMemorizationPathTile({
+    required this.isDark,
+    required this.onReset,
+  });
+
+  final bool isDark;
+  final Future<void> Function() onReset;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () async {
+        final confirmed = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('إعادة ضبط مسار الحفظ؟', style: TextStyle(fontFamily: 'Amiri')),
+            content: const Text(
+              'سيؤدي هذا إلى إلغاء المسار المختار وحالة ربط ولي الأمر، ولكنه سيحتفظ بإعدادات الحفظ الذكي الخاصة بك.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('إلغاء'),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('تأكيد إعادة الضبط'),
+              ),
+            ],
+          ),
+        );
+        if (confirmed == true) await onReset();
+      },
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.restart_alt_rounded,
+                color: Colors.orange,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'إعادة ضبط المسار',
+                    style: AppTypography.titleMedium.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : AppColors.lightTextPrimary,
+                    ),
+                  ),
+                  Text(
+                    'اختر مسار الكبار أو الأطفال مرة أخرى بدون فقدان إعدادات الحفظ الذكي.',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ─── Theme Toggle ─────────────────────────────────────────────────────────────
 
 class _ThemeSettingTile extends StatelessWidget {

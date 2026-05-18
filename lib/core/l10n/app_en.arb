@@ -362,5 +362,35 @@
         "type": "int"
       }
     }
-  }
+  },
+  "memorizationPathReset": "Memorization path has been reset",
+  "resetMemorizationPath": "Reset / Change path",
+  "linkGuardianNow": "Link guardian now",
+  "continueWithoutGuardian": "Continue without guardian",
+  "guardianCodeExpired": "Code expired",
+  "guardianCodeAlreadyUsed": "Code already used",
+  "parentGuardianMode": "I am a parent/guardian",
+  "qcfPocTitle": "QCF rendering proof of concept",
+  "qcfPocIntro": "Temporary visual test screen for Quran rendering inside the memorization area.",
+  "qcfPocNoProduction": "This screen does not change Hifz logic, memorization state, progress, locks, unlocks, or checkpoints.",
+  "qcfPocVisualOnly": "qcf_quran_plus is used here only for visual Quran rendering.",
+  "qcfPocSingleVerse": "Single verse",
+  "qcfPocMultipleVerses": "Multiple verses",
+  "qcfPocLastVerse": "Last verse",
+  "qcfPocFullPage": "Full mushaf page",
+  "qcfPocFindings": "Findings",
+  "qcfPocSupported": "Supported",
+  "qcfPocLimited": "Limited",
+  "qcfPocUnsupported": "Unsupported",
+  "qcfPocStatus": "Status",
+  "qcfPocAlBaqarah255": "Al-Baqarah 255",
+  "qcfPocAlFatihah": "Al-Fatiha 1-7",
+  "qcfPocAlIkhlas": "Al-Ikhlas 1-4",
+  "qcfPocAshSharh8": "Ash-Sharh 8",
+  "qcfPocFullPageSample": "Mushaf page 1 preview",
+  "qcfPocVerseSupported": "Verse text renders visually with QCF helpers.",
+  "qcfPocMultiVerseSupported": "Grouped verses render visually from the same surah.",
+  "qcfPocFullPageSupported": "Full page rendering is available in a constrained preview.",
+  "qcfPocNoLimitations": "No limitation observed in this isolated POC.",
+  "qcfPocLimitationInstruction": "Any limitation listed here must be reviewed before production Hifz screens change."
 }
