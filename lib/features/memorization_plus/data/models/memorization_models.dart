@@ -167,7 +167,8 @@ class AyahReviewRecordModel extends AyahReviewRecord {
   });
 
   factory AyahReviewRecordModel.initial(int surahId, int ayahNumber) {
-    final now = DateTime.now();
+    // UTC: seed date must be UTC so isDue comparisons are timezone-safe.
+    final now = DateTime.now().toUtc();
     return AyahReviewRecordModel(
       surahId: surahId,
       ayahNumber: ayahNumber,

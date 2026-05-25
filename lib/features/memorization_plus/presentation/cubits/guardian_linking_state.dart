@@ -1,7 +1,9 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../domain/entities/memorization_entities.dart';
 
+@immutable
 abstract class GuardianLinkingState extends Equatable {
   const GuardianLinkingState();
 

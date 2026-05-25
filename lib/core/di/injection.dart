@@ -43,7 +43,9 @@ import '../../features/progress/domain/usecases/get_progress_usecase.dart';
 import '../../features/progress/domain/usecases/save_read_page_usecase.dart';
 import '../../features/progress/presentation/cubits/progress_cubit.dart';
 import '../../features/home/presentation/cubits/home_cubit.dart';
+import '../../features/home/domain/usecases/get_activity_heatmap_usecase.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
+import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
@@ -57,6 +59,7 @@ import '../../features/memorization_plus/presentation/cubits/custom_plan_cubit.d
 import '../../features/memorization_plus/presentation/cubits/memorization_identity_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/quiz_cubit.dart';
 import '../../features/settings/presentation/cubits/profile_cubit.dart';
+import '../../features/settings/presentation/cubits/settings_cubit.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/streak/data/models/streak_isar.dart';
@@ -77,6 +80,7 @@ Future<void> configureDependencies() async {
   final dir = await getApplicationDocumentsDirectory();
   final isar = await Isar.open([
     IsarAyahProgressSchema,
+    IsarAyahReviewRecordSchema,
     StreakIsarSchema,
     XpIsarSchema,
     DailyActivityIsarSchema, // For yearly activity heatmap
@@ -88,6 +92,12 @@ Future<void> configureDependencies() async {
   await hifzDatasource.migrateFromSharedPreferencesIfNeeded();
   getIt.registerLazySingleton<HifzLocalDatasource>(() => hifzDatasource);
 
+  final memorizationPlusDatasource = MemorizationPlusLocalDatasourceImpl(
+    sharedPrefs,
+    isar: isar,
+  );
+  await memorizationPlusDatasource.migrateReviewRecordsToIsarIfNeeded();
+
   // ─── Core ───────────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ThemeCubit>(
     () => ThemeCubit(getIt<SharedPreferences>()),
@@ -98,12 +108,18 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<ProfileCubit>(
     () => ProfileCubit(getIt<SharedPreferences>()),
   );
+  getIt.registerFactory<SettingsCubit>(
+    () => SettingsCubit(
+      getIt<MemorizationPlusRepository>(),
+      getIt<SharedPreferences>(),
+    ),
+  );
   getIt.registerSingleton<AudioCacheService>(AudioCacheService.instance);
   getIt.registerSingleton<AppSessionService>(
     AppSessionService(getIt<SharedPreferences>()),
   );
-  getIt.registerSingleton<TaliaNotificationService>(
-    TaliaNotificationService.instance,
+  getIt.registerLazySingleton<TaliaNotificationService>(
+    TaliaNotificationService.new,
   );
 
   // ─── New Core Services ──────────────────────────────────────────────────────
@@ -112,7 +128,7 @@ Future<void> configureDependencies() async {
     () => ProgressLocalDatasourceImpl(getIt<SharedPreferences>()),
   );
   getIt.registerLazySingleton<MemorizationPlusLocalDatasource>(
-    () => MemorizationPlusLocalDatasourceImpl(getIt<SharedPreferences>()),
+    () => memorizationPlusDatasource,
   );
   getIt.registerLazySingleton<QuranLocalDatasource>(
     () => QuranLocalDatasourceImpl(),
@@ -360,7 +376,9 @@ Future<void> configureDependencies() async {
     () => GuardianLinkingCubit(getIt<MemorizationPlusRepository>()),
   );
   getIt.registerFactory<MemorizationIdentityCubit>(
-    () => MemorizationIdentityCubit(repository: getIt<MemorizationPlusRepository>()),
+    () => MemorizationIdentityCubit(
+      repository: getIt<MemorizationPlusRepository>(),
+    ),
   );
   getIt.registerFactory<DailyPlanCubit>(
     () => DailyPlanCubit(
@@ -417,8 +435,9 @@ Future<void> configureDependencies() async {
       getIt<GetCustomPlanUsecase>(),
       getIt<MemorizationPlusRepository>(),
       getIt<AppSessionService>(),
+      GetActivityHeatmapUsecase(getIt<Isar>()),
     ),
   );
   getIt.registerFactory<StreakCubit>(() => StreakCubit(getIt<StreakService>()));
-  getIt.registerFactory<AuthCubit>(() => AuthCubit(getIt<AuthRepository>()));
+  getIt.registerSingleton<AuthCubit>(AuthCubit(getIt<AuthRepository>()));
 }

@@ -12,8 +12,10 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/talia_logger.dart';
+import '../../../../core/widgets/ayah_listen_button.dart';
 import '../../../../core/widgets/qcf_hifz_verse_view.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
+import '../../domain/entities/memorization_entities.dart';
 import '../cubits/quiz_cubit.dart';
 
 class QuizPage extends StatelessWidget {
@@ -147,6 +149,8 @@ class _QuestionViewState extends State<_QuestionView> {
   late stt.SpeechToText _speech;
   bool _isListening = false;
   bool _speechEnabled = false;
+  bool _speechInitialized = false;
+  int _speechFailureCount = 0;
   String _recognizedWords = '';
 
   @override
@@ -156,34 +160,41 @@ class _QuestionViewState extends State<_QuestionView> {
     _initSpeech();
   }
 
-  void _initSpeech() async {
+  Future<void> _initSpeech({bool resetFailures = false}) async {
+    if (resetFailures) {
+      setState(() {
+        _speechInitialized = false;
+        _speechFailureCount = 0;
+      });
+    }
+
     // Check mic permission first
     final status = await Permission.microphone.request();
     if (status.isGranted) {
       _speechEnabled = await _speech.initialize(
         onStatus: (val) {
           if (val == 'done' || val == 'notListening') {
-            setState(() => _isListening = false);
+            if (mounted) setState(() => _isListening = false);
           }
         },
         onError: (val) {
-          setState(() => _isListening = false);
+          if (mounted) {
+            setState(() {
+              _isListening = false;
+              _speechFailureCount++;
+            });
+          }
           TaliaLogger.w('Speech recognition error', val);
         },
       );
     }
-    setState(() {});
+    if (!mounted) return;
+    setState(() => _speechInitialized = true);
   }
 
   void _listen() async {
     if (!_speechEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'نظام التعرف على الصوت غير متاح أو لا توجد صلاحيات (الميكروفون).',
-          ),
-        ),
-      );
+      setState(() => _speechInitialized = true);
       return;
     }
 
@@ -225,6 +236,8 @@ class _QuestionViewState extends State<_QuestionView> {
     final isDark = widget.isDark;
     final primary = Theme.of(context).primaryColor;
     final progress = (s.questionIndex + 1) / s.totalQuestions;
+    final showManualPanel =
+        _speechInitialized && (!_speechEnabled || _speechFailureCount >= 2);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.pagePadding),
@@ -297,7 +310,7 @@ class _QuestionViewState extends State<_QuestionView> {
             child: Column(
               children: [
                 Icon(
-                  Icons.mic_none_rounded, // or quiz_rounded
+                  Icons.mic_none_rounded,
                   size: 48,
                   color: primary.withValues(alpha: 0.6),
                 ),
@@ -361,7 +374,54 @@ class _QuestionViewState extends State<_QuestionView> {
             ),
           ),
 
-          const SizedBox(height: AppSpacing.xl * 1.5),
+          const SizedBox(height: AppSpacing.xl),
+
+          // ── Listen Section ──────────────────────────────────────────────
+          // Allows the user to hear the ayah before reciting it from memory.
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: Colors.blue.withValues(alpha: isDark ? 0.12 : 0.06),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(color: Colors.blue.withValues(alpha: 0.25)),
+            ),
+            child: Row(
+              children: [
+                AyahListenButton(
+                  surahId: s.surahId,
+                  ayahNumber: s.ayahNumber,
+                  size: AyahListenButtonSize.normal,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'استمع للآية',
+                        style: AppTypography.titleMedium.copyWith(
+                          color: Colors.blue,
+                          fontFamily: 'Amiri',
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        'استمع قبل التسميع لتتذكر النطق الصحيح',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                          fontFamily: 'Amiri',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.xl),
 
           // Voice Control Area
           Center(
@@ -413,6 +473,17 @@ class _QuestionViewState extends State<_QuestionView> {
               ),
             ),
           ),
+
+          if (showManualPanel) ...[
+            const SizedBox(height: AppSpacing.lg),
+            _ManualEvaluationPanel(
+              isDark: isDark,
+              onRetryMic: () => _initSpeech(resetFailures: true),
+              onSkip: () => context.read<QuizCubit>().nextQuestion(),
+              onRate: (rating) =>
+                  context.read<QuizCubit>().submitManualRating(rating),
+            ),
+          ],
 
           const SizedBox(height: AppSpacing.xl),
 
@@ -500,6 +571,135 @@ class _QuestionViewState extends State<_QuestionView> {
   }
 }
 
+class _ManualEvaluationPanel extends StatelessWidget {
+  const _ManualEvaluationPanel({
+    required this.isDark,
+    required this.onRetryMic,
+    required this.onSkip,
+    required this.onRate,
+  });
+
+  final bool isDark;
+  final VoidCallback onRetryMic;
+  final VoidCallback onSkip;
+  final ValueChanged<PerformanceRating> onRate;
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: Colors.orange.withValues(alpha: isDark ? 0.14 : 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: Colors.orange.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.tune_rounded, color: Colors.orange),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  'التقييم اليدوي',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: textColor,
+                    fontFamily: 'Amiri',
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'إذا لم يعمل الميكروفون، قيّم التسميع بنفس المقياس المستخدم في التطبيق.',
+            style: AppTypography.bodySmall.copyWith(color: subTextColor),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              _ManualRatingButton(
+                label: 'ضعيف',
+                icon: Icons.replay_rounded,
+                color: Colors.orange,
+                onTap: () => onRate(PerformanceRating.weak),
+              ),
+              _ManualRatingButton(
+                label: 'متوسط',
+                icon: Icons.check_circle_outline_rounded,
+                color: Theme.of(context).primaryColor,
+                onTap: () => onRate(PerformanceRating.average),
+              ),
+              _ManualRatingButton(
+                label: 'ممتاز',
+                icon: Icons.verified_rounded,
+                color: Colors.green,
+                onTap: () => onRate(PerformanceRating.excellent),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onRetryMic,
+                  icon: const Icon(Icons.mic_rounded, size: 18),
+                  label: const Text('إعادة محاولة الميكروفون'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              TextButton.icon(
+                onPressed: onSkip,
+                icon: const Icon(Icons.skip_next_rounded, size: 18),
+                label: const Text('تخطي الآية'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ManualRatingButton extends StatelessWidget {
+  const _ManualRatingButton({
+    required this.label,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: color,
+        side: BorderSide(color: color.withValues(alpha: 0.55)),
+      ),
+    );
+  }
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // Answer Result View
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -512,7 +712,7 @@ class _AnswerResultView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final passed = state.passed;
-    final color = passed ? Colors.green : Colors.redAccent;
+    final color = passed ? Colors.green : Colors.orange;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.pagePadding),
@@ -528,7 +728,9 @@ class _AnswerResultView extends StatelessWidget {
                 color: color.withValues(alpha: 0.1),
               ),
               child: Icon(
-                passed ? Icons.check_circle_rounded : Icons.cancel_rounded,
+                passed
+                    ? Icons.check_circle_rounded
+                    : Icons.psychology_alt_rounded,
                 size: 72,
                 color: color,
               ),
@@ -537,7 +739,7 @@ class _AnswerResultView extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Center(
             child: Text(
-              passed ? 'أحسنت! ✨' : 'حاول مرة أخرى 💪',
+              passed ? 'أحسنت! ✨' : 'نراجعها معاً 💪',
               style: AppTypography.headlineSmall.copyWith(
                 color: color,
                 fontWeight: FontWeight.bold,
@@ -590,11 +792,58 @@ class _AnswerResultView extends StatelessWidget {
             title: 'إجابتك',
             text: state.userText,
             icon: Icons.edit_note_rounded,
-            color: passed ? Colors.green : Colors.redAccent,
+            color: passed ? Colors.green : Colors.orange,
             isDark: isDark,
           ),
 
           const SizedBox(height: AppSpacing.xl),
+
+          if (!passed) ...[
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: Colors.orange.withValues(alpha: isDark ? 0.14 : 0.08),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                border: Border.all(
+                  color: Colors.orange.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Row(
+                children: [
+                  AyahListenButton(
+                    surahId: state.surahId,
+                    ayahNumber: state.ayahNumber,
+                    size: AyahListenButtonSize.normal,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'استمع ثم أعد المحاولة',
+                          style: AppTypography.titleSmall.copyWith(
+                            color: Colors.orange.shade700,
+                            fontFamily: 'Amiri',
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Text(
+                          'تحتاج تدريباً أكثر، وهذا طبيعي في أول المراجعة.',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xl),
+          ],
 
           // Next button
           SizedBox(
@@ -807,10 +1056,10 @@ class _CompletedView extends StatelessWidget {
                 isDark: isDark,
               ),
               _StatChip(
-                label: 'تحتاج مراجعة',
+                label: 'تحتاج تدريباً',
                 value: '${state.failedCount}',
                 icon: Icons.replay_rounded,
-                color: Colors.redAccent,
+                color: Colors.orange,
                 isDark: isDark,
               ),
             ],

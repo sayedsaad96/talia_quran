@@ -772,3 +772,243 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 REVOKE EXECUTE ON FUNCTION public.upsert_daily_activities_batch(JSONB) FROM anon;
 GRANT  EXECUTE ON FUNCTION public.upsert_daily_activities_batch(JSONB) TO authenticated;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+--  Phase 6 / T6.2 RLS Hardening
+--  Authenticated users can access only their own rows, or linked child rows for
+--  guardian dashboards. Unauthenticated API requests receive no table access.
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.ayah_progress ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.streaks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.xp ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.xp_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.certificates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.daily_activities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.child_link_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.parent_child_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.kids_progress_cloud ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.kids_session_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.parent_rewards ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE
+  public.profiles,
+  public.ayah_progress,
+  public.streaks,
+  public.xp,
+  public.xp_history,
+  public.bookmarks,
+  public.certificates,
+  public.daily_activities,
+  public.child_link_requests,
+  public.parent_child_links,
+  public.kids_progress_cloud,
+  public.kids_session_logs,
+  public.parent_rewards
+FROM anon, authenticated;
+
+REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon, authenticated;
+GRANT USAGE ON SCHEMA public TO authenticated;
+
+GRANT SELECT, UPDATE ON public.profiles TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.ayah_progress TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.streaks TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.xp TO authenticated;
+GRANT SELECT, INSERT ON public.xp_history TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.bookmarks TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.certificates TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.daily_activities TO authenticated;
+GRANT SELECT ON public.child_link_requests TO authenticated;
+GRANT SELECT ON public.parent_child_links TO authenticated;
+GRANT SELECT ON public.kids_progress_cloud TO authenticated;
+GRANT SELECT ON public.kids_session_logs TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.parent_rewards TO authenticated;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+
+DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_parent_read_linked_child" ON public.profiles;
+DROP POLICY IF EXISTS "ayah_progress_all_own" ON public.ayah_progress;
+DROP POLICY IF EXISTS "streaks_all_own" ON public.streaks;
+DROP POLICY IF EXISTS "xp_all_own" ON public.xp;
+DROP POLICY IF EXISTS "xp_history_select_own" ON public.xp_history;
+DROP POLICY IF EXISTS "xp_history_insert_own" ON public.xp_history;
+DROP POLICY IF EXISTS "bookmarks_all_own" ON public.bookmarks;
+DROP POLICY IF EXISTS "certificates_all_own" ON public.certificates;
+DROP POLICY IF EXISTS "daily_activities_all_own" ON public.daily_activities;
+DROP POLICY IF EXISTS "Users can manage their own daily activities" ON public.daily_activities;
+DROP POLICY IF EXISTS "child_link_requests_child_own" ON public.child_link_requests;
+DROP POLICY IF EXISTS "parent_child_links_parent_or_child_read" ON public.parent_child_links;
+DROP POLICY IF EXISTS "kids_progress_child_write" ON public.kids_progress_cloud;
+DROP POLICY IF EXISTS "kids_progress_child_select" ON public.kids_progress_cloud;
+DROP POLICY IF EXISTS "kids_progress_parent_read" ON public.kids_progress_cloud;
+DROP POLICY IF EXISTS "kids_session_logs_child_write" ON public.kids_session_logs;
+DROP POLICY IF EXISTS "kids_session_logs_child_select" ON public.kids_session_logs;
+DROP POLICY IF EXISTS "kids_session_logs_parent_read" ON public.kids_session_logs;
+DROP POLICY IF EXISTS "parent_rewards_parent_manage" ON public.parent_rewards;
+DROP POLICY IF EXISTS "parent_rewards_child_read" ON public.parent_rewards;
+
+CREATE POLICY "profiles_select_own"
+  ON public.profiles FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = id);
+
+CREATE POLICY "profiles_update_own"
+  ON public.profiles FOR UPDATE TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = id)
+  WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = id);
+
+CREATE POLICY "profiles_parent_read_linked_child"
+  ON public.profiles FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.parent_child_links pcl
+      WHERE pcl.child_user_id = profiles.id
+        AND pcl.parent_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  );
+
+CREATE POLICY "ayah_progress_all_own"
+  ON public.ayah_progress FOR ALL TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
+
+CREATE POLICY "streaks_all_own"
+  ON public.streaks FOR ALL TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
+
+CREATE POLICY "xp_all_own"
+  ON public.xp FOR ALL TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
+
+CREATE POLICY "xp_history_select_own"
+  ON public.xp_history FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
+
+CREATE POLICY "xp_history_insert_own"
+  ON public.xp_history FOR INSERT TO authenticated
+  WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
+
+CREATE POLICY "bookmarks_all_own"
+  ON public.bookmarks FOR ALL TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
+
+CREATE POLICY "certificates_all_own"
+  ON public.certificates FOR ALL TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
+
+CREATE POLICY "daily_activities_all_own"
+  ON public.daily_activities FOR ALL TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
+
+CREATE POLICY "child_link_requests_child_own"
+  ON public.child_link_requests FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = child_user_id);
+
+CREATE POLICY "parent_child_links_parent_or_child_read"
+  ON public.parent_child_links FOR SELECT TO authenticated
+  USING (
+    (SELECT auth.uid()) IS NOT NULL
+    AND ((SELECT auth.uid()) = parent_user_id OR (SELECT auth.uid()) = child_user_id)
+  );
+
+CREATE POLICY "kids_progress_child_select"
+  ON public.kids_progress_cloud FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = child_user_id);
+
+CREATE POLICY "kids_progress_parent_read"
+  ON public.kids_progress_cloud FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.parent_child_links pcl
+      WHERE pcl.child_user_id = kids_progress_cloud.child_user_id
+        AND pcl.parent_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  );
+
+CREATE POLICY "kids_session_logs_child_select"
+  ON public.kids_session_logs FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = child_user_id);
+
+CREATE POLICY "kids_session_logs_parent_read"
+  ON public.kids_session_logs FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1
+      FROM public.parent_child_links pcl
+      WHERE pcl.child_user_id = kids_session_logs.child_user_id
+        AND pcl.parent_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  );
+
+CREATE POLICY "parent_rewards_parent_manage"
+  ON public.parent_rewards FOR ALL TO authenticated
+  USING (
+    (SELECT auth.uid()) = parent_user_id
+    AND EXISTS (
+      SELECT 1
+      FROM public.parent_child_links pcl
+      WHERE pcl.child_user_id = parent_rewards.child_user_id
+        AND pcl.parent_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  )
+  WITH CHECK (
+    (SELECT auth.uid()) = parent_user_id
+    AND EXISTS (
+      SELECT 1
+      FROM public.parent_child_links pcl
+      WHERE pcl.child_user_id = parent_rewards.child_user_id
+        AND pcl.parent_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  );
+
+CREATE POLICY "parent_rewards_child_read"
+  ON public.parent_rewards FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = child_user_id);
+
+ALTER FUNCTION public.handle_new_user() SET search_path = public;
+ALTER FUNCTION public.update_updated_at() SET search_path = public;
+ALTER FUNCTION public.upsert_ayah_progress(JSONB) SET search_path = public;
+ALTER FUNCTION public.upsert_streak(INTEGER, INTEGER, DATE, INTEGER) SET search_path = public;
+ALTER FUNCTION public.upsert_xp(INTEGER) SET search_path = public;
+ALTER FUNCTION public.upsert_daily_activity(INTEGER, INTEGER) SET search_path = public;
+
+REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.update_updated_at() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.upsert_ayah_progress(JSONB) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.upsert_streak(INTEGER, INTEGER, DATE, INTEGER) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.upsert_xp(INTEGER) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.upsert_daily_activity(INTEGER, INTEGER) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.upsert_daily_activities_batch(JSONB) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.create_child_link_request() FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.create_child_link_request_with_hash(TEXT) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.accept_child_link_token(TEXT) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.accept_child_link_token_with_hash(TEXT) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.upsert_kids_progress_cloud(INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.insert_kids_session_log(TEXT, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) FROM PUBLIC, anon;
+
+GRANT EXECUTE ON FUNCTION public.upsert_ayah_progress(JSONB) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.upsert_streak(INTEGER, INTEGER, DATE, INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.upsert_xp(INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.upsert_daily_activity(INTEGER, INTEGER) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.upsert_daily_activities_batch(JSONB) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.create_child_link_request() TO authenticated;
+GRANT EXECUTE ON FUNCTION public.create_child_link_request_with_hash(TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.accept_child_link_token(TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.accept_child_link_token_with_hash(TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.upsert_kids_progress_cloud(INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.insert_kids_session_log(TEXT, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) TO authenticated;

@@ -1,5 +1,6 @@
 part of 'azkar_cubit.dart';
 
+@immutable
 abstract class AzkarState extends Equatable {
   const AzkarState();
   @override

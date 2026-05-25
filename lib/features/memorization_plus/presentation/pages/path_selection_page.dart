@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_scaffold.dart';
+import '../../../../core/widgets/error_info_banner.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../domain/entities/memorization_entities.dart';
@@ -29,7 +32,7 @@ class _PathSelectionView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppScaffold(
-      title: 'مسار الحفظ',
+      title: context.l10n.memorizationPathTitle,
       body: BlocConsumer<MemorizationIdentityCubit, MemorizationIdentityState>(
         listener: (context, state) {
           if (state is MemorizationIdentitySuccess) {
@@ -39,13 +42,6 @@ class _PathSelectionView extends StatelessWidget {
             } else if (profile.isChild) {
               context.go(AppRoutes.memorizationPlusGuardianLinking);
             }
-          } else if (state is MemorizationIdentityError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: AppColors.error,
-              ),
-            );
           }
         },
         builder: (context, state) {
@@ -53,45 +49,68 @@ class _PathSelectionView extends StatelessWidget {
           final isDark = context.isDark;
 
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 32.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'من سيستخدم هذه الميزة؟',
+                  context.l10n.memorizationPathQuestion,
                   style: AppTypography.headlineMedium,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  'اختر المسار المناسب لك أو لطفلك لتجربة حفظ مخصصة.',
+                  context.l10n.memorizationPathDescription,
                   style: AppTypography.bodyMedium.copyWith(
-                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
                   ),
                   textAlign: TextAlign.center,
                 ),
+                if (state is MemorizationIdentityError) ...[
+                  const SizedBox(height: 20),
+                  ErrorInfoBanner(
+                    type: ErrorInfoBannerType.error,
+                    title: 'تعذر حفظ اختيارك',
+                    message: state.message,
+                  ),
+                ],
                 const SizedBox(height: 48),
                 _buildPathCard(
                   context: context,
-                  title: 'مسار البالغين',
-                  description: 'خطة حفظ مرنة مع مراجعة ذكية وتتبع يومي للإنجاز.',
+                  title: context.l10n.memorizationPathAdultsTitle,
+                  description: context.l10n.memorizationPathAdultsDesc,
                   icon: Icons.person_outline,
                   color: AppColors.primary,
                   isLoading: isLoading,
                   onTap: () {
-                    context.read<MemorizationIdentityCubit>().selectPath(MemorizationPath.adult);
+                    _confirmPathSelection(
+                      context,
+                      path: MemorizationPath.adult,
+                      title: context.l10n.memorizationPathAdultsTitle,
+                      description: context.l10n.memorizationPathAdultsDesc,
+                    );
                   },
                 ),
                 const SizedBox(height: 24),
                 _buildPathCard(
                   context: context,
-                  title: 'مسار الأطفال',
-                  description: 'رحلة حفظ تفاعلية ممتعة بإشراف ولي الأمر.',
+                  title: context.l10n.memorizationPathKidsTitle,
+                  description: context.l10n.memorizationPathKidsDesc,
                   icon: Icons.child_care,
                   color: AppColors.gold,
                   isLoading: isLoading,
                   onTap: () {
-                    context.read<MemorizationIdentityCubit>().selectPath(MemorizationPath.child);
+                    _confirmPathSelection(
+                      context,
+                      path: MemorizationPath.child,
+                      title: context.l10n.memorizationPathKidsTitle,
+                      description: context.l10n.memorizationPathKidsDesc,
+                    );
                   },
                 ),
                 if (isLoading) ...[
@@ -106,6 +125,67 @@ class _PathSelectionView extends StatelessWidget {
     );
   }
 
+  Future<void> _confirmPathSelection(
+    BuildContext context, {
+    required MemorizationPath path,
+    required String title,
+    required String description,
+  }) async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'ماذا سيحدث بعد ذلك؟',
+                style: AppTypography.headlineSmall.copyWith(
+                  fontFamily: 'Amiri',
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '$title\n$description',
+                style: AppTypography.bodyMedium.copyWith(height: 1.6),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'يمكن تغييره من الإعدادات لاحقاً بدون فقدان تقدمك.',
+                      style: AppTypography.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: () => Navigator.pop(sheetContext, true),
+                child: const Text('تأكيد'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(sheetContext, false),
+                child: const Text('رجوع'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      unawaited(context.read<MemorizationIdentityCubit>().selectPath(path));
+    }
+  }
+
   Widget _buildPathCard({
     required BuildContext context,
     required String title,
@@ -116,8 +196,12 @@ class _PathSelectionView extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     final isDark = context.isDark;
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final secondaryTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     return GestureDetector(
       onTap: isLoading ? null : onTap,
@@ -157,7 +241,9 @@ class _PathSelectionView extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     description,
-                    style: AppTypography.bodySmall.copyWith(color: secondaryTextColor),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: secondaryTextColor,
+                    ),
                   ),
                 ],
               ),

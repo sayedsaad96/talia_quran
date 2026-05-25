@@ -312,6 +312,4 @@ abstract class AppTheme {
       highlightColor: AppColors.primaryLight.withValues(alpha: 0.04),
     );
   }
-
-  const AppTheme._();
 }

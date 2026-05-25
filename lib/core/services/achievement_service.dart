@@ -1,61 +1,16 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/talia_logger.dart';
+import '../../features/certificate/domain/entities/certificate_award.dart';
 import '../../features/hifz/data/datasources/hifz_local_datasource.dart';
 import '../../features/hifz/domain/entities/hifz_entities.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 
-/// Model for a certificate that has been earned.
-class CertificateAward {
-  const CertificateAward({
-    required this.id,
-    required this.titleAr,
-    required this.type,
-    required this.earnedAt,
-    this.juzNumber,
-    this.surahId,
-    this.surahNameAr,
-    this.surahNameEn,
-  });
+// Re-export so existing callers importing achievement_service.dart continue
+// to receive CertificateAward and CertificateType without import changes.
+export '../../features/certificate/domain/entities/certificate_award.dart';
 
-  final String id;
-  final String titleAr;
-  final CertificateType type;
-  final DateTime earnedAt;
-  final int? juzNumber;
-  final int? surahId;
-  final String? surahNameAr;
-  final String? surahNameEn;
-
-  Map<String, dynamic> toJson() => {
-    'id': id,
-    'titleAr': titleAr,
-    'type': type.name,
-    'earnedAt': earnedAt.toIso8601String(),
-    'juzNumber': juzNumber,
-    'surahId': surahId,
-    'surahNameAr': surahNameAr,
-    'surahNameEn': surahNameEn,
-  };
-
-  factory CertificateAward.fromJson(Map<String, dynamic> json) =>
-      CertificateAward(
-        id: json['id'] as String,
-        titleAr: json['titleAr'] as String,
-        type: CertificateType.values.firstWhere(
-          (t) => t.name == json['type'],
-          orElse: () => CertificateType.surah,
-        ),
-        earnedAt: DateTime.parse(json['earnedAt'] as String),
-        juzNumber: json['juzNumber'] as int?,
-        surahId: json['surahId'] as int?,
-        surahNameAr: json['surahNameAr'] as String?,
-        surahNameEn: json['surahNameEn'] as String?,
-      );
-}
-
-enum CertificateType { juz, surah, halfQuran, fullQuran }
 
 class AchievementService {
   AchievementService(this._prefs, this._hifzDs, this._memPlusDs, this._quranDs);
@@ -99,6 +54,10 @@ class AchievementService {
   /// path.
   Future<List<CertificateAward>> checkAndUnlockCertificates() async {
     try {
+      // Cache earned IDs once — avoids repeated JSON parsing across 144+ checks
+      final alreadyEarnedIds =
+          getEarnedCertificates().map((c) => c.id).toSet();
+
       final allProgress = await _hifzDs.getAllProgress();
       final memPlusRecords = await _memPlusDs.getAllReviewRecords();
       final surahs = await _quranDs.getSurahs();
@@ -134,7 +93,7 @@ class AchievementService {
 
         if (isComplete) {
           final id = 'cert_juz_$juz';
-          if (!_isAlreadyEarned(id)) {
+          if (!alreadyEarnedIds.contains(id)) {
             final award = CertificateAward(
               id: id,
               titleAr: 'شهادة حفظ الجزء ${_juzNames[juz - 1]}',
@@ -143,6 +102,7 @@ class AchievementService {
               juzNumber: juz,
             );
             earned.add(award);
+            alreadyEarnedIds.add(id);
             await _saveEarned(award);
           }
         }
@@ -165,7 +125,7 @@ class AchievementService {
 
         if (isComplete) {
           final id = 'cert_surah_${surah.id}';
-          if (!_isAlreadyEarned(id)) {
+          if (!alreadyEarnedIds.contains(id)) {
             final award = CertificateAward(
               id: id,
               titleAr: 'شهادة حفظ سورة ${surah.nameAr}',
@@ -176,6 +136,7 @@ class AchievementService {
               surahNameEn: surah.nameEn,
             );
             earned.add(award);
+            alreadyEarnedIds.add(id);
             await _saveEarned(award);
           }
         }
@@ -198,8 +159,8 @@ class AchievementService {
 
       // Half Quran (15+ complete Juz)
       if (fullyMemorizedJuzCount >= 15) {
-        final id = 'cert_half_quran';
-        if (!_isAlreadyEarned(id)) {
+        const id = 'cert_half_quran';
+        if (!alreadyEarnedIds.contains(id)) {
           final award = CertificateAward(
             id: id,
             titleAr: 'شهادة حفظ نصف القرآن الكريم',
@@ -207,14 +168,15 @@ class AchievementService {
             earnedAt: DateTime.now(),
           );
           earned.add(award);
+          alreadyEarnedIds.add(id);
           await _saveEarned(award);
         }
       }
 
       // Full Quran (30 complete Juz)
       if (fullyMemorizedJuzCount == 30) {
-        final id = 'cert_full_quran';
-        if (!_isAlreadyEarned(id)) {
+        const id = 'cert_full_quran';
+        if (!alreadyEarnedIds.contains(id)) {
           final award = CertificateAward(
             id: id,
             titleAr: 'شهادة ختم القرآن الكريم كاملاً',
@@ -222,6 +184,7 @@ class AchievementService {
             earnedAt: DateTime.now(),
           );
           earned.add(award);
+          alreadyEarnedIds.add(id);
           await _saveEarned(award);
         }
       }
@@ -238,10 +201,6 @@ class AchievementService {
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
-
-  bool _isAlreadyEarned(String id) {
-    return getEarnedCertificates().any((c) => c.id == id);
-  }
 
   Future<void> _saveEarned(CertificateAward award) async {
     final existing = getEarnedCertificates();

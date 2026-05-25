@@ -1,5 +1,6 @@
 part of 'streak_cubit.dart';
 
+@immutable
 abstract class StreakState extends Equatable {
   const StreakState();
   @override

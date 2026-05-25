@@ -1,5 +1,6 @@
 part of 'track_selection_cubit.dart';
 
+@immutable
 abstract class TrackSelectionState extends Equatable {
   const TrackSelectionState();
   @override

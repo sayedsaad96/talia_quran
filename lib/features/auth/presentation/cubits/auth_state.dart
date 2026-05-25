@@ -1,5 +1,6 @@
 part of 'auth_cubit.dart';
 
+@immutable
 abstract class AuthState extends Equatable {
   const AuthState();
   @override

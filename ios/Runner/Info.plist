@@ -2,12 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<key>NSCameraUsageDescription</key>
+		<string>تطلب تالية الوصول إلى الكاميرا لمسح رمز QR الخاص بربط ولي الأمر.</string>
 		<key>NSSpeechRecognitionUsageDescription</key>
-		<string>This app requires access to Speech Recognition to evaluate your Quran recitation.</string>
+		<string>تطلب تالية الوصول إلى التعرف على الكلام لتقييم تلاوتك القرآنية.</string>
 		<key>NSPhotoLibraryAddUsageDescription</key>
 		<string>تطلب تالية الوصول إلى معرض الصور لحفظ شهادات الإنجاز الخاصة بك.</string>
 		<key>NSMicrophoneUsageDescription</key>
-		<string>This app requires access to the microphone to record and evaluate your Quran recitation.</string>
+		<string>تطلب تالية الوصول إلى الميكروفون لتسجيل وتقييم تلاوتك القرآنية.</string>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
 		<key>CFBundleDevelopmentRegion</key>
@@ -62,8 +64,6 @@
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
-			<string>UIInterfaceOrientationLandscapeLeft</string>
-			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>UISupportedInterfaceOrientations~ipad</key>
 		<array>

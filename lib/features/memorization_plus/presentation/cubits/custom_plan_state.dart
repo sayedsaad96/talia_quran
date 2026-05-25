@@ -1,5 +1,6 @@
 part of 'custom_plan_cubit.dart';
 
+@immutable
 abstract class CustomPlanState extends Equatable {
   const CustomPlanState();
 

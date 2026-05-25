@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/memorization_entities.dart';
@@ -7,10 +8,9 @@ import '../../domain/repositories/memorization_plus_repository.dart';
 part 'memorization_identity_state.dart';
 
 class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
-  MemorizationIdentityCubit({
-    required MemorizationPlusRepository repository,
-  })  : _repository = repository,
-        super(const MemorizationIdentityInitial());
+  MemorizationIdentityCubit({required MemorizationPlusRepository repository})
+    : _repository = repository,
+      super(const MemorizationIdentityInitial());
 
   final MemorizationPlusRepository _repository;
 
@@ -38,3 +38,4 @@ class MemorizationIdentityCubit extends Cubit<MemorizationIdentityState> {
     );
   }
 }
+

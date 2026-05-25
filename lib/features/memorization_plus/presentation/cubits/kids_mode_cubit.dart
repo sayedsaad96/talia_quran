@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -90,7 +91,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     final st = state as KidsModeLoaded;
 
     _loopCount = 0;
-    emit(st.copyWith(isPlaying: true, currentLoop: 1));
+    emit(st.copyWith(isPlaying: true, currentLoop: 1, clearAudioError: true));
     await _playAyah(st.surahId, st.ayahNumber);
   }
 
@@ -101,7 +102,13 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       await _player.play();
     } catch (_) {
       if (state is KidsModeLoaded) {
-        emit((state as KidsModeLoaded).copyWith(isPlaying: false));
+        emit(
+          (state as KidsModeLoaded).copyWith(
+            isPlaying: false,
+            audioError:
+                'لم يعمل الصوت الآن. جرّب مرة أخرى أو اطلب من ولي الأمر الاتصال بالإنترنت.',
+          ),
+        );
       }
     }
   }
@@ -112,10 +119,16 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
     _loopCount++;
     if (_loopCount < _maxLoops) {
-      emit(st.copyWith(currentLoop: _loopCount + 1));
+      emit(st.copyWith(currentLoop: _loopCount + 1, clearAudioError: true));
       _playAyah(st.surahId, st.ayahNumber);
     } else {
-      emit(st.copyWith(isPlaying: false, currentLoop: _maxLoops));
+      emit(
+        st.copyWith(
+          isPlaying: false,
+          currentLoop: _maxLoops,
+          clearAudioError: true,
+        ),
+      );
     }
   }
 

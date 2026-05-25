@@ -60,8 +60,15 @@ Future<void> main() async {
 }
 
 Future<void> _bootstrapAndRun() async {
-  // Load environment variables from .env (excluded from Git via .gitignore)
-  await dotenv.load(fileName: '.env');
+  // Load environment variables from .env (excluded from Git via .gitignore).
+  // Wrapped in try-catch: if .env is absent (CI, release build without asset,
+  // or after Phase 3 removal from pubspec assets), the app continues in
+  // offline mode rather than crashing before any local content is reachable.
+  try {
+    await dotenv.load(fileName: '.env');
+  } catch (_) {
+    // .env not found — continue without Supabase config (offline mode).
+  }
 
   // Prevent Google Fonts from fetching fonts at runtime — all fonts are bundled as assets
   GoogleFonts.config.allowRuntimeFetching = false;
@@ -108,13 +115,15 @@ Future<void> _bootstrapAndRun() async {
   await configureDependencies();
 
   // Initialize notifications with sensible defaults
-  final notificationService = TaliaNotificationService.instance;
+  final notificationService = getIt<TaliaNotificationService>();
   await notificationService.initialize();
   // M05 FIX: Do not await requestPermissions() before runApp.
   // Awaiting this before runApp() on Android 13+ blocks the main isolate
   // while the OS permission dialog is active. If the dialog is hidden behind
   // the splash screen, the app will appear to hang infinitely.
-  unawaited(notificationService.requestPermissions()); // intentionally not awaited
+  unawaited(
+    notificationService.requestPermissions(),
+  ); // intentionally not awaited
 
   final prefs = getIt<SharedPreferences>();
 

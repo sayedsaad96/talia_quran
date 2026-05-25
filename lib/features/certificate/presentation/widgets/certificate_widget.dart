@@ -592,7 +592,7 @@ class _AppSealPainter extends CustomPainter {
 
     // 1. Outer decorative border (Scalloped / Sunburst)
     final outerPath = Path();
-    final int petals = 32;
+    const int petals = 32;
     for (var i = 0; i < petals * 2; i++) {
       final angle = (math.pi * 2 * i) / (petals * 2);
       final r = i.isEven ? radius : radius - 3.5;

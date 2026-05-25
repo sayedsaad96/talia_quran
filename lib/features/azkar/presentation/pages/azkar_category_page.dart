@@ -101,6 +101,9 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
   static const _fontSizes = [22.0, 26.0, 30.0];
   int _fontSizeIndex = 1;
   late PageController _pageController;
+  Timer? _undoTimer;
+  bool _showUndo = false;
+  int? _undoIndex;
 
   @override
   void initState() {
@@ -110,6 +113,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
 
   @override
   void dispose() {
+    _undoTimer?.cancel();
     _pageController.dispose();
     super.dispose();
   }
@@ -136,6 +140,46 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
         ShareParams(text: _shareableText(context, session)),
       ),
     );
+  }
+
+  void _handleCounterTap(BuildContext context, int index, ZikrSession session) {
+    if (session.isDone) {
+      HapticFeedback.selectionClick();
+      context.read<AzkarCubit>().goNextUnfinished();
+      return;
+    }
+
+    final willComplete = session.currentCount + 1 >= session.zikr.totalCount;
+    if (willComplete) {
+      HapticFeedback.heavyImpact();
+    } else {
+      HapticFeedback.lightImpact();
+    }
+    context.read<AzkarCubit>().increment();
+
+    _undoTimer?.cancel();
+    setState(() {
+      _showUndo = true;
+      _undoIndex = index;
+    });
+    _undoTimer = Timer(const Duration(seconds: 3), () {
+      if (!mounted) return;
+      setState(() => _showUndo = false);
+    });
+  }
+
+  Future<void> _undoLastCount(BuildContext context) async {
+    final index = _undoIndex;
+    if (index == null) return;
+
+    final cubit = context.read<AzkarCubit>();
+    cubit.goTo(index);
+    await cubit.decrementCurrent();
+    await HapticFeedback.selectionClick();
+    _undoTimer?.cancel();
+    if (mounted) {
+      setState(() => _showUndo = false);
+    }
   }
 
   String _shareableText(BuildContext context, ZikrSession session) {
@@ -396,14 +440,10 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                       session: session,
                       fontSize: _fontSizes[_fontSizeIndex],
                       isDark: widget.isDark,
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        if (session.isDone) {
-                          context.read<AzkarCubit>().goNextUnfinished();
-                        } else {
-                          context.read<AzkarCubit>().increment();
-                        }
-                      },
+                      showUndo: _showUndo && _undoIndex == index,
+                      onTap: () => _handleCounterTap(context, index, session),
+                      onLongPress: () => _undoLastCount(context),
+                      onUndo: () => _undoLastCount(context),
                       onShare: () => _shareZikr(context, session),
                       onCopy: () => _copyZikr(context, session),
                     );
@@ -423,7 +463,10 @@ class _ZikrReaderPage extends StatelessWidget {
     required this.session,
     required this.fontSize,
     required this.isDark,
+    required this.showUndo,
     required this.onTap,
+    required this.onLongPress,
+    required this.onUndo,
     required this.onShare,
     required this.onCopy,
   });
@@ -431,7 +474,10 @@ class _ZikrReaderPage extends StatelessWidget {
   final ZikrSession session;
   final double fontSize;
   final bool isDark;
+  final bool showUndo;
   final VoidCallback onTap;
+  final VoidCallback onLongPress;
+  final VoidCallback onUndo;
   final VoidCallback onShare;
   final VoidCallback onCopy;
 
@@ -539,6 +585,7 @@ class _ZikrReaderPage extends StatelessWidget {
           // ─── Tap Target (Counter) ────────────────────────────────
           GestureDetector(
             onTap: onTap,
+            onLongPress: onLongPress,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               width: double.infinity,
@@ -599,6 +646,39 @@ class _ZikrReaderPage extends StatelessWidget {
                       fontFamily: 'Amiri',
                       fontWeight: FontWeight.w600,
                     ),
+                  ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 180),
+                    child: showUndo
+                        ? Padding(
+                            key: const ValueKey('undo'),
+                            padding: const EdgeInsets.only(top: 10),
+                            child: TextButton.icon(
+                              onPressed: onUndo,
+                              style: TextButton.styleFrom(
+                                foregroundColor: Colors.white,
+                                backgroundColor: Colors.white.withValues(
+                                  alpha: 0.16,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 6,
+                                ),
+                              ),
+                              icon: const Icon(Icons.undo_rounded, size: 18),
+                              label: const Text('تراجع'),
+                            ),
+                          )
+                        : Padding(
+                            key: const ValueKey('hint'),
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Text(
+                              'اضغط مطولاً للتراجع',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: Colors.white.withValues(alpha: 0.72),
+                              ),
+                            ),
+                          ),
                   ),
                 ],
               ),

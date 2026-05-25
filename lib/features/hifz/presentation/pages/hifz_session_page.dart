@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -122,6 +123,79 @@ class _FullSurahSession extends StatelessWidget {
   const _FullSurahSession({required this.state, required this.isDark});
   final HifzSessionLoaded state;
   final bool isDark;
+  static const _skipHintKey = 'hifz_skip_hint_seen';
+
+  Future<void> _showSkipHintIfNeeded(BuildContext context) async {
+    final prefs = getIt<SharedPreferences>();
+    final seen = prefs.getBool(_skipHintKey) ?? false;
+    if (seen) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusXl),
+        ),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.skip_next_rounded,
+                color: AppColors.primary,
+                size: 36,
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                sheetContext.l10n.hifzSkipHintTitle,
+                style: AppTypography.titleLarge.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                  fontFamily: 'Amiri',
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                sheetContext.l10n.hifzSkipHintBody,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                  fontFamily: 'Amiri',
+                  height: 1.6,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  child: Text(sheetContext.l10n.understood),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await prefs.setBool(_skipHintKey, true);
+  }
+
+  Future<void> _handleSkip(BuildContext context) async {
+    await _showSkipHintIfNeeded(context);
+    if (!context.mounted) return;
+    await context.read<HifzSessionCubit>().skipAyah();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -366,7 +440,7 @@ class _FullSurahSession extends StatelessWidget {
                           if (state.currentIndex == state.ayahs.length - 1) {
                             Navigator.of(context).pop();
                           } else {
-                            context.read<HifzSessionCubit>().skipAyah();
+                            unawaited(_handleSkip(context));
                           }
                         },
                       ),

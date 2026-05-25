@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../progress/domain/usecases/get_progress_usecase.dart';
@@ -11,6 +12,7 @@ import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../../core/services/app_session_service.dart';
+import '../../domain/usecases/get_activity_heatmap_usecase.dart';
 
 part 'home_state.dart';
 
@@ -21,6 +23,7 @@ class HomeCubit extends Cubit<HomeState> {
   final GetCustomPlanUsecase _getCustomPlan;
   final MemorizationPlusRepository _memorizationRepository;
   final AppSessionService _sessionService;
+  final GetActivityHeatmapUsecase _getHeatmap;
 
   HomeCubit(
     this._getProgress,
@@ -29,36 +32,49 @@ class HomeCubit extends Cubit<HomeState> {
     this._getCustomPlan,
     this._memorizationRepository,
     this._sessionService,
+    this._getHeatmap,
   ) : super(const HomeInitial());
 
   Future<void> load() async {
     emit(const HomeLoading());
-
-    final progressResult = await _getProgress();
-    final hifzResult = await _getHifzProgress();
 
     final now = DateTime.now();
     // Use date-based seed to ensure the random page stays the same for the whole day
     final today = DateTime(now.year, now.month, now.day);
     final random = Random(today.millisecondsSinceEpoch);
     final pageNumber = random.nextInt(604) + 1;
-    final quranPageResult = await _getQuranPage(pageNumber);
+
+    final progressFuture = _getProgress();
+    final hifzFuture = _getHifzProgress();
+    final quranPageFuture = _getQuranPage(pageNumber);
+    final planFuture = _getCustomPlan();
+    final heatmapFuture = _getHeatmap();
+
+    final progressResult = await progressFuture;
+    final hifzResult = await hifzFuture;
+    final quranPageResult = await quranPageFuture;
     QuranPageDetail? dailyWirdDetail;
     quranPageResult.fold((l) => null, (r) => dailyWirdDetail = r);
 
-    // Fetch custom plan
     CustomMemorizationPlan? customPlan;
-    final planResult = await _getCustomPlan();
+    final planResult = await planFuture;
     planResult.fold((l) => null, (plan) => customPlan = plan);
+    final heatmap = await heatmapFuture;
 
     // Load last restorable location for "Continue Reading" chip
     final lastLocation = _sessionService.getLastRestorableLocation();
 
     // Load parent tracking preferences
     MemorizationTrack? selectedTrack;
-    _memorizationRepository.getSelectedTrack().fold((_) {}, (t) => selectedTrack = t);
+    _memorizationRepository.getSelectedTrack().fold(
+      (_) {},
+      (t) => selectedTrack = t,
+    );
     bool isParentMode = false;
-    _memorizationRepository.getIsParentMode().fold((_) {}, (m) => isParentMode = m);
+    _memorizationRepository.getIsParentMode().fold(
+      (_) {},
+      (m) => isParentMode = m,
+    );
 
     progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
       final hifzProgress = hifzResult.getOrElse(() => []);
@@ -72,6 +88,8 @@ class HomeCubit extends Cubit<HomeState> {
           selectedTrack: selectedTrack,
           isParentMode: isParentMode,
           lastRestorableLocation: lastLocation,
+          activityCountsByDay: heatmap.countsByDay,
+          activityStartDate: heatmap.startDate,
         ),
       );
     });

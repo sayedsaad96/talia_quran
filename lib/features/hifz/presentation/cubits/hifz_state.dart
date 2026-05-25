@@ -1,5 +1,6 @@
 part of 'hifz_cubit.dart';
 
+@immutable
 abstract class HifzState extends Equatable {
   const HifzState();
   @override

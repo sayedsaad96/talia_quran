@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
@@ -5,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/xp_constants.dart';
@@ -21,6 +21,7 @@ import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/achievement_service.dart';
+import '../../../../core/services/app_session_service.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
@@ -108,6 +109,36 @@ class _HomeContent extends StatelessWidget {
         // ─── Sign-In Nudge Banner ───────────────────────────────────────────
         SliverToBoxAdapter(child: _SignInNudgeBanner(isDark: isDark)),
 
+        SliverToBoxAdapter(child: _StartHereStrip(isDark: isDark)),
+
+        if (state.lastRestorableLocation != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.md,
+                AppSpacing.pagePadding,
+                0,
+              ),
+              child: _ResumeSessionCard(
+                location: state.lastRestorableLocation!,
+                isDark: isDark,
+              ),
+            ),
+          ),
+
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pagePadding,
+              AppSpacing.md,
+              AppSpacing.pagePadding,
+              0,
+            ),
+            child: _NextBestActionCard(state: state, isDark: isDark),
+          ),
+        ),
+
         // ─── Daily Wird Card ────────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
@@ -120,23 +151,6 @@ class _HomeContent extends StatelessWidget {
             child: _DailyWirdCard(state: state, isDark: isDark),
           ),
         ),
-
-        // ─── Continue Reading Chip ───────────────────────────────────────────
-        if (state.lastRestorableLocation != null)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.sm,
-                AppSpacing.pagePadding,
-                0,
-              ),
-              child: _ContinueReadingChip(
-                location: state.lastRestorableLocation!,
-                isDark: isDark,
-              ),
-            ),
-          ),
 
         // ─── Progress Section ────────────────────────────────────────────────
         SliverToBoxAdapter(
@@ -185,7 +199,7 @@ class _HomeContent extends StatelessWidget {
           ),
         ),
 
-        // ─── Active Custom Plan Card (If available) ──────────────────────────
+        // ─── Active Custom Plan Card OR MemorizationPlus Card ────────────────
         if (state.customPlan != null)
           SliverToBoxAdapter(
             child: Padding(
@@ -200,20 +214,19 @@ class _HomeContent extends StatelessWidget {
                 isDark: isDark,
               ),
             ),
-          ),
-
-        // ─── MemorizationPlus Card ───────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.lg,
-              AppSpacing.pagePadding,
-              0,
+          )
+        else
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.lg,
+                AppSpacing.pagePadding,
+                0,
+              ),
+              child: _MemorizationPlusCard(isDark: isDark),
             ),
-            child: _MemorizationPlusCard(isDark: isDark),
           ),
-        ),
 
         // ─── Parent Dashboard Shortcut (If Parent Mode / Kids Track) ──────────
         if (state.selectedTrack == MemorizationTrack.kids || state.isParentMode)
@@ -238,7 +251,10 @@ class _HomeContent extends StatelessWidget {
               AppSpacing.pagePadding,
               0,
             ),
-            child: ActivityHeatmap(isar: getIt<Isar>()),
+            child: ActivityHeatmap(
+              activityCountsByDay: state.activityCountsByDay,
+              startDate: state.activityStartDate,
+            ),
           ),
         ),
 

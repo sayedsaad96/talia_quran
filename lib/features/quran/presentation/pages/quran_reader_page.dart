@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
@@ -39,10 +40,14 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   PageController? _pageController;
   SurahDetailCubit? _surahDetailCubit;
   Timer? _readTimer;
+  Timer? _readConfirmedFeedbackTimer;
   QuranPageDetail? _currentDetail;
   int? _currentPageNumber;
+  bool _showLongPressHint = false;
+  bool _showReadConfirmedFeedback = false;
 
   final Set<int> _confirmedReadPages = {};
+  static const _longPressHintKey = 'quran_long_press_hint_seen';
 
   int _normalizePageNumber(int pageNumber) => pageNumber.clamp(1, 604);
 
@@ -57,11 +62,13 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     } else if (widget.surahId != null) {
       _surahDetailCubit = getIt<SurahDetailCubit>()..loadSurah(widget.surahId!);
     }
+    unawaited(_loadLongPressHintState());
   }
 
   @override
   void dispose() {
     _readTimer?.cancel();
+    _readConfirmedFeedbackTimer?.cancel();
     _pageController?.dispose();
     _surahDetailCubit?.close();
     _quranPageCubit.close();
@@ -81,6 +88,32 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
         '/quran/page/${_normalizePageNumber(pageNumber)}',
       ),
     );
+  }
+
+  Future<void> _loadLongPressHintState() async {
+    final seen = getIt<SharedPreferences>().getBool(_longPressHintKey) ?? false;
+    if (!seen && mounted) {
+      setState(() => _showLongPressHint = true);
+    }
+  }
+
+  void _dismissLongPressHint() {
+    unawaited(getIt<SharedPreferences>().setBool(_longPressHintKey, true));
+    if (mounted) {
+      setState(() => _showLongPressHint = false);
+    }
+  }
+
+  void _showReadConfirmed() {
+    _readConfirmedFeedbackTimer?.cancel();
+    if (mounted) {
+      setState(() => _showReadConfirmedFeedback = true);
+    }
+    _readConfirmedFeedbackTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) {
+        setState(() => _showReadConfirmedFeedback = false);
+      }
+    });
   }
 
   void _loadPage(int pageNumber) {
@@ -207,9 +240,14 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
           if (state is QuranPageLoaded) {
             _currentDetail = state.detail;
             if (state.isReadConfirmed) {
-              _confirmedReadPages.add(state.detail.pageNumber);
+              final isNewlyConfirmed = _confirmedReadPages.add(
+                state.detail.pageNumber,
+              );
               _readTimer?.cancel();
               _readTimer = null;
+              if (isNewlyConfirmed) {
+                _showReadConfirmed();
+              }
             } else {
               _startReadTimer(state.detail, context);
             }
@@ -249,43 +287,59 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
             key: _scaffoldKey,
             backgroundColor: bg,
             body: SafeArea(
-              child: qcf.QuranPageView(
-                pageController: _pageController!,
-                highlights: _highlights,
-                isDarkMode: isDark,
-                isTajweed: true,
-                pageBackgroundColor: bg,
-                onPageChanged: (page) {
-                  setState(() => _currentPageNumber = page);
-                  _saveCurrentPage(page);
-                  _loadPage(page);
-                },
-                onLongPress: (surahNumber, verseNumber, details) =>
-                    _showAyahOptions(
-                      context,
-                      surahNumber,
-                      verseNumber,
-                      details,
+              child: Stack(
+                children: [
+                  qcf.QuranPageView(
+                    pageController: _pageController!,
+                    highlights: _highlights,
+                    isDarkMode: isDark,
+                    isTajweed: true,
+                    pageBackgroundColor: bg,
+                    onPageChanged: (page) {
+                      setState(() => _currentPageNumber = page);
+                      _saveCurrentPage(page);
+                      _loadPage(page);
+                    },
+                    onLongPress: (surahNumber, verseNumber, details) =>
+                        _showAyahOptions(
+                          context,
+                          surahNumber,
+                          verseNumber,
+                          details,
+                        ),
+                    topBar: _MushafTopBar(
+                      surahName: firstSurah?.nameAr ?? '',
+                      juzNumber: juzNumber,
+                      gold: gold,
+                      bg: bg,
+                      onClose: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go('/');
+                        }
+                      },
                     ),
-                topBar: _MushafTopBar(
-                  surahName: firstSurah?.nameAr ?? '',
-                  juzNumber: juzNumber,
-                  gold: gold,
-                  bg: bg,
-                  onClose: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go('/');
-                    }
-                  },
-                ),
-                bottomBar: _MushafFooter(
-                  pageNumber: pageNumber,
-                  hizbNumber: MushafHizbHelper.getHizb(pageNumber),
-                  gold: gold,
-                  bg: bg,
-                ),
+                    bottomBar: _MushafFooter(
+                      pageNumber: pageNumber,
+                      hizbNumber: MushafHizbHelper.getHizb(pageNumber),
+                      gold: gold,
+                      bg: bg,
+                      showReadConfirmed: _showReadConfirmedFeedback,
+                    ),
+                  ),
+                  if (_showLongPressHint)
+                    PositionedDirectional(
+                      top: 54,
+                      start: AppSpacing.md,
+                      end: AppSpacing.md,
+                      child: _LongPressHintBanner(
+                        gold: gold,
+                        bg: bg,
+                        onDismiss: _dismissLongPressHint,
+                      ),
+                    ),
+                ],
               ),
             ),
           );
@@ -373,12 +427,14 @@ class _MushafFooter extends StatelessWidget {
     required this.hizbNumber,
     required this.gold,
     required this.bg,
+    required this.showReadConfirmed,
   });
 
   final int pageNumber;
   final int hizbNumber;
   final Color gold;
   final Color bg;
+  final bool showReadConfirmed;
 
   @override
   Widget build(BuildContext context) {
@@ -415,8 +471,80 @@ class _MushafFooter extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 60),
+          AnimatedOpacity(
+            opacity: showReadConfirmed ? 1 : 0,
+            duration: const Duration(milliseconds: 220),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.check_circle_rounded, color: gold, size: 16),
+                const SizedBox(width: 4),
+                Text(
+                  context.l10n.readPageConfirmed,
+                  style: TextStyle(
+                    fontFamily: 'Amiri',
+                    fontSize: 12,
+                    color: gold,
+                    fontWeight: FontWeight.w700,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+class _LongPressHintBanner extends StatelessWidget {
+  const _LongPressHintBanner({
+    required this.gold,
+    required this.bg,
+    required this.onDismiss,
+  });
+
+  final Color gold;
+  final Color bg;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: bg,
+      elevation: 4,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(color: gold.withValues(alpha: 0.28)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.touch_app_rounded, color: gold, size: 18),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                context.l10n.quranLongPressHint,
+                style: TextStyle(
+                  fontFamily: 'Amiri',
+                  color: gold,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  height: 1.5,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: onDismiss,
+              icon: Icon(Icons.close_rounded, color: gold, size: 18),
+              visualDensity: VisualDensity.compact,
+              tooltip: context.l10n.close,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -458,7 +586,6 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
         widget.ayah.numberInSurah,
       );
       await AudioCacheService.playFromSource(_player, source);
-      await _player.play();
       unawaited(_playerSub?.cancel() ?? Future.value());
       _playerSub = _player.playerStateStream.listen((ps) {
         if (ps.processingState == ProcessingState.completed && mounted) {
@@ -533,23 +660,35 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                     label: context.l10n.bookmark,
                     color: Colors.orange,
                     onTap: () async {
-                      await getIt<BookmarkService>().toggle(
-                        BookmarkEntry(
-                          surahId: widget.ayah.surahId,
-                          surahName: widget.surahName,
-                          ayahNumber: widget.ayah.numberInSurah,
-                          ayahText: widget.ayah.text,
-                          savedAt: DateTime.now(),
-                        ),
+                      final bookmarkService = getIt<BookmarkService>();
+                      final entry = BookmarkEntry(
+                        surahId: widget.ayah.surahId,
+                        surahName: widget.surahName,
+                        ayahNumber: widget.ayah.numberInSurah,
+                        ayahText: widget.ayah.text,
+                        savedAt: DateTime.now().toUtc(),
                       );
+                      final wasBookmarked = bookmarkService.isBookmarked(
+                        entry.surahId,
+                        entry.ayahNumber,
+                      );
+                      await bookmarkService.toggle(entry);
                       if (context.mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        final messenger = ScaffoldMessenger.of(context);
+                        final navigator = Navigator.of(context);
+                        final message = wasBookmarked
+                            ? context.l10n.bookmarkRemoved
+                            : context.l10n.bookmarkAdded;
+                        final undoLabel = context.l10n.undo;
+                        navigator.pop();
+                        messenger.showSnackBar(
                           SnackBar(
-                            content: Text(
-                              context.isArabic
-                                  ? 'تم حفظ العلامة المرجعية'
-                                  : 'Bookmark saved',
+                            content: Text(message),
+                            action: SnackBarAction(
+                              label: undoLabel,
+                              onPressed: () {
+                                unawaited(bookmarkService.toggle(entry));
+                              },
                             ),
                           ),
                         );

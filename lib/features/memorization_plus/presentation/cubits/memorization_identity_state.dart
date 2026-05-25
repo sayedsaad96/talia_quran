@@ -1,5 +1,6 @@
 part of 'memorization_identity_cubit.dart';
 
+@immutable
 abstract class MemorizationIdentityState extends Equatable {
   const MemorizationIdentityState();
 

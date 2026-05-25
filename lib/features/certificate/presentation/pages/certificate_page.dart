@@ -1,8 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gal/gal.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
@@ -50,28 +48,24 @@ class _CertificatePageState extends State<CertificatePage> {
     super.dispose();
   }
 
-  Future<File> _captureAsFile() async {
-    final bytes = await _screenshotController.captureFromWidget(
-      CertificateWidget(
-        userName: widget.userName,
-        award: widget.award,
-        completionDate: widget.award.earnedAt, // L02 FIX
-      ),
-      pixelRatio: 3.0,
-    );
-    final dir = await getTemporaryDirectory();
-    final fileName = switch (widget.award.type) {
-      CertificateType.juz =>
-        'talia_certificate_juz_${widget.award.juzNumber}.png',
-      CertificateType.surah =>
-        'talia_certificate_surah_${widget.award.surahId}.png',
-      CertificateType.halfQuran => 'talia_certificate_half_quran.png',
-      CertificateType.fullQuran => 'talia_certificate_full_quran.png',
-    };
-    final file = File('${dir.path}/$fileName');
-    await file.writeAsBytes(bytes);
-    return file;
-  }
+  String get _certificateFileName => switch (widget.award.type) {
+    CertificateType.juz =>
+      'talia_certificate_juz_${widget.award.juzNumber}.png',
+    CertificateType.surah =>
+      'talia_certificate_surah_${widget.award.surahId}.png',
+    CertificateType.halfQuran => 'talia_certificate_half_quran.png',
+    CertificateType.fullQuran => 'talia_certificate_full_quran.png',
+  };
+
+  Future<Uint8List> _captureCertificateBytes() =>
+      _screenshotController.captureFromWidget(
+        CertificateWidget(
+          userName: widget.userName,
+          award: widget.award,
+          completionDate: widget.award.earnedAt, // L02 FIX
+        ),
+        pixelRatio: 3.0,
+      );
 
   Future<void> _share() async {
     setState(() => _isSaving = true);
@@ -90,11 +84,20 @@ class _CertificatePageState extends State<CertificatePage> {
         CertificateType.halfQuran => l10n.shareCertificateHalfQuran,
         CertificateType.fullQuran => l10n.shareCertificateFullQuran,
       };
-      // Always share as a high-quality image
-      final file = await _captureAsFile();
+      // Always share as a high-quality image.
+      final bytes = await _captureCertificateBytes();
 
       await SharePlus.instance.share(
-        ShareParams(files: [XFile(file.path)], text: shareText),
+        ShareParams(
+          files: [
+            XFile.fromData(
+              bytes,
+              mimeType: 'image/png',
+              name: _certificateFileName,
+            ),
+          ],
+          text: shareText,
+        ),
       );
     } catch (e) {
       if (mounted) {
@@ -127,8 +130,11 @@ class _CertificatePageState extends State<CertificatePage> {
         }
       }
 
-      final file = await _captureAsFile();
-      await Gal.putImage(file.path);
+      final bytes = await _captureCertificateBytes();
+      await Gal.putImageBytes(
+        bytes,
+        name: _certificateFileName.replaceFirst('.png', ''),
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

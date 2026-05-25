@@ -1,5 +1,6 @@
 part of 'parent_dashboard_cubit.dart';
 
+@immutable
 abstract class ParentDashboardState extends Equatable {
   const ParentDashboardState();
 

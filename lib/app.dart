@@ -24,15 +24,17 @@ class TaliaApp extends StatefulWidget {
 }
 
 class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
+  late final TaliaNotificationService _notificationService =
+      getIt<TaliaNotificationService>();
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    TaliaNotificationService.instance.onPayloadReceived = _openNotification;
+    _notificationService.onPayloadReceived = _openNotification;
     AppRouter.router.routerDelegate.addListener(_saveCurrentLocation);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final payload = TaliaNotificationService.instance
-          .takePendingLaunchPayload();
+      final payload = _notificationService.takePendingLaunchPayload();
       if (payload != null) {
         _openNotification(payload);
       }
@@ -42,7 +44,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    TaliaNotificationService.instance.onPayloadReceived = null;
+    _notificationService.onPayloadReceived = null;
     AppRouter.router.routerDelegate.removeListener(_saveCurrentLocation);
     super.dispose();
   }
@@ -51,7 +53,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       // Refresh notifications on resume to sync timezone/time
-      TaliaNotificationService.instance.refreshNotifications();
+      _notificationService.refreshNotifications();
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused ||
@@ -78,7 +80,9 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         BlocProvider(create: (_) => getIt<ThemeCubit>()..loadTheme()),
         BlocProvider(create: (_) => getIt<LocaleCubit>()..loadLocale()),
         BlocProvider(create: (_) => getIt<ProfileCubit>()..loadProfile()),
-        BlocProvider(create: (_) => getIt<AuthCubit>()),
+        // AuthCubit is a GetIt singleton — use value: so the framework does
+        // not dispose it when this widget is torn down.
+        BlocProvider.value(value: getIt<AuthCubit>()),
       ],
       child: BlocBuilder<LocaleCubit, Locale>(
         builder: (context, locale) {

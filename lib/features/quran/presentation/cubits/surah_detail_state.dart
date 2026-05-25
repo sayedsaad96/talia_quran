@@ -1,5 +1,6 @@
 part of 'surah_detail_cubit.dart';
 
+@immutable
 abstract class SurahDetailState extends Equatable {
   const SurahDetailState();
   @override

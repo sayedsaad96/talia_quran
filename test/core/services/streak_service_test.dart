@@ -38,6 +38,26 @@ void main() {
     return 1; // broken
   }
 
+  DateTime simulateFreeze(DateTime lastActivityDate) {
+    return lastActivityDate.add(const Duration(days: 1));
+  }
+
+  int dayKey(DateTime date) {
+    final utcDate = date.toUtc();
+    return utcDate.year * 10000 + utcDate.month * 100 + utcDate.day;
+  }
+
+  String dayKeyToString(int key) {
+    final year = key ~/ 10000;
+    final month = (key % 10000) ~/ 100;
+    final day = key % 100;
+    return '$year-${month.toString().padLeft(2, '0')}-${day.toString().padLeft(2, '0')}';
+  }
+
+  void upsertActivity(Map<int, int> heatmap, int key, int delta) {
+    heatmap[key] = (heatmap[key] ?? 0) + delta;
+  }
+
   // ─── Same-day ────────────────────────────────────────────────────────────
 
   group('Same-day activity', () {
@@ -146,6 +166,60 @@ void main() {
         today: today,
       );
       expect(result, equals(1));
+    });
+  });
+
+  // ─── Freeze protection ──────────────────────────────────────────────────
+
+  group('Freeze protection', () {
+    test('skipping one day resets streak without a freeze', () {
+      final twoDaysAgo = DateTime.utc(2025, 6, 13);
+      final today = DateTime.utc(2025, 6, 15);
+
+      final result = simulateStreak(
+        lastActivityDate: twoDaysAgo,
+        currentStreak: 12,
+        today: today,
+      );
+
+      expect(result, equals(1));
+    });
+
+    test(
+      'skipping one day stays consecutive after a freeze advances last date',
+      () {
+        final twoDaysAgo = DateTime.utc(2025, 6, 13);
+        final today = DateTime.utc(2025, 6, 15);
+        final protectedLastDate = simulateFreeze(twoDaysAgo);
+
+        final result = simulateStreak(
+          lastActivityDate: protectedLastDate,
+          currentStreak: 12,
+          today: today,
+        );
+
+        expect(result, equals(13));
+      },
+    );
+  });
+
+  // ─── Heatmap persistence rules ───────────────────────────────────────────
+
+  group('Heatmap activity map', () {
+    test('uses stable UTC YYYYMMDD keys', () {
+      final key = dayKey(DateTime.utc(2025, 6, 15, 23, 59));
+      expect(key, equals(20250615));
+      expect(dayKeyToString(key), equals('2025-06-15'));
+    });
+
+    test('upserts activity counts for the same day', () {
+      final heatmap = <int, int>{};
+      final key = dayKey(DateTime.utc(2025, 6, 15));
+
+      upsertActivity(heatmap, key, 1);
+      upsertActivity(heatmap, key, 3);
+
+      expect(heatmap[key], equals(4));
     });
   });
 

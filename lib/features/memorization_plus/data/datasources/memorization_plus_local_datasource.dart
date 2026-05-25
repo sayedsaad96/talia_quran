@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/isar_ayah_review_record.dart';
 import '../models/memorization_models.dart';
 
 abstract class MemorizationPlusLocalDatasource {
@@ -19,6 +21,7 @@ abstract class MemorizationPlusLocalDatasource {
   Future<void> clearSelectedTrack();
 
   // Review records
+  Future<void> migrateReviewRecordsToIsarIfNeeded();
   Future<AyahReviewRecordModel?> getReviewRecord(int surahId, int ayahNumber);
   Future<List<AyahReviewRecordModel>> getAllReviewRecords();
   Future<void> saveReviewRecord(AyahReviewRecordModel record);
@@ -57,15 +60,17 @@ abstract class MemorizationPlusLocalDatasource {
 
 class MemorizationPlusLocalDatasourceImpl
     implements MemorizationPlusLocalDatasource {
-  MemorizationPlusLocalDatasourceImpl(this._prefs);
+  MemorizationPlusLocalDatasourceImpl(this._prefs, {Isar? isar}) : _isar = isar;
 
   final SharedPreferences _prefs;
+  final Isar? _isar;
 
   // ─── Key namespace (isolated from existing features) ────────────────────────
   static const _kProfile = 'mem_plus_profile';
   static const _kPairingSession = 'mem_plus_pairing_session';
   static const _kTrack = 'mem_plus_track';
   static const _kReviewPrefix = 'mem_plus_review';
+  static const _kReviewIsarMigration = 'mem_plus_reviews_migrated_to_isar_v1';
   static const _kDailyPlan = 'mem_plus_daily_plan';
   static const _kKidsProgress = 'mem_plus_kids_progress';
   static const _kKidsSessionLogs = 'mem_plus_kids_session_logs';
@@ -77,6 +82,8 @@ class MemorizationPlusLocalDatasourceImpl
 
   String _reviewKey(int surahId, int ayahNumber) =>
       '${_kReviewPrefix}_${surahId}_$ayahNumber';
+  String _reviewCompositeKey(int surahId, int ayahNumber) =>
+      '${surahId}_$ayahNumber';
 
   Map<String, dynamic>? _tryDecodeMap(String raw) {
     try {
@@ -155,10 +162,54 @@ class MemorizationPlusLocalDatasourceImpl
 
   // ─── Review records ─────────────────────────────────────────────────────────
   @override
+  Future<void> migrateReviewRecordsToIsarIfNeeded() async {
+    final isar = _isar;
+    if (isar == null || (_prefs.getBool(_kReviewIsarMigration) ?? false)) {
+      return;
+    }
+
+    final legacyKeys = _legacyReviewKeys();
+    if (legacyKeys.isEmpty) {
+      await _prefs.setBool(_kReviewIsarMigration, true);
+      return;
+    }
+
+    final records = legacyKeys
+        .map((key) {
+          final raw = _prefs.getString(key);
+          return raw == null
+              ? null
+              : _tryParse(raw, AyahReviewRecordModel.fromJson);
+        })
+        .whereType<AyahReviewRecordModel>()
+        .toList();
+
+    await isar.writeTxn(() async {
+      await isar.isarAyahReviewRecords.putAll(
+        records.map(IsarAyahReviewRecord.fromModel).toList(),
+      );
+    });
+
+    for (final key in legacyKeys) {
+      await _removeOrThrow(key);
+    }
+    await _prefs.setBool(_kReviewIsarMigration, true);
+  }
+
+  @override
   Future<AyahReviewRecordModel?> getReviewRecord(
     int surahId,
     int ayahNumber,
   ) async {
+    final isar = _isar;
+    if (isar != null) {
+      await migrateReviewRecordsToIsarIfNeeded();
+      final record = await isar.isarAyahReviewRecords.getByCompositeKey(
+        _reviewCompositeKey(surahId, ayahNumber),
+      );
+      return record?.toModel();
+    }
+
     final raw = _prefs.getString(_reviewKey(surahId, ayahNumber));
     if (raw == null) return null;
     return _tryParse(raw, AyahReviewRecordModel.fromJson);
@@ -166,11 +217,14 @@ class MemorizationPlusLocalDatasourceImpl
 
   @override
   Future<List<AyahReviewRecordModel>> getAllReviewRecords() async {
-    final keys = _prefs
-        .getKeys()
-        .where((k) => k.startsWith(_kReviewPrefix))
-        .toList();
-    return keys
+    final isar = _isar;
+    if (isar != null) {
+      await migrateReviewRecordsToIsarIfNeeded();
+      final records = await isar.isarAyahReviewRecords.where().findAll();
+      return records.map((record) => record.toModel()).toList();
+    }
+
+    return _legacyReviewKeys()
         .map((k) {
           final raw = _prefs.getString(k);
           return raw == null
@@ -182,11 +236,30 @@ class MemorizationPlusLocalDatasourceImpl
   }
 
   @override
-  Future<void> saveReviewRecord(AyahReviewRecordModel record) =>
-      _setStringOrThrow(
-        _reviewKey(record.surahId, record.ayahNumber),
-        jsonEncode(record.toJson()),
-      );
+  Future<void> saveReviewRecord(AyahReviewRecordModel record) async {
+    final isar = _isar;
+    if (isar != null) {
+      await migrateReviewRecordsToIsarIfNeeded();
+      await isar.writeTxn(() async {
+        await isar.isarAyahReviewRecords.put(
+          IsarAyahReviewRecord.fromModel(record),
+        );
+      });
+      return;
+    }
+
+    await _setStringOrThrow(
+      _reviewKey(record.surahId, record.ayahNumber),
+      jsonEncode(record.toJson()),
+    );
+  }
+
+  List<String> _legacyReviewKeys() {
+    return _prefs
+        .getKeys()
+        .where((key) => key.startsWith('${_kReviewPrefix}_'))
+        .toList();
+  }
 
   // ─── Daily plan cache ────────────────────────────────────────────────────────
   @override

@@ -1,5 +1,6 @@
 part of 'daily_plan_cubit.dart';
 
+@immutable
 abstract class DailyPlanState extends Equatable {
   const DailyPlanState();
   @override

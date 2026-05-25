@@ -60,7 +60,7 @@ class AppSessionService {
       }
     }
 
-    return true;
+    return false;
   }
 
   int? _readInt(Uri uri, String key) {

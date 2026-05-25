@@ -145,8 +145,6 @@ class _QuranViewState extends State<_QuranView>
                       color: Colors.white70,
                     ),
                   ).animate().fadeIn(duration: 200.ms),
-                  const SizedBox(height: AppSpacing.md),
-                  _SearchBar(controller: _searchCtrl),
                 ],
               ),
             ),
@@ -154,23 +152,36 @@ class _QuranViewState extends State<_QuranView>
         ),
       ),
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(48),
+        preferredSize: const Size.fromHeight(104),
         child: Container(
           color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-          child: TabBar(
-            controller: _tabCtrl,
-            labelColor: primary,
-            unselectedLabelColor: isDark
-                ? AppColors.darkTextHint
-                : AppColors.lightTextHint,
-            labelStyle: AppTypography.labelLarge,
-            indicatorColor: primary,
-            indicatorSize: TabBarIndicatorSize.label,
-            indicatorWeight: 2,
-            tabs: [
-              Tab(text: context.l10n.surahs),
-              Tab(text: context.l10n.juz),
-              Tab(text: context.l10n.bookmark),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pagePadding,
+                  AppSpacing.sm,
+                  AppSpacing.pagePadding,
+                  AppSpacing.sm,
+                ),
+                child: _SearchBar(controller: _searchCtrl),
+              ),
+              TabBar(
+                controller: _tabCtrl,
+                labelColor: primary,
+                unselectedLabelColor: isDark
+                    ? AppColors.darkTextHint
+                    : AppColors.lightTextHint,
+                labelStyle: AppTypography.labelLarge,
+                indicatorColor: primary,
+                indicatorSize: TabBarIndicatorSize.label,
+                indicatorWeight: 2,
+                tabs: [
+                  Tab(text: context.l10n.surahs),
+                  Tab(text: context.l10n.juz),
+                  Tab(text: context.l10n.bookmark),
+                ],
+              ),
             ],
           ),
         ),
@@ -185,24 +196,36 @@ class _SearchBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.isDark;
+
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: 44),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: isDark
+              ? AppColors.darkSurfaceVariant
+              : AppColors.lightSurfaceVariant,
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          border: Border.all(
+            color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+          ),
         ),
         child: TextField(
           controller: controller,
           onChanged: (q) => context.read<SurahListCubit>().search(q),
-          style: AppTypography.bodyMedium.copyWith(color: Colors.white),
+          style: AppTypography.bodyMedium.copyWith(
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
+          ),
           decoration: InputDecoration(
             hintText: context.l10n.searchSurah,
-            hintStyle: AppTypography.bodyMedium.copyWith(color: Colors.white60),
-            prefixIcon: const Icon(
+            hintStyle: AppTypography.bodyMedium.copyWith(
+              color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+            ),
+            prefixIcon: Icon(
               Icons.search_rounded,
-              color: Colors.white60,
+              color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
               size: 20,
             ),
             filled: false,

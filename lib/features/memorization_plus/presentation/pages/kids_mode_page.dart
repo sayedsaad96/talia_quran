@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/error_info_banner.dart';
 import '../../../../core/widgets/qcf_hifz_verse_view.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../cubits/kids_mode_cubit.dart';
@@ -179,6 +180,17 @@ class _KidsModeBody extends StatelessWidget {
               // Loop indicator
               _LoopIndicator(state: state),
               const SizedBox(height: AppSpacing.xl),
+
+              if (state.audioError != null) ...[
+                ErrorInfoBanner(
+                  type: ErrorInfoBannerType.warning,
+                  title: 'الصوت لم يعمل',
+                  message: state.audioError!,
+                  actionLabel: 'جرّب مرة أخرى',
+                  onAction: () => context.read<KidsModeCubit>().playAudio(),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
 
               // Play button
               _PlayButton(state: state),
@@ -380,30 +392,49 @@ class _LoopIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+    final nextLabel = state.currentLoop <= 0
+        ? 'اسمع'
+        : state.currentLoop == 1
+        ? 'ردد معي'
+        : 'آخر مرة';
+
+    return Column(
       children: [
-        ...List.generate(state.maxLoops, (i) {
-          final isActive = i < state.currentLoop;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            margin: const EdgeInsets.symmetric(horizontal: 6),
-            width: isActive ? 28 : 14,
-            height: 14,
-            decoration: BoxDecoration(
-              color: isActive
-                  ? const Color(0xFF2D8E4C)
-                  : const Color(0xFF2D8E4C).withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(7),
-            ),
-          );
-        }),
-        const SizedBox(width: 12),
         Text(
-          '${state.currentLoop} / ${state.maxLoops}',
-          style: AppTypography.bodySmall.copyWith(
+          nextLabel,
+          style: AppTypography.titleSmall.copyWith(
             color: const Color(0xFF2D8E4C),
+            fontFamily: 'Amiri',
+            fontWeight: FontWeight.w700,
           ),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ...List.generate(state.maxLoops, (i) {
+              final isActive = i < state.currentLoop;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                width: isActive ? 28 : 14,
+                height: 14,
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? const Color(0xFF2D8E4C)
+                      : const Color(0xFF2D8E4C).withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(7),
+                ),
+              );
+            }),
+            const SizedBox(width: 12),
+            Text(
+              '${state.currentLoop} / ${state.maxLoops}',
+              style: AppTypography.bodySmall.copyWith(
+                color: const Color(0xFF2D8E4C),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -472,10 +503,10 @@ class _CompleteButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.isCompleted) return const SizedBox.shrink();
+    final canComplete = state.currentLoop >= state.maxLoops;
     return Column(
       children: [
-        // BUG-4 FIX: show warning if user tries to complete before listening
-        if (state.mustListenFirst)
+        if (!canComplete || state.mustListenFirst)
           Container(
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -493,13 +524,15 @@ class _CompleteButton extends StatelessWidget {
                   size: 18,
                 ),
                 const SizedBox(width: 8),
-                Text(
-                  'استمع للآية ${state.maxLoops} مرات أولاً 🎧',
-                  style: const TextStyle(
-                    color: Colors.orange,
-                    fontFamily: 'Amiri',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
+                Flexible(
+                  child: Text(
+                    'استمع ${state.currentLoop} من ${state.maxLoops} مرات لفتح الزر',
+                    style: const TextStyle(
+                      color: Colors.orange,
+                      fontFamily: 'Amiri',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ],
@@ -507,10 +540,16 @@ class _CompleteButton extends StatelessWidget {
           ),
         Center(
           child: OutlinedButton.icon(
-            onPressed: () => context.read<KidsModeCubit>().markCompleted(),
+            onPressed: canComplete
+                ? () => context.read<KidsModeCubit>().markCompleted()
+                : null,
             style: OutlinedButton.styleFrom(
-              foregroundColor: const Color(0xFF2D8E4C),
-              side: const BorderSide(color: Color(0xFF2D8E4C)),
+              foregroundColor: canComplete
+                  ? const Color(0xFF2D8E4C)
+                  : Colors.grey,
+              side: BorderSide(
+                color: canComplete ? const Color(0xFF2D8E4C) : Colors.grey,
+              ),
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.xl,
                 vertical: AppSpacing.md,

@@ -1,5 +1,6 @@
 part of 'home_cubit.dart';
 
+@immutable
 abstract class HomeState extends Equatable {
   const HomeState();
   @override
@@ -24,6 +25,8 @@ class HomeLoaded extends HomeState {
     this.selectedTrack,
     this.isParentMode = false,
     this.lastRestorableLocation,
+    this.activityCountsByDay = const {},
+    required this.activityStartDate,
   });
 
   final OverallProgress progress;
@@ -33,9 +36,12 @@ class HomeLoaded extends HomeState {
   final CustomMemorizationPlan? customPlan;
   final MemorizationTrack? selectedTrack;
   final bool isParentMode;
+
   /// Last restorable GoRouter path, e.g. `/quran/page/42`.
   /// Null when the user has never read anything.
   final String? lastRestorableLocation;
+  final Map<String, int> activityCountsByDay;
+  final DateTime activityStartDate;
 
   @override
   List<Object?> get props => [
@@ -47,6 +53,8 @@ class HomeLoaded extends HomeState {
     selectedTrack,
     isParentMode,
     lastRestorableLocation,
+    activityCountsByDay,
+    activityStartDate,
   ];
 }
 

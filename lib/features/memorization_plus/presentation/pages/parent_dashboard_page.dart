@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -91,6 +93,7 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
               title: 'أنشئ رمز ولي الأمر',
               buttonText: 'حفظ الرمز',
               controller: _pinController,
+              requiresConfirmation: true,
               onSubmit: (pin) => context.read<ParentDashboardCubit>().setPin(
                 pin,
                 surahId: widget.surahId,
@@ -124,6 +127,13 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
                   120,
                 ),
                 children: [
+                  _TodaySummaryCard(
+                    dashboard: state.dashboard,
+                    onAddReward: () => _showQuickRewardDialog(context),
+                    onShowLastLog: () =>
+                        _showLastSessionDialog(context, state.dashboard.logs),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
                   _SummaryCard(dashboard: state.dashboard),
                   const SizedBox(height: AppSpacing.lg),
                   _ReminderCard(settings: state.dashboard.settings),
@@ -234,14 +244,67 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
       );
     }
   }
+
+  Future<void> _showQuickRewardDialog(BuildContext context) async {
+    final controller = TextEditingController();
+    final title = await showDialog<String>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('إضافة مكافأة'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(hintText: 'مثال: وقت لعب إضافي'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, controller.text.trim()),
+            child: const Text('إضافة'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (title != null && title.isNotEmpty && context.mounted) {
+      unawaited(context.read<ParentDashboardCubit>().addReward(title));
+    }
+  }
+
+  Future<void> _showLastSessionDialog(
+    BuildContext context,
+    List<KidsSessionLog> logs,
+  ) async {
+    final latest = logs.isEmpty ? null : logs.first;
+    await showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('آخر جلسة'),
+        content: Text(
+          latest == null
+              ? 'لا توجد جلسات مسجلة بعد.'
+              : 'سورة ${latest.surahId} • آية ${latest.ayahNumber}\n${latest.repeatsCompleted} تكرارات • ${latest.pointsEarned} نقطة',
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('تم'),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
-class _PinGate extends StatelessWidget {
+class _PinGate extends StatefulWidget {
   const _PinGate({
     required this.title,
     required this.buttonText,
     required this.controller,
     required this.onSubmit,
+    this.requiresConfirmation = false,
     this.onReset,
   });
 
@@ -249,7 +312,33 @@ class _PinGate extends StatelessWidget {
   final String buttonText;
   final TextEditingController controller;
   final ValueChanged<String> onSubmit;
+  final bool requiresConfirmation;
   final VoidCallback? onReset;
+
+  @override
+  State<_PinGate> createState() => _PinGateState();
+}
+
+class _PinGateState extends State<_PinGate> {
+  final _confirmController = TextEditingController();
+  String? _error;
+
+  @override
+  void dispose() {
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final pin = widget.controller.text.trim();
+    final confirm = _confirmController.text.trim();
+    if (widget.requiresConfirmation && pin != confirm) {
+      setState(() => _error = 'رمزا PIN غير متطابقين');
+      return;
+    }
+    setState(() => _error = null);
+    widget.onSubmit(pin);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -261,31 +350,124 @@ class _PinGate extends StatelessWidget {
           children: [
             const Icon(Icons.lock_rounded, size: 54, color: Color(0xFF2D8E4C)),
             const SizedBox(height: AppSpacing.md),
-            Text(title, style: AppTypography.headlineSmall),
+            Text(widget.title, style: AppTypography.headlineSmall),
+            const SizedBox(height: AppSpacing.sm),
+            const Text(
+              'هذا الرمز يحمي لوحة ولي الأمر على هذا الجهاز',
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: AppSpacing.lg),
             TextField(
-              controller: controller,
+              controller: widget.controller,
               keyboardType: TextInputType.number,
               obscureText: true,
               maxLength: 4,
               textAlign: TextAlign.center,
-              decoration: const InputDecoration(counterText: ''),
+              decoration: const InputDecoration(
+                counterText: '',
+                labelText: 'PIN',
+              ),
             ),
+            if (widget.requiresConfirmation) ...[
+              const SizedBox(height: AppSpacing.sm),
+              TextField(
+                controller: _confirmController,
+                keyboardType: TextInputType.number,
+                obscureText: true,
+                maxLength: 4,
+                textAlign: TextAlign.center,
+                decoration: const InputDecoration(
+                  counterText: '',
+                  labelText: 'تأكيد PIN',
+                ),
+              ),
+            ],
+            if (_error != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(_error!, style: const TextStyle(color: AppColors.error)),
+            ],
             const SizedBox(height: AppSpacing.md),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
-                onPressed: () => onSubmit(controller.text.trim()),
-                child: Text(buttonText),
+                onPressed: _submit,
+                child: Text(widget.buttonText),
               ),
             ),
-            if (onReset != null)
+            if (widget.onReset != null)
               TextButton(
-                onPressed: onReset,
-                child: const Text('نسيت الرمز؟ إعادة ضبط محلية'),
+                onPressed: widget.onReset,
+                child: const Text(
+                  'إعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد',
+                ),
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _TodaySummaryCard extends StatelessWidget {
+  const _TodaySummaryCard({
+    required this.dashboard,
+    required this.onAddReward,
+    required this.onShowLastLog,
+  });
+
+  final ParentDashboard dashboard;
+  final VoidCallback onAddReward;
+  final VoidCallback onShowLastLog;
+
+  @override
+  Widget build(BuildContext context) {
+    final today = DateTime.now().toUtc();
+    final todayStart = DateTime.utc(today.year, today.month, today.day);
+    final todaysLogs = dashboard.logs
+        .where((log) => !log.completedAt.toUtc().isBefore(todayStart))
+        .toList();
+    final points = todaysLogs.fold<int>(
+      0,
+      (sum, log) => sum + log.pointsEarned,
+    );
+    final sentence = todaysLogs.isEmpty
+        ? 'اليوم: لا توجد جلسات بعد. شجعه على جلسة قصيرة.'
+        : 'اليوم: أكمل الطفل ${todaysLogs.length} جلسة. شجعه على المراجعة القادمة.';
+
+    return _Panel(
+      title: 'ملخص اليوم',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              _Metric(label: 'جلسات اليوم', value: '${todaysLogs.length}'),
+              _Metric(label: 'نقاط اليوم', value: '$points'),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Text(sentence, style: AppTypography.bodyMedium),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onAddReward,
+                  icon: const Icon(Icons.card_giftcard_rounded),
+                  label: const Text('إضافة مكافأة'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: onShowLastLog,
+                  icon: const Icon(Icons.history_rounded),
+                  label: const Text('عرض آخر جلسة'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

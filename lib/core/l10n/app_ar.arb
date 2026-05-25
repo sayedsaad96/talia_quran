@@ -95,6 +95,7 @@
   "share": "مشاركة",
   "copy": "نسخ",
   "bookmark": "إشارة مرجعية",
+  "undo": "تراجع",
   "copied": "تم النسخ",
   "profile": "الملف الشخصي",
   "editProfile": "تعديل الملف الشخصي",
@@ -151,6 +152,7 @@
   "morningAzkarReminder": "تذكير أذكار الصباح",
   "eveningAzkarReminder": "تذكير أذكار المساء",
   "dailyDuaReminder": "دعاء اليوم",
+  "dailyDuaTime": "كل يوم الساعة ٩:٠٠ صباحًا",
   "signOut": "تسجيل الخروج",
   "signIn": "تسجيل الدخول",
   "signUp": "حساب جديد",
@@ -184,6 +186,9 @@
   "morningAzkarTime": "كل يوم الساعة ٦:٠٠ صباحًا",
   "eveningAzkarTime": "كل يوم الساعة ٦:٠٠ مساءً",
   "taliaDescription": "تطبيق متميز لحفظ ومراجعة القرآن الكريم",
+  "settingsAppBrand": "تالية — Talia",
+  "tutorialGuideTitle": "دليل استخدام تالية",
+  "tutorialGuideSubtitle": "تعرف على كل مزايا التطبيق وطريقة استخدامها",
   "arabicNameHint": "💡 يفضل إدخال الاسم باللغة العربية ليظهر بشكل أجمل في الشهادات",
   "invalidAge": "أدخل عمرًا صحيحًا بين 1 و120",
   "profileSaveError": "تعذر حفظ الملف الشخصي",
@@ -192,6 +197,7 @@
   "streakReminderSaveError": "تعذر تحديث تنبيه السلسلة",
   "morningAzkarSaveError": "تعذر تحديث تذكير أذكار الصباح",
   "eveningAzkarSaveError": "تعذر تحديث تذكير أذكار المساء",
+  "dailyDuaSaveError": "تعذر تحديث دعاء اليوم",
   "difficultyEasy": "سهل (٧٠٪)",
   "difficultyMedium": "متوسط (٨٥٪)",
   "difficultyHard": "صعب (٩٢٪)",
@@ -368,11 +374,174 @@
   },
   "memorizationPathReset": "تمت إعادة ضبط مسار الحفظ",
   "resetMemorizationPath": "إعادة ضبط / تغيير المسار",
+  "memorizationPath": "مسار الحفظ",
+  "kidsAndGuardian": "الأطفال وولي الأمر",
+  "parentDashboardTitle": "لوحة ولي الأمر",
+  "parentDashboardSubtitle": "تابع حفظ الطفل والمكافآت والربط عن بعد",
+  "parentModeSubtitle": "فعّل لمتابعة حفظ طفلك والربط عن بعد",
+  "resetMemorizationPathQuestion": "إعادة ضبط مسار الحفظ؟",
+  "resetMemorizationIdentityWarning": "سيؤدي هذا إلى إلغاء المسار المختار وحالة ربط ولي الأمر، ولكنه سيحتفظ بإعدادات الحفظ الذكي الخاصة بك.",
+  "confirmResetMemorizationPath": "تأكيد إعادة الضبط",
+  "resetMemorizationPathTileTitle": "إعادة ضبط المسار",
+  "resetMemorizationPathTileSubtitle": "اختر مسار الكبار أو الأطفال مرة أخرى بدون فقدان إعدادات الحفظ الذكي.",
+  "resetMemorizationPathPreserveProgressDesc": "تغيير مسار الحفظ بين مسار الكبار والأطفال، مع الاحتفاظ ببيانات الحفظ.",
+  "resetMemorizationPathPreserveProgressDialog": "هذا سيقوم بإلغاء مسار الحفظ الحالي لتتمكن من اختيار مسار جديد. لن تفقد آياتك المحفوظة.",
+  "completePreviousSurahFirst": "أكمل {surahName} أولاً",
+  "@completePreviousSurahFirst": {
+    "placeholders": {
+      "surahName": {}
+    }
+  },
   "linkGuardianNow": "ربط ولي الأمر الآن",
   "continueWithoutGuardian": "المتابعة بدون ولي أمر",
+  "guardianLinkTitle": "ربط حساب ولي الأمر",
+  "guardianLinkDesc": "اختر ما إذا كنت تريد ربط ولي أمر بهذا المسار لمتابعة حفظ الطفل.",
+  "guardianCreateCodeMessage": "قم بإنشاء رمز جديد صالح لمدة 15 دقيقة.",
+  "guardianCodeUsedMessage": "لا يمكن استخدام هذا الرمز مرة أخرى.",
+  "guardianCreateNewCode": "إنشاء رمز جديد",
   "guardianCodeExpired": "انتهت صلاحية الرمز",
   "guardianCodeAlreadyUsed": "تم استخدام الرمز مسبقاً",
+  "guardianPairingValidUntil": "صالح حتى الساعة {time}",
+  "@guardianPairingValidUntil": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "guardianPairingExpiresIn": "ينتهي خلال {minutes} دقيقة",
+  "@guardianPairingExpiresIn": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "guardianPairingExpired": "انتهت صلاحية الرمز",
+  "guardianPairingStepsTitle": "خطوات الربط",
+  "guardianPairingStepOpenParentDevice": "افتح تالية على جهاز ولي الأمر",
+  "guardianPairingStepOpenDashboard": "اذهب إلى الإعدادات > لوحة ولي الأمر",
+  "guardianPairingStepScanOrEnterCode": "امسح رمز QR أو أدخل الرمز يدوياً",
+  "guardianRegenerateCode": "تجديد الرمز",
+  "splashSubtitle": "تطبيق تحفيظ القرآن الكريم",
+  "onboardingSkip": "تخطي",
+  "onboardingStartNow": "ابدأ الآن",
+  "onboardingQuranTitle": "تجربة المصحف الحقيقي",
+  "onboardingQuranDesc": "اقرأ القرآن الكريم بتجربة فريدة تحاكي المصحف الورقي بصفحاته وتصميمه الأصيل لتنعم بخشوع التلاوة.",
+  "onboardingSmartTitle": "حفظ ذكي ومراجعة مخصصة",
+  "onboardingSmartDesc": "خطط حفظ مرنة، ومراجعات ذكية، وتقييم ذاتي يساعدك على تثبيت الآيات بدون ضغط.",
+  "onboardingKidsTitle": "رحلة ممتعة للأطفال",
+  "onboardingKidsDesc": "مسار مبسط للأطفال يجمع بين الاستماع والتكرار والنجوم، مع متابعة ولي الأمر.",
+  "memorizationPathTitle": "مسار الحفظ",
+  "memorizationPathQuestion": "من سيستخدم هذه الميزة؟",
+  "memorizationPathDescription": "اختر المسار المناسب لك أو لطفلك لتجربة حفظ مخصصة.",
+  "memorizationPathAdultsTitle": "مسار البالغين",
+  "memorizationPathAdultsDesc": "خطة حفظ مرنة مع مراجعة ذكية وتتبع يومي للإنجاز.",
+  "memorizationPathKidsTitle": "مسار الأطفال",
+  "memorizationPathKidsDesc": "رحلة حفظ تفاعلية ممتعة بإشراف ولي الأمر.",
+  "kidsJourneyTitle": "رحلة الحفظ",
+  "kidsJourneySubtitle": "استمع، كرر، واجمع النجوم خطوة بخطوة",
+  "kidsJourneyMapTitle": "خريطة الحفظ",
+  "kidsPointsValue": "{points} نقطة",
+  "@kidsPointsValue": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsLevelValue": "مستوى {level}",
+  "@kidsLevelValue": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsStartFirstStageToday": "ابدأ أول مرحلة اليوم",
+  "kidsStageAyahRange": "المرحلة {stage}: الآيات {startAyah}-{endAyah}",
+  "@kidsStageAyahRange": {
+    "placeholders": {
+      "stage": {
+        "type": "int"
+      },
+      "startAyah": {
+        "type": "int"
+      },
+      "endAyah": {
+        "type": "int"
+      }
+    }
+  },
+  "remoteGuardianLinkTitle": "ربط ولي الأمر عن بعد",
+  "createQr": "إنشاء QR",
+  "renew": "تجديد",
+  "remoteGuardianLinkInstruction": "افتح لوحة ولي الأمر على الجهاز الآخر وامسح الرمز.",
+  "kidsStageTitle": "مرحلة {stage}",
+  "@kidsStageTitle": {
+    "placeholders": {
+      "stage": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsStageProgress": "الآيات {startAyah}-{endAyah} • {completed}/{total}",
+  "@kidsStageProgress": {
+    "placeholders": {
+      "startAyah": {
+        "type": "int"
+      },
+      "endAyah": {
+        "type": "int"
+      },
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "quranLongPressHint": "اضغط مطولاً على الآية للاستماع أو إضافة علامة",
+  "readPageConfirmed": "تم احتساب الصفحة",
+  "dailyPlanRatingWeakDesc": "احتجت للمصحف",
+  "dailyPlanRatingAverageDesc": "أخطاء بسيطة",
+  "dailyPlanRatingExcellentDesc": "بدون خطأ",
+  "dailyPlanRatingHintTitle": "كيف تختار التقييم؟",
+  "dailyPlanRatingHintBody": "التقييم يحدد موعد المراجعة القادمة: ضعيف للمراجعة القريبة، متوسط للمراجعة المعتدلة، وممتاز للمراجعة بعد فترة أطول.",
+  "understood": "فهمت",
+  "hifzSkipHintTitle": "تخطي الآية",
+  "hifzSkipHintBody": "سنضيف هذه الآية للمراجعة لاحقاً، لا تقلق.",
+  "accuracyEasyTitle": "متسامح",
+  "accuracyEasyDesc": "مناسب للأطفال والمبتدئين",
+  "accuracyMediumTitle": "متوازن",
+  "accuracyMediumDesc": "للممارسة اليومية",
+  "accuracyHardTitle": "دقيق",
+  "accuracyHardDesc": "للمتقدمين",
+  "accuracyRequiredPercent": "{percent}% مطلوبة",
+  "@accuracyRequiredPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "parentGuardianMode": "أنا ولي أمر",
+  "qcfPocTitle": "تجربة عرض QCF",
+  "qcfPocIntro": "شاشة مؤقتة لاختبار العرض البصري للقرآن داخل منطقة الحفظ.",
+  "qcfPocNoProduction": "هذه الشاشة لا تغيّر منطق الحفظ أو حالة الحفظ أو التقدم أو القفل أو نقاط التحقق.",
+  "qcfPocVisualOnly": "يُستخدم qcf_quran_plus هنا لعرض آيات القرآن بصرياً فقط.",
+  "qcfPocSingleVerse": "آية واحدة",
+  "qcfPocMultipleVerses": "عدة آيات",
+  "qcfPocLastVerse": "آخر آية",
+  "qcfPocFullPage": "صفحة مصحف كاملة",
+  "qcfPocFindings": "النتائج",
+  "qcfPocSupported": "مدعوم",
+  "qcfPocLimited": "محدود",
+  "qcfPocUnsupported": "غير مدعوم",
+  "qcfPocStatus": "الحالة",
+  "qcfPocAlBaqarah255": "البقرة ٢٥٥",
+  "qcfPocAlFatihah": "الفاتحة ١-٧",
+  "qcfPocAlIkhlas": "الإخلاص ١-٤",
+  "qcfPocAshSharh8": "الشرح ٨",
   "qcfPocTitle": "تجربة عرض QCF",
   "qcfPocIntro": "شاشة مؤقتة لاختبار العرض البصري للقرآن داخل منطقة الحفظ.",
   "qcfPocNoProduction": "هذه الشاشة لا تغيّر منطق الحفظ أو حالة الحفظ أو التقدم أو القفل أو نقاط التحقق.",
@@ -395,5 +564,52 @@
   "qcfPocMultiVerseSupported": "تظهر الآيات المجموعة بصرياً من السورة نفسها.",
   "qcfPocFullPageSupported": "عرض الصفحة الكاملة متاح داخل معاينة محددة.",
   "qcfPocNoLimitations": "لم تظهر قيود في هذه التجربة المعزولة.",
-  "qcfPocLimitationInstruction": "يجب مراجعة أي قيد يظهر هنا قبل تغيير شاشات الحفظ الفعلية."
+  "qcfPocLimitationInstruction": "يجب مراجعة أي قيد يظهر هنا قبل تغيير شاشات الحفظ الفعلية.",
+  "parentDashboardCardSubtitle": "تابع حفظ الطفل والمكافآت",
+  "viewDashboard": "عرض اللوحة",
+  "resumeWhereYouLeft": "استكمال من حيث توقفت",
+  "resumeAction": "استكمال",
+  "notNow": "ليس الآن",
+  "lastSavedReading": "آخر قراءة محفوظة",
+  "incompleteHifzSession": "جلسة حفظ غير مكتملة",
+  "dailyMemorizationPlan": "خطة حفظ يومية",
+  "incompleteKidsSession": "جلسة طفل غير مكتملة",
+  "previousHifzQuiz": "اختبار حفظ سابق",
+  "savedPreviousActivity": "نشاط سابق محفوظ",
+  "completeTodaysHifz": "أكمل ورد الحفظ اليوم",
+  "planReadySmallStep": "خطتك جاهزة، خطوة صغيرة تكفي.",
+  "readTodaysPortion": "اقرأ ورد اليوم",
+  "onePageMakesProgress": "صفحة واحدة تجعل التقدّم واضحاً.",
+  "timeForDhikr": "حان وقت الذكر",
+  "startShortAzkarNow": "ابدأ بأذكار قصيرة الآن.",
+  "followChildJourney": "تابع رحلة الطفل",
+  "reviewProgressOrReward": "راجع التقدم أو أضف مكافأة مشجعة.",
+  "startQuranStepNow": "ابدأ خطوة قرآنية الآن",
+  "chooseReadingOrMemorization": "اختر قراءة أو حفظاً بسيطاً لهذا اليوم.",
+  "kidsFirstMissionToday": "مهمتك الأولى اليوم",
+  "kidsCompleteStageToday": "أكمل المرحلة {stage} اليوم",
+  "@kidsCompleteStageToday": {
+    "placeholders": {
+      "stage": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsFirstMissionSubtitle": "ابدأ بالاستماع والتكرار، وكل خطوة تقربك من نجمة جديدة.",
+  "kidsRemainingAyahs": "تبقى {count} آيات في هذه المرحلة.",
+  "@kidsRemainingAyahs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationEverydayAt": "كل يوم الساعة {time}",
+  "@notificationEverydayAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

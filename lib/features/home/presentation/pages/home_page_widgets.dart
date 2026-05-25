@@ -1092,7 +1092,7 @@ class _StreakXpRow extends StatelessWidget {
               final totalXp = snapshot.data ?? 0;
               final xpService = getIt<XpService>();
               final level = xpService.getCurrentLevel(totalXp);
-              final levels = XpConstants.levels;
+              const levels = XpConstants.levels;
               final currentIdx = levels.indexWhere((l) => l.name == level.name);
               final nextLevel = currentIdx < levels.length - 1
                   ? levels[currentIdx + 1]
@@ -1126,7 +1126,7 @@ class _StreakXpRow extends StatelessWidget {
                         Text(level.icon, style: const TextStyle(fontSize: 24)),
                         const SizedBox(width: 8),
                         Text(
-                          level.name,
+                          context.localizeLevelName(level.name),
                           style: AppTypography.headlineSmall.copyWith(
                             fontWeight: FontWeight.bold,
                             color: isDark ? Colors.white : Colors.black87,
@@ -1214,7 +1214,7 @@ class _ParentDashboardShortcutCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'لوحة ولي الأمر',
+                    context.l10n.parentDashboardTitle,
                     style: AppTypography.titleLarge.copyWith(
                       color: isDark ? Colors.white : Colors.black87,
                       fontFamily: 'Amiri',
@@ -1225,7 +1225,7 @@ class _ParentDashboardShortcutCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'تابع حفظ الطفل والمكافآت',
+                    context.l10n.parentDashboardCardSubtitle,
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark ? Colors.white70 : Colors.black54,
                     ),
@@ -1240,7 +1240,7 @@ class _ParentDashboardShortcutCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
               ),
               child: Text(
-                'عرض اللوحة',
+                context.l10n.viewDashboard,
                 style: AppTypography.labelSmall.copyWith(
                   color: const Color(0xFF2D8E4C),
                   fontWeight: FontWeight.bold,
@@ -1572,6 +1572,347 @@ class _DebugCertificatePreview extends StatelessWidget {
 
 // ─── Continue Reading Chip ────────────────────────────────────────────────────
 
+class _StartHereStrip extends StatefulWidget {
+  const _StartHereStrip({required this.isDark});
+  final bool isDark;
+
+  @override
+  State<_StartHereStrip> createState() => _StartHereStripState();
+}
+
+class _StartHereStripState extends State<_StartHereStrip> {
+  static const _skippedKey = 'onboarding_skipped';
+  static const _completedKey = 'first_action_completed';
+  bool _visible = false;
+  bool _loaded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = getIt<SharedPreferences>();
+    final skipped = prefs.getBool(_skippedKey) ?? false;
+    final completed = prefs.getBool(_completedKey) ?? false;
+    if (mounted) {
+      setState(() {
+        _visible = skipped && !completed;
+        _loaded = true;
+      });
+    }
+  }
+
+  Future<void> _completeAndGo(String route) async {
+    await getIt<SharedPreferences>().setBool(_completedKey, true);
+    if (!mounted) return;
+    setState(() => _visible = false);
+    unawaited(context.push(route));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_loaded || !_visible) return const SizedBox.shrink();
+    final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = widget.isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pagePadding,
+        AppSpacing.md,
+        AppSpacing.pagePadding,
+        0,
+      ),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: primary.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(color: primary.withValues(alpha: 0.22)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.flag_rounded, color: primary, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'ابدأ من هنا',
+                    style: AppTypography.titleMedium.copyWith(
+                      color: textColor,
+                      fontFamily: 'Amiri',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: () async {
+                    await getIt<SharedPreferences>().setBool(
+                      _completedKey,
+                      true,
+                    );
+                    if (mounted) setState(() => _visible = false);
+                  },
+                  icon: Icon(Icons.close_rounded, color: subTextColor),
+                  visualDensity: VisualDensity.compact,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              children: [
+                _StartActionChip(
+                  icon: Icons.menu_book_rounded,
+                  label: 'اقرأ صفحة',
+                  onTap: () => _completeAndGo('/quran'),
+                ),
+                _StartActionChip(
+                  icon: Icons.psychology_alt_rounded,
+                  label: 'ابدأ الحفظ',
+                  onTap: () => _completeAndGo('/memorization-plus'),
+                ),
+                _StartActionChip(
+                  icon: Icons.help_outline_rounded,
+                  label: 'دليل سريع',
+                  onTap: () => _completeAndGo('/tutorial-guide'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.04),
+    );
+  }
+}
+
+class _StartActionChip extends StatelessWidget {
+  const _StartActionChip({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ActionChip(
+      avatar: Icon(icon, size: 18),
+      label: Text(label),
+      onPressed: onTap,
+    );
+  }
+}
+
+class _ResumeSessionCard extends StatelessWidget {
+  const _ResumeSessionCard({required this.location, required this.isDark});
+
+  final String location;
+  final bool isDark;
+
+  String _description(BuildContext context) {
+    final uri = Uri.tryParse(location);
+    if (uri == null) return context.l10n.resumeWhereYouLeft;
+    if (uri.path.startsWith('/quran/page/')) return context.l10n.lastSavedReading;
+    if (uri.path == '/hifz/session') return context.l10n.incompleteHifzSession;
+    if (uri.path == '/memorization-plus/daily-plan') return context.l10n.dailyMemorizationPlan;
+    if (uri.path == '/memorization-plus/kids') return context.l10n.incompleteKidsSession;
+    if (uri.path == '/memorization-plus/quiz') return context.l10n.previousHifzQuiz;
+    return context.l10n.savedPreviousActivity;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkCard : AppColors.lightCard,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: primary.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.play_circle_fill_rounded, color: primary, size: 34),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.resumeWhereYouLeft,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: textColor,
+                    fontFamily: 'Amiri',
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  _description(context),
+                  style: AppTypography.bodySmall.copyWith(color: subTextColor),
+                ),
+              ],
+            ),
+          ),
+          TextButton(
+            onPressed: () => unawaited(context.push(location)),
+            child: Text(context.l10n.resumeAction),
+          ),
+          IconButton(
+            onPressed: () async {
+              await getIt<AppSessionService>().clearLastRestorableLocation();
+              if (context.mounted) {
+                unawaited(context.read<HomeCubit>().load());
+              }
+            },
+            icon: Icon(Icons.close_rounded, color: subTextColor),
+            tooltip: context.l10n.notNow,
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+  }
+}
+
+class _NextBestActionCard extends StatefulWidget {
+  const _NextBestActionCard({required this.state, required this.isDark});
+
+  final HomeLoaded state;
+  final bool isDark;
+
+  @override
+  State<_NextBestActionCard> createState() => _NextBestActionCardState();
+}
+
+class _NextBestActionCardState extends State<_NextBestActionCard> {
+  String? _goal;
+
+  @override
+  void initState() {
+    super.initState();
+    _goal = getIt<SharedPreferences>().getString('user_primary_goal');
+  }
+
+  (String, String, IconData, String) _action(BuildContext context) {
+    if (widget.state.customPlan != null) {
+      return (
+        context.l10n.completeTodaysHifz,
+        context.l10n.planReadySmallStep,
+        Icons.psychology_alt_rounded,
+        '/memorization-plus',
+      );
+    }
+    if (widget.state.dailyWirdPageDetail != null) {
+      return (
+        context.l10n.readTodaysPortion,
+        context.l10n.onePageMakesProgress,
+        Icons.menu_book_rounded,
+        '/quran/page/${widget.state.dailyWirdPageDetail!.pageNumber}',
+      );
+    }
+    if (_goal == 'azkar') {
+      return (
+        context.l10n.timeForDhikr,
+        context.l10n.startShortAzkarNow,
+        Icons.volunteer_activism_rounded,
+        '/azkar',
+      );
+    }
+    if (_goal == 'child') {
+      return (
+        context.l10n.followChildJourney,
+        context.l10n.reviewProgressOrReward,
+        Icons.family_restroom_rounded,
+        '${AppRoutes.parentDashboard}?surahId=1',
+      );
+    }
+    return (
+      context.l10n.startQuranStepNow,
+      context.l10n.chooseReadingOrMemorization,
+      Icons.auto_awesome_rounded,
+      _goal == 'memorization' ? '/memorization-plus' : '/quran',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = widget.isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = widget.isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+    final action = _action(context);
+
+    return InkWell(
+      onTap: () => context.push(action.$4),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              primary.withValues(alpha: 0.14),
+              primary.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(color: primary.withValues(alpha: 0.24)),
+        ),
+        child: Row(
+          children: [
+            Icon(action.$3, color: primary, size: 30),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    action.$1,
+                    style: AppTypography.titleMedium.copyWith(
+                      color: textColor,
+                      fontFamily: 'Amiri',
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    action.$2,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: subTextColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.arrow_forward_ios_rounded, color: primary, size: 16),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+  }
+}
+
+// ignore: unused_element
 class _ContinueReadingChip extends StatelessWidget {
   const _ContinueReadingChip({required this.location, required this.isDark});
 

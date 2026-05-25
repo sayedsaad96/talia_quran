@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -121,13 +122,14 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
           '${TaliaNotificationService.kidsReminderPreferenceKey}_minute',
           minute,
         );
+        final notificationService = getIt<TaliaNotificationService>();
         if (enabled) {
-          await TaliaNotificationService.instance.scheduleKidsReviewReminder(
+          await notificationService.scheduleKidsReviewReminder(
             hour: hour,
             minute: minute,
           );
         } else {
-          await TaliaNotificationService.instance.cancelKidsReviewReminder();
+          await notificationService.cancelKidsReviewReminder();
         }
         await refresh(surahId: current.surahId);
       },

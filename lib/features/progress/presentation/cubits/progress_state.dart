@@ -1,5 +1,6 @@
 part of 'progress_cubit.dart';
 
+@immutable
 abstract class ProgressState extends Equatable {
   const ProgressState();
   @override

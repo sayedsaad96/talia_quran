@@ -208,7 +208,8 @@ class ScheduleNextReviewUsecase {
   const ScheduleNextReviewUsecase();
 
   AyahReviewRecord schedule(AyahReviewRecord record, PerformanceRating rating) {
-    final now = DateTime.now();
+    // UTC: all SM-2 scheduling dates must be UTC for cross-timezone consistency.
+    final now = DateTime.now().toUtc();
     final int newStrength;
     final int newInterval;
 

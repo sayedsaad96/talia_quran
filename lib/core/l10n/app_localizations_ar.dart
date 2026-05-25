@@ -285,6 +285,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get bookmark => 'إشارة مرجعية';
 
   @override
+  String get undo => 'تراجع';
+
+  @override
   String get copied => 'تم النسخ';
 
   @override
@@ -441,6 +444,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyDuaReminder => 'دعاء اليوم';
 
   @override
+  String get dailyDuaTime => 'كل يوم الساعة ٩:٠٠ صباحًا';
+
+  @override
   String get signOut => 'تسجيل الخروج';
 
   @override
@@ -546,6 +552,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get taliaDescription => 'تطبيق متميز لحفظ ومراجعة القرآن الكريم';
 
   @override
+  String get settingsAppBrand => 'تالية — Talia';
+
+  @override
+  String get tutorialGuideTitle => 'دليل استخدام تالية';
+
+  @override
+  String get tutorialGuideSubtitle =>
+      'تعرف على كل مزايا التطبيق وطريقة استخدامها';
+
+  @override
   String get arabicNameHint =>
       '💡 يفضل إدخال الاسم باللغة العربية ليظهر بشكل أجمل في الشهادات';
 
@@ -569,6 +585,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get eveningAzkarSaveError => 'تعذر تحديث تذكير أذكار المساء';
+
+  @override
+  String get dailyDuaSaveError => 'تعذر تحديث دعاء اليوم';
 
   @override
   String get difficultyEasy => 'سهل (٧٠٪)';
@@ -1108,16 +1127,274 @@ class AppLocalizationsAr extends AppLocalizations {
   String get resetMemorizationPath => 'إعادة ضبط / تغيير المسار';
 
   @override
+  String get memorizationPath => 'مسار الحفظ';
+
+  @override
+  String get kidsAndGuardian => 'الأطفال وولي الأمر';
+
+  @override
+  String get parentDashboardTitle => 'لوحة ولي الأمر';
+
+  @override
+  String get parentDashboardSubtitle =>
+      'تابع حفظ الطفل والمكافآت والربط عن بعد';
+
+  @override
+  String get parentModeSubtitle => 'فعّل لمتابعة حفظ طفلك والربط عن بعد';
+
+  @override
+  String get resetMemorizationPathQuestion => 'إعادة ضبط مسار الحفظ؟';
+
+  @override
+  String get resetMemorizationIdentityWarning =>
+      'سيؤدي هذا إلى إلغاء المسار المختار وحالة ربط ولي الأمر، ولكنه سيحتفظ بإعدادات الحفظ الذكي الخاصة بك.';
+
+  @override
+  String get confirmResetMemorizationPath => 'تأكيد إعادة الضبط';
+
+  @override
+  String get resetMemorizationPathTileTitle => 'إعادة ضبط المسار';
+
+  @override
+  String get resetMemorizationPathTileSubtitle =>
+      'اختر مسار الكبار أو الأطفال مرة أخرى بدون فقدان إعدادات الحفظ الذكي.';
+
+  @override
+  String get resetMemorizationPathPreserveProgressDesc =>
+      'تغيير مسار الحفظ بين مسار الكبار والأطفال، مع الاحتفاظ ببيانات الحفظ.';
+
+  @override
+  String get resetMemorizationPathPreserveProgressDialog =>
+      'هذا سيقوم بإلغاء مسار الحفظ الحالي لتتمكن من اختيار مسار جديد. لن تفقد آياتك المحفوظة.';
+
+  @override
+  String completePreviousSurahFirst(Object surahName) {
+    return 'أكمل $surahName أولاً';
+  }
+
+  @override
   String get linkGuardianNow => 'ربط ولي الأمر الآن';
 
   @override
   String get continueWithoutGuardian => 'المتابعة بدون ولي أمر';
 
   @override
+  String get guardianLinkTitle => 'ربط حساب ولي الأمر';
+
+  @override
+  String get guardianLinkDesc =>
+      'اختر ما إذا كنت تريد ربط ولي أمر بهذا المسار لمتابعة حفظ الطفل.';
+
+  @override
+  String get guardianCreateCodeMessage =>
+      'قم بإنشاء رمز جديد صالح لمدة 15 دقيقة.';
+
+  @override
+  String get guardianCodeUsedMessage => 'لا يمكن استخدام هذا الرمز مرة أخرى.';
+
+  @override
+  String get guardianCreateNewCode => 'إنشاء رمز جديد';
+
+  @override
   String get guardianCodeExpired => 'انتهت صلاحية الرمز';
 
   @override
   String get guardianCodeAlreadyUsed => 'تم استخدام الرمز مسبقاً';
+
+  @override
+  String guardianPairingValidUntil(Object time) {
+    return 'صالح حتى الساعة $time';
+  }
+
+  @override
+  String guardianPairingExpiresIn(int minutes) {
+    return 'ينتهي خلال $minutes دقيقة';
+  }
+
+  @override
+  String get guardianPairingExpired => 'انتهت صلاحية الرمز';
+
+  @override
+  String get guardianPairingStepsTitle => 'خطوات الربط';
+
+  @override
+  String get guardianPairingStepOpenParentDevice =>
+      'افتح تالية على جهاز ولي الأمر';
+
+  @override
+  String get guardianPairingStepOpenDashboard =>
+      'اذهب إلى الإعدادات > لوحة ولي الأمر';
+
+  @override
+  String get guardianPairingStepScanOrEnterCode =>
+      'امسح رمز QR أو أدخل الرمز يدوياً';
+
+  @override
+  String get guardianRegenerateCode => 'تجديد الرمز';
+
+  @override
+  String get splashSubtitle => 'تطبيق تحفيظ القرآن الكريم';
+
+  @override
+  String get onboardingSkip => 'تخطي';
+
+  @override
+  String get onboardingStartNow => 'ابدأ الآن';
+
+  @override
+  String get onboardingQuranTitle => 'تجربة المصحف الحقيقي';
+
+  @override
+  String get onboardingQuranDesc =>
+      'اقرأ القرآن الكريم بتجربة فريدة تحاكي المصحف الورقي بصفحاته وتصميمه الأصيل لتنعم بخشوع التلاوة.';
+
+  @override
+  String get onboardingSmartTitle => 'حفظ ذكي ومراجعة مخصصة';
+
+  @override
+  String get onboardingSmartDesc =>
+      'خطط حفظ مرنة، ومراجعات ذكية، وتقييم ذاتي يساعدك على تثبيت الآيات بدون ضغط.';
+
+  @override
+  String get onboardingKidsTitle => 'رحلة ممتعة للأطفال';
+
+  @override
+  String get onboardingKidsDesc =>
+      'مسار مبسط للأطفال يجمع بين الاستماع والتكرار والنجوم، مع متابعة ولي الأمر.';
+
+  @override
+  String get memorizationPathTitle => 'مسار الحفظ';
+
+  @override
+  String get memorizationPathQuestion => 'من سيستخدم هذه الميزة؟';
+
+  @override
+  String get memorizationPathDescription =>
+      'اختر المسار المناسب لك أو لطفلك لتجربة حفظ مخصصة.';
+
+  @override
+  String get memorizationPathAdultsTitle => 'مسار البالغين';
+
+  @override
+  String get memorizationPathAdultsDesc =>
+      'خطة حفظ مرنة مع مراجعة ذكية وتتبع يومي للإنجاز.';
+
+  @override
+  String get memorizationPathKidsTitle => 'مسار الأطفال';
+
+  @override
+  String get memorizationPathKidsDesc =>
+      'رحلة حفظ تفاعلية ممتعة بإشراف ولي الأمر.';
+
+  @override
+  String get kidsJourneyTitle => 'رحلة الحفظ';
+
+  @override
+  String get kidsJourneySubtitle => 'استمع، كرر، واجمع النجوم خطوة بخطوة';
+
+  @override
+  String get kidsJourneyMapTitle => 'خريطة الحفظ';
+
+  @override
+  String kidsPointsValue(int points) {
+    return '$points نقطة';
+  }
+
+  @override
+  String kidsLevelValue(int level) {
+    return 'مستوى $level';
+  }
+
+  @override
+  String get kidsStartFirstStageToday => 'ابدأ أول مرحلة اليوم';
+
+  @override
+  String kidsStageAyahRange(int stage, int startAyah, int endAyah) {
+    return 'المرحلة $stage: الآيات $startAyah-$endAyah';
+  }
+
+  @override
+  String get remoteGuardianLinkTitle => 'ربط ولي الأمر عن بعد';
+
+  @override
+  String get createQr => 'إنشاء QR';
+
+  @override
+  String get renew => 'تجديد';
+
+  @override
+  String get remoteGuardianLinkInstruction =>
+      'افتح لوحة ولي الأمر على الجهاز الآخر وامسح الرمز.';
+
+  @override
+  String kidsStageTitle(int stage) {
+    return 'مرحلة $stage';
+  }
+
+  @override
+  String kidsStageProgress(
+    int startAyah,
+    int endAyah,
+    int completed,
+    int total,
+  ) {
+    return 'الآيات $startAyah-$endAyah • $completed/$total';
+  }
+
+  @override
+  String get quranLongPressHint =>
+      'اضغط مطولاً على الآية للاستماع أو إضافة علامة';
+
+  @override
+  String get readPageConfirmed => 'تم احتساب الصفحة';
+
+  @override
+  String get dailyPlanRatingWeakDesc => 'احتجت للمصحف';
+
+  @override
+  String get dailyPlanRatingAverageDesc => 'أخطاء بسيطة';
+
+  @override
+  String get dailyPlanRatingExcellentDesc => 'بدون خطأ';
+
+  @override
+  String get dailyPlanRatingHintTitle => 'كيف تختار التقييم؟';
+
+  @override
+  String get dailyPlanRatingHintBody =>
+      'التقييم يحدد موعد المراجعة القادمة: ضعيف للمراجعة القريبة، متوسط للمراجعة المعتدلة، وممتاز للمراجعة بعد فترة أطول.';
+
+  @override
+  String get understood => 'فهمت';
+
+  @override
+  String get hifzSkipHintTitle => 'تخطي الآية';
+
+  @override
+  String get hifzSkipHintBody => 'سنضيف هذه الآية للمراجعة لاحقاً، لا تقلق.';
+
+  @override
+  String get accuracyEasyTitle => 'متسامح';
+
+  @override
+  String get accuracyEasyDesc => 'مناسب للأطفال والمبتدئين';
+
+  @override
+  String get accuracyMediumTitle => 'متوازن';
+
+  @override
+  String get accuracyMediumDesc => 'للممارسة اليومية';
+
+  @override
+  String get accuracyHardTitle => 'دقيق';
+
+  @override
+  String get accuracyHardDesc => 'للمتقدمين';
+
+  @override
+  String accuracyRequiredPercent(int percent) {
+    return '$percent% مطلوبة';
+  }
 
   @override
   String get parentGuardianMode => 'أنا ولي أمر';
@@ -1196,4 +1473,90 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get qcfPocLimitationInstruction =>
       'يجب مراجعة أي قيد يظهر هنا قبل تغيير شاشات الحفظ الفعلية.';
+
+  @override
+  String get parentDashboardCardSubtitle => 'تابع حفظ الطفل والمكافآت';
+
+  @override
+  String get viewDashboard => 'عرض اللوحة';
+
+  @override
+  String get resumeWhereYouLeft => 'استكمال من حيث توقفت';
+
+  @override
+  String get resumeAction => 'استكمال';
+
+  @override
+  String get notNow => 'ليس الآن';
+
+  @override
+  String get lastSavedReading => 'آخر قراءة محفوظة';
+
+  @override
+  String get incompleteHifzSession => 'جلسة حفظ غير مكتملة';
+
+  @override
+  String get dailyMemorizationPlan => 'خطة حفظ يومية';
+
+  @override
+  String get incompleteKidsSession => 'جلسة طفل غير مكتملة';
+
+  @override
+  String get previousHifzQuiz => 'اختبار حفظ سابق';
+
+  @override
+  String get savedPreviousActivity => 'نشاط سابق محفوظ';
+
+  @override
+  String get completeTodaysHifz => 'أكمل ورد الحفظ اليوم';
+
+  @override
+  String get planReadySmallStep => 'خطتك جاهزة، خطوة صغيرة تكفي.';
+
+  @override
+  String get readTodaysPortion => 'اقرأ ورد اليوم';
+
+  @override
+  String get onePageMakesProgress => 'صفحة واحدة تجعل التقدّم واضحاً.';
+
+  @override
+  String get timeForDhikr => 'حان وقت الذكر';
+
+  @override
+  String get startShortAzkarNow => 'ابدأ بأذكار قصيرة الآن.';
+
+  @override
+  String get followChildJourney => 'تابع رحلة الطفل';
+
+  @override
+  String get reviewProgressOrReward => 'راجع التقدم أو أضف مكافأة مشجعة.';
+
+  @override
+  String get startQuranStepNow => 'ابدأ خطوة قرآنية الآن';
+
+  @override
+  String get chooseReadingOrMemorization =>
+      'اختر قراءة أو حفظاً بسيطاً لهذا اليوم.';
+
+  @override
+  String get kidsFirstMissionToday => 'مهمتك الأولى اليوم';
+
+  @override
+  String kidsCompleteStageToday(int stage) {
+    return 'أكمل المرحلة $stage اليوم';
+  }
+
+  @override
+  String get kidsFirstMissionSubtitle =>
+      'ابدأ بالاستماع والتكرار، وكل خطوة تقربك من نجمة جديدة.';
+
+  @override
+  String kidsRemainingAyahs(int count) {
+    return 'تبقى $count آيات في هذه المرحلة.';
+  }
+
+  @override
+  String notificationEverydayAt(String time) {
+    return 'كل يوم الساعة $time';
+  }
 }

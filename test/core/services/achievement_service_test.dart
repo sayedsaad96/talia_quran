@@ -230,6 +230,9 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   Future<void> clearPairingSession() async {}
 
   @override
+  Future<void> migrateReviewRecordsToIsarIfNeeded() async {}
+
+  @override
   Future<List<AyahReviewRecordModel>> getAllReviewRecords() async => records;
 
   @override

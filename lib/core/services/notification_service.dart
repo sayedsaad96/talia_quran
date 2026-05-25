@@ -16,8 +16,7 @@ import 'package:timezone/data/latest.dart' as tz_data;
 /// - Morning and evening azkar reminders
 /// - Smart reminders based on user's average app-open time
 class TaliaNotificationService {
-  TaliaNotificationService._();
-  static final TaliaNotificationService instance = TaliaNotificationService._();
+  TaliaNotificationService();
 
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
@@ -151,6 +150,7 @@ class TaliaNotificationService {
 
     final prefs = await SharedPreferences.getInstance();
     final reviewEnabled = prefs.getBool(dailyReviewPreferenceKey) ?? true;
+    final streakEnabled = prefs.getBool(streakAlertPreferenceKey) ?? true;
     final morningAzkarEnabled =
         prefs.getBool(morningAzkarPreferenceKey) ?? true;
     final eveningAzkarEnabled =
@@ -159,26 +159,40 @@ class TaliaNotificationService {
     final kidsReviewEnabled = prefs.getBool(kidsReminderPreferenceKey) ?? false;
 
     if (reviewEnabled) {
-      await scheduleDailyReviewReminder();
+      final hour = prefs.getInt('${dailyReviewPreferenceKey}_hour') ?? 20;
+      final minute = prefs.getInt('${dailyReviewPreferenceKey}_minute') ?? 0;
+      await scheduleDailyReviewReminder(hour: hour, minute: minute);
     } else {
       await cancelDailyReviewReminder();
+      if (streakEnabled) {
+        final hour = prefs.getInt('${streakAlertPreferenceKey}_hour') ?? 22;
+        final minute = prefs.getInt('${streakAlertPreferenceKey}_minute') ?? 0;
+        await scheduleStreakProtectionAlert(currentStreak: 1, hour: hour, minute: minute);
+      }
     }
+    
     await scheduleDailyAyahReminder();
 
     if (morningAzkarEnabled) {
-      await scheduleMorningAzkarReminder();
+      final hour = prefs.getInt('${morningAzkarPreferenceKey}_hour') ?? 6;
+      final minute = prefs.getInt('${morningAzkarPreferenceKey}_minute') ?? 0;
+      await scheduleMorningAzkarReminder(hour: hour, minute: minute);
     } else {
       await cancelMorningAzkarReminder();
     }
 
     if (eveningAzkarEnabled) {
-      await scheduleEveningAzkarReminder();
+      final hour = prefs.getInt('${eveningAzkarPreferenceKey}_hour') ?? 18;
+      final minute = prefs.getInt('${eveningAzkarPreferenceKey}_minute') ?? 0;
+      await scheduleEveningAzkarReminder(hour: hour, minute: minute);
     } else {
       await cancelEveningAzkarReminder();
     }
 
     if (dailyDuaEnabled) {
-      await scheduleDailyDuaReminder();
+      final hour = prefs.getInt('${dailyDuaPreferenceKey}_hour') ?? 9;
+      final minute = prefs.getInt('${dailyDuaPreferenceKey}_minute') ?? 0;
+      await scheduleDailyDuaReminder(hour: hour, minute: minute);
     } else {
       await cancelDailyDuaReminder();
     }
@@ -250,6 +264,8 @@ class TaliaNotificationService {
   /// Only fires if the user hasn't opened the app today.
   Future<void> scheduleStreakProtectionAlert({
     required int currentStreak,
+    int hour = 22,
+    int minute = 0,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     if (currentStreak <= 0) return;
@@ -260,7 +276,7 @@ class TaliaNotificationService {
       id: _streakAlertId,
       title: '⚠️ لا تُضيِّع $currentStreak يوماً!',
       body: 'لم تراجع حفظك اليوم بعد — لا تزال قادرًا',
-      scheduledDate: _nextInstanceOfTime(22, 0),
+      scheduledDate: _nextInstanceOfTime(hour, minute),
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,

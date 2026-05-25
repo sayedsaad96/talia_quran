@@ -146,6 +146,31 @@ class QcfHifzVerseView extends StatelessWidget {
       Theme.of(context).brightness == Brightness.dark;
 }
 
+// ─── Formatting Helpers ───────────────────────────────────────────────────────
+
+String _removeVerseEndGlyph(String verseText, int surahNumber, int verseNumber) {
+  String cleaned = verseText.replaceAll('\n', ' ').trim();
+  if (cleaned.isEmpty) return cleaned;
+  
+  try {
+    final endGlyph = qcf.getAyaNoQCFLite(surahNumber, verseNumber);
+    if (cleaned.endsWith(endGlyph)) {
+      cleaned = cleaned.substring(0, cleaned.length - endGlyph.length).trim();
+    }
+  } catch (_) {
+    // If it fails, return as is
+  }
+  return cleaned;
+}
+
+String _removeFallbackVerseNumber(String text) {
+  return text
+      .replaceAll('\n', ' ')
+      .trim()
+      .replaceAll(RegExp(r'[\u0660-\u0669\u06F0-\u06F9]+\s*$'), '')
+      .trim();
+}
+
 // ─── QCF Content ──────────────────────────────────────────────────────────────
 
 /// Renders one or more verses using qcf_quran_plus helpers inside a try/catch.
@@ -180,11 +205,11 @@ class _QcfContent extends StatelessWidget {
       // Build inline span for single verse or same-surah range.
       final spans = <TextSpan>[];
       for (var verse = startVerse; verse <= endVerse; verse++) {
-        final verseText = qcf.getVerse(surahNumber, verse);
-        final endSymbol = qcf.getVerseEndSymbol(verse);
+        final rawVerseText = qcf.getVerse(surahNumber, verse);
+
 
         // Guard: if QCF returns empty/null-like text, fall through to fallback.
-        if (verseText.isEmpty) {
+        if (rawVerseText.isEmpty) {
           return _FallbackText(
             text: fallbackText,
             textAlign: textAlign,
@@ -193,7 +218,8 @@ class _QcfContent extends StatelessWidget {
           );
         }
 
-        spans.add(TextSpan(text: '$verseText $endSymbol '));
+        final cleanedVerseText = _removeVerseEndGlyph(rawVerseText, surahNumber, verse);
+        spans.add(TextSpan(text: '$cleanedVerseText '));
       }
 
       final qcfStyle = qcf.QuranTextStyles.qcfStyle(
@@ -240,10 +266,11 @@ class _FallbackText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cleanedText = _removeFallbackVerseNumber(text);
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Text(
-        text,
+        cleanedText,
         style: TextStyle(
           fontFamily: 'Amiri',
           fontSize: fontSize,

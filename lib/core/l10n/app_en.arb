@@ -92,6 +92,7 @@
   "share": "Share",
   "copy": "Copy",
   "bookmark": "Bookmark",
+  "undo": "Undo",
   "copied": "Copied",
   "profile": "Profile",
   "editProfile": "Edit Profile",
@@ -148,6 +149,7 @@
   "morningAzkarReminder": "Morning Azkar Reminder",
   "eveningAzkarReminder": "Evening Azkar Reminder",
   "dailyDuaReminder": "Daily Dua",
+  "dailyDuaTime": "Everyday at 9:00 AM",
   "signOut": "Sign Out",
   "signIn": "Sign In",
   "signUp": "Sign Up",
@@ -181,6 +183,9 @@
   "morningAzkarTime": "Everyday at 6:00 AM",
   "eveningAzkarTime": "Everyday at 6:00 PM",
   "taliaDescription": "A premium app for memorizing and reviewing the Holy Quran",
+  "settingsAppBrand": "Talia",
+  "tutorialGuideTitle": "Talia user guide",
+  "tutorialGuideSubtitle": "Learn every feature and how to use it",
   "arabicNameHint": "💡 It is better to enter the name in Arabic to appear nicely in certificates",
   "invalidAge": "Enter a valid age between 1 and 120",
   "profileSaveError": "Failed to save profile",
@@ -189,6 +194,7 @@
   "streakReminderSaveError": "Failed to update streak alert",
   "morningAzkarSaveError": "Failed to update morning Azkar reminder",
   "eveningAzkarSaveError": "Failed to update evening Azkar reminder",
+  "dailyDuaSaveError": "Failed to update daily dua reminder",
   "difficultyEasy": "Easy (70%)",
   "difficultyMedium": "Medium (85%)",
   "difficultyHard": "Hard (92%)",
@@ -365,11 +371,174 @@
   },
   "memorizationPathReset": "Memorization path has been reset",
   "resetMemorizationPath": "Reset / Change path",
+  "memorizationPath": "Memorization Path",
+  "kidsAndGuardian": "Kids and Guardian",
+  "parentDashboardTitle": "Guardian Dashboard",
+  "parentDashboardSubtitle": "Track your child's memorization, rewards, and remote link",
+  "parentModeSubtitle": "Enable this to follow your child's memorization and remote link",
+  "resetMemorizationPathQuestion": "Reset memorization path?",
+  "resetMemorizationIdentityWarning": "This will clear the selected path and guardian link state, while keeping your smart memorization settings.",
+  "confirmResetMemorizationPath": "Confirm reset",
+  "resetMemorizationPathTileTitle": "Reset path",
+  "resetMemorizationPathTileSubtitle": "Choose the adult or kids path again without losing smart memorization settings.",
+  "resetMemorizationPathPreserveProgressDesc": "Switch between the adult and kids memorization paths while keeping your memorization data.",
+  "resetMemorizationPathPreserveProgressDialog": "This will clear the current memorization path so you can choose a new one. Your memorized ayahs will not be lost.",
+  "completePreviousSurahFirst": "Complete {surahName} first",
+  "@completePreviousSurahFirst": {
+    "placeholders": {
+      "surahName": {}
+    }
+  },
   "linkGuardianNow": "Link guardian now",
   "continueWithoutGuardian": "Continue without guardian",
+  "guardianLinkTitle": "Link guardian account",
+  "guardianLinkDesc": "Choose whether to link a guardian to this path so they can follow the child's memorization.",
+  "guardianCreateCodeMessage": "Create a new code valid for 15 minutes.",
+  "guardianCodeUsedMessage": "This code cannot be used again.",
+  "guardianCreateNewCode": "Create new code",
   "guardianCodeExpired": "Code expired",
   "guardianCodeAlreadyUsed": "Code already used",
+  "guardianPairingValidUntil": "Valid until {time}",
+  "@guardianPairingValidUntil": {
+    "placeholders": {
+      "time": {}
+    }
+  },
+  "guardianPairingExpiresIn": "Expires in {minutes} min",
+  "@guardianPairingExpiresIn": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "guardianPairingExpired": "Code expired",
+  "guardianPairingStepsTitle": "Pairing steps",
+  "guardianPairingStepOpenParentDevice": "Open Talia on the guardian device",
+  "guardianPairingStepOpenDashboard": "Go to Settings > Guardian Dashboard",
+  "guardianPairingStepScanOrEnterCode": "Scan the QR code or enter the code manually",
+  "guardianRegenerateCode": "Regenerate code",
+  "splashSubtitle": "Quran memorization app",
+  "onboardingSkip": "Skip",
+  "onboardingStartNow": "Start now",
+  "onboardingQuranTitle": "A real Mushaf experience",
+  "onboardingQuranDesc": "Read the Holy Quran in an experience that feels close to the printed Mushaf, with familiar pages and respectful visual design.",
+  "onboardingSmartTitle": "Smart memorization and review",
+  "onboardingSmartDesc": "Flexible memorization plans, smart reviews, and self-rating help you strengthen ayahs without pressure.",
+  "onboardingKidsTitle": "A joyful journey for kids",
+  "onboardingKidsDesc": "A simple kids path with listening, repetition, stars, and guardian follow-up.",
+  "memorizationPathTitle": "Memorization path",
+  "memorizationPathQuestion": "Who will use this feature?",
+  "memorizationPathDescription": "Choose the path that fits you or your child for a personalized memorization experience.",
+  "memorizationPathAdultsTitle": "Adult path",
+  "memorizationPathAdultsDesc": "A flexible memorization plan with smart review and daily progress tracking.",
+  "memorizationPathKidsTitle": "Kids path",
+  "memorizationPathKidsDesc": "A fun interactive memorization journey with guardian supervision.",
+  "kidsJourneyTitle": "Memorization journey",
+  "kidsJourneySubtitle": "Listen, repeat, and collect stars step by step",
+  "kidsJourneyMapTitle": "Memorization map",
+  "kidsPointsValue": "{points} points",
+  "@kidsPointsValue": {
+    "placeholders": {
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsLevelValue": "Level {level}",
+  "@kidsLevelValue": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsStartFirstStageToday": "Start your first stage today",
+  "kidsStageAyahRange": "Stage {stage}: ayahs {startAyah}-{endAyah}",
+  "@kidsStageAyahRange": {
+    "placeholders": {
+      "stage": {
+        "type": "int"
+      },
+      "startAyah": {
+        "type": "int"
+      },
+      "endAyah": {
+        "type": "int"
+      }
+    }
+  },
+  "remoteGuardianLinkTitle": "Remote guardian link",
+  "createQr": "Create QR",
+  "renew": "Renew",
+  "remoteGuardianLinkInstruction": "Open the guardian dashboard on the other device and scan the code.",
+  "kidsStageTitle": "Stage {stage}",
+  "@kidsStageTitle": {
+    "placeholders": {
+      "stage": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsStageProgress": "Ayahs {startAyah}-{endAyah} • {completed}/{total}",
+  "@kidsStageProgress": {
+    "placeholders": {
+      "startAyah": {
+        "type": "int"
+      },
+      "endAyah": {
+        "type": "int"
+      },
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "quranLongPressHint": "Long-press an ayah to listen or add a bookmark",
+  "readPageConfirmed": "Page counted",
+  "dailyPlanRatingWeakDesc": "Needed the Mushaf",
+  "dailyPlanRatingAverageDesc": "Small mistakes",
+  "dailyPlanRatingExcellentDesc": "No mistakes",
+  "dailyPlanRatingHintTitle": "How to choose a rating",
+  "dailyPlanRatingHintBody": "Your rating affects the next review: weak means sooner review, average means moderate spacing, and excellent means a longer gap.",
+  "understood": "Got it",
+  "hifzSkipHintTitle": "Skip ayah",
+  "hifzSkipHintBody": "We will add this ayah to review later, no worries.",
+  "accuracyEasyTitle": "Lenient",
+  "accuracyEasyDesc": "Best for kids and beginners",
+  "accuracyMediumTitle": "Balanced",
+  "accuracyMediumDesc": "For daily practice",
+  "accuracyHardTitle": "Strict",
+  "accuracyHardDesc": "For advanced learners",
+  "accuracyRequiredPercent": "{percent}% required",
+  "@accuracyRequiredPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
   "parentGuardianMode": "I am a parent/guardian",
+  "qcfPocTitle": "QCF rendering proof of concept",
+  "qcfPocIntro": "Temporary visual test screen for Quran rendering inside the memorization area.",
+  "qcfPocNoProduction": "This screen does not change Hifz logic, memorization state, progress, locks, unlocks, or checkpoints.",
+  "qcfPocVisualOnly": "qcf_quran_plus is used here only for visual Quran rendering.",
+  "qcfPocSingleVerse": "Single verse",
+  "qcfPocMultipleVerses": "Multiple verses",
+  "qcfPocLastVerse": "Last verse",
+  "qcfPocFullPage": "Full mushaf page",
+  "qcfPocFindings": "Findings",
+  "qcfPocSupported": "Supported",
+  "qcfPocLimited": "Limited",
+  "qcfPocUnsupported": "Unsupported",
+  "qcfPocStatus": "Status",
+  "qcfPocAlBaqarah255": "Al-Baqarah 255",
+  "qcfPocAlFatihah": "Al-Fatiha 1-7",
+  "qcfPocAlIkhlas": "Al-Ikhlas 1-4",
+  "qcfPocAshSharh8": "Ash-Sharh 8",
   "qcfPocTitle": "QCF rendering proof of concept",
   "qcfPocIntro": "Temporary visual test screen for Quran rendering inside the memorization area.",
   "qcfPocNoProduction": "This screen does not change Hifz logic, memorization state, progress, locks, unlocks, or checkpoints.",
@@ -392,5 +561,53 @@
   "qcfPocMultiVerseSupported": "Grouped verses render visually from the same surah.",
   "qcfPocFullPageSupported": "Full page rendering is available in a constrained preview.",
   "qcfPocNoLimitations": "No limitation observed in this isolated POC.",
-  "qcfPocLimitationInstruction": "Any limitation listed here must be reviewed before production Hifz screens change."
+  "qcfPocLimitationInstruction": "Any limitation listed here must be reviewed before production Hifz screens change.",
+  "parentDashboardTitle": "Parent Dashboard",
+  "parentDashboardCardSubtitle": "Track child's memorization & rewards",
+  "viewDashboard": "View Dashboard",
+  "resumeWhereYouLeft": "Resume where you left off",
+  "resumeAction": "Resume",
+  "notNow": "Not now",
+  "lastSavedReading": "Last saved reading",
+  "incompleteHifzSession": "Incomplete memorization session",
+  "dailyMemorizationPlan": "Daily memorization plan",
+  "incompleteKidsSession": "Incomplete kids session",
+  "previousHifzQuiz": "Previous memorization quiz",
+  "savedPreviousActivity": "Saved previous activity",
+  "completeTodaysHifz": "Complete today's memorization",
+  "planReadySmallStep": "Your plan is ready, a small step is enough.",
+  "readTodaysPortion": "Read today's portion",
+  "onePageMakesProgress": "One page makes progress clear.",
+  "timeForDhikr": "Time for Dhikr",
+  "startShortAzkarNow": "Start with short Azkar now.",
+  "followChildJourney": "Follow the child's journey",
+  "reviewProgressOrReward": "Review progress or add an encouraging reward.",
+  "startQuranStepNow": "Start a Quran step now",
+  "chooseReadingOrMemorization": "Choose reading or simple memorization for today.",
+  "kidsFirstMissionToday": "Your first mission today",
+  "kidsCompleteStageToday": "Complete stage {stage} today",
+  "@kidsCompleteStageToday": {
+    "placeholders": {
+      "stage": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsFirstMissionSubtitle": "Start listening and repeating, every step brings you closer to a new star.",
+  "kidsRemainingAyahs": "{count} ayahs remaining in this stage.",
+  "@kidsRemainingAyahs": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "notificationEverydayAt": "Everyday at {time}",
+  "@notificationEverydayAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

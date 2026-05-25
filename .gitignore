@@ -46,3 +46,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Build artifacts — jars, zips, local maven caches
+*.jar
+*.zip
+android/local_maven/
+test_builder.jar

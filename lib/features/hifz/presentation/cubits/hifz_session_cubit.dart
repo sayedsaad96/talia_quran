@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -185,11 +186,18 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
         ),
       );
 
-      // Prefetch audio for upcoming ayahs in the background
+      // Prefetch audio for the next few ayahs in the background.
+      // Bounded to current + next 4 to avoid downloading the entire surah at once.
+      const int prefetchWindow = 5;
+      final prefetchNumbers = _ayahs
+          .skip(startIndex)
+          .take(prefetchWindow)
+          .map((a) => a.numberInSurah)
+          .toList();
       unawaited(
         AudioCacheService.instance.prefetchSession(
           surahId: surahId,
-          ayahNumbers: _ayahs.map((a) => a.numberInSurah).toList(),
+          ayahNumbers: prefetchNumbers,
         ),
       );
     });
@@ -543,15 +551,31 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
       }
 
       HapticService.selection();
+      final nextIndex = st.currentIndex + 1;
       emit(
         st.copyWith(
-          currentIndex: st.currentIndex + 1,
+          currentIndex: nextIndex,
           clearScore: true,
           recognizedText: '',
           clearRequiredCheckpoint: true,
           clearCompletedCheckpoint: true,
         ),
       );
+      // Sliding prefetch: ensure audio is cached for the next 2 upcoming ayahs.
+      const int slideAhead = 2;
+      final upcomingNumbers = _ayahs
+          .skip(nextIndex)
+          .take(slideAhead)
+          .map((a) => a.numberInSurah)
+          .toList();
+      if (upcomingNumbers.isNotEmpty) {
+        unawaited(
+          AudioCacheService.instance.prefetchSession(
+            surahId: st.surah.id,
+            ayahNumbers: upcomingNumbers,
+          ),
+        );
+      }
     }
   }
 
@@ -624,3 +648,4 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     return super.close();
   }
 }
+

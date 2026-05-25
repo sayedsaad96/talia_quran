@@ -20,6 +20,12 @@ void main() {
         expect(model.surahId, equals(36));
         expect(model.ayahNumber, equals(12));
       });
+
+      test('creates UTC review dates', () {
+        final model = AyahProgressModel.initial(1, 1);
+        expect(model.lastReviewDate.isUtc, isTrue);
+        expect(model.nextReviewDate.isUtc, isTrue);
+      });
     });
 
     group('advanceWithSpacedRepetition', () {
@@ -30,7 +36,7 @@ void main() {
       });
 
       test(
-        'uses configured spaced repetition intervals without skipping first interval',
+        'delegates to the shared scheduler without skipping the first interval',
         () {
           var current = AyahProgressModel.initial(1, 1);
 
@@ -54,19 +60,38 @@ void main() {
         },
       );
 
-      test('sets status to review before 5 repetitions', () {
+      test('follows the shared excellent-rating scheduler intervals', () {
+        var current = AyahProgressModel.initial(1, 1);
+        const expectedIntervals = [1, 3, 8, 20, 50, 125];
+
+        for (final intervalDays in expectedIntervals) {
+          final before = DateTime.now().toUtc();
+          current = current.advanceWithSpacedRepetition();
+          final expected = before.add(Duration(days: intervalDays));
+
+          expect(
+            current.nextReviewDate.difference(expected).inSeconds.abs(),
+            lessThan(2),
+            reason:
+                'Expected repetition ${current.repetitions} to use '
+                '$intervalDays day interval',
+          );
+        }
+      });
+
+      test('sets status to review before strength reaches memorized level', () {
         final model = AyahProgressModel.initial(1, 1);
         var current = model;
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 5; i++) {
           current = current.advanceWithSpacedRepetition();
           expect(current.status, equals(AyahStatus.review));
         }
       });
 
-      test('sets status to memorized at 5+ repetitions', () {
+      test('sets status to memorized at 6+ excellent repetitions', () {
         final model = AyahProgressModel.initial(1, 1);
         var current = model;
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 6; i++) {
           current = current.advanceWithSpacedRepetition();
         }
         expect(current.status, equals(AyahStatus.memorized));
@@ -85,6 +110,16 @@ void main() {
         final advanced = model.advanceWithSpacedRepetition();
         expect(advanced.surahId, equals(55));
         expect(advanced.ayahNumber, equals(13));
+      });
+
+      test('keeps last and next review dates in UTC', () {
+        final advanced = AyahProgressModel.initial(
+          1,
+          1,
+        ).advanceWithSpacedRepetition();
+
+        expect(advanced.lastReviewDate.isUtc, isTrue);
+        expect(advanced.nextReviewDate.isUtc, isTrue);
       });
     });
 
@@ -129,7 +164,7 @@ void main() {
           1,
         ).advanceWithSpacedRepetition();
         final penalized = model.softPenalty();
-        final tomorrow = DateTime.now().add(const Duration(days: 1));
+        final tomorrow = DateTime.now().toUtc().add(const Duration(days: 1));
         // Allow 1 second tolerance for test execution time
         expect(
           penalized.nextReviewDate.difference(tomorrow).inSeconds.abs(),
@@ -145,6 +180,17 @@ void main() {
         final penalized = model.softPenalty();
         expect(penalized.surahId, equals(36));
         expect(penalized.ayahNumber, equals(7));
+      });
+
+      test('keeps last and next review dates in UTC', () {
+        final model = AyahProgressModel.initial(
+          1,
+          1,
+        ).advanceWithSpacedRepetition();
+        final penalized = model.softPenalty();
+
+        expect(penalized.lastReviewDate.isUtc, isTrue);
+        expect(penalized.nextReviewDate.isUtc, isTrue);
       });
     });
 

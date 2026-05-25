@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/user_profile.dart';
 
 // ─── State ───────────────────────────────────────────────────────────────────
 
+@immutable
 abstract class ProfileState extends Equatable {
   const ProfileState();
   @override

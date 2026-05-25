@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/error_info_banner.dart';
 import '../cubits/guardian_linking_cubit.dart';
 import '../cubits/guardian_linking_state.dart';
 
@@ -46,14 +49,6 @@ class _GuardianLinkingView extends StatelessWidget {
               if (state is GuardianLinkingSkipped ||
                   state is GuardianLinkingLinked) {
                 context.go('/memorization-plus/kids-journey?surahId=1');
-              } else if (state is GuardianLinkingError ||
-                  state is GuardianLinkingBlocked) {
-                final message = state is GuardianLinkingError
-                    ? state.message
-                    : (state as GuardianLinkingBlocked).message;
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(message)));
               }
             },
             builder: (context, state) {
@@ -74,7 +69,7 @@ class _GuardianLinkingView extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   Text(
-                    'ربط حساب ولي الأمر',
+                    context.l10n.guardianLinkTitle,
                     textAlign: TextAlign.center,
                     style: AppTypography.headlineSmall.copyWith(
                       color: textColor,
@@ -83,7 +78,7 @@ class _GuardianLinkingView extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'اختر ما إذا كنت تريد ربط ولي أمر بهذا المسار لمتابعة حفظ الطفل.',
+                    context.l10n.guardianLinkDesc,
                     textAlign: TextAlign.center,
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark
@@ -92,6 +87,21 @@ class _GuardianLinkingView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
+                  if (state is GuardianLinkingError ||
+                      state is GuardianLinkingBlocked) ...[
+                    ErrorInfoBanner(
+                      type: state is GuardianLinkingBlocked
+                          ? ErrorInfoBannerType.warning
+                          : ErrorInfoBannerType.error,
+                      title: state is GuardianLinkingBlocked
+                          ? 'الربط متوقف مؤقتاً'
+                          : 'تعذر ربط ولي الأمر',
+                      message: state is GuardianLinkingError
+                          ? state.message
+                          : (state as GuardianLinkingBlocked).message,
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                  ],
                   if (state is GuardianLinkingPending)
                     _PairingCard(
                       surface: surface,
@@ -102,9 +112,9 @@ class _GuardianLinkingView extends StatelessWidget {
                   else if (state is GuardianLinkingExpired)
                     _StatusCard(
                       surface: surface,
-                      title: 'انتهت صلاحية الرمز',
-                      message: 'قم بإنشاء رمز جديد صالح لمدة 15 دقيقة.',
-                      actionLabel: 'إنشاء رمز جديد',
+                      title: context.l10n.guardianCodeExpired,
+                      message: context.l10n.guardianCreateCodeMessage,
+                      actionLabel: context.l10n.guardianCreateNewCode,
                       onPressed: () => context
                           .read<GuardianLinkingCubit>()
                           .createPairingSession(),
@@ -112,9 +122,9 @@ class _GuardianLinkingView extends StatelessWidget {
                   else if (state is GuardianLinkingUsed)
                     _StatusCard(
                       surface: surface,
-                      title: 'الرمز مستخدم مسبقاً',
-                      message: 'لا يمكن استخدام هذا الرمز مرة أخرى.',
-                      actionLabel: 'إنشاء رمز جديد',
+                      title: context.l10n.guardianCodeAlreadyUsed,
+                      message: context.l10n.guardianCodeUsedMessage,
+                      actionLabel: context.l10n.guardianCreateNewCode,
                       onPressed: () => context
                           .read<GuardianLinkingCubit>()
                           .createPairingSession(),
@@ -150,14 +160,14 @@ class _ChoiceActions extends StatelessWidget {
             onPressed: () =>
                 context.read<GuardianLinkingCubit>().createPairingSession(),
             icon: const Icon(Icons.qr_code_rounded),
-            label: const Text('ربط ولي الأمر الآن'),
+            label: Text(context.l10n.linkGuardianNow),
           ),
           const SizedBox(height: AppSpacing.md),
           OutlinedButton.icon(
             onPressed: () =>
                 context.read<GuardianLinkingCubit>().continueWithoutGuardian(),
             icon: const Icon(Icons.arrow_forward_rounded),
-            label: const Text('المتابعة بدون ربط'),
+            label: Text(context.l10n.continueWithoutGuardian),
           ),
         ],
       ),
@@ -165,7 +175,7 @@ class _ChoiceActions extends StatelessWidget {
   }
 }
 
-class _PairingCard extends StatelessWidget {
+class _PairingCard extends StatefulWidget {
   const _PairingCard({
     required this.surface,
     required this.code,
@@ -179,19 +189,54 @@ class _PairingCard extends StatelessWidget {
   final DateTime expiresAt;
 
   @override
+  State<_PairingCard> createState() => _PairingCardState();
+}
+
+class _PairingCardState extends State<_PairingCard> {
+  Timer? _timer;
+  late Duration _remaining;
+
+  @override
+  void initState() {
+    super.initState();
+    _remaining = _calculateRemaining();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() => _remaining = _calculateRemaining());
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  Duration _calculateRemaining() {
+    final remaining = widget.expiresAt.difference(DateTime.now());
+    return remaining.isNegative ? Duration.zero : remaining;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final minutes = (_remaining.inSeconds / 60).ceil().clamp(0, 999);
+    final time = TimeOfDay.fromDateTime(widget.expiresAt).format(context);
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: surface,
+        color: widget.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       ),
       child: Column(
         children: [
-          QrImageView(data: qrData, size: 180, backgroundColor: Colors.white),
+          QrImageView(
+            data: widget.qrData,
+            size: 180,
+            backgroundColor: Colors.white,
+          ),
           const SizedBox(height: AppSpacing.lg),
           SelectableText(
-            code,
+            widget.code,
             textAlign: TextAlign.center,
             style: AppTypography.headlineMedium.copyWith(
               color: AppColors.primary,
@@ -201,17 +246,74 @@ class _PairingCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Valid until ${TimeOfDay.fromDateTime(expiresAt).format(context)}',
+            context.l10n.guardianPairingValidUntil(time),
             textAlign: TextAlign.center,
             style: AppTypography.bodySmall,
           ),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            minutes == 0
+                ? context.l10n.guardianPairingExpired
+                : context.l10n.guardianPairingExpiresIn(minutes),
+            textAlign: TextAlign.center,
+            style: AppTypography.labelSmall.copyWith(
+              color: minutes == 0 ? AppColors.error : AppColors.primary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          _PairingSteps(),
           const SizedBox(height: AppSpacing.lg),
           OutlinedButton.icon(
             onPressed: () =>
                 context.read<GuardianLinkingCubit>().createPairingSession(),
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Regenerate code'),
+            label: Text(context.l10n.guardianRegenerateCode),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PairingSteps extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final steps = [
+      context.l10n.guardianPairingStepOpenParentDevice,
+      context.l10n.guardianPairingStepOpenDashboard,
+      context.l10n.guardianPairingStepScanOrEnterCode,
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.16)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            context.l10n.guardianPairingStepsTitle,
+            style: AppTypography.labelMedium.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          for (var i = 0; i < steps.length; i++)
+            Padding(
+              padding: EdgeInsets.only(
+                bottom: i == steps.length - 1 ? 0 : AppSpacing.xs,
+              ),
+              child: Text(
+                '${i + 1}. ${steps[i]}',
+                style: AppTypography.bodySmall,
+                textDirection: Directionality.of(context),
+              ),
+            ),
         ],
       ),
     );

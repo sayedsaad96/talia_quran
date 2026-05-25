@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/auth/presentation/cubits/auth_cubit.dart';
 import '../../features/memorization_plus/domain/entities/memorization_entities.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../constants/app_constants.dart';
 import '../di/injection.dart';
 
 import '../../features/home/presentation/pages/home_page.dart';
@@ -420,6 +422,25 @@ abstract class AppRouter {
             routes: [
               GoRoute(
                 path: AppRoutes.hifz,
+                redirect: (context, state) async {
+                  try {
+                    final repo = getIt<MemorizationPlusRepository>();
+                    final profileResult = await repo.getMemorizationProfile();
+                    final profile = profileResult.fold((_) => null, (p) => p);
+                    if (profile?.hasSelectedPath == true) return null;
+
+                    final prefs = getIt<SharedPreferences>();
+                    final legacyPath = prefs.getString(
+                      AppConstants.kHifzPathMode,
+                    );
+                    if (legacyPath != null && legacyPath.isNotEmpty) {
+                      return null;
+                    }
+                    return AppRoutes.memorizationPlus;
+                  } catch (_) {
+                    return null;
+                  }
+                },
                 pageBuilder: (_, _) =>
                     const NoTransitionPage(child: HifzPage()),
               ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/widgets/error_info_banner.dart';
 import '../../presentation/cubits/auth_cubit.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 
@@ -12,6 +13,18 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
+class _AuthFeedback {
+  const _AuthFeedback({
+    required this.message,
+    required this.type,
+    this.showResend = false,
+  });
+
+  final String message;
+  final ErrorInfoBannerType type;
+  final bool showResend;
+}
+
 class _LoginPageState extends State<LoginPage> {
   bool _isSignUp = false;
   bool _obscurePassword = true;
@@ -19,6 +32,7 @@ class _LoginPageState extends State<LoginPage> {
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  _AuthFeedback? _feedback;
 
   @override
   void dispose() {
@@ -54,6 +68,7 @@ class _LoginPageState extends State<LoginPage> {
         body: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
             if (state is AuthAuthenticated) {
+              setState(() => _feedback = null);
               // Update local profile automatically with the user's display name
               context.read<ProfileCubit>().updateProfile(
                 name: state.user.displayName,
@@ -63,11 +78,10 @@ class _LoginPageState extends State<LoginPage> {
             if (state is AuthError) {
               // Special sentinel: confirmation email was re-sent successfully
               if (state.message == '__resent__') {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(context.l10n.confirmationEmailSent),
-                    backgroundColor: Colors.green,
-                    duration: const Duration(seconds: 4),
+                setState(
+                  () => _feedback = _AuthFeedback(
+                    message: context.l10n.confirmationEmailSent,
+                    type: ErrorInfoBannerType.success,
                   ),
                 );
                 return;
@@ -78,22 +92,11 @@ class _LoginPageState extends State<LoginPage> {
                   state.message.contains('تأكيد') ||
                   state.message.contains('تفقّد') ||
                   state.message.contains('confirmed');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(_localizedAuthMessage(context, state.message)),
-                  backgroundColor: Colors.red.shade700,
-                  duration: const Duration(seconds: 6),
-                  action: isNotConfirmed
-                      ? SnackBarAction(
-                          label: context.l10n.resendConfirmation,
-                          textColor: Colors.white,
-                          onPressed: () {
-                            context.read<AuthCubit>().resendConfirmation(
-                              _emailController.text.trim(),
-                            );
-                          },
-                        )
-                      : null,
+              setState(
+                () => _feedback = _AuthFeedback(
+                  message: _localizedAuthMessage(context, state.message),
+                  type: ErrorInfoBannerType.error,
+                  showResend: isNotConfirmed,
                 ),
               );
             }
@@ -129,6 +132,27 @@ class _LoginPageState extends State<LoginPage> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
+                      if (_feedback != null) ...[
+                        ErrorInfoBanner(
+                          type: _feedback!.type,
+                          title: _feedback!.type == ErrorInfoBannerType.success
+                              ? context.l10n.confirmationEmailSent
+                              : context.l10n.authGenericError,
+                          message: _feedback!.message,
+                          actionLabel: _feedback!.showResend
+                              ? context.l10n.resendConfirmation
+                              : null,
+                          onAction: _feedback!.showResend
+                              ? () => context
+                                    .read<AuthCubit>()
+                                    .resendConfirmation(
+                                      _emailController.text.trim(),
+                                    )
+                              : null,
+                          onDismissed: () => setState(() => _feedback = null),
+                        ),
+                        const SizedBox(height: 18),
+                      ],
 
                       // Sign In / Sign Up toggle
                       Row(

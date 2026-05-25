@@ -1,5 +1,6 @@
 part of 'quiz_cubit.dart';
 
+@immutable
 abstract class QuizState extends Equatable {
   const QuizState();
 

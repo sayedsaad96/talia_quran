@@ -49,10 +49,14 @@ void main() {
   });
 
   test('createPairingSession emits Pending when successful', () async {
-    when(mockRepository.createGuardianPairingSession())
-        .thenAnswer((_) async => Right(testSession));
+    when(
+      mockRepository.createGuardianPairingSession(),
+    ).thenAnswer((_) async => Right(testSession));
 
-    await expectLater(
+    // Register expectation first, call action second, await expectation last.
+    // This prevents the 30s timeout caused by awaiting expectLater before
+    // the cubit method fires any states.
+    final expectation = expectLater(
       cubit.stream,
       emitsInOrder([
         const GuardianLinkingLoading(),
@@ -61,13 +65,15 @@ void main() {
     );
 
     await cubit.createPairingSession();
+    await expectation;
   });
 
   test('createPairingSession emits Blocked when fails', () async {
-    when(mockRepository.createGuardianPairingSession())
-        .thenAnswer((_) async => const Left(CacheFailure('Failed to generate')));
+    when(
+      mockRepository.createGuardianPairingSession(),
+    ).thenAnswer((_) async => const Left(CacheFailure('Failed to generate')));
 
-    await expectLater(
+    final expectation = expectLater(
       cubit.stream,
       emitsInOrder([
         const GuardianLinkingLoading(),
@@ -76,13 +82,15 @@ void main() {
     );
 
     await cubit.createPairingSession();
+    await expectation;
   });
 
   test('continueWithoutGuardian emits Skipped when successful', () async {
-    when(mockRepository.continueWithoutGuardian())
-        .thenAnswer((_) async => Right(testProfile));
+    when(
+      mockRepository.continueWithoutGuardian(),
+    ).thenAnswer((_) async => Right(testProfile));
 
-    await expectLater(
+    final expectation = expectLater(
       cubit.stream,
       emitsInOrder([
         const GuardianLinkingLoading(),
@@ -91,5 +99,6 @@ void main() {
     );
 
     await cubit.continueWithoutGuardian();
+    await expectation;
   });
 }

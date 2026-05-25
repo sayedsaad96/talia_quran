@@ -1,5 +1,6 @@
 allprojects {
     repositories {
+        maven { url = uri("$rootDir/local_maven") }
         google()
         mavenCentral()
     }
@@ -17,6 +18,17 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+}
+
+subprojects {
+    plugins.withId("com.android.library") {
+        configure<com.android.build.gradle.BaseExtension> {
+            compileSdkVersion(34)
+            if (namespace == null) {
+                namespace = project.group.toString()
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

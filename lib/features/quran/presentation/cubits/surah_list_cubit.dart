@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../../domain/usecases/get_surahs_usecase.dart';
+import '../../../../core/utils/arabic_normalizer.dart';
 
 part 'surah_list_state.dart';
 
@@ -27,11 +29,17 @@ class SurahListCubit extends Cubit<SurahListState> {
       emit(current.copyWith(filtered: _allSurahs, query: ''));
       return;
     }
-    final q = query.trim().toLowerCase();
+    final qRaw = query.trim().toLowerCase();
+    final qNormalized = ArabicNormalizer.normalize(query.trim());
+    
     final filtered = _allSurahs.where((s) {
-      return s.nameAr.contains(q) ||
-          s.nameEn.toLowerCase().contains(q) ||
-          s.id.toString() == q;
+      final surahNameNormalized = ArabicNormalizer.normalize(s.nameAr);
+      final matchAr = qNormalized.isNotEmpty && surahNameNormalized.contains(qNormalized);
+      
+      return matchAr ||
+          s.nameAr.contains(qRaw) ||
+          s.nameEn.toLowerCase().contains(qRaw) ||
+          s.id.toString() == qRaw;
     }).toList();
     emit(current.copyWith(filtered: filtered, query: query));
   }
@@ -47,3 +55,4 @@ class SurahListCubit extends Cubit<SurahListState> {
     emit(current.copyWith(filtered: filtered, selectedJuz: juz));
   }
 }
+

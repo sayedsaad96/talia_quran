@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -105,6 +106,25 @@ class AzkarCubit extends Cubit<AzkarState> {
     emit(state.copyWith(sessions: sessions, allDone: false));
   }
 
+  Future<void> decrementCurrent() async {
+    final state = this.state;
+    if (state is! AzkarLoaded) return;
+
+    final sessions = List<ZikrSession>.from(state.sessions);
+    final idx = state.currentIndex;
+    if (sessions[idx].currentCount <= 0) return;
+
+    sessions[idx] = sessions[idx].decrement();
+    final session = sessions[idx];
+    await _prefs.setInt(
+      '$_counterPrefix${state.category.name}_${session.zikr.id}',
+      session.currentCount,
+    );
+    await _prefs.setString('$_datePrefix${state.category.name}', _todayKey());
+
+    emit(state.copyWith(sessions: sessions, allDone: false));
+  }
+
   void goTo(int index) {
     final state = this.state;
     if (state is! AzkarLoaded) return;
@@ -122,7 +142,7 @@ class AzkarCubit extends Cubit<AzkarState> {
   void goNextUnfinished() {
     final state = this.state;
     if (state is! AzkarLoaded) return;
-    
+
     int nextIndex = state.sessions.indexWhere(
       (s) => !s.isDone,
       state.currentIndex + 1,
@@ -136,7 +156,6 @@ class AzkarCubit extends Cubit<AzkarState> {
       emit(state.copyWith(currentIndex: state.currentIndex + 1));
     }
   }
-
 
   String _todayKey() {
     final now = DateTime.now();

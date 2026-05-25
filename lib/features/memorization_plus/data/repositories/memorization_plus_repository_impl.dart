@@ -24,6 +24,10 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   final QuranRepository _quranRepository;
 
   final _scheduler = const ScheduleNextReviewUsecase();
+
+  /// Lazy Supabase getter — safe to reference but individual methods that call
+  /// Supabase must still handle StateError / no-network gracefully via try-catch.
+  /// All Supabase-using methods in this repo already have `catch (e)` blocks.
   SupabaseClient get _supabase => Supabase.instance.client;
 
   // ─── Identity profile ──────────────────────────────────────────────────────
@@ -131,8 +135,6 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       return Left(CacheFailure(e.toString()));
     }
   }
-
-
 
   @override
   Future<Either<Failure, MemorizationProfile>> acceptGuardianPairingCode(
@@ -354,7 +356,8 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
 
   Future<MemorizationProfile> _saveProfile(MemorizationProfile profile) async {
     final model = MemorizationProfileModel.fromEntity(
-      profile.copyWith(updatedAt: DateTime.now()),
+      // UTC: consistent with review scheduling and streak date policy.
+      profile.copyWith(updatedAt: DateTime.now().toUtc()),
     );
     await _datasource.saveMemorizationProfile(model);
     return model;
@@ -481,7 +484,8 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         }
 
         bestPlan = DailyPlan(
-          generatedAt: DateTime.now(),
+          // UTC so the same-day stale check in getCachedDailyPlan is timezone-safe.
+          generatedAt: DateTime.now().toUtc(),
           surahId: currentSurahId,
           newAyahs: newAyahs,
           nearRevision: nearRevision,
@@ -497,7 +501,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       }
 
       bestPlan ??= DailyPlan(
-        generatedAt: DateTime.now(),
+        generatedAt: DateTime.now().toUtc(),
         surahId: maxSurahId,
         newAyahs: const [],
         nearRevision: const [],
@@ -520,12 +524,14 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       final cached = await _datasource.getCachedDailyPlan();
       if (cached == null) return const Right(null);
 
-      // If plan is from a previous day, treat as stale
-      final today = DateTime.now();
+      // Compare on UTC date components to avoid DST-ambiguous local midnight.
+      // The cached plan's generatedAt is also stored in UTC (see generateDailyPlan).
+      final today = DateTime.now().toUtc();
+      final cachedDate = cached.generatedAt.toUtc();
       final sameDay =
-          cached.generatedAt.year == today.year &&
-          cached.generatedAt.month == today.month &&
-          cached.generatedAt.day == today.day;
+          cachedDate.year == today.year &&
+          cachedDate.month == today.month &&
+          cachedDate.day == today.day;
 
       return Right(sameDay ? cached : null);
     } catch (e) {
@@ -614,7 +620,8 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       final existing = await _datasource.getReviewRecord(surahId, ayahNumber);
       final current =
           existing ?? AyahReviewRecordModel.initial(surahId, ayahNumber);
-      final now = DateTime.now();
+      // UTC: consistent with AyahReviewRecord scheduling in ScheduleNextReviewUsecase.
+      final now = DateTime.now().toUtc();
       final intervalDays = current.intervalDays < 30
           ? 30
           : current.intervalDays;
@@ -732,7 +739,8 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     required int pointsEarned,
   }) async {
     try {
-      final now = DateTime.now();
+      // UTC: consistent with all other review/session date fields.
+      final now = DateTime.now().toUtc();
       final log = KidsSessionLogModel(
         id: '${now.microsecondsSinceEpoch}_${surahId}_$ayahNumber',
         surahId: surahId,
@@ -804,7 +812,21 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   Future<Either<Failure, bool>> verifyParentPin(String pin) async {
     try {
       final settings = await _datasource.getParentSettings();
-      return Right(settings.pinHash == _hashPin(pin));
+      final stored = settings.pinHash;
+      if (stored == _hashPin(pin)) {
+        return const Right(true);
+      }
+
+      if (_isLegacyPlaintextPin(stored) && stored == pin) {
+        await _datasource.saveParentSettings(
+          ParentSettingsModel.fromEntity(
+            settings.copyWith(pinHash: _hashPin(pin)),
+          ),
+        );
+        return const Right(true);
+      }
+
+      return const Right(false);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -1104,6 +1126,10 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   }
 
   String _hashPin(String pin) => sha256.convert(utf8.encode(pin)).toString();
+
+  bool _isLegacyPlaintextPin(String? value) {
+    return value != null && value.length == 4 && int.tryParse(value) != null;
+  }
 
   String _extractToken(String raw) {
     const prefix = 'talia-kids-link:';

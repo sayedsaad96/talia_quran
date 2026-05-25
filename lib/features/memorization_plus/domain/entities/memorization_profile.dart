@@ -2,7 +2,9 @@ import 'package:equatable/equatable.dart';
 import 'memorization_entities.dart';
 
 enum MemorizationPath { adult, child }
+
 enum GuardianLinkStatus { none, pending, linked }
+
 enum GuardianOnboardingStatus { required, skipped, completed }
 
 class MemorizationProfile extends Equatable {
@@ -19,7 +21,8 @@ class MemorizationProfile extends Equatable {
   });
 
   factory MemorizationProfile.empty() {
-    final now = DateTime.now();
+    // UTC: profile timestamps must match the UTC policy used everywhere else.
+    final now = DateTime.now().toUtc();
     return MemorizationProfile(
       schemaVersion: 1,
       selectedPath: null,
@@ -45,9 +48,12 @@ class MemorizationProfile extends Equatable {
   bool get isAdult => selectedPath == MemorizationPath.adult;
   bool get isChild => selectedPath == MemorizationPath.child;
   bool get isGuardianLinked => guardianLinkStatus == GuardianLinkStatus.linked;
-  
-  MemorizationTrack? get legacyTrack => isAdult ? MemorizationTrack.adults : (isChild ? MemorizationTrack.kids : null);
-  String? get hifzPathValue => isAdult ? 'forward' : (isChild ? 'backward' : null);
+
+  MemorizationTrack? get legacyTrack => isAdult
+      ? MemorizationTrack.adults
+      : (isChild ? MemorizationTrack.kids : null);
+  String? get hifzPathValue =>
+      isAdult ? 'forward' : (isChild ? 'backward' : null);
   bool get needsGuardianOnboarding =>
       isChild &&
       guardianOnboardingStatus == GuardianOnboardingStatus.required &&
@@ -80,7 +86,7 @@ class MemorizationProfile extends Equatable {
         : (linkedChildId ?? this.linkedChildId),
     guardianId: clearGuardianId ? null : (guardianId ?? this.guardianId),
     createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? DateTime.now(),
+    updatedAt: updatedAt ?? DateTime.now().toUtc(),
   );
 
   @override

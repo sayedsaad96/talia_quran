@@ -37,7 +37,7 @@ class XpService {
   XpLevel getCurrentLevel(int xp) => _getLevel(xp);
 
   XpLevel _getLevel(int xp) {
-    final levels = XpConstants.levels;
+    const levels = XpConstants.levels;
     for (int i = levels.length - 1; i >= 0; i--) {
       if (xp >= levels[i].minXp) return levels[i];
     }
@@ -45,7 +45,7 @@ class XpService {
   }
 
   double _getProgress(int xp) {
-    final levels = XpConstants.levels;
+    const levels = XpConstants.levels;
     final current = _getLevel(xp);
     final currentIdx = levels.indexWhere((l) => l.name == current.name);
     if (currentIdx >= levels.length - 1) return 1.0;

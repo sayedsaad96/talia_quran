@@ -82,10 +82,33 @@ void main() {
       await repository.setParentPin('1234');
       final verified = await repository.verifyParentPin('1234');
       final rewards = await repository.saveParentReward('نزهة قصيرة');
+      final settings = await datasource.getParentSettings();
 
       expect(verified.getOrElse(() => false), isTrue);
+      expect(settings.pinHash, isNot('1234'));
+      expect(settings.pinHash, hasLength(64));
       expect(rewards.getOrElse(() => const []), hasLength(1));
     });
+
+    test(
+      'legacy plaintext parent PIN verifies once and migrates to hash',
+      () async {
+        await datasource.saveParentSettings(
+          const ParentSettingsModel(pinHash: '1234'),
+        );
+
+        final verified = await repository.verifyParentPin('1234');
+        final migrated = await datasource.getParentSettings();
+
+        expect(verified.getOrElse(() => false), isTrue);
+        expect(migrated.pinHash, isNot('1234'));
+        expect(migrated.pinHash, hasLength(64));
+        expect(
+          (await repository.verifyParentPin('0000')).getOrElse(() => true),
+          isFalse,
+        );
+      },
+    );
 
     test(
       'selectMemorizationPath(adult) stores profile and legacy track',

@@ -105,8 +105,10 @@ class ProgressRepositoryImpl implements ProgressRepository {
           final juzAyahs = ayahsByJuz[juz];
           if (juzAyahs != null &&
               juzAyahs.isNotEmpty &&
-              juzAyahs.every((a) =>
-                  memorizedKeys.contains('${a.surahId}_${a.numberInSurah}'))) {
+              juzAyahs.every(
+                (a) =>
+                    memorizedKeys.contains('${a.surahId}_${a.numberInSurah}'),
+              )) {
             memorizedJuz++;
           }
         }
@@ -121,8 +123,8 @@ class ProgressRepositoryImpl implements ProgressRepository {
       final streak = _progressDs.getStreakDays();
       final lastActive = _progressDs.getLastActiveDate();
 
-      // Update streak
-      final today = DateTime.now();
+      // Update streak using UTC-normalized today to avoid timezone boundary bugs.
+      final today = DateTime.now().toUtc();
       final updatedStreak = _calculateStreak(streak, lastActive, today);
       if (updatedStreak != streak) {
         await _progressDs.saveStreak(updatedStreak, today);
@@ -194,7 +196,8 @@ class ProgressRepositoryImpl implements ProgressRepository {
     try {
       final streak = _progressDs.getStreakDays();
       final lastActive = _progressDs.getLastActiveDate();
-      final now = DateTime.now();
+      // UTC-normalized: consistent with getOverallProgress() and StreakService.
+      final now = DateTime.now().toUtc();
       final updated = _calculateStreak(streak, lastActive, now);
       await _progressDs.saveStreak(updated, now);
       return const Right(null);
@@ -205,12 +208,13 @@ class ProgressRepositoryImpl implements ProgressRepository {
 
   int _calculateStreak(int current, DateTime? lastActive, DateTime now) {
     if (lastActive == null) return 1;
-    final lastDate = DateTime(
-      lastActive.year,
-      lastActive.month,
-      lastActive.day,
+    // Compare on UTC date components to avoid DST-ambiguous local midnight.
+    final lastDate = DateTime.utc(
+      lastActive.toUtc().year,
+      lastActive.toUtc().month,
+      lastActive.toUtc().day,
     );
-    final nowDate = DateTime(now.year, now.month, now.day);
+    final nowDate = DateTime.utc(now.year, now.month, now.day);
     final diff = nowDate.difference(lastDate).inDays;
     if (diff == 0) return current; // Same day
     if (diff == 1) return current + 1; // Consecutive day

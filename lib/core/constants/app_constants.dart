@@ -39,6 +39,4 @@ abstract class AppConstants {
   // App Links
   static const String androidStoreUrl =
       'https://play.google.com/store/apps/details?id=com.sayed.talia_quran';
-
-  const AppConstants._();
 }

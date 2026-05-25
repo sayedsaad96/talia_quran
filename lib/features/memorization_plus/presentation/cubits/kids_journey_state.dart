@@ -1,5 +1,6 @@
 part of 'kids_journey_cubit.dart';
 
+@immutable
 abstract class KidsJourneyState extends Equatable {
   const KidsJourneyState();
 

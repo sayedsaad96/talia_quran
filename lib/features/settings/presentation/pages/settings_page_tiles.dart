@@ -74,7 +74,7 @@ class _ParentDashboardTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'لوحة ولي الأمر',
+                    context.l10n.parentDashboardTitle,
                     style: AppTypography.bodyMedium.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -83,7 +83,7 @@ class _ParentDashboardTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'تابع حفظ الطفل والمكافآت والربط عن بعد',
+                    context.l10n.parentDashboardSubtitle,
                     style: AppTypography.labelSmall.copyWith(
                       color: isDark
                           ? AppColors.darkTextSecondary
@@ -139,7 +139,7 @@ class _ParentModeToggle extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'أنا ولي أمر',
+                  context.l10n.parentGuardianMode,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark
                         ? AppColors.darkTextPrimary
@@ -148,7 +148,7 @@ class _ParentModeToggle extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  'فعّل لمتابعة حفظ طفلك والربط عن بعد',
+                  context.l10n.parentModeSubtitle,
                   style: AppTypography.labelSmall.copyWith(
                     color: isDark
                         ? AppColors.darkTextSecondary
@@ -184,26 +184,65 @@ class _ResetMemorizationPathTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () async {
+        const confirmText = 'إعادة ضبط';
+        final confirmController = TextEditingController();
         final confirmed = await showDialog<bool>(
           context: context,
-          builder: (dialogContext) => AlertDialog(
-            title: const Text('إعادة ضبط مسار الحفظ؟', style: TextStyle(fontFamily: 'Amiri')),
-            content: const Text(
-              'سيؤدي هذا إلى إلغاء المسار المختار وحالة ربط ولي الأمر، ولكنه سيحتفظ بإعدادات الحفظ الذكي الخاصة بك.',
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('إلغاء'),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: const Text('تأكيد إعادة الضبط'),
-              ),
-            ],
+          builder: (dialogContext) => StatefulBuilder(
+            builder: (context, setDialogState) {
+              final canConfirm = confirmController.text.trim() == confirmText;
+              return AlertDialog(
+                title: Text(
+                  context.l10n.resetMemorizationPathQuestion,
+                  style: const TextStyle(fontFamily: 'Amiri'),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(context.l10n.resetMemorizationIdentityWarning),
+                    const SizedBox(height: AppSpacing.md),
+                    const _SettingsChecklistLine(
+                      icon: Icons.check_circle_rounded,
+                      color: Color(0xFF2D8E4C),
+                      text: 'سيبقى: الإنجازات، السجل، الشهادات',
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    const _SettingsChecklistLine(
+                      icon: Icons.warning_amber_rounded,
+                      color: Colors.orange,
+                      text: 'سيتغير: اختيار المسار والخطة الحالية',
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    const Text('اكتب "إعادة ضبط" لتأكيد العملية.'),
+                    const SizedBox(height: AppSpacing.sm),
+                    TextField(
+                      controller: confirmController,
+                      onChanged: (_) => setDialogState(() {}),
+                      decoration: const InputDecoration(hintText: confirmText),
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: Text(context.l10n.cancel),
+                  ),
+                  FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppColors.error,
+                    ),
+                    onPressed: canConfirm
+                        ? () => Navigator.pop(dialogContext, true)
+                        : null,
+                    child: Text(context.l10n.confirmResetMemorizationPath),
+                  ),
+                ],
+              );
+            },
           ),
         );
+        confirmController.dispose();
         if (confirmed == true) await onReset();
       },
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -232,7 +271,7 @@ class _ResetMemorizationPathTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'إعادة ضبط المسار',
+                    context.l10n.resetMemorizationPathTileTitle,
                     style: AppTypography.titleMedium.copyWith(
                       color: isDark
                           ? AppColors.darkTextPrimary
@@ -240,7 +279,7 @@ class _ResetMemorizationPathTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'اختر مسار الكبار أو الأطفال مرة أخرى بدون فقدان إعدادات الحفظ الذكي.',
+                    context.l10n.resetMemorizationPathTileSubtitle,
                     style: AppTypography.labelSmall.copyWith(
                       color: isDark
                           ? AppColors.darkTextSecondary
@@ -254,6 +293,29 @@ class _ResetMemorizationPathTile extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _SettingsChecklistLine extends StatelessWidget {
+  const _SettingsChecklistLine({
+    required this.icon,
+    required this.color,
+    required this.text,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: 8),
+        Expanded(child: Text(text)),
+      ],
     );
   }
 }
@@ -410,7 +472,7 @@ class _LocaleSettingTile extends StatelessWidget {
         return Column(
           children: [
             _LocaleOption(
-              label: 'العربية',
+              label: context.l10n.arabic,
               sublabel: 'Arabic',
               flag: '🇸🇦',
               isSelected: isAr,
@@ -426,7 +488,7 @@ class _LocaleSettingTile extends StatelessWidget {
             ),
             _LocaleOption(
               label: 'English',
-              sublabel: 'الإنجليزية',
+              sublabel: context.l10n.english,
               flag: '🇬🇧',
               isSelected: !isAr,
               color: primary,
@@ -570,14 +632,14 @@ class _TutorialGuideTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'دليل استخدام تالية',
+                    context.l10n.tutorialGuideTitle,
                     style: AppTypography.bodyMedium.copyWith(
                       color: textColor,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   Text(
-                    'تعرف على كل مزايا التطبيق وطريقة استخدامها',
+                    context.l10n.tutorialGuideSubtitle,
                     style: AppTypography.labelSmall.copyWith(
                       color: subtextColor,
                     ),
@@ -621,10 +683,10 @@ class _AboutTile extends StatelessWidget {
               gradient: AppColors.primaryGradient,
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
-            child: const Center(
+            child: Center(
               child: Text(
-                'ت',
-                style: TextStyle(
+                context.l10n.appName.substring(0, 1),
+                style: const TextStyle(
                   fontFamily: 'Amiri',
                   color: Colors.white,
                   fontSize: 26,
@@ -639,7 +701,7 @@ class _AboutTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'تالية — Talia',
+                  context.l10n.settingsAppBrand,
                   style: AppTypography.titleLarge.copyWith(color: textColor),
                 ),
                 Text(
@@ -648,9 +710,7 @@ class _AboutTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  context.isArabic
-                      ? 'تطبيق متميز لحفظ ومراجعة القرآن الكريم'
-                      : 'A premium Quran memorization app',
+                  context.l10n.taliaDescription,
                   style: AppTypography.labelSmall.copyWith(color: subtextColor),
                 ),
               ],
@@ -843,9 +903,7 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
                 right: 4,
               ),
               child: Text(
-                context.isArabic
-                    ? '💡 يفضل إدخال الاسم باللغة العربية ليظهر بشكل أجمل في الشهادات'
-                    : '💡 Prefer entering your name in Arabic for better certificate appearance',
+                context.l10n.arabicNameHint,
                 style: AppTypography.labelSmall.copyWith(
                   color: isDark ? AppColors.primaryLight : AppColors.primary,
                   fontSize: 10,
@@ -901,12 +959,7 @@ class _EditProfileDialogState extends State<_EditProfileDialog> {
             if (!context.mounted) return;
 
             if (!saved) {
-              _showSettingsError(
-                context,
-                context.isArabic
-                    ? 'تعذر حفظ الملف الشخصي'
-                    : 'Could not save profile',
-              );
+              _showSettingsError(context, context.l10n.profileSaveError);
               return;
             }
 
@@ -952,6 +1005,30 @@ class _AccuracySettingTileState extends State<_AccuracySettingTile> {
     }
   }
 
+  Future<void> _select(BuildContext context, int value) async {
+    if (value == _selected) return;
+
+    final previous = _selected;
+    final errorMessage = context.l10n.accuracySaveError;
+    final messenger = ScaffoldMessenger.of(context);
+    setState(() => _selected = value);
+
+    final saved = await getIt<SharedPreferences>().setDouble(
+      _key,
+      _levels[_selected],
+    );
+    if (!mounted) return;
+    if (!saved) {
+      setState(() => _selected = previous);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(errorMessage),
+          backgroundColor: Colors.red.shade700,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final textColor = widget.isDark
@@ -959,53 +1036,155 @@ class _AccuracySettingTileState extends State<_AccuracySettingTile> {
         : AppColors.lightTextPrimary;
     final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
 
-    final labels = [
-      context.l10n.difficultyEasy,
-      context.l10n.difficultyMedium,
-      context.l10n.difficultyHard,
+    final titles = [
+      context.l10n.accuracyEasyTitle,
+      context.l10n.accuracyMediumTitle,
+      context.l10n.accuracyHardTitle,
     ];
+    final descriptions = [
+      context.l10n.accuracyEasyDesc,
+      context.l10n.accuracyMediumDesc,
+      context.l10n.accuracyHardDesc,
+    ];
+    final percents = [70, 85, 92];
+    final colors = [Colors.green, primary, Colors.deepOrange];
 
-    return ListTile(
-      leading: Icon(Icons.mic_rounded, color: primary),
-      title: Text(
-        context.l10n.accuracyLevel,
-        style: AppTypography.bodyMedium.copyWith(color: textColor),
-      ),
-      trailing: DropdownButton<int>(
-        value: _selected,
-        items: [
-          for (int i = 0; i < 3; i++)
-            DropdownMenuItem(
-              value: i,
-              child: Text(labels[i], style: const TextStyle(fontSize: 12)),
-            ),
-        ],
-        onChanged: (val) async {
-          if (val != null) {
-            final previous = _selected;
-            final errorMessage = context.isArabic
-                ? 'تعذر حفظ مستوى الدقة'
-                : 'Could not save accuracy level';
-            final messenger = ScaffoldMessenger.of(context);
-            setState(() => _selected = val);
-            final saved = await getIt<SharedPreferences>().setDouble(
-              _key,
-              _levels[_selected],
-            );
-            if (!mounted) return;
-            if (!saved) {
-              setState(() => _selected = previous);
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(errorMessage),
-                  backgroundColor: Colors.red.shade700,
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.mic_rounded, color: primary),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Text(
+                  context.l10n.accuracyLevel,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              );
-            }
-          }
-        },
-        underline: const SizedBox(),
-        icon: Icon(Icons.arrow_drop_down_rounded, color: primary),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.md),
+          for (int i = 0; i < 3; i++) ...[
+            _AccuracyOptionCard(
+              title: titles[i],
+              description: descriptions[i],
+              percentLabel: context.l10n.accuracyRequiredPercent(percents[i]),
+              color: colors[i],
+              isDark: widget.isDark,
+              isSelected: _selected == i,
+              onTap: () => _select(context, i),
+            ),
+            if (i != 2) const SizedBox(height: AppSpacing.sm),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _AccuracyOptionCard extends StatelessWidget {
+  const _AccuracyOptionCard({
+    required this.title,
+    required this.description,
+    required this.percentLabel,
+    required this.color,
+    required this.isDark,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  final String title;
+  final String description;
+  final String percentLabel;
+  final Color color;
+  final bool isDark;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: isSelected ? 0.14 : 0.06),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: color.withValues(alpha: isSelected ? 0.72 : 0.18),
+              width: isSelected ? 1.4 : 1,
+            ),
+          ),
+          child: Row(
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 22,
+                height: 22,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isSelected ? color : Colors.transparent,
+                  border: Border.all(color: color, width: 2),
+                ),
+                child: isSelected
+                    ? const Icon(
+                        Icons.check_rounded,
+                        color: Colors.white,
+                        size: 14,
+                      )
+                    : null,
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: textColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: subTextColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                percentLabel,
+                style: AppTypography.labelSmall.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1042,6 +1221,12 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
   bool _savingEveningAzkar = false;
   bool _savingDailyDua = false;
 
+  TimeOfDay _reviewTime = const TimeOfDay(hour: 20, minute: 0);
+  TimeOfDay _streakTime = const TimeOfDay(hour: 22, minute: 0);
+  TimeOfDay _morningAzkarTime = const TimeOfDay(hour: 6, minute: 0);
+  TimeOfDay _eveningAzkarTime = const TimeOfDay(hour: 18, minute: 0);
+  TimeOfDay _dailyDuaTime = const TimeOfDay(hour: 9, minute: 0);
+
   @override
   void initState() {
     super.initState();
@@ -1051,6 +1236,65 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     _morningAzkarEnabled = prefs.getBool(_morningAzkarKey) ?? true;
     _eveningAzkarEnabled = prefs.getBool(_eveningAzkarKey) ?? true;
     _dailyDuaEnabled = prefs.getBool(_dailyDuaKey) ?? true;
+
+    _reviewTime = TimeOfDay(
+      hour: prefs.getInt('${_reviewKey}_hour') ?? 20,
+      minute: prefs.getInt('${_reviewKey}_minute') ?? 0,
+    );
+    _streakTime = TimeOfDay(
+      hour: prefs.getInt('${_streakKey}_hour') ?? 22,
+      minute: prefs.getInt('${_streakKey}_minute') ?? 0,
+    );
+    _morningAzkarTime = TimeOfDay(
+      hour: prefs.getInt('${_morningAzkarKey}_hour') ?? 6,
+      minute: prefs.getInt('${_morningAzkarKey}_minute') ?? 0,
+    );
+    _eveningAzkarTime = TimeOfDay(
+      hour: prefs.getInt('${_eveningAzkarKey}_hour') ?? 18,
+      minute: prefs.getInt('${_eveningAzkarKey}_minute') ?? 0,
+    );
+    _dailyDuaTime = TimeOfDay(
+      hour: prefs.getInt('${_dailyDuaKey}_hour') ?? 9,
+      minute: prefs.getInt('${_dailyDuaKey}_minute') ?? 0,
+    );
+  }
+
+  String _formatTime(TimeOfDay time) {
+    final localizations = MaterialLocalizations.of(context);
+    final formatted = localizations.formatTimeOfDay(
+      time,
+      alwaysUse24HourFormat: false,
+    );
+    return formatted.replaceAll('AM', 'ص').replaceAll('PM', 'م');
+  }
+
+  Future<void> _pickTime(
+    String key,
+    TimeOfDay initialTime,
+    bool isEnabled,
+    void Function(TimeOfDay) onTimeSelected,
+    Future<void> Function(int, int) scheduleFunction,
+  ) async {
+    final newTime = await showTimePicker(
+      context: context,
+      initialTime: initialTime,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: false),
+          child: child!,
+        );
+      },
+    );
+
+    if (newTime != null && newTime != initialTime) {
+      setState(() => onTimeSelected(newTime));
+      final prefs = getIt<SharedPreferences>();
+      await prefs.setInt('${key}_hour', newTime.hour);
+      await prefs.setInt('${key}_minute', newTime.minute);
+      if (isEnabled) {
+        await scheduleFunction(newTime.hour, newTime.minute);
+      }
+    }
   }
 
   Future<void> _toggleReview(bool value) async {
@@ -1066,24 +1310,24 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         throw StateError('Failed to save daily review notification setting');
       }
       if (value) {
-        await TaliaNotificationService.instance.scheduleDailyReviewReminder();
+        await getIt<TaliaNotificationService>().scheduleDailyReviewReminder(
+          hour: _reviewTime.hour,
+          minute: _reviewTime.minute,
+        );
       } else {
-        await TaliaNotificationService.instance.cancelDailyReviewReminder();
+        await getIt<TaliaNotificationService>().cancelDailyReviewReminder();
         if (_streakEnabled) {
-          await TaliaNotificationService.instance.scheduleStreakProtectionAlert(
+          await getIt<TaliaNotificationService>().scheduleStreakProtectionAlert(
             currentStreak: 1,
+            hour: _streakTime.hour,
+            minute: _streakTime.minute,
           );
         }
       }
     } catch (_) {
       if (!mounted) return;
       setState(() => _reviewEnabled = previous);
-      _showSettingsError(
-        context,
-        context.isArabic
-            ? 'تعذر تحديث تذكير المراجعة'
-            : 'Could not update review reminder',
-      );
+      _showSettingsError(context, context.l10n.reviewReminderSaveError);
     } finally {
       if (mounted) {
         setState(() => _savingReview = false);
@@ -1104,21 +1348,18 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         throw StateError('Failed to save streak notification setting');
       }
       if (value) {
-        await TaliaNotificationService.instance.scheduleStreakProtectionAlert(
+        await getIt<TaliaNotificationService>().scheduleStreakProtectionAlert(
           currentStreak: 1,
+          hour: _streakTime.hour,
+          minute: _streakTime.minute,
         );
       } else {
-        await TaliaNotificationService.instance.cancelStreakAlert();
+        await getIt<TaliaNotificationService>().cancelStreakAlert();
       }
     } catch (_) {
       if (!mounted) return;
       setState(() => _streakEnabled = previous);
-      _showSettingsError(
-        context,
-        context.isArabic
-            ? 'تعذر تحديث تنبيه السلسلة'
-            : 'Could not update streak alert',
-      );
+      _showSettingsError(context, context.l10n.streakReminderSaveError);
     } finally {
       if (mounted) {
         setState(() => _savingStreak = false);
@@ -1142,19 +1383,17 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         throw StateError('Failed to save morning azkar notification setting');
       }
       if (value) {
-        await TaliaNotificationService.instance.scheduleMorningAzkarReminder();
+        await getIt<TaliaNotificationService>().scheduleMorningAzkarReminder(
+          hour: _morningAzkarTime.hour,
+          minute: _morningAzkarTime.minute,
+        );
       } else {
-        await TaliaNotificationService.instance.cancelMorningAzkarReminder();
+        await getIt<TaliaNotificationService>().cancelMorningAzkarReminder();
       }
     } catch (_) {
       if (!mounted) return;
       setState(() => _morningAzkarEnabled = previous);
-      _showSettingsError(
-        context,
-        context.isArabic
-            ? 'تعذر تحديث تذكير أذكار الصباح'
-            : 'Could not update morning azkar reminder',
-      );
+      _showSettingsError(context, context.l10n.morningAzkarSaveError);
     } finally {
       if (mounted) {
         setState(() => _savingMorningAzkar = false);
@@ -1178,19 +1417,17 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         throw StateError('Failed to save evening azkar notification setting');
       }
       if (value) {
-        await TaliaNotificationService.instance.scheduleEveningAzkarReminder();
+        await getIt<TaliaNotificationService>().scheduleEveningAzkarReminder(
+          hour: _eveningAzkarTime.hour,
+          minute: _eveningAzkarTime.minute,
+        );
       } else {
-        await TaliaNotificationService.instance.cancelEveningAzkarReminder();
+        await getIt<TaliaNotificationService>().cancelEveningAzkarReminder();
       }
     } catch (_) {
       if (!mounted) return;
       setState(() => _eveningAzkarEnabled = previous);
-      _showSettingsError(
-        context,
-        context.isArabic
-            ? 'تعذر تحديث تذكير أذكار المساء'
-            : 'Could not update evening azkar reminder',
-      );
+      _showSettingsError(context, context.l10n.eveningAzkarSaveError);
     } finally {
       if (mounted) {
         setState(() => _savingEveningAzkar = false);
@@ -1214,24 +1451,86 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         throw StateError('Failed to save daily dua notification setting');
       }
       if (value) {
-        await TaliaNotificationService.instance.scheduleDailyDuaReminder();
+        await getIt<TaliaNotificationService>().scheduleDailyDuaReminder(
+          hour: _dailyDuaTime.hour,
+          minute: _dailyDuaTime.minute,
+        );
       } else {
-        await TaliaNotificationService.instance.cancelDailyDuaReminder();
+        await getIt<TaliaNotificationService>().cancelDailyDuaReminder();
       }
     } catch (_) {
       if (!mounted) return;
       setState(() => _dailyDuaEnabled = previous);
-      _showSettingsError(
-        context,
-        context.isArabic
-            ? 'تعذر تحديث دعاء اليوم'
-            : 'Could not update daily dua reminder',
-      );
+      _showSettingsError(context, context.l10n.dailyDuaSaveError);
     } finally {
       if (mounted) {
         setState(() => _savingDailyDua = false);
       }
     }
+  }
+
+  Widget _buildTimeEditorTile({
+    required String title,
+    required TimeOfDay time,
+    required bool isEnabled,
+    required bool isSaving,
+    required ValueChanged<bool> onToggle,
+    required VoidCallback onTapEdit,
+    required IconData icon,
+    required Color primaryColor,
+    required Color textColor,
+    required Color subtextColor,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTapEdit,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              Icon(icon, color: primaryColor),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          context.l10n.notificationEverydayAt(_formatTime(time)),
+                          style: AppTypography.labelSmall.copyWith(
+                            color: subtextColor,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.edit_rounded,
+                          size: 14,
+                          color: primaryColor.withValues(alpha: 0.7),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              Switch(
+                value: isEnabled,
+                onChanged: isSaving ? null : onToggle,
+                activeThumbColor: primaryColor,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -1243,106 +1542,114 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
     final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
+    final divider = widget.isDark
+        ? AppColors.darkDivider
+        : AppColors.lightDivider;
 
     return Column(
       children: [
-        SwitchListTile(
-          secondary: Icon(Icons.notifications_active_rounded, color: primary),
-          title: Text(
-            context.l10n.dailyReviewReminder,
-            style: AppTypography.bodyMedium.copyWith(color: textColor),
+        _buildTimeEditorTile(
+          title: context.l10n.dailyReviewReminder,
+          time: _reviewTime,
+          isEnabled: _reviewEnabled,
+          isSaving: _savingReview,
+          onToggle: _toggleReview,
+          icon: Icons.notifications_active_rounded,
+          primaryColor: primary,
+          textColor: textColor,
+          subtextColor: subtextColor,
+          onTapEdit: () => _pickTime(
+            _reviewKey,
+            _reviewTime,
+            _reviewEnabled,
+            (t) => _reviewTime = t,
+            (h, m) => getIt<TaliaNotificationService>()
+                .scheduleDailyReviewReminder(hour: h, minute: m),
           ),
-          subtitle: Text(
-            context.isArabic
-                ? 'كل يوم الساعة ٨:٠٠ مساءً'
-                : 'Every day at 8:00 PM',
-            style: AppTypography.labelSmall.copyWith(color: subtextColor),
-          ),
-          value: _reviewEnabled,
-          onChanged: _savingReview ? null : _toggleReview,
-          activeThumbColor: primary,
         ),
-        Divider(
-          height: 0.5,
-          color: widget.isDark ? AppColors.darkDivider : AppColors.lightDivider,
-          indent: 56,
+        Divider(height: 0.5, color: divider, indent: 56),
+        _buildTimeEditorTile(
+          title: context.l10n.streakProtection,
+          time: _streakTime,
+          isEnabled: _streakEnabled,
+          isSaving: _savingStreak,
+          onToggle: _toggleStreak,
+          icon: Icons.shield_rounded,
+          primaryColor: primary,
+          textColor: textColor,
+          subtextColor: subtextColor,
+          onTapEdit: () => _pickTime(
+            _streakKey,
+            _streakTime,
+            _streakEnabled,
+            (t) => _streakTime = t,
+            (h, m) =>
+                getIt<TaliaNotificationService>().scheduleStreakProtectionAlert(
+                  currentStreak: 1,
+                  hour: h,
+                  minute: m,
+                ),
+          ),
         ),
-        SwitchListTile(
-          secondary: Icon(Icons.shield_rounded, color: primary),
-          title: Text(
-            context.l10n.streakProtection,
-            style: AppTypography.bodyMedium.copyWith(color: textColor),
+        Divider(height: 0.5, color: divider, indent: 56),
+        _buildTimeEditorTile(
+          title: context.l10n.morningAzkarReminder,
+          time: _morningAzkarTime,
+          isEnabled: _morningAzkarEnabled,
+          isSaving: _savingMorningAzkar,
+          onToggle: _toggleMorningAzkar,
+          icon: Icons.wb_sunny_rounded,
+          primaryColor: primary,
+          textColor: textColor,
+          subtextColor: subtextColor,
+          onTapEdit: () => _pickTime(
+            _morningAzkarKey,
+            _morningAzkarTime,
+            _morningAzkarEnabled,
+            (t) => _morningAzkarTime = t,
+            (h, m) => getIt<TaliaNotificationService>()
+                .scheduleMorningAzkarReminder(hour: h, minute: m),
           ),
-          subtitle: Text(
-            context.l10n.streakProtectionDesc,
-            style: AppTypography.labelSmall.copyWith(color: subtextColor),
-          ),
-          value: _streakEnabled,
-          onChanged: _savingStreak ? null : _toggleStreak,
-          activeThumbColor: primary,
         ),
-        Divider(
-          height: 0.5,
-          color: widget.isDark ? AppColors.darkDivider : AppColors.lightDivider,
-          indent: 56,
+        Divider(height: 0.5, color: divider, indent: 56),
+        _buildTimeEditorTile(
+          title: context.l10n.eveningAzkarReminder,
+          time: _eveningAzkarTime,
+          isEnabled: _eveningAzkarEnabled,
+          isSaving: _savingEveningAzkar,
+          onToggle: _toggleEveningAzkar,
+          icon: Icons.nightlight_round,
+          primaryColor: primary,
+          textColor: textColor,
+          subtextColor: subtextColor,
+          onTapEdit: () => _pickTime(
+            _eveningAzkarKey,
+            _eveningAzkarTime,
+            _eveningAzkarEnabled,
+            (t) => _eveningAzkarTime = t,
+            (h, m) => getIt<TaliaNotificationService>()
+                .scheduleEveningAzkarReminder(hour: h, minute: m),
+          ),
         ),
-        SwitchListTile(
-          secondary: Icon(Icons.wb_sunny_rounded, color: primary),
-          title: Text(
-            context.l10n.morningAzkarReminder,
-            style: AppTypography.bodyMedium.copyWith(color: textColor),
+        Divider(height: 0.5, color: divider, indent: 56),
+        _buildTimeEditorTile(
+          title: context.l10n.dailyDuaReminder,
+          time: _dailyDuaTime,
+          isEnabled: _dailyDuaEnabled,
+          isSaving: _savingDailyDua,
+          onToggle: _toggleDailyDua,
+          icon: Icons.volunteer_activism_rounded,
+          primaryColor: primary,
+          textColor: textColor,
+          subtextColor: subtextColor,
+          onTapEdit: () => _pickTime(
+            _dailyDuaKey,
+            _dailyDuaTime,
+            _dailyDuaEnabled,
+            (t) => _dailyDuaTime = t,
+            (h, m) => getIt<TaliaNotificationService>()
+                .scheduleDailyDuaReminder(hour: h, minute: m),
           ),
-          subtitle: Text(
-            context.isArabic
-                ? 'كل يوم الساعة ٦:٠٠ صباحًا'
-                : 'Every day at 6:00 AM',
-            style: AppTypography.labelSmall.copyWith(color: subtextColor),
-          ),
-          value: _morningAzkarEnabled,
-          onChanged: _savingMorningAzkar ? null : _toggleMorningAzkar,
-          activeThumbColor: primary,
-        ),
-        Divider(
-          height: 0.5,
-          color: widget.isDark ? AppColors.darkDivider : AppColors.lightDivider,
-          indent: 56,
-        ),
-        SwitchListTile(
-          secondary: Icon(Icons.nightlight_round, color: primary),
-          title: Text(
-            context.l10n.eveningAzkarReminder,
-            style: AppTypography.bodyMedium.copyWith(color: textColor),
-          ),
-          subtitle: Text(
-            context.isArabic
-                ? 'كل يوم الساعة ٦:٠٠ مساءً'
-                : 'Every day at 6:00 PM',
-            style: AppTypography.labelSmall.copyWith(color: subtextColor),
-          ),
-          value: _eveningAzkarEnabled,
-          onChanged: _savingEveningAzkar ? null : _toggleEveningAzkar,
-          activeThumbColor: primary,
-        ),
-        Divider(
-          height: 0.5,
-          color: widget.isDark ? AppColors.darkDivider : AppColors.lightDivider,
-          indent: 56,
-        ),
-        SwitchListTile(
-          secondary: Icon(Icons.volunteer_activism_rounded, color: primary),
-          title: Text(
-            context.l10n.dailyDuaReminder,
-            style: AppTypography.bodyMedium.copyWith(color: textColor),
-          ),
-          subtitle: Text(
-            context.isArabic
-                ? 'كل يوم الساعة ٩:٠٠ صباحًا'
-                : 'Every day at 9:00 AM',
-            style: AppTypography.labelSmall.copyWith(color: subtextColor),
-          ),
-          value: _dailyDuaEnabled,
-          onChanged: _savingDailyDua ? null : _toggleDailyDua,
-          activeThumbColor: primary,
         ),
       ],
     );
@@ -1422,13 +1729,9 @@ class _AccountSectionState extends State<_AccountSection> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                context.isArabic
-                    ? (_isSignUp
-                          ? 'تم إنشاء الحساب بنجاح ✓'
-                          : 'تم تسجيل الدخول بنجاح ✓')
-                    : (_isSignUp
-                          ? 'Account created ✓'
-                          : 'Signed in successfully ✓'),
+                _isSignUp
+                    ? context.l10n.signupSuccess
+                    : context.l10n.loginSuccess,
               ),
               backgroundColor: Colors.green.shade700,
             ),
@@ -1490,9 +1793,7 @@ class _AccountSectionState extends State<_AccountSection> {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                context.isArabic
-                                    ? 'تقدمك محفوظ على السحابة'
-                                    : 'Progress backed up',
+                                context.l10n.profileSavedToCloud,
                                 style: AppTypography.labelSmall.copyWith(
                                   color: Colors.green.shade500,
                                   fontSize: 10,
@@ -1572,9 +1873,7 @@ class _AccountSectionState extends State<_AccountSection> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        context.isArabic
-                            ? 'سجّل دخولك لحفظ تقدمك على جميع أجهزتك وعدم فقدانه عند مسح التطبيق.'
-                            : 'Sign in to back up your progress and prevent data loss.',
+                        context.l10n.guestModeWarning,
                         style: AppTypography.bodySmall.copyWith(
                           color: subtextColor,
                           height: 1.5,
@@ -1683,9 +1982,7 @@ class _AccountSectionState extends State<_AccountSection> {
                       ),
                   validator: (v) {
                     if (v == null || v.isEmpty) {
-                      return context.isArabic
-                          ? 'أدخل كلمة المرور'
-                          : 'Enter password';
+                      return context.l10n.enterPassword;
                     }
                     if (_isSignUp && v.length < 6) {
                       return context.l10n.passwordTooShort;
@@ -1772,9 +2069,7 @@ class _AccountSectionState extends State<_AccountSection> {
           ),
         ),
         content: Text(
-          context.isArabic
-              ? 'هل تريد تسجيل الخروج؟ تقدمك المحفوظ على السحابة لن يُحذف.'
-              : 'Sign out? Your cloud backup will remain safe.',
+          context.l10n.signOutWarning,
           style: AppTypography.bodyMedium.copyWith(
             color: isDark
                 ? AppColors.darkTextSecondary

@@ -23,11 +23,25 @@ class ServerFailure extends Failure {
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._isar);
 
-  final SupabaseClient _supabase = Supabase.instance.client;
+  // Safe getter — checks if Supabase was initialized before accessing the client.
+  // Returns null-safe access; throws if called when definitely initialized.
+  static bool get _isSupabaseInitialized {
+    try {
+      Supabase.instance.client; // will throw StateError if not initialized
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // Lazy getter — defers access until first use so the app doesn't crash
+  // when Supabase was not initialized (offline / missing .env).
+  SupabaseClient get _supabase => Supabase.instance.client;
   final Isar _isar;
 
   @override
   AppUser? get currentUser {
+    if (!_isSupabaseInitialized) return null;
     final user = _supabase.auth.currentUser;
     if (user == null) return null;
     return AppUser(
@@ -39,19 +53,22 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Stream<AppUser?> get authStateChanges => _supabase.auth.onAuthStateChange
-      .map((event) => event.session?.user)
-      .map(
-        (user) => user == null
-            ? null
-            : AppUser(
-                id: user.id,
-                email: user.email ?? '',
-                displayName:
-                    user.userMetadata?['display_name'] as String? ?? 'مستخدم',
-                avatarUrl: user.userMetadata?['avatar_url'] as String?,
-              ),
-      );
+  Stream<AppUser?> get authStateChanges {
+    if (!_isSupabaseInitialized) return const Stream.empty();
+    return _supabase.auth.onAuthStateChange
+        .map((event) => event.session?.user)
+        .map(
+          (user) => user == null
+              ? null
+              : AppUser(
+                  id: user.id,
+                  email: user.email ?? '',
+                  displayName:
+                      user.userMetadata?['display_name'] as String? ?? 'مستخدم',
+                  avatarUrl: user.userMetadata?['avatar_url'] as String?,
+                ),
+        );
+  }
 
   // ─── Sign Up ──────────────────────────────────────────────────────────────
 

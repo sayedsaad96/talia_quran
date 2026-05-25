@@ -35,10 +35,13 @@ void main() {
   });
 
   test('selectPath emits Loading then Success when successful', () async {
-    when(mockRepository.selectMemorizationPath(MemorizationPath.adult))
-        .thenAnswer((_) async => Right(testProfile));
+    when(
+      mockRepository.selectMemorizationPath(MemorizationPath.adult),
+    ).thenAnswer((_) async => Right(testProfile));
 
-    await expectLater(
+    // Wire up expectation BEFORE calling the action, then await AFTER — fixes
+    // the race where await expectLater blocks before the cubit method is called.
+    final expectation = expectLater(
       cubit.stream,
       emitsInOrder([
         const MemorizationIdentityLoading(),
@@ -47,13 +50,15 @@ void main() {
     );
 
     await cubit.selectPath(MemorizationPath.adult);
+    await expectation;
   });
 
   test('selectPath emits Loading then Error when fails', () async {
-    when(mockRepository.selectMemorizationPath(MemorizationPath.adult))
-        .thenAnswer((_) async => const Left(CacheFailure('Save failed')));
+    when(
+      mockRepository.selectMemorizationPath(MemorizationPath.adult),
+    ).thenAnswer((_) async => const Left(CacheFailure('Save failed')));
 
-    await expectLater(
+    final expectation = expectLater(
       cubit.stream,
       emitsInOrder([
         const MemorizationIdentityLoading(),
@@ -62,5 +67,6 @@ void main() {
     );
 
     await cubit.selectPath(MemorizationPath.adult);
+    await expectation;
   });
 }

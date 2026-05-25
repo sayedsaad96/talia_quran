@@ -5,22 +5,22 @@ import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
 void main() {
   Surah buildSurah(int id) => Surah(
-        id: id,
-        nameAr: 'سورة $id',
-        nameEn: 'Surah $id',
-        ayahCount: 10,
-        juz: 1,
-        type: 'meccan',
-        page: id,
-      );
+    id: id,
+    nameAr: 'سورة $id',
+    nameEn: 'Surah $id',
+    ayahCount: 10,
+    juz: 1,
+    type: 'meccan',
+    page: id,
+  );
 
   SurahHifzProgress completeProgress(int surahId) => SurahHifzProgress(
-        surahId: surahId,
-        totalAyahs: 10,
-        memorizedCount: 10,
-        reviewCount: 0,
-        learningCount: 0,
-      );
+    surahId: surahId,
+    totalAyahs: 10,
+    memorizedCount: 10,
+    reviewCount: 0,
+    learningCount: 0,
+  );
 
   group('buildUnlockedSurahIds', () {
     test('unlocks only the first surah when no surah is complete', () {

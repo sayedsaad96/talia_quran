@@ -70,10 +70,10 @@ class _KidsJourneyView extends StatelessWidget {
                     delegate: SliverChildListDelegate([
                       _HeroProgressCard(state: state, isDark: isDark),
                       const SizedBox(height: AppSpacing.lg),
-                      _RemoteLinkCard(state: state, isDark: isDark),
+                      _KidsFirstMissionCard(state: state, isDark: isDark),
                       const SizedBox(height: AppSpacing.lg),
                       Text(
-                        'خريطة الحفظ',
+                        context.l10n.kidsJourneyMapTitle,
                         style: AppTypography.headlineSmall.copyWith(
                           color: isDark
                               ? AppColors.darkTextPrimary
@@ -118,7 +118,7 @@ class _KidsJourneyView extends StatelessWidget {
             Icons.admin_panel_settings_rounded,
             color: Colors.white,
           ),
-          tooltip: 'لوحة ولي الأمر',
+          tooltip: context.l10n.parentDashboardTitle,
           onPressed: () => context.push(
             '${AppRoutes.parentDashboard}?surahId=${state.surahId}',
           ),
@@ -140,14 +140,14 @@ class _KidsJourneyView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'رحلة الحفظ',
+                    context.l10n.kidsJourneyTitle,
                     style: AppTypography.headlineLarge.copyWith(
                       color: Colors.white,
                       fontFamily: 'Amiri',
                     ),
                   ),
                   Text(
-                    'استمع، كرر، واجمع النجوم خطوة بخطوة',
+                    context.l10n.kidsJourneySubtitle,
                     style: AppTypography.bodyMedium.copyWith(
                       color: Colors.white70,
                     ),
@@ -190,13 +190,13 @@ class _HeroProgressCard extends StatelessWidget {
             children: [
               _StatPill(
                 icon: Icons.stars_rounded,
-                label: '${state.progress.totalPoints} نقطة',
+                label: context.l10n.kidsPointsValue(state.progress.totalPoints),
                 color: const Color(0xFFFFB300),
               ),
               const SizedBox(width: 8),
               _StatPill(
                 icon: Icons.military_tech_rounded,
-                label: 'مستوى ${state.progress.currentLevel}',
+                label: context.l10n.kidsLevelValue(state.progress.currentLevel),
                 color: const Color(0xFF2D8E4C),
               ),
             ],
@@ -204,8 +204,12 @@ class _HeroProgressCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Text(
             stage == null
-                ? 'ابدأ أول مرحلة اليوم'
-                : 'المرحلة ${stage.stageNumber}: الآيات ${stage.startAyah}-${stage.endAyah}',
+                ? context.l10n.kidsStartFirstStageToday
+                : context.l10n.kidsStageAyahRange(
+                    stage.stageNumber,
+                    stage.startAyah,
+                    stage.endAyah,
+                  ),
             style: AppTypography.titleLarge.copyWith(
               fontFamily: 'Amiri',
               color: isDark
@@ -229,6 +233,7 @@ class _HeroProgressCard extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _RemoteLinkCard extends StatelessWidget {
   const _RemoteLinkCard({required this.state, required this.isDark});
   final KidsJourneyLoaded state;
@@ -254,7 +259,7 @@ class _RemoteLinkCard extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'ربط ولي الأمر عن بعد',
+                  context.l10n.remoteGuardianLinkTitle,
                   style: AppTypography.titleMedium.copyWith(
                     fontFamily: 'Amiri',
                   ),
@@ -265,7 +270,11 @@ class _RemoteLinkCard extends StatelessWidget {
                     ? null
                     : () =>
                           context.read<KidsJourneyCubit>().createRemoteLinkQr(),
-                child: Text(state.qrPayload == null ? 'إنشاء QR' : 'تجديد'),
+                child: Text(
+                  state.qrPayload == null
+                      ? context.l10n.createQr
+                      : context.l10n.renew,
+                ),
               ),
             ],
           ),
@@ -284,7 +293,7 @@ class _RemoteLinkCard extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'افتح لوحة ولي الأمر على الجهاز الآخر وامسح الرمز.',
+              context.l10n.remoteGuardianLinkInstruction,
               textAlign: TextAlign.center,
               style: AppTypography.bodySmall.copyWith(
                 color: isDark
@@ -293,6 +302,73 @@ class _RemoteLinkCard extends StatelessWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _KidsFirstMissionCard extends StatelessWidget {
+  const _KidsFirstMissionCard({required this.state, required this.isDark});
+  final KidsJourneyLoaded state;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final stage = state.currentStage;
+    const color = Color(0xFF2D8E4C);
+    final title = stage == null
+        ? context.l10n.kidsFirstMissionToday
+        : context.l10n.kidsCompleteStageToday(stage.stageNumber);
+    final subtitle = stage == null
+        ? context.l10n.kidsFirstMissionSubtitle
+        : context.l10n.kidsRemainingAyahs(stage.totalAyahs - stage.completedCount);
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.18 : 0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: color.withValues(alpha: 0.24)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.16),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.emoji_events_rounded,
+              color: Color(0xFF2D8E4C),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.titleMedium.copyWith(
+                    fontFamily: 'Amiri',
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -360,13 +436,18 @@ class _StageTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'مرحلة ${stage.stageNumber}',
+                      context.l10n.kidsStageTitle(stage.stageNumber),
                       style: AppTypography.titleMedium.copyWith(
                         fontFamily: 'Amiri',
                       ),
                     ),
                     Text(
-                      'الآيات ${stage.startAyah}-${stage.endAyah} • ${stage.completedCount}/${stage.totalAyahs}',
+                      context.l10n.kidsStageProgress(
+                        stage.startAyah,
+                        stage.endAyah,
+                        stage.completedCount,
+                        stage.totalAyahs,
+                      ),
                       style: AppTypography.bodySmall.copyWith(
                         color: isDark
                             ? AppColors.darkTextSecondary

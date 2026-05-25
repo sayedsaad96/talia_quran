@@ -65,14 +65,9 @@ class _HifzView extends StatelessWidget {
                 if (state.selectedPath == null) ...[
                   SliverFillRemaining(
                     hasScrollBody: false,
-                    child: Builder(
-                      builder: (ctx) {
-                        // Redirect after frame to avoid calling push during build.
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (ctx.mounted) ctx.go(AppRoutes.memorizationPlus);
-                        });
-                        return const SizedBox.shrink();
-                      },
+                    child: EmptyStateWidget(
+                      icon: Icons.route_rounded,
+                      message: context.l10n.chooseMemorizationPath,
                     ),
                   ),
                 ] else ...[
@@ -202,7 +197,7 @@ class _HifzView extends StatelessWidget {
                           ),
                         ],
                       ),
-                       if (state is HifzLoaded && state.selectedPath != null)
+                      if (state is HifzLoaded && state.selectedPath != null)
                         IconButton(
                           icon: const Icon(
                             Icons.settings_suggest_rounded,
@@ -213,7 +208,8 @@ class _HifzView extends StatelessWidget {
                           // the Settings page (Reset / Change path control)
                           // to preserve shared identity integrity.
                           // UPDATE: User requested to not go to the main settings page.
-                          onPressed: () => _showMemorizationSettingsSheet(ctx, isDark),
+                          onPressed: () =>
+                              _showMemorizationSettingsSheet(ctx, isDark),
                         ),
                     ],
                   ),
@@ -325,9 +321,12 @@ class _HifzSurahTile extends StatelessWidget {
     final isLocked = !isUnlocked;
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-    final lockedText = context.isArabic
-        ? 'أكمل ${requiredPreviousSurah?.nameAr ?? 'السورة السابقة'} أولاً'
-        : 'Complete ${requiredPreviousSurah?.nameEn ?? 'the previous surah'} first';
+    final previousSurahName = context.isArabic
+        ? requiredPreviousSurah?.nameAr ?? context.l10n.surah
+        : requiredPreviousSurah?.nameEn ?? context.l10n.surah;
+    final lockedText = context.l10n.completePreviousSurahFirst(
+      previousSurahName,
+    );
 
     return GestureDetector(
       onTap: () {
@@ -540,9 +539,13 @@ class _MemPlusBanner extends StatelessWidget {
 void _showMemorizationSettingsSheet(BuildContext context, bool isDark) {
   showModalBottomSheet(
     context: context,
-    backgroundColor: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+    backgroundColor: isDark
+        ? AppColors.darkBackground
+        : AppColors.lightBackground,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusXl)),
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppSpacing.radiusXl),
+      ),
     ),
     builder: (ctx) => SafeArea(
       child: Padding(
@@ -554,7 +557,9 @@ void _showMemorizationSettingsSheet(BuildContext context, bool isDark) {
             Text(
               ctx.l10n.changeMemorizationPath,
               style: AppTypography.headlineSmall.copyWith(
-                color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                color: isDark
+                    ? AppColors.darkTextPrimary
+                    : AppColors.lightTextPrimary,
                 fontFamily: 'Amiri',
               ),
             ),
@@ -567,19 +572,26 @@ void _showMemorizationSettingsSheet(BuildContext context, bool isDark) {
                   color: Colors.orange.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.restart_alt_rounded, color: Colors.orange),
+                child: const Icon(
+                  Icons.restart_alt_rounded,
+                  color: Colors.orange,
+                ),
               ),
               title: Text(
-                'إعادة ضبط المسار',
+                ctx.l10n.resetMemorizationPathTileTitle,
                 style: AppTypography.bodyMedium.copyWith(
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               subtitle: Text(
-                'تغيير مسار الحفظ بين مسار الكبار والأطفال، مع الاحتفاظ ببيانات الحفظ.',
+                ctx.l10n.resetMemorizationPathPreserveProgressDesc,
                 style: AppTypography.labelSmall.copyWith(
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
                 ),
               ),
               onTap: () async {
@@ -587,25 +599,31 @@ void _showMemorizationSettingsSheet(BuildContext context, bool isDark) {
                 final confirmed = await showDialog<bool>(
                   context: context,
                   builder: (dialogContext) => AlertDialog(
-                    title: const Text('إعادة ضبط مسار الحفظ؟', style: TextStyle(fontFamily: 'Amiri')),
-                    content: const Text(
-                      'هذا سيقوم بإلغاء مسار الحفظ الحالي لتتمكن من اختيار مسار جديد. لن تفقد آياتك المحفوظة.',
+                    title: Text(
+                      ctx.l10n.resetMemorizationPathQuestion,
+                      style: const TextStyle(fontFamily: 'Amiri'),
+                    ),
+                    content: Text(
+                      ctx.l10n.resetMemorizationPathPreserveProgressDialog,
                     ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(dialogContext, false),
-                        child: const Text('إلغاء'),
+                        child: Text(ctx.l10n.cancel),
                       ),
                       FilledButton(
-                        style: FilledButton.styleFrom(backgroundColor: Colors.orange),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                        ),
                         onPressed: () => Navigator.pop(dialogContext, true),
-                        child: const Text('إعادة ضبط'),
+                        child: Text(ctx.l10n.reset),
                       ),
                     ],
                   ),
                 );
                 if (confirmed == true) {
-                  await getIt<MemorizationPlusRepository>().resetMemorizationIdentity();
+                  await getIt<MemorizationPlusRepository>()
+                      .resetMemorizationIdentity();
                   if (context.mounted) {
                     context.pushReplacement(AppRoutes.memorizationPlus);
                   }

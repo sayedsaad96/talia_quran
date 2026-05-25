@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -12,7 +13,11 @@ class OnboardingPage extends StatefulWidget {
 
 class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
+  static const _pageCount = 4;
+  static const _goalKey = 'user_primary_goal';
+  static const _skippedKey = 'onboarding_skipped';
   int _currentPage = 0;
+  String _selectedGoal = 'reading';
 
   @override
   void dispose() {
@@ -20,15 +25,17 @@ class _OnboardingPageState extends State<OnboardingPage> {
     super.dispose();
   }
 
-  Future<void> _completeOnboarding() async {
+  Future<void> _completeOnboarding({bool skipped = false}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isFirstTimeAppOpen', false);
+    await prefs.setBool(_skippedKey, skipped);
+    await prefs.setString(_goalKey, _selectedGoal);
     if (!mounted) return;
-    context.go('/');
+    context.go(skipped ? '/' : _routeForGoal(_selectedGoal));
   }
 
   void _nextPage() {
-    if (_currentPage < 2) {
+    if (_currentPage < _pageCount - 1) {
       _pageController.animateToPage(
         _currentPage + 1,
         duration: const Duration(milliseconds: 300),
@@ -38,6 +45,14 @@ class _OnboardingPageState extends State<OnboardingPage> {
       _completeOnboarding();
     }
   }
+
+  String _routeForGoal(String goal) => switch (goal) {
+    'reading' => '/quran',
+    'memorization' => '/memorization-plus',
+    'child' => '/memorization-plus',
+    'azkar' => '/azkar',
+    _ => '/',
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -51,15 +66,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Skip button
+            // RTL-first: skip button positioned on the trailing side
             Align(
-              alignment: Alignment.topLeft,
+              alignment: AlignmentDirectional.topStart,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: TextButton(
-                  onPressed: _completeOnboarding,
+                  onPressed: () => _completeOnboarding(skipped: true),
                   child: Text(
-                    'تخطي',
+                    context.l10n.onboardingSkip,
                     style: TextStyle(
                       color: isDark
                           ? AppColors.darkTextSecondary
@@ -83,31 +98,34 @@ class _OnboardingPageState extends State<OnboardingPage> {
                 },
                 children: [
                   _OnboardingSlide(
-                    title: 'تجربة المصحف الحقيقي',
-                    description:
-                        'اقرأ القرآن الكريم بتجربة فريدة تحاكي المصحف الورقي بصفحاته وتصميمه الأصيل لتنعم بخشوع التلاوة.',
+                    title: context.l10n.onboardingQuranTitle,
+                    description: context.l10n.onboardingQuranDesc,
                     icon: Icons.menu_book_rounded,
                     isDark: isDark,
                     primaryColor: primaryColor,
                     glowColor: Colors.amber,
                   ),
                   _OnboardingSlide(
-                    title: 'حفظ ذكي بالتباعد',
-                    description:
-                        'استخدم تقنية التكرار المتباعد التي تتبع مستواك وتحدد أوقات المراجعة لكل آية لضمان تثبيت الحفظ وعدم النسيان.',
+                    title: context.l10n.onboardingSmartTitle,
+                    description: context.l10n.onboardingSmartDesc,
                     icon: Icons.psychology_alt_rounded,
                     isDark: isDark,
                     primaryColor: primaryColor,
                     glowColor: Colors.blueAccent,
                   ),
                   _OnboardingSlide(
-                    title: 'مسار مخصص للأطفال',
-                    description:
-                        'بيئة آمنة ومشجعة مليئة بالمكافآت والنجوم لتحفيز أطفالك بأسلوب ممتع على حفظ وتقييم أدائهم خطوة بخطوة.',
+                    title: context.l10n.onboardingKidsTitle,
+                    description: context.l10n.onboardingKidsDesc,
                     icon: Icons.child_care_rounded,
                     isDark: isDark,
                     primaryColor: primaryColor,
                     glowColor: Colors.purpleAccent,
+                  ),
+                  _GoalSelectionSlide(
+                    selectedGoal: _selectedGoal,
+                    onChanged: (goal) => setState(() => _selectedGoal = goal),
+                    isDark: isDark,
+                    primaryColor: primaryColor,
                   ),
                 ],
               ),
@@ -125,7 +143,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   // Indicators
                   Row(
                     children: List.generate(
-                      3,
+                      _pageCount,
                       (index) => AnimatedContainer(
                         duration: const Duration(milliseconds: 300),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -162,13 +180,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          _currentPage == 2 ? 'ابدأ الآن' : 'التالي',
+                          _currentPage == _pageCount - 1
+                              ? context.l10n.onboardingStartNow
+                              : context.l10n.next,
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        if (_currentPage != 2) ...[
+                        if (_currentPage != _pageCount - 1) ...[
                           const SizedBox(width: 8),
                           const Icon(Icons.arrow_forward_rounded, size: 20),
                         ],
@@ -287,6 +307,114 @@ class _OnboardingSlide extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GoalSelectionSlide extends StatelessWidget {
+  const _GoalSelectionSlide({
+    required this.selectedGoal,
+    required this.onChanged,
+    required this.isDark,
+    required this.primaryColor,
+  });
+
+  final String selectedGoal;
+  final ValueChanged<String> onChanged;
+  final bool isDark;
+  final Color primaryColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final goals = [
+      ('reading', 'القراءة', Icons.menu_book_rounded, AppColors.primary),
+      (
+        'memorization',
+        'الحفظ لنفسي',
+        Icons.psychology_alt_rounded,
+        Colors.blue,
+      ),
+      ('child', 'متابعة طفل', Icons.child_care_rounded, Colors.green),
+      ('azkar', 'الأذكار', Icons.volunteer_activism_rounded, Colors.orange),
+    ];
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.explore_rounded, color: primaryColor, size: 72),
+          const SizedBox(height: 32),
+          Text(
+            'ماذا تريد أن تفعل أولاً؟',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'اختر بداية واضحة، ويمكنك استخدام باقي التطبيق لاحقاً.',
+            style: TextStyle(fontSize: 16, height: 1.5, color: subTextColor),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 28),
+          ...goals.map((goal) {
+            final selected = selectedGoal == goal.$1;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: InkWell(
+                onTap: () => onChanged(goal.$1),
+                borderRadius: BorderRadius.circular(16),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? goal.$4.withValues(alpha: 0.14)
+                        : isDark
+                        ? AppColors.darkSurface
+                        : AppColors.lightSurface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: selected
+                          ? goal.$4
+                          : goal.$4.withValues(alpha: 0.16),
+                      width: selected ? 2 : 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(goal.$3, color: goal.$4),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          goal.$2,
+                          style: TextStyle(
+                            color: selected ? goal.$4 : textColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (selected)
+                        Icon(Icons.check_circle_rounded, color: goal.$4),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
         ],
       ),
     );

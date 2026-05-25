@@ -48,21 +48,21 @@ class AyahReviewRecord extends Equatable {
   final int totalReviews;
   final PerformanceRating? lastRating;
 
-  bool get isDue => !DateTime.now().isBefore(nextReviewDate);
+  bool get isDue => !DateTime.now().toUtc().isBefore(nextReviewDate.toUtc());
   bool get isNew => totalReviews == 0;
   bool get isMemorized => strengthLevel >= 6;
 
   /// Near revision: reviewed within last 5 days
   bool get isNearRevision {
     if (isNew) return false;
-    final diff = DateTime.now().difference(lastReviewedAt).inDays;
+    final diff = DateTime.now().toUtc().difference(lastReviewedAt.toUtc()).inDays;
     return diff <= 5 && !isMemorized;
   }
 
   /// Far revision: reviewed more than 5 days ago
   bool get isFarRevision {
     if (isNew) return false;
-    final diff = DateTime.now().difference(lastReviewedAt).inDays;
+    final diff = DateTime.now().toUtc().difference(lastReviewedAt.toUtc()).inDays;
     return diff > 5 && !isMemorized;
   }
 
@@ -226,13 +226,28 @@ class KidsProgress extends Equatable {
       level++;
       needed = level * 100;
     }
+
+    // Only increment streak when the session is on a new UTC calendar day.
+    // Without this check, calling addPoints() multiple times in the same day
+    // would inflate the streak counter incorrectly.
+    final now = DateTime.now().toUtc();
+    final todayKey = DateTime.utc(now.year, now.month, now.day);
+    final lastKey = lastSessionAt == null
+        ? null
+        : DateTime.utc(
+            lastSessionAt!.toUtc().year,
+            lastSessionAt!.toUtc().month,
+            lastSessionAt!.toUtc().day,
+          );
+    final isNewDay = lastKey == null || todayKey.isAfter(lastKey);
+
     return KidsProgress(
       totalPoints: newTotal,
       currentLevel: level,
-      currentStreak: currentStreak + 1,
+      currentStreak: isNewDay ? currentStreak + 1 : currentStreak,
       starsEarned: starsEarned + _starsForRating(),
       ayahsCompleted: ayahsCompleted + 1,
-      lastSessionAt: DateTime.now(),
+      lastSessionAt: now,
     );
   }
 
@@ -438,13 +453,13 @@ class ParentDashboard extends Equatable {
   final ParentSettings settings;
 
   int get weeklyCompletedSessions {
-    final now = DateTime.now();
-    final weekStart = DateTime(
+    final now = DateTime.now().toUtc();
+    final weekStart = DateTime.utc(
       now.year,
       now.month,
       now.day,
     ).subtract(Duration(days: now.weekday - 1));
-    return logs.where((log) => !log.completedAt.isBefore(weekStart)).length;
+    return logs.where((log) => !log.completedAt.toUtc().isBefore(weekStart)).length;
   }
 
   @override

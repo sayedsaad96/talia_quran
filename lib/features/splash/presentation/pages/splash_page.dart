@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/services/app_session_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
 
@@ -18,6 +18,7 @@ class _SplashPageState extends State<SplashPage>
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
+  bool _hasNavigated = false;
 
   @override
   void initState() {
@@ -48,22 +49,18 @@ class _SplashPageState extends State<SplashPage>
   Future<void> _navigateAfterDelay() async {
     await Future.delayed(const Duration(milliseconds: 2500));
     if (!mounted) return;
-    if (AppRouter.router.routerDelegate.currentConfiguration.uri.path !=
-        AppRoutes.splash) {
-      return;
-    }
+    if (_hasNavigated) return;
 
     // Use DI-injected SharedPreferences instead of creating a new instance
     final prefs = getIt<SharedPreferences>();
     final bool isFirstTime = prefs.getBool('isFirstTimeAppOpen') ?? true;
-    final lastLocation = getIt<AppSessionService>().getLastRestorableLocation();
-
     if (!mounted) return;
+    _hasNavigated = true;
 
     if (isFirstTime) {
-      context.go('/onboarding');
+      context.go(AppRoutes.onboarding);
     } else {
-      context.go(lastLocation ?? '/');
+      context.go(AppRoutes.home);
     }
   }
 
@@ -132,7 +129,7 @@ class _SplashPageState extends State<SplashPage>
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'تالية',
+                        context.l10n.appName,
                         style: TextStyle(
                           fontFamily: 'Amiri',
                           fontSize: 48,
@@ -144,7 +141,7 @@ class _SplashPageState extends State<SplashPage>
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'تطبيق تحفيظ القرآن الذكي',
+                        context.l10n.splashSubtitle,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,

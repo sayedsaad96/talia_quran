@@ -50,6 +50,15 @@ class ZikrSession extends Equatable {
     );
   }
 
+  ZikrSession decrement() {
+    final next = (currentCount - 1).clamp(0, zikr.totalCount);
+    return ZikrSession(
+      zikr: zikr,
+      currentCount: next,
+      isDone: next >= zikr.totalCount,
+    );
+  }
+
   ZikrSession reset() =>
       ZikrSession(zikr: zikr, currentCount: 0, isDone: false);
 

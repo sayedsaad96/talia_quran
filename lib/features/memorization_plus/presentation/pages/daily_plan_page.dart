@@ -5,12 +5,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:percent_indicator/percent_indicator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/ayah_listen_button.dart';
 import '../../../../core/widgets/qcf_hifz_verse_view.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/router/app_router.dart';
@@ -547,6 +549,88 @@ class _AyahPlanTile extends StatelessWidget {
   final bool isDark;
   final Color primary;
   final bool isEvaluating;
+  static const _ratingHintKey = 'daily_plan_rating_hint_seen';
+
+  Future<void> _showRatingHintIfNeeded(BuildContext context) async {
+    final prefs = getIt<SharedPreferences>();
+    final seen = prefs.getBool(_ratingHintKey) ?? false;
+    if (seen) return;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppSpacing.radiusXl),
+        ),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkDivider
+                      : AppColors.lightDivider,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              Icon(Icons.psychology_alt_rounded, color: primary, size: 34),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                sheetContext.l10n.dailyPlanRatingHintTitle,
+                style: AppTypography.titleLarge.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
+                  fontFamily: 'Amiri',
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                sheetContext.l10n.dailyPlanRatingHintBody,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                  fontFamily: 'Amiri',
+                  height: 1.6,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(sheetContext),
+                  child: Text(sheetContext.l10n.understood),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await prefs.setBool(_ratingHintKey, true);
+  }
+
+  Future<void> _evaluate(BuildContext context, PerformanceRating rating) async {
+    await _showRatingHintIfNeeded(context);
+    if (!context.mounted) return;
+    await context.read<DailyPlanCubit>().evaluateAyah(
+      surahId: planAyah.surahId,
+      ayahNumber: planAyah.ayahNumber,
+      rating: rating,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -634,7 +718,7 @@ class _AyahPlanTile extends StatelessWidget {
                     style: AppTypography.bodySmall.copyWith(color: primary),
                   ),
           ),
-          // Evaluation buttons (show only if not yet done)
+          // Listen button + Evaluation buttons (show only if not yet done)
           if (!isDone && !isEvaluating)
             Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -643,39 +727,59 @@ class _AyahPlanTile extends StatelessWidget {
                 AppSpacing.md,
                 AppSpacing.md,
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _EvalButton(
-                    label: 'ضعيف',
-                    icon: Icons.sentiment_dissatisfied_rounded,
-                    color: Colors.red,
-                    onTap: () => context.read<DailyPlanCubit>().evaluateAyah(
-                      surahId: planAyah.surahId,
-                      ayahNumber: planAyah.ayahNumber,
-                      rating: PerformanceRating.weak,
-                    ),
+                  // ── Listen row ──────────────────────────────────────────
+                  Row(
+                    children: [
+                      AyahListenButton(
+                        surahId: planAyah.surahId,
+                        ayahNumber: planAyah.ayahNumber,
+                        size: AyahListenButtonSize.small,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'استمع للآية قبل التقييم',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextHint
+                              : AppColors.lightTextHint,
+                          fontFamily: 'Amiri',
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  _EvalButton(
-                    label: 'متوسط',
-                    icon: Icons.sentiment_neutral_rounded,
-                    color: const Color(0xFFFF8C42),
-                    onTap: () => context.read<DailyPlanCubit>().evaluateAyah(
-                      surahId: planAyah.surahId,
-                      ayahNumber: planAyah.ayahNumber,
-                      rating: PerformanceRating.average,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  _EvalButton(
-                    label: 'ممتاز',
-                    icon: Icons.sentiment_very_satisfied_rounded,
-                    color: const Color(0xFF2D8E4C),
-                    onTap: () => context.read<DailyPlanCubit>().evaluateAyah(
-                      surahId: planAyah.surahId,
-                      ayahNumber: planAyah.ayahNumber,
-                      rating: PerformanceRating.excellent,
-                    ),
+                  const SizedBox(height: AppSpacing.sm),
+                  // ── Rating buttons ──────────────────────────────────────
+                  Row(
+                    children: [
+                      _EvalButton(
+                        label: 'ضعيف',
+                        description: context.l10n.dailyPlanRatingWeakDesc,
+                        icon: Icons.sentiment_dissatisfied_rounded,
+                        color: Colors.red,
+                        onTap: () => _evaluate(context, PerformanceRating.weak),
+                      ),
+                      const SizedBox(width: 8),
+                      _EvalButton(
+                        label: 'متوسط',
+                        description: context.l10n.dailyPlanRatingAverageDesc,
+                        icon: Icons.sentiment_neutral_rounded,
+                        color: const Color(0xFFFF8C42),
+                        onTap: () =>
+                            _evaluate(context, PerformanceRating.average),
+                      ),
+                      const SizedBox(width: 8),
+                      _EvalButton(
+                        label: 'ممتاز',
+                        description: context.l10n.dailyPlanRatingExcellentDesc,
+                        icon: Icons.sentiment_very_satisfied_rounded,
+                        color: const Color(0xFF2D8E4C),
+                        onTap: () =>
+                            _evaluate(context, PerformanceRating.excellent),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -694,11 +798,13 @@ class _AyahPlanTile extends StatelessWidget {
 class _EvalButton extends StatelessWidget {
   const _EvalButton({
     required this.label,
+    required this.description,
     required this.icon,
     required this.color,
     required this.onTap,
   });
   final String label;
+  final String description;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
@@ -725,6 +831,18 @@ class _EvalButton extends StatelessWidget {
               Text(
                 label,
                 style: AppTypography.labelSmall.copyWith(color: color),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                description,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.labelSmall.copyWith(
+                  color: color.withValues(alpha: 0.82),
+                  fontSize: 10,
+                  height: 1.2,
+                ),
               ),
             ],
           ),

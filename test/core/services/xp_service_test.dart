@@ -9,7 +9,7 @@ import 'package:talia_quran/core/constants/xp_constants.dart';
 void main() {
   group('XpConstants — level progression', () {
     XpLevel levelFor(int xp) {
-      final levels = XpConstants.levels;
+      const levels = XpConstants.levels;
       for (int i = levels.length - 1; i >= 0; i--) {
         if (xp >= levels[i].minXp) return levels[i];
       }
@@ -17,7 +17,7 @@ void main() {
     }
 
     double progressFor(int xp) {
-      final levels = XpConstants.levels;
+      const levels = XpConstants.levels;
       final current = levelFor(xp);
       final idx = levels.indexWhere((l) => l.name == current.name);
       if (idx >= levels.length - 1) return 1.0;
@@ -127,8 +127,7 @@ void main() {
     });
 
     test('levels are sorted in ascending minXp order', () {
-      final xpValues =
-          XpConstants.levels.map((l) => l.minXp).toList();
+      final xpValues = XpConstants.levels.map((l) => l.minXp).toList();
       final sorted = [...xpValues]..sort();
       expect(xpValues, equals(sorted));
     });

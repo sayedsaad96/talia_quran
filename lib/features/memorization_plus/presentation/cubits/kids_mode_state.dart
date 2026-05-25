@@ -1,5 +1,6 @@
 part of 'kids_mode_cubit.dart';
 
+@immutable
 abstract class KidsModeState extends Equatable {
   const KidsModeState();
   @override
@@ -33,6 +34,7 @@ class KidsModeLoaded extends KidsModeState {
     required this.isCompleted,
     this.newAwards = const [],
     this.mustListenFirst = false, // BUG-4 FIX: guard for listen-before-complete
+    this.audioError,
   });
 
   final int surahId;
@@ -45,6 +47,7 @@ class KidsModeLoaded extends KidsModeState {
   final bool isCompleted;
   final List<CertificateAward> newAwards;
   final bool mustListenFirst;
+  final String? audioError;
 
   KidsModeLoaded copyWith({
     KidsProgress? progress,
@@ -53,6 +56,8 @@ class KidsModeLoaded extends KidsModeState {
     bool? isCompleted,
     List<CertificateAward>? newAwards,
     bool? mustListenFirst,
+    String? audioError,
+    bool clearAudioError = false,
   }) => KidsModeLoaded(
     surahId: surahId,
     ayahNumber: ayahNumber,
@@ -62,8 +67,9 @@ class KidsModeLoaded extends KidsModeState {
     currentLoop: currentLoop ?? this.currentLoop,
     maxLoops: maxLoops,
     isCompleted: isCompleted ?? this.isCompleted,
-    newAwards: newAwards ?? const [],
+    newAwards: newAwards ?? this.newAwards,
     mustListenFirst: mustListenFirst ?? this.mustListenFirst,
+    audioError: clearAudioError ? null : audioError ?? this.audioError,
   );
 
   @override
@@ -76,5 +82,6 @@ class KidsModeLoaded extends KidsModeState {
     isCompleted,
     newAwards,
     mustListenFirst,
+    audioError,
   ];
 }

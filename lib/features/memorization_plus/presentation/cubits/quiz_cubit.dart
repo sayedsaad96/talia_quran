@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/services/achievement_service.dart';
@@ -176,6 +177,43 @@ class QuizCubit extends Cubit<QuizState> {
     );
   }
 
+  Future<void> submitManualRating(PerformanceRating rating) async {
+    if (state is! QuizQuestion) return;
+    final current = _items[_currentIndex];
+
+    final passed = rating != PerformanceRating.weak;
+    if (passed) {
+      _passedCount++;
+    } else {
+      _failedCount++;
+    }
+
+    var newAwards = <CertificateAward>[];
+    final result = await _repository.evaluateAyah(
+      surahId: current.surahId,
+      ayahNumber: current.ayahNumber,
+      rating: rating,
+    );
+    final failure = result.fold((f) => f, (_) => null);
+    if (failure == null) {
+      newAwards = await _achievementService.checkAndUnlockCertificates();
+    }
+
+    emit(
+      QuizAnswerResult(
+        surahId: current.surahId,
+        ayahNumber: current.ayahNumber,
+        correctText: current.correctText,
+        userText: 'تقييم يدوي: ${_manualRatingLabel(rating)}',
+        similarity: _manualRatingScore(rating),
+        passed: passed,
+        questionIndex: _currentIndex,
+        totalQuestions: _items.length,
+        newAwards: newAwards,
+      ),
+    );
+  }
+
   /// Move to the next question or show final results.
   void nextQuestion() {
     _currentIndex++;
@@ -248,6 +286,22 @@ class QuizCubit extends Cubit<QuizState> {
       }
     }
     return dp[m][n];
+  }
+
+  double _manualRatingScore(PerformanceRating rating) {
+    return switch (rating) {
+      PerformanceRating.excellent => 1.0,
+      PerformanceRating.average => 0.7,
+      PerformanceRating.weak => 0.4,
+    };
+  }
+
+  String _manualRatingLabel(PerformanceRating rating) {
+    return switch (rating) {
+      PerformanceRating.excellent => 'ممتاز',
+      PerformanceRating.average => 'متوسط',
+      PerformanceRating.weak => 'ضعيف',
+    };
   }
 }
 
