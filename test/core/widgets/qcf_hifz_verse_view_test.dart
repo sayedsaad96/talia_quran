@@ -139,7 +139,7 @@ void main() {
     testWidgets('shows fallback text when surahNumber is 115 (invalid)', (
       tester,
     ) async {
-      const fallback = 'fallback text surah 115';
+      const fallback = 'fallback text invalid surah';
       await tester.pumpWidget(
         _wrap(
           const QcfHifzVerseView(
@@ -157,7 +157,7 @@ void main() {
     testWidgets('shows fallback text when verseNumber is 0 (invalid)', (
       tester,
     ) async {
-      const fallback = 'fallback verse 0';
+      const fallback = 'fallback invalid verse';
       await tester.pumpWidget(
         _wrap(
           const QcfHifzVerseView(
@@ -210,6 +210,47 @@ void main() {
         expect(find.text(fallback), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'cleans trailing ayah markers from fallback text on memorization screens',
+      (tester) async {
+        const rawFallback = 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ ١';
+        const cleanedFallback = 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ';
+        await tester.pumpWidget(
+          _wrap(
+            const QcfHifzVerseView(
+              surahNumber: 0,
+              verseNumber: 1,
+              fallbackText: rawFallback,
+              isUnlocked: true,
+              isMemorized: false,
+            ),
+          ),
+        );
+
+        expect(find.text(cleanedFallback), findsOneWidget);
+        expect(find.text(rawFallback), findsNothing);
+      },
+    );
+
+    testWidgets('normalizes safe Quran spacing in fallback text', (
+      tester,
+    ) async {
+      const cleanedFallback = 'مِن شَرِّ الْوَسْوَاسِ';
+      await tester.pumpWidget(
+        _wrap(
+          const QcfHifzVerseView(
+            surahNumber: 0,
+            verseNumber: 1,
+            fallbackText: 'مِن شَرِّالْوَسْوَاسِ',
+            isUnlocked: true,
+            isMemorized: false,
+          ),
+        ),
+      );
+
+      expect(find.text(cleanedFallback), findsOneWidget);
+    });
 
     // ── T004: Locked state ─────────────────────────────────────────────────────
 

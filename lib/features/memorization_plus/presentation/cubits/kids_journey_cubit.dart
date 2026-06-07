@@ -1,19 +1,25 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
 part 'kids_journey_state.dart';
 
 class KidsJourneyCubit extends Cubit<KidsJourneyState> {
-  KidsJourneyCubit(this._getJourney, this._getKidsProgress, this._remoteLink)
-    : super(const KidsJourneyInitial());
+  KidsJourneyCubit(
+    this._getJourney,
+    this._getKidsProgress,
+    this._remoteLink,
+    this._quranRepository,
+  ) : super(const KidsJourneyInitial());
 
   final GetKidsJourneyUsecase _getJourney;
   final GetKidsProgressUsecase _getKidsProgress;
   final ParentRemoteLinkUsecase _remoteLink;
+  final QuranRepository _quranRepository;
 
   Future<void> load({required int surahId}) async {
     emit(const KidsJourneyLoading());
@@ -30,11 +36,17 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
       return;
     }
 
+    // Fetch surah name — gracefully falls back to null on failure
+    String? surahName;
+    final surahResult = await _quranRepository.getSurahDetail(surahId);
+    surahResult.fold((_) => null, (detail) => surahName = detail.surah.nameAr);
+
     emit(
       KidsJourneyLoaded(
         surahId: surahId,
         stages: journeyResult.getOrElse(() => const []),
         progress: progressResult.getOrElse(() => const KidsProgress.initial()),
+        surahName: surahName,
       ),
     );
   }
@@ -62,4 +74,3 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
     );
   }
 }
-

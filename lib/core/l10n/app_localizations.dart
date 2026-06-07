@@ -1080,19 +1080,19 @@ abstract class AppLocalizations {
   /// No description provided for @profileSavedToCloud.
   ///
   /// In ar, this message translates to:
-  /// **'تقدمك محفوظ على السحابة'**
+  /// **'تم تسجيل الدخول إلى حسابك'**
   String get profileSavedToCloud;
 
   /// No description provided for @guestModeWarning.
   ///
   /// In ar, this message translates to:
-  /// **'سجّل دخولك لحفظ تقدمك على جميع أجهزتك وعدم فقدانه عند مسح التطبيق.'**
+  /// **'سجّل دخولك لإدارة حسابك وخيارات الاستعادة.'**
   String get guestModeWarning;
 
   /// No description provided for @signOutWarning.
   ///
   /// In ar, this message translates to:
-  /// **'هل تريد تسجيل الخروج؟ تقدمك المحفوظ على السحابة لن يُحذف.'**
+  /// **'هل تريد تسجيل الخروج؟ سيبقى تقدمك المحلي متاحًا على هذا الجهاز.'**
   String get signOutWarning;
 
   /// No description provided for @dailyReviewReminder.
@@ -1398,7 +1398,7 @@ abstract class AppLocalizations {
   /// No description provided for @syncProgressDesc.
   ///
   /// In ar, this message translates to:
-  /// **'قم بتسجيل الدخول لحفظ تقدمك ومزامنته على جميع أجهزتك'**
+  /// **'قم بتسجيل الدخول لإدارة حسابك وخيارات الاستعادة'**
   String get syncProgressDesc;
 
   /// No description provided for @later.
@@ -1596,13 +1596,13 @@ abstract class AppLocalizations {
   /// No description provided for @backupProgressTitle.
   ///
   /// In ar, this message translates to:
-  /// **'احفظ تقدمك الآن!'**
+  /// **'إدارة الحساب'**
   String get backupProgressTitle;
 
   /// No description provided for @backupProgressDesc.
   ///
   /// In ar, this message translates to:
-  /// **'سجّل دخولك من الإعدادات لحماية تقدمك'**
+  /// **'سجّل دخولك من الإعدادات لإدارة حسابك'**
   String get backupProgressDesc;
 
   /// No description provided for @azkarSubtitle.
@@ -2361,6 +2361,24 @@ abstract class AppLocalizations {
   /// **'تجديد الرمز'**
   String get guardianRegenerateCode;
 
+  /// No description provided for @guardianSignInRequired.
+  ///
+  /// In ar, this message translates to:
+  /// **'ربط ولي الأمر يتطلب تسجيل الدخول أولاً'**
+  String get guardianSignInRequired;
+
+  /// No description provided for @guardianSignInAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الدخول أو إنشاء حساب'**
+  String get guardianSignInAction;
+
+  /// No description provided for @guardianGuestContinueKids.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة حفظ الأطفال'**
+  String get guardianGuestContinueKids;
+
   /// No description provided for @splashSubtitle.
   ///
   /// In ar, this message translates to:
@@ -2941,6 +2959,767 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'كل يوم الساعة {time}'**
   String notificationEverydayAt(String time);
+
+  /// No description provided for @kidsGamifiedWelcome.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرحباً بطل الحفظ!'**
+  String get kidsGamifiedWelcome;
+
+  /// No description provided for @kidsGamifiedLevelProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'المستوى {level} — {progress}/100'**
+  String kidsGamifiedLevelProgress(int level, int progress);
+
+  /// No description provided for @kidsGamifiedStarsCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} نجمة'**
+  String kidsGamifiedStarsCount(int count);
+
+  /// No description provided for @kidsGamifiedLastMission.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر مهمة'**
+  String get kidsGamifiedLastMission;
+
+  /// No description provided for @kidsGamifiedContinueNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'استكمل الآن'**
+  String get kidsGamifiedContinueNow;
+
+  /// No description provided for @kidsGamifiedMushaf.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصحف'**
+  String get kidsGamifiedMushaf;
+
+  /// No description provided for @kidsGamifiedJourney.
+  ///
+  /// In ar, this message translates to:
+  /// **'رحلتي'**
+  String get kidsGamifiedJourney;
+
+  /// No description provided for @kidsGamifiedMissions.
+  ///
+  /// In ar, this message translates to:
+  /// **'المهام'**
+  String get kidsGamifiedMissions;
+
+  /// No description provided for @kidsGamifiedHouseTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيت الحفظ {number}'**
+  String kidsGamifiedHouseTitle(int number);
+
+  /// No description provided for @kidsGamifiedReviewHouseTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'بيت المراجعة {number}'**
+  String kidsGamifiedReviewHouseTitle(int number);
+
+  /// No description provided for @kidsGamifiedAyahRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآيات {startAyah}-{endAyah}'**
+  String kidsGamifiedAyahRange(int startAyah, int endAyah);
+
+  /// No description provided for @kidsGamifiedProgressCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{completed}/{total}'**
+  String kidsGamifiedProgressCount(int completed, int total);
+
+  /// No description provided for @kidsGamifiedLockedStage.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا البيت مغلق الآن'**
+  String get kidsGamifiedLockedStage;
+
+  /// No description provided for @kidsGamifiedCurrentStage.
+  ///
+  /// In ar, this message translates to:
+  /// **'مهمتك الحالية'**
+  String get kidsGamifiedCurrentStage;
+
+  /// No description provided for @kidsGamifiedCompletedStage.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت، اكتمل البيت'**
+  String get kidsGamifiedCompletedStage;
+
+  /// No description provided for @kidsGamifiedNeedsReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاهز للمراجعة'**
+  String get kidsGamifiedNeedsReview;
+
+  /// No description provided for @kidsGamifiedListenStep.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع'**
+  String get kidsGamifiedListenStep;
+
+  /// No description provided for @kidsGamifiedListenStepSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسمع الآية بتأنٍ وتركيز'**
+  String get kidsGamifiedListenStepSubtitle;
+
+  /// No description provided for @kidsGamifiedRepeatStep.
+  ///
+  /// In ar, this message translates to:
+  /// **'ردد'**
+  String get kidsGamifiedRepeatStep;
+
+  /// No description provided for @kidsGamifiedRepeatStepSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'كرر خلف القارئ حتى تثبت الآية'**
+  String get kidsGamifiedRepeatStepSubtitle;
+
+  /// No description provided for @kidsGamifiedTestStep.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختبر نفسك'**
+  String get kidsGamifiedTestStep;
+
+  /// No description provided for @kidsGamifiedTestStepSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاول التسميع بدون مساعدة'**
+  String get kidsGamifiedTestStepSubtitle;
+
+  /// No description provided for @kidsGamifiedStartMission.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ المهمة'**
+  String get kidsGamifiedStartMission;
+
+  /// No description provided for @kidsGamifiedListenAndRepeat.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع وكرر'**
+  String get kidsGamifiedListenAndRepeat;
+
+  /// No description provided for @kidsGamifiedRecordYourVoice.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجل تلاوتك'**
+  String get kidsGamifiedRecordYourVoice;
+
+  /// No description provided for @kidsGamifiedRecordingInProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري التسجيل...'**
+  String get kidsGamifiedRecordingInProgress;
+
+  /// No description provided for @kidsGamifiedAudioUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصوت غير متاح الآن، حاول مرة أخرى بعد قليل.'**
+  String get kidsGamifiedAudioUnavailable;
+
+  /// No description provided for @kidsGamifiedListenFirst.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع للآية {count} مرات قبل تسجيل تلاوتك.'**
+  String kidsGamifiedListenFirst(int count);
+
+  /// No description provided for @kidsGamifiedAudioLoading.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري تجهيز التلاوة...'**
+  String get kidsGamifiedAudioLoading;
+
+  /// No description provided for @kidsGamifiedWellDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت!'**
+  String get kidsGamifiedWellDone;
+
+  /// No description provided for @kidsGamifiedEarnedStars.
+  ///
+  /// In ar, this message translates to:
+  /// **'+{count} نجمة'**
+  String kidsGamifiedEarnedStars(int count);
+
+  /// No description provided for @kidsGamifiedEarnedGems.
+  ///
+  /// In ar, this message translates to:
+  /// **'+{count} جوهرة'**
+  String kidsGamifiedEarnedGems(int count);
+
+  /// No description provided for @kidsGamifiedNextStage.
+  ///
+  /// In ar, this message translates to:
+  /// **'التالي'**
+  String get kidsGamifiedNextStage;
+
+  /// No description provided for @kidsGamifiedReturnToMap.
+  ///
+  /// In ar, this message translates to:
+  /// **'العودة للخريطة'**
+  String get kidsGamifiedReturnToMap;
+
+  /// No description provided for @kidsGamifiedJourneyComplete.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت رحلة الحفظ الحالية، بارك الله فيك!'**
+  String get kidsGamifiedJourneyComplete;
+
+  /// No description provided for @kidsGamifiedFallbackMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سنعود للتجربة القديمة للحفاظ على تقدمك.'**
+  String get kidsGamifiedFallbackMessage;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In ar, this message translates to:
+  /// **'سياسة الخصوصية'**
+  String get privacyPolicy;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسيت كلمة المرور؟'**
+  String get forgotPassword;
+
+  /// No description provided for @passwordResetEmailSent.
+  ///
+  /// In ar, this message translates to:
+  /// **'✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني'**
+  String get passwordResetEmailSent;
+
+  /// No description provided for @forgotPasswordEnterEmail.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل بريدك الإلكتروني أولاً لإعادة تعيين كلمة المرور'**
+  String get forgotPasswordEnterEmail;
+
+  /// No description provided for @updatePasswordTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعيين كلمة مرور جديدة'**
+  String get updatePasswordTitle;
+
+  /// No description provided for @updatePasswordSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل كلمة مرور قوية جديدة لحسابك.'**
+  String get updatePasswordSubtitle;
+
+  /// No description provided for @newPassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمة المرور الجديدة'**
+  String get newPassword;
+
+  /// No description provided for @confirmNewPassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد كلمة المرور الجديدة'**
+  String get confirmNewPassword;
+
+  /// No description provided for @passwordsDoNotMatch.
+  ///
+  /// In ar, this message translates to:
+  /// **'كلمتا المرور غير متطابقتين'**
+  String get passwordsDoNotMatch;
+
+  /// No description provided for @passwordUpdated.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تحديث كلمة المرور بنجاح. سجل الدخول مرة أخرى.'**
+  String get passwordUpdated;
+
+  /// No description provided for @updatePasswordButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحديث كلمة المرور'**
+  String get updatePasswordButton;
+
+  /// No description provided for @invalidPasswordRecoveryLink.
+  ///
+  /// In ar, this message translates to:
+  /// **'رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.'**
+  String get invalidPasswordRecoveryLink;
+
+  /// No description provided for @onboardingGoalQuestion.
+  ///
+  /// In ar, this message translates to:
+  /// **'ماذا تريد أن تفعل أولاً؟'**
+  String get onboardingGoalQuestion;
+
+  /// No description provided for @onboardingGoalSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر بداية واضحة، ويمكنك استخدام باقي التطبيق لاحقاً.'**
+  String get onboardingGoalSubtitle;
+
+  /// No description provided for @onboardingGoalReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'القراءة'**
+  String get onboardingGoalReading;
+
+  /// No description provided for @onboardingGoalMemorization.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحفظ لنفسي'**
+  String get onboardingGoalMemorization;
+
+  /// No description provided for @onboardingGoalChild.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة طفل'**
+  String get onboardingGoalChild;
+
+  /// No description provided for @onboardingGoalAzkar.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأذكار'**
+  String get onboardingGoalAzkar;
+
+  /// No description provided for @dailyPlanQuizAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختبار المراجعة'**
+  String get dailyPlanQuizAction;
+
+  /// No description provided for @dailyPlanNewAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'آيات جديدة للحفظ'**
+  String get dailyPlanNewAyahs;
+
+  /// No description provided for @dailyPlanNearRevision.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة قريبة (آخر ٥ أيام)'**
+  String get dailyPlanNearRevision;
+
+  /// No description provided for @dailyPlanFarRevision.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة بعيدة'**
+  String get dailyPlanFarRevision;
+
+  /// No description provided for @dailyPlanCompletedTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما شاء الله! أكملت خطة اليوم'**
+  String get dailyPlanCompletedTitle;
+
+  /// No description provided for @dailyPlanCompletedSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت {count} عناصر بنجاح.\nثابر على هذا المستوى.'**
+  String dailyPlanCompletedSubtitle(int count);
+
+  /// No description provided for @dailyPlanNewAyahsShort.
+  ///
+  /// In ar, this message translates to:
+  /// **'آيات جديدة'**
+  String get dailyPlanNewAyahsShort;
+
+  /// No description provided for @dailyPlanReviewShort.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة'**
+  String get dailyPlanReviewShort;
+
+  /// No description provided for @dailyPlanBlessingAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'بارك الله فيك ✨'**
+  String get dailyPlanBlessingAction;
+
+  /// No description provided for @dailyPlanRatingExcellent.
+  ///
+  /// In ar, this message translates to:
+  /// **'✅ ممتاز! تم جدولة مراجعة الآية {ayahNumber} بعد فترة أطول'**
+  String dailyPlanRatingExcellent(int ayahNumber);
+
+  /// No description provided for @dailyPlanRatingAverage.
+  ///
+  /// In ar, this message translates to:
+  /// **'⏰ متوسط، سيتم المراجعة خلال فترة معتدلة'**
+  String get dailyPlanRatingAverage;
+
+  /// No description provided for @dailyPlanRatingWeak.
+  ///
+  /// In ar, this message translates to:
+  /// **'🔁 ضعيف، ستتم مراجعة الآية {ayahNumber} غداً'**
+  String dailyPlanRatingWeak(int ayahNumber);
+
+  /// No description provided for @performanceWeak.
+  ///
+  /// In ar, this message translates to:
+  /// **'ضعيف'**
+  String get performanceWeak;
+
+  /// No description provided for @performanceAverage.
+  ///
+  /// In ar, this message translates to:
+  /// **'متوسط'**
+  String get performanceAverage;
+
+  /// No description provided for @performanceExcellent.
+  ///
+  /// In ar, this message translates to:
+  /// **'ممتاز'**
+  String get performanceExcellent;
+
+  /// No description provided for @dailyPlanListenBeforeRating.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع للآية قبل التقييم'**
+  String get dailyPlanListenBeforeRating;
+
+  /// No description provided for @reviewQuizTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختبار المراجعة'**
+  String get reviewQuizTitle;
+
+  /// No description provided for @quizExitTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخروج من اختبار المراجعة؟'**
+  String get quizExitTitle;
+
+  /// No description provided for @quizExitMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيتم حفظ الآيات التي قيّمتها حتى الآن.\nهل تريد الخروج؟'**
+  String get quizExitMessage;
+
+  /// No description provided for @quizStayAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'البقاء'**
+  String get quizStayAction;
+
+  /// No description provided for @quizExitAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'خروج'**
+  String get quizExitAction;
+
+  /// No description provided for @quizYourAnswer.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجابتك'**
+  String get quizYourAnswer;
+
+  /// No description provided for @quizListenRetryTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع ثم أعد المحاولة'**
+  String get quizListenRetryTitle;
+
+  /// No description provided for @quizListenRetrySubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج تدريباً أكثر، وهذا طبيعي في أول المراجعة.'**
+  String get quizListenRetrySubtitle;
+
+  /// No description provided for @quizNextAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآية التالية'**
+  String get quizNextAyah;
+
+  /// No description provided for @quizShowResults.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض النتائج'**
+  String get quizShowResults;
+
+  /// No description provided for @quizExcellentResult.
+  ///
+  /// In ar, this message translates to:
+  /// **'ممتاز!'**
+  String get quizExcellentResult;
+
+  /// No description provided for @quizGoodEffortResult.
+  ///
+  /// In ar, this message translates to:
+  /// **'جهد جيد!'**
+  String get quizGoodEffortResult;
+
+  /// No description provided for @quizPassedMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'لقد اجتزت اختبار المراجعة بنجاح'**
+  String get quizPassedMessage;
+
+  /// No description provided for @quizRetryMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاول مراجعة الآيات وأعد الاختبار'**
+  String get quizRetryMessage;
+
+  /// No description provided for @quizScoreLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'النتيجة'**
+  String get quizScoreLabel;
+
+  /// No description provided for @quizTotalLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي'**
+  String get quizTotalLabel;
+
+  /// No description provided for @quizPassedLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'ناجحة'**
+  String get quizPassedLabel;
+
+  /// No description provided for @quizNeedsPracticeLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج تدريباً'**
+  String get quizNeedsPracticeLabel;
+
+  /// No description provided for @backAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'العودة'**
+  String get backAction;
+
+  /// No description provided for @parentDashboardLastSession.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر جلسة'**
+  String get parentDashboardLastSession;
+
+  /// No description provided for @parentDashboardNoSessionsYet.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد جلسات مسجلة بعد.'**
+  String get parentDashboardNoSessionsYet;
+
+  /// No description provided for @parentDashboardSessionSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surahId} • آية {ayahNumber}\n{repeats} تكرارات • {points} نقطة'**
+  String parentDashboardSessionSummary(
+    int surahId,
+    int ayahNumber,
+    int repeats,
+    int points,
+  );
+
+  /// No description provided for @parentDashboardDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم'**
+  String get parentDashboardDone;
+
+  /// No description provided for @parentDashboardPinMismatch.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمزا PIN غير متطابقين'**
+  String get parentDashboardPinMismatch;
+
+  /// No description provided for @parentDashboardPinHelp.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الرمز يحمي لوحة ولي الأمر على هذا الجهاز'**
+  String get parentDashboardPinHelp;
+
+  /// No description provided for @parentDashboardPinConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'تأكيد PIN'**
+  String get parentDashboardPinConfirm;
+
+  /// No description provided for @parentDashboardResetPin.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد'**
+  String get parentDashboardResetPin;
+
+  /// No description provided for @parentDashboardTodaySummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملخص اليوم'**
+  String get parentDashboardTodaySummary;
+
+  /// No description provided for @parentDashboardTodayEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم: لا توجد جلسات بعد. شجعه على جلسة قصيرة.'**
+  String get parentDashboardTodayEmpty;
+
+  /// No description provided for @parentDashboardTodayCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم: أكمل الطفل {count} جلسة. شجعه على المراجعة القادمة.'**
+  String parentDashboardTodayCompleted(int count);
+
+  /// No description provided for @parentDashboardTodaySessions.
+  ///
+  /// In ar, this message translates to:
+  /// **'جلسات اليوم'**
+  String get parentDashboardTodaySessions;
+
+  /// No description provided for @parentDashboardTodayPoints.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقاط اليوم'**
+  String get parentDashboardTodayPoints;
+
+  /// No description provided for @parentDashboardAddReward.
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة مكافأة'**
+  String get parentDashboardAddReward;
+
+  /// No description provided for @parentDashboardShowLastSession.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض آخر جلسة'**
+  String get parentDashboardShowLastSession;
+
+  /// No description provided for @parentDashboardChildSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملخص الطفل'**
+  String get parentDashboardChildSummary;
+
+  /// No description provided for @parentDashboardPoints.
+  ///
+  /// In ar, this message translates to:
+  /// **'نقاط'**
+  String get parentDashboardPoints;
+
+  /// No description provided for @parentDashboardStars.
+  ///
+  /// In ar, this message translates to:
+  /// **'نجوم'**
+  String get parentDashboardStars;
+
+  /// No description provided for @parentDashboardWeekSessions.
+  ///
+  /// In ar, this message translates to:
+  /// **'جلسات الأسبوع'**
+  String get parentDashboardWeekSessions;
+
+  /// No description provided for @parentDashboardChildReminder.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير الطفل'**
+  String get parentDashboardChildReminder;
+
+  /// No description provided for @parentDashboardDailyReminder.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير يومي الساعة 6:30 مساءً'**
+  String get parentDashboardDailyReminder;
+
+  /// No description provided for @parentDashboardReminderSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'يمكن تغيير الوقت لاحقًا من إعدادات ولي الأمر'**
+  String get parentDashboardReminderSubtitle;
+
+  /// No description provided for @parentDashboardRemoteFollowup.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتابعة عن بعد'**
+  String get parentDashboardRemoteFollowup;
+
+  /// No description provided for @parentDashboardScanQr.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح QR'**
+  String get parentDashboardScanQr;
+
+  /// No description provided for @parentDashboardManualEntry.
+  ///
+  /// In ar, this message translates to:
+  /// **'إدخال يدوي'**
+  String get parentDashboardManualEntry;
+
+  /// No description provided for @parentDashboardNoRemoteChild.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يوجد طفل مرتبط عن بعد حتى الآن.'**
+  String get parentDashboardNoRemoteChild;
+
+  /// No description provided for @parentDashboardRemoteChildSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'{ayahs} آية • {points} نقطة'**
+  String parentDashboardRemoteChildSummary(int ayahs, int points);
+
+  /// No description provided for @parentDashboardRewardsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكافآت ولي الأمر'**
+  String get parentDashboardRewardsTitle;
+
+  /// No description provided for @parentDashboardRewardHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثال: وقت لعب إضافي'**
+  String get parentDashboardRewardHint;
+
+  /// No description provided for @parentDashboardRewardEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف مكافآت تظهر للطفل عند تحقيق هدفه الأسبوعي.'**
+  String get parentDashboardRewardEmpty;
+
+  /// No description provided for @parentDashboardRewardLocked.
+  ///
+  /// In ar, this message translates to:
+  /// **'مقفلة'**
+  String get parentDashboardRewardLocked;
+
+  /// No description provided for @parentDashboardRewardUnlocked.
+  ///
+  /// In ar, this message translates to:
+  /// **'مفتوحة'**
+  String get parentDashboardRewardUnlocked;
+
+  /// No description provided for @parentDashboardRewardClaimed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم استلامها'**
+  String get parentDashboardRewardClaimed;
+
+  /// No description provided for @parentDashboardRecentSessions.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر الجلسات'**
+  String get parentDashboardRecentSessions;
+
+  /// No description provided for @parentDashboardNoKidsSessions.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد جلسات أطفال بعد.'**
+  String get parentDashboardNoKidsSessions;
+
+  /// No description provided for @parentDashboardLogTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surahId} • آية {ayahNumber}'**
+  String parentDashboardLogTitle(int surahId, int ayahNumber);
+
+  /// No description provided for @parentDashboardLogSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'{repeats} تكرارات • {points} نقطة'**
+  String parentDashboardLogSubtitle(int repeats, int points);
 }
 
 class _AppLocalizationsDelegate

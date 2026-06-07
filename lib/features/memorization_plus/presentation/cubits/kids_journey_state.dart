@@ -29,6 +29,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     required this.surahId,
     required this.stages,
     required this.progress,
+    this.surahName,
     this.qrPayload,
     this.message,
     this.isCreatingLink = false,
@@ -37,6 +38,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
   final int surahId;
   final List<KidsJourneyStage> stages;
   final KidsProgress progress;
+  final String? surahName;
   final String? qrPayload;
   final String? message;
   final bool isCreatingLink;
@@ -51,6 +53,8 @@ class KidsJourneyLoaded extends KidsJourneyState {
   KidsJourneyLoaded copyWith({
     List<KidsJourneyStage>? stages,
     KidsProgress? progress,
+    String? surahName,
+    bool clearSurahName = false,
     String? qrPayload,
     bool clearQrPayload = false,
     String? message,
@@ -60,6 +64,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     surahId: surahId,
     stages: stages ?? this.stages,
     progress: progress ?? this.progress,
+    surahName: clearSurahName ? null : (surahName ?? this.surahName),
     qrPayload: clearQrPayload ? null : (qrPayload ?? this.qrPayload),
     message: clearMessage ? null : (message ?? this.message),
     isCreatingLink: isCreatingLink ?? this.isCreatingLink,
@@ -70,6 +75,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     surahId,
     stages,
     progress,
+    surahName,
     qrPayload,
     message,
     isCreatingLink,

@@ -12,11 +12,3 @@ class GetProgressUsecase implements UseCaseNoParams<OverallProgress> {
   Future<Either<Failure, OverallProgress>> call() =>
       _repository.getOverallProgress();
 }
-
-class UpdateStreakUsecase implements UseCaseNoParams<void> {
-  UpdateStreakUsecase(this._repository);
-  final ProgressRepository _repository;
-
-  @override
-  Future<Either<Failure, void>> call() => _repository.updateStreak();
-}

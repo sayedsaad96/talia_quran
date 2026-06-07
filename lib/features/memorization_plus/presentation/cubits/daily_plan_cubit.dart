@@ -1,6 +1,7 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/memorization/memorization_path_resolver.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/services/streak_service.dart';
 import '../../../../core/services/xp_service.dart';
@@ -18,6 +19,7 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
     this._achievementService,
     this._streakService, // RISK-5 FIX
     this._xpService, // RISK-5 FIX
+    this._pathResolver,
   ) : super(const DailyPlanInitial());
 
   final GenerateDailyPlanUsecase _generateDailyPlan;
@@ -27,9 +29,14 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
   final AchievementService _achievementService;
   final StreakService _streakService; // RISK-5 FIX
   final XpService _xpService; // RISK-5 FIX
+  final MemorizationPathResolver _pathResolver;
 
   Future<void> load({required int surahId, int newAyahsPerDay = 5}) async {
     emit(const DailyPlanLoading());
+    if (await _isKidsProfile()) {
+      emit(const DailyPlanKidsRedirect());
+      return;
+    }
 
     // Try cache first
     final cached = await _getCachedPlan();
@@ -72,6 +79,11 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
 
   Future<void> refresh({required int surahId, int newAyahsPerDay = 5}) async {
     emit(const DailyPlanLoading());
+    if (await _isKidsProfile()) {
+      emit(const DailyPlanKidsRedirect());
+      return;
+    }
+
     final result = await _generateDailyPlan(
       GenerateDailyPlanParams(surahId: surahId, newAyahsPerDay: newAyahsPerDay),
     );
@@ -79,6 +91,11 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
       (f) => emit(DailyPlanError(f.message)),
       (plan) => emit(DailyPlanLoaded(plan: plan, surahId: plan.surahId)),
     );
+  }
+
+  Future<bool> _isKidsProfile() async {
+    final profile = await _pathResolver.currentProfile();
+    return _pathResolver.isKids(profile);
   }
 
   Future<void> evaluateAyah({
@@ -147,4 +164,3 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
     );
   }
 }
-

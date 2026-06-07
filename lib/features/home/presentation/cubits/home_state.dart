@@ -24,6 +24,7 @@ class HomeLoaded extends HomeState {
     this.customPlan,
     this.selectedTrack,
     this.isParentMode = false,
+    this.isKids = false,
     this.lastRestorableLocation,
     this.activityCountsByDay = const {},
     required this.activityStartDate,
@@ -36,6 +37,9 @@ class HomeLoaded extends HomeState {
   final CustomMemorizationPlan? customPlan;
   final MemorizationTrack? selectedTrack;
   final bool isParentMode;
+
+  /// Whether the active memorization profile is a child/kids path.
+  final bool isKids;
 
   /// Last restorable GoRouter path, e.g. `/quran/page/42`.
   /// Null when the user has never read anything.
@@ -52,6 +56,7 @@ class HomeLoaded extends HomeState {
     customPlan,
     selectedTrack,
     isParentMode,
+    isKids,
     lastRestorableLocation,
     activityCountsByDay,
     activityStartDate,

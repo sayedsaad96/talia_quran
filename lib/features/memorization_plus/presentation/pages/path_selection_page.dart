@@ -10,24 +10,31 @@ import '../../../../core/widgets/app_scaffold.dart';
 import '../../../../core/widgets/error_info_banner.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/di/injection.dart';
+import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/memorization_identity_cubit.dart';
+import '../navigation/memorization_navigation_resolver.dart';
 import '../../../../core/extensions/context_extensions.dart';
 
 class PathSelectionPage extends StatelessWidget {
-  const PathSelectionPage({super.key});
+  const PathSelectionPage({super.key, this.preferredPath});
+
+  final MemorizationPath? preferredPath;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => getIt<MemorizationIdentityCubit>(),
-      child: const _PathSelectionView(),
+      child: _PathSelectionView(preferredPath: preferredPath),
     );
   }
 }
 
 class _PathSelectionView extends StatelessWidget {
-  const _PathSelectionView();
+  const _PathSelectionView({this.preferredPath});
+
+  final MemorizationPath? preferredPath;
 
   @override
   Widget build(BuildContext context) {
@@ -38,9 +45,14 @@ class _PathSelectionView extends StatelessWidget {
           if (state is MemorizationIdentitySuccess) {
             final profile = state.profile;
             if (profile.isAdult) {
-              context.go(AppRoutes.memorizationPlusCustomPlan);
+              unawaited(_goToAdultEntry(context));
             } else if (profile.isChild) {
-              context.go(AppRoutes.memorizationPlusGuardianLinking);
+              final authState = context.read<AuthCubit>().state;
+              context.go(
+                authState is AuthAuthenticated
+                    ? AppRoutes.memorizationPlusGuardianLinking
+                    : AppRoutes.memorizationPlusKidsHome,
+              );
             }
           }
         },
@@ -80,39 +92,7 @@ class _PathSelectionView extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(height: 48),
-                _buildPathCard(
-                  context: context,
-                  title: context.l10n.memorizationPathAdultsTitle,
-                  description: context.l10n.memorizationPathAdultsDesc,
-                  icon: Icons.person_outline,
-                  color: AppColors.primary,
-                  isLoading: isLoading,
-                  onTap: () {
-                    _confirmPathSelection(
-                      context,
-                      path: MemorizationPath.adult,
-                      title: context.l10n.memorizationPathAdultsTitle,
-                      description: context.l10n.memorizationPathAdultsDesc,
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-                _buildPathCard(
-                  context: context,
-                  title: context.l10n.memorizationPathKidsTitle,
-                  description: context.l10n.memorizationPathKidsDesc,
-                  icon: Icons.child_care,
-                  color: AppColors.gold,
-                  isLoading: isLoading,
-                  onTap: () {
-                    _confirmPathSelection(
-                      context,
-                      path: MemorizationPath.child,
-                      title: context.l10n.memorizationPathKidsTitle,
-                      description: context.l10n.memorizationPathKidsDesc,
-                    );
-                  },
-                ),
+                ..._pathCards(context, isLoading),
                 if (isLoading) ...[
                   const SizedBox(height: 32),
                   const Center(child: CircularProgressIndicator()),
@@ -123,6 +103,54 @@ class _PathSelectionView extends StatelessWidget {
         },
       ),
     );
+  }
+
+  Future<void> _goToAdultEntry(BuildContext context) async {
+    final location = await MemorizationNavigationResolver(
+      getIt<MemorizationPlusRepository>(),
+    ).adultEntryLocation();
+    if (context.mounted) context.go(location);
+  }
+
+  List<Widget> _pathCards(BuildContext context, bool isLoading) {
+    final adultsCard = _buildPathCard(
+      context: context,
+      title: context.l10n.memorizationPathAdultsTitle,
+      description: context.l10n.memorizationPathAdultsDesc,
+      icon: Icons.person_outline,
+      color: AppColors.primary,
+      isLoading: isLoading,
+      onTap: () {
+        _confirmPathSelection(
+          context,
+          path: MemorizationPath.adult,
+          title: context.l10n.memorizationPathAdultsTitle,
+          description: context.l10n.memorizationPathAdultsDesc,
+        );
+      },
+    );
+    final kidsCard = _buildPathCard(
+      context: context,
+      title: context.l10n.memorizationPathKidsTitle,
+      description: context.l10n.memorizationPathKidsDesc,
+      icon: Icons.child_care,
+      color: AppColors.gold,
+      isLoading: isLoading,
+      onTap: () {
+        _confirmPathSelection(
+          context,
+          path: MemorizationPath.child,
+          title: context.l10n.memorizationPathKidsTitle,
+          description: context.l10n.memorizationPathKidsDesc,
+        );
+      },
+    );
+    const spacer = SizedBox(height: 24);
+
+    if (preferredPath == MemorizationPath.child) {
+      return [kidsCard, spacer, adultsCard];
+    }
+    return [adultsCard, spacer, kidsCard];
   }
 
   Future<void> _confirmPathSelection(
@@ -249,7 +277,13 @@ class _PathSelectionView extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            Icon(Icons.arrow_forward_ios, color: secondaryTextColor, size: 20),
+            Icon(
+              context.isArabic
+                  ? Icons.arrow_back_ios_new
+                  : Icons.arrow_forward_ios,
+              color: secondaryTextColor,
+              size: 20,
+            ),
           ],
         ),
       ),

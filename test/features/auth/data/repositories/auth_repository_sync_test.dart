@@ -22,8 +22,9 @@ void main() {
 
   group('syncProgressToCloud', () {
     test('returns Right(unit) when sync succeeds', () async {
-      when(mockRepository.syncProgressToCloud())
-          .thenAnswer((_) async => const Right(unit));
+      when(
+        mockRepository.syncProgressToCloud(),
+      ).thenAnswer((_) async => const Right(unit));
 
       final result = await mockRepository.syncProgressToCloud();
 
@@ -33,9 +34,7 @@ void main() {
 
     test('returns Left(Failure) when sync fails due to server error', () async {
       when(mockRepository.syncProgressToCloud()).thenAnswer(
-        (_) async => const Left(
-          _TestFailure('فشل المزامنة مع السحابة'),
-        ),
+        (_) async => const Left(_TestFailure('فشل المزامنة مع السحابة')),
       );
 
       final result = await mockRepository.syncProgressToCloud();
@@ -50,8 +49,9 @@ void main() {
     test('returns Right(unit) when user is not logged in (no-op)', () async {
       // Spec: when currentUser == null, syncProgressToCloud should succeed
       // silently without attempting any network call.
-      when(mockRepository.syncProgressToCloud())
-          .thenAnswer((_) async => const Right(unit));
+      when(
+        mockRepository.syncProgressToCloud(),
+      ).thenAnswer((_) async => const Right(unit));
       when(mockRepository.currentUser).thenReturn(null);
 
       final result = await mockRepository.syncProgressToCloud();
@@ -64,8 +64,9 @@ void main() {
 
   group('pullProgressFromCloud', () {
     test('returns Right(unit) when pull succeeds', () async {
-      when(mockRepository.pullProgressFromCloud())
-          .thenAnswer((_) async => const Right(unit));
+      when(
+        mockRepository.pullProgressFromCloud(),
+      ).thenAnswer((_) async => const Right(unit));
 
       final result = await mockRepository.pullProgressFromCloud();
 
@@ -75,24 +76,23 @@ void main() {
 
     test('returns Left(Failure) when pull fails due to server error', () async {
       when(mockRepository.pullProgressFromCloud()).thenAnswer(
-        (_) async => const Left(
-          _TestFailure('فشل استرجاع البيانات من السحابة'),
-        ),
+        (_) async =>
+            const Left(_TestFailure('فشل استرجاع البيانات من السحابة')),
       );
 
       final result = await mockRepository.pullProgressFromCloud();
 
       expect(result.isLeft(), isTrue);
       result.fold(
-        (failure) =>
-            expect(failure.message, 'فشل استرجاع البيانات من السحابة'),
+        (failure) => expect(failure.message, 'فشل استرجاع البيانات من السحابة'),
         (_) => fail('Expected Left but got Right'),
       );
     });
 
     test('returns Right(unit) when user is not logged in (no-op)', () async {
-      when(mockRepository.pullProgressFromCloud())
-          .thenAnswer((_) async => const Right(unit));
+      when(
+        mockRepository.pullProgressFromCloud(),
+      ).thenAnswer((_) async => const Right(unit));
       when(mockRepository.currentUser).thenReturn(null);
 
       final result = await mockRepository.pullProgressFromCloud();
@@ -105,10 +105,12 @@ void main() {
 
   group('sync round-trip', () {
     test('sync followed by pull completes without error', () async {
-      when(mockRepository.syncProgressToCloud())
-          .thenAnswer((_) async => const Right(unit));
-      when(mockRepository.pullProgressFromCloud())
-          .thenAnswer((_) async => const Right(unit));
+      when(
+        mockRepository.syncProgressToCloud(),
+      ).thenAnswer((_) async => const Right(unit));
+      when(
+        mockRepository.pullProgressFromCloud(),
+      ).thenAnswer((_) async => const Right(unit));
 
       final syncResult = await mockRepository.syncProgressToCloud();
       final pullResult = await mockRepository.pullProgressFromCloud();

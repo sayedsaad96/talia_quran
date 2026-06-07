@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/services/streak_reader.dart';
 import '../../../hifz/data/datasources/hifz_local_datasource.dart';
 import '../../../hifz/domain/entities/hifz_entities.dart';
 import '../../domain/entities/progress_entities.dart';
@@ -16,11 +17,13 @@ class ProgressRepositoryImpl implements ProgressRepository {
     this._hifzDs,
     this._memPlusDs,
     this._quranDs,
+    this._streakReader,
   );
   final ProgressLocalDatasource _progressDs;
   final HifzLocalDatasource _hifzDs;
   final MemorizationPlusLocalDatasource _memPlusDs;
   final QuranLocalDatasource _quranDs;
+  final StreakReader _streakReader;
 
   @override
   Future<Either<Failure, OverallProgress>> getOverallProgress() async {
@@ -120,21 +123,15 @@ class ProgressRepositoryImpl implements ProgressRepository {
                 .clamp(0, AppConstants.totalJuz);
       }
 
-      final streak = _progressDs.getStreakDays();
-      final lastActive = _progressDs.getLastActiveDate();
-
-      // Update streak using UTC-normalized today to avoid timezone boundary bugs.
-      final today = DateTime.now().toUtc();
-      final updatedStreak = _calculateStreak(streak, lastActive, today);
-      if (updatedStreak != streak) {
-        await _progressDs.saveStreak(updatedStreak, today);
-      }
+      final streakEntity = await _streakReader.getStreak();
+      final streak = streakEntity.currentStreak;
+      final lastActive = streakEntity.lastActivityDate;
 
       final achievements = _buildAchievements(
         memorizedAyahs: memorizedAyahs,
         memorizedSurahs: memorizedSurahs,
         memorizedJuz: memorizedJuz,
-        streak: updatedStreak,
+        streak: streak,
         readPages: readPagesCount,
         readAyahs: readAyahs,
         learningAyahs: learningAyahs,
@@ -165,7 +162,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
           readJuz: readJuz,
           learningAyahs: learningAyahs,
           reviewAyahs: reviewAyahs,
-          streakDays: updatedStreak,
+          streakDays: streak,
           lastActiveDate: lastActive,
           achievements: achievements,
           readPagesCount: readPagesCount,
@@ -189,36 +186,6 @@ class ProgressRepositoryImpl implements ProgressRepository {
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
-  }
-
-  @override
-  Future<Either<Failure, void>> updateStreak() async {
-    try {
-      final streak = _progressDs.getStreakDays();
-      final lastActive = _progressDs.getLastActiveDate();
-      // UTC-normalized: consistent with getOverallProgress() and StreakService.
-      final now = DateTime.now().toUtc();
-      final updated = _calculateStreak(streak, lastActive, now);
-      await _progressDs.saveStreak(updated, now);
-      return const Right(null);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
-    }
-  }
-
-  int _calculateStreak(int current, DateTime? lastActive, DateTime now) {
-    if (lastActive == null) return 1;
-    // Compare on UTC date components to avoid DST-ambiguous local midnight.
-    final lastDate = DateTime.utc(
-      lastActive.toUtc().year,
-      lastActive.toUtc().month,
-      lastActive.toUtc().day,
-    );
-    final nowDate = DateTime.utc(now.year, now.month, now.day);
-    final diff = nowDate.difference(lastDate).inDays;
-    if (diff == 0) return current; // Same day
-    if (diff == 1) return current + 1; // Consecutive day
-    return 1; // Streak broken
   }
 
   List<Achievement> _buildAchievements({

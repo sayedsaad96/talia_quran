@@ -59,19 +59,19 @@ class _QuizView extends StatelessWidget {
         final shouldPop = await showDialog<bool>(
           context: context,
           builder: (_) => AlertDialog(
-            title: const Text('الخروج من الاختبار؟'),
-            content: const Text(
-              'سيتم حفظ الآيات التي قيّمتها حتى الآن.\nهل تريد الخروج؟',
-              textDirection: TextDirection.rtl,
-            ),
+            title: Text(context.l10n.quizExitTitle),
+            content: Text(context.l10n.quizExitMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('البقاء'),
+                child: Text(context.l10n.quizStayAction),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: const Text('خروج', style: TextStyle(color: Colors.red)),
+                child: Text(
+                  context.l10n.quizExitAction,
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
             ],
           ),
@@ -84,7 +84,7 @@ class _QuizView extends StatelessWidget {
             : AppColors.lightBackground,
         appBar: AppBar(
           title: Text(
-            'اختبار الحفظ',
+            context.l10n.reviewQuizTitle,
             style: AppTypography.titleLarge.copyWith(
               fontFamily: 'Amiri',
               color: isDark
@@ -789,7 +789,7 @@ class _AnswerResultView extends StatelessWidget {
 
           // User text
           _ComparisonCard(
-            title: 'إجابتك',
+            title: context.l10n.quizYourAnswer,
             text: state.userText,
             icon: Icons.edit_note_rounded,
             color: passed ? Colors.green : Colors.orange,
@@ -821,7 +821,7 @@ class _AnswerResultView extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'استمع ثم أعد المحاولة',
+                          context.l10n.quizListenRetryTitle,
                           style: AppTypography.titleSmall.copyWith(
                             color: Colors.orange.shade700,
                             fontFamily: 'Amiri',
@@ -829,7 +829,7 @@ class _AnswerResultView extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'تحتاج تدريباً أكثر، وهذا طبيعي في أول المراجعة.',
+                          context.l10n.quizListenRetrySubtitle,
                           style: AppTypography.bodySmall.copyWith(
                             color: isDark
                                 ? AppColors.darkTextSecondary
@@ -860,8 +860,8 @@ class _AnswerResultView extends StatelessWidget {
               ),
               child: Text(
                 state.questionIndex < state.totalQuestions - 1
-                    ? 'الآية التالية →'
-                    : 'عرض النتائج',
+                    ? context.l10n.quizNextAyah
+                    : context.l10n.quizShowResults,
                 style: AppTypography.titleMedium.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -981,7 +981,9 @@ class _CompletedView extends StatelessWidget {
           const SizedBox(height: AppSpacing.xl),
 
           Text(
-            passed ? 'ممتاز!' : 'جهد جيد!',
+            passed
+                ? context.l10n.quizExcellentResult
+                : context.l10n.quizGoodEffortResult,
             style: AppTypography.displaySmall.copyWith(
               color: isDark
                   ? AppColors.darkTextPrimary
@@ -992,8 +994,8 @@ class _CompletedView extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Text(
             passed
-                ? 'لقد اجتزت الاختبار بنجاح'
-                : 'حاول مراجعة الآيات وأعد الاختبار',
+                ? context.l10n.quizPassedMessage
+                : context.l10n.quizRetryMessage,
             style: AppTypography.bodyMedium.copyWith(
               color: isDark
                   ? AppColors.darkTextSecondary
@@ -1023,7 +1025,7 @@ class _CompletedView extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'النتيجة',
+                    context.l10n.quizScoreLabel,
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark
                           ? AppColors.darkTextSecondary
@@ -1042,21 +1044,21 @@ class _CompletedView extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _StatChip(
-                label: 'إجمالي',
+                label: context.l10n.quizTotalLabel,
                 value: '${state.totalQuestions}',
                 icon: Icons.list_rounded,
                 color: primary,
                 isDark: isDark,
               ),
               _StatChip(
-                label: 'ناجحة',
+                label: context.l10n.quizPassedLabel,
                 value: '${state.passedCount}',
                 icon: Icons.check_circle_rounded,
                 color: Colors.green,
                 isDark: isDark,
               ),
               _StatChip(
-                label: 'تحتاج تدريباً',
+                label: context.l10n.quizNeedsPracticeLabel,
                 value: '${state.failedCount}',
                 icon: Icons.replay_rounded,
                 color: Colors.orange,
@@ -1075,7 +1077,7 @@ class _CompletedView extends StatelessWidget {
               onPressed: () => context.pop(),
               icon: const Icon(Icons.arrow_back_rounded),
               label: Text(
-                'العودة',
+                context.l10n.backAction,
                 style: AppTypography.titleMedium.copyWith(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,

@@ -387,36 +387,88 @@ class _AchievementBadgeShape extends StatelessWidget {
     IconData iconData = Icons.star_rounded;
     switch (achievement.id) {
       // Reading
-      case 'first_page': iconData = Icons.menu_book_rounded; break;
-      case 'ten_pages': iconData = Icons.import_contacts_rounded; break;
-      case 'fifty_pages': iconData = Icons.auto_stories_rounded; break;
-      case 'juz_read': iconData = Icons.chrome_reader_mode_rounded; break;
-      case 'five_juz_read': iconData = Icons.library_books_rounded; break;
-      case 'half_quran_read': iconData = Icons.emoji_events_rounded; break;
-      case 'full_quran_read': iconData = Icons.diamond_rounded; break;
+      case 'first_page':
+        iconData = Icons.menu_book_rounded;
+        break;
+      case 'ten_pages':
+        iconData = Icons.import_contacts_rounded;
+        break;
+      case 'fifty_pages':
+        iconData = Icons.auto_stories_rounded;
+        break;
+      case 'juz_read':
+        iconData = Icons.chrome_reader_mode_rounded;
+        break;
+      case 'five_juz_read':
+        iconData = Icons.library_books_rounded;
+        break;
+      case 'half_quran_read':
+        iconData = Icons.emoji_events_rounded;
+        break;
+      case 'full_quran_read':
+        iconData = Icons.diamond_rounded;
+        break;
 
       // Memorization
-      case 'first_ayah': iconData = Icons.star_outline_rounded; break;
-      case 'ten_ayahs': iconData = Icons.star_half_rounded; break;
-      case 'fifty_ayahs': iconData = Icons.star_rounded; break;
-      case 'hundred_ayahs': iconData = Icons.stars_rounded; break;
-      case 'first_surah': iconData = Icons.bookmark_added_rounded; break;
-      case 'five_surahs': iconData = Icons.collections_bookmark_rounded; break;
-      case 'ten_surahs': iconData = Icons.workspace_premium_rounded; break;
-      case 'juz_amma': iconData = Icons.mosque_rounded; break;
-      case 'one_juz_memorized': iconData = Icons.verified_rounded; break;
-      case 'five_juz_memorized': iconData = Icons.military_tech_rounded; break;
-      case 'ten_juz_memorized': iconData = Icons.shield_rounded; break;
-      case 'half_quran_memorized': iconData = Icons.military_tech_rounded; break;
-      case 'full_quran_memorized': iconData = Icons.diamond_rounded; break;
+      case 'first_ayah':
+        iconData = Icons.star_outline_rounded;
+        break;
+      case 'ten_ayahs':
+        iconData = Icons.star_half_rounded;
+        break;
+      case 'fifty_ayahs':
+        iconData = Icons.star_rounded;
+        break;
+      case 'hundred_ayahs':
+        iconData = Icons.stars_rounded;
+        break;
+      case 'first_surah':
+        iconData = Icons.bookmark_added_rounded;
+        break;
+      case 'five_surahs':
+        iconData = Icons.collections_bookmark_rounded;
+        break;
+      case 'ten_surahs':
+        iconData = Icons.workspace_premium_rounded;
+        break;
+      case 'juz_amma':
+        iconData = Icons.mosque_rounded;
+        break;
+      case 'one_juz_memorized':
+        iconData = Icons.verified_rounded;
+        break;
+      case 'five_juz_memorized':
+        iconData = Icons.military_tech_rounded;
+        break;
+      case 'ten_juz_memorized':
+        iconData = Icons.shield_rounded;
+        break;
+      case 'half_quran_memorized':
+        iconData = Icons.military_tech_rounded;
+        break;
+      case 'full_quran_memorized':
+        iconData = Icons.diamond_rounded;
+        break;
 
       // Streak
-      case 'three_day_streak': iconData = Icons.local_fire_department_rounded; break;
-      case 'week_streak': iconData = Icons.whatshot_rounded; break;
-      case 'two_week_streak': iconData = Icons.bolt_rounded; break;
-      case 'month_streak': iconData = Icons.offline_bolt_rounded; break;
-      case 'ninety_day_streak': iconData = Icons.auto_awesome_rounded; break;
-      case 'year_streak': iconData = Icons.workspace_premium_rounded; break;
+      case 'three_day_streak':
+        iconData = Icons.local_fire_department_rounded;
+        break;
+      case 'week_streak':
+        iconData = Icons.whatshot_rounded;
+        break;
+      case 'two_week_streak':
+        iconData = Icons.bolt_rounded;
+        break;
+      case 'month_streak':
+        iconData = Icons.offline_bolt_rounded;
+        break;
+      case 'ninety_day_streak':
+        iconData = Icons.auto_awesome_rounded;
+        break;
+      case 'year_streak':
+        iconData = Icons.workspace_premium_rounded;
+        break;
     }
 
     // Determine rank based on position/target
@@ -457,8 +509,8 @@ class _AchievementBadgeShape extends StatelessWidget {
     Color glowColor;
 
     if (!isUnlocked) {
-      gradientColors = isDark 
-          ? [const Color(0xFF303030), const Color(0xFF1A1A1A)] 
+      gradientColors = isDark
+          ? [const Color(0xFF303030), const Color(0xFF1A1A1A)]
           : [const Color(0xFFE0E0E0), const Color(0xFFBDBDBD)];
       glowColor = Colors.transparent;
     } else {
@@ -511,7 +563,9 @@ class _AchievementBadgeShape extends StatelessWidget {
           ),
         ],
         border: Border.all(
-          color: isUnlocked ? Colors.white.withValues(alpha: 0.3) : Colors.transparent,
+          color: isUnlocked
+              ? Colors.white.withValues(alpha: 0.3)
+              : Colors.transparent,
           width: size * 0.04,
         ),
       ),
@@ -519,7 +573,9 @@ class _AchievementBadgeShape extends StatelessWidget {
         child: Icon(
           iconData,
           size: size * 0.55,
-          color: isUnlocked ? Colors.white : (isDark ? Colors.white24 : Colors.black26),
+          color: isUnlocked
+              ? Colors.white
+              : (isDark ? Colors.white24 : Colors.black26),
         ),
       ),
     );

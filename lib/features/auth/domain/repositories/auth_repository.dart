@@ -19,6 +19,11 @@ abstract class AuthRepository {
   /// Sign out
   Future<Either<Failure, Unit>> signOut();
 
+  /// Delete the currently signed-in Supabase account.
+  ///
+  /// This requires the `delete_current_user` RPC to be deployed in Supabase.
+  Future<Either<Failure, Unit>> deleteAccount();
+
   /// Sync local progress to cloud
   Future<Either<Failure, Unit>> syncProgressToCloud();
 
@@ -28,9 +33,18 @@ abstract class AuthRepository {
   /// Resend confirmation email
   Future<void> resendConfirmation(String email);
 
+  /// Send a password reset email
+  Future<Either<Failure, Unit>> resetPassword(String email);
+
+  /// Update the current recovery/session user's password
+  Future<Either<Failure, Unit>> updatePassword(String newPassword);
+
   /// Current user (null = not logged in)
   AppUser? get currentUser;
 
   /// Stream for tracking auth state
   Stream<AppUser?> get authStateChanges;
+
+  /// Emits when Supabase opens the app from a password recovery link.
+  Stream<void> get passwordRecoveryChanges;
 }

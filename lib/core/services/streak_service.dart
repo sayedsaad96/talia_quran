@@ -3,14 +3,16 @@ import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/domain/entities/streak_entity.dart';
 import '../../features/streak/domain/entities/streak_result.dart';
+import 'streak_reader.dart';
 
-class StreakService {
+class StreakService implements StreakReader {
   StreakService(this._isar);
 
   final Isar _isar;
 
   static const List<int> _milestones = [3, 7, 14, 30, 60, 100, 365];
 
+  @override
   Future<StreakEntity> getStreak() async {
     final data = await _isar.streakIsars.get(1);
     if (data == null) {

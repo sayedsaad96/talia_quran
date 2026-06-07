@@ -523,15 +523,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authGenericError => 'Something went wrong. Try again.';
 
   @override
-  String get profileSavedToCloud => 'Your progress is saved to the cloud';
+  String get profileSavedToCloud => 'Signed in to your account';
 
   @override
   String get guestModeWarning =>
-      'Sign in to save your progress across all devices.';
+      'Sign in to manage your account and recovery options.';
 
   @override
   String get signOutWarning =>
-      'Do you want to sign out? Your cloud progress will not be deleted.';
+      'Do you want to sign out? Local progress on this device will remain available.';
 
   @override
   String get dailyReviewReminder => 'Daily Review Reminder';
@@ -689,7 +689,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncProgressDesc =>
-      'Sign in to save and sync your progress across all devices';
+      'Sign in to manage your account and recovery options';
 
   @override
   String get later => 'Later';
@@ -797,11 +797,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get debugCertFullQuran => 'Full Quran';
 
   @override
-  String get backupProgressTitle => 'Back up your progress!';
+  String get backupProgressTitle => 'Manage your account';
 
   @override
   String get backupProgressDesc =>
-      'Sign in from Settings to protect your progress';
+      'Sign in from Settings to manage your account';
 
   @override
   String get azkarSubtitle => 'Remember Allah often';
@@ -1238,6 +1238,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guardianRegenerateCode => 'Regenerate code';
 
   @override
+  String get guardianSignInRequired =>
+      'Guardian linking requires signing in first';
+
+  @override
+  String get guardianSignInAction => 'Sign in or create account';
+
+  @override
+  String get guardianGuestContinueKids => 'Continue Kids memorization';
+
+  @override
   String get splashSubtitle => 'Quran memorization app';
 
   @override
@@ -1570,5 +1580,441 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String notificationEverydayAt(String time) {
     return 'Everyday at $time';
+  }
+
+  @override
+  String get kidsGamifiedWelcome => 'Welcome, memorization hero!';
+
+  @override
+  String kidsGamifiedLevelProgress(int level, int progress) {
+    return 'Level $level — $progress/100';
+  }
+
+  @override
+  String kidsGamifiedStarsCount(int count) {
+    return '$count stars';
+  }
+
+  @override
+  String get kidsGamifiedLastMission => 'Last mission';
+
+  @override
+  String get kidsGamifiedContinueNow => 'Continue now';
+
+  @override
+  String get kidsGamifiedMushaf => 'Mushaf';
+
+  @override
+  String get kidsGamifiedJourney => 'My journey';
+
+  @override
+  String get kidsGamifiedMissions => 'Missions';
+
+  @override
+  String kidsGamifiedHouseTitle(int number) {
+    return 'Memorization House $number';
+  }
+
+  @override
+  String kidsGamifiedReviewHouseTitle(int number) {
+    return 'Review House $number';
+  }
+
+  @override
+  String kidsGamifiedAyahRange(int startAyah, int endAyah) {
+    return 'Ayahs $startAyah-$endAyah';
+  }
+
+  @override
+  String kidsGamifiedProgressCount(int completed, int total) {
+    return '$completed/$total';
+  }
+
+  @override
+  String get kidsGamifiedLockedStage => 'This house is locked for now';
+
+  @override
+  String get kidsGamifiedCurrentStage => 'Your current mission';
+
+  @override
+  String get kidsGamifiedCompletedStage => 'Well done, house completed';
+
+  @override
+  String get kidsGamifiedNeedsReview => 'Ready for review';
+
+  @override
+  String get kidsGamifiedListenStep => 'Listen';
+
+  @override
+  String get kidsGamifiedListenStepSubtitle => 'Listen carefully to the ayah';
+
+  @override
+  String get kidsGamifiedRepeatStep => 'Repeat';
+
+  @override
+  String get kidsGamifiedRepeatStepSubtitle =>
+      'Repeat after the reciter until it settles';
+
+  @override
+  String get kidsGamifiedTestStep => 'Test yourself';
+
+  @override
+  String get kidsGamifiedTestStepSubtitle => 'Try reciting without help';
+
+  @override
+  String get kidsGamifiedStartMission => 'Start mission';
+
+  @override
+  String get kidsGamifiedListenAndRepeat => 'Listen and repeat';
+
+  @override
+  String get kidsGamifiedRecordYourVoice => 'Record your recitation';
+
+  @override
+  String get kidsGamifiedRecordingInProgress => 'Recording...';
+
+  @override
+  String get kidsGamifiedAudioUnavailable =>
+      'Audio is unavailable right now. Please try again soon.';
+
+  @override
+  String kidsGamifiedListenFirst(int count) {
+    return 'Listen to the ayah $count times before recording your voice.';
+  }
+
+  @override
+  String get kidsGamifiedAudioLoading => 'Preparing recitation...';
+
+  @override
+  String get kidsGamifiedWellDone => 'Well done!';
+
+  @override
+  String kidsGamifiedEarnedStars(int count) {
+    return '+$count stars';
+  }
+
+  @override
+  String kidsGamifiedEarnedGems(int count) {
+    return '+$count gems';
+  }
+
+  @override
+  String get kidsGamifiedNextStage => 'Next';
+
+  @override
+  String get kidsGamifiedReturnToMap => 'Return to map';
+
+  @override
+  String get kidsGamifiedJourneyComplete =>
+      'You completed the current memorization journey. May Allah bless you!';
+
+  @override
+  String get kidsGamifiedFallbackMessage =>
+      'We will return to the old experience to protect your progress.';
+
+  @override
+  String get privacyPolicy => 'Privacy Policy';
+
+  @override
+  String get forgotPassword => 'Forgot password?';
+
+  @override
+  String get passwordResetEmailSent =>
+      '✅ A password reset link has been sent to your email';
+
+  @override
+  String get forgotPasswordEnterEmail =>
+      'Enter your email first to reset your password';
+
+  @override
+  String get updatePasswordTitle => 'Set a new password';
+
+  @override
+  String get updatePasswordSubtitle =>
+      'Enter a strong new password for your account.';
+
+  @override
+  String get newPassword => 'New password';
+
+  @override
+  String get confirmNewPassword => 'Confirm new password';
+
+  @override
+  String get passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get passwordUpdated =>
+      'Password updated successfully. Please sign in again.';
+
+  @override
+  String get updatePasswordButton => 'Update password';
+
+  @override
+  String get invalidPasswordRecoveryLink =>
+      'This reset link is invalid or expired. Request a new password reset email.';
+
+  @override
+  String get onboardingGoalQuestion => 'What would you like to do first?';
+
+  @override
+  String get onboardingGoalSubtitle =>
+      'Choose a clear starting point. You can still use the rest of the app later.';
+
+  @override
+  String get onboardingGoalReading => 'Reading';
+
+  @override
+  String get onboardingGoalMemorization => 'Memorization for me';
+
+  @override
+  String get onboardingGoalChild => 'Follow a child';
+
+  @override
+  String get onboardingGoalAzkar => 'Azkar';
+
+  @override
+  String get dailyPlanQuizAction => 'Review Quiz';
+
+  @override
+  String get dailyPlanNewAyahs => 'New ayahs to memorize';
+
+  @override
+  String get dailyPlanNearRevision => 'Near review (last 5 days)';
+
+  @override
+  String get dailyPlanFarRevision => 'Far review';
+
+  @override
+  String get dailyPlanCompletedTitle =>
+      'MashaAllah! You completed Today\'s Plan';
+
+  @override
+  String dailyPlanCompletedSubtitle(int count) {
+    return 'You completed $count items successfully.\nKeep going with this steady pace.';
+  }
+
+  @override
+  String get dailyPlanNewAyahsShort => 'New ayahs';
+
+  @override
+  String get dailyPlanReviewShort => 'Review';
+
+  @override
+  String get dailyPlanBlessingAction => 'May Allah bless you ✨';
+
+  @override
+  String dailyPlanRatingExcellent(int ayahNumber) {
+    return '✅ Excellent! Ayah $ayahNumber was scheduled for a longer review interval';
+  }
+
+  @override
+  String get dailyPlanRatingAverage =>
+      '⏰ Good effort, this will be reviewed after a moderate interval';
+
+  @override
+  String dailyPlanRatingWeak(int ayahNumber) {
+    return '🔁 Needs practice, ayah $ayahNumber will be reviewed tomorrow';
+  }
+
+  @override
+  String get performanceWeak => 'Needs practice';
+
+  @override
+  String get performanceAverage => 'Good';
+
+  @override
+  String get performanceExcellent => 'Excellent';
+
+  @override
+  String get dailyPlanListenBeforeRating => 'Listen to the ayah before rating';
+
+  @override
+  String get reviewQuizTitle => 'Review Quiz';
+
+  @override
+  String get quizExitTitle => 'Leave Review Quiz?';
+
+  @override
+  String get quizExitMessage =>
+      'Your rated ayahs so far will be saved.\nDo you want to leave?';
+
+  @override
+  String get quizStayAction => 'Stay';
+
+  @override
+  String get quizExitAction => 'Leave';
+
+  @override
+  String get quizYourAnswer => 'Your answer';
+
+  @override
+  String get quizListenRetryTitle => 'Listen, then try again';
+
+  @override
+  String get quizListenRetrySubtitle =>
+      'This needs more practice, and that is normal at the start of review.';
+
+  @override
+  String get quizNextAyah => 'Next ayah';
+
+  @override
+  String get quizShowResults => 'Show results';
+
+  @override
+  String get quizExcellentResult => 'Excellent!';
+
+  @override
+  String get quizGoodEffortResult => 'Good effort!';
+
+  @override
+  String get quizPassedMessage => 'You passed the review quiz successfully';
+
+  @override
+  String get quizRetryMessage => 'Review the ayahs and try the quiz again';
+
+  @override
+  String get quizScoreLabel => 'Score';
+
+  @override
+  String get quizTotalLabel => 'Total';
+
+  @override
+  String get quizPassedLabel => 'Passed';
+
+  @override
+  String get quizNeedsPracticeLabel => 'Needs practice';
+
+  @override
+  String get backAction => 'Back';
+
+  @override
+  String get parentDashboardLastSession => 'Last session';
+
+  @override
+  String get parentDashboardNoSessionsYet => 'No sessions recorded yet.';
+
+  @override
+  String parentDashboardSessionSummary(
+    int surahId,
+    int ayahNumber,
+    int repeats,
+    int points,
+  ) {
+    return 'Surah $surahId • Ayah $ayahNumber\n$repeats repeats • $points points';
+  }
+
+  @override
+  String get parentDashboardDone => 'Done';
+
+  @override
+  String get parentDashboardPinMismatch => 'PIN codes do not match';
+
+  @override
+  String get parentDashboardPinHelp =>
+      'This code protects the parent dashboard on this device';
+
+  @override
+  String get parentDashboardPinConfirm => 'Confirm PIN';
+
+  @override
+  String get parentDashboardResetPin =>
+      'Reset on this device — a new code will be required';
+
+  @override
+  String get parentDashboardTodaySummary => 'Today';
+
+  @override
+  String get parentDashboardTodayEmpty =>
+      'Today: no sessions yet. Encourage a short session.';
+
+  @override
+  String parentDashboardTodayCompleted(int count) {
+    return 'Today: the child completed $count sessions. Encourage the next review.';
+  }
+
+  @override
+  String get parentDashboardTodaySessions => 'Today\'s sessions';
+
+  @override
+  String get parentDashboardTodayPoints => 'Today\'s points';
+
+  @override
+  String get parentDashboardAddReward => 'Add reward';
+
+  @override
+  String get parentDashboardShowLastSession => 'Show last session';
+
+  @override
+  String get parentDashboardChildSummary => 'Child summary';
+
+  @override
+  String get parentDashboardPoints => 'Points';
+
+  @override
+  String get parentDashboardStars => 'Stars';
+
+  @override
+  String get parentDashboardWeekSessions => 'Week sessions';
+
+  @override
+  String get parentDashboardChildReminder => 'Child reminder';
+
+  @override
+  String get parentDashboardDailyReminder => 'Daily reminder at 6:30 PM';
+
+  @override
+  String get parentDashboardReminderSubtitle =>
+      'The time can be changed later from parent settings';
+
+  @override
+  String get parentDashboardRemoteFollowup => 'Remote follow-up';
+
+  @override
+  String get parentDashboardScanQr => 'Scan QR';
+
+  @override
+  String get parentDashboardManualEntry => 'Manual entry';
+
+  @override
+  String get parentDashboardNoRemoteChild => 'No remote child is linked yet.';
+
+  @override
+  String parentDashboardRemoteChildSummary(int ayahs, int points) {
+    return '$ayahs ayahs • $points points';
+  }
+
+  @override
+  String get parentDashboardRewardsTitle => 'Parent rewards';
+
+  @override
+  String get parentDashboardRewardHint => 'Example: extra play time';
+
+  @override
+  String get parentDashboardRewardEmpty =>
+      'Add rewards that appear for the child after reaching the weekly goal.';
+
+  @override
+  String get parentDashboardRewardLocked => 'Locked';
+
+  @override
+  String get parentDashboardRewardUnlocked => 'Unlocked';
+
+  @override
+  String get parentDashboardRewardClaimed => 'Claimed';
+
+  @override
+  String get parentDashboardRecentSessions => 'Recent sessions';
+
+  @override
+  String get parentDashboardNoKidsSessions => 'No kids sessions yet.';
+
+  @override
+  String parentDashboardLogTitle(int surahId, int ayahNumber) {
+    return 'Surah $surahId • Ayah $ayahNumber';
+  }
+
+  @override
+  String parentDashboardLogSubtitle(int repeats, int points) {
+    return '$repeats repeats • $points points';
   }
 }

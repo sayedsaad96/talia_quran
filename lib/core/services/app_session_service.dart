@@ -33,6 +33,7 @@ class AppSessionService {
     switch (uri.path) {
       case '/splash':
       case '/onboarding':
+      case '/onboarding/child':
       case '/login':
       case '/certificate':
         return false;
@@ -52,6 +53,11 @@ class AppSessionService {
     }
 
     final segments = uri.pathSegments;
+    if (segments.length == 3 &&
+        segments[0] == 'memorization-plus' &&
+        segments[1] == 'journey') {
+      return _isValidSurahId(int.tryParse(segments[2]));
+    }
     if (segments.length == 3 && segments[0] == 'quran') {
       final value = int.tryParse(segments[2]);
       if (segments[1] == 'surah') return _isValidSurahId(value);

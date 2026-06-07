@@ -18,7 +18,10 @@ class AppShell extends StatelessWidget {
   static const _tabs = [
     _TabItem(icon: Icons.home_rounded, route: AppRoutes.home),
     _TabItem(icon: Icons.menu_book_rounded, route: AppRoutes.quran),
-    _TabItem(icon: Icons.auto_stories_rounded, route: AppRoutes.hifz),
+    _TabItem(
+      icon: Icons.auto_stories_rounded,
+      route: AppRoutes.memorizationHub,
+    ),
     _TabItem(icon: Icons.spa_rounded, route: AppRoutes.azkar),
     _TabItem(icon: Icons.bar_chart_rounded, route: AppRoutes.progress),
   ];
@@ -65,7 +68,7 @@ class _TaliaBottomNav extends StatelessWidget {
   List<String> _labels(BuildContext ctx) => [
     ctx.l10n.home,
     ctx.l10n.quran,
-    ctx.l10n.hifz,
+    ctx.l10n.memorization,
     ctx.l10n.azkar,
     ctx.l10n.progress,
   ];

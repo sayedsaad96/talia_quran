@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
@@ -18,6 +18,10 @@ class AuthCubit extends Cubit<AuthState> {
         emit(const AuthUnauthenticated());
       }
     });
+    _passwordRecoverySub = _authRepository.passwordRecoveryChanges.listen((_) {
+      if (isClosed) return;
+      emit(const AuthPasswordRecoveryDetected());
+    });
 
     // Set initial state immediately
     final currentUser = _authRepository.currentUser;
@@ -30,6 +34,7 @@ class AuthCubit extends Cubit<AuthState> {
 
   final AuthRepository _authRepository;
   StreamSubscription<AppUser?>? _authSub;
+  StreamSubscription<void>? _passwordRecoverySub;
 
   Future<void> signUp({
     required String email,
@@ -72,20 +77,52 @@ class AuthCubit extends Cubit<AuthState> {
     );
   }
 
+  Future<void> deleteAccount() async {
+    emit(const AuthLoading());
+    final result = await _authRepository.deleteAccount();
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(AuthError(failure.toString())),
+      (_) => emit(const AuthAccountDeleted()),
+    );
+  }
+
   /// Resend confirmation email for unconfirmed accounts
   Future<void> resendConfirmation(String email) async {
     try {
       await _authRepository.resendConfirmation(email);
-      if (!isClosed) emit(const AuthError('__resent__'));
+      if (!isClosed) emit(const AuthResendConfirmationSuccess());
     } catch (_) {
       if (!isClosed) emit(const AuthError('فشل إعادة الإرسال، حاول مرة أخرى'));
     }
   }
 
+  /// Send a password reset email
+  Future<void> resetPassword(String email) async {
+    emit(const AuthLoading());
+    final result = await _authRepository.resetPassword(email);
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(AuthError(failure.toString())),
+      (_) => emit(const AuthPasswordResetSent()),
+    );
+  }
+
+  /// Update password after Supabase opens the recovery link in the app.
+  Future<void> updatePassword(String newPassword) async {
+    emit(const AuthLoading());
+    final result = await _authRepository.updatePassword(newPassword);
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(AuthError(failure.toString())),
+      (_) => emit(const AuthPasswordUpdated()),
+    );
+  }
+
   @override
   Future<void> close() {
     _authSub?.cancel();
+    _passwordRecoverySub?.cancel();
     return super.close();
   }
 }
-

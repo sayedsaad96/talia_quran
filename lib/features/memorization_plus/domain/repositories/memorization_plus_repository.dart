@@ -88,7 +88,7 @@ abstract class MemorizationPlusRepository {
     required String childUserId,
     required String title,
   });
-  Future<Either<Failure, KidsProgress>> awardKidsPoints({
+  Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
     required int surahId,
     required int ayahNumber,
     required int repeatsCompleted,

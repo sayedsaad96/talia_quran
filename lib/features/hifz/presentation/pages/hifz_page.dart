@@ -15,7 +15,7 @@ import '../../domain/entities/hifz_entities.dart';
 import '../cubits/hifz_cubit.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../memorization_plus/presentation/widgets/memorization_path_settings_sheet.dart';
 
 class HifzPage extends StatelessWidget {
   const HifzPage({super.key});
@@ -47,7 +47,12 @@ class _HifzView extends StatelessWidget {
             slivers: [
               _buildAppBar(context, isDark, primary, state),
               // ─── MemorizationPlus entry banner ─────────────────────────────
-              if (state is HifzLoaded && state.selectedPath != null)
+              // T-07: Hide MemPlus entry banner for child profiles.
+              // Kids are redirected by the router, but belt-and-suspenders:
+              // don't show the adult MemPlus banner if they somehow land here.
+              if (state is HifzLoaded &&
+                  state.selectedPath != null &&
+                  state.selectedPath != 'backward')
                 SliverToBoxAdapter(child: _MemPlusBanner(isDark: isDark)),
               if (state is HifzLoading)
                 const SliverFillRemaining(child: LoadingWidget()),
@@ -208,8 +213,10 @@ class _HifzView extends StatelessWidget {
                           // the Settings page (Reset / Change path control)
                           // to preserve shared identity integrity.
                           // UPDATE: User requested to not go to the main settings page.
-                          onPressed: () =>
-                              _showMemorizationSettingsSheet(ctx, isDark),
+                          onPressed: () => showMemorizationPathSettingsSheet(
+                            ctx,
+                            isDark: isDark,
+                          ),
                         ),
                     ],
                   ),
@@ -460,7 +467,11 @@ class _HifzSurahTile extends StatelessWidget {
             ),
             const SizedBox(width: AppSpacing.sm),
             Icon(
-              isLocked ? Icons.lock_rounded : Icons.arrow_forward_ios_rounded,
+              isLocked
+                  ? Icons.lock_rounded
+                  : context.isArabic
+                  ? Icons.arrow_back_ios_new_rounded
+                  : Icons.arrow_forward_ios_rounded,
               size: 14,
               color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
             ),
@@ -480,7 +491,7 @@ class _MemPlusBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push(AppRoutes.memorizationPlus),
+      onTap: () => context.go(AppRoutes.memorizationHub),
       child: Container(
         margin: const EdgeInsets.fromLTRB(
           AppSpacing.pagePadding,
@@ -524,8 +535,10 @@ class _MemPlusBanner extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
+            Icon(
+              context.isArabic
+                  ? Icons.arrow_back_ios_new_rounded
+                  : Icons.arrow_forward_ios_rounded,
               color: Colors.white54,
               size: 14,
             ),
@@ -534,105 +547,4 @@ class _MemPlusBanner extends StatelessWidget {
       ),
     );
   }
-}
-
-void _showMemorizationSettingsSheet(BuildContext context, bool isDark) {
-  showModalBottomSheet(
-    context: context,
-    backgroundColor: isDark
-        ? AppColors.darkBackground
-        : AppColors.lightBackground,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(
-        top: Radius.circular(AppSpacing.radiusXl),
-      ),
-    ),
-    builder: (ctx) => SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              ctx.l10n.changeMemorizationPath,
-              style: AppTypography.headlineSmall.copyWith(
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
-                fontFamily: 'Amiri',
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            ListTile(
-              leading: Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.restart_alt_rounded,
-                  color: Colors.orange,
-                ),
-              ),
-              title: Text(
-                ctx.l10n.resetMemorizationPathTileTitle,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              subtitle: Text(
-                ctx.l10n.resetMemorizationPathPreserveProgressDesc,
-                style: AppTypography.labelSmall.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
-                ),
-              ),
-              onTap: () async {
-                Navigator.pop(ctx);
-                final confirmed = await showDialog<bool>(
-                  context: context,
-                  builder: (dialogContext) => AlertDialog(
-                    title: Text(
-                      ctx.l10n.resetMemorizationPathQuestion,
-                      style: const TextStyle(fontFamily: 'Amiri'),
-                    ),
-                    content: Text(
-                      ctx.l10n.resetMemorizationPathPreserveProgressDialog,
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext, false),
-                        child: Text(ctx.l10n.cancel),
-                      ),
-                      FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.orange,
-                        ),
-                        onPressed: () => Navigator.pop(dialogContext, true),
-                        child: Text(ctx.l10n.reset),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirmed == true) {
-                  await getIt<MemorizationPlusRepository>()
-                      .resetMemorizationIdentity();
-                  if (context.mounted) {
-                    context.pushReplacement(AppRoutes.memorizationPlus);
-                  }
-                }
-              },
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
 }

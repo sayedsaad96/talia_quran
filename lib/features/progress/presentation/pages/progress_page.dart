@@ -64,6 +64,7 @@ class _ProgressView extends StatelessWidget {
                 SliverToBoxAdapter(
                   child: _ProgressContent(
                     progress: state.progress,
+                    isKids: state.isKids,
                     isDark: isDark,
                   ),
                 ),
@@ -166,8 +167,14 @@ class _ProgressView extends StatelessWidget {
 // ─── Main Content (StatefulWidget for controlled animations) ──────────────────
 
 class _ProgressContent extends StatefulWidget {
-  const _ProgressContent({required this.progress, required this.isDark});
+  const _ProgressContent({
+    required this.progress,
+    required this.isKids,
+    required this.isDark,
+  });
+
   final OverallProgress progress;
+  final bool isKids;
   final bool isDark;
 
   @override
@@ -206,6 +213,7 @@ class _ProgressContentState extends State<_ProgressContent>
   @override
   Widget build(BuildContext context) {
     final p = widget.progress;
+    final isKids = widget.isKids;
     final isDark = widget.isDark;
 
     return FadeTransition(
@@ -289,54 +297,58 @@ class _ProgressContentState extends State<_ProgressContent>
                 padding: EdgeInsets.zero,
               ),
               const SizedBox(height: AppSpacing.md),
-              _DetailedProgressCard(
-                isDark: isDark,
-                icon: Icons.psychology_rounded,
-                iconColor: AppColors.primary,
-                title: context.l10n.memorization,
-                percentage: p.memorizedAyahsPercentage,
-                rows: [
-                  _DetailRow(
-                    label: context.l10n.memorizedAyahs,
-                    current: p.memorizedAyahs,
-                    total: p.totalAyahs,
-                    color: AppColors.primary,
-                  ),
-                  _DetailRow(
-                    label: context.l10n.memorizedSurahsLabel,
-                    current: p.memorizedSurahs,
-                    total: p.totalSurahs,
-                    color: AppColors.gold,
-                  ),
-                  _DetailRow(
-                    label: context.l10n.memorizedJuzLabel,
-                    current: p.memorizedJuz,
-                    total: p.totalJuz,
-                    color: AppColors.info,
-                  ),
-                ],
-                extraInfo: [
-                  _InfoChip(
-                    label: context.l10n.learning,
-                    value: '${p.learningAyahs}',
-                    color: AppColors.warning,
-                    isDark: isDark,
-                  ),
-                  _InfoChip(
-                    label: context.l10n.reviewing,
-                    value: '${p.reviewAyahs}',
-                    color: AppColors.info,
-                    isDark: isDark,
-                  ),
-                ],
-              ),
+              if (isKids)
+                _KidsMemorizationProgressCard(progress: p, isDark: isDark)
+              else
+                _DetailedProgressCard(
+                  isDark: isDark,
+                  icon: Icons.psychology_rounded,
+                  iconColor: AppColors.primary,
+                  title: context.l10n.memorization,
+                  percentage: p.memorizedAyahsPercentage,
+                  rows: [
+                    _DetailRow(
+                      label: context.l10n.memorizedAyahs,
+                      current: p.memorizedAyahs,
+                      total: p.totalAyahs,
+                      color: AppColors.primary,
+                    ),
+                    _DetailRow(
+                      label: context.l10n.memorizedSurahsLabel,
+                      current: p.memorizedSurahs,
+                      total: p.totalSurahs,
+                      color: AppColors.gold,
+                    ),
+                    _DetailRow(
+                      label: context.l10n.memorizedJuzLabel,
+                      current: p.memorizedJuz,
+                      total: p.totalJuz,
+                      color: AppColors.info,
+                    ),
+                  ],
+                  extraInfo: [
+                    _InfoChip(
+                      label: context.l10n.learning,
+                      value: '${p.learningAyahs}',
+                      color: AppColors.warning,
+                      isDark: isDark,
+                    ),
+                    _InfoChip(
+                      label: context.l10n.reviewing,
+                      value: '${p.reviewAyahs}',
+                      color: AppColors.info,
+                      isDark: isDark,
+                    ),
+                  ],
+                ),
 
               const SizedBox(height: AppSpacing.sectionGap),
 
               // ─── Smart Memorization Progress Section ─────────
-              if (p.smartMemorizedAyahs > 0 ||
-                  p.smartReviewAyahs > 0 ||
-                  p.kidsPoints > 0) ...[
+              if (!isKids &&
+                  (p.smartMemorizedAyahs > 0 ||
+                      p.smartReviewAyahs > 0 ||
+                      p.kidsPoints > 0)) ...[
                 SectionHeader(
                   title: context.l10n.smartMemorization,
                   padding: EdgeInsets.zero,
@@ -394,6 +406,103 @@ class _ProgressContentState extends State<_ProgressContent>
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _KidsMemorizationProgressCard extends StatelessWidget {
+  const _KidsMemorizationProgressCard({
+    required this.progress,
+    required this.isDark,
+  });
+
+  final OverallProgress progress;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final textPrimary = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final textSecondary = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        border: Border.all(color: border, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.gold.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.star_rounded,
+                  color: AppColors.gold,
+                  size: 28,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.kidsTrack,
+                      style: AppTypography.headlineSmall.copyWith(
+                        color: textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.l10n.kidsJourneySubtitle,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          Row(
+            children: [
+              Expanded(
+                child: _StatBox(
+                  label: context.l10n.points,
+                  value: '${progress.kidsPoints}',
+                  icon: Icons.military_tech_rounded,
+                  color: AppColors.primary,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: _StatBox(
+                  label: context.l10n.stars,
+                  value: '${progress.kidsStars}',
+                  icon: Icons.star_rounded,
+                  color: AppColors.gold,
+                  isDark: isDark,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

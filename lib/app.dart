@@ -84,29 +84,36 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         // not dispose it when this widget is torn down.
         BlocProvider.value(value: getIt<AuthCubit>()),
       ],
-      child: BlocBuilder<LocaleCubit, Locale>(
-        builder: (context, locale) {
-          return BlocBuilder<ThemeCubit, ThemeMode>(
-            builder: (context, themeMode) {
-              return MaterialApp.router(
-                title: 'تالية',
-                debugShowCheckedModeBanner: false,
-                themeMode: themeMode,
-                theme: AppTheme.light,
-                darkTheme: AppTheme.dark,
-                locale: locale,
-                supportedLocales: AppLocalizations.supportedLocales,
-                localizationsDelegates: const [
-                  AppLocalizations.delegate,
-                  GlobalMaterialLocalizations.delegate,
-                  GlobalWidgetsLocalizations.delegate,
-                  GlobalCupertinoLocalizations.delegate,
-                ],
-                routerConfig: AppRouter.router,
-              );
-            },
-          );
+      child: BlocListener<AuthCubit, AuthState>(
+        listener: (context, state) {
+          if (state is AuthPasswordRecoveryDetected) {
+            AppRouter.router.go(AppRoutes.updatePassword);
+          }
         },
+        child: BlocBuilder<LocaleCubit, Locale>(
+          builder: (context, locale) {
+            return BlocBuilder<ThemeCubit, ThemeMode>(
+              builder: (context, themeMode) {
+                return MaterialApp.router(
+                  title: 'تالية',
+                  debugShowCheckedModeBanner: false,
+                  themeMode: themeMode,
+                  theme: AppTheme.light,
+                  darkTheme: AppTheme.dark,
+                  locale: locale,
+                  supportedLocales: AppLocalizations.supportedLocales,
+                  localizationsDelegates: const [
+                    AppLocalizations.delegate,
+                    GlobalMaterialLocalizations.delegate,
+                    GlobalWidgetsLocalizations.delegate,
+                    GlobalCupertinoLocalizations.delegate,
+                  ],
+                  routerConfig: AppRouter.router,
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }

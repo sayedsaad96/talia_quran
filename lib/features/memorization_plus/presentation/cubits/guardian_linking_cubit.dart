@@ -12,6 +12,14 @@ class GuardianLinkingCubit extends Cubit<GuardianLinkingState> {
 
   Future<void> load() async {
     emit(const GuardianLinkingLoading());
+    await _refreshLinkStatus(emitPendingSession: true);
+  }
+
+  Future<void> checkLinkStatus() async {
+    await _refreshLinkStatus(emitPendingSession: false);
+  }
+
+  Future<void> _refreshLinkStatus({required bool emitPendingSession}) async {
     final profileResult = await _repository.refreshChildGuardianLink();
     await profileResult.fold(
       (failure) async => emit(GuardianLinkingError(failure.message)),
@@ -25,10 +33,15 @@ class GuardianLinkingCubit extends Cubit<GuardianLinkingState> {
           (failure) => emit(GuardianLinkingError(failure.message)),
           (session) {
             if (session == null) {
-              emit(GuardianLinkingRequired(profile: profile));
+              if (emitPendingSession) {
+                emit(GuardianLinkingRequired(profile: profile));
+              }
               return;
             }
-            _emitSession(session, profile);
+            if (emitPendingSession ||
+                session.status != PairingSessionStatus.pending) {
+              _emitSession(session, profile);
+            }
           },
         );
       },

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dartz/dartz.dart';
 import 'package:isar/isar.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/config/supabase_config.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../domain/entities/app_user.dart';
@@ -14,6 +15,13 @@ import '../../../xp/data/models/xp_isar.dart';
 
 class AuthFailure extends Failure {
   const AuthFailure([super.message = 'Auth error']);
+}
+
+class AuthConfigurationFailure extends Failure {
+  const AuthConfigurationFailure([
+    super.message =
+        'تسجيل الدخول السحابي غير مهيأ في هذا الإصدار. شغّل التطبيق بإعدادات SUPABASE_URL و SUPABASE_ANON_KEY أو استخدمه كضيف.',
+  ]);
 }
 
 class ServerFailure extends Failure {
@@ -39,6 +47,13 @@ class AuthRepositoryImpl implements AuthRepository {
   SupabaseClient get _supabase => Supabase.instance.client;
   final Isar _isar;
 
+  Either<Failure, SupabaseClient> _clientOrFailure() {
+    if (!_isSupabaseInitialized) {
+      return const Left(AuthConfigurationFailure());
+    }
+    return Right(_supabase);
+  }
+
   @override
   AppUser? get currentUser {
     if (!_isSupabaseInitialized) return null;
@@ -56,6 +71,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Stream<AppUser?> get authStateChanges {
     if (!_isSupabaseInitialized) return const Stream.empty();
     return _supabase.auth.onAuthStateChange
+        .where((event) => event.event != AuthChangeEvent.passwordRecovery)
         .map((event) => event.session?.user)
         .map(
           (user) => user == null
@@ -70,6 +86,14 @@ class AuthRepositoryImpl implements AuthRepository {
         );
   }
 
+  @override
+  Stream<void> get passwordRecoveryChanges {
+    if (!_isSupabaseInitialized) return const Stream.empty();
+    return _supabase.auth.onAuthStateChange
+        .where((event) => event.event == AuthChangeEvent.passwordRecovery)
+        .map<void>((_) {});
+  }
+
   // ─── Sign Up ──────────────────────────────────────────────────────────────
 
   @override
@@ -79,7 +103,17 @@ class AuthRepositoryImpl implements AuthRepository {
     required String displayName,
   }) async {
     try {
-      final response = await _supabase.auth.signUp(
+      final clientResult = _clientOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      final response = await client.auth.signUp(
         email: email,
         password: password,
         data: {'display_name': displayName},
@@ -114,13 +148,6 @@ class AuthRepositoryImpl implements AuthRepository {
         displayName: displayName,
       );
 
-      // Sync local progress to cloud (non-blocking)
-      try {
-        await syncProgressToCloud();
-      } catch (e) {
-        TaliaLogger.w('Post-signup sync failed', e);
-      }
-
       return Right(user);
     } on AuthException catch (e) {
       TaliaLogger.w('Auth sign-up error', e);
@@ -139,7 +166,17 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
   }) async {
     try {
-      final response = await _supabase.auth.signInWithPassword(
+      final clientResult = _clientOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      final response = await client.auth.signInWithPassword(
         email: email,
         password: password,
       );
@@ -155,13 +192,6 @@ class AuthRepositoryImpl implements AuthRepository {
             response.user!.userMetadata?['display_name'] as String? ?? 'مستخدم',
       );
 
-      // Sync local progress to cloud (non-blocking)
-      try {
-        await syncProgressToCloud();
-      } catch (e) {
-        TaliaLogger.w('Post-sign-in sync failed', e);
-      }
-
       return Right(user);
     } on AuthException catch (e) {
       TaliaLogger.w('Auth sign-in error', e);
@@ -176,7 +206,63 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> resendConfirmation(String email) async {
+    if (!_isSupabaseInitialized) {
+      throw const AuthException('Supabase is not configured');
+    }
     await _supabase.auth.resend(type: OtpType.signup, email: email);
+  }
+
+  // ─── Reset Password ───────────────────────────────────────────────────────
+
+  @override
+  Future<Either<Failure, Unit>> resetPassword(String email) async {
+    try {
+      final clientResult = _clientOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      await client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: SupabaseConfig.passwordRecoveryRedirectTo,
+      );
+      return const Right(unit);
+    } on AuthException catch (e) {
+      TaliaLogger.w('Password reset error', e);
+      return Left(AuthFailure(_mapAuthError(e.message)));
+    } catch (e) {
+      TaliaLogger.w('Unexpected password reset error', e);
+      return const Left(AuthFailure('حدث خطأ أثناء إرسال رابط إعادة التعيين'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> updatePassword(String newPassword) async {
+    try {
+      final clientResult = _clientOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      await client.auth.updateUser(UserAttributes(password: newPassword));
+      return const Right(unit);
+    } on AuthException catch (e) {
+      TaliaLogger.w('Password update error', e);
+      return Left(AuthFailure(_mapAuthError(e.message)));
+    } catch (e) {
+      TaliaLogger.w('Unexpected password update error', e);
+      return const Left(AuthFailure('حدث خطأ أثناء تحديث كلمة المرور'));
+    }
   }
 
   // ─── Sign Out ─────────────────────────────────────────────────────────────
@@ -184,6 +270,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, Unit>> signOut() async {
     try {
+      if (!_isSupabaseInitialized) return const Right(unit);
       await _supabase.auth.signOut();
       return const Right(unit);
     } catch (e) {
@@ -192,11 +279,58 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, Unit>> deleteAccount() async {
+    try {
+      final clientResult = _clientOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      if (client.auth.currentUser == null) {
+        return const Left(AuthFailure('لا يوجد حساب مسجل لحذفه'));
+      }
+
+      await client.rpc('delete_current_user');
+      try {
+        await client.auth.signOut();
+      } catch (e) {
+        TaliaLogger.w('Post-delete sign-out cleanup failed', e);
+      }
+      return const Right(unit);
+    } on PostgrestException catch (e) {
+      TaliaLogger.w('Account deletion RPC error', e);
+      final message = e.message.toLowerCase();
+      if (message.contains('could not find the function') ||
+          message.contains('delete_current_user') ||
+          message.contains('schema cache')) {
+        return const Left(
+          ServerFailure(
+            'حذف الحساب يحتاج تفعيل وظيفة Supabase delete_current_user أولاً.',
+          ),
+        );
+      }
+      return const Left(ServerFailure('تعذر حذف الحساب. حاول لاحقاً.'));
+    } on AuthException catch (e) {
+      TaliaLogger.w('Account deletion auth error', e);
+      return Left(AuthFailure(_mapAuthError(e.message)));
+    } catch (e) {
+      TaliaLogger.w('Unexpected account deletion error', e);
+      return const Left(ServerFailure('تعذر حذف الحساب. حاول لاحقاً.'));
+    }
+  }
+
   // ─── Cloud Sync ─────────────────────────────────────────────────────────────
 
   @override
   Future<Either<Failure, Unit>> syncProgressToCloud() async {
     try {
+      if (!_isSupabaseInitialized) return const Right(unit);
       final user = _supabase.auth.currentUser;
       if (user == null) return const Right(unit);
 
@@ -216,6 +350,7 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, Unit>> pullProgressFromCloud() async {
     try {
+      if (!_isSupabaseInitialized) return const Right(unit);
       final user = _supabase.auth.currentUser;
       if (user == null) return const Right(unit);
 
@@ -479,6 +614,14 @@ class AuthRepositoryImpl implements AuthRepository {
         lower.contains('connection') ||
         lower.contains('socket')) {
       return 'لا يوجد اتصال بالإنترنت';
+    }
+
+    // Missing/expired password recovery session
+    if (lower.contains('session missing') ||
+        lower.contains('session_missing') ||
+        lower.contains('no current session') ||
+        lower.contains('missing session')) {
+      return 'رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.';
     }
 
     // User not found

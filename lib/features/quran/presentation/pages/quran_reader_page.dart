@@ -21,6 +21,7 @@ import '../../data/datasources/bookmark_service.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../cubits/quran_page_cubit.dart';
 import '../cubits/surah_detail_cubit.dart';
+import '../services/quran_read_confirmation_gate.dart';
 
 class QuranReaderPage extends StatefulWidget {
   const QuranReaderPage({super.key, this.surahId, this.pageNumber});
@@ -46,7 +47,8 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   bool _showLongPressHint = false;
   bool _showReadConfirmedFeedback = false;
 
-  final Set<int> _confirmedReadPages = {};
+  final QuranReadConfirmationGate _readConfirmationGate =
+      QuranReadConfirmationGate();
   static const _longPressHintKey = 'quran_long_press_hint_seen';
 
   int _normalizePageNumber(int pageNumber) => pageNumber.clamp(1, 604);
@@ -122,10 +124,27 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     unawaited(_quranPageCubit.loadPage(pageNumber));
   }
 
+  void _registerPageInteraction(int pageNumber, BuildContext context) {
+    final normalizedPage = _normalizePageNumber(pageNumber);
+    _readConfirmationGate.registerInteraction(normalizedPage);
+    _confirmReadIfReady(normalizedPage, context);
+  }
+
+  void _confirmReadIfReady(int pageNumber, BuildContext context) {
+    if (!mounted || !context.mounted || _currentPageNumber != pageNumber) {
+      return;
+    }
+    if (!_readConfirmationGate.shouldConfirm(pageNumber)) {
+      return;
+    }
+    _readConfirmationGate.markPending(pageNumber);
+    unawaited(context.read<QuranPageCubit>().confirmRead(pageNumber));
+  }
+
   void _startReadTimer(QuranPageDetail detail, BuildContext context) {
     final pageNumber = detail.pageNumber;
     if (_currentPageNumber != pageNumber ||
-        _confirmedReadPages.contains(pageNumber) ||
+        _readConfirmationGate.hasConfirmed(pageNumber) ||
         _readTimer != null) {
       return;
     }
@@ -141,7 +160,8 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
       if (!mounted || !context.mounted || _currentPageNumber != pageNumber) {
         return;
       }
-      unawaited(context.read<QuranPageCubit>().confirmRead(pageNumber));
+      _readConfirmationGate.registerTimerElapsed(pageNumber);
+      _confirmReadIfReady(pageNumber, context);
     });
   }
 
@@ -172,6 +192,9 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     LongPressStartDetails _,
   ) {
     HapticFeedback.lightImpact();
+    if (_currentPageNumber != null) {
+      _registerPageInteraction(_currentPageNumber!, context);
+    }
     final ayah = _resolveAyah(surahNumber, verseNumber);
     showModalBottomSheet(
       context: context,
@@ -180,6 +203,11 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
       builder: (ctx) => _AyahOptionsSheet(
         ayah: ayah,
         surahName: qcf.getSurahNameArabic(surahNumber),
+        onInteraction: () {
+          if (_currentPageNumber != null) {
+            _registerPageInteraction(_currentPageNumber!, context);
+          }
+        },
       ),
     );
   }
@@ -240,7 +268,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
           if (state is QuranPageLoaded) {
             _currentDetail = state.detail;
             if (state.isReadConfirmed) {
-              final isNewlyConfirmed = _confirmedReadPages.add(
+              final isNewlyConfirmed = _readConfirmationGate.markConfirmed(
                 state.detail.pageNumber,
               );
               _readTimer?.cancel();
@@ -253,6 +281,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
             }
 
             if (state.readConfirmationError != null) {
+              _readConfirmationGate.clearPending(state.detail.pageNumber);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(state.readConfirmationError!)),
               );
@@ -289,43 +318,51 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
             body: SafeArea(
               child: Stack(
                 children: [
-                  qcf.QuranPageView(
-                    pageController: _pageController!,
-                    highlights: _highlights,
-                    isDarkMode: isDark,
-                    isTajweed: true,
-                    pageBackgroundColor: bg,
-                    onPageChanged: (page) {
-                      setState(() => _currentPageNumber = page);
-                      _saveCurrentPage(page);
-                      _loadPage(page);
-                    },
-                    onLongPress: (surahNumber, verseNumber, details) =>
-                        _showAyahOptions(
-                          context,
-                          surahNumber,
-                          verseNumber,
-                          details,
-                        ),
-                    topBar: _MushafTopBar(
-                      surahName: firstSurah?.nameAr ?? '',
-                      juzNumber: juzNumber,
-                      gold: gold,
-                      bg: bg,
-                      onClose: () {
-                        if (context.canPop()) {
-                          context.pop();
-                        } else {
-                          context.go('/');
-                        }
+                  Listener(
+                    behavior: HitTestBehavior.translucent,
+                    onPointerDown: (_) =>
+                        _registerPageInteraction(pageNumber, context),
+                    onPointerSignal: (_) =>
+                        _registerPageInteraction(pageNumber, context),
+                    child: qcf.QuranPageView(
+                      pageController: _pageController!,
+                      highlights: _highlights,
+                      isDarkMode: isDark,
+                      isTajweed: true,
+                      pageBackgroundColor: bg,
+                      onPageChanged: (page) {
+                        setState(() => _currentPageNumber = page);
+                        _saveCurrentPage(page);
+                        _registerPageInteraction(page, context);
+                        _loadPage(page);
                       },
-                    ),
-                    bottomBar: _MushafFooter(
-                      pageNumber: pageNumber,
-                      hizbNumber: MushafHizbHelper.getHizb(pageNumber),
-                      gold: gold,
-                      bg: bg,
-                      showReadConfirmed: _showReadConfirmedFeedback,
+                      onLongPress: (surahNumber, verseNumber, details) =>
+                          _showAyahOptions(
+                            context,
+                            surahNumber,
+                            verseNumber,
+                            details,
+                          ),
+                      topBar: _MushafTopBar(
+                        surahName: firstSurah?.nameAr ?? '',
+                        juzNumber: juzNumber,
+                        gold: gold,
+                        bg: bg,
+                        onClose: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/');
+                          }
+                        },
+                      ),
+                      bottomBar: _MushafFooter(
+                        pageNumber: pageNumber,
+                        hizbNumber: MushafHizbHelper.getHizb(pageNumber),
+                        gold: gold,
+                        bg: bg,
+                        showReadConfirmed: _showReadConfirmedFeedback,
+                      ),
                     ),
                   ),
                   if (_showLongPressHint)
@@ -551,10 +588,15 @@ class _LongPressHintBanner extends StatelessWidget {
 }
 
 class _AyahOptionsSheet extends StatefulWidget {
-  const _AyahOptionsSheet({required this.ayah, required this.surahName});
+  const _AyahOptionsSheet({
+    required this.ayah,
+    required this.surahName,
+    required this.onInteraction,
+  });
 
   final Ayah ayah;
   final String surahName;
+  final VoidCallback onInteraction;
 
   @override
   State<_AyahOptionsSheet> createState() => _AyahOptionsSheetState();
@@ -580,6 +622,7 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
     }
 
     try {
+      widget.onInteraction();
       setState(() => _isPlaying = true);
       final source = await AudioCacheService.instance.getAudioSource(
         widget.ayah.surahId,

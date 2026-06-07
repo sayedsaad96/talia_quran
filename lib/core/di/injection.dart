@@ -6,12 +6,14 @@ import 'package:path_provider/path_provider.dart';
 import '../services/audio_cache_service.dart';
 import '../services/app_session_service.dart';
 import '../services/notification_service.dart';
+import '../services/streak_reader.dart';
 import '../services/streak_service.dart';
 import '../services/xp_service.dart';
 import '../services/subscription_service.dart';
 import '../services/achievement_service.dart';
 import '../theme/theme_cubit.dart';
 import '../l10n/locale_cubit.dart';
+import '../memorization/memorization_path_resolver.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
 import '../../features/quran/data/repositories/quran_repository_impl.dart';
@@ -54,7 +56,6 @@ import '../../features/memorization_plus/presentation/cubits/guardian_linking_cu
 import '../../features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/parent_dashboard_cubit.dart';
-import '../../features/memorization_plus/presentation/cubits/track_selection_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/custom_plan_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/memorization_identity_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/quiz_cubit.dart';
@@ -112,6 +113,7 @@ Future<void> configureDependencies() async {
     () => SettingsCubit(
       getIt<MemorizationPlusRepository>(),
       getIt<SharedPreferences>(),
+      getIt<MemorizationPathResolver>(),
     ),
   );
   getIt.registerSingleton<AudioCacheService>(AudioCacheService.instance);
@@ -145,6 +147,7 @@ Future<void> configureDependencies() async {
 
   // ─── Core Services ──────────────────────────────────────────────────────────
   getIt.registerSingleton<StreakService>(StreakService(getIt<Isar>()));
+  getIt.registerSingleton<StreakReader>(getIt<StreakService>());
   getIt.registerSingleton<XpService>(XpService(getIt<Isar>()));
   getIt.registerSingleton<SubscriptionService>(SubscriptionService());
   getIt.registerSingleton<AchievementService>(
@@ -163,6 +166,7 @@ Future<void> configureDependencies() async {
       getIt<HifzLocalDatasource>(),
       getIt<MemorizationPlusLocalDatasource>(),
       getIt<QuranLocalDatasource>(),
+      getIt<StreakReader>(),
     ),
   );
   getIt.registerLazySingleton<QuranRepository>(
@@ -182,6 +186,9 @@ Future<void> configureDependencies() async {
       getIt<MemorizationPlusLocalDatasource>(),
       getIt<QuranRepository>(),
     ),
+  );
+  getIt.registerLazySingleton<MemorizationPathResolver>(
+    () => MemorizationPathResolver(getIt<MemorizationPlusRepository>()),
   );
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(getIt<Isar>()),
@@ -320,7 +327,10 @@ Future<void> configureDependencies() async {
 
   // ─── Cubits ─────────────────────────────────────────────────────────────────
   getIt.registerFactory<ProgressCubit>(
-    () => ProgressCubit(getIt<GetProgressUsecase>()),
+    () => ProgressCubit(
+      getIt<GetProgressUsecase>(),
+      getIt<MemorizationPathResolver>(),
+    ),
   );
   getIt.registerFactory<SurahListCubit>(
     () => SurahListCubit(getIt<GetSurahsUsecase>()),
@@ -345,6 +355,7 @@ Future<void> configureDependencies() async {
       getIt<GetHifzPathUsecase>(),
       getIt<SaveHifzPathUsecase>(),
       getIt<MemorizationPlusRepository>(),
+      getIt<MemorizationPathResolver>(),
     ),
   );
   getIt.registerFactory<HifzSessionCubit>(
@@ -364,13 +375,11 @@ Future<void> configureDependencies() async {
       getIt<StreakService>(),
       getIt<XpService>(),
       getIt<AchievementService>(),
+      getIt<MemorizationPlusRepository>(), // T-06: for defensive kids check
     ),
   );
   getIt.registerFactory<AzkarCubit>(
     () => AzkarCubit(getIt<GetAzkarUsecase>(), getIt<SharedPreferences>()),
-  );
-  getIt.registerFactory<TrackSelectionCubit>(
-    () => TrackSelectionCubit(getIt<MemorizationPlusRepository>()),
   );
   getIt.registerFactory<GuardianLinkingCubit>(
     () => GuardianLinkingCubit(getIt<MemorizationPlusRepository>()),
@@ -378,6 +387,7 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<MemorizationIdentityCubit>(
     () => MemorizationIdentityCubit(
       repository: getIt<MemorizationPlusRepository>(),
+      pathResolver: getIt<MemorizationPathResolver>(),
     ),
   );
   getIt.registerFactory<DailyPlanCubit>(
@@ -389,6 +399,7 @@ Future<void> configureDependencies() async {
       getIt<AchievementService>(),
       getIt<StreakService>(), // RISK-5 FIX
       getIt<XpService>(), // RISK-5 FIX
+      getIt<MemorizationPathResolver>(),
     ),
   );
   getIt.registerFactory<KidsModeCubit>(
@@ -411,6 +422,7 @@ Future<void> configureDependencies() async {
       getIt<GetKidsJourneyUsecase>(),
       getIt<GetKidsProgressUsecase>(),
       getIt<ParentRemoteLinkUsecase>(),
+      getIt<QuranRepository>(),
     ),
   );
   getIt.registerFactory<ParentDashboardCubit>(
@@ -436,6 +448,7 @@ Future<void> configureDependencies() async {
       getIt<MemorizationPlusRepository>(),
       getIt<AppSessionService>(),
       GetActivityHeatmapUsecase(getIt<Isar>()),
+      getIt<MemorizationPathResolver>(),
     ),
   );
   getIt.registerFactory<StreakCubit>(() => StreakCubit(getIt<StreakService>()));

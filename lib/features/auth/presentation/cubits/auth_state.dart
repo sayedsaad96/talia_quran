@@ -26,6 +26,26 @@ class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated();
 }
 
+class AuthAccountDeleted extends AuthState {
+  const AuthAccountDeleted();
+}
+
+class AuthPasswordResetSent extends AuthState {
+  const AuthPasswordResetSent();
+}
+
+class AuthPasswordRecoveryDetected extends AuthState {
+  const AuthPasswordRecoveryDetected();
+}
+
+class AuthPasswordUpdated extends AuthState {
+  const AuthPasswordUpdated();
+}
+
+class AuthResendConfirmationSuccess extends AuthState {
+  const AuthResendConfirmationSuccess();
+}
+
 class AuthError extends AuthState {
   const AuthError(this.message);
   final String message;

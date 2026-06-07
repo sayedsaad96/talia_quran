@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -89,6 +91,15 @@ class _HifzSessionView extends StatelessWidget {
               unawaited(
                 showCertificateCelebrationDialog(context, state.awards),
               );
+            }
+            // T-06: Redirect kids who accidentally reach the basic session
+            // back to their dedicated kids-home screen.
+            if (state is HifzSessionError && state.redirectToKidsHome) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (context.mounted) {
+                  context.go(AppRoutes.memorizationPlusKidsHome);
+                }
+              });
             }
           },
           buildWhen: (previous, current) => current is! CertificatesEarned,
@@ -485,6 +496,8 @@ class _FullSurahSession extends StatelessWidget {
                           icon: Icon(
                             state.currentIndex == state.ayahs.length - 1
                                 ? Icons.done_all_rounded
+                                : context.isArabic
+                                ? Icons.arrow_back_rounded
                                 : Icons.arrow_forward_rounded,
                           ),
                           label: Text(
@@ -675,6 +688,8 @@ class _CheckpointReviewCard extends StatelessWidget {
             icon: Icon(
               state.currentIndex == state.ayahs.length - 1
                   ? Icons.done_all_rounded
+                  : context.isArabic
+                  ? Icons.arrow_back_rounded
                   : Icons.arrow_forward_rounded,
             ),
             label: Text(

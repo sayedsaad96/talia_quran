@@ -523,15 +523,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authGenericError => 'حدث خطأ، حاول مرة أخرى';
 
   @override
-  String get profileSavedToCloud => 'تقدمك محفوظ على السحابة';
+  String get profileSavedToCloud => 'تم تسجيل الدخول إلى حسابك';
 
   @override
-  String get guestModeWarning =>
-      'سجّل دخولك لحفظ تقدمك على جميع أجهزتك وعدم فقدانه عند مسح التطبيق.';
+  String get guestModeWarning => 'سجّل دخولك لإدارة حسابك وخيارات الاستعادة.';
 
   @override
   String get signOutWarning =>
-      'هل تريد تسجيل الخروج؟ تقدمك المحفوظ على السحابة لن يُحذف.';
+      'هل تريد تسجيل الخروج؟ سيبقى تقدمك المحلي متاحًا على هذا الجهاز.';
 
   @override
   String get dailyReviewReminder => 'تذكير المراجعة اليومية';
@@ -689,7 +688,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get syncProgressDesc =>
-      'قم بتسجيل الدخول لحفظ تقدمك ومزامنته على جميع أجهزتك';
+      'قم بتسجيل الدخول لإدارة حسابك وخيارات الاستعادة';
 
   @override
   String get later => 'لاحقاً';
@@ -796,10 +795,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get debugCertFullQuran => 'ختم القرآن';
 
   @override
-  String get backupProgressTitle => 'احفظ تقدمك الآن!';
+  String get backupProgressTitle => 'إدارة الحساب';
 
   @override
-  String get backupProgressDesc => 'سجّل دخولك من الإعدادات لحماية تقدمك';
+  String get backupProgressDesc => 'سجّل دخولك من الإعدادات لإدارة حسابك';
 
   @override
   String get azkarSubtitle => 'اذكر الله كثيراً';
@@ -1233,6 +1232,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get guardianRegenerateCode => 'تجديد الرمز';
 
   @override
+  String get guardianSignInRequired => 'ربط ولي الأمر يتطلب تسجيل الدخول أولاً';
+
+  @override
+  String get guardianSignInAction => 'تسجيل الدخول أو إنشاء حساب';
+
+  @override
+  String get guardianGuestContinueKids => 'متابعة حفظ الأطفال';
+
+  @override
   String get splashSubtitle => 'تطبيق تحفيظ القرآن الكريم';
 
   @override
@@ -1558,5 +1566,439 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String notificationEverydayAt(String time) {
     return 'كل يوم الساعة $time';
+  }
+
+  @override
+  String get kidsGamifiedWelcome => 'مرحباً بطل الحفظ!';
+
+  @override
+  String kidsGamifiedLevelProgress(int level, int progress) {
+    return 'المستوى $level — $progress/100';
+  }
+
+  @override
+  String kidsGamifiedStarsCount(int count) {
+    return '$count نجمة';
+  }
+
+  @override
+  String get kidsGamifiedLastMission => 'آخر مهمة';
+
+  @override
+  String get kidsGamifiedContinueNow => 'استكمل الآن';
+
+  @override
+  String get kidsGamifiedMushaf => 'المصحف';
+
+  @override
+  String get kidsGamifiedJourney => 'رحلتي';
+
+  @override
+  String get kidsGamifiedMissions => 'المهام';
+
+  @override
+  String kidsGamifiedHouseTitle(int number) {
+    return 'بيت الحفظ $number';
+  }
+
+  @override
+  String kidsGamifiedReviewHouseTitle(int number) {
+    return 'بيت المراجعة $number';
+  }
+
+  @override
+  String kidsGamifiedAyahRange(int startAyah, int endAyah) {
+    return 'الآيات $startAyah-$endAyah';
+  }
+
+  @override
+  String kidsGamifiedProgressCount(int completed, int total) {
+    return '$completed/$total';
+  }
+
+  @override
+  String get kidsGamifiedLockedStage => 'هذا البيت مغلق الآن';
+
+  @override
+  String get kidsGamifiedCurrentStage => 'مهمتك الحالية';
+
+  @override
+  String get kidsGamifiedCompletedStage => 'أحسنت، اكتمل البيت';
+
+  @override
+  String get kidsGamifiedNeedsReview => 'جاهز للمراجعة';
+
+  @override
+  String get kidsGamifiedListenStep => 'استمع';
+
+  @override
+  String get kidsGamifiedListenStepSubtitle => 'اسمع الآية بتأنٍ وتركيز';
+
+  @override
+  String get kidsGamifiedRepeatStep => 'ردد';
+
+  @override
+  String get kidsGamifiedRepeatStepSubtitle => 'كرر خلف القارئ حتى تثبت الآية';
+
+  @override
+  String get kidsGamifiedTestStep => 'اختبر نفسك';
+
+  @override
+  String get kidsGamifiedTestStepSubtitle => 'حاول التسميع بدون مساعدة';
+
+  @override
+  String get kidsGamifiedStartMission => 'ابدأ المهمة';
+
+  @override
+  String get kidsGamifiedListenAndRepeat => 'استمع وكرر';
+
+  @override
+  String get kidsGamifiedRecordYourVoice => 'سجل تلاوتك';
+
+  @override
+  String get kidsGamifiedRecordingInProgress => 'جاري التسجيل...';
+
+  @override
+  String get kidsGamifiedAudioUnavailable =>
+      'الصوت غير متاح الآن، حاول مرة أخرى بعد قليل.';
+
+  @override
+  String kidsGamifiedListenFirst(int count) {
+    return 'استمع للآية $count مرات قبل تسجيل تلاوتك.';
+  }
+
+  @override
+  String get kidsGamifiedAudioLoading => 'جاري تجهيز التلاوة...';
+
+  @override
+  String get kidsGamifiedWellDone => 'أحسنت!';
+
+  @override
+  String kidsGamifiedEarnedStars(int count) {
+    return '+$count نجمة';
+  }
+
+  @override
+  String kidsGamifiedEarnedGems(int count) {
+    return '+$count جوهرة';
+  }
+
+  @override
+  String get kidsGamifiedNextStage => 'التالي';
+
+  @override
+  String get kidsGamifiedReturnToMap => 'العودة للخريطة';
+
+  @override
+  String get kidsGamifiedJourneyComplete =>
+      'أتممت رحلة الحفظ الحالية، بارك الله فيك!';
+
+  @override
+  String get kidsGamifiedFallbackMessage =>
+      'سنعود للتجربة القديمة للحفاظ على تقدمك.';
+
+  @override
+  String get privacyPolicy => 'سياسة الخصوصية';
+
+  @override
+  String get forgotPassword => 'نسيت كلمة المرور؟';
+
+  @override
+  String get passwordResetEmailSent =>
+      '✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني';
+
+  @override
+  String get forgotPasswordEnterEmail =>
+      'أدخل بريدك الإلكتروني أولاً لإعادة تعيين كلمة المرور';
+
+  @override
+  String get updatePasswordTitle => 'تعيين كلمة مرور جديدة';
+
+  @override
+  String get updatePasswordSubtitle => 'أدخل كلمة مرور قوية جديدة لحسابك.';
+
+  @override
+  String get newPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get confirmNewPassword => 'تأكيد كلمة المرور الجديدة';
+
+  @override
+  String get passwordsDoNotMatch => 'كلمتا المرور غير متطابقتين';
+
+  @override
+  String get passwordUpdated =>
+      'تم تحديث كلمة المرور بنجاح. سجل الدخول مرة أخرى.';
+
+  @override
+  String get updatePasswordButton => 'تحديث كلمة المرور';
+
+  @override
+  String get invalidPasswordRecoveryLink =>
+      'رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.';
+
+  @override
+  String get onboardingGoalQuestion => 'ماذا تريد أن تفعل أولاً؟';
+
+  @override
+  String get onboardingGoalSubtitle =>
+      'اختر بداية واضحة، ويمكنك استخدام باقي التطبيق لاحقاً.';
+
+  @override
+  String get onboardingGoalReading => 'القراءة';
+
+  @override
+  String get onboardingGoalMemorization => 'الحفظ لنفسي';
+
+  @override
+  String get onboardingGoalChild => 'متابعة طفل';
+
+  @override
+  String get onboardingGoalAzkar => 'الأذكار';
+
+  @override
+  String get dailyPlanQuizAction => 'اختبار المراجعة';
+
+  @override
+  String get dailyPlanNewAyahs => 'آيات جديدة للحفظ';
+
+  @override
+  String get dailyPlanNearRevision => 'مراجعة قريبة (آخر ٥ أيام)';
+
+  @override
+  String get dailyPlanFarRevision => 'مراجعة بعيدة';
+
+  @override
+  String get dailyPlanCompletedTitle => 'ما شاء الله! أكملت خطة اليوم';
+
+  @override
+  String dailyPlanCompletedSubtitle(int count) {
+    return 'أتممت $count عناصر بنجاح.\nثابر على هذا المستوى.';
+  }
+
+  @override
+  String get dailyPlanNewAyahsShort => 'آيات جديدة';
+
+  @override
+  String get dailyPlanReviewShort => 'مراجعة';
+
+  @override
+  String get dailyPlanBlessingAction => 'بارك الله فيك ✨';
+
+  @override
+  String dailyPlanRatingExcellent(int ayahNumber) {
+    return '✅ ممتاز! تم جدولة مراجعة الآية $ayahNumber بعد فترة أطول';
+  }
+
+  @override
+  String get dailyPlanRatingAverage =>
+      '⏰ متوسط، سيتم المراجعة خلال فترة معتدلة';
+
+  @override
+  String dailyPlanRatingWeak(int ayahNumber) {
+    return '🔁 ضعيف، ستتم مراجعة الآية $ayahNumber غداً';
+  }
+
+  @override
+  String get performanceWeak => 'ضعيف';
+
+  @override
+  String get performanceAverage => 'متوسط';
+
+  @override
+  String get performanceExcellent => 'ممتاز';
+
+  @override
+  String get dailyPlanListenBeforeRating => 'استمع للآية قبل التقييم';
+
+  @override
+  String get reviewQuizTitle => 'اختبار المراجعة';
+
+  @override
+  String get quizExitTitle => 'الخروج من اختبار المراجعة؟';
+
+  @override
+  String get quizExitMessage =>
+      'سيتم حفظ الآيات التي قيّمتها حتى الآن.\nهل تريد الخروج؟';
+
+  @override
+  String get quizStayAction => 'البقاء';
+
+  @override
+  String get quizExitAction => 'خروج';
+
+  @override
+  String get quizYourAnswer => 'إجابتك';
+
+  @override
+  String get quizListenRetryTitle => 'استمع ثم أعد المحاولة';
+
+  @override
+  String get quizListenRetrySubtitle =>
+      'تحتاج تدريباً أكثر، وهذا طبيعي في أول المراجعة.';
+
+  @override
+  String get quizNextAyah => 'الآية التالية';
+
+  @override
+  String get quizShowResults => 'عرض النتائج';
+
+  @override
+  String get quizExcellentResult => 'ممتاز!';
+
+  @override
+  String get quizGoodEffortResult => 'جهد جيد!';
+
+  @override
+  String get quizPassedMessage => 'لقد اجتزت اختبار المراجعة بنجاح';
+
+  @override
+  String get quizRetryMessage => 'حاول مراجعة الآيات وأعد الاختبار';
+
+  @override
+  String get quizScoreLabel => 'النتيجة';
+
+  @override
+  String get quizTotalLabel => 'إجمالي';
+
+  @override
+  String get quizPassedLabel => 'ناجحة';
+
+  @override
+  String get quizNeedsPracticeLabel => 'تحتاج تدريباً';
+
+  @override
+  String get backAction => 'العودة';
+
+  @override
+  String get parentDashboardLastSession => 'آخر جلسة';
+
+  @override
+  String get parentDashboardNoSessionsYet => 'لا توجد جلسات مسجلة بعد.';
+
+  @override
+  String parentDashboardSessionSummary(
+    int surahId,
+    int ayahNumber,
+    int repeats,
+    int points,
+  ) {
+    return 'سورة $surahId • آية $ayahNumber\n$repeats تكرارات • $points نقطة';
+  }
+
+  @override
+  String get parentDashboardDone => 'تم';
+
+  @override
+  String get parentDashboardPinMismatch => 'رمزا PIN غير متطابقين';
+
+  @override
+  String get parentDashboardPinHelp =>
+      'هذا الرمز يحمي لوحة ولي الأمر على هذا الجهاز';
+
+  @override
+  String get parentDashboardPinConfirm => 'تأكيد PIN';
+
+  @override
+  String get parentDashboardResetPin =>
+      'إعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد';
+
+  @override
+  String get parentDashboardTodaySummary => 'ملخص اليوم';
+
+  @override
+  String get parentDashboardTodayEmpty =>
+      'اليوم: لا توجد جلسات بعد. شجعه على جلسة قصيرة.';
+
+  @override
+  String parentDashboardTodayCompleted(int count) {
+    return 'اليوم: أكمل الطفل $count جلسة. شجعه على المراجعة القادمة.';
+  }
+
+  @override
+  String get parentDashboardTodaySessions => 'جلسات اليوم';
+
+  @override
+  String get parentDashboardTodayPoints => 'نقاط اليوم';
+
+  @override
+  String get parentDashboardAddReward => 'إضافة مكافأة';
+
+  @override
+  String get parentDashboardShowLastSession => 'عرض آخر جلسة';
+
+  @override
+  String get parentDashboardChildSummary => 'ملخص الطفل';
+
+  @override
+  String get parentDashboardPoints => 'نقاط';
+
+  @override
+  String get parentDashboardStars => 'نجوم';
+
+  @override
+  String get parentDashboardWeekSessions => 'جلسات الأسبوع';
+
+  @override
+  String get parentDashboardChildReminder => 'تذكير الطفل';
+
+  @override
+  String get parentDashboardDailyReminder => 'تذكير يومي الساعة 6:30 مساءً';
+
+  @override
+  String get parentDashboardReminderSubtitle =>
+      'يمكن تغيير الوقت لاحقًا من إعدادات ولي الأمر';
+
+  @override
+  String get parentDashboardRemoteFollowup => 'المتابعة عن بعد';
+
+  @override
+  String get parentDashboardScanQr => 'مسح QR';
+
+  @override
+  String get parentDashboardManualEntry => 'إدخال يدوي';
+
+  @override
+  String get parentDashboardNoRemoteChild =>
+      'لا يوجد طفل مرتبط عن بعد حتى الآن.';
+
+  @override
+  String parentDashboardRemoteChildSummary(int ayahs, int points) {
+    return '$ayahs آية • $points نقطة';
+  }
+
+  @override
+  String get parentDashboardRewardsTitle => 'مكافآت ولي الأمر';
+
+  @override
+  String get parentDashboardRewardHint => 'مثال: وقت لعب إضافي';
+
+  @override
+  String get parentDashboardRewardEmpty =>
+      'أضف مكافآت تظهر للطفل عند تحقيق هدفه الأسبوعي.';
+
+  @override
+  String get parentDashboardRewardLocked => 'مقفلة';
+
+  @override
+  String get parentDashboardRewardUnlocked => 'مفتوحة';
+
+  @override
+  String get parentDashboardRewardClaimed => 'تم استلامها';
+
+  @override
+  String get parentDashboardRecentSessions => 'آخر الجلسات';
+
+  @override
+  String get parentDashboardNoKidsSessions => 'لا توجد جلسات أطفال بعد.';
+
+  @override
+  String parentDashboardLogTitle(int surahId, int ayahNumber) {
+    return 'سورة $surahId • آية $ayahNumber';
+  }
+
+  @override
+  String parentDashboardLogSubtitle(int repeats, int points) {
+    return '$repeats تكرارات • $points نقطة';
   }
 }

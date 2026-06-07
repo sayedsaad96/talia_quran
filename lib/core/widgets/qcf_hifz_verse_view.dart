@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 
+import '../utils/quran_text_display_formatter.dart';
 import '../theme/app_colors.dart';
 
 // ─── Display Mode ─────────────────────────────────────────────────────────────
@@ -148,27 +149,17 @@ class QcfHifzVerseView extends StatelessWidget {
 
 // ─── Formatting Helpers ───────────────────────────────────────────────────────
 
-String _removeVerseEndGlyph(String verseText, int surahNumber, int verseNumber) {
-  String cleaned = verseText.replaceAll('\n', ' ').trim();
-  if (cleaned.isEmpty) return cleaned;
-  
+String _cleanVerseText(String verseText, int surahNumber, int verseNumber) {
+  var trailingMarker = '';
   try {
-    final endGlyph = qcf.getAyaNoQCFLite(surahNumber, verseNumber);
-    if (cleaned.endsWith(endGlyph)) {
-      cleaned = cleaned.substring(0, cleaned.length - endGlyph.length).trim();
-    }
+    trailingMarker = qcf.getAyaNoQCFLite(surahNumber, verseNumber);
   } catch (_) {
-    // If it fails, return as is
+    // Fall back to regex-only cleanup when the end marker cannot be resolved.
   }
-  return cleaned;
-}
-
-String _removeFallbackVerseNumber(String text) {
-  return text
-      .replaceAll('\n', ' ')
-      .trim()
-      .replaceAll(RegExp(r'[\u0660-\u0669\u06F0-\u06F9]+\s*$'), '')
-      .trim();
+  return QuranTextDisplayFormatter.cleanAyahForMemorization(
+    verseText,
+    trailingMarker: trailingMarker,
+  );
 }
 
 // ─── QCF Content ──────────────────────────────────────────────────────────────
@@ -207,7 +198,6 @@ class _QcfContent extends StatelessWidget {
       for (var verse = startVerse; verse <= endVerse; verse++) {
         final rawVerseText = qcf.getVerse(surahNumber, verse);
 
-
         // Guard: if QCF returns empty/null-like text, fall through to fallback.
         if (rawVerseText.isEmpty) {
           return _FallbackText(
@@ -218,7 +208,11 @@ class _QcfContent extends StatelessWidget {
           );
         }
 
-        final cleanedVerseText = _removeVerseEndGlyph(rawVerseText, surahNumber, verse);
+        final cleanedVerseText = _cleanVerseText(
+          rawVerseText,
+          surahNumber,
+          verse,
+        );
         spans.add(TextSpan(text: '$cleanedVerseText '));
       }
 
@@ -266,7 +260,9 @@ class _FallbackText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cleanedText = _removeFallbackVerseNumber(text);
+    final cleanedText = QuranTextDisplayFormatter.cleanAyahForMemorization(
+      text,
+    );
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Text(

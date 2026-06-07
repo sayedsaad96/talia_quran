@@ -31,11 +31,12 @@ class SurahListCubit extends Cubit<SurahListState> {
     }
     final qRaw = query.trim().toLowerCase();
     final qNormalized = ArabicNormalizer.normalize(query.trim());
-    
+
     final filtered = _allSurahs.where((s) {
       final surahNameNormalized = ArabicNormalizer.normalize(s.nameAr);
-      final matchAr = qNormalized.isNotEmpty && surahNameNormalized.contains(qNormalized);
-      
+      final matchAr =
+          qNormalized.isNotEmpty && surahNameNormalized.contains(qNormalized);
+
       return matchAr ||
           s.nameAr.contains(qRaw) ||
           s.nameEn.toLowerCase().contains(qRaw) ||
@@ -55,4 +56,3 @@ class SurahListCubit extends Cubit<SurahListState> {
     emit(current.copyWith(filtered: filtered, selectedJuz: juz));
   }
 }
-

@@ -1,14 +1,12 @@
 import 'dart:async';
 import 'dart:ui';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/constants/xp_constants.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
@@ -16,15 +14,12 @@ import '../../../../core/services/xp_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_cubit.dart';
-import '../../../../core/widgets/activity_heatmap.dart';
 import '../../../../core/widgets/state_widgets.dart';
-import '../../../../core/widgets/section_header.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
-import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../../streak/presentation/cubits/streak_cubit.dart';
 import '../cubits/home_cubit.dart';
@@ -86,6 +81,7 @@ class _HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isKids = state.isKids;
     return CustomScrollView(
       slivers: [
         // ─── Hero Header ─────────────────────────────────────────────────────
@@ -93,23 +89,8 @@ class _HomeContent extends StatelessWidget {
           child: _HeroHeader(state: state, isDark: isDark),
         ),
 
-        // ─── Streak & XP Row ─────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.lg,
-              AppSpacing.pagePadding,
-              0,
-            ),
-            child: _StreakXpRow(isDark: isDark),
-          ),
-        ),
-
         // ─── Sign-In Nudge Banner ───────────────────────────────────────────
         SliverToBoxAdapter(child: _SignInNudgeBanner(isDark: isDark)),
-
-        SliverToBoxAdapter(child: _StartHereStrip(isDark: isDark)),
 
         if (state.lastRestorableLocation != null)
           SliverToBoxAdapter(
@@ -123,21 +104,32 @@ class _HomeContent extends StatelessWidget {
               child: _ResumeSessionCard(
                 location: state.lastRestorableLocation!,
                 isDark: isDark,
+                isKids: isKids,
+              ),
+            ),
+          )
+        // Only show the "Next Best Action" card when there is no active
+        // restorable session. Showing both at once is redundant since both
+        // can point to the same memorization feature.
+        else
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.md,
+                AppSpacing.pagePadding,
+                0,
+              ),
+              child: _NextBestActionCard(
+                state: state,
+                isDark: isDark,
+                isKids: isKids,
               ),
             ),
           ),
 
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.md,
-              AppSpacing.pagePadding,
-              0,
-            ),
-            child: _NextBestActionCard(state: state, isDark: isDark),
-          ),
-        ),
+        if (state.lastRestorableLocation == null)
+          SliverToBoxAdapter(child: _TutorialPromptBanner(isDark: isDark)),
 
         // ─── Daily Wird Card ────────────────────────────────────────────────
         SliverToBoxAdapter(
@@ -159,34 +151,18 @@ class _HomeContent extends StatelessWidget {
               AppSpacing.pagePadding,
               AppSpacing.lg,
               AppSpacing.pagePadding,
-              AppSpacing.sm,
+              0,
             ),
-            child: SectionHeader(
-              title: context.l10n.overallProgress,
-              padding: EdgeInsets.zero,
-              action: GestureDetector(
-                onTap: () => context.go('/progress'),
-                child: Text(
-                  context.l10n.viewAll,
-                  style: AppTypography.labelMedium.copyWith(
-                    color: isDark ? AppColors.primaryLight : AppColors.primary,
-                  ),
-                ),
-              ),
+            child: _ProgressSection(
+              progress: state.progress,
+              isDark: isDark,
+              isKids: isKids,
+              kidsPoints: state.progress.kidsPoints,
             ),
           ),
         ),
 
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.pagePadding,
-            ),
-            child: _ProgressSection(progress: state.progress, isDark: isDark),
-          ),
-        ),
-
-        // ─── Azkar Shortcut ──────────────────────────────────────────────────
+        // ─── Quick Actions ───────────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -195,82 +171,9 @@ class _HomeContent extends StatelessWidget {
               AppSpacing.pagePadding,
               0,
             ),
-            child: _AzkarShortcutRow(isDark: isDark),
+            child: _QuickActionsGrid(isDark: isDark),
           ),
         ),
-
-        // ─── Active Custom Plan Card OR MemorizationPlus Card ────────────────
-        if (state.customPlan != null)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.lg,
-                AppSpacing.pagePadding,
-                0,
-              ),
-              child: _ActiveCustomPlanCard(
-                plan: state.customPlan!,
-                isDark: isDark,
-              ),
-            ),
-          )
-        else
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.lg,
-                AppSpacing.pagePadding,
-                0,
-              ),
-              child: _MemorizationPlusCard(isDark: isDark),
-            ),
-          ),
-
-        // ─── Parent Dashboard Shortcut (If Parent Mode / Kids Track) ──────────
-        if (state.selectedTrack == MemorizationTrack.kids || state.isParentMode)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.lg,
-                AppSpacing.pagePadding,
-                0,
-              ),
-              child: _ParentDashboardShortcutCard(isDark: isDark),
-            ),
-          ),
-
-        // ─── Activity Heatmap ─────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.sectionGap,
-              AppSpacing.pagePadding,
-              0,
-            ),
-            child: ActivityHeatmap(
-              activityCountsByDay: state.activityCountsByDay,
-              startDate: state.activityStartDate,
-            ),
-          ),
-        ),
-
-        // ─── Debug Certificate Preview (Debug Mode Only) ──────────────────
-        if (kDebugMode)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.lg,
-                AppSpacing.pagePadding,
-                0,
-              ),
-              child: _DebugCertificatePreview(isDark: isDark),
-            ),
-          ),
 
         // ─── Bottom padding (above nav bar) ──────────────────────────────────
         const SliverToBoxAdapter(child: SizedBox(height: 120)),

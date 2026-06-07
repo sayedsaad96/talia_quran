@@ -1,17 +1,16 @@
 part of 'home_page.dart';
 
-// ─── Hero Header ──────────────────────────────────────────────────────────────
-
 class _HeroHeader extends StatelessWidget {
   const _HeroHeader({required this.state, required this.isDark});
+
   final HomeLoaded state;
   final bool isDark;
 
-  String _greetingText(BuildContext ctx) => switch (state.greeting) {
-    'morning' => ctx.l10n.greetingMorning,
-    'afternoon' => ctx.l10n.greetingAfternoon,
-    'evening' => ctx.l10n.greetingEvening,
-    _ => ctx.l10n.greetingNight,
+  String _greetingText(BuildContext context) => switch (state.greeting) {
+    'morning' => context.l10n.greetingMorning,
+    'afternoon' => context.l10n.greetingAfternoon,
+    'evening' => context.l10n.greetingEvening,
+    _ => context.l10n.greetingNight,
   };
 
   IconData _greetingIcon() => switch (state.greeting) {
@@ -54,20 +53,6 @@ class _HeroHeader extends StatelessWidget {
               ),
             ),
           ),
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: const Alignment(-0.3, 0.05),
-                  radius: 0.92,
-                  colors: [
-                    AppColors.primaryLight.withValues(alpha: 0.28),
-                    Colors.transparent,
-                  ],
-                ),
-              ),
-            ),
-          ),
           SafeArea(
             bottom: false,
             child: Padding(
@@ -80,7 +65,6 @@ class _HeroHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ─── Top row ────────────────────────────────────────────────
                   Row(
                     children: [
                       Icon(
@@ -95,11 +79,11 @@ class _HeroHeader extends StatelessWidget {
                             final hasName =
                                 profileState is ProfileLoaded &&
                                 profileState.profile.hasName;
-                            final nameStr = hasName
+                            final name = hasName
                                 ? ', ${profileState.profile.displayName}'
                                 : '';
                             return Text(
-                              '${_greetingText(context)}$nameStr',
+                              '${_greetingText(context)}$name',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTypography.bodyMedium.copyWith(
@@ -117,28 +101,41 @@ class _HeroHeader extends StatelessWidget {
                       ),
                     ],
                   ).animate().fadeIn(duration: 350.ms),
-
                   const SizedBox(height: AppSpacing.md),
-
-                  // ─── App name + Bismillah ────────────────────────────────────
-                  Text(
-                    'تالية',
-                    style: AppTypography.displayMedium.copyWith(
-                      fontFamily: 'Amiri',
-                      color: Colors.white,
-                      fontWeight: FontWeight.w800,
-                      shadows: const [
-                        Shadow(
-                          color: Color(0x99000000),
-                          blurRadius: 18,
-                          offset: Offset(0, 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'تالية',
+                        style: AppTypography.displayMedium.copyWith(
+                          fontFamily: 'Amiri',
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          shadows: const [
+                            Shadow(
+                              color: Color(0x99000000),
+                              blurRadius: 18,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
-
+                      ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
+                      const SizedBox(width: 12),
+                      const Icon(
+                        Icons.menu_book_rounded,
+                        color: Colors.white,
+                        size: 38,
+                        shadows: [
+                          Shadow(
+                            color: Color(0x99000000),
+                            blurRadius: 18,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
+                      ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
+                    ],
+                  ),
                   const SizedBox(height: 2),
-
                   Text(
                     'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
                     style: AppTypography.bodySmall.copyWith(
@@ -148,63 +145,8 @@ class _HeroHeader extends StatelessWidget {
                     ),
                     textDirection: TextDirection.rtl,
                   ).animate().fadeIn(duration: 460.ms),
-
                   const SizedBox(height: AppSpacing.lg),
-
-                  // ─── Achievement Badges ──────────────────────────────────
-                  Builder(
-                    builder: (context) {
-                      final readingAchievements = state.progress.achievements
-                          .where(
-                            (a) =>
-                                a.isUnlocked &&
-                                a.category == AchievementCategory.reading,
-                          );
-                      final memAchievements = state.progress.achievements.where(
-                        (a) =>
-                            a.isUnlocked &&
-                            a.category == AchievementCategory.memorization,
-                      );
-
-                      final highestReading = readingAchievements.isNotEmpty
-                          ? readingAchievements.last
-                          : null;
-                      final highestMem = memAchievements.isNotEmpty
-                          ? memAchievements.last
-                          : null;
-
-                      return Wrap(
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          if (highestReading != null)
-                            _AchievementBadge(
-                                  achievement: highestReading,
-                                  isDark: true,
-                                )
-                                .animate()
-                                .fadeIn(duration: 300.ms)
-                                .slideY(begin: 0.04),
-                          if (highestMem != null)
-                            _AchievementBadge(
-                                  achievement: highestMem,
-                                  isDark: true,
-                                )
-                                .animate()
-                                .fadeIn(duration: 350.ms)
-                                .slideY(begin: 0.04),
-                          if (highestReading == null && highestMem == null)
-                            const _AchievementBadge(
-                                  achievement: null,
-                                  isDark: true,
-                                )
-                                .animate()
-                                .fadeIn(duration: 300.ms)
-                                .slideY(begin: 0.04),
-                        ],
-                      );
-                    },
-                  ),
+                  _AchievementRow(progress: state.progress),
                 ],
               ),
             ),
@@ -231,13 +173,9 @@ class _HeroIconButton extends StatelessWidget {
           color: Colors.white.withValues(alpha: 0.1),
           child: InkWell(
             onTap: onTap,
-            child: Container(
+            child: SizedBox(
               width: 42,
               height: 42,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-              ),
               child: Icon(
                 icon,
                 color: Colors.white.withValues(alpha: 0.82),
@@ -251,96 +189,102 @@ class _HeroIconButton extends StatelessWidget {
   }
 }
 
+class _AchievementRow extends StatelessWidget {
+  const _AchievementRow({required this.progress});
+
+  final OverallProgress progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final readingAchievements = progress.achievements.where(
+      (a) => a.isUnlocked && a.category == AchievementCategory.reading,
+    );
+    final memAchievements = progress.achievements.where(
+      (a) => a.isUnlocked && a.category == AchievementCategory.memorization,
+    );
+    final highestReading = readingAchievements.isNotEmpty
+        ? readingAchievements.last
+        : null;
+    final highestMem = memAchievements.isNotEmpty ? memAchievements.last : null;
+
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.sm,
+      children: [
+        if (highestReading != null)
+          _AchievementBadge(achievement: highestReading, isDark: true),
+        if (highestMem != null)
+          _AchievementBadge(achievement: highestMem, isDark: true),
+        if (highestReading == null && highestMem == null)
+          const _AchievementBadge(achievement: null, isDark: true),
+      ],
+    );
+  }
+}
+
 class _AchievementBadge extends StatelessWidget {
   const _AchievementBadge({required this.achievement, required this.isDark});
+
   final Achievement? achievement;
   final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    String badgeTitle = context.l10n.levelBeginner;
-    IconData badgeIcon = Icons.stars_rounded;
-    Color badgeColor = const Color(0xFFC0C0C0); // Silver for default
+    String title = context.l10n.levelBeginner;
+    IconData icon = Icons.stars_rounded;
+    Color color = const Color(0xFFC0C0C0);
     String categoryLabel = '';
 
     if (achievement != null) {
       final best = achievement!;
-      badgeTitle = context.localizedAchievementTitle(best);
-
-      // Determine color, icon, and label based on category
+      title = context.localizedAchievementTitle(best);
       if (best.category == AchievementCategory.memorization) {
-        badgeColor = const Color(0xFFFFD700); // Gold for memorization
-        badgeIcon = Icons.workspace_premium_rounded;
+        color = const Color(0xFFFFD700);
+        icon = Icons.workspace_premium_rounded;
         categoryLabel = context.l10n.memorization;
       } else {
-        badgeColor = const Color(0xFF82C8E5); // Light blue/cyan for reading
-        badgeIcon = Icons.menu_book_rounded;
+        color = const Color(0xFF82C8E5);
+        icon = Icons.menu_book_rounded;
         categoryLabel = context.l10n.reading;
-      }
-
-      // Special override for highest achievements
-      if (best.id == 'full_quran_read' || best.id == 'full_quran_memorized') {
-        badgeColor = const Color(0xFFE5C158); // Premium gold
-        badgeIcon = Icons.diamond_rounded;
       }
     }
 
     return GestureDetector(
       onTap: () {
-        // C01 FIX: Show real certificates instead of dummy data
-        final earnedCerts = getIt<AchievementService>().getEarnedCertificates();
-        if (earnedCerts.isEmpty) {
-          // No certificates yet — go to progress page
-          context.go('/progress');
+        final certs = getIt<AchievementService>().getEarnedCertificates();
+        if (certs.isEmpty) {
+          context.go(AppRoutes.progress);
           return;
         }
-        final latestAward = earnedCerts.first; // sorted by date desc
         context.push(
-          '/certificate',
+          AppRoutes.certificate,
           extra: {
-            'award': latestAward,
+            'award': certs.first,
             'userName': context.read<ProfileCubit>().state is ProfileLoaded
                 ? (context.read<ProfileCubit>().state as ProfileLoaded)
                       .profile
                       .displayName
-                : (context.l10n.taliaUser),
+                : context.l10n.taliaUser,
           },
         );
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              badgeColor.withValues(alpha: 0.25),
-              badgeColor.withValues(alpha: 0.05),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: color.withValues(alpha: 0.14),
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          border: Border.all(
-            color: badgeColor.withValues(alpha: 0.4),
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: badgeColor.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(badgeIcon, color: badgeColor, size: 24),
+            Icon(icon, color: color, size: 24),
             const SizedBox(width: 8),
             if (categoryLabel.isNotEmpty) ...[
               Text(
                 categoryLabel,
                 style: AppTypography.titleSmall.copyWith(
-                  color: badgeColor.withValues(alpha: 0.9),
+                  color: color.withValues(alpha: 0.9),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -348,13 +292,13 @@ class _AchievementBadge extends StatelessWidget {
                 margin: const EdgeInsets.symmetric(horizontal: 8),
                 height: 16,
                 width: 1.5,
-                color: badgeColor.withValues(alpha: 0.4),
+                color: color.withValues(alpha: 0.4),
               ),
             ],
             Text(
-              badgeTitle,
+              title,
               style: AppTypography.titleMedium.copyWith(
-                color: badgeColor,
+                color: color,
                 fontWeight: FontWeight.w800,
                 fontSize: 16,
               ),
@@ -366,10 +310,9 @@ class _AchievementBadge extends StatelessWidget {
   }
 }
 
-// ─── Daily Wird Card ──────────────────────────────────────────────────────────
-
 class _DailyWirdCard extends StatelessWidget {
   const _DailyWirdCard({required this.state, required this.isDark});
+
   final HomeLoaded state;
   final bool isDark;
 
@@ -398,18 +341,9 @@ class _DailyWirdCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [const Color(0xFF1A2A1A), const Color(0xFF0D1A12)]
-                : [const Color(0xFFE8F5EF), const Color(0xFFD4EDE0)],
-          ),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.2),
-            width: 1,
-          ),
+          color: isDark ? AppColors.darkCard : AppColors.lightCard,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [
@@ -455,8 +389,10 @@ class _DailyWirdCard extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
+            Icon(
+              context.isArabic
+                  ? Icons.arrow_back_ios_new_rounded
+                  : Icons.arrow_forward_ios_rounded,
               size: 14,
               color: AppColors.primary,
             ),
@@ -467,232 +403,188 @@ class _DailyWirdCard extends StatelessWidget {
   }
 }
 
-// ─── Progress Section ──────────────────────────────────────────────────────────
-
 class _ProgressSection extends StatelessWidget {
-  const _ProgressSection({required this.progress, required this.isDark});
+  const _ProgressSection({
+    required this.progress,
+    required this.isDark,
+    this.isKids = false,
+    this.kidsPoints = 0,
+  });
+
   final OverallProgress progress;
   final bool isDark;
+  final bool isKids;
+  final int kidsPoints;
 
   @override
   Widget build(BuildContext context) {
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
-
-    return Column(
-      children: [
-        // ── Streak pill ─────────────────────────────────────────────
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF8C42), Color(0xFFFF6B00)],
-            ),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFFF8C42).withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.local_fire_department_rounded,
-                color: Colors.white,
-                size: 22,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                '${progress.streakDays}',
-                style: AppTypography.titleLarge.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                context.l10n.days,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Text(
-                context.l10n.streak,
-                style: AppTypography.bodySmall.copyWith(
-                  color: Colors.white.withValues(alpha: 0.7),
-                ),
-              ),
-            ],
-          ),
-        ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.03),
-
-        const SizedBox(height: AppSpacing.md),
-
-        // ── Two progress cards side by side ─────────────────────────
-        Row(
-          children: [
-            // Reading card
-            Expanded(
-              child: _MiniProgressCard(
-                icon: Icons.menu_book_rounded,
-                iconColor: AppColors.primary,
-                gradientColors: isDark
-                    ? [const Color(0xFF0D2818), const Color(0xFF0A1F14)]
-                    : [const Color(0xFFE8F5EF), const Color(0xFFD4EDE0)],
-                title: context.l10n.reading,
-                value: progress.readPagesCount,
-                total: progress.totalQuranPages,
-                unit: context.l10n.page,
-                isDark: isDark,
-                surface: surface,
-                border: border,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            // Memorization card
-            Expanded(
-              child: _MiniProgressCard(
-                icon: Icons.auto_stories_rounded,
-                iconColor: const Color(0xFF2D5A8E),
-                gradientColors: isDark
-                    ? [const Color(0xFF0D1A2E), const Color(0xFF0A1422)]
-                    : [const Color(0xFFE8EEF5), const Color(0xFFD4DEE8)],
-                title: context.l10n.hifz,
-                value: progress.memorizedAyahs,
-                total: progress.totalAyahs,
-                unit: context.l10n.ayah,
-                isDark: isDark,
-                surface: surface,
-                border: border,
-              ),
-            ),
-          ],
-        ).animate().fadeIn(duration: 250.ms, delay: 100.ms),
-      ],
-    );
-  }
-}
-
-class _MiniProgressCard extends StatelessWidget {
-  const _MiniProgressCard({
-    required this.icon,
-    required this.iconColor,
-    required this.gradientColors,
-    required this.title,
-    required this.value,
-    required this.total,
-    required this.unit,
-    required this.isDark,
-    required this.surface,
-    required this.border,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final List<Color> gradientColors;
-  final String title;
-  final int value;
-  final int total;
-  final String unit;
-  final bool isDark;
-  final Color surface;
-  final Color border;
-
-  @override
-  Widget build(BuildContext context) {
-    final pct = total == 0 ? 0.0 : (value / total).clamp(0.0, 1.0);
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final progressPercent = isKids && kidsPoints > 0
+        ? (progress.kidsStars / 5).clamp(0.0, 1.0)
+        : progress.quranPercentage;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: gradientColors,
-        ),
+        color: surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(color: border, width: 0.5),
+      ),
+      child: FutureBuilder<int>(
+        future: getIt<XpService>().getTotalXp(),
+        builder: (context, snapshot) {
+          final totalXp = snapshot.data ?? 0;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    isKids ? Icons.stars_rounded : Icons.insights_rounded,
+                    color: primary,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      isKids
+                          ? (context.isArabic ? 'تقدم الطفل' : 'Kids Progress')
+                          : (context.isArabic ? 'تقدمك' : 'Your Progress'),
+                      style: AppTypography.titleMedium.copyWith(
+                        color: textColor,
+                        fontFamily: 'Amiri',
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${(progressPercent * 100).toStringAsFixed(0)}%',
+                    style: AppTypography.titleSmall.copyWith(
+                      color: primary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                child: LinearProgressIndicator(
+                  value: progressPercent,
+                  minHeight: 8,
+                  backgroundColor: primary.withValues(alpha: 0.12),
+                  valueColor: AlwaysStoppedAnimation<Color>(primary),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Row(
+                children: [
+                  Expanded(
+                    child: _ProgressMetricPill(
+                      label: isKids
+                          ? (context.isArabic ? 'النقاط' : 'Points')
+                          : context.l10n.reading,
+                      value: isKids
+                          ? '$kidsPoints'
+                          : '${progress.readPagesCount}/${progress.totalQuranPages}',
+                      icon: isKids
+                          ? Icons.emoji_events_rounded
+                          : Icons.menu_book_rounded,
+                      color: primary,
+                      isDark: isDark,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: _ProgressMetricPill(
+                      label: isKids
+                          ? (context.isArabic ? 'النجوم' : 'Stars')
+                          : context.l10n.hifz,
+                      value: isKids
+                          ? '${progress.kidsStars}/5'
+                          : '${progress.memorizedAyahs}/${progress.totalAyahs}',
+                      icon: isKids
+                          ? Icons.star_rounded
+                          : Icons.auto_stories_rounded,
+                      color: const Color(0xFF2D5A8E),
+                      isDark: isDark,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: _ProgressMetricPill(
+                      label: 'XP',
+                      value: '$totalXp',
+                      icon: Icons.bolt_rounded,
+                      color: const Color(0xFFFF8C42),
+                      isDark: isDark,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
+    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+  }
+}
+
+class _ProgressMetricPill extends StatelessWidget {
+  const _ProgressMetricPill({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.isDark,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: color.withValues(alpha: 0.16)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header row
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(icon, color: iconColor, size: 18),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTypography.labelMedium.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Big number
+          Icon(icon, color: color, size: 18),
+          const SizedBox(height: 6),
           Text(
-            '$value',
-            style: AppTypography.displaySmall.copyWith(
-              color: iconColor,
-              fontWeight: FontWeight.w700,
-              fontSize: 28,
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.titleSmall.copyWith(
+              color: textColor,
+              fontWeight: FontWeight.w800,
             ),
           ),
           Text(
-            context.l10n.miniProgressOf(total, unit),
-            style: AppTypography.labelSmall.copyWith(
-              color: isDark
-                  ? AppColors.darkTextSecondary
-                  : AppColors.lightTextSecondary,
-              fontSize: 10,
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.sm),
-
-          // Progress bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-            child: LinearProgressIndicator(
-              value: pct,
-              backgroundColor: iconColor.withValues(alpha: 0.1),
-              valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-              minHeight: 5,
-            ),
-          ),
-
-          const SizedBox(height: 4),
-
-          // Percentage
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: Text(
-              '${(pct * 100).toStringAsFixed(1)}%',
-              style: AppTypography.labelSmall.copyWith(
-                color: iconColor,
-                fontWeight: FontWeight.w600,
-                fontSize: 10,
-              ),
-            ),
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.labelSmall.copyWith(color: subTextColor),
           ),
         ],
       ),
@@ -700,564 +592,141 @@ class _MiniProgressCard extends StatelessWidget {
   }
 }
 
-// ─── Azkar Shortcut Row ───────────────────────────────────────────────────────
+class _QuickActionsGrid extends StatelessWidget {
+  const _QuickActionsGrid({required this.isDark});
 
-class _AzkarShortcutRow extends StatelessWidget {
-  const _AzkarShortcutRow({required this.isDark});
   final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: AppSpacing.sm,
+      mainAxisSpacing: AppSpacing.sm,
+      childAspectRatio: 1.65,
       children: [
-        SectionHeader(
-          title: context.l10n.azkar,
-          padding: EdgeInsets.zero,
-          action: GestureDetector(
-            onTap: () => context.go('/azkar'),
-            child: Text(
-              context.l10n.viewAll,
-              style: AppTypography.labelMedium.copyWith(
-                color: isDark ? AppColors.primaryLight : AppColors.primary,
-              ),
-            ),
-          ),
+        _QuickActionButton(
+          icon: Icons.menu_book_rounded,
+          title: context.isArabic ? 'القرآن' : 'Quran',
+          subtitle: context.isArabic ? 'اقرأ وردك' : 'Read today',
+          color: AppColors.primary,
+          route: AppRoutes.quran,
+          isDark: isDark,
         ),
-        const SizedBox(height: AppSpacing.md),
-        Row(
+        _QuickActionButton(
+          icon: Icons.psychology_alt_rounded,
+          title: context.isArabic ? 'خطة اليوم' : "Today's Plan",
+          subtitle: context.isArabic ? 'تابع حفظك' : "Continue today's plan",
+          color: const Color(0xFF2D5A8E),
+          route: AppRoutes.memorizationHub,
+          isDark: isDark,
+        ),
+        _QuickActionButton(
+          icon: Icons.insights_rounded,
+          title: context.isArabic ? 'التقدم' : 'Progress',
+          subtitle: context.isArabic ? 'راجع إنجازك' : 'Review gains',
+          color: const Color(0xFFFF8C42),
+          route: AppRoutes.progress,
+          isDark: isDark,
+        ),
+        _QuickActionButton(
+          icon: Icons.settings_rounded,
+          title: context.isArabic ? 'الإعدادات' : 'Settings',
+          subtitle: context.isArabic ? 'خصص تجربتك' : 'Tune app',
+          color: const Color(0xFF6C3483),
+          route: AppRoutes.settings,
+          isDark: isDark,
+        ),
+      ],
+    ).animate().fadeIn(duration: 250.ms, delay: 120.ms);
+  }
+}
+
+class _QuickActionButton extends StatelessWidget {
+  const _QuickActionButton({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.route,
+    required this.isDark,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final String route;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return InkWell(
+      onTap: () => context.push(route),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkCard : AppColors.lightCard,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(color: color.withValues(alpha: 0.18)),
+        ),
+        child: Row(
           children: [
-            Expanded(
-              child: _AzkarShortcut(
-                label: context.l10n.morningAzkar,
-                icon: Icons.wb_sunny_rounded,
-                route: '/azkar/morning',
-                colors: const [Color(0xFFFF8C42), Color(0xFFFF6B00)],
-                isDark: isDark,
-                delay: 0,
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
+              child: Icon(icon, color: color, size: 22),
             ),
             const SizedBox(width: AppSpacing.sm),
             Expanded(
-              child: _AzkarShortcut(
-                label: context.l10n.eveningAzkar,
-                icon: Icons.nightlight_round,
-                route: '/azkar/evening',
-                colors: const [Color(0xFF2D5A8E), Color(0xFF1A3A5C)],
-                isDark: isDark,
-                delay: 80,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.titleSmall.copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: subTextColor,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
         ),
-      ],
+      ),
     );
   }
 }
-
-class _AzkarShortcut extends StatelessWidget {
-  const _AzkarShortcut({
-    required this.label,
-    required this.icon,
-    required this.route,
-    required this.colors,
-    required this.isDark,
-    required this.delay,
-  });
-
-  final String label;
-  final IconData icon;
-  final String route;
-  final List<Color> colors;
-  final bool isDark;
-  final int delay;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push(route),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 80),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: colors,
-            ),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            boxShadow: [
-              BoxShadow(
-                color: colors[0].withValues(alpha: 0.25),
-                blurRadius: 12,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: AppSpacing.md,
-              horizontal: AppSpacing.sm,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, color: Colors.white, size: 22),
-                const SizedBox(width: 8),
-                Text(
-                  label,
-                  style: AppTypography.titleMedium.copyWith(
-                    color: Colors.white,
-                    fontFamily: 'Amiri',
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.03, end: 0);
-  }
-}
-
-// ─── MemorizationPlus Card (Entry Point) ─────────────────────────────────────
-
-class _MemorizationPlusCard extends StatelessWidget {
-  const _MemorizationPlusCard({required this.isDark});
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push(AppRoutes.memorizationPlus),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1A3A5C), Color(0xFF1A6B5A)],
-          ),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.25),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              ),
-              child: const Icon(
-                Icons.psychology_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.l10n.smartMemorization,
-                    style: AppTypography.titleLarge.copyWith(
-                      color: Colors.white,
-                      fontFamily: 'Amiri',
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    context.l10n.smartMemorizationSubtitle,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: Colors.white70,
-                      fontFamily: 'Amiri',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              color: Colors.white54,
-              size: 16,
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.03, end: 0);
-  }
-}
-
-// ─── Active Custom Plan Card ─────────────────────────────────────────────────
-
-class _ActiveCustomPlanCard extends StatelessWidget {
-  const _ActiveCustomPlanCard({required this.plan, required this.isDark});
-  final CustomMemorizationPlan plan;
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context
-          .push('/memorization-plus/daily-plan?surahId=${plan.startSurahId}')
-          .then((_) {
-            if (context.mounted) {
-              context.read<HomeCubit>().load();
-            }
-          }),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF6C3483).withValues(alpha: 0.9),
-              AppColors.primary.withValues(alpha: 0.8),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF6C3483).withValues(alpha: 0.25),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.menu_book_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    plan.name,
-                    style: AppTypography.titleLarge.copyWith(
-                      color: Colors.white,
-                      fontFamily: 'Amiri',
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    context.l10n.dailyPlanSummary(
-                      plan.newAyahsPerDay,
-                      plan.sessionMinutes,
-                    ),
-                    style: AppTypography.bodySmall.copyWith(
-                      color: Colors.white70,
-                      fontFamily: 'Amiri',
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              ),
-              child: Text(
-                context.l10n.continueMemorizing,
-                style: AppTypography.labelSmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.03, end: 0);
-  }
-}
-
-// ─── Streak & XP Row ──────────────────────────────────────────────────────────
-
-class _StreakXpRow extends StatelessWidget {
-  const _StreakXpRow({required this.isDark});
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        // ─── Streak Card ─────────────────────────────────────────────
-        Expanded(
-          child: BlocBuilder<StreakCubit, StreakState>(
-            builder: (context, state) {
-              int currentStreak = 0;
-              int longestStreak = 0;
-              if (state is StreakLoaded) {
-                currentStreak = state.streak.currentStreak;
-                longestStreak = state.streak.longestStreak;
-              }
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : Colors.white,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(
-                    color: currentStreak > 0
-                        ? const Color(0xFFF59E0B).withValues(alpha: 0.4)
-                        : (isDark ? Colors.white12 : Colors.black12),
-                  ),
-                  boxShadow: [
-                    if (!isDark)
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          currentStreak > 0 ? '🔥' : '❄️',
-                          style: const TextStyle(fontSize: 24),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          '$currentStreak',
-                          style: AppTypography.headlineMedium.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: currentStreak > 0
-                                ? const Color(0xFFF59E0B)
-                                : (isDark ? Colors.white54 : Colors.black38),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.l10n.consecutiveDays,
-                      style: AppTypography.labelSmall.copyWith(
-                        color: isDark ? Colors.white60 : Colors.black54,
-                      ),
-                    ),
-                    if (longestStreak > 0) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        context.l10n.bestStreak(longestStreak),
-                        style: AppTypography.labelSmall.copyWith(
-                          color: isDark ? Colors.white38 : Colors.black38,
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ).animate().fadeIn(duration: 200.ms).slideX(begin: -0.02);
-            },
-          ),
-        ),
-
-        const SizedBox(width: AppSpacing.md),
-
-        // ─── XP Card ─────────────────────────────────────────────────
-        Expanded(
-          child: FutureBuilder<int>(
-            future: getIt<XpService>().getTotalXp(),
-            builder: (context, snapshot) {
-              final totalXp = snapshot.data ?? 0;
-              final xpService = getIt<XpService>();
-              final level = xpService.getCurrentLevel(totalXp);
-              const levels = XpConstants.levels;
-              final currentIdx = levels.indexWhere((l) => l.name == level.name);
-              final nextLevel = currentIdx < levels.length - 1
-                  ? levels[currentIdx + 1]
-                  : null;
-              final progress = nextLevel != null
-                  ? ((totalXp - level.minXp) / (nextLevel.minXp - level.minXp))
-                        .clamp(0.0, 1.0)
-                  : 1.0;
-              return Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCard : Colors.white,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(
-                    color: isDark ? Colors.white12 : Colors.black12,
-                  ),
-                  boxShadow: [
-                    if (!isDark)
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(level.icon, style: const TextStyle(fontSize: 24)),
-                        const SizedBox(width: 8),
-                        Text(
-                          context.localizeLevelName(level.name),
-                          style: AppTypography.headlineSmall.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? Colors.white : Colors.black87,
-                            fontFamily: 'Amiri',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '$totalXp ${context.l10n.points}',
-                      style: AppTypography.labelSmall.copyWith(
-                        color: isDark ? Colors.white60 : Colors.black54,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        minHeight: 4,
-                        backgroundColor: isDark
-                            ? Colors.white12
-                            : Colors.black12,
-                        valueColor: AlwaysStoppedAnimation(
-                          Color(level.colorHex),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ).animate().fadeIn(duration: 200.ms).slideX(begin: 0.02);
-            },
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Parent Dashboard Shortcut Card ──────────────────────────────────────────
-
-class _ParentDashboardShortcutCard extends StatelessWidget {
-  const _ParentDashboardShortcutCard({required this.isDark});
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('${AppRoutes.parentDashboard}?surahId=1'),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : Colors.white,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          border: Border.all(
-            color: const Color(0xFF2D8E4C).withValues(alpha: 0.2),
-          ),
-          boxShadow: [
-            if (!isDark)
-              BoxShadow(
-                color: const Color(0xFF2D8E4C).withValues(alpha: 0.08),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2D8E4C).withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.family_restroom_rounded,
-                color: Color(0xFF2D8E4C),
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    context.l10n.parentDashboardTitle,
-                    style: AppTypography.titleLarge.copyWith(
-                      color: isDark ? Colors.white : Colors.black87,
-                      fontFamily: 'Amiri',
-                      fontWeight: FontWeight.w700,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    context.l10n.parentDashboardCardSubtitle,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: isDark ? Colors.white70 : Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2D8E4C).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              ),
-              child: Text(
-                context.l10n.viewDashboard,
-                style: AppTypography.labelSmall.copyWith(
-                  color: const Color(0xFF2D8E4C),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.03, end: 0);
-  }
-}
-
-// ─── Sign-In Nudge Banner ──────────────────────────────────────────────────────
 
 class _SignInNudgeBanner extends StatefulWidget {
   const _SignInNudgeBanner({required this.isDark});
+
   final bool isDark;
 
   @override
@@ -1276,8 +745,8 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
   }
 
   Future<void> _checkDismissed() async {
-    final prefs = getIt<SharedPreferences>();
-    final dismissed = prefs.getBool(_dismissedKey) ?? false;
+    final dismissed =
+        getIt<SharedPreferences>().getBool(_dismissedKey) ?? false;
     if (mounted) {
       setState(() {
         _dismissed = dismissed;
@@ -1287,8 +756,7 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
   }
 
   Future<void> _dismiss() async {
-    final prefs = getIt<SharedPreferences>();
-    await prefs.setBool(_dismissedKey, true);
+    await getIt<SharedPreferences>().setBool(_dismissedKey, true);
     if (mounted) setState(() => _dismissed = true);
   }
 
@@ -1296,293 +764,91 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
   Widget build(BuildContext context) {
     if (!_loaded || _dismissed) return const SizedBox.shrink();
 
-    // Only show if user is not signed in
     return BlocBuilder<AuthCubit, AuthState>(
       builder: (context, authState) {
         if (authState is AuthAuthenticated) return const SizedBox.shrink();
 
-        // Only show if user has made some progress (streak > 0 or XP > 0)
-        return BlocBuilder<StreakCubit, StreakState>(
-          builder: (context, streakState) {
-            final hasProgress =
-                streakState is StreakLoaded &&
-                streakState.streak.currentStreak > 0;
+        final primary = widget.isDark
+            ? AppColors.primaryLight
+            : AppColors.primary;
+        final textColor = widget.isDark
+            ? AppColors.darkTextPrimary
+            : AppColors.lightTextPrimary;
+        final subTextColor = widget.isDark
+            ? AppColors.darkTextSecondary
+            : AppColors.lightTextSecondary;
 
-            if (!hasProgress) return const SizedBox.shrink();
-
-            final primary = widget.isDark
-                ? AppColors.primaryLight
-                : AppColors.primary;
-
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.md,
-                AppSpacing.pagePadding,
-                0,
-              ),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      primary.withValues(alpha: 0.12),
-                      primary.withValues(alpha: 0.06),
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.pagePadding,
+            AppSpacing.md,
+            AppSpacing.pagePadding,
+            0,
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(color: primary.withValues(alpha: 0.18)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.account_circle_rounded, color: primary, size: 26),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.isArabic
+                            ? 'إدارة الحساب'
+                            : 'Manage your account',
+                        style: AppTypography.titleSmall.copyWith(
+                          color: textColor,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      Text(
+                        context.isArabic
+                            ? 'سجّل الدخول للوصول إلى خيارات الحساب والاستعادة.'
+                            : 'Sign in for account and recovery options.',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: subTextColor,
+                        ),
+                      ),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: primary.withValues(alpha: 0.25)),
                 ),
-                child: Row(
-                  children: [
-                    // Cloud icon
-                    Container(
-                      width: 40,
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: primary.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.cloud_upload_rounded,
-                        color: primary,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // Text
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            context.l10n.backupProgressTitle,
-                            style: AppTypography.labelMedium.copyWith(
-                              color: widget.isDark
-                                  ? AppColors.darkTextPrimary
-                                  : AppColors.lightTextPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          Text(
-                            context.l10n.backupProgressDesc,
-                            style: AppTypography.labelSmall.copyWith(
-                              color: widget.isDark
-                                  ? AppColors.darkTextSecondary
-                                  : AppColors.lightTextSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // Action + Dismiss
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        GestureDetector(
-                          onTap: () => context.push(AppRoutes.settings),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: primary,
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusSm,
-                              ),
-                            ),
-                            child: Text(
-                              context.l10n.signIn,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        GestureDetector(
-                          onTap: _dismiss,
-                          child: Text(
-                            context.l10n.later,
-                            style: AppTypography.labelSmall.copyWith(
-                              color: widget.isDark
-                                  ? AppColors.darkTextHint
-                                  : AppColors.lightTextHint,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                TextButton(
+                  onPressed: () => context.push(AppRoutes.settings),
+                  child: Text(context.l10n.signIn),
                 ),
-              ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.05),
-            );
-          },
-        );
-      },
-    );
-  }
-}
-
-// ─── Debug Certificate Preview (Debug Mode Only) ──────────────────────────────
-
-class _DebugCertificatePreview extends StatelessWidget {
-  const _DebugCertificatePreview({required this.isDark});
-  final bool isDark;
-
-  @override
-  Widget build(BuildContext context) {
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        border: Border.all(
-          color: Colors.orange.withValues(alpha: 0.5),
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.bug_report_rounded,
-                color: Colors.orange,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                context.l10n.debugCertificatePreview,
-                style: AppTypography.titleSmall.copyWith(
-                  color: Colors.orange,
-                  fontWeight: FontWeight.bold,
+                IconButton(
+                  onPressed: _dismiss,
+                  icon: Icon(Icons.close_rounded, color: subTextColor),
+                  tooltip: context.l10n.later,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Text(
-            context.l10n.debugCertificatePreviewDesc,
-            style: AppTypography.bodySmall.copyWith(
-              color: textColor.withValues(alpha: 0.7),
+              ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Wrap(
-            spacing: AppSpacing.sm,
-            runSpacing: AppSpacing.sm,
-            children: [
-              _debugCertButton(
-                context,
-                context.l10n.debugCertJuz30,
-                CertificateType.juz,
-                juzNumber: 30,
-              ),
-              _debugCertButton(
-                context,
-                context.l10n.debugCertSurahBaqarah,
-                CertificateType.surah,
-                surahId: 2,
-                surahNameAr: 'البقرة',
-              ),
-              _debugCertButton(
-                context,
-                context.l10n.debugCertHalfQuran,
-                CertificateType.halfQuran,
-              ),
-              _debugCertButton(
-                context,
-                context.l10n.debugCertFullQuran,
-                CertificateType.fullQuran,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _debugCertButton(
-    BuildContext context,
-    String label,
-    CertificateType type, {
-    int? juzNumber,
-    int? surahId,
-    String? surahNameAr,
-  }) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.orange.withValues(alpha: 0.15),
-        foregroundColor: Colors.orange,
-        elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      ),
-      onPressed: () {
-        final userName = context.read<ProfileCubit>().state is ProfileLoaded
-            ? (context.read<ProfileCubit>().state as ProfileLoaded)
-                  .profile
-                  .displayName
-            : context.l10n.taliaUser;
-
-        final debugAward = CertificateAward(
-          id: 'debug_${type.name}',
-          titleAr: _debugTitle(type, juzNumber, surahNameAr),
-          type: type,
-          earnedAt: DateTime.now(),
-          juzNumber: juzNumber,
-          surahId: surahId,
-          surahNameAr: surahNameAr,
-        );
-
-        context.push(
-          '/certificate',
-          extra: {'award': debugAward, 'userName': userName},
+          ).animate().fadeIn(duration: 250.ms).slideY(begin: -0.03),
         );
       },
-      child: Text(label, style: const TextStyle(fontSize: 12)),
     );
-  }
-
-  String _debugTitle(
-    CertificateType type,
-    int? juzNumber,
-    String? surahNameAr,
-  ) {
-    return switch (type) {
-      CertificateType.juz => 'شهادة حفظ الجزء ${juzNumber ?? 1}',
-      CertificateType.surah => 'شهادة حفظ سورة ${surahNameAr ?? 'البقرة'}',
-      CertificateType.halfQuran => 'شهادة حفظ نصف القرآن الكريم',
-      CertificateType.fullQuran => 'شهادة ختم القرآن الكريم كاملاً',
-    };
   }
 }
 
-// ─── Continue Reading Chip ────────────────────────────────────────────────────
+class _TutorialPromptBanner extends StatefulWidget {
+  const _TutorialPromptBanner({required this.isDark});
 
-class _StartHereStrip extends StatefulWidget {
-  const _StartHereStrip({required this.isDark});
   final bool isDark;
 
   @override
-  State<_StartHereStrip> createState() => _StartHereStripState();
+  State<_TutorialPromptBanner> createState() => _TutorialPromptBannerState();
 }
 
-class _StartHereStripState extends State<_StartHereStrip> {
-  static const _skippedKey = 'onboarding_skipped';
-  static const _completedKey = 'first_action_completed';
+class _TutorialPromptBannerState extends State<_TutorialPromptBanner> {
+  static const _seenKey = 'home_tutorial_prompt_seen';
   bool _visible = false;
   bool _loaded = false;
 
@@ -1593,27 +859,31 @@ class _StartHereStripState extends State<_StartHereStrip> {
   }
 
   Future<void> _load() async {
-    final prefs = getIt<SharedPreferences>();
-    final skipped = prefs.getBool(_skippedKey) ?? false;
-    final completed = prefs.getBool(_completedKey) ?? false;
+    final seen = getIt<SharedPreferences>().getBool(_seenKey) ?? false;
     if (mounted) {
       setState(() {
-        _visible = skipped && !completed;
+        _visible = !seen;
         _loaded = true;
       });
     }
   }
 
-  Future<void> _completeAndGo(String route) async {
-    await getIt<SharedPreferences>().setBool(_completedKey, true);
+  Future<void> _dismiss() async {
+    await getIt<SharedPreferences>().setBool(_seenKey, true);
+    if (mounted) setState(() => _visible = false);
+  }
+
+  Future<void> _openGuide() async {
+    await getIt<SharedPreferences>().setBool(_seenKey, true);
     if (!mounted) return;
     setState(() => _visible = false);
-    unawaited(context.push(route));
+    await context.push(AppRoutes.tutorialGuide);
   }
 
   @override
   Widget build(BuildContext context) {
     if (!_loaded || !_visible) return const SizedBox.shrink();
+
     final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
     final textColor = widget.isDark
         ? AppColors.darkTextPrimary
@@ -1625,116 +895,237 @@ class _StartHereStripState extends State<_StartHereStrip> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pagePadding,
-        AppSpacing.md,
+        AppSpacing.sm,
         AppSpacing.pagePadding,
         0,
       ),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: primary.withValues(alpha: 0.08),
+          color: widget.isDark ? AppColors.darkCard : AppColors.lightCard,
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border.all(color: primary.withValues(alpha: 0.22)),
+          border: Border.all(color: primary.withValues(alpha: 0.16)),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Row(
           children: [
-            Row(
-              children: [
-                Icon(Icons.flag_rounded, color: primary, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'ابدأ من هنا',
-                    style: AppTypography.titleMedium.copyWith(
+            Icon(Icons.help_outline_rounded, color: primary, size: 24),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.isArabic
+                        ? 'تحتاج جولة سريعة؟'
+                        : 'Need a quick tour?',
+                    style: AppTypography.titleSmall.copyWith(
                       color: textColor,
-                      fontFamily: 'Amiri',
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () async {
-                    await getIt<SharedPreferences>().setBool(
-                      _completedKey,
-                      true,
-                    );
-                    if (mounted) setState(() => _visible = false);
-                  },
-                  icon: Icon(Icons.close_rounded, color: subTextColor),
-                  visualDensity: VisualDensity.compact,
-                ),
-              ],
+                  Text(
+                    context.isArabic
+                        ? 'افتح الدليل متى أردت من هنا أو من المساعدة.'
+                        : 'Open the guide here or later from Help.',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: subTextColor,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: AppSpacing.sm),
-            Wrap(
-              spacing: AppSpacing.sm,
-              runSpacing: AppSpacing.sm,
-              children: [
-                _StartActionChip(
-                  icon: Icons.menu_book_rounded,
-                  label: 'اقرأ صفحة',
-                  onTap: () => _completeAndGo('/quran'),
-                ),
-                _StartActionChip(
-                  icon: Icons.psychology_alt_rounded,
-                  label: 'ابدأ الحفظ',
-                  onTap: () => _completeAndGo('/memorization-plus'),
-                ),
-                _StartActionChip(
-                  icon: Icons.help_outline_rounded,
-                  label: 'دليل سريع',
-                  onTap: () => _completeAndGo('/tutorial-guide'),
-                ),
-              ],
+            TextButton(
+              onPressed: _openGuide,
+              child: Text(context.isArabic ? 'الدليل' : 'Guide'),
+            ),
+            IconButton(
+              onPressed: _dismiss,
+              icon: Icon(Icons.close_rounded, color: subTextColor),
+              tooltip: context.l10n.notNow,
             ),
           ],
         ),
-      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.04),
-    );
-  }
-}
-
-class _StartActionChip extends StatelessWidget {
-  const _StartActionChip({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ActionChip(
-      avatar: Icon(icon, size: 18),
-      label: Text(label),
-      onPressed: onTap,
+      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.02),
     );
   }
 }
 
 class _ResumeSessionCard extends StatelessWidget {
-  const _ResumeSessionCard({required this.location, required this.isDark});
+  const _ResumeSessionCard({
+    required this.location,
+    required this.isDark,
+    required this.isKids,
+  });
 
   final String location;
   final bool isDark;
+  final bool isKids;
 
-  String _description(BuildContext context) {
+  String _normalizedLocation() {
     final uri = Uri.tryParse(location);
-    if (uri == null) return context.l10n.resumeWhereYouLeft;
-    if (uri.path.startsWith('/quran/page/')) return context.l10n.lastSavedReading;
-    if (uri.path == '/hifz/session') return context.l10n.incompleteHifzSession;
-    if (uri.path == '/memorization-plus/daily-plan') return context.l10n.dailyMemorizationPlan;
-    if (uri.path == '/memorization-plus/kids') return context.l10n.incompleteKidsSession;
-    if (uri.path == '/memorization-plus/quiz') return context.l10n.previousHifzQuiz;
-    return context.l10n.savedPreviousActivity;
+    if (!isKids || uri?.path != AppRoutes.hifzSession) return location;
+
+    final surahId = int.tryParse(uri!.queryParameters['surahId'] ?? '');
+    final startAyah = int.tryParse(uri.queryParameters['startAyah'] ?? '');
+    if (surahId != null &&
+        surahId >= 1 &&
+        surahId <= 114 &&
+        startAyah != null &&
+        startAyah > 0) {
+      final query = Uri(
+        queryParameters: {'surahId': '$surahId', 'ayahNumber': '$startAyah'},
+      ).query;
+      return '${AppRoutes.memorizationPlusKids}?$query';
+    }
+    return AppRoutes.memorizationPlusKidsHome;
+  }
+
+  _ResumeInfo _info(BuildContext context) {
+    final uri = Uri.tryParse(location);
+    if (uri == null) {
+      return _ResumeInfo(
+        title: context.l10n.resumeWhereYouLeft,
+        description: context.l10n.savedPreviousActivity,
+        icon: Icons.play_circle_fill_rounded,
+      );
+    }
+
+    final surahId = int.tryParse(uri.queryParameters['surahId'] ?? '');
+    final startAyah =
+        int.tryParse(uri.queryParameters['startAyah'] ?? '') ??
+        int.tryParse(uri.queryParameters['ayahNumber'] ?? '');
+
+    if (uri.path.startsWith('/quran/page/')) {
+      final page = uri.pathSegments.length >= 3 ? uri.pathSegments[2] : null;
+      return _ResumeInfo(
+        title: context.isArabic
+            ? 'تابع قراءة القرآن'
+            : 'Continue Quran Reading',
+        description: page == null
+            ? context.l10n.lastSavedReading
+            : context.isArabic
+            ? 'الصفحة $page'
+            : 'Page $page',
+        icon: Icons.menu_book_rounded,
+      );
+    }
+    if (uri.path.startsWith('/quran/surah/')) {
+      final id = uri.pathSegments.length >= 3
+          ? int.tryParse(uri.pathSegments[2])
+          : null;
+      final surah = _surahLabel(context, id);
+      return _ResumeInfo(
+        title: context.isArabic ? 'تابع $surah' : 'Continue $surah',
+        description: context.l10n.lastSavedReading,
+        icon: Icons.menu_book_rounded,
+      );
+    }
+    if (isKids && uri.path == AppRoutes.hifzSession) {
+      return _kidsStageInfo(context, surahId, startAyah);
+    }
+    if (uri.path == AppRoutes.hifzSession) {
+      final surah = _surahLabel(context, surahId);
+      return _ResumeInfo(
+        title: context.isArabic ? 'تابع $surah' : 'Continue $surah',
+        description: startAyah == null
+            ? context.l10n.incompleteHifzSession
+            : context.isArabic
+            ? 'من الآية $startAyah'
+            : 'From ayah $startAyah',
+        icon: Icons.psychology_alt_rounded,
+      );
+    }
+    if (uri.path == AppRoutes.memorizationPlusDailyPlan) {
+      final surah = _surahLabel(context, surahId);
+      return _ResumeInfo(
+        title: context.isArabic ? 'تابع خطة اليوم' : "Continue Today's Plan",
+        description: surahId == null
+            ? context.l10n.dailyMemorizationPlan
+            : surah,
+        icon: Icons.today_rounded,
+      );
+    }
+    if (uri.path == AppRoutes.memorizationPlusKids) {
+      return _kidsStageInfo(context, surahId, startAyah);
+    }
+    if (uri.path == AppRoutes.memorizationPlusKidsJourney) {
+      final surah = _surahLabel(context, surahId);
+      return _ResumeInfo(
+        title: context.isArabic ? 'تابع رحلة الطفل' : 'Continue Kids Journey',
+        description: surahId == null
+            ? context.l10n.savedPreviousActivity
+            : context.isArabic
+            ? 'خريطة $surah'
+            : '$surah map',
+        icon: Icons.map_rounded,
+      );
+    }
+    if (uri.pathSegments.length == 3 &&
+        uri.pathSegments[0] == 'memorization-plus' &&
+        uri.pathSegments[1] == 'journey') {
+      final id = int.tryParse(uri.pathSegments[2]);
+      final surah = _surahLabel(context, id);
+      return _ResumeInfo(
+        title: context.isArabic ? 'تابع رحلة الطفل' : 'Continue Kids Journey',
+        description: context.isArabic ? 'خريطة $surah' : '$surah map',
+        icon: Icons.map_rounded,
+      );
+    }
+    if (uri.path == AppRoutes.memorizationPlusQuiz) {
+      return _ResumeInfo(
+        title: context.isArabic
+            ? 'تابع اختبار المراجعة'
+            : 'Continue Review Quiz',
+        description: context.l10n.previousHifzQuiz,
+        icon: Icons.quiz_rounded,
+      );
+    }
+    return _ResumeInfo(
+      title: context.l10n.resumeWhereYouLeft,
+      description: context.l10n.savedPreviousActivity,
+      icon: Icons.play_circle_fill_rounded,
+    );
+  }
+
+  _ResumeInfo _kidsStageInfo(
+    BuildContext context,
+    int? surahId,
+    int? ayahNumber,
+  ) {
+    final stage = ayahNumber == null ? null : ((ayahNumber - 1) ~/ 5) + 1;
+    final surah = _surahLabel(context, surahId);
+    return _ResumeInfo(
+      title: stage == null
+          ? (context.isArabic ? 'تابع مهمة الطفل' : 'Continue Kids Mission')
+          : context.isArabic
+          ? 'تابع المرحلة $stage'
+          : 'Continue Stage $stage',
+      description: ayahNumber == null
+          ? context.l10n.incompleteKidsSession
+          : context.isArabic
+          ? '$surah، الآية $ayahNumber'
+          : '$surah, ayah $ayahNumber',
+      icon: Icons.flag_rounded,
+    );
+  }
+
+  String _surahLabel(BuildContext context, int? surahId) {
+    if (surahId == null) return context.l10n.surah;
+    if (context.isArabic) return '${context.l10n.surah} $surahId';
+    return switch (surahId) {
+      1 => 'Surah Al-Fatihah',
+      2 => 'Surah Al-Baqarah',
+      112 => 'Surah Al-Ikhlas',
+      113 => 'Surah Al-Falaq',
+      114 => 'Surah An-Nas',
+      _ => 'Surah $surahId',
+    };
   }
 
   @override
   Widget build(BuildContext context) {
+    final resumeLocation = _normalizedLocation();
+    final info = _info(context);
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final textColor = isDark
         ? AppColors.darkTextPrimary
@@ -1752,14 +1143,14 @@ class _ResumeSessionCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(Icons.play_circle_fill_rounded, color: primary, size: 34),
+          Icon(info.icon, color: primary, size: 34),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  context.l10n.resumeWhereYouLeft,
+                  info.title,
                   style: AppTypography.titleMedium.copyWith(
                     color: textColor,
                     fontFamily: 'Amiri',
@@ -1767,22 +1158,20 @@ class _ResumeSessionCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  _description(context),
+                  info.description,
                   style: AppTypography.bodySmall.copyWith(color: subTextColor),
                 ),
               ],
             ),
           ),
           TextButton(
-            onPressed: () => unawaited(context.push(location)),
+            onPressed: () => unawaited(context.push(resumeLocation)),
             child: Text(context.l10n.resumeAction),
           ),
           IconButton(
             onPressed: () async {
               await getIt<AppSessionService>().clearLastRestorableLocation();
-              if (context.mounted) {
-                unawaited(context.read<HomeCubit>().load());
-              }
+              if (context.mounted) unawaited(context.read<HomeCubit>().load());
             },
             icon: Icon(Icons.close_rounded, color: subTextColor),
             tooltip: context.l10n.notNow,
@@ -1793,11 +1182,28 @@ class _ResumeSessionCard extends StatelessWidget {
   }
 }
 
+class _ResumeInfo {
+  const _ResumeInfo({
+    required this.title,
+    required this.description,
+    required this.icon,
+  });
+
+  final String title;
+  final String description;
+  final IconData icon;
+}
+
 class _NextBestActionCard extends StatefulWidget {
-  const _NextBestActionCard({required this.state, required this.isDark});
+  const _NextBestActionCard({
+    required this.state,
+    required this.isDark,
+    this.isKids = false,
+  });
 
   final HomeLoaded state;
   final bool isDark;
+  final bool isKids;
 
   @override
   State<_NextBestActionCard> createState() => _NextBestActionCardState();
@@ -1813,12 +1219,22 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
   }
 
   (String, String, IconData, String) _action(BuildContext context) {
+    if (widget.isKids) {
+      return (
+        context.isArabic ? 'المهمة الحالية' : 'Current Mission',
+        context.isArabic
+            ? 'ابدأ مهمة الطفل الحالية.'
+            : "Start the child's current mission.",
+        Icons.star_rounded,
+        AppRoutes.memorizationHub,
+      );
+    }
     if (widget.state.customPlan != null) {
       return (
-        context.l10n.completeTodaysHifz,
+        context.isArabic ? 'أكمل خطة اليوم' : "Continue Today's Plan",
         context.l10n.planReadySmallStep,
         Icons.psychology_alt_rounded,
-        '/memorization-plus',
+        AppRoutes.memorizationHub,
       );
     }
     if (widget.state.dailyWirdPageDetail != null) {
@@ -1839,17 +1255,19 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
     }
     if (_goal == 'child') {
       return (
-        context.l10n.followChildJourney,
-        context.l10n.reviewProgressOrReward,
-        Icons.family_restroom_rounded,
-        '${AppRoutes.parentDashboard}?surahId=1',
+        context.isArabic ? 'المهمة الحالية' : 'Current Mission',
+        context.isArabic
+            ? 'اختر مسار الطفل أو تابع المهمة الحالية.'
+            : 'Choose the kids path or continue the current mission.',
+        Icons.auto_stories_rounded,
+        AppRoutes.memorizationHub,
       );
     }
     return (
-      context.l10n.startQuranStepNow,
+      context.isArabic ? 'خطة اليوم' : "Today's Plan",
       context.l10n.chooseReadingOrMemorization,
       Icons.auto_awesome_rounded,
-      _goal == 'memorization' ? '/memorization-plus' : '/quran',
+      AppRoutes.memorizationHub,
     );
   }
 
@@ -1904,79 +1322,16 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded, color: primary, size: 16),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
-  }
-}
-
-// ignore: unused_element
-class _ContinueReadingChip extends StatelessWidget {
-  const _ContinueReadingChip({required this.location, required this.isDark});
-
-  final String location;
-  final bool isDark;
-
-  /// Parses `/quran/page/42` → 'صفحة 42' (Arabic).
-  /// Falls back to a generic label for other restorable locations.
-  String _label(BuildContext context) {
-    final uri = Uri.tryParse(location);
-    if (uri == null) return context.isArabic ? 'استكمال القراءة' : 'Continue';
-    final segments = uri.pathSegments;
-    if (segments.length == 3 && segments[0] == 'quran') {
-      if (segments[1] == 'page') {
-        return context.isArabic
-            ? 'استكمال القراءة — صفحة ${segments[2]}'
-            : 'Continue Reading — Page ${segments[2]}';
-      }
-      if (segments[1] == 'surah') {
-        return context.isArabic
-            ? 'استكمال قراءة السورة ${segments[2]}'
-            : 'Continue Surah ${segments[2]}';
-      }
-    }
-    return context.isArabic
-        ? 'استكمال من حيث توقفت'
-        : 'Continue where you left off';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-
-    return GestureDetector(
-      onTap: () => context.push(location),
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: primary.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          border: Border.all(color: primary.withValues(alpha: 0.25)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.play_circle_outline_rounded, color: primary, size: 18),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                _label(context),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.labelMedium.copyWith(
-                  color: primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+            Icon(
+              context.isArabic
+                  ? Icons.arrow_back_ios_new_rounded
+                  : Icons.arrow_forward_ios_rounded,
+              color: primary,
+              size: 16,
             ),
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 300.ms).slideX(begin: -0.02);
+    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
   }
 }

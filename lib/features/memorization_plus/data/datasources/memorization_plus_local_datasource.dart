@@ -66,8 +66,14 @@ class MemorizationPlusLocalDatasourceImpl
   final Isar? _isar;
 
   // ─── Key namespace (isolated from existing features) ────────────────────────
+  /// Authoritative identity profile — single source of truth for path/identity.
   static const _kProfile = 'mem_plus_profile';
   static const _kPairingSession = 'mem_plus_pairing_session';
+
+  /// LEGACY: Legacy track key — still written for backward compatibility.
+  /// Read `_kProfile` (MemorizationProfile.selectedPath) as the authoritative
+  /// source instead. Do NOT remove this key — existing installs depend on it
+  /// for smooth migration paths.
   static const _kTrack = 'mem_plus_track';
   static const _kReviewPrefix = 'mem_plus_review';
   static const _kReviewIsarMigration = 'mem_plus_reviews_migrated_to_isar_v1';
@@ -78,6 +84,9 @@ class MemorizationPlusLocalDatasourceImpl
   static const _kParentRewards = 'mem_plus_parent_rewards';
   static const _kCustomPlan = 'mem_plus_custom_plan';
   static const _kSmartSettings = 'mem_plus_smart_settings';
+
+  /// LEGACY: Written in parallel with MemorizationProfile.isParentGuardian.
+  /// Kept for backward compatibility — do NOT remove.
   static const _kIsParentMode = 'mem_plus_is_parent_mode';
 
   String _reviewKey(int surahId, int ayahNumber) =>

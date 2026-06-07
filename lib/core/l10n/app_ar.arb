@@ -177,9 +177,9 @@
   "authSigninFailed": "فشل تسجيل الدخول",
   "authSignoutFailed": "حدث خطأ أثناء تسجيل الخروج",
   "authGenericError": "حدث خطأ، حاول مرة أخرى",
-  "profileSavedToCloud": "تقدمك محفوظ على السحابة",
-  "guestModeWarning": "سجّل دخولك لحفظ تقدمك على جميع أجهزتك وعدم فقدانه عند مسح التطبيق.",
-  "signOutWarning": "هل تريد تسجيل الخروج؟ تقدمك المحفوظ على السحابة لن يُحذف.",
+  "profileSavedToCloud": "تم تسجيل الدخول إلى حسابك",
+  "guestModeWarning": "سجّل دخولك لإدارة حسابك وخيارات الاستعادة.",
+  "signOutWarning": "هل تريد تسجيل الخروج؟ سيبقى تقدمك المحلي متاحًا على هذا الجهاز.",
   "dailyReviewReminder": "تذكير المراجعة اليومية",
   "dailyReviewTime": "كل يوم الساعة ٨:٠٠ مساءً",
   "streakProtectionDesc": "تنبيه الساعة ١٠:٠٠ مساءً إذا لم تراجع",
@@ -236,7 +236,7 @@
     }
   },
   "saveProgress": "احفظ تقدمك",
-  "syncProgressDesc": "قم بتسجيل الدخول لحفظ تقدمك ومزامنته على جميع أجهزتك",
+  "syncProgressDesc": "قم بتسجيل الدخول لإدارة حسابك وخيارات الاستعادة",
   "later": "لاحقاً",
   "congratulations": "مبارك!",
   "completedJuzAmma": "لقد أتممت حفظ جزء عم بنجاح.",
@@ -269,8 +269,8 @@
   "debugCertSurahBaqarah": "سورة البقرة",
   "debugCertHalfQuran": "نصف القرآن",
   "debugCertFullQuran": "ختم القرآن",
-  "backupProgressTitle": "احفظ تقدمك الآن!",
-  "backupProgressDesc": "سجّل دخولك من الإعدادات لحماية تقدمك",
+  "backupProgressTitle": "إدارة الحساب",
+  "backupProgressDesc": "سجّل دخولك من الإعدادات لإدارة حسابك",
   "azkarSubtitle": "اذكر الله كثيراً",
   "zikrCount": "{count} ذكر",
   "azkarCount": "{count} أذكار",
@@ -421,6 +421,9 @@
   "guardianPairingStepOpenDashboard": "اذهب إلى الإعدادات > لوحة ولي الأمر",
   "guardianPairingStepScanOrEnterCode": "امسح رمز QR أو أدخل الرمز يدوياً",
   "guardianRegenerateCode": "تجديد الرمز",
+  "guardianSignInRequired": "ربط ولي الأمر يتطلب تسجيل الدخول أولاً",
+  "guardianSignInAction": "تسجيل الدخول أو إنشاء حساب",
+  "guardianGuestContinueKids": "متابعة حفظ الأطفال",
   "splashSubtitle": "تطبيق تحفيظ القرآن الكريم",
   "onboardingSkip": "تخطي",
   "onboardingStartNow": "ابدأ الآن",
@@ -609,6 +612,278 @@
     "placeholders": {
       "time": {
         "type": "String"
+      }
+    }
+  },
+  "kidsGamifiedWelcome": "مرحباً بطل الحفظ!",
+  "kidsGamifiedLevelProgress": "المستوى {level} — {progress}/100",
+  "@kidsGamifiedLevelProgress": {
+    "placeholders": {
+      "level": {
+        "type": "int"
+      },
+      "progress": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsGamifiedStarsCount": "{count} نجمة",
+  "@kidsGamifiedStarsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsGamifiedLastMission": "آخر مهمة",
+  "kidsGamifiedContinueNow": "استكمل الآن",
+  "kidsGamifiedMushaf": "المصحف",
+  "kidsGamifiedJourney": "رحلتي",
+  "kidsGamifiedMissions": "المهام",
+  "kidsGamifiedHouseTitle": "بيت الحفظ {number}",
+  "@kidsGamifiedHouseTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsGamifiedReviewHouseTitle": "بيت المراجعة {number}",
+  "@kidsGamifiedReviewHouseTitle": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsGamifiedAyahRange": "الآيات {startAyah}-{endAyah}",
+  "@kidsGamifiedAyahRange": {
+    "placeholders": {
+      "startAyah": {
+        "type": "int"
+      },
+      "endAyah": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsGamifiedProgressCount": "{completed}/{total}",
+  "@kidsGamifiedProgressCount": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsGamifiedLockedStage": "هذا البيت مغلق الآن",
+  "kidsGamifiedCurrentStage": "مهمتك الحالية",
+  "kidsGamifiedCompletedStage": "أحسنت، اكتمل البيت",
+  "kidsGamifiedNeedsReview": "جاهز للمراجعة",
+  "kidsGamifiedListenStep": "استمع",
+  "kidsGamifiedListenStepSubtitle": "اسمع الآية بتأنٍ وتركيز",
+  "kidsGamifiedRepeatStep": "ردد",
+  "kidsGamifiedRepeatStepSubtitle": "كرر خلف القارئ حتى تثبت الآية",
+  "kidsGamifiedTestStep": "اختبر نفسك",
+  "kidsGamifiedTestStepSubtitle": "حاول التسميع بدون مساعدة",
+  "kidsGamifiedStartMission": "ابدأ المهمة",
+  "kidsGamifiedListenAndRepeat": "استمع وكرر",
+  "kidsGamifiedRecordYourVoice": "سجل تلاوتك",
+  "kidsGamifiedRecordingInProgress": "جاري التسجيل...",
+  "kidsGamifiedAudioUnavailable": "الصوت غير متاح الآن، حاول مرة أخرى بعد قليل.",
+  "kidsGamifiedListenFirst": "استمع للآية {count} مرات قبل تسجيل تلاوتك.",
+  "@kidsGamifiedListenFirst": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsGamifiedAudioLoading": "جاري تجهيز التلاوة...",
+  "kidsGamifiedWellDone": "أحسنت!",
+  "kidsGamifiedEarnedStars": "+{count} نجمة",
+  "@kidsGamifiedEarnedStars": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsGamifiedEarnedGems": "+{count} جوهرة",
+  "@kidsGamifiedEarnedGems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsGamifiedNextStage": "التالي",
+  "kidsGamifiedReturnToMap": "العودة للخريطة",
+  "kidsGamifiedJourneyComplete": "أتممت رحلة الحفظ الحالية، بارك الله فيك!",
+  "kidsGamifiedFallbackMessage": "سنعود للتجربة القديمة للحفاظ على تقدمك.",
+  "privacyPolicy": "سياسة الخصوصية",
+  "forgotPassword": "نسيت كلمة المرور؟",
+  "passwordResetEmailSent": "✅ تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني",
+  "forgotPasswordEnterEmail": "أدخل بريدك الإلكتروني أولاً لإعادة تعيين كلمة المرور",
+  "updatePasswordTitle": "تعيين كلمة مرور جديدة",
+  "updatePasswordSubtitle": "أدخل كلمة مرور قوية جديدة لحسابك.",
+  "newPassword": "كلمة المرور الجديدة",
+  "confirmNewPassword": "تأكيد كلمة المرور الجديدة",
+  "passwordsDoNotMatch": "كلمتا المرور غير متطابقتين",
+  "passwordUpdated": "تم تحديث كلمة المرور بنجاح. سجل الدخول مرة أخرى.",
+  "updatePasswordButton": "تحديث كلمة المرور",
+  "invalidPasswordRecoveryLink": "رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.",
+  "onboardingGoalQuestion": "ماذا تريد أن تفعل أولاً؟",
+  "onboardingGoalSubtitle": "اختر بداية واضحة، ويمكنك استخدام باقي التطبيق لاحقاً.",
+  "onboardingGoalReading": "القراءة",
+  "onboardingGoalMemorization": "الحفظ لنفسي",
+  "onboardingGoalChild": "متابعة طفل",
+  "onboardingGoalAzkar": "الأذكار",
+  "dailyPlanQuizAction": "اختبار المراجعة",
+  "dailyPlanNewAyahs": "آيات جديدة للحفظ",
+  "dailyPlanNearRevision": "مراجعة قريبة (آخر ٥ أيام)",
+  "dailyPlanFarRevision": "مراجعة بعيدة",
+  "dailyPlanCompletedTitle": "ما شاء الله! أكملت خطة اليوم",
+  "dailyPlanCompletedSubtitle": "أتممت {count} عناصر بنجاح.\nثابر على هذا المستوى.",
+  "@dailyPlanCompletedSubtitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanNewAyahsShort": "آيات جديدة",
+  "dailyPlanReviewShort": "مراجعة",
+  "dailyPlanBlessingAction": "بارك الله فيك ✨",
+  "dailyPlanRatingExcellent": "✅ ممتاز! تم جدولة مراجعة الآية {ayahNumber} بعد فترة أطول",
+  "@dailyPlanRatingExcellent": {
+    "placeholders": {
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanRatingAverage": "⏰ متوسط، سيتم المراجعة خلال فترة معتدلة",
+  "dailyPlanRatingWeak": "🔁 ضعيف، ستتم مراجعة الآية {ayahNumber} غداً",
+  "@dailyPlanRatingWeak": {
+    "placeholders": {
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "performanceWeak": "ضعيف",
+  "performanceAverage": "متوسط",
+  "performanceExcellent": "ممتاز",
+  "dailyPlanListenBeforeRating": "استمع للآية قبل التقييم",
+  "reviewQuizTitle": "اختبار المراجعة",
+  "quizExitTitle": "الخروج من اختبار المراجعة؟",
+  "quizExitMessage": "سيتم حفظ الآيات التي قيّمتها حتى الآن.\nهل تريد الخروج؟",
+  "quizStayAction": "البقاء",
+  "quizExitAction": "خروج",
+  "quizYourAnswer": "إجابتك",
+  "quizListenRetryTitle": "استمع ثم أعد المحاولة",
+  "quizListenRetrySubtitle": "تحتاج تدريباً أكثر، وهذا طبيعي في أول المراجعة.",
+  "quizNextAyah": "الآية التالية",
+  "quizShowResults": "عرض النتائج",
+  "quizExcellentResult": "ممتاز!",
+  "quizGoodEffortResult": "جهد جيد!",
+  "quizPassedMessage": "لقد اجتزت اختبار المراجعة بنجاح",
+  "quizRetryMessage": "حاول مراجعة الآيات وأعد الاختبار",
+  "quizScoreLabel": "النتيجة",
+  "quizTotalLabel": "إجمالي",
+  "quizPassedLabel": "ناجحة",
+  "quizNeedsPracticeLabel": "تحتاج تدريباً",
+  "backAction": "العودة",
+  "parentDashboardLastSession": "آخر جلسة",
+  "parentDashboardNoSessionsYet": "لا توجد جلسات مسجلة بعد.",
+  "parentDashboardSessionSummary": "سورة {surahId} • آية {ayahNumber}\n{repeats} تكرارات • {points} نقطة",
+  "@parentDashboardSessionSummary": {
+    "placeholders": {
+      "surahId": {
+        "type": "int"
+      },
+      "ayahNumber": {
+        "type": "int"
+      },
+      "repeats": {
+        "type": "int"
+      },
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardDone": "تم",
+  "parentDashboardPinMismatch": "رمزا PIN غير متطابقين",
+  "parentDashboardPinHelp": "هذا الرمز يحمي لوحة ولي الأمر على هذا الجهاز",
+  "parentDashboardPinConfirm": "تأكيد PIN",
+  "parentDashboardResetPin": "إعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد",
+  "parentDashboardTodaySummary": "ملخص اليوم",
+  "parentDashboardTodayEmpty": "اليوم: لا توجد جلسات بعد. شجعه على جلسة قصيرة.",
+  "parentDashboardTodayCompleted": "اليوم: أكمل الطفل {count} جلسة. شجعه على المراجعة القادمة.",
+  "@parentDashboardTodayCompleted": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardTodaySessions": "جلسات اليوم",
+  "parentDashboardTodayPoints": "نقاط اليوم",
+  "parentDashboardAddReward": "إضافة مكافأة",
+  "parentDashboardShowLastSession": "عرض آخر جلسة",
+  "parentDashboardChildSummary": "ملخص الطفل",
+  "parentDashboardPoints": "نقاط",
+  "parentDashboardStars": "نجوم",
+  "parentDashboardWeekSessions": "جلسات الأسبوع",
+  "parentDashboardChildReminder": "تذكير الطفل",
+  "parentDashboardDailyReminder": "تذكير يومي الساعة 6:30 مساءً",
+  "parentDashboardReminderSubtitle": "يمكن تغيير الوقت لاحقًا من إعدادات ولي الأمر",
+  "parentDashboardRemoteFollowup": "المتابعة عن بعد",
+  "parentDashboardScanQr": "مسح QR",
+  "parentDashboardManualEntry": "إدخال يدوي",
+  "parentDashboardNoRemoteChild": "لا يوجد طفل مرتبط عن بعد حتى الآن.",
+  "parentDashboardRemoteChildSummary": "{ayahs} آية • {points} نقطة",
+  "@parentDashboardRemoteChildSummary": {
+    "placeholders": {
+      "ayahs": {
+        "type": "int"
+      },
+      "points": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardRewardsTitle": "مكافآت ولي الأمر",
+  "parentDashboardRewardHint": "مثال: وقت لعب إضافي",
+  "parentDashboardRewardEmpty": "أضف مكافآت تظهر للطفل عند تحقيق هدفه الأسبوعي.",
+  "parentDashboardRewardLocked": "مقفلة",
+  "parentDashboardRewardUnlocked": "مفتوحة",
+  "parentDashboardRewardClaimed": "تم استلامها",
+  "parentDashboardRecentSessions": "آخر الجلسات",
+  "parentDashboardNoKidsSessions": "لا توجد جلسات أطفال بعد.",
+  "parentDashboardLogTitle": "سورة {surahId} • آية {ayahNumber}",
+  "@parentDashboardLogTitle": {
+    "placeholders": {
+      "surahId": {
+        "type": "int"
+      },
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardLogSubtitle": "{repeats} تكرارات • {points} نقطة",
+  "@parentDashboardLogSubtitle": {
+    "placeholders": {
+      "repeats": {
+        "type": "int"
+      },
+      "points": {
+        "type": "int"
       }
     }
   }

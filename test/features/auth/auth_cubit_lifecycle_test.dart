@@ -21,6 +21,7 @@ import 'auth_cubit_lifecycle_test.mocks.dart';
 void main() {
   late MockAuthRepository mockRepo;
   late StreamController<AppUser?> authStreamCtrl;
+  late StreamController<void> passwordRecoveryStreamCtrl;
 
   const testUser = AppUser(
     id: 'user-123',
@@ -29,8 +30,10 @@ void main() {
   );
 
   AuthCubit buildCubit({AppUser? currentUser}) {
-    when(mockRepo.authStateChanges)
-        .thenAnswer((_) => authStreamCtrl.stream);
+    when(mockRepo.authStateChanges).thenAnswer((_) => authStreamCtrl.stream);
+    when(
+      mockRepo.passwordRecoveryChanges,
+    ).thenAnswer((_) => passwordRecoveryStreamCtrl.stream);
     when(mockRepo.currentUser).thenReturn(currentUser);
     return AuthCubit(mockRepo);
   }
@@ -38,10 +41,12 @@ void main() {
   setUp(() {
     mockRepo = MockAuthRepository();
     authStreamCtrl = StreamController<AppUser?>.broadcast();
+    passwordRecoveryStreamCtrl = StreamController<void>.broadcast();
   });
 
   tearDown(() async {
     await authStreamCtrl.close();
+    await passwordRecoveryStreamCtrl.close();
   });
 
   // ─── Offline / Uninitialised Supabase guard ─────────────────────────────────
@@ -49,8 +54,10 @@ void main() {
   group('offline / uninitialised guard', () {
     test('does not throw when authStateChanges returns empty stream', () {
       when(mockRepo.currentUser).thenReturn(null);
-      when(mockRepo.authStateChanges)
-          .thenAnswer((_) => const Stream.empty());
+      when(mockRepo.authStateChanges).thenAnswer((_) => const Stream.empty());
+      when(
+        mockRepo.passwordRecoveryChanges,
+      ).thenAnswer((_) => const Stream.empty());
 
       AuthCubit? cubit;
       expect(() {
@@ -64,18 +71,20 @@ void main() {
   // ─── Subscription lifecycle (singleton safety) ──────────────────────────────
 
   group('subscription lifecycle', () {
-    test('cancels stream subscription on close — no state changes after close',
-        () async {
-      final cubit = buildCubit(currentUser: null);
+    test(
+      'cancels stream subscription on close — no state changes after close',
+      () async {
+        final cubit = buildCubit(currentUser: null);
 
-      await cubit.close();
+        await cubit.close();
 
-      // Add to stream after close — must not throw.
-      expect(() => authStreamCtrl.add(testUser), returnsNormally);
-      await Future<void>.delayed(Duration.zero);
+        // Add to stream after close — must not throw.
+        expect(() => authStreamCtrl.add(testUser), returnsNormally);
+        await Future<void>.delayed(Duration.zero);
 
-      expect(cubit.isClosed, isTrue);
-    });
+        expect(cubit.isClosed, isTrue);
+      },
+    );
 
     test('same instance reflects stream changes (singleton semantics)', () async {
       final cubit = buildCubit(currentUser: null);
@@ -104,13 +113,15 @@ void main() {
   // ─── AuthInitial guard (router redirect safety) ─────────────────────────────
 
   group('AuthInitial during initialisation', () {
-    test('emits non-Initial state synchronously (constructor resolves state)',
-        () {
-      final cubit = buildCubit(currentUser: null);
+    test(
+      'emits non-Initial state synchronously (constructor resolves state)',
+      () {
+        final cubit = buildCubit(currentUser: null);
 
-      // Constructor synchronously resolves currentUser.
-      expect(cubit.state, isNot(isA<AuthInitial>()));
-      cubit.close();
-    });
+        // Constructor synchronously resolves currentUser.
+        expect(cubit.state, isNot(isA<AuthInitial>()));
+        cubit.close();
+      },
+    );
   });
 }

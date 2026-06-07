@@ -8,11 +8,15 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/error_info_banner.dart';
+import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/guardian_linking_cubit.dart';
 import '../cubits/guardian_linking_state.dart';
+import '../navigation/memorization_navigation_resolver.dart';
 
 class GuardianLinkingPage extends StatelessWidget {
   const GuardianLinkingPage({super.key});
@@ -36,6 +40,8 @@ class _GuardianLinkingView extends StatelessWidget {
     final textColor = isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
+    final authState = context.watch<AuthCubit>().state;
+    final isGuest = authState is! AuthAuthenticated;
 
     return PopScope(
       canPop: false,
@@ -48,12 +54,13 @@ class _GuardianLinkingView extends StatelessWidget {
             listener: (context, state) {
               if (state is GuardianLinkingSkipped ||
                   state is GuardianLinkingLinked) {
-                context.go('/memorization-plus/kids-journey?surahId=1');
+                unawaited(_goToKidsJourney(context));
               }
             },
             builder: (context, state) {
-              if (state is GuardianLinkingLoading ||
-                  state is GuardianLinkingInitial) {
+              if (!isGuest &&
+                  (state is GuardianLinkingLoading ||
+                      state is GuardianLinkingInitial)) {
                 return const Center(child: CircularProgressIndicator());
               }
 
@@ -87,55 +94,109 @@ class _GuardianLinkingView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  if (state is GuardianLinkingError ||
-                      state is GuardianLinkingBlocked) ...[
-                    ErrorInfoBanner(
-                      type: state is GuardianLinkingBlocked
-                          ? ErrorInfoBannerType.warning
-                          : ErrorInfoBannerType.error,
-                      title: state is GuardianLinkingBlocked
-                          ? 'الربط متوقف مؤقتاً'
-                          : 'تعذر ربط ولي الأمر',
-                      message: state is GuardianLinkingError
-                          ? state.message
-                          : (state as GuardianLinkingBlocked).message,
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
+                  if (isGuest)
+                    _GuestGuardianLinkingCard(surface: surface)
+                  else ...[
+                    if (state is GuardianLinkingError ||
+                        state is GuardianLinkingBlocked) ...[
+                      ErrorInfoBanner(
+                        type: state is GuardianLinkingBlocked
+                            ? ErrorInfoBannerType.warning
+                            : ErrorInfoBannerType.error,
+                        title: state is GuardianLinkingBlocked
+                            ? 'الربط متوقف مؤقتاً'
+                            : 'تعذر ربط ولي الأمر',
+                        message: state is GuardianLinkingError
+                            ? state.message
+                            : (state as GuardianLinkingBlocked).message,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                    ],
+                    if (state is GuardianLinkingPending)
+                      _PairingCard(
+                        surface: surface,
+                        code: state.session.pairingCode,
+                        qrData: state.session.qrData,
+                        expiresAt: state.session.expiresAt,
+                      )
+                    else if (state is GuardianLinkingExpired)
+                      _StatusCard(
+                        surface: surface,
+                        title: context.l10n.guardianCodeExpired,
+                        message: context.l10n.guardianCreateCodeMessage,
+                        actionLabel: context.l10n.guardianCreateNewCode,
+                        onPressed: () => context
+                            .read<GuardianLinkingCubit>()
+                            .createPairingSession(),
+                      )
+                    else if (state is GuardianLinkingUsed)
+                      _StatusCard(
+                        surface: surface,
+                        title: context.l10n.guardianCodeAlreadyUsed,
+                        message: context.l10n.guardianCodeUsedMessage,
+                        actionLabel: context.l10n.guardianCreateNewCode,
+                        onPressed: () => context
+                            .read<GuardianLinkingCubit>()
+                            .createPairingSession(),
+                      )
+                    else
+                      _ChoiceActions(surface: surface),
                   ],
-                  if (state is GuardianLinkingPending)
-                    _PairingCard(
-                      surface: surface,
-                      code: state.session.pairingCode,
-                      qrData: state.session.qrData,
-                      expiresAt: state.session.expiresAt,
-                    )
-                  else if (state is GuardianLinkingExpired)
-                    _StatusCard(
-                      surface: surface,
-                      title: context.l10n.guardianCodeExpired,
-                      message: context.l10n.guardianCreateCodeMessage,
-                      actionLabel: context.l10n.guardianCreateNewCode,
-                      onPressed: () => context
-                          .read<GuardianLinkingCubit>()
-                          .createPairingSession(),
-                    )
-                  else if (state is GuardianLinkingUsed)
-                    _StatusCard(
-                      surface: surface,
-                      title: context.l10n.guardianCodeAlreadyUsed,
-                      message: context.l10n.guardianCodeUsedMessage,
-                      actionLabel: context.l10n.guardianCreateNewCode,
-                      onPressed: () => context
-                          .read<GuardianLinkingCubit>()
-                          .createPairingSession(),
-                    )
-                  else
-                    _ChoiceActions(surface: surface),
                 ],
               );
             },
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _goToKidsJourney(BuildContext context) async {
+    final location = await MemorizationNavigationResolver(
+      getIt<MemorizationPlusRepository>(),
+    ).guardianLinkedLocation();
+    if (context.mounted) context.go(location);
+  }
+}
+
+class _GuestGuardianLinkingCard extends StatelessWidget {
+  const _GuestGuardianLinkingCard({required this.surface});
+
+  final Color surface;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ErrorInfoBanner(
+            type: ErrorInfoBannerType.info,
+            title: context.l10n.guardianLinkTitle,
+            message: context.l10n.guardianSignInRequired,
+          ),
+          const SizedBox(height: AppSpacing.lg),
+          FilledButton.icon(
+            onPressed: () => context.go(AppRoutes.login),
+            icon: const Icon(Icons.login_rounded),
+            label: Text(context.l10n.guardianSignInAction),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          OutlinedButton.icon(
+            onPressed: () => context.go(AppRoutes.memorizationPlusKidsHome),
+            icon: Icon(
+              context.isArabic
+                  ? Icons.arrow_back_rounded
+                  : Icons.arrow_forward_rounded,
+            ),
+            label: Text(context.l10n.guardianGuestContinueKids),
+          ),
+        ],
       ),
     );
   }
@@ -166,7 +227,11 @@ class _ChoiceActions extends StatelessWidget {
           OutlinedButton.icon(
             onPressed: () =>
                 context.read<GuardianLinkingCubit>().continueWithoutGuardian(),
-            icon: const Icon(Icons.arrow_forward_rounded),
+            icon: Icon(
+              context.isArabic
+                  ? Icons.arrow_back_rounded
+                  : Icons.arrow_forward_rounded,
+            ),
             label: Text(context.l10n.continueWithoutGuardian),
           ),
         ],
@@ -201,7 +266,11 @@ class _PairingCardState extends State<_PairingCard> {
     super.initState();
     _remaining = _calculateRemaining();
     _timer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) setState(() => _remaining = _calculateRemaining());
+      if (!mounted) return;
+      setState(() => _remaining = _calculateRemaining());
+      if (_remaining > Duration.zero) {
+        context.read<GuardianLinkingCubit>().checkLinkStatus();
+      }
     });
   }
 
