@@ -101,4 +101,27 @@ void main() {
     await cubit.continueWithoutGuardian();
     await expectation;
   });
+
+  test(
+    'checkLinkStatus emits Linked without loading when cloud link exists',
+    () async {
+      final linkedProfile = testProfile.copyWith(
+        guardianLinkStatus: GuardianLinkStatus.linked,
+        guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+        guardianId: 'parent-user',
+      );
+      when(
+        mockRepository.refreshChildGuardianLink(),
+      ).thenAnswer((_) async => Right(linkedProfile));
+
+      final expectation = expectLater(
+        cubit.stream,
+        emits(GuardianLinkingLinked(profile: linkedProfile)),
+      );
+
+      await cubit.checkLinkStatus();
+      await expectation;
+      verifyNever(mockRepository.refreshPairingSession());
+    },
+  );
 }

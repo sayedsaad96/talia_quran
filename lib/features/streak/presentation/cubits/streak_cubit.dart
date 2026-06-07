@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/streak_entity.dart';
@@ -40,4 +40,3 @@ class StreakCubit extends Cubit<StreakState> {
     await loadStreak();
   }
 }
-

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class OnboardingPage extends StatefulWidget {
@@ -47,11 +48,11 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   String _routeForGoal(String goal) => switch (goal) {
-    'reading' => '/quran',
-    'memorization' => '/memorization-plus',
-    'child' => '/memorization-plus',
-    'azkar' => '/azkar',
-    _ => '/',
+    'reading' => AppRoutes.quran,
+    'memorization' => AppRoutes.memorizationPlus,
+    'child' => AppRoutes.childOnboarding,
+    'azkar' => AppRoutes.azkar,
+    _ => AppRoutes.home,
   };
 
   @override
@@ -190,7 +191,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                         ),
                         if (_currentPage != _pageCount - 1) ...[
                           const SizedBox(width: 8),
-                          const Icon(Icons.arrow_forward_rounded, size: 20),
+                          Icon(
+                            context.isArabic
+                                ? Icons.arrow_back_rounded
+                                : Icons.arrow_forward_rounded,
+                            size: 20,
+                          ),
                         ],
                       ],
                     ),
@@ -329,15 +335,30 @@ class _GoalSelectionSlide extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final goals = [
-      ('reading', 'القراءة', Icons.menu_book_rounded, AppColors.primary),
+      (
+        'reading',
+        context.l10n.onboardingGoalReading,
+        Icons.menu_book_rounded,
+        AppColors.primary,
+      ),
       (
         'memorization',
-        'الحفظ لنفسي',
+        context.l10n.onboardingGoalMemorization,
         Icons.psychology_alt_rounded,
         Colors.blue,
       ),
-      ('child', 'متابعة طفل', Icons.child_care_rounded, Colors.green),
-      ('azkar', 'الأذكار', Icons.volunteer_activism_rounded, Colors.orange),
+      (
+        'child',
+        context.l10n.onboardingGoalChild,
+        Icons.child_care_rounded,
+        Colors.green,
+      ),
+      (
+        'azkar',
+        context.l10n.onboardingGoalAzkar,
+        Icons.volunteer_activism_rounded,
+        Colors.orange,
+      ),
     ];
     final textColor = isDark
         ? AppColors.darkTextPrimary
@@ -354,7 +375,7 @@ class _GoalSelectionSlide extends StatelessWidget {
           Icon(Icons.explore_rounded, color: primaryColor, size: 72),
           const SizedBox(height: 32),
           Text(
-            'ماذا تريد أن تفعل أولاً؟',
+            context.l10n.onboardingGoalQuestion,
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
@@ -364,7 +385,7 @@ class _GoalSelectionSlide extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'اختر بداية واضحة، ويمكنك استخدام باقي التطبيق لاحقاً.',
+            context.l10n.onboardingGoalSubtitle,
             style: TextStyle(fontSize: 16, height: 1.5, color: subTextColor),
             textAlign: TextAlign.center,
           ),

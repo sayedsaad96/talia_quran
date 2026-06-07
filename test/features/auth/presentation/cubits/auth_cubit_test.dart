@@ -15,6 +15,7 @@ import 'auth_cubit_test.mocks.dart';
 void main() {
   late MockAuthRepository mockAuthRepository;
   late StreamController<AppUser?> authStreamController;
+  late StreamController<void> passwordRecoveryStreamController;
 
   const testUser = AppUser(
     id: 'test-uid-1',
@@ -24,19 +25,25 @@ void main() {
 
   /// Helper: creates a cubit with no current user (typical unauthenticated state).
   AuthCubit buildCubit({AppUser? currentUser}) {
-    when(mockAuthRepository.authStateChanges)
-        .thenAnswer((_) => authStreamController.stream);
+    when(
+      mockAuthRepository.authStateChanges,
+    ).thenAnswer((_) => authStreamController.stream);
+    when(
+      mockAuthRepository.passwordRecoveryChanges,
+    ).thenAnswer((_) => passwordRecoveryStreamController.stream);
     when(mockAuthRepository.currentUser).thenReturn(currentUser);
     return AuthCubit(mockAuthRepository);
   }
 
   setUp(() {
     authStreamController = StreamController<AppUser?>.broadcast();
+    passwordRecoveryStreamController = StreamController<void>.broadcast();
     mockAuthRepository = MockAuthRepository();
   });
 
   tearDown(() async {
     await authStreamController.close();
+    await passwordRecoveryStreamController.close();
   });
 
   // ─── Initial State ──────────────────────────────────────────────────────────
@@ -81,6 +88,19 @@ void main() {
       );
 
       authStreamController.add(null);
+      await expectation;
+      await cubit.close();
+    });
+
+    test('transitions to PasswordRecoveryDetected on recovery event', () async {
+      final cubit = buildCubit(currentUser: null);
+
+      final expectation = expectLater(
+        cubit.stream,
+        emitsInOrder([isA<AuthPasswordRecoveryDetected>()]),
+      );
+
+      passwordRecoveryStreamController.add(null);
       await expectation;
       await cubit.close();
     });
@@ -191,8 +211,9 @@ void main() {
     tearDown(() => cubit.close());
 
     test('emits Loading then Unauthenticated on success', () async {
-      when(mockAuthRepository.signOut())
-          .thenAnswer((_) async => const Right(unit));
+      when(
+        mockAuthRepository.signOut(),
+      ).thenAnswer((_) async => const Right(unit));
 
       final expectation = expectLater(
         cubit.stream,
@@ -204,8 +225,9 @@ void main() {
     });
 
     test('emits Loading then Error when signOut fails', () async {
-      when(mockAuthRepository.signOut())
-          .thenAnswer((_) async => const Left(CacheFailure('خطأ في تسجيل الخروج')));
+      when(mockAuthRepository.signOut()).thenAnswer(
+        (_) async => const Left(CacheFailure('خطأ في تسجيل الخروج')),
+      );
 
       final expectation = expectLater(
         cubit.stream,
@@ -213,6 +235,115 @@ void main() {
       );
 
       await cubit.signOut();
+      await expectation;
+    });
+  });
+
+  // ─── Reset Password ────────────────────────────────────────────────────────
+
+  group('resetPassword', () {
+    late AuthCubit cubit;
+
+    setUp(() => cubit = buildCubit(currentUser: null));
+    tearDown(() => cubit.close());
+
+    test('emits Loading then PasswordResetSent on success', () async {
+      when(
+        mockAuthRepository.resetPassword(any),
+      ).thenAnswer((_) async => const Right(unit));
+
+      final expectation = expectLater(
+        cubit.stream,
+        emitsInOrder([isA<AuthLoading>(), isA<AuthPasswordResetSent>()]),
+      );
+
+      await cubit.resetPassword('test@talia.app');
+      await expectation;
+      verify(mockAuthRepository.resetPassword('test@talia.app')).called(1);
+    });
+
+    test('emits Loading then Error when reset email fails', () async {
+      when(mockAuthRepository.resetPassword(any)).thenAnswer(
+        (_) async => const Left(CacheFailure('تعذر إرسال رابط إعادة التعيين')),
+      );
+
+      final expectation = expectLater(
+        cubit.stream,
+        emitsInOrder([isA<AuthLoading>(), isA<AuthError>()]),
+      );
+
+      await cubit.resetPassword('missing@talia.app');
+      await expectation;
+    });
+  });
+
+  group('updatePassword', () {
+    late AuthCubit cubit;
+
+    setUp(() => cubit = buildCubit(currentUser: testUser));
+    tearDown(() => cubit.close());
+
+    test('emits Loading then PasswordUpdated on success', () async {
+      when(
+        mockAuthRepository.updatePassword(any),
+      ).thenAnswer((_) async => const Right(unit));
+
+      final expectation = expectLater(
+        cubit.stream,
+        emitsInOrder([isA<AuthLoading>(), isA<AuthPasswordUpdated>()]),
+      );
+
+      await cubit.updatePassword('new-password');
+      await expectation;
+      verify(mockAuthRepository.updatePassword('new-password')).called(1);
+    });
+
+    test('emits Loading then Error when update fails', () async {
+      when(mockAuthRepository.updatePassword(any)).thenAnswer(
+        (_) async => const Left(CacheFailure('تعذر تحديث كلمة المرور')),
+      );
+
+      final expectation = expectLater(
+        cubit.stream,
+        emitsInOrder([isA<AuthLoading>(), isA<AuthError>()]),
+      );
+
+      await cubit.updatePassword('new-password');
+      await expectation;
+    });
+  });
+
+  group('deleteAccount', () {
+    late AuthCubit cubit;
+
+    setUp(() => cubit = buildCubit(currentUser: testUser));
+    tearDown(() => cubit.close());
+
+    test('emits Loading then AccountDeleted on success', () async {
+      when(
+        mockAuthRepository.deleteAccount(),
+      ).thenAnswer((_) async => const Right(unit));
+
+      final expectation = expectLater(
+        cubit.stream,
+        emitsInOrder([isA<AuthLoading>(), isA<AuthAccountDeleted>()]),
+      );
+
+      await cubit.deleteAccount();
+      await expectation;
+    });
+
+    test('emits Loading then Error when deletion fails', () async {
+      when(mockAuthRepository.deleteAccount()).thenAnswer(
+        (_) async => const Left(CacheFailure('delete_current_user غير مفعلة')),
+      );
+
+      final expectation = expectLater(
+        cubit.stream,
+        emitsInOrder([isA<AuthLoading>(), isA<AuthError>()]),
+      );
+
+      await cubit.deleteAccount();
       await expectation;
     });
   });

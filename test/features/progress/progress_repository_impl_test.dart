@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/services/streak_reader.dart';
 import 'package:talia_quran/features/hifz/data/datasources/hifz_local_datasource.dart';
 import 'package:talia_quran/features/hifz/data/models/ayah_progress_model.dart';
 import 'package:talia_quran/features/hifz/domain/entities/hifz_entities.dart';
@@ -9,6 +10,7 @@ import 'package:talia_quran/features/progress/data/repositories/progress_reposit
 import 'package:talia_quran/features/quran/data/datasources/quran_local_datasource.dart';
 import 'package:talia_quran/features/quran/data/models/ayah_model.dart';
 import 'package:talia_quran/features/quran/data/models/surah_model.dart';
+import 'package:talia_quran/features/streak/domain/entities/streak_entity.dart';
 
 void main() {
   group('ProgressRepositoryImpl', () {
@@ -45,6 +47,7 @@ void main() {
           ]),
           _FakeMemPlusDatasource(),
           _FakeQuranDatasource(),
+          const _FakeStreakReader(),
         );
 
         final result = await repository.getOverallProgress();
@@ -62,6 +65,7 @@ void main() {
           _FakeHifzDatasource(const []),
           _FakeMemPlusDatasource(),
           _FakeQuranDatasource(),
+          const _FakeStreakReader(),
         );
 
         final result = await repository.getOverallProgress();
@@ -72,27 +76,56 @@ void main() {
         expect(progress.readSurahs, 2);
       },
     );
+
+    test('getOverallProgress reads streak from StreakReader', () async {
+      final progressDatasource = _FakeProgressDatasource();
+      final repository = ProgressRepositoryImpl(
+        progressDatasource,
+        _FakeHifzDatasource(const []),
+        _FakeMemPlusDatasource(),
+        _FakeQuranDatasource(),
+        _FakeStreakReader(
+          currentStreak: 7,
+          lastActivityDate: DateTime.utc(2026, 5, 6),
+        ),
+      );
+
+      final result = await repository.getOverallProgress();
+      final progress = result.getOrElse(() => throw StateError('failed'));
+
+      expect(progress.streakDays, 7);
+      expect(progress.lastActiveDate, DateTime.utc(2026, 5, 6));
+      expect(progressDatasource.saveReadPageCalls, 0);
+    });
   });
+}
+
+class _FakeStreakReader implements StreakReader {
+  const _FakeStreakReader({this.currentStreak = 3, this.lastActivityDate});
+
+  final int currentStreak;
+  final DateTime? lastActivityDate;
+
+  @override
+  Future<StreakEntity> getStreak() async => StreakEntity(
+    currentStreak: currentStreak,
+    longestStreak: currentStreak,
+    lastActivityDate: lastActivityDate,
+  );
 }
 
 class _FakeProgressDatasource implements ProgressLocalDatasource {
   _FakeProgressDatasource({this.readPages = const []});
   final List<int> readPages;
-
-  @override
-  DateTime? getLastActiveDate() => DateTime(2026, 5, 5);
+  int saveReadPageCalls = 0;
 
   @override
   List<int> getReadPages() => readPages;
 
   @override
-  int getStreakDays() => 3;
-
-  @override
-  Future<void> saveReadPage(int pageNumber) async {}
-
-  @override
-  Future<void> saveStreak(int days, DateTime date) async {}
+  Future<void> saveReadPage(int pageNumber) async {
+    saveReadPageCalls++;
+  }
 }
 
 class _FakeHifzDatasource implements HifzLocalDatasource {

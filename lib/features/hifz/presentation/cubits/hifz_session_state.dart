@@ -125,10 +125,14 @@ class HifzSessionLoaded extends HifzSessionState {
 }
 
 class HifzSessionError extends HifzSessionState {
-  const HifzSessionError(this.message);
+  const HifzSessionError(this.message, {this.redirectToKidsHome = false});
   final String message;
+
+  /// T-06: When true the UI should redirect the user to the kids-home screen
+  /// instead of showing a generic error dialog.
+  final bool redirectToKidsHome;
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, redirectToKidsHome];
 }
 
 /// Emitted (briefly) when one or more certificates are newly earned.

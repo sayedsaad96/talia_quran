@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -18,12 +19,15 @@ import '../models/memorization_models.dart';
 class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   MemorizationPlusRepositoryImpl(this._datasource, this._quranRepository);
 
+  static const _pairingSessionLifetime = Duration(minutes: 10);
+
   final MemorizationPlusLocalDatasource _datasource;
 
   /// For surah ayah counts
   final QuranRepository _quranRepository;
 
   final _scheduler = const ScheduleNextReviewUsecase();
+  final Map<String, Future<void>> _kidsAwardLocks = {};
 
   /// Lazy Supabase getter — safe to reference but individual methods that call
   /// Supabase must still handle StateError / no-network gracefully via try-catch.
@@ -116,7 +120,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
           pairingCode: token,
           qrData: 'talia-kids-link:$token',
           createdAt: now,
-          expiresAt: now.add(const Duration(minutes: 15)),
+          expiresAt: now.add(_pairingSessionLifetime),
           status: PairingSessionStatus.pending,
           isUsed: false,
         );
@@ -145,16 +149,22 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       return await result.fold((failure) async => Left(failure), (_) async {
         final userId = _supabase.auth.currentUser?.id;
         final profile = await _loadProfile();
+        final linkedChildId = !profile.isChild && userId != null
+            ? await _latestActiveChildIdForParent(userId)
+            : null;
+        final guardianId = profile.isChild && userId != null
+            ? await _activeGuardianIdForChild(userId)
+            : null;
         final saved = await _saveProfile(
           profile.isChild
               ? profile.copyWith(
                   guardianLinkStatus: GuardianLinkStatus.linked,
                   guardianOnboardingStatus: GuardianOnboardingStatus.completed,
-                  guardianId: userId ?? 'linked_guardian',
+                  guardianId: guardianId ?? userId,
                 )
               : profile.copyWith(
                   isParentGuardian: true,
-                  linkedChildId: profile.linkedChildId ?? 'linked_child',
+                  linkedChildId: linkedChildId,
                 ),
         );
         await _datasource.setIsParentMode(saved.isParentGuardian);
@@ -253,17 +263,35 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   refreshChildGuardianLink() async {
     try {
       final profile = await _loadProfile();
-      if (!profile.isChild || !profile.isGuardianLinked) return Right(profile);
+      if (!profile.isChild) return Right(profile);
       final user = _supabase.auth.currentUser;
       if (user == null) return Right(profile);
 
-      final links = await _supabase
-          .from('parent_child_links')
-          .select('parent_user_id')
-          .eq('child_user_id', user.id)
-          .eq('status', 'active')
-          .limit(1);
-      if (links.isNotEmpty) return Right(profile);
+      final guardianId = await _activeGuardianIdForChild(user.id);
+      if (guardianId != null) {
+        final saved = await _saveProfile(
+          profile.copyWith(
+            guardianLinkStatus: GuardianLinkStatus.linked,
+            guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+            guardianId: guardianId,
+          ),
+        );
+        final session = await _datasource.getPairingSession();
+        if (session != null && session.status == PairingSessionStatus.pending) {
+          await _datasource.savePairingSession(
+            PairingSessionModel.fromEntity(
+              session.copyWith(
+                status: PairingSessionStatus.completed,
+                isUsed: true,
+                guardianId: guardianId,
+              ),
+            ),
+          );
+        }
+        return Right(saved);
+      }
+
+      if (!profile.isGuardianLinked) return Right(profile);
 
       final saved = await _saveProfile(
         profile.copyWith(
@@ -739,6 +767,16 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     required int pointsEarned,
   }) async {
     try {
+      final logs = await _datasource.getKidsSessionLogs();
+      KidsSessionLogModel? existing;
+      for (final log in logs) {
+        if (log.surahId == surahId && log.ayahNumber == ayahNumber) {
+          existing = log;
+          break;
+        }
+      }
+      if (existing != null) return Right(existing);
+
       // UTC: consistent with all other review/session date fields.
       final now = DateTime.now().toUtc();
       final log = KidsSessionLogModel(
@@ -919,7 +957,9 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   Future<Either<Failure, String>> createChildLinkToken() async {
     try {
       if (_supabase.auth.currentUser == null) {
-        return const Left(NetworkFailure('سجّل الدخول أولاً على جهاز الطفل'));
+        return const Left(
+          NetworkFailure('Guardian linking requires signing in first'),
+        );
       }
 
       // Generate random 12-char uppercase hex token (no pgcrypto needed)
@@ -1108,20 +1148,80 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   }
 
   @override
-  Future<Either<Failure, KidsProgress>> awardKidsPoints({
+  Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
     required int surahId,
     required int ayahNumber,
     required int repeatsCompleted,
-  }) async {
+  }) => _withKidsAwardLock(surahId, ayahNumber, () async {
     try {
       final current = await _datasource.getKidsProgress();
+      final logs = await _datasource.getKidsSessionLogs();
+      final alreadyCompleted = logs.any(
+        (log) => log.surahId == surahId && log.ayahNumber == ayahNumber,
+      );
+      if (alreadyCompleted) {
+        return Right(
+          KidsCompletionResult(
+            progress: current,
+            pointsEarned: 0,
+            starsEarned: 0,
+            alreadyCompleted: true,
+          ),
+        );
+      }
+
       // Points: 10 base + 2 per extra repeat
       final points = 10 + ((repeatsCompleted - 1) * 2).clamp(0, 20);
       final updated = current.addPoints(points);
       await _datasource.saveKidsProgress(KidsProgressModel.fromEntity(updated));
-      return Right(updated);
+      final logResult = await saveKidsSessionLog(
+        surahId: surahId,
+        ayahNumber: ayahNumber,
+        repeatsCompleted: repeatsCompleted,
+        pointsEarned: points,
+      );
+      final logFailure = logResult.fold((failure) => failure, (_) => null);
+      if (logFailure != null) return Left(logFailure);
+
+      return Right(
+        KidsCompletionResult(
+          progress: updated,
+          pointsEarned: points,
+          starsEarned: updated.starsEarned - current.starsEarned,
+          alreadyCompleted: false,
+        ),
+      );
     } catch (e) {
       return Left(CacheFailure(e.toString()));
+    }
+  });
+
+  Future<T> _withKidsAwardLock<T>(
+    int surahId,
+    int ayahNumber,
+    Future<T> Function() action,
+  ) async {
+    final key = '${surahId}_$ayahNumber';
+    final previous = _kidsAwardLocks[key];
+    final completer = Completer<void>();
+    final current = previous == null
+        ? completer.future
+        : previous.catchError((_) {}).then((_) => completer.future);
+    _kidsAwardLocks[key] = current;
+
+    if (previous != null) {
+      try {
+        await previous;
+      } catch (_) {}
+    }
+
+    try {
+      return await action();
+    } finally {
+      completer.complete();
+      if (_kidsAwardLocks[key] == current) {
+        unawaited(_kidsAwardLocks.remove(key));
+      }
     }
   }
 
@@ -1133,7 +1233,34 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
 
   String _extractToken(String raw) {
     const prefix = 'talia-kids-link:';
-    return raw.startsWith(prefix) ? raw.substring(prefix.length) : raw;
+    final trimmed = raw.trim();
+    return trimmed.toLowerCase().startsWith(prefix)
+        ? trimmed.substring(prefix.length)
+        : trimmed;
+  }
+
+  Future<String?> _activeGuardianIdForChild(String childUserId) async {
+    final links = await _supabase
+        .from('parent_child_links')
+        .select('parent_user_id')
+        .eq('child_user_id', childUserId)
+        .eq('status', 'active')
+        .order('linked_at', ascending: false)
+        .limit(1);
+    if (links.isEmpty) return null;
+    return links.first['parent_user_id'] as String?;
+  }
+
+  Future<String?> _latestActiveChildIdForParent(String parentUserId) async {
+    final links = await _supabase
+        .from('parent_child_links')
+        .select('child_user_id')
+        .eq('parent_user_id', parentUserId)
+        .eq('status', 'active')
+        .order('linked_at', ascending: false)
+        .limit(1);
+    if (links.isEmpty) return null;
+    return links.first['child_user_id'] as String?;
   }
 
   Future<void> _unlockWeeklyRewardIfNeeded() async {

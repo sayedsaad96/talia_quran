@@ -24,10 +24,7 @@ class SettingsState extends Equatable {
   final bool showMemorizationPathResetSuccess;
 
   bool get shouldShowParentSection {
-    if (selectedTrack == 'kids') return true;
-    if (selectedHifzPath == 'backward') return true;
-    if (selectedTrack == 'adults' && isParentMode) return true;
-    return false;
+    return selectedTrack == 'adults' && isParentMode;
   }
 
   SettingsState copyWith({

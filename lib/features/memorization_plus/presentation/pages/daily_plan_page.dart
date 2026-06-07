@@ -44,6 +44,11 @@ class _DailyPlanView extends StatelessWidget {
 
     return BlocConsumer<DailyPlanCubit, DailyPlanState>(
       listener: (context, state) {
+        if (state is DailyPlanKidsRedirect) {
+          context.go(AppRoutes.memorizationPlusKidsHome);
+          return;
+        }
+
         if (state is DailyPlanLoaded && state.newAwards.isNotEmpty) {
           HapticFeedback.heavyImpact();
           unawaited(showCertificateCelebrationDialog(context, state.newAwards));
@@ -103,7 +108,7 @@ class _DailyPlanView extends StatelessWidget {
                   backgroundColor: primary,
                   icon: const Icon(Icons.quiz_rounded, color: Colors.white),
                   label: Text(
-                    'اختبر حفظك',
+                    context.l10n.dailyPlanQuizAction,
                     style: AppTypography.labelLarge.copyWith(
                       color: Colors.white,
                       fontFamily: 'Amiri',
@@ -113,7 +118,9 @@ class _DailyPlanView extends StatelessWidget {
                 )
               : null,
           body: () {
-            if (state is DailyPlanLoading || state is DailyPlanInitial) {
+            if (state is DailyPlanLoading ||
+                state is DailyPlanInitial ||
+                state is DailyPlanKidsRedirect) {
               return const Center(child: LoadingWidget());
             }
             if (state is DailyPlanError) {
@@ -163,7 +170,7 @@ class _DailyPlanView extends StatelessWidget {
                     // New Ayahs
                     if (plan.newAyahs.isNotEmpty)
                       _AyahSection(
-                        label: '📖 آيات جديدة للحفظ',
+                        label: '📖 ${context.l10n.dailyPlanNewAyahs}',
                         ayahs: plan.newAyahs,
                         plan: plan,
                         isDark: isDark,
@@ -175,7 +182,7 @@ class _DailyPlanView extends StatelessWidget {
                     // Near revision
                     if (plan.nearRevision.isNotEmpty)
                       _AyahSection(
-                        label: '🔄 مراجعة قريبة (آخر ٥ أيام)',
+                        label: '🔄 ${context.l10n.dailyPlanNearRevision}',
                         ayahs: plan.nearRevision,
                         plan: plan,
                         isDark: isDark,
@@ -187,7 +194,7 @@ class _DailyPlanView extends StatelessWidget {
                     // Far revision
                     if (plan.farRevision.isNotEmpty)
                       _AyahSection(
-                        label: '📅 مراجعة بعيدة',
+                        label: '📅 ${context.l10n.dailyPlanFarRevision}',
                         ayahs: plan.farRevision,
                         plan: plan,
                         isDark: isDark,
@@ -248,7 +255,7 @@ class _DailyPlanView extends StatelessWidget {
             const Text('🎉', style: TextStyle(fontSize: 56)),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'ما شاء الله! أكملت خطتك اليومية',
+              context.l10n.dailyPlanCompletedTitle,
               style: AppTypography.headlineSmall.copyWith(
                 color: textPrimary,
                 fontFamily: 'Amiri',
@@ -257,7 +264,7 @@ class _DailyPlanView extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'أتممت ${plan.totalItems} عناصر بنجاح.\nثابر على هذا المستوى!',
+              context.l10n.dailyPlanCompletedSubtitle(plan.totalItems),
               style: AppTypography.bodyMedium.copyWith(
                 color: textSecondary,
                 fontFamily: 'Amiri',
@@ -271,14 +278,14 @@ class _DailyPlanView extends StatelessWidget {
               children: [
                 _CelebrationStat(
                   icon: Icons.auto_stories_rounded,
-                  label: 'آيات جديدة',
+                  label: context.l10n.dailyPlanNewAyahsShort,
                   value: '${plan.newAyahs.length}',
                   color: primary,
                   isDark: isDark,
                 ),
                 _CelebrationStat(
                   icon: Icons.replay_rounded,
-                  label: 'مراجعة',
+                  label: context.l10n.dailyPlanReviewShort,
                   value:
                       '${plan.nearRevision.length + plan.farRevision.length}',
                   color: const Color(0xFF2D8E4C),
@@ -300,7 +307,7 @@ class _DailyPlanView extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'بارك الله فيك ✨',
+                  context.l10n.dailyPlanBlessingAction,
                   style: AppTypography.titleMedium.copyWith(
                     color: Colors.white,
                     fontFamily: 'Amiri',
@@ -740,7 +747,7 @@ class _AyahPlanTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'استمع للآية قبل التقييم',
+                        context.l10n.dailyPlanListenBeforeRating,
                         style: AppTypography.labelSmall.copyWith(
                           color: isDark
                               ? AppColors.darkTextHint
@@ -755,7 +762,7 @@ class _AyahPlanTile extends StatelessWidget {
                   Row(
                     children: [
                       _EvalButton(
-                        label: 'ضعيف',
+                        label: context.l10n.performanceWeak,
                         description: context.l10n.dailyPlanRatingWeakDesc,
                         icon: Icons.sentiment_dissatisfied_rounded,
                         color: Colors.red,
@@ -763,7 +770,7 @@ class _AyahPlanTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       _EvalButton(
-                        label: 'متوسط',
+                        label: context.l10n.performanceAverage,
                         description: context.l10n.dailyPlanRatingAverageDesc,
                         icon: Icons.sentiment_neutral_rounded,
                         color: const Color(0xFFFF8C42),
@@ -772,7 +779,7 @@ class _AyahPlanTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       _EvalButton(
-                        label: 'ممتاز',
+                        label: context.l10n.performanceExcellent,
                         description: context.l10n.dailyPlanRatingExcellentDesc,
                         icon: Icons.sentiment_very_satisfied_rounded,
                         color: const Color(0xFF2D8E4C),
@@ -869,15 +876,15 @@ class _RatingBanner extends StatelessWidget {
     final (color, message) = switch (rating) {
       PerformanceRating.excellent => (
         const Color(0xFF2D8E4C),
-        '✅ ممتاز! تم جدولة مراجعة الآية $ayahNumber بعد فترة أطول',
+        context.l10n.dailyPlanRatingExcellent(ayahNumber),
       ),
       PerformanceRating.average => (
         const Color(0xFFFF8C42),
-        '⏰ متوسط، سيتم المراجعة خلال فترة معتدلة',
+        context.l10n.dailyPlanRatingAverage,
       ),
       PerformanceRating.weak => (
         Colors.red,
-        '🔁 ضعيف، ستتم مراجعة الآية $ayahNumber غداً',
+        context.l10n.dailyPlanRatingWeak(ayahNumber),
       ),
     };
 

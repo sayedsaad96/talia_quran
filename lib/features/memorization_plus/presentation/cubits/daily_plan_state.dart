@@ -15,6 +15,10 @@ class DailyPlanLoading extends DailyPlanState {
   const DailyPlanLoading();
 }
 
+class DailyPlanKidsRedirect extends DailyPlanState {
+  const DailyPlanKidsRedirect();
+}
+
 class DailyPlanLoaded extends DailyPlanState {
   const DailyPlanLoaded({
     required this.plan,

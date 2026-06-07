@@ -267,17 +267,18 @@ class AwardKidsPointsParams {
 }
 
 class AwardKidsPointsUsecase
-    implements UseCase<KidsProgress, AwardKidsPointsParams> {
+    implements UseCase<KidsCompletionResult, AwardKidsPointsParams> {
   const AwardKidsPointsUsecase(this._repository);
   final MemorizationPlusRepository _repository;
 
   @override
-  Future<Either<Failure, KidsProgress>> call(AwardKidsPointsParams params) =>
-      _repository.awardKidsPoints(
-        surahId: params.surahId,
-        ayahNumber: params.ayahNumber,
-        repeatsCompleted: params.repeatsCompleted,
-      );
+  Future<Either<Failure, KidsCompletionResult>> call(
+    AwardKidsPointsParams params,
+  ) => _repository.awardKidsPoints(
+    surahId: params.surahId,
+    ayahNumber: params.ayahNumber,
+    repeatsCompleted: params.repeatsCompleted,
+  );
 }
 
 class GetKidsJourneyParams {

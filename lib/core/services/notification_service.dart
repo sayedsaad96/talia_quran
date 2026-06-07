@@ -167,10 +167,14 @@ class TaliaNotificationService {
       if (streakEnabled) {
         final hour = prefs.getInt('${streakAlertPreferenceKey}_hour') ?? 22;
         final minute = prefs.getInt('${streakAlertPreferenceKey}_minute') ?? 0;
-        await scheduleStreakProtectionAlert(currentStreak: 1, hour: hour, minute: minute);
+        await scheduleStreakProtectionAlert(
+          currentStreak: 1,
+          hour: hour,
+          minute: minute,
+        );
       }
     }
-    
+
     await scheduleDailyAyahReminder();
 
     if (morningAzkarEnabled) {

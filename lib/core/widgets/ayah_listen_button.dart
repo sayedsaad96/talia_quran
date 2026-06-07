@@ -194,8 +194,7 @@ class _AyahListenButtonState extends State<AyahListenButton> {
                 color: _isPlaying
                     ? Colors.blue
                     : (isDark ? Colors.white70 : Colors.black87),
-                fontWeight:
-                    _isPlaying ? FontWeight.bold : FontWeight.normal,
+                fontWeight: _isPlaying ? FontWeight.bold : FontWeight.normal,
               ),
             ),
           ],

@@ -11,7 +11,6 @@ import '../../features/quran/data/datasources/quran_local_datasource.dart';
 // to receive CertificateAward and CertificateType without import changes.
 export '../../features/certificate/domain/entities/certificate_award.dart';
 
-
 class AchievementService {
   AchievementService(this._prefs, this._hifzDs, this._memPlusDs, this._quranDs);
 
@@ -55,8 +54,7 @@ class AchievementService {
   Future<List<CertificateAward>> checkAndUnlockCertificates() async {
     try {
       // Cache earned IDs once — avoids repeated JSON parsing across 144+ checks
-      final alreadyEarnedIds =
-          getEarnedCertificates().map((c) => c.id).toSet();
+      final alreadyEarnedIds = getEarnedCertificates().map((c) => c.id).toSet();
 
       final allProgress = await _hifzDs.getAllProgress();
       final memPlusRecords = await _memPlusDs.getAllReviewRecords();

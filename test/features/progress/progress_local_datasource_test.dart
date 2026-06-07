@@ -44,14 +44,5 @@ void main() {
         expect(datasource.getReadPages(), [1, 604]);
       },
     );
-
-    test('saves streak days and last active date together', () async {
-      final date = DateTime(2026, 5, 5);
-
-      await datasource.saveStreak(7, date);
-
-      expect(datasource.getStreakDays(), 7);
-      expect(datasource.getLastActiveDate(), date);
-    });
   });
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
@@ -8,6 +8,7 @@ import '../../domain/entities/hifz_entities.dart';
 import '../../domain/usecases/get_hifz_progress_usecase.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../../core/memorization/memorization_path_resolver.dart';
 
 part 'hifz_state.dart';
 
@@ -18,6 +19,7 @@ class HifzCubit extends Cubit<HifzState> {
     this._getPath,
     this._savePath,
     this._memorizationRepository,
+    this._pathResolver,
   ) : super(const HifzInitial());
 
   final GetSurahsUsecase _getSurahs;
@@ -25,6 +27,7 @@ class HifzCubit extends Cubit<HifzState> {
   final GetHifzPathUsecase _getPath;
   final SaveHifzPathUsecase _savePath;
   final MemorizationPlusRepository _memorizationRepository;
+  final MemorizationPathResolver _pathResolver;
 
   Future<void> load() async {
     emit(const HifzLoading());
@@ -92,8 +95,10 @@ class HifzCubit extends Cubit<HifzState> {
       final memPath = path == 'backward'
           ? MemorizationPath.child
           : MemorizationPath.adult;
-      await _memorizationRepository.selectMemorizationPath(memPath);
+      final pathResult = await _memorizationRepository.selectMemorizationPath(
+        memPath,
+      );
+      pathResult.fold((_) => null, (_) => _pathResolver.notifyChanged());
     }
   }
 }
-

@@ -55,14 +55,20 @@ class AyahReviewRecord extends Equatable {
   /// Near revision: reviewed within last 5 days
   bool get isNearRevision {
     if (isNew) return false;
-    final diff = DateTime.now().toUtc().difference(lastReviewedAt.toUtc()).inDays;
+    final diff = DateTime.now()
+        .toUtc()
+        .difference(lastReviewedAt.toUtc())
+        .inDays;
     return diff <= 5 && !isMemorized;
   }
 
   /// Far revision: reviewed more than 5 days ago
   bool get isFarRevision {
     if (isNew) return false;
-    final diff = DateTime.now().toUtc().difference(lastReviewedAt.toUtc()).inDays;
+    final diff = DateTime.now()
+        .toUtc()
+        .difference(lastReviewedAt.toUtc())
+        .inDays;
     return diff > 5 && !isMemorized;
   }
 
@@ -272,6 +278,28 @@ class KidsProgress extends Equatable {
   ];
 }
 
+class KidsCompletionResult extends Equatable {
+  const KidsCompletionResult({
+    required this.progress,
+    required this.pointsEarned,
+    required this.starsEarned,
+    required this.alreadyCompleted,
+  });
+
+  final KidsProgress progress;
+  final int pointsEarned;
+  final int starsEarned;
+  final bool alreadyCompleted;
+
+  @override
+  List<Object?> get props => [
+    progress,
+    pointsEarned,
+    starsEarned,
+    alreadyCompleted,
+  ];
+}
+
 class KidsJourneyStage extends Equatable {
   const KidsJourneyStage({
     required this.stageNumber,
@@ -293,6 +321,12 @@ class KidsJourneyStage extends Equatable {
   int get completedCount => completedAyahs.length;
   double get progress => totalAyahs <= 0 ? 0 : completedCount / totalAyahs;
   bool get isUnlocked => status != KidsJourneyStageStatus.locked;
+
+  /// The next ayah to start memorizing. If all ayahs are completed,
+  /// returns [startAyah] to allow reviewing from the beginning.
+  int get nextAyahToStart => completedAyahs.length >= totalAyahs
+      ? startAyah
+      : startAyah + completedAyahs.length;
 
   @override
   List<Object?> get props => [
@@ -459,7 +493,9 @@ class ParentDashboard extends Equatable {
       now.month,
       now.day,
     ).subtract(Duration(days: now.weekday - 1));
-    return logs.where((log) => !log.completedAt.toUtc().isBefore(weekStart)).length;
+    return logs
+        .where((log) => !log.completedAt.toUtc().isBefore(weekStart))
+        .length;
   }
 
   @override

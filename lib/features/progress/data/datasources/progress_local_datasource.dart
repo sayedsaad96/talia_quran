@@ -3,9 +3,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_constants.dart';
 
 abstract class ProgressLocalDatasource {
-  int getStreakDays();
-  DateTime? getLastActiveDate();
-  Future<void> saveStreak(int days, DateTime date);
   List<int> getReadPages();
   Future<void> saveReadPage(int pageNumber);
 }
@@ -13,28 +10,6 @@ abstract class ProgressLocalDatasource {
 class ProgressLocalDatasourceImpl implements ProgressLocalDatasource {
   ProgressLocalDatasourceImpl(this._prefs);
   final SharedPreferences _prefs;
-
-  @override
-  int getStreakDays() => _prefs.getInt(AppConstants.kStreakCount) ?? 0;
-
-  @override
-  DateTime? getLastActiveDate() {
-    final raw = _prefs.getString(AppConstants.kLastActiveDate);
-    if (raw == null) return null;
-    return DateTime.tryParse(raw);
-  }
-
-  @override
-  Future<void> saveStreak(int days, DateTime date) async {
-    final savedDays = await _prefs.setInt(AppConstants.kStreakCount, days);
-    final savedDate = await _prefs.setString(
-      AppConstants.kLastActiveDate,
-      date.toIso8601String(),
-    );
-    if (!savedDays || !savedDate) {
-      throw StateError('Failed to save streak');
-    }
-  }
 
   @override
   List<int> getReadPages() {

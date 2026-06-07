@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
@@ -11,6 +12,7 @@ import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../../core/memorization/memorization_path_resolver.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../domain/usecases/get_activity_heatmap_usecase.dart';
 
@@ -24,6 +26,8 @@ class HomeCubit extends Cubit<HomeState> {
   final MemorizationPlusRepository _memorizationRepository;
   final AppSessionService _sessionService;
   final GetActivityHeatmapUsecase _getHeatmap;
+  final MemorizationPathResolver _pathResolver;
+  late final StreamSubscription<void> _pathChangesSub;
 
   HomeCubit(
     this._getProgress,
@@ -33,7 +37,14 @@ class HomeCubit extends Cubit<HomeState> {
     this._memorizationRepository,
     this._sessionService,
     this._getHeatmap,
-  ) : super(const HomeInitial());
+    this._pathResolver,
+  ) : super(const HomeInitial()) {
+    _pathChangesSub = _pathResolver.changes.listen((_) {
+      if (!isClosed) {
+        unawaited(load());
+      }
+    });
+  }
 
   Future<void> load() async {
     emit(const HomeLoading());
@@ -64,17 +75,19 @@ class HomeCubit extends Cubit<HomeState> {
     // Load last restorable location for "Continue Reading" chip
     final lastLocation = _sessionService.getLastRestorableLocation();
 
-    // Load parent tracking preferences
-    MemorizationTrack? selectedTrack;
-    _memorizationRepository.getSelectedTrack().fold(
-      (_) {},
-      (t) => selectedTrack = t,
-    );
-    bool isParentMode = false;
-    _memorizationRepository.getIsParentMode().fold(
-      (_) {},
-      (m) => isParentMode = m,
-    );
+    // T-03 FIX: Load the authoritative memorization profile async instead of
+    // the legacy synchronous getSelectedTrack() / getIsParentMode() reads.
+    // This ensures HomeCubit always reflects the latest path configuration.
+    final profileResult = await _memorizationRepository
+        .getMemorizationProfile();
+    final profile = profileResult.fold((_) => null, (p) => p);
+    final selectedTrack = profile?.selectedPath == MemorizationPath.child
+        ? MemorizationTrack.kids
+        : profile?.selectedPath == MemorizationPath.adult
+        ? MemorizationTrack.adults
+        : null;
+    final isParentMode = profile?.isParentGuardian ?? false;
+    final isKids = profile?.isChild ?? false;
 
     progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
       final hifzProgress = hifzResult.getOrElse(() => []);
@@ -87,6 +100,7 @@ class HomeCubit extends Cubit<HomeState> {
           customPlan: customPlan,
           selectedTrack: selectedTrack,
           isParentMode: isParentMode,
+          isKids: isKids,
           lastRestorableLocation: lastLocation,
           activityCountsByDay: heatmap.countsByDay,
           activityStartDate: heatmap.startDate,
@@ -101,5 +115,11 @@ class HomeCubit extends Cubit<HomeState> {
     if (hour >= 12 && hour < 17) return 'afternoon';
     if (hour >= 17 && hour < 21) return 'evening';
     return 'night';
+  }
+
+  @override
+  Future<void> close() async {
+    await _pathChangesSub.cancel();
+    return super.close();
   }
 }

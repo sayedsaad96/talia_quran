@@ -2,14 +2,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/memorization/memorization_path_resolver.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'settings_state.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
-  SettingsCubit(this._repository, this._prefs) : super(const SettingsState());
+  SettingsCubit(this._repository, this._prefs, this._pathResolver)
+    : super(const SettingsState());
 
   final MemorizationPlusRepository _repository;
   final SharedPreferences _prefs;
+  final MemorizationPathResolver _pathResolver;
 
   Future<void> load({bool showPathResetSuccess = false}) async {
     emit(
@@ -68,6 +71,7 @@ class SettingsCubit extends Cubit<SettingsState> {
       return;
     }
 
+    _pathResolver.notifyChanged();
     await load(showPathResetSuccess: true);
   }
 

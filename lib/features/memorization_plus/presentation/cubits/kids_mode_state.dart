@@ -35,6 +35,9 @@ class KidsModeLoaded extends KidsModeState {
     this.newAwards = const [],
     this.mustListenFirst = false, // BUG-4 FIX: guard for listen-before-complete
     this.audioError,
+    this.isBuffering = false, // true while audio URL is loading/buffering
+    this.isRecording = false, // true during the mic-recording animation phase
+    this.sessionStarsEarned = 0,
   });
 
   final int surahId;
@@ -49,6 +52,13 @@ class KidsModeLoaded extends KidsModeState {
   final bool mustListenFirst;
   final String? audioError;
 
+  /// True while just_audio is loading/buffering the audio URL.
+  final bool isBuffering;
+
+  /// True during the brief microphone-recording animation before completion.
+  final bool isRecording;
+  final int sessionStarsEarned;
+
   KidsModeLoaded copyWith({
     KidsProgress? progress,
     bool? isPlaying,
@@ -58,6 +68,9 @@ class KidsModeLoaded extends KidsModeState {
     bool? mustListenFirst,
     String? audioError,
     bool clearAudioError = false,
+    bool? isBuffering,
+    bool? isRecording,
+    int? sessionStarsEarned,
   }) => KidsModeLoaded(
     surahId: surahId,
     ayahNumber: ayahNumber,
@@ -70,6 +83,9 @@ class KidsModeLoaded extends KidsModeState {
     newAwards: newAwards ?? this.newAwards,
     mustListenFirst: mustListenFirst ?? this.mustListenFirst,
     audioError: clearAudioError ? null : audioError ?? this.audioError,
+    isBuffering: isBuffering ?? this.isBuffering,
+    isRecording: isRecording ?? this.isRecording,
+    sessionStarsEarned: sessionStarsEarned ?? this.sessionStarsEarned,
   );
 
   @override
@@ -83,5 +99,8 @@ class KidsModeLoaded extends KidsModeState {
     newAwards,
     mustListenFirst,
     audioError,
+    isBuffering,
+    isRecording,
+    sessionStarsEarned,
   ];
 }

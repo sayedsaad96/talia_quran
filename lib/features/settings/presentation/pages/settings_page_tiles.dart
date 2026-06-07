@@ -46,8 +46,7 @@ class _ParentDashboardTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () =>
-          context.push('/memorization-plus/parent-dashboard?surahId=1'),
+      onTap: () => unawaited(_openParentDashboard(context)),
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -98,6 +97,13 @@ class _ParentDashboardTile extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openParentDashboard(BuildContext context) async {
+    final location = await MemorizationNavigationResolver(
+      getIt<MemorizationPlusRepository>(),
+    ).parentDashboardLocation();
+    if (context.mounted) unawaited(context.push(location));
   }
 }
 
@@ -640,6 +646,74 @@ class _TutorialGuideTile extends StatelessWidget {
                   ),
                   Text(
                     context.l10n.tutorialGuideSubtitle,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: subtextColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 16,
+              color: subtextColor,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PrivacyPolicyTile extends StatelessWidget {
+  const _PrivacyPolicyTile({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return InkWell(
+      onTap: () => context.push(AppRoutes.privacyPolicy),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.privacy_tip_outlined, color: primary),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.privacyPolicy,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    context.isArabic
+                        ? 'كيف نحفظ بياناتك وخصوصيتك'
+                        : 'How your data and privacy are handled',
                     style: AppTypography.labelSmall.copyWith(
                       color: subtextColor,
                     ),
@@ -1505,7 +1579,9 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
                     Row(
                       children: [
                         Text(
-                          context.l10n.notificationEverydayAt(_formatTime(time)),
+                          context.l10n.notificationEverydayAt(
+                            _formatTime(time),
+                          ),
                           style: AppTypography.labelSmall.copyWith(
                             color: subtextColor,
                           ),
@@ -1667,38 +1743,6 @@ class _AccountSection extends StatefulWidget {
 }
 
 class _AccountSectionState extends State<_AccountSection> {
-  bool _isSignUp = false;
-  bool _obscurePassword = true;
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _nameController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _nameController.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    if (!_formKey.currentState!.validate()) return;
-    final cubit = context.read<AuthCubit>();
-    if (_isSignUp) {
-      cubit.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        displayName: _nameController.text.trim(),
-      );
-    } else {
-      cubit.signIn(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
@@ -1708,9 +1752,6 @@ class _AccountSectionState extends State<_AccountSection> {
     final subtextColor = widget.isDark
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
-    final fieldFill = widget.isDark
-        ? Colors.white.withValues(alpha: 0.06)
-        : Colors.black.withValues(alpha: 0.04);
 
     return BlocConsumer<AuthCubit, AuthState>(
       listener: (context, state) {
@@ -1721,21 +1762,14 @@ class _AccountSectionState extends State<_AccountSection> {
               backgroundColor: Colors.red.shade700,
             ),
           );
-        } else if (state is AuthAuthenticated) {
-          // Update local profile automatically with the user's display name
-          context.read<ProfileCubit>().updateProfile(
-            name: state.user.displayName,
-          );
+        } else if (state is AuthAccountDeleted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(
-                _isSignUp
-                    ? context.l10n.signupSuccess
-                    : context.l10n.loginSuccess,
-              ),
+              content: Text(_accountDeletedMessage(context)),
               backgroundColor: Colors.green.shade700,
             ),
           );
+          context.go(AppRoutes.home);
         }
       },
       builder: (context, state) {
@@ -1787,7 +1821,7 @@ class _AccountSectionState extends State<_AccountSection> {
                           Row(
                             children: [
                               Icon(
-                                Icons.cloud_done_rounded,
+                                Icons.verified_user_rounded,
                                 size: 12,
                                 color: Colors.green.shade500,
                               ),
@@ -1817,9 +1851,7 @@ class _AccountSectionState extends State<_AccountSection> {
               ),
               InkWell(
                 onTap: () => _confirmSignOut(context),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(AppSpacing.radiusLg),
-                ),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: AppSpacing.md,
@@ -1853,201 +1885,113 @@ class _AccountSectionState extends State<_AccountSection> {
                   ),
                 ),
               ),
+              Divider(
+                height: 0.5,
+                color: widget.isDark
+                    ? AppColors.darkDivider
+                    : AppColors.lightDivider,
+                indent: 16,
+                endIndent: 16,
+              ),
+              InkWell(
+                onTap: () => _confirmDeleteAccount(context, user.email),
+                borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(AppSpacing.radiusLg),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.md,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: Colors.red.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.delete_forever_rounded,
+                          color: Colors.red,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _deleteAccountTitle(context),
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: Colors.red,
+                              ),
+                            ),
+                            Text(
+                              _deleteAccountSubtitle(context),
+                              style: AppTypography.labelSmall.copyWith(
+                                color: subtextColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           );
         }
 
-        // ─── Unauthenticated view (Email/Password form) ───────────
+        // ─── Unauthenticated view (Redirect to Main Login) ───────────
         return Padding(
           padding: const EdgeInsets.all(AppSpacing.md),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Info text
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.cloud_upload_outlined, color: primary, size: 22),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        context.l10n.guestModeWarning,
-                        style: AppTypography.bodySmall.copyWith(
-                          color: subtextColor,
-                          height: 1.5,
-                        ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.cloud_upload_outlined, color: primary, size: 22),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      context.l10n.guestModeWarning,
+                      style: AppTypography.bodySmall.copyWith(
+                        color: subtextColor,
+                        height: 1.5,
                       ),
                     ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                // Sign In / Sign Up toggle
-                Row(
-                  children: [
-                    _TabChip(
-                      label: context.l10n.signIn,
-                      isSelected: !_isSignUp,
-                      primary: primary,
-                      textColor: textColor,
-                      isDark: widget.isDark,
-                      onTap: () => setState(() => _isSignUp = false),
-                    ),
-                    const SizedBox(width: 8),
-                    _TabChip(
-                      label: context.l10n.signUp,
-                      isSelected: _isSignUp,
-                      primary: primary,
-                      textColor: textColor,
-                      isDark: widget.isDark,
-                      onTap: () => setState(() => _isSignUp = true),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                // Display Name (sign up only)
-                if (_isSignUp) ...[
-                  TextFormField(
-                    controller: _nameController,
-                    style: AppTypography.bodyMedium.copyWith(color: textColor),
-                    decoration: _inputDecoration(
-                      label: context.l10n.name,
-                      icon: Icons.person_outline_rounded,
-                      primary: primary,
-                      textColor: textColor,
-                      fillColor: fieldFill,
-                    ),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return context.l10n.enterName;
-                      }
-                      return null;
-                    },
                   ),
-                  const SizedBox(height: 10),
                 ],
-
-                // Email
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  style: AppTypography.bodyMedium.copyWith(color: textColor),
-                  decoration: _inputDecoration(
-                    label: context.l10n.email,
-                    icon: Icons.email_outlined,
-                    primary: primary,
-                    textColor: textColor,
-                    fillColor: fieldFill,
-                  ),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) {
-                      return context.l10n.enterEmail;
-                    }
-                    if (!v.contains('@') || !v.contains('.')) {
-                      return context.l10n.invalidEmail;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 10),
-
-                // Password
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  style: AppTypography.bodyMedium.copyWith(color: textColor),
-                  decoration:
-                      _inputDecoration(
-                        label: context.l10n.password,
-                        icon: Icons.lock_outline_rounded,
-                        primary: primary,
-                        textColor: textColor,
-                        fillColor: fieldFill,
-                      ).copyWith(
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_rounded
-                                : Icons.visibility_rounded,
-                            color: subtextColor,
-                            size: 20,
-                          ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
-                        ),
-                      ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) {
-                      return context.l10n.enterPassword;
-                    }
-                    if (_isSignUp && v.length < 6) {
-                      return context.l10n.passwordTooShort;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-
-                // Submit button
-                FilledButton(
-                  onPressed: _submit,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: primary,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    ),
-                  ),
-                  child: Text(
-                    _isSignUp
-                        ? (context.l10n.createAccount)
-                        : (context.l10n.signIn),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              FilledButton(
+                onPressed: () => context.push(AppRoutes.login),
+                style: FilledButton.styleFrom(
+                  backgroundColor: primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                   ),
                 ),
-              ],
-            ),
+                child: Text(
+                  context.l10n.signIn,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
+                ),
+              ),
+            ],
           ),
         );
       },
-    );
-  }
-
-  InputDecoration _inputDecoration({
-    required String label,
-    required IconData icon,
-    required Color primary,
-    required Color textColor,
-    required Color fillColor,
-  }) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: AppTypography.labelMedium.copyWith(
-        color: textColor.withValues(alpha: 0.6),
-      ),
-      prefixIcon: Icon(icon, color: primary, size: 20),
-      filled: true,
-      fillColor: fillColor,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        borderSide: BorderSide(color: primary, width: 1.5),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        borderSide: const BorderSide(color: Colors.red, width: 1),
-      ),
     );
   }
 
@@ -2093,52 +2037,52 @@ class _AccountSectionState extends State<_AccountSection> {
       ),
     );
   }
-}
 
-// ─── Tab Chip Widget ──────────────────────────────────────────────────────────
+  String _accountDeletedMessage(BuildContext context) => context.isArabic
+      ? 'تم حذف الحساب السحابي. بقي تقدمك المحلي محفوظاً على هذا الجهاز.'
+      : 'Cloud account deleted. Your local progress remains on this device.';
 
-class _TabChip extends StatelessWidget {
-  const _TabChip({
-    required this.label,
-    required this.isSelected,
-    required this.primary,
-    required this.textColor,
-    required this.isDark,
-    required this.onTap,
-  });
+  String _deleteAccountTitle(BuildContext context) =>
+      context.isArabic ? 'حذف الحساب' : 'Delete account';
 
-  final String label;
-  final bool isSelected;
-  final Color primary;
-  final Color textColor;
-  final bool isDark;
-  final VoidCallback onTap;
+  String _deleteAccountSubtitle(BuildContext context) => context.isArabic
+      ? 'يحذف الحساب السحابي فقط'
+      : 'Deletes the cloud account only';
 
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? primary.withValues(alpha: 0.15)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-          border: Border.all(
-            color: isSelected
-                ? primary
-                : (isDark ? Colors.white12 : Colors.black12),
+  String _deleteAccountWarning(BuildContext context, String email) {
+    if (context.isArabic) {
+      return 'سيتم حذف حساب Supabase المرتبط بـ $email وبياناته السحابية.\n\n'
+          'لن يتم حذف تقدم القرآن المحلي، أو الحفظ، أو مسار الأطفال، أو الحفظ الذكي من هذا الجهاز.\n\n'
+          'هل تريد المتابعة؟';
+    }
+
+    return 'This deletes the Supabase account for $email and its cloud data.\n\n'
+        'Local Quran, Hifz, Kids, and Smart memorization progress on this device will not be deleted.\n\n'
+        'Do you want to continue?';
+  }
+
+  Future<void> _confirmDeleteAccount(BuildContext context, String email) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(_deleteAccountTitle(context)),
+        content: Text(_deleteAccountWarning(context, email)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.cancel),
           ),
-        ),
-        child: Text(
-          label,
-          style: AppTypography.labelMedium.copyWith(
-            color: isSelected ? primary : textColor.withValues(alpha: 0.6),
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(context.l10n.delete),
           ),
-        ),
+        ],
       ),
     );
+
+    if (confirmed == true && context.mounted) {
+      await context.read<AuthCubit>().deleteAccount();
+    }
   }
 }

@@ -2,12 +2,12 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
+import 'core/config/supabase_config.dart';
 import 'core/di/injection.dart';
 import 'core/services/notification_service.dart';
 import 'core/utils/talia_logger.dart';
@@ -60,16 +60,6 @@ Future<void> main() async {
 }
 
 Future<void> _bootstrapAndRun() async {
-  // Load environment variables from .env (excluded from Git via .gitignore).
-  // Wrapped in try-catch: if .env is absent (CI, release build without asset,
-  // or after Phase 3 removal from pubspec assets), the app continues in
-  // offline mode rather than crashing before any local content is reachable.
-  try {
-    await dotenv.load(fileName: '.env');
-  } catch (_) {
-    // .env not found — continue without Supabase config (offline mode).
-  }
-
   // Prevent Google Fonts from fetching fonts at runtime — all fonts are bundled as assets
   GoogleFonts.config.allowRuntimeFetching = false;
 
@@ -90,26 +80,19 @@ Future<void> _bootstrapAndRun() async {
     ),
   );
 
-  final supabaseUrl = dotenv.env['SUPABASE_URL']?.trim();
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY']?.trim();
+  const supabaseConfig = SupabaseConfig.fromDartDefine;
 
-  // OFFLINE-FIRST FIX (FIND-STAB01): If Supabase credentials are absent or
-  // incomplete, continue in offline mode rather than crashing the app.
-  // Auth-dependent features will be unavailable, but core Quran/Hifz/Azkar
-  // functionality is fully offline and remains accessible.
-  final hasSupabaseConfig =
-      supabaseUrl != null &&
-      supabaseUrl.isNotEmpty &&
-      supabaseAnonKey != null &&
-      supabaseAnonKey.isNotEmpty;
-
-  if (hasSupabaseConfig) {
-    // Initialize Supabase — credentials loaded from .env (never hardcoded)
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+  // OFFLINE-FIRST: Supabase config is supplied through --dart-define.
+  // If absent, continue in offline mode; local Quran, Hifz, Azkar, progress,
+  // and memorization features must remain reachable.
+  if (supabaseConfig.isConfigured) {
+    await Supabase.initialize(
+      url: supabaseConfig.url.trim(),
+      anonKey: supabaseConfig.anonKey.trim(),
+    );
   }
-  // Note: if hasSupabaseConfig is false, the app starts in offline mode.
-  // Auth features (LoginPage) will show an appropriate error when Supabase
-  // client is accessed, but all local features remain fully functional.
+  // If Supabase is not configured, auth/cloud features return friendly offline
+  // errors while local-first features continue to work.
 
   // Initialize dependency injection
   await configureDependencies();

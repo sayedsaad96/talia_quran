@@ -23,26 +23,36 @@ import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/memorization_plus/presentation/pages/path_selection_page.dart';
 import '../../features/memorization_plus/presentation/pages/guardian_linking_page.dart';
 import '../../features/memorization_plus/presentation/pages/daily_plan_page.dart';
-import '../../features/memorization_plus/presentation/pages/kids_journey_page.dart';
-import '../../features/memorization_plus/presentation/pages/kids_mode_page.dart';
+import '../../features/memorization_plus/presentation/pages/kids_gamified_completion_page.dart';
+import '../../features/memorization_plus/presentation/pages/kids_gamified_home_page.dart';
+import '../../features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
+import '../../features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
+import '../../features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
+import '../../features/memorization_plus/presentation/pages/memorization_hub_page.dart';
 import '../../features/memorization_plus/presentation/pages/parent_dashboard_page.dart';
 import '../../features/memorization_plus/presentation/pages/custom_plan_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/quiz_page.dart';
 import '../../features/memorization_plus/presentation/pages/qcf_rendering_poc_page.dart';
+import '../../features/memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/onboarding/presentation/pages/child_onboarding_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/certificate/presentation/pages/certificate_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/auth/presentation/pages/update_password_page.dart';
 import '../../features/tutorial_guide/presentation/pages/tutorial_guide_page.dart';
+import '../../features/settings/presentation/pages/privacy_policy_page.dart';
 import '../services/achievement_service.dart';
 import '../widgets/app_shell.dart';
 
 abstract class AppRoutes {
   static const String splash = '/splash';
   static const String onboarding = '/onboarding';
+  static const String childOnboarding = '/onboarding/child';
   static const String home = '/';
   static const String quran = '/quran';
   static const String hifz = '/hifz';
+  static const String memorizationHub = '/memorization';
   static const String azkar = '/azkar';
   static const String progress = '/progress';
   static const String hifzSession = '/hifz/session';
@@ -54,15 +64,24 @@ abstract class AppRoutes {
       '/memorization-plus/daily-plan';
   static const String memorizationPlusKidsJourney =
       '/memorization-plus/kids-journey';
+  static const String memorizationPlusJourney = '/memorization-plus/journey';
   static const String memorizationPlusKids = '/memorization-plus/kids';
+  static const String memorizationPlusKidsHome = '/memorization-plus/kids-home';
+  static const String memorizationPlusKidsStage =
+      '/memorization-plus/kids-stage';
+  static const String memorizationPlusKidsCompletion =
+      '/memorization-plus/kids-completion';
   static const String parentDashboard = '/memorization-plus/parent-dashboard';
   static const String memorizationPlusCustomPlan =
       '/memorization-plus/custom-plan';
   static const String memorizationPlusQuiz = '/memorization-plus/quiz';
   static const String qcfRenderingPoc = '/debug/qcf-rendering-poc';
   static const String login = '/login';
+  static const String updatePassword = '/auth/update-password';
+  static const String updatePasswordAlias = '/update-password';
   static const String certificate = '/certificate';
   static const String tutorialGuide = '/tutorial-guide';
+  static const String privacyPolicy = '/settings/privacy-policy';
 }
 
 /// Bridges [AuthCubit] state stream into a [Listenable] so [GoRouter]
@@ -85,17 +104,108 @@ class _AuthNotifier extends ChangeNotifier {
 final _publicRoutes = <String>[
   AppRoutes.splash,
   AppRoutes.onboarding,
+  AppRoutes.childOnboarding,
   AppRoutes.login,
+  AppRoutes.updatePassword,
+  AppRoutes.updatePasswordAlias,
   AppRoutes.home,
   AppRoutes.quran,
   AppRoutes.hifz,
+  AppRoutes.memorizationHub,
   AppRoutes.azkar,
   AppRoutes.progress,
   AppRoutes.settings,
   AppRoutes.certificate,
   AppRoutes.tutorialGuide,
+  AppRoutes.privacyPolicy,
+  AppRoutes.memorizationPlus,
   if (kDebugMode) AppRoutes.qcfRenderingPoc,
 ];
+
+final _remoteProtectedRoutes = <String>[AppRoutes.parentDashboard];
+
+class MemorizationRouteGuard {
+  const MemorizationRouteGuard._();
+
+  static Future<MemorizationProfile?> _readProfile() async {
+    try {
+      final repo = getIt<MemorizationPlusRepository>();
+      final profileResult = await repo.getMemorizationProfile();
+      return profileResult.fold((_) => null, (profile) => profile);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<String?> entryRedirect() async {
+    try {
+      final repo = getIt<MemorizationPlusRepository>();
+      final profileResult = await repo.getMemorizationProfile();
+      final profile = profileResult.fold((_) => null, (p) => p);
+      if (profile == null || !profile.hasSelectedPath) return null;
+
+      if (profile.isChild) return AppRoutes.memorizationPlusKidsHome;
+
+      if (profile.isAdult) {
+        return MemorizationNavigationResolver(repo).adultEntryLocation();
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<String?> adultOnlyRedirect() async {
+    final profile = await _readProfile();
+    return profile?.isChild == true ? AppRoutes.memorizationPlusKidsHome : null;
+  }
+
+  static Future<String?> kidsOnlyRedirect() async {
+    final profile = await _readProfile();
+    if (profile == null || profile.isChild) return null;
+    return AppRoutes.memorizationPlus;
+  }
+
+  static Future<String?> hifzRedirect() async {
+    try {
+      final profile = await _readProfile();
+      if (profile?.isChild == true) {
+        return AppRoutes.memorizationPlusKidsHome;
+      }
+      if (profile?.hasSelectedPath == true) return null;
+
+      final prefs = getIt<SharedPreferences>();
+      final legacyPath = prefs.getString(AppConstants.kHifzPathMode);
+      if (legacyPath != null && legacyPath.isNotEmpty) return null;
+      return AppRoutes.memorizationPlus;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<String?> hifzSessionRedirect(GoRouterState state) async {
+    final profile = await _readProfile();
+    if (profile?.isChild != true) return null;
+
+    final extra = state.extra as Map<String, dynamic>?;
+    final surahId =
+        extra?['surahId'] as int? ??
+        int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+    final startAyah =
+        extra?['startAyah'] as int? ??
+        int.tryParse(state.uri.queryParameters['startAyah'] ?? '');
+
+    if (AppRouter._isValidSurahId(surahId) &&
+        startAyah != null &&
+        startAyah > 0) {
+      return AppRouter._kidsListenLocation(
+        surahId: surahId!,
+        ayahNumber: startAyah,
+      );
+    }
+    return AppRoutes.memorizationPlusKidsHome;
+  }
+}
 
 abstract class AppRouter {
   // UX-4 FIX: Removed _shellNavigatorKey — no longer needed with StatefulShellRoute.
@@ -110,11 +220,12 @@ abstract class AppRouter {
     redirect: (context, state) {
       final authState = getIt<AuthCubit>().state;
       final location = state.matchedLocation;
-      final isPublic = _publicRoutes.any((r) {
-        if (r == AppRoutes.home) return location == AppRoutes.home;
-        return location.startsWith(r);
-      });
-      if (isPublic) return null;
+      if (requiresAuthentication(location)) {
+        if (authState is AuthAuthenticated) return null;
+        if (authState is AuthInitial) return null;
+        return AppRoutes.login;
+      }
+      if (isPublicLocation(location)) return null;
       if (authState is AuthAuthenticated) return null;
       if (authState is AuthInitial) return null; // still initialising
       return AppRoutes.login; // unauthenticated on protected route
@@ -143,8 +254,23 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.childOnboarding,
+        builder: (context, state) => const ChildOnboardingPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.login,
         builder: (context, state) => const LoginPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.updatePassword,
+        builder: (context, state) => const UpdatePasswordPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.updatePasswordAlias,
+        builder: (context, state) => const UpdatePasswordPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -201,6 +327,8 @@ abstract class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.hifzSession,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.hifzSessionRedirect(state),
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final surahId =
@@ -237,38 +365,19 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.privacyPolicy,
+        builder: (context, state) => const PrivacyPolicyPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationPlus,
-        redirect: (context, state) async {
-          // OFFLINE-SAFE: wrap in try/catch(Object) to guard against
-          // AuthRetryableFetchException when the network is unavailable.
-          // GoRouter wraps any uncaught async error as GoException which
-          // crashes the router — returning null is a safe no-op fallback.
-          try {
-            final repo = getIt<MemorizationPlusRepository>();
-            final profileResult = await repo.getMemorizationProfile();
-            final profile = profileResult.fold((_) => null, (p) => p);
-            if (profile == null) return null;
-
-            if (profile.hasSelectedPath) {
-              if (profile.isAdult) {
-                final planResult = await repo.getCustomPlan();
-                final hasPlan = planResult.fold(
-                  (_) => false,
-                  (plan) => plan != null,
-                );
-                if (!hasPlan) return AppRoutes.memorizationPlusCustomPlan;
-                return AppRoutes.memorizationPlusDailyPlan;
-              }
-              if (profile.isChild) return AppRoutes.memorizationPlusKidsJourney;
-            }
-            return null;
-          } catch (_) {
-            // Network unavailable or auth token refresh failed — show
-            // PathSelectionPage so the user sees their last known state.
-            return null;
-          }
+        redirect: (context, state) => MemorizationRouteGuard.entryRedirect(),
+        builder: (context, state) {
+          final preferredPath = state.uri.queryParameters['preferred'] == 'kids'
+              ? MemorizationPath.child
+              : null;
+          return PathSelectionPage(preferredPath: preferredPath);
         },
-        builder: (context, state) => const PathSelectionPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -305,36 +414,51 @@ abstract class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationPlusDailyPlan,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.adultOnlyRedirect(),
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final surahId =
               extra?['surahId'] as int? ??
-              int.tryParse(state.uri.queryParameters['surahId'] ?? '') ??
-              1; // M06 FIX: Default to 1 to prevent redirect loops
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
           if (!_isValidSurahId(surahId)) {
-            return const PathSelectionPage();
+            return const CustomPlanSetupPage();
           }
-          return DailyPlanPage(surahId: surahId);
+          return DailyPlanPage(surahId: surahId!);
         },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationPlusKidsJourney,
+        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final surahId =
               extra?['surahId'] as int? ??
-              int.tryParse(state.uri.queryParameters['surahId'] ?? '') ??
-              1; // M06 FIX: Default to 1 to prevent redirect loops
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
           if (!_isValidSurahId(surahId)) {
             return const PathSelectionPage();
           }
-          return KidsJourneyPage(surahId: surahId);
+          return KidsGamifiedJourneyPage(surahId: surahId!);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '${AppRoutes.memorizationPlusJourney}/:surahId',
+        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
+        builder: (context, state) {
+          final surahId =
+              int.tryParse(state.pathParameters['surahId'] ?? '') ?? 1;
+          if (!_isValidSurahId(surahId)) {
+            return const PathSelectionPage();
+          }
+          return KidsGamifiedJourneyPage(surahId: surahId);
         },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationPlusKids,
+        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final surahId =
@@ -348,10 +472,78 @@ abstract class AppRouter {
               ayahNumber < 1) {
             return const PathSelectionPage();
           }
-          return KidsModePage(
-            surahId: surahId!,
+          final resolvedSurahId = surahId!;
+          final ayahText = extra?['ayahText'] as String? ?? '';
+          return KidsGamifiedListenPage(
+            surahId: resolvedSurahId,
             ayahNumber: ayahNumber,
-            ayahText: extra?['ayahText'] as String? ?? '',
+            ayahText: ayahText,
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationPlusKidsHome,
+        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final surahId =
+              extra?['surahId'] as int? ??
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '') ??
+              1;
+          if (!_isValidSurahId(surahId)) {
+            return const PathSelectionPage();
+          }
+          return KidsGamifiedHomePage(surahId: surahId);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationPlusKidsStage,
+        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
+        builder: (context, state) {
+          final stage = _parseKidsJourneyStage(state);
+          if (stage == null || !_isValidSurahId(stage.surahId)) {
+            return const PathSelectionPage();
+          }
+          return KidsGamifiedStagePage(
+            stage: stage,
+            surahName: state.uri.queryParameters['surahName'],
+          );
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationPlusKidsCompletion,
+        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final surahId =
+              extra?['surahId'] as int? ??
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+          final completedAyahNumber =
+              extra?['completedAyahNumber'] as int? ??
+              int.tryParse(
+                state.uri.queryParameters['completedAyahNumber'] ?? '',
+              );
+          if (!_isValidSurahId(surahId) ||
+              completedAyahNumber == null ||
+              completedAyahNumber < 1) {
+            return const PathSelectionPage();
+          }
+          final starsEarned =
+              extra?['starsEarned'] as int? ??
+              int.tryParse(state.uri.queryParameters['starsEarned'] ?? '') ??
+              1;
+          final gemsEarned =
+              extra?['gemsEarned'] as int? ??
+              int.tryParse(state.uri.queryParameters['gemsEarned'] ?? '') ??
+              0;
+          return KidsGamifiedCompletionPage(
+            surahId: surahId!,
+            completedAyahNumber: completedAyahNumber,
+            starsEarned: starsEarned,
+            gemsEarned: gemsEarned,
           );
         },
       ),
@@ -369,11 +561,15 @@ abstract class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationPlusCustomPlan,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.adultOnlyRedirect(),
         builder: (context, state) => const CustomPlanSetupPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationPlusQuiz,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.adultOnlyRedirect(),
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final surahId =
@@ -421,26 +617,14 @@ abstract class AppRouter {
           StatefulShellBranch(
             routes: [
               GoRoute(
+                path: AppRoutes.memorizationHub,
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: MemorizationHubPage()),
+              ),
+              GoRoute(
                 path: AppRoutes.hifz,
-                redirect: (context, state) async {
-                  try {
-                    final repo = getIt<MemorizationPlusRepository>();
-                    final profileResult = await repo.getMemorizationProfile();
-                    final profile = profileResult.fold((_) => null, (p) => p);
-                    if (profile?.hasSelectedPath == true) return null;
-
-                    final prefs = getIt<SharedPreferences>();
-                    final legacyPath = prefs.getString(
-                      AppConstants.kHifzPathMode,
-                    );
-                    if (legacyPath != null && legacyPath.isNotEmpty) {
-                      return null;
-                    }
-                    return AppRoutes.memorizationPlus;
-                  } catch (_) {
-                    return null;
-                  }
-                },
+                redirect: (context, state) =>
+                    MemorizationRouteGuard.hifzRedirect(),
                 pageBuilder: (_, _) =>
                     const NoTransitionPage(child: HifzPage()),
               ),
@@ -471,8 +655,81 @@ abstract class AppRouter {
 
   const AppRouter._();
 
+  static bool requiresAuthentication(String location) {
+    return _remoteProtectedRoutes.any((r) => location.startsWith(r));
+  }
+
+  static bool isPublicLocation(String location) {
+    return _publicRoutes.any((r) {
+      if (r == AppRoutes.home) return location == AppRoutes.home;
+      return location.startsWith(r);
+    });
+  }
+
   static bool _isValidSurahId(int? surahId) =>
       surahId != null && surahId >= 1 && surahId <= 114;
+
+  static String _kidsListenLocation({
+    required int surahId,
+    required int ayahNumber,
+  }) {
+    final query = Uri(
+      queryParameters: {'surahId': '$surahId', 'ayahNumber': '$ayahNumber'},
+    ).query;
+    return '${AppRoutes.memorizationPlusKids}?$query';
+  }
+
+  static KidsJourneyStage? _parseKidsJourneyStage(GoRouterState state) {
+    final extra = state.extra;
+    if (extra is KidsJourneyStage) return extra;
+
+    final extraMap = extra is Map<String, dynamic> ? extra : null;
+    final query = state.uri.queryParameters;
+    final surahId =
+        extraMap?['surahId'] as int? ?? int.tryParse(query['surahId'] ?? '');
+    final stageNumber =
+        extraMap?['stageNumber'] as int? ??
+        int.tryParse(query['stageNumber'] ?? '');
+    final startAyah =
+        extraMap?['startAyah'] as int? ??
+        int.tryParse(query['startAyah'] ?? '');
+    final endAyah =
+        extraMap?['endAyah'] as int? ?? int.tryParse(query['endAyah'] ?? '');
+
+    if (!_isValidSurahId(surahId) ||
+        stageNumber == null ||
+        stageNumber < 1 ||
+        startAyah == null ||
+        startAyah < 1 ||
+        endAyah == null ||
+        endAyah < startAyah) {
+      return null;
+    }
+
+    final completedAyahs = extraMap?['completedAyahs'] is List<int>
+        ? extraMap!['completedAyahs'] as List<int>
+        : _parseAyahNumbers(query['completedAyahs']) ?? const <int>[];
+    final status = _parseKidsJourneyStageStatus(
+      extraMap?['status'] as String? ?? query['status'],
+    );
+
+    return KidsJourneyStage(
+      stageNumber: stageNumber,
+      surahId: surahId!,
+      startAyah: startAyah,
+      endAyah: endAyah,
+      completedAyahs: completedAyahs,
+      status: status,
+    );
+  }
+
+  static KidsJourneyStageStatus _parseKidsJourneyStageStatus(String? value) {
+    if (value == null || value.isEmpty) return KidsJourneyStageStatus.current;
+    for (final status in KidsJourneyStageStatus.values) {
+      if (status.name == value) return status;
+    }
+    return KidsJourneyStageStatus.current;
+  }
 
   static List<int>? _parseAyahNumbers(String? value) {
     if (value == null || value.trim().isEmpty) return null;

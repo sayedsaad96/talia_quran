@@ -231,7 +231,7 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('حفظ'),
+            child: Text(context.l10n.save),
           ),
         ],
       ),
@@ -250,19 +250,21 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
     final title = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('إضافة مكافأة'),
+        title: Text(context.l10n.parentDashboardAddReward),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: 'مثال: وقت لعب إضافي'),
+          decoration: InputDecoration(
+            hintText: context.l10n.parentDashboardRewardHint,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('إضافة'),
+            child: Text(context.l10n.parentDashboardAddReward),
           ),
         ],
       ),
@@ -281,16 +283,21 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
     await showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('آخر جلسة'),
+        title: Text(context.l10n.parentDashboardLastSession),
         content: Text(
           latest == null
-              ? 'لا توجد جلسات مسجلة بعد.'
-              : 'سورة ${latest.surahId} • آية ${latest.ayahNumber}\n${latest.repeatsCompleted} تكرارات • ${latest.pointsEarned} نقطة',
+              ? context.l10n.parentDashboardNoSessionsYet
+              : context.l10n.parentDashboardSessionSummary(
+                  latest.surahId,
+                  latest.ayahNumber,
+                  latest.repeatsCompleted,
+                  latest.pointsEarned,
+                ),
         ),
         actions: [
           FilledButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('تم'),
+            child: Text(context.l10n.parentDashboardDone),
           ),
         ],
       ),
@@ -333,7 +340,7 @@ class _PinGateState extends State<_PinGate> {
     final pin = widget.controller.text.trim();
     final confirm = _confirmController.text.trim();
     if (widget.requiresConfirmation && pin != confirm) {
-      setState(() => _error = 'رمزا PIN غير متطابقين');
+      setState(() => _error = context.l10n.parentDashboardPinMismatch);
       return;
     }
     setState(() => _error = null);
@@ -352,8 +359,8 @@ class _PinGateState extends State<_PinGate> {
             const SizedBox(height: AppSpacing.md),
             Text(widget.title, style: AppTypography.headlineSmall),
             const SizedBox(height: AppSpacing.sm),
-            const Text(
-              'هذا الرمز يحمي لوحة ولي الأمر على هذا الجهاز',
+            Text(
+              context.l10n.parentDashboardPinHelp,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppSpacing.lg),
@@ -376,9 +383,9 @@ class _PinGateState extends State<_PinGate> {
                 obscureText: true,
                 maxLength: 4,
                 textAlign: TextAlign.center,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   counterText: '',
-                  labelText: 'تأكيد PIN',
+                  labelText: context.l10n.parentDashboardPinConfirm,
                 ),
               ),
             ],
@@ -397,9 +404,7 @@ class _PinGateState extends State<_PinGate> {
             if (widget.onReset != null)
               TextButton(
                 onPressed: widget.onReset,
-                child: const Text(
-                  'إعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد',
-                ),
+                child: Text(context.l10n.parentDashboardResetPin),
               ),
           ],
         ),
@@ -431,18 +436,24 @@ class _TodaySummaryCard extends StatelessWidget {
       (sum, log) => sum + log.pointsEarned,
     );
     final sentence = todaysLogs.isEmpty
-        ? 'اليوم: لا توجد جلسات بعد. شجعه على جلسة قصيرة.'
-        : 'اليوم: أكمل الطفل ${todaysLogs.length} جلسة. شجعه على المراجعة القادمة.';
+        ? context.l10n.parentDashboardTodayEmpty
+        : context.l10n.parentDashboardTodayCompleted(todaysLogs.length);
 
     return _Panel(
-      title: 'ملخص اليوم',
+      title: context.l10n.parentDashboardTodaySummary,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              _Metric(label: 'جلسات اليوم', value: '${todaysLogs.length}'),
-              _Metric(label: 'نقاط اليوم', value: '$points'),
+              _Metric(
+                label: context.l10n.parentDashboardTodaySessions,
+                value: '${todaysLogs.length}',
+              ),
+              _Metric(
+                label: context.l10n.parentDashboardTodayPoints,
+                value: '$points',
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.md),
@@ -454,7 +465,7 @@ class _TodaySummaryCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: onAddReward,
                   icon: const Icon(Icons.card_giftcard_rounded),
-                  label: const Text('إضافة مكافأة'),
+                  label: Text(context.l10n.parentDashboardAddReward),
                 ),
               ),
               const SizedBox(width: 8),
@@ -462,7 +473,7 @@ class _TodaySummaryCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onShowLastLog,
                   icon: const Icon(Icons.history_rounded),
-                  label: const Text('عرض آخر جلسة'),
+                  label: Text(context.l10n.parentDashboardShowLastSession),
                 ),
               ),
             ],
@@ -481,15 +492,21 @@ class _SummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = dashboard.progress;
     return _Panel(
-      title: 'ملخص الطفل',
+      title: context.l10n.parentDashboardChildSummary,
       child: Column(
         children: [
           Row(
             children: [
-              _Metric(label: 'نقاط', value: '${p.totalPoints}'),
-              _Metric(label: 'نجوم', value: '${p.starsEarned}'),
               _Metric(
-                label: 'جلسات الأسبوع',
+                label: context.l10n.parentDashboardPoints,
+                value: '${p.totalPoints}',
+              ),
+              _Metric(
+                label: context.l10n.parentDashboardStars,
+                value: '${p.starsEarned}',
+              ),
+              _Metric(
+                label: context.l10n.parentDashboardWeekSessions,
                 value: '${dashboard.weeklyCompletedSessions}',
               ),
             ],
@@ -517,12 +534,12 @@ class _ReminderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Panel(
-      title: 'تذكير الطفل',
+      title: context.l10n.parentDashboardChildReminder,
       child: SwitchListTile(
         contentPadding: EdgeInsets.zero,
         value: settings.reminderEnabled,
-        title: const Text('تذكير يومي الساعة 6:30 مساءً'),
-        subtitle: const Text('يمكن تغيير الوقت لاحقًا من إعدادات ولي الأمر'),
+        title: Text(context.l10n.parentDashboardDailyReminder),
+        subtitle: Text(context.l10n.parentDashboardReminderSubtitle),
         onChanged: (value) =>
             context.read<ParentDashboardCubit>().updateReminder(
               enabled: value,
@@ -550,7 +567,7 @@ class _RemoteToolsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Panel(
-      title: 'المتابعة عن بعد',
+      title: context.l10n.parentDashboardRemoteFollowup,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -560,22 +577,22 @@ class _RemoteToolsCard extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onScan,
                   icon: const Icon(Icons.qr_code_scanner_rounded),
-                  label: const Text('مسح QR'),
+                  label: Text(context.l10n.parentDashboardScanQr),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: TextButton(
                   onPressed: onManual,
-                  child: const Text('إدخال يدوي'),
+                  child: Text(context.l10n.parentDashboardManualEntry),
                 ),
               ),
             ],
           ),
           if (children.isEmpty)
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
-              child: Text('لا يوجد طفل مرتبط عن بعد حتى الآن.'),
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(context.l10n.parentDashboardNoRemoteChild),
             )
           else
             ...children.map(
@@ -586,7 +603,10 @@ class _RemoteToolsCard extends StatelessWidget {
                 ),
                 title: Text(child.displayName),
                 subtitle: Text(
-                  '${child.progress.ayahsCompleted} آية • ${child.progress.totalPoints} نقطة',
+                  context.l10n.parentDashboardRemoteChildSummary(
+                    child.progress.ayahsCompleted,
+                    child.progress.totalPoints,
+                  ),
                 ),
                 trailing: IconButton(
                   icon: const Icon(Icons.card_giftcard_rounded),
@@ -614,7 +634,7 @@ class _RewardsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Panel(
-      title: 'مكافآت ولي الأمر',
+      title: context.l10n.parentDashboardRewardsTitle,
       child: Column(
         children: [
           Row(
@@ -622,18 +642,21 @@ class _RewardsCard extends StatelessWidget {
               Expanded(
                 child: TextField(
                   controller: controller,
-                  decoration: const InputDecoration(
-                    hintText: 'مثال: وقت لعب إضافي',
+                  decoration: InputDecoration(
+                    hintText: context.l10n.parentDashboardRewardHint,
                   ),
                 ),
               ),
               const SizedBox(width: 8),
-              FilledButton(onPressed: onAdd, child: const Text('إضافة')),
+              FilledButton(
+                onPressed: onAdd,
+                child: Text(context.l10n.parentDashboardAddReward),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
           if (rewards.isEmpty)
-            const Text('أضف مكافآت تظهر للطفل عند تحقيق هدفه الأسبوعي.')
+            Text(context.l10n.parentDashboardRewardEmpty)
           else
             ...rewards.map(
               (reward) => ListTile(
@@ -644,7 +667,7 @@ class _RewardsCard extends StatelessWidget {
                       : Icons.emoji_events_rounded,
                 ),
                 title: Text(reward.title),
-                subtitle: Text(_rewardStatusLabel(reward.status)),
+                subtitle: Text(_rewardStatusLabel(context, reward.status)),
               ),
             ),
         ],
@@ -652,11 +675,13 @@ class _RewardsCard extends StatelessWidget {
     );
   }
 
-  String _rewardStatusLabel(ParentRewardStatus status) => switch (status) {
-    ParentRewardStatus.locked => 'مقفلة',
-    ParentRewardStatus.unlocked => 'مفتوحة',
-    ParentRewardStatus.claimed => 'تم استلامها',
-  };
+  String _rewardStatusLabel(BuildContext context, ParentRewardStatus status) =>
+      switch (status) {
+        ParentRewardStatus.locked => context.l10n.parentDashboardRewardLocked,
+        ParentRewardStatus.unlocked =>
+          context.l10n.parentDashboardRewardUnlocked,
+        ParentRewardStatus.claimed => context.l10n.parentDashboardRewardClaimed,
+      };
 }
 
 class _LogsCard extends StatelessWidget {
@@ -666,9 +691,9 @@ class _LogsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _Panel(
-      title: 'آخر الجلسات',
+      title: context.l10n.parentDashboardRecentSessions,
       child: logs.isEmpty
-          ? const Text('لا توجد جلسات أطفال بعد.')
+          ? Text(context.l10n.parentDashboardNoKidsSessions)
           : Column(
               children: logs.take(8).map((log) {
                 return ListTile(
@@ -677,9 +702,17 @@ class _LogsCard extends StatelessWidget {
                     Icons.check_circle_rounded,
                     color: Color(0xFF2D8E4C),
                   ),
-                  title: Text('سورة ${log.surahId} • آية ${log.ayahNumber}'),
+                  title: Text(
+                    context.l10n.parentDashboardLogTitle(
+                      log.surahId,
+                      log.ayahNumber,
+                    ),
+                  ),
                   subtitle: Text(
-                    '${log.repeatsCompleted} تكرارات • ${log.pointsEarned} نقطة',
+                    context.l10n.parentDashboardLogSubtitle(
+                      log.repeatsCompleted,
+                      log.pointsEarned,
+                    ),
                   ),
                 );
               }).toList(),

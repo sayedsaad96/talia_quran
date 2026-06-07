@@ -30,6 +30,14 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         _onPlaybackCompleted();
       }
     });
+    // Track buffering state separately so the UI shows a precise loading indicator
+    _bufferingSub = _player.processingStateStream.listen((ps) {
+      if (state is KidsModeLoaded) {
+        final buffering =
+            ps == ProcessingState.loading || ps == ProcessingState.buffering;
+        emit((state as KidsModeLoaded).copyWith(isBuffering: buffering));
+      }
+    });
   }
 
   final GetKidsProgressUsecase _getKidsProgress;
@@ -42,9 +50,16 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final XpService _xpService; // RISK-5 FIX
   final AudioPlayer _player = AudioPlayer();
   late final StreamSubscription<PlayerState> _playerSub;
+  late final StreamSubscription<ProcessingState> _bufferingSub;
 
   int _loopCount = 0;
+  final Set<String> _completionsInFlight = <String>{};
   static const int _maxLoops = 3;
+
+  @visibleForTesting
+  void debugSetLoopCount(int count) {
+    _loopCount = count;
+  }
 
   Future<void> load(int surahId, int ayahNumber, String ayahText) async {
     emit(const KidsModeLoading());
@@ -91,7 +106,14 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     final st = state as KidsModeLoaded;
 
     _loopCount = 0;
-    emit(st.copyWith(isPlaying: true, currentLoop: 1, clearAudioError: true));
+    emit(
+      st.copyWith(
+        isPlaying: true,
+        isBuffering: true,
+        currentLoop: 1,
+        clearAudioError: true,
+      ),
+    );
     await _playAyah(st.surahId, st.ayahNumber);
   }
 
@@ -135,13 +157,48 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   Future<void> stopAudio() async {
     await _player.stop();
     if (state is KidsModeLoaded) {
-      emit((state as KidsModeLoaded).copyWith(isPlaying: false));
+      emit(
+        (state as KidsModeLoaded).copyWith(
+          isPlaying: false,
+          isBuffering: false,
+        ),
+      );
     }
+  }
+
+  /// Shows a brief visual recording animation, then finalises completion.
+  /// This satisfies US4 Acceptance Scenario 3: the child sees a visual
+  /// indicator before the session is marked as done.
+  Future<void> startRecording() async {
+    if (state is! KidsModeLoaded) return;
+    final st = state as KidsModeLoaded;
+    if (st.isCompleted) return;
+
+    if (_loopCount < _maxLoops) {
+      emit(st.copyWith(mustListenFirst: true));
+      Future.delayed(const Duration(seconds: 2), () {
+        if (state is KidsModeLoaded) {
+          emit((state as KidsModeLoaded).copyWith(mustListenFirst: false));
+        }
+      });
+      return;
+    }
+
+    // Show recording indicator for 1.5 s so the child has visual feedback
+    emit(st.copyWith(isRecording: true));
+    await Future<void>.delayed(const Duration(milliseconds: 1500));
+
+    // Guard: cubit may have been closed during the delay
+    if (isClosed || state is! KidsModeLoaded) return;
+    emit((state as KidsModeLoaded).copyWith(isRecording: false));
+
+    await markCompleted();
   }
 
   Future<void> markCompleted() async {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
+    if (st.isCompleted) return;
 
     // BUG-4 FIX: prevent completing without listening the required times
     if (_loopCount < _maxLoops) {
@@ -156,56 +213,80 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       return;
     }
 
-    final result = await _awardPoints(
-      AwardKidsPointsParams(
-        surahId: st.surahId,
-        ayahNumber: st.ayahNumber,
-        repeatsCompleted: _loopCount,
-      ),
-    );
+    final completionKey = '${st.surahId}_${st.ayahNumber}';
+    if (_completionsInFlight.contains(completionKey)) return;
+    _completionsInFlight.add(completionKey);
 
-    final updated = result.fold<KidsProgress?>((f) {
-      emit(KidsModeError(f.message));
-      return null;
-    }, (progress) => progress);
-    if (updated == null) return;
-
-    final markResult = await _markAyahMemorized(
-      MarkAyahMemorizedParams(surahId: st.surahId, ayahNumber: st.ayahNumber),
-    );
-    final markFailure = markResult.fold((f) => f, (_) => null);
-    if (markFailure != null) {
-      emit(KidsModeError(markFailure.message));
-      return;
-    }
-
-    // RISK-5 FIX: record streak & XP from Kids Mode — same as Hifz & Adults
     try {
-      await _streakService.recordActivity(activityDelta: 1);
-      await _xpService.addXp('ayah_memorized');
-    } catch (_) {
-      // Non-critical
+      final result = await _awardPoints(
+        AwardKidsPointsParams(
+          surahId: st.surahId,
+          ayahNumber: st.ayahNumber,
+          repeatsCompleted: _loopCount,
+        ),
+      );
+
+      final completion = result.fold<KidsCompletionResult?>((f) {
+        emit(KidsModeError(f.message));
+        return null;
+      }, (completion) => completion);
+      if (completion == null) return;
+
+      if (completion.alreadyCompleted) {
+        emit(
+          st.copyWith(
+            progress: completion.progress,
+            isCompleted: true,
+            sessionStarsEarned: 0,
+          ),
+        );
+        return;
+      }
+
+      final markResult = await _markAyahMemorized(
+        MarkAyahMemorizedParams(surahId: st.surahId, ayahNumber: st.ayahNumber),
+      );
+      final markFailure = markResult.fold((f) => f, (_) => null);
+      if (markFailure != null) {
+        emit(KidsModeError(markFailure.message));
+        return;
+      }
+
+      // RISK-5 FIX: record streak & XP from Kids Mode — same as Hifz & Adults
+      try {
+        await _streakService.recordActivity(activityDelta: 1);
+        await _xpService.addXp('ayah_memorized');
+      } catch (_) {
+        // Non-critical
+      }
+
+      await _saveKidsSessionLog(
+        SaveKidsSessionLogParams(
+          surahId: st.surahId,
+          ayahNumber: st.ayahNumber,
+          repeatsCompleted: _loopCount,
+          pointsEarned: completion.pointsEarned,
+        ),
+      );
+
+      final newAwards = await _achievementService.checkAndUnlockCertificates();
+      emit(
+        st.copyWith(
+          progress: completion.progress,
+          isCompleted: true,
+          newAwards: newAwards,
+          sessionStarsEarned: completion.starsEarned,
+        ),
+      );
+    } finally {
+      _completionsInFlight.remove(completionKey);
     }
-
-    final pointsEarned = 10 + ((_loopCount - 1) * 2).clamp(0, 20);
-    await _saveKidsSessionLog(
-      SaveKidsSessionLogParams(
-        surahId: st.surahId,
-        ayahNumber: st.ayahNumber,
-        repeatsCompleted: _loopCount,
-        pointsEarned: pointsEarned,
-      ),
-    );
-
-    final newAwards = await _achievementService.checkAndUnlockCertificates();
-    emit(
-      st.copyWith(progress: updated, isCompleted: true, newAwards: newAwards),
-    );
   }
 
   @override
   Future<void> close() async {
     await _playerSub.cancel();
+    await _bufferingSub.cancel();
     await _player.dispose();
     return super.close();
   }

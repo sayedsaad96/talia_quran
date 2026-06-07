@@ -4,7 +4,7 @@
 // When premium features are ready to be developed, replace this
 // with the actual RevenueCat / purchases_flutter implementation.
 //
-// TODO: Re-implement with purchases_flutter when monetization is ready.
+// Note: Re-implement with purchases_flutter when monetization is ready.
 
 class SubscriptionService {
   /// Always returns true — app is completely free

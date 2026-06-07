@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 // In free tier mode, PremiumGate simply renders its child directly.
 // When premium features are added, restore the subscription check logic.
 //
-// TODO: Re-implement premium check when monetization is ready.
+// Note: Re-implement premium check when monetization is ready.
 
 class PremiumGate extends StatelessWidget {
   const PremiumGate({

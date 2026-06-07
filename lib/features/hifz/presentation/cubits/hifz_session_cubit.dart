@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -22,6 +22,7 @@ import '../../../../core/services/xp_service.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
 import '../../../../core/utils/talia_logger.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
 part 'hifz_session_state.dart';
 
@@ -42,6 +43,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     this._streakService,
     this._xpService,
     this._achievementService,
+    this._memorizationRepository,
   ) : super(const HifzSessionInitial()) {
     _initSpeech();
     // BUG-NEW-004 FIX: Store subscription reference
@@ -70,6 +72,8 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   final StreakService _streakService;
   final XpService _xpService;
   final AchievementService _achievementService;
+  // T-06: Used for the defensive kids-profile check in startSession().
+  final MemorizationPlusRepository _memorizationRepository;
 
   final SpeechToText _speechToText = SpeechToText();
   final AudioPlayer _player = AudioPlayer();
@@ -102,6 +106,25 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
 
   Future<void> startSession(int surahId, int startAyah) async {
     emit(const HifzSessionLoading());
+
+    // T-06 FIX: Defensive guard — reject basic-memorization session
+    // initialization for child profiles at the Cubit level (not only the router).
+    try {
+      final profileResult = await _memorizationRepository
+          .getMemorizationProfile();
+      final isKids = profileResult.fold((_) => false, (p) => p.isChild);
+      if (isKids) {
+        emit(
+          const HifzSessionError(
+            'هذا المسار مخصص للبالغين. سيتم توجيهك لمسار الأطفال.',
+            redirectToKidsHome: true,
+          ),
+        );
+        return;
+      }
+    } catch (_) {
+      // If profile check fails, allow session to continue (offline-safe).
+    }
 
     final unlockError = await _validateSurahAccess(surahId);
     if (unlockError != null) {
@@ -648,4 +671,3 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     return super.close();
   }
 }
-

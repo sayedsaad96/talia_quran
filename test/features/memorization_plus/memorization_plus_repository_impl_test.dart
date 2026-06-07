@@ -78,6 +78,146 @@ void main() {
       expect(logs.single.pointsEarned, 14);
     });
 
+    test('saveKidsSessionLog is idempotent per ayah', () async {
+      await repository.saveKidsSessionLog(
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+        pointsEarned: 14,
+      );
+
+      final duplicate = await repository.saveKidsSessionLog(
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+        pointsEarned: 14,
+      );
+
+      final logs = await datasource.getKidsSessionLogs();
+      final returned = duplicate.getOrElse(
+        () => throw StateError('Expected duplicate log to return existing log'),
+      );
+
+      expect(logs, hasLength(1));
+      expect(returned.id, logs.single.id);
+    });
+
+    test('awardKidsPoints awards only once per completed ayah', () async {
+      final first = await repository.awardKidsPoints(
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+      );
+      final firstResult = first.getOrElse(
+        () => throw StateError('Expected first award to succeed'),
+      );
+
+      final replay = await repository.awardKidsPoints(
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+      );
+      final replayResult = replay.getOrElse(
+        () => throw StateError('Expected replay award to succeed'),
+      );
+      final progress = await datasource.getKidsProgress();
+      final logs = await datasource.getKidsSessionLogs();
+
+      expect(firstResult.alreadyCompleted, isFalse);
+      expect(firstResult.pointsEarned, 14);
+      expect(firstResult.starsEarned, 1);
+      expect(replayResult.alreadyCompleted, isTrue);
+      expect(replayResult.pointsEarned, 0);
+      expect(replayResult.starsEarned, 0);
+      expect(progress.totalPoints, 14);
+      expect(progress.starsEarned, 1);
+      expect(progress.ayahsCompleted, 1);
+      expect(logs, hasLength(1));
+    });
+
+    test('rapid duplicate kids completion awards only once', () async {
+      await datasource.saveParentSettings(
+        const ParentSettingsModel(weeklyGoalSessions: 1),
+      );
+      await repository.saveParentReward('رحلة عائلية');
+
+      final results = await Future.wait([
+        repository.awardKidsPoints(
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 3,
+        ),
+        repository.awardKidsPoints(
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 3,
+        ),
+      ]);
+
+      final completions = results
+          .map(
+            (result) => result.getOrElse(
+              () => throw StateError('Expected rapid completion to succeed'),
+            ),
+          )
+          .toList();
+      final progress = await datasource.getKidsProgress();
+      final logs = await datasource.getKidsSessionLogs();
+      final rewards = await datasource.getParentRewards();
+
+      expect(
+        completions.where((result) => !result.alreadyCompleted),
+        hasLength(1),
+      );
+      expect(
+        completions.where((result) => result.alreadyCompleted),
+        hasLength(1),
+      );
+      expect(
+        completions.fold<int>(0, (sum, result) => sum + result.pointsEarned),
+        14,
+      );
+      expect(
+        completions.fold<int>(0, (sum, result) => sum + result.starsEarned),
+        1,
+      );
+      expect(progress.totalPoints, 14);
+      expect(progress.starsEarned, 1);
+      expect(progress.ayahsCompleted, 1);
+      expect(logs, hasLength(1));
+      expect(
+        rewards.where((reward) => reward.status == ParentRewardStatus.unlocked),
+        hasLength(1),
+      );
+    });
+
+    test('duplicate kids completion does not disturb journey status', () async {
+      for (var ayah = 1; ayah <= 5; ayah++) {
+        await repository.saveKidsSessionLog(
+          surahId: 114,
+          ayahNumber: ayah,
+          repeatsCompleted: 3,
+          pointsEarned: 14,
+        );
+      }
+      await repository.saveKidsSessionLog(
+        surahId: 114,
+        ayahNumber: 5,
+        repeatsCompleted: 3,
+        pointsEarned: 14,
+      );
+
+      final logs = await datasource.getKidsSessionLogs();
+      final journey = await repository.getKidsJourney(surahId: 114);
+      final stages = journey.getOrElse(
+        () => throw StateError('Expected journey to load'),
+      );
+
+      expect(logs.where((log) => log.ayahNumber == 5), hasLength(1));
+      expect(stages.first.status, KidsJourneyStageStatus.completed);
+      expect(stages.last.status, KidsJourneyStageStatus.current);
+    });
+
     test('parent settings and rewards are stored locally', () async {
       await repository.setParentPin('1234');
       final verified = await repository.verifyParentPin('1234');
@@ -192,6 +332,18 @@ void main() {
         );
       },
     );
+
+    test('guest child cannot create guardian QR token or session', () async {
+      await repository.selectMemorizationPath(MemorizationPath.child);
+
+      final result = await repository.createGuardianPairingSession();
+      final session = await datasource.getPairingSession();
+      final profile = await datasource.getMemorizationProfile();
+
+      expect(result.isLeft(), isTrue);
+      expect(session, isNull);
+      expect(profile.guardianLinkStatus, GuardianLinkStatus.none);
+    });
 
     test(
       'refreshPairingSession expires stale pending sessions locally',

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/services/notification_service.dart';
@@ -12,10 +14,13 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
 import '../../data/user_profile.dart';
+import '../../../../core/router/app_router.dart';
 
 part 'settings_page_tiles.dart';
 
@@ -147,9 +152,14 @@ class _SettingsView extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _SettingsSection(
+                      title: context.isArabic ? 'المساعدة' : 'Help',
+                      children: [_TutorialGuideTile(isDark: isDark)],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _SettingsSection(
                       title: context.l10n.about,
                       children: [
-                        _TutorialGuideTile(isDark: isDark),
+                        _PrivacyPolicyTile(isDark: isDark),
                         Divider(
                           height: 0.5,
                           color: isDark

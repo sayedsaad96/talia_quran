@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/memorization_identity_cubit.dart';
 
@@ -10,14 +11,20 @@ import 'guardian_linking_cubit_test.mocks.dart';
 void main() {
   late MemorizationIdentityCubit cubit;
   late MockMemorizationPlusRepository mockRepository;
+  late MemorizationPathResolver pathResolver;
 
   setUp(() {
     mockRepository = MockMemorizationPlusRepository();
-    cubit = MemorizationIdentityCubit(repository: mockRepository);
+    pathResolver = MemorizationPathResolver(mockRepository);
+    cubit = MemorizationIdentityCubit(
+      repository: mockRepository,
+      pathResolver: pathResolver,
+    );
   });
 
-  tearDown(() {
-    cubit.close();
+  tearDown(() async {
+    await cubit.close();
+    await pathResolver.dispose();
   });
 
   final testProfile = MemorizationProfile(

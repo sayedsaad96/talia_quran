@@ -17,11 +17,13 @@ class _AuthFeedback {
   const _AuthFeedback({
     required this.message,
     required this.type,
+    this.title,
     this.showResend = false,
   });
 
   final String message;
   final ErrorInfoBannerType type;
+  final String? title;
   final bool showResend;
 }
 
@@ -75,18 +77,24 @@ class _LoginPageState extends State<LoginPage> {
               );
               context.go('/');
             }
+            if (state is AuthPasswordResetSent) {
+              setState(
+                () => _feedback = _AuthFeedback(
+                  title: context.l10n.forgotPassword,
+                  message: context.l10n.passwordResetEmailSent,
+                  type: ErrorInfoBannerType.success,
+                ),
+              );
+            }
+            if (state is AuthResendConfirmationSuccess) {
+              setState(
+                () => _feedback = _AuthFeedback(
+                  message: context.l10n.confirmationEmailSent,
+                  type: ErrorInfoBannerType.success,
+                ),
+              );
+            }
             if (state is AuthError) {
-              // Special sentinel: confirmation email was re-sent successfully
-              if (state.message == '__resent__') {
-                setState(
-                  () => _feedback = _AuthFeedback(
-                    message: context.l10n.confirmationEmailSent,
-                    type: ErrorInfoBannerType.success,
-                  ),
-                );
-                return;
-              }
-
               // Email not confirmed — offer resend button
               final isNotConfirmed =
                   state.message.contains('تأكيد') ||
@@ -135,9 +143,11 @@ class _LoginPageState extends State<LoginPage> {
                       if (_feedback != null) ...[
                         ErrorInfoBanner(
                           type: _feedback!.type,
-                          title: _feedback!.type == ErrorInfoBannerType.success
-                              ? context.l10n.confirmationEmailSent
-                              : context.l10n.authGenericError,
+                          title:
+                              _feedback!.title ??
+                              (_feedback!.type == ErrorInfoBannerType.success
+                                  ? context.l10n.confirmationEmailSent
+                                  : context.l10n.authGenericError),
                           message: _feedback!.message,
                           actionLabel: _feedback!.showResend
                               ? context.l10n.resendConfirmation
@@ -211,7 +221,10 @@ class _LoginPageState extends State<LoginPage> {
                           if (v == null || v.trim().isEmpty) {
                             return context.l10n.enterEmail;
                           }
-                          if (!v.contains('@') || !v.contains('.')) {
+                          final emailRegex = RegExp(
+                            r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                          );
+                          if (!emailRegex.hasMatch(v.trim())) {
                             return context.l10n.invalidEmail;
                           }
                           return null;
@@ -250,6 +263,33 @@ class _LoginPageState extends State<LoginPage> {
                           return null;
                         },
                       ),
+                      if (!_isSignUp) ...[
+                        Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: TextButton(
+                            onPressed: () {
+                              final email = _emailController.text.trim();
+                              if (email.isEmpty ||
+                                  !email.contains('@') ||
+                                  !email.contains('.')) {
+                                setState(
+                                  () => _feedback = _AuthFeedback(
+                                    message:
+                                        context.l10n.forgotPasswordEnterEmail,
+                                    type: ErrorInfoBannerType.error,
+                                  ),
+                                );
+                                return;
+                              }
+                              context.read<AuthCubit>().resetPassword(email);
+                            },
+                            child: Text(
+                              context.l10n.forgotPassword,
+                              style: TextStyle(color: cs.primary, fontSize: 13),
+                            ),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 24),
 
                       // Submit

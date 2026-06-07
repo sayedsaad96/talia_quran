@@ -59,8 +59,7 @@ class GetActivityHeatmapUsecase {
       return ActivityHeatmapData(
         countsByDay: map,
         startDate:
-            earliestDate ??
-            DateTime.now().subtract(const Duration(days: 365)),
+            earliestDate ?? DateTime.now().subtract(const Duration(days: 365)),
       );
     } catch (_) {
       return ActivityHeatmapData(
