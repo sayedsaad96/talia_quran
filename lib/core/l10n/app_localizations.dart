@@ -62,7 +62,8 @@ import 'app_localizations_en.dart';
 /// be consistent with the languages listed in the AppLocalizations.supportedLocales
 /// property.
 abstract class AppLocalizations {
-  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+  AppLocalizations(String locale)
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -70,7 +71,8 @@ abstract class AppLocalizations {
     return Localizations.of<AppLocalizations>(context, AppLocalizations)!;
   }
 
-  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+  static const LocalizationsDelegate<AppLocalizations> delegate =
+      _AppLocalizationsDelegate();
 
   /// A list of this localizations delegate along with the default localizations
   /// delegates.
@@ -82,17 +84,18 @@ abstract class AppLocalizations {
   /// Additional delegates can be added by appending to this list in
   /// MaterialApp. This list does not have to be used at all if a custom list
   /// of delegates is preferred or required.
-  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
+      <LocalizationsDelegate<dynamic>>[
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('ar'),
-    Locale('en')
+    Locale('en'),
   ];
 
   /// Application name
@@ -717,7 +720,11 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'🏆 إنجاز جديد يُضاف في رحلة {name} مع القرآن: \"{title}\"\n📖 {description}\n\nمع تالية، كل خطوة تتحول إلى أثر يُرى وإنجاز يستحق المشاركة.'**
-  String shareAchievementWithName(Object description, Object name, Object title);
+  String shareAchievementWithName(
+    Object description,
+    Object name,
+    Object title,
+  );
 
   /// No description provided for @shareMemorizationAchievementText.
   ///
@@ -729,7 +736,11 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'🌟 إنجاز مبارك في مسيرة حفظ {name}: \"{title}\"\n🧠 {description}\n\nتالية يرافق رحلة الحفظ بخطوات واضحة، وتحفيز مستمر، وإنجازات تُلهم الاستمرار.'**
-  String shareMemorizationAchievementWithName(Object description, Object name, Object title);
+  String shareMemorizationAchievementWithName(
+    Object description,
+    Object name,
+    Object title,
+  );
 
   /// No description provided for @shareProgress.
   ///
@@ -747,7 +758,12 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'📊 هذا ملخص تقدم {name} في رحلته مع القرآن عبر تالية:\n📖 {pages} صفحة مقروءة\n🧠 {ayahs} آية محفوظة\n🔥 {streak} أيام من الاستمرارية\n\nتالية يساعد على بناء عادة قرآنية ثابتة بخطوات واضحة وتحفيز يومي.'**
-  String shareProgressWithName(Object ayahs, Object name, Object pages, Object streak);
+  String shareProgressWithName(
+    Object ayahs,
+    Object name,
+    Object pages,
+    Object streak,
+  );
 
   /// No description provided for @viewAll.
   ///
@@ -2535,7 +2551,12 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'الآيات {startAyah}-{endAyah} • {completed}/{total}'**
-  String kidsStageProgress(int startAyah, int endAyah, int completed, int total);
+  String kidsStageProgress(
+    int startAyah,
+    int endAyah,
+    int completed,
+    int total,
+  );
 
   /// No description provided for @quranLongPressHint.
   ///
@@ -3489,7 +3510,12 @@ abstract class AppLocalizations {
   ///
   /// In ar, this message translates to:
   /// **'سورة {surahId} • آية {ayahNumber}\n{repeats} تكرارات • {points} نقطة'**
-  String parentDashboardSessionSummary(int surahId, int ayahNumber, int repeats, int points);
+  String parentDashboardSessionSummary(
+    int surahId,
+    int ayahNumber,
+    int repeats,
+    int points,
+  );
 
   /// No description provided for @parentDashboardDone.
   ///
@@ -3696,7 +3722,8 @@ abstract class AppLocalizations {
   String parentDashboardLogSubtitle(int repeats, int points);
 }
 
-class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+class _AppLocalizationsDelegate
+    extends LocalizationsDelegate<AppLocalizations> {
   const _AppLocalizationsDelegate();
 
   @override
@@ -3705,25 +3732,26 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
   }
 
   @override
-  bool isSupported(Locale locale) => <String>['ar', 'en'].contains(locale.languageCode);
+  bool isSupported(Locale locale) =>
+      <String>['ar', 'en'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
 }
 
 AppLocalizations lookupAppLocalizations(Locale locale) {
-
-
   // Lookup logic when only language code is specified.
   switch (locale.languageCode) {
-    case 'ar': return AppLocalizationsAr();
-    case 'en': return AppLocalizationsEn();
+    case 'ar':
+      return AppLocalizationsAr();
+    case 'en':
+      return AppLocalizationsEn();
   }
 
   throw FlutterError(
     'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
     'an issue with the localizations generation tool. Please file an issue '
     'on GitHub with a reproducible sample app and the gen-l10n configuration '
-    'that was used.'
+    'that was used.',
   );
 }
