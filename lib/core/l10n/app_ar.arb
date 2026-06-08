@@ -886,5 +886,35 @@
         "type": "int"
       }
     }
-  }
+  },
+  "guardianLinkingTemporarilyBlocked": "الربط متوقف مؤقتاً",
+  "guardianLinkingFailedTitle": "تعذر ربط ولي الأمر",
+  "guardianLinkingTimeoutMessage": "استغرق ربط ولي الأمر وقتاً طويلاً. تحقق من الاتصال وحاول مجدداً، أو تابع بدون ولي أمر الآن.",
+  "parentDashboardPinInvalid": "أدخل رمزًا من 4 أرقام",
+  "parentDashboardPinIncorrect": "رمز غير صحيح",
+  "parentDashboardRewardAdded": "تمت إضافة المكافأة",
+  "parentDashboardRemoteRewardAdded": "تم إرسال المكافأة للطفل",
+  "parentDashboardChildLinked": "تم ربط الطفل بنجاح",
+  "parentDashboardReminderSaved": "تم تحديث التذكير",
+  "guardianLinkingSlowHint": "تستغرق العملية وقتًا أطول من المعتاد. يمكنك المتابعة والربط لاحقًا.",
+  "hifzReviewPassedTitle": "تم اجتياز المراجعة",
+  "hifzReviewTimeTitle": "حان وقت المراجعة",
+  "hifzReviewFullSurahHint": "راجع السورة كاملة قبل إنهائها",
+  "hifzReviewRangeHint": "راجع الآيات من {startAyah} إلى {endAyah} قبل الانتقال للآية التالية",
+  "@hifzReviewRangeHint": {"placeholders": {"startAyah": {"type": "int"}, "endAyah": {"type": "int"}}},
+  "hifzEvaluatingReview": "جارِ تقييم المراجعة...",
+  "hifzLeaveSessionMessage": "هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.",
+  "hifzAyahNumberLabel": "آية {ayahNumber}",
+  "@hifzAyahNumberLabel": {"placeholders": {"ayahNumber": {"type": "int"}}},
+  "hifzEvaluatingAyah": "جارِ التقييم...",
+  "hifzRecordingAyahHint": "يتم التسجيل، اقرأ الآية من حفظك...",
+  "hifzExcellentMemorization": "ممتاز! حفظ متقن.",
+  "hifzNeedsAyahReview": "تحتاج إلى مراجعة هذه الآية.",
+  "hifzNoVoiceRecognized": "(لم يتم التعرف على صوت)",
+  "hifzRecordingReviewHint": "يتم التسجيل، اقرأ المقطع من حفظك...",
+  "hifzFinishRecitation": "إنهاء التسميع",
+  "hifzFinishSession": "إنهاء الجلسة",
+  "hifzNextAyah": "الآية التالية",
+  "hifzReviewNotPassed": "لم يتم اجتياز المراجعة. حاول مرة أخرى.",
+  "hifzStartRecitation": "ابدأ التسميع"
 }

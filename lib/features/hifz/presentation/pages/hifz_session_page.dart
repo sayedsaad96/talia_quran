@@ -53,11 +53,7 @@ class _HifzSessionView extends StatelessWidget {
           context: context,
           builder: (ctx) => AlertDialog(
             title: Text(context.l10n.endSessionTitle),
-            content: Text(
-              context.isArabic
-                  ? 'هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.'
-                  : 'Do you want to leave the memorization session? Your current progress will be saved.',
-            ),
+            content: Text(context.l10n.hifzLeaveSessionMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
@@ -256,7 +252,7 @@ class _FullSurahSession extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                   ),
                   child: Text(
-                    '${context.isArabic ? "آية" : "Ayah"} ${ayah.numberInSurah}',
+                    context.l10n.hifzAyahNumberLabel(ayah.numberInSurah),
                     style: AppTypography.titleMedium.copyWith(color: primary),
                   ),
                 ),
@@ -292,9 +288,7 @@ class _FullSurahSession extends StatelessWidget {
                                   const CircularProgressIndicator(),
                                   const SizedBox(height: AppSpacing.md),
                                   Text(
-                                    context.isArabic
-                                        ? "جارِ التقييم..."
-                                        : "Evaluating...",
+                                    context.l10n.hifzEvaluatingAyah,
                                     style: AppTypography.bodyLarge.copyWith(
                                       color: textColor,
                                     ),
@@ -312,9 +306,7 @@ class _FullSurahSession extends StatelessWidget {
                             // Show QcfHifzVerseView when verse is displayed normally.
                             : state.isRecording
                             ? Text(
-                                context.isArabic
-                                    ? "يتم التسجيل، اقرأ الآية من حفظك..."
-                                    : "Recording, recite from memory...",
+                                context.l10n.hifzRecordingAyahHint,
                                 style: AppTypography.bodyLarge.copyWith(
                                   color: textColor,
                                   fontSize: 20,
@@ -502,12 +494,8 @@ class _FullSurahSession extends StatelessWidget {
                           ),
                           label: Text(
                             state.currentIndex == state.ayahs.length - 1
-                                ? (context.isArabic
-                                      ? 'إنهاء الجلسة'
-                                      : 'Finish Session')
-                                : (context.isArabic
-                                      ? 'الآية التالية'
-                                      : 'Next Ayah'),
+                                ? context.l10n.hifzFinishSession
+                                : context.l10n.hifzNextAyah,
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
@@ -570,12 +558,8 @@ class _EvaluationResult extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         Text(
           pass
-              ? (context.isArabic
-                    ? 'ممتاز! حفظ متقن.'
-                    : 'Excellent! Perfect memorization.')
-              : (context.isArabic
-                    ? 'تحتاج إلى مراجعة هذه الآية.'
-                    : 'You need to review this Ayah.'),
+              ? context.l10n.hifzExcellentMemorization
+              : context.l10n.hifzNeedsAyahReview,
           style: AppTypography.titleMedium.copyWith(
             color: isDark ? Colors.white70 : Colors.black87,
           ),
@@ -588,15 +572,13 @@ class _EvaluationResult extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           state.recognizedText.isEmpty
-              ? (context.isArabic
-                    ? "(لم يتم التعرف على صوت)"
-                    : "(No voice recognized)")
+              ? context.l10n.hifzNoVoiceRecognized
               : state.recognizedText,
           style: AppTypography.bodyLarge.copyWith(
             color: isDark ? Colors.white54 : Colors.black54,
           ),
           textAlign: TextAlign.center,
-          textDirection: TextDirection.rtl,
+          textDirection: context.textDirection,
         ),
       ],
     );
@@ -633,7 +615,9 @@ class _CheckpointReviewCard extends StatelessWidget {
         ).animate().scale(duration: 200.ms),
         const SizedBox(height: AppSpacing.md),
         Text(
-          passed ? 'تم اجتياز المراجعة' : 'حان وقت المراجعة',
+          passed
+              ? context.l10n.hifzReviewPassedTitle
+              : context.l10n.hifzReviewTimeTitle,
           style: AppTypography.titleLarge.copyWith(
             color: passed ? Colors.green : primary,
             fontWeight: FontWeight.w700,
@@ -643,8 +627,11 @@ class _CheckpointReviewCard extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           isSmallFullSurah
-              ? 'راجع السورة كاملة قبل إنهائها'
-              : 'راجع الآيات من ${checkpoint.startAyah} إلى ${checkpoint.endAyah} قبل الانتقال للآية التالية',
+              ? context.l10n.hifzReviewFullSurahHint
+              : context.l10n.hifzReviewRangeHint(
+                  checkpoint.startAyah,
+                  checkpoint.endAyah,
+                ),
           style: AppTypography.bodyLarge.copyWith(color: textColor),
           textAlign: TextAlign.center,
           textDirection: TextDirection.rtl,
@@ -654,13 +641,13 @@ class _CheckpointReviewCard extends StatelessWidget {
           const CircularProgressIndicator(),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'جارِ تقييم المراجعة...',
+            context.l10n.hifzEvaluatingReview,
             style: AppTypography.bodyMedium.copyWith(color: textColor),
           ),
         ] else if (state.isRecording) ...[
           const SizedBox(height: AppSpacing.lg),
           Text(
-            'يتم التسجيل، اقرأ المقطع من حفظك...',
+            context.l10n.hifzRecordingReviewHint,
             style: AppTypography.bodyMedium.copyWith(color: textColor),
             textAlign: TextAlign.center,
           ),
@@ -668,7 +655,7 @@ class _CheckpointReviewCard extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: () => context.read<HifzSessionCubit>().stopRecording(),
             icon: const Icon(Icons.stop_rounded),
-            label: const Text('إنهاء التسميع'),
+            label: Text(context.l10n.hifzFinishRecitation),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
@@ -694,8 +681,8 @@ class _CheckpointReviewCard extends StatelessWidget {
             ),
             label: Text(
               state.currentIndex == state.ayahs.length - 1
-                  ? 'إنهاء الجلسة'
-                  : 'الآية التالية',
+                  ? context.l10n.hifzFinishSession
+                  : context.l10n.hifzNextAyah,
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
@@ -707,7 +694,7 @@ class _CheckpointReviewCard extends StatelessWidget {
           if (failed) ...[
             const SizedBox(height: AppSpacing.md),
             Text(
-              'لم يتم اجتياز المراجعة. حاول مرة أخرى.',
+              context.l10n.hifzReviewNotPassed,
               style: AppTypography.bodyMedium.copyWith(color: Colors.redAccent),
               textAlign: TextAlign.center,
             ),
@@ -716,7 +703,7 @@ class _CheckpointReviewCard extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: () => context.read<HifzSessionCubit>().startRecording(),
             icon: const Icon(Icons.mic_rounded),
-            label: const Text('ابدأ التسميع'),
+            label: Text(context.l10n.hifzStartRecitation),
             style: ElevatedButton.styleFrom(
               backgroundColor: primary,
               foregroundColor: Colors.white,

@@ -884,5 +884,35 @@
         "type": "int"
       }
     }
-  }
+  },
+  "guardianLinkingTemporarilyBlocked": "Linking temporarily blocked",
+  "guardianLinkingFailedTitle": "Failed to link guardian",
+  "guardianLinkingTimeoutMessage": "Guardian linking took too long. Check your connection and try again, or continue without guardian for now.",
+  "parentDashboardPinInvalid": "Enter a 4-digit code",
+  "parentDashboardPinIncorrect": "Incorrect code",
+  "parentDashboardRewardAdded": "Reward added",
+  "parentDashboardRemoteRewardAdded": "Reward sent to child",
+  "parentDashboardChildLinked": "Child linked successfully",
+  "parentDashboardReminderSaved": "Reminder updated",
+  "guardianLinkingSlowHint": "This is taking longer than expected. You can continue and link later.",
+  "hifzReviewPassedTitle": "Review passed",
+  "hifzReviewTimeTitle": "Time to review",
+  "hifzReviewFullSurahHint": "Review the full surah before finishing it",
+  "hifzReviewRangeHint": "Review ayahs {startAyah} to {endAyah} before moving to the next ayah",
+  "@hifzReviewRangeHint": {"placeholders": {"startAyah": {"type": "int"}, "endAyah": {"type": "int"}}},
+  "hifzEvaluatingReview": "Evaluating review…",
+  "hifzLeaveSessionMessage": "Do you want to leave the memorization session? Your current progress will be saved.",
+  "hifzAyahNumberLabel": "Ayah {ayahNumber}",
+  "@hifzAyahNumberLabel": {"placeholders": {"ayahNumber": {"type": "int"}}},
+  "hifzEvaluatingAyah": "Evaluating...",
+  "hifzRecordingAyahHint": "Recording, recite from memory...",
+  "hifzExcellentMemorization": "Excellent! Perfect memorization.",
+  "hifzNeedsAyahReview": "You need to review this Ayah.",
+  "hifzNoVoiceRecognized": "(No voice recognized)",
+  "hifzRecordingReviewHint": "Recording — recite the passage from memory…",
+  "hifzFinishRecitation": "Finish recitation",
+  "hifzFinishSession": "Finish session",
+  "hifzNextAyah": "Next ayah",
+  "hifzReviewNotPassed": "Review not passed. Try again.",
+  "hifzStartRecitation": "Start recitation"
 }

@@ -38,6 +38,7 @@ class _ParentDashboardView extends StatefulWidget {
 class _ParentDashboardViewState extends State<_ParentDashboardView> {
   final _pinController = TextEditingController();
   final _rewardController = TextEditingController();
+  int _lastShownFeedbackEventId = 0;
 
   @override
   void dispose() {
@@ -64,15 +65,24 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
       ),
       body: BlocConsumer<ParentDashboardCubit, ParentDashboardState>(
         listener: (context, state) {
-          final message = switch (state) {
-            ParentDashboardLocked(:final message) => message,
-            ParentDashboardLoaded(:final message) => message,
+          final feedbackEventId = switch (state) {
+            ParentDashboardNeedsPin(:final feedbackEventId) => feedbackEventId,
+            ParentDashboardLocked(:final feedbackEventId) => feedbackEventId,
+            ParentDashboardLoaded(:final feedbackEventId) => feedbackEventId,
+            _ => 0,
+          };
+          final feedback = switch (state) {
+            ParentDashboardNeedsPin(:final feedback) => feedback,
+            ParentDashboardLocked(:final feedback) => feedback,
+            ParentDashboardLoaded(:final feedback) => feedback,
             _ => null,
           };
-          if (message != null) {
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text(message)));
+          if (feedback != null && feedbackEventId > _lastShownFeedbackEventId) {
+            _lastShownFeedbackEventId = feedbackEventId;
+            context.showSnackBar(
+              _feedbackMessage(context, feedback),
+              isError: feedback.isError,
+            );
           }
         },
         builder: (context, state) {
@@ -166,6 +176,27 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
         },
       ),
     );
+  }
+
+  String _feedbackMessage(
+    BuildContext context,
+    ParentDashboardFeedback feedback,
+  ) {
+    final l10n = context.l10n;
+    return switch (feedback.type) {
+      ParentDashboardFeedbackType.pinInvalid => l10n.parentDashboardPinInvalid,
+      ParentDashboardFeedbackType.pinIncorrect =>
+        l10n.parentDashboardPinIncorrect,
+      ParentDashboardFeedbackType.rewardAdded =>
+        l10n.parentDashboardRewardAdded,
+      ParentDashboardFeedbackType.remoteRewardAdded =>
+        l10n.parentDashboardRemoteRewardAdded,
+      ParentDashboardFeedbackType.childLinked =>
+        l10n.parentDashboardChildLinked,
+      ParentDashboardFeedbackType.reminderSaved =>
+        l10n.parentDashboardReminderSaved,
+      ParentDashboardFeedbackType.failure => feedback.message ?? '',
+    };
   }
 
   Future<void> _openScanner(BuildContext context) async {

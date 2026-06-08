@@ -2001,4 +2001,95 @@ class AppLocalizationsAr extends AppLocalizations {
   String parentDashboardLogSubtitle(int repeats, int points) {
     return '$repeats تكرارات • $points نقطة';
   }
+
+  @override
+  String get guardianLinkingTemporarilyBlocked => 'الربط متوقف مؤقتاً';
+
+  @override
+  String get guardianLinkingFailedTitle => 'تعذر ربط ولي الأمر';
+
+  @override
+  String get guardianLinkingTimeoutMessage =>
+      'استغرق ربط ولي الأمر وقتاً طويلاً. تحقق من الاتصال وحاول مجدداً، أو تابع بدون ولي أمر الآن.';
+
+  @override
+  String get parentDashboardPinInvalid => 'أدخل رمزًا من 4 أرقام';
+
+  @override
+  String get parentDashboardPinIncorrect => 'رمز غير صحيح';
+
+  @override
+  String get parentDashboardRewardAdded => 'تمت إضافة المكافأة';
+
+  @override
+  String get parentDashboardRemoteRewardAdded => 'تم إرسال المكافأة للطفل';
+
+  @override
+  String get parentDashboardChildLinked => 'تم ربط الطفل بنجاح';
+
+  @override
+  String get parentDashboardReminderSaved => 'تم تحديث التذكير';
+
+  @override
+  String get guardianLinkingSlowHint =>
+      'تستغرق العملية وقتًا أطول من المعتاد. يمكنك المتابعة والربط لاحقًا.';
+
+  @override
+  String get hifzReviewPassedTitle => 'تم اجتياز المراجعة';
+
+  @override
+  String get hifzReviewTimeTitle => 'حان وقت المراجعة';
+
+  @override
+  String get hifzReviewFullSurahHint => 'راجع السورة كاملة قبل إنهائها';
+
+  @override
+  String hifzReviewRangeHint(int startAyah, int endAyah) {
+    return 'راجع الآيات من $startAyah إلى $endAyah قبل الانتقال للآية التالية';
+  }
+
+  @override
+  String get hifzEvaluatingReview => 'جارِ تقييم المراجعة...';
+
+  @override
+  String get hifzLeaveSessionMessage =>
+      'هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.';
+
+  @override
+  String hifzAyahNumberLabel(int ayahNumber) {
+    return 'آية $ayahNumber';
+  }
+
+  @override
+  String get hifzEvaluatingAyah => 'جارِ التقييم...';
+
+  @override
+  String get hifzRecordingAyahHint => 'يتم التسجيل، اقرأ الآية من حفظك...';
+
+  @override
+  String get hifzExcellentMemorization => 'ممتاز! حفظ متقن.';
+
+  @override
+  String get hifzNeedsAyahReview => 'تحتاج إلى مراجعة هذه الآية.';
+
+  @override
+  String get hifzNoVoiceRecognized => '(لم يتم التعرف على صوت)';
+
+  @override
+  String get hifzRecordingReviewHint => 'يتم التسجيل، اقرأ المقطع من حفظك...';
+
+  @override
+  String get hifzFinishRecitation => 'إنهاء التسميع';
+
+  @override
+  String get hifzFinishSession => 'إنهاء الجلسة';
+
+  @override
+  String get hifzNextAyah => 'الآية التالية';
+
+  @override
+  String get hifzReviewNotPassed => 'لم يتم اجتياز المراجعة. حاول مرة أخرى.';
+
+  @override
+  String get hifzStartRecitation => 'ابدأ التسميع';
 }

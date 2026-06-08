@@ -282,49 +282,6 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<ParentRemoteLinkUsecase>(
     () => ParentRemoteLinkUsecase(getIt<MemorizationPlusRepository>()),
   );
-  getIt.registerLazySingleton<GetMemorizationProfileUsecase>(
-    () => GetMemorizationProfileUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<SelectMemorizationPathUsecase>(
-    () => SelectMemorizationPathUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<ContinueWithoutGuardianUsecase>(
-    () => ContinueWithoutGuardianUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<CreateGuardianPairingSessionUsecase>(
-    () => CreateGuardianPairingSessionUsecase(
-      getIt<MemorizationPlusRepository>(),
-    ),
-  );
-  getIt.registerLazySingleton<AcceptGuardianPairingCodeUsecase>(
-    () => AcceptGuardianPairingCodeUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<RefreshPairingSessionUsecase>(
-    () => RefreshPairingSessionUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<UnlinkGuardianUsecase>(
-    () => UnlinkGuardianUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<SetParentGuardianModeUsecase>(
-    () => SetParentGuardianModeUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<RefreshChildGuardianLinkUsecase>(
-    () => RefreshChildGuardianLinkUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<ResetMemorizationIdentityUsecase>(
-    () => ResetMemorizationIdentityUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<GetSmartMemorizationSettingsUsecase>(
-    () => GetSmartMemorizationSettingsUsecase(
-      getIt<MemorizationPlusRepository>(),
-    ),
-  );
-  getIt.registerLazySingleton<SaveSmartMemorizationSettingsUsecase>(
-    () => SaveSmartMemorizationSettingsUsecase(
-      getIt<MemorizationPlusRepository>(),
-    ),
-  );
-
   // ─── Cubits ─────────────────────────────────────────────────────────────────
   getIt.registerFactory<ProgressCubit>(
     () => ProgressCubit(

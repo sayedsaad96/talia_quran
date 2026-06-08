@@ -2017,4 +2017,97 @@ class AppLocalizationsEn extends AppLocalizations {
   String parentDashboardLogSubtitle(int repeats, int points) {
     return '$repeats repeats • $points points';
   }
+
+  @override
+  String get guardianLinkingTemporarilyBlocked => 'Linking temporarily blocked';
+
+  @override
+  String get guardianLinkingFailedTitle => 'Failed to link guardian';
+
+  @override
+  String get guardianLinkingTimeoutMessage =>
+      'Guardian linking took too long. Check your connection and try again, or continue without guardian for now.';
+
+  @override
+  String get parentDashboardPinInvalid => 'Enter a 4-digit code';
+
+  @override
+  String get parentDashboardPinIncorrect => 'Incorrect code';
+
+  @override
+  String get parentDashboardRewardAdded => 'Reward added';
+
+  @override
+  String get parentDashboardRemoteRewardAdded => 'Reward sent to child';
+
+  @override
+  String get parentDashboardChildLinked => 'Child linked successfully';
+
+  @override
+  String get parentDashboardReminderSaved => 'Reminder updated';
+
+  @override
+  String get guardianLinkingSlowHint =>
+      'This is taking longer than expected. You can continue and link later.';
+
+  @override
+  String get hifzReviewPassedTitle => 'Review passed';
+
+  @override
+  String get hifzReviewTimeTitle => 'Time to review';
+
+  @override
+  String get hifzReviewFullSurahHint =>
+      'Review the full surah before finishing it';
+
+  @override
+  String hifzReviewRangeHint(int startAyah, int endAyah) {
+    return 'Review ayahs $startAyah to $endAyah before moving to the next ayah';
+  }
+
+  @override
+  String get hifzEvaluatingReview => 'Evaluating review…';
+
+  @override
+  String get hifzLeaveSessionMessage =>
+      'Do you want to leave the memorization session? Your current progress will be saved.';
+
+  @override
+  String hifzAyahNumberLabel(int ayahNumber) {
+    return 'Ayah $ayahNumber';
+  }
+
+  @override
+  String get hifzEvaluatingAyah => 'Evaluating...';
+
+  @override
+  String get hifzRecordingAyahHint => 'Recording, recite from memory...';
+
+  @override
+  String get hifzExcellentMemorization => 'Excellent! Perfect memorization.';
+
+  @override
+  String get hifzNeedsAyahReview => 'You need to review this Ayah.';
+
+  @override
+  String get hifzNoVoiceRecognized => '(No voice recognized)';
+
+  @override
+  String get hifzRecordingReviewHint =>
+      'Recording — recite the passage from memory…';
+
+  @override
+  String get hifzFinishRecitation => 'Finish recitation';
+
+  @override
+  String get hifzFinishSession => 'Finish session';
+
+  @override
+  String get hifzNextAyah => 'Next ayah';
+
+  @override
+  String get hifzReviewNotPassed => 'Review not passed. Try again.';
+
+  @override
+  String get hifzStartRecitation => 'Start recitation';
 }

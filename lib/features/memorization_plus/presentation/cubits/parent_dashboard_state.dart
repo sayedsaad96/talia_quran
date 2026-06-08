@@ -1,5 +1,53 @@
 part of 'parent_dashboard_cubit.dart';
 
+/// Localized, UI-mapped feedback codes emitted by [ParentDashboardCubit].
+/// The cubit stays free of `BuildContext`/l10n; the page maps these to strings.
+enum ParentDashboardFeedbackType {
+  pinInvalid,
+  pinIncorrect,
+  rewardAdded,
+  remoteRewardAdded,
+  childLinked,
+  reminderSaved,
+  failure,
+}
+
+class ParentDashboardFeedback extends Equatable {
+  const ParentDashboardFeedback(this.type, {this.message});
+
+  const ParentDashboardFeedback.pinInvalid()
+    : type = ParentDashboardFeedbackType.pinInvalid,
+      message = null;
+  const ParentDashboardFeedback.pinIncorrect()
+    : type = ParentDashboardFeedbackType.pinIncorrect,
+      message = null;
+  const ParentDashboardFeedback.rewardAdded()
+    : type = ParentDashboardFeedbackType.rewardAdded,
+      message = null;
+  const ParentDashboardFeedback.remoteRewardAdded()
+    : type = ParentDashboardFeedbackType.remoteRewardAdded,
+      message = null;
+  const ParentDashboardFeedback.childLinked()
+    : type = ParentDashboardFeedbackType.childLinked,
+      message = null;
+  const ParentDashboardFeedback.reminderSaved()
+    : type = ParentDashboardFeedbackType.reminderSaved,
+      message = null;
+  const ParentDashboardFeedback.failure(this.message)
+    : type = ParentDashboardFeedbackType.failure;
+
+  final ParentDashboardFeedbackType type;
+  final String? message;
+
+  bool get isError =>
+      type == ParentDashboardFeedbackType.pinInvalid ||
+      type == ParentDashboardFeedbackType.pinIncorrect ||
+      type == ParentDashboardFeedbackType.failure;
+
+  @override
+  List<Object?> get props => [type, message];
+}
+
 @immutable
 abstract class ParentDashboardState extends Equatable {
   const ParentDashboardState();
@@ -17,26 +65,37 @@ class ParentDashboardLoading extends ParentDashboardState {
 }
 
 class ParentDashboardNeedsPin extends ParentDashboardState {
-  const ParentDashboardNeedsPin({required this.settings});
+  const ParentDashboardNeedsPin({
+    required this.settings,
+    this.feedback,
+    this.feedbackEventId = 0,
+  });
+
   final ParentSettings settings;
+  final ParentDashboardFeedback? feedback;
+
+  /// Monotonic id so repeated identical notices still reach the UI listener.
+  final int feedbackEventId;
 
   @override
-  List<Object?> get props => [settings];
+  List<Object?> get props => [settings, feedback, feedbackEventId];
 }
 
 class ParentDashboardLocked extends ParentDashboardState {
   const ParentDashboardLocked({
     required this.settings,
     required this.surahId,
-    this.message,
+    this.feedback,
+    this.feedbackEventId = 0,
   });
 
   final ParentSettings settings;
   final int surahId;
-  final String? message;
+  final ParentDashboardFeedback? feedback;
+  final int feedbackEventId;
 
   @override
-  List<Object?> get props => [settings, surahId, message];
+  List<Object?> get props => [settings, surahId, feedback, feedbackEventId];
 }
 
 class ParentDashboardLoaded extends ParentDashboardState {
@@ -44,23 +103,37 @@ class ParentDashboardLoaded extends ParentDashboardState {
     required this.dashboard,
     required this.remoteChildren,
     required this.surahId,
-    this.message,
+    this.feedback,
+    this.feedbackEventId = 0,
   });
 
   final ParentDashboard dashboard;
   final List<RemoteChildSummary> remoteChildren;
   final int surahId;
-  final String? message;
 
-  ParentDashboardLoaded copyWith({String? message}) => ParentDashboardLoaded(
+  /// Transient success/validation/failure feedback mapped by the page.
+  final ParentDashboardFeedback? feedback;
+  final int feedbackEventId;
+
+  ParentDashboardLoaded copyWith({
+    ParentDashboardFeedback? feedback,
+    int feedbackEventId = 0,
+  }) => ParentDashboardLoaded(
     dashboard: dashboard,
     remoteChildren: remoteChildren,
     surahId: surahId,
-    message: message,
+    feedback: feedback,
+    feedbackEventId: feedbackEventId,
   );
 
   @override
-  List<Object?> get props => [dashboard, remoteChildren, surahId, message];
+  List<Object?> get props => [
+    dashboard,
+    remoteChildren,
+    surahId,
+    feedback,
+    feedbackEventId,
+  ];
 }
 
 class ParentDashboardError extends ParentDashboardState {

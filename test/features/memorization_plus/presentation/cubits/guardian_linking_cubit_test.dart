@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -46,6 +48,93 @@ void main() {
 
   test('initial state should be GuardianLinkingInitial', () {
     expect(cubit.state, equals(const GuardianLinkingInitial()));
+  });
+
+  test('load emits Required when guardian status loads successfully', () async {
+    when(
+      mockRepository.refreshChildGuardianLink(),
+    ).thenAnswer((_) async => Right(testProfile));
+    when(
+      mockRepository.refreshPairingSession(),
+    ).thenAnswer((_) async => const Right(null));
+
+    final expectation = expectLater(
+      cubit.stream,
+      emitsInOrder([
+        const GuardianLinkingLoading(),
+        GuardianLinkingRequired(profile: testProfile),
+      ]),
+    );
+
+    await cubit.load();
+    await expectation;
+  });
+
+  test('load emits explicit Error when guardian status fails', () async {
+    when(
+      mockRepository.refreshChildGuardianLink(),
+    ).thenAnswer((_) async => const Left(CacheFailure('network failed')));
+
+    final expectation = expectLater(
+      cubit.stream,
+      emitsInOrder([
+        const GuardianLinkingLoading(),
+        const GuardianLinkingError('network failed'),
+      ]),
+    );
+
+    await cubit.load();
+    await expectation;
+  });
+
+  test('load emits timeout Error when initial guardian load hangs', () async {
+    await cubit.close();
+    cubit = GuardianLinkingCubit(
+      mockRepository,
+      initialLoadTimeout: const Duration(milliseconds: 10),
+    );
+    when(mockRepository.refreshChildGuardianLink()).thenAnswer(
+      (_) => Completer<Either<Failure, MemorizationProfile>>().future,
+    );
+
+    final expectation = expectLater(
+      cubit.stream,
+      emitsInOrder([
+        const GuardianLinkingLoading(),
+        const GuardianLinkingError.timeout(),
+      ]),
+    );
+
+    await cubit.load();
+    await expectation;
+  });
+
+  test('retry after load failure can recover to Required', () async {
+    var attempts = 0;
+    when(mockRepository.refreshChildGuardianLink()).thenAnswer((_) async {
+      attempts += 1;
+      if (attempts == 1) {
+        return const Left(CacheFailure('network failed'));
+      }
+      return Right(testProfile);
+    });
+    when(
+      mockRepository.refreshPairingSession(),
+    ).thenAnswer((_) async => const Right(null));
+
+    final expectation = expectLater(
+      cubit.stream,
+      emitsInOrder([
+        const GuardianLinkingLoading(),
+        const GuardianLinkingError('network failed'),
+        const GuardianLinkingLoading(),
+        GuardianLinkingRequired(profile: testProfile),
+      ]),
+    );
+
+    await cubit.load();
+    await cubit.load();
+    await expectation;
   });
 
   test('createPairingSession emits Pending when successful', () async {

@@ -3720,6 +3720,174 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'{repeats} تكرارات • {points} نقطة'**
   String parentDashboardLogSubtitle(int repeats, int points);
+
+  /// No description provided for @guardianLinkingTemporarilyBlocked.
+  ///
+  /// In ar, this message translates to:
+  /// **'الربط متوقف مؤقتاً'**
+  String get guardianLinkingTemporarilyBlocked;
+
+  /// No description provided for @guardianLinkingFailedTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر ربط ولي الأمر'**
+  String get guardianLinkingFailedTitle;
+
+  /// No description provided for @guardianLinkingTimeoutMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'استغرق ربط ولي الأمر وقتاً طويلاً. تحقق من الاتصال وحاول مجدداً، أو تابع بدون ولي أمر الآن.'**
+  String get guardianLinkingTimeoutMessage;
+
+  /// No description provided for @parentDashboardPinInvalid.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل رمزًا من 4 أرقام'**
+  String get parentDashboardPinInvalid;
+
+  /// No description provided for @parentDashboardPinIncorrect.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمز غير صحيح'**
+  String get parentDashboardPinIncorrect;
+
+  /// No description provided for @parentDashboardRewardAdded.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت إضافة المكافأة'**
+  String get parentDashboardRewardAdded;
+
+  /// No description provided for @parentDashboardRemoteRewardAdded.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إرسال المكافأة للطفل'**
+  String get parentDashboardRemoteRewardAdded;
+
+  /// No description provided for @parentDashboardChildLinked.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم ربط الطفل بنجاح'**
+  String get parentDashboardChildLinked;
+
+  /// No description provided for @parentDashboardReminderSaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تحديث التذكير'**
+  String get parentDashboardReminderSaved;
+
+  /// No description provided for @guardianLinkingSlowHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'تستغرق العملية وقتًا أطول من المعتاد. يمكنك المتابعة والربط لاحقًا.'**
+  String get guardianLinkingSlowHint;
+
+  /// No description provided for @hifzReviewPassedTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم اجتياز المراجعة'**
+  String get hifzReviewPassedTitle;
+
+  /// No description provided for @hifzReviewTimeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حان وقت المراجعة'**
+  String get hifzReviewTimeTitle;
+
+  /// No description provided for @hifzReviewFullSurahHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع السورة كاملة قبل إنهائها'**
+  String get hifzReviewFullSurahHint;
+
+  /// No description provided for @hifzReviewRangeHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع الآيات من {startAyah} إلى {endAyah} قبل الانتقال للآية التالية'**
+  String hifzReviewRangeHint(int startAyah, int endAyah);
+
+  /// No description provided for @hifzEvaluatingReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارِ تقييم المراجعة...'**
+  String get hifzEvaluatingReview;
+
+  /// No description provided for @hifzLeaveSessionMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.'**
+  String get hifzLeaveSessionMessage;
+
+  /// No description provided for @hifzAyahNumberLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية {ayahNumber}'**
+  String hifzAyahNumberLabel(int ayahNumber);
+
+  /// No description provided for @hifzEvaluatingAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارِ التقييم...'**
+  String get hifzEvaluatingAyah;
+
+  /// No description provided for @hifzRecordingAyahHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتم التسجيل، اقرأ الآية من حفظك...'**
+  String get hifzRecordingAyahHint;
+
+  /// No description provided for @hifzExcellentMemorization.
+  ///
+  /// In ar, this message translates to:
+  /// **'ممتاز! حفظ متقن.'**
+  String get hifzExcellentMemorization;
+
+  /// No description provided for @hifzNeedsAyahReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج إلى مراجعة هذه الآية.'**
+  String get hifzNeedsAyahReview;
+
+  /// No description provided for @hifzNoVoiceRecognized.
+  ///
+  /// In ar, this message translates to:
+  /// **'(لم يتم التعرف على صوت)'**
+  String get hifzNoVoiceRecognized;
+
+  /// No description provided for @hifzRecordingReviewHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتم التسجيل، اقرأ المقطع من حفظك...'**
+  String get hifzRecordingReviewHint;
+
+  /// No description provided for @hifzFinishRecitation.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنهاء التسميع'**
+  String get hifzFinishRecitation;
+
+  /// No description provided for @hifzFinishSession.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنهاء الجلسة'**
+  String get hifzFinishSession;
+
+  /// No description provided for @hifzNextAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآية التالية'**
+  String get hifzNextAyah;
+
+  /// No description provided for @hifzReviewNotPassed.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم اجتياز المراجعة. حاول مرة أخرى.'**
+  String get hifzReviewNotPassed;
+
+  /// No description provided for @hifzStartRecitation.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ التسميع'**
+  String get hifzStartRecitation;
 }
 
 class _AppLocalizationsDelegate
