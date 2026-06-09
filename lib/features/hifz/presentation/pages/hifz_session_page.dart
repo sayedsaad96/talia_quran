@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -53,11 +55,7 @@ class _HifzSessionView extends StatelessWidget {
           context: context,
           builder: (ctx) => AlertDialog(
             title: Text(context.l10n.endSessionTitle),
-            content: Text(
-              context.isArabic
-                  ? 'هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.'
-                  : 'Do you want to leave the memorization session? Your current progress will be saved.',
-            ),
+            content: Text(context.l10n.hifzLeaveSessionMessage),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),
@@ -108,7 +106,7 @@ class _HifzSessionView extends StatelessWidget {
               return const Center(child: LoadingWidget());
             }
             if (state is HifzSessionError) {
-              return ErrorStateWidget(message: state.message);
+              return ErrorStateWidget(message: _errorMessage(context, state));
             }
             if (state is HifzSessionLoaded) {
               return _FullSurahSession(state: state, isDark: isDark);
@@ -127,6 +125,14 @@ class _HifzSessionView extends StatelessWidget {
         '/hifz/session?surahId=${state.surah.id}&startAyah=${ayah.numberInSurah}',
       ),
     );
+  }
+
+  String _errorMessage(BuildContext context, HifzSessionError state) {
+    return switch (state.issue) {
+      HifzSessionIssue.kidsRedirectedFromAdultHifz =>
+        context.l10n.hifzKidsRedirectedFromAdult,
+      null => context.localizedCubitMessage(state.message),
+    };
   }
 }
 
@@ -256,7 +262,7 @@ class _FullSurahSession extends StatelessWidget {
                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                   ),
                   child: Text(
-                    '${context.isArabic ? "آية" : "Ayah"} ${ayah.numberInSurah}',
+                    context.l10n.hifzAyahNumberLabel(ayah.numberInSurah),
                     style: AppTypography.titleMedium.copyWith(color: primary),
                   ),
                 ),
@@ -292,9 +298,7 @@ class _FullSurahSession extends StatelessWidget {
                                   const CircularProgressIndicator(),
                                   const SizedBox(height: AppSpacing.md),
                                   Text(
-                                    context.isArabic
-                                        ? "جارِ التقييم..."
-                                        : "Evaluating...",
+                                    context.l10n.hifzEvaluatingAyah,
                                     style: AppTypography.bodyLarge.copyWith(
                                       color: textColor,
                                     ),
@@ -312,9 +316,7 @@ class _FullSurahSession extends StatelessWidget {
                             // Show QcfHifzVerseView when verse is displayed normally.
                             : state.isRecording
                             ? Text(
-                                context.isArabic
-                                    ? "يتم التسجيل، اقرأ الآية من حفظك..."
-                                    : "Recording, recite from memory...",
+                                context.l10n.hifzRecordingAyahHint,
                                 style: AppTypography.bodyLarge.copyWith(
                                   color: textColor,
                                   fontSize: 20,
@@ -365,7 +367,7 @@ class _FullSurahSession extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            state.audioError!,
+                            context.localizedCubitMessage(state.audioError!),
                             style: AppTypography.bodySmall.copyWith(
                               color: Colors.red,
                             ),
@@ -374,6 +376,9 @@ class _FullSurahSession extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                if (state.speechIssue != null)
+                  _SpeechIssueBanner(issue: state.speechIssue!),
 
                 // Controls Area
                 if (!hasCheckpoint &&
@@ -502,12 +507,8 @@ class _FullSurahSession extends StatelessWidget {
                           ),
                           label: Text(
                             state.currentIndex == state.ayahs.length - 1
-                                ? (context.isArabic
-                                      ? 'إنهاء الجلسة'
-                                      : 'Finish Session')
-                                : (context.isArabic
-                                      ? 'الآية التالية'
-                                      : 'Next Ayah'),
+                                ? context.l10n.hifzFinishSession
+                                : context.l10n.hifzNextAyah,
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor:
@@ -533,6 +534,78 @@ class _FullSurahSession extends StatelessWidget {
       ],
     );
   }
+}
+
+class _SpeechIssueBanner extends StatelessWidget {
+  const _SpeechIssueBanner({required this.issue});
+
+  final HifzSpeechIssue issue;
+
+  @override
+  Widget build(BuildContext context) {
+    final showOpenSettings =
+        issue == HifzSpeechIssue.permissionPermanentlyDenied ||
+        issue == HifzSpeechIssue.unavailable;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.mic_off_rounded,
+                color: AppColors.error,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _message(context),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            children: [
+              TextButton.icon(
+                onPressed: () =>
+                    context.read<HifzSessionCubit>().startRecording(),
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(context.l10n.tryAgainAction),
+              ),
+              if (showOpenSettings)
+                TextButton.icon(
+                  onPressed: () => unawaited(openAppSettings()),
+                  icon: const Icon(Icons.settings_rounded),
+                  label: Text(context.l10n.openSettingsAction),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _message(BuildContext context) => switch (issue) {
+    HifzSpeechIssue.permissionDenied => context.l10n.micPermissionError,
+    HifzSpeechIssue.permissionPermanentlyDenied =>
+      context.l10n.micPermissionError,
+    HifzSpeechIssue.unavailable => context.l10n.speechUnavailableError,
+  };
 }
 
 class _EvaluationResult extends StatelessWidget {
@@ -570,12 +643,8 @@ class _EvaluationResult extends StatelessWidget {
         const SizedBox(height: AppSpacing.md),
         Text(
           pass
-              ? (context.isArabic
-                    ? 'ممتاز! حفظ متقن.'
-                    : 'Excellent! Perfect memorization.')
-              : (context.isArabic
-                    ? 'تحتاج إلى مراجعة هذه الآية.'
-                    : 'You need to review this Ayah.'),
+              ? context.l10n.hifzExcellentMemorization
+              : context.l10n.hifzNeedsAyahReview,
           style: AppTypography.titleMedium.copyWith(
             color: isDark ? Colors.white70 : Colors.black87,
           ),
@@ -588,9 +657,7 @@ class _EvaluationResult extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           state.recognizedText.isEmpty
-              ? (context.isArabic
-                    ? "(لم يتم التعرف على صوت)"
-                    : "(No voice recognized)")
+              ? context.l10n.hifzNoVoiceRecognized
               : state.recognizedText,
           style: AppTypography.bodyLarge.copyWith(
             color: isDark ? Colors.white54 : Colors.black54,
@@ -633,7 +700,9 @@ class _CheckpointReviewCard extends StatelessWidget {
         ).animate().scale(duration: 200.ms),
         const SizedBox(height: AppSpacing.md),
         Text(
-          passed ? 'تم اجتياز المراجعة' : 'حان وقت المراجعة',
+          passed
+              ? context.l10n.hifzReviewPassedTitle
+              : context.l10n.hifzReviewTimeTitle,
           style: AppTypography.titleLarge.copyWith(
             color: passed ? Colors.green : primary,
             fontWeight: FontWeight.w700,
@@ -643,24 +712,27 @@ class _CheckpointReviewCard extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           isSmallFullSurah
-              ? 'راجع السورة كاملة قبل إنهائها'
-              : 'راجع الآيات من ${checkpoint.startAyah} إلى ${checkpoint.endAyah} قبل الانتقال للآية التالية',
+              ? context.l10n.hifzReviewFullSurahHint
+              : context.l10n.hifzReviewRangeHint(
+                  checkpoint.startAyah,
+                  checkpoint.endAyah,
+                ),
           style: AppTypography.bodyLarge.copyWith(color: textColor),
           textAlign: TextAlign.center,
-          textDirection: TextDirection.rtl,
+          textDirection: context.textDirection,
         ),
         if (state.isEvaluating) ...[
           const SizedBox(height: AppSpacing.lg),
           const CircularProgressIndicator(),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'جارِ تقييم المراجعة...',
+            context.l10n.hifzEvaluatingReview,
             style: AppTypography.bodyMedium.copyWith(color: textColor),
           ),
         ] else if (state.isRecording) ...[
           const SizedBox(height: AppSpacing.lg),
           Text(
-            'يتم التسجيل، اقرأ المقطع من حفظك...',
+            context.l10n.hifzRecordingReviewHint,
             style: AppTypography.bodyMedium.copyWith(color: textColor),
             textAlign: TextAlign.center,
           ),
@@ -668,7 +740,7 @@ class _CheckpointReviewCard extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: () => context.read<HifzSessionCubit>().stopRecording(),
             icon: const Icon(Icons.stop_rounded),
-            label: const Text('إنهاء التسميع'),
+            label: Text(context.l10n.hifzFinishRecitation),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
@@ -694,8 +766,8 @@ class _CheckpointReviewCard extends StatelessWidget {
             ),
             label: Text(
               state.currentIndex == state.ayahs.length - 1
-                  ? 'إنهاء الجلسة'
-                  : 'الآية التالية',
+                  ? context.l10n.hifzFinishSession
+                  : context.l10n.hifzNextAyah,
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
@@ -707,7 +779,7 @@ class _CheckpointReviewCard extends StatelessWidget {
           if (failed) ...[
             const SizedBox(height: AppSpacing.md),
             Text(
-              'لم يتم اجتياز المراجعة. حاول مرة أخرى.',
+              context.l10n.hifzReviewNotPassed,
               style: AppTypography.bodyMedium.copyWith(color: Colors.redAccent),
               textAlign: TextAlign.center,
             ),
@@ -716,7 +788,7 @@ class _CheckpointReviewCard extends StatelessWidget {
           ElevatedButton.icon(
             onPressed: () => context.read<HifzSessionCubit>().startRecording(),
             icon: const Icon(Icons.mic_rounded),
-            label: const Text('ابدأ التسميع'),
+            label: Text(context.l10n.hifzStartRecitation),
             style: ElevatedButton.styleFrom(
               backgroundColor: primary,
               foregroundColor: Colors.white,

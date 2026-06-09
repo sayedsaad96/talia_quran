@@ -60,7 +60,10 @@ class _AzkarCategoryView extends StatelessWidget {
             return const Center(child: LoadingWidget());
           }
           if (state is AzkarError) {
-            return ErrorStateWidget(message: state.message);
+            return ErrorStateWidget(
+              message: state.message,
+              onRetry: () => context.read<AzkarCubit>().load(category),
+            );
           }
           if (state is AzkarLoaded) {
             if (state.allDone) {
@@ -666,14 +669,14 @@ class _ZikrReaderPage extends StatelessWidget {
                                 ),
                               ),
                               icon: const Icon(Icons.undo_rounded, size: 18),
-                              label: const Text('تراجع'),
+                              label: Text(context.l10n.undo),
                             ),
                           )
                         : Padding(
                             key: const ValueKey('hint'),
                             padding: const EdgeInsets.only(top: 8),
                             child: Text(
-                              'اضغط مطولاً للتراجع',
+                              context.l10n.longPressToUndo,
                               style: AppTypography.labelSmall.copyWith(
                                 color: Colors.white.withValues(alpha: 0.72),
                               ),

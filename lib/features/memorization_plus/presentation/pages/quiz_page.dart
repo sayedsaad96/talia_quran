@@ -9,6 +9,8 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/constants/speech_constants.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/talia_logger.dart';
@@ -113,7 +115,10 @@ class _QuizView extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
             if (state is QuizError) {
-              return _ErrorView(message: state.message, isDark: isDark);
+              return _ErrorView(
+                message: context.localizedCubitMessage(state.message),
+                isDark: isDark,
+              );
             }
             if (state is QuizQuestion) {
               return _QuestionView(state: state, isDark: isDark);
@@ -207,7 +212,7 @@ class _QuestionViewState extends State<_QuestionView> {
         onResult: (val) => setState(() {
           _recognizedWords = val.recognizedWords;
         }),
-        localeId: 'ar_SA', // Set to Arabic
+        localeId: kArabicSpeechLocaleId,
       );
     } else {
       setState(() => _isListening = false);
@@ -217,7 +222,7 @@ class _QuestionViewState extends State<_QuestionView> {
 
   @override
   void dispose() {
-    _speech.stop();
+    unawaited(_speech.cancel());
     super.dispose();
   }
 
@@ -316,7 +321,7 @@ class _QuestionViewState extends State<_QuestionView> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  'الآية رقم ${s.ayahNumber}',
+                  context.l10n.quizAyahNumberTitle(s.ayahNumber),
                   style: AppTypography.headlineSmall.copyWith(
                     color: isDark
                         ? AppColors.darkTextPrimary
@@ -327,7 +332,7 @@ class _QuestionViewState extends State<_QuestionView> {
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 Text(
-                  'اضغط على المايكروفون وقم بتسميع الآية',
+                  context.l10n.quizRecitePrompt,
                   style: AppTypography.bodyMedium.copyWith(
                     color: isDark
                         ? AppColors.darkTextSecondary
@@ -359,7 +364,7 @@ class _QuestionViewState extends State<_QuestionView> {
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
-                          'تلميح: ${s.hint}',
+                          context.l10n.quizHintLabel(s.hint),
                           style: AppTypography.bodySmall.copyWith(
                             color: Colors.amber.shade700,
                             fontFamily: 'Amiri',
@@ -398,7 +403,7 @@ class _QuestionViewState extends State<_QuestionView> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'استمع للآية',
+                        context.l10n.quizListenAyahTitle,
                         style: AppTypography.titleMedium.copyWith(
                           color: Colors.blue,
                           fontFamily: 'Amiri',
@@ -406,7 +411,7 @@ class _QuestionViewState extends State<_QuestionView> {
                         ),
                       ),
                       Text(
-                        'استمع قبل التسميع لتتذكر النطق الصحيح',
+                        context.l10n.quizListenAyahSubtitle,
                         style: AppTypography.bodySmall.copyWith(
                           color: isDark
                               ? AppColors.darkTextSecondary
@@ -459,10 +464,10 @@ class _QuestionViewState extends State<_QuestionView> {
           Center(
             child: Text(
               _isListening
-                  ? 'جاري الاستماع...'
+                  ? context.l10n.quizListeningStatus
                   : (_recognizedWords.isEmpty
-                        ? 'انقر للتحدث'
-                        : 'انقر لإعادة التسجيل'),
+                        ? context.l10n.quizTapToSpeak
+                        : context.l10n.quizTapToRecordAgain),
               style: AppTypography.labelMedium.copyWith(
                 color: _isListening
                     ? Colors.redAccent
@@ -527,8 +532,8 @@ class _QuestionViewState extends State<_QuestionView> {
                       if (_recognizedWords.trim().isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: const Text(
-                              'يرجى تسجيل الصوت أولاً قبل التحقق',
+                            content: Text(
+                              context.l10n.quizRecordBeforeChecking,
                             ),
                             behavior: SnackBarBehavior.floating,
                             shape: RoundedRectangleBorder(
@@ -555,7 +560,7 @@ class _QuestionViewState extends State<_QuestionView> {
                   const Icon(Icons.check_circle_rounded),
                   const SizedBox(width: 12),
                   Text(
-                    'تحقق من الإجابة',
+                    context.l10n.quizCheckAnswer,
                     style: AppTypography.titleMedium.copyWith(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -609,7 +614,7 @@ class _ManualEvaluationPanel extends StatelessWidget {
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Text(
-                  'التقييم اليدوي',
+                  context.l10n.quizManualEvaluation,
                   style: AppTypography.titleMedium.copyWith(
                     color: textColor,
                     fontFamily: 'Amiri',
@@ -621,7 +626,7 @@ class _ManualEvaluationPanel extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'إذا لم يعمل الميكروفون، قيّم التسميع بنفس المقياس المستخدم في التطبيق.',
+            context.l10n.quizManualEvaluationHelp,
             style: AppTypography.bodySmall.copyWith(color: subTextColor),
           ),
           const SizedBox(height: AppSpacing.md),
@@ -630,19 +635,19 @@ class _ManualEvaluationPanel extends StatelessWidget {
             runSpacing: AppSpacing.sm,
             children: [
               _ManualRatingButton(
-                label: 'ضعيف',
+                label: context.l10n.performanceWeak,
                 icon: Icons.replay_rounded,
                 color: Colors.orange,
                 onTap: () => onRate(PerformanceRating.weak),
               ),
               _ManualRatingButton(
-                label: 'متوسط',
+                label: context.l10n.performanceAverage,
                 icon: Icons.check_circle_outline_rounded,
                 color: Theme.of(context).primaryColor,
                 onTap: () => onRate(PerformanceRating.average),
               ),
               _ManualRatingButton(
-                label: 'ممتاز',
+                label: context.l10n.performanceExcellent,
                 icon: Icons.verified_rounded,
                 color: Colors.green,
                 onTap: () => onRate(PerformanceRating.excellent),
@@ -656,14 +661,14 @@ class _ManualEvaluationPanel extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: onRetryMic,
                   icon: const Icon(Icons.mic_rounded, size: 18),
-                  label: const Text('إعادة محاولة الميكروفون'),
+                  label: Text(context.l10n.quizRetryMicrophone),
                 ),
               ),
               const SizedBox(width: AppSpacing.sm),
               TextButton.icon(
                 onPressed: onSkip,
                 icon: const Icon(Icons.skip_next_rounded, size: 18),
-                label: const Text('تخطي الآية'),
+                label: Text(context.l10n.quizSkipAyah),
               ),
             ],
           ),
@@ -739,7 +744,9 @@ class _AnswerResultView extends StatelessWidget {
           const SizedBox(height: AppSpacing.lg),
           Center(
             child: Text(
-              passed ? 'أحسنت! ✨' : 'نراجعها معاً 💪',
+              passed
+                  ? context.l10n.quizAnswerPassedTitle
+                  : context.l10n.quizAnswerNeedsPracticeTitle,
               style: AppTypography.headlineSmall.copyWith(
                 color: color,
                 fontWeight: FontWeight.bold,
@@ -755,7 +762,7 @@ class _AnswerResultView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'نسبة التطابق: ${state.scorePercent}%',
+                context.l10n.quizMatchPercent(state.scorePercent),
                 style: AppTypography.titleMedium.copyWith(
                   color: color,
                   fontWeight: FontWeight.bold,
@@ -769,7 +776,7 @@ class _AnswerResultView extends StatelessWidget {
           // T017: correct Quran text rendered through QcfHifzVerseView.
           // userText stays as normal recognized speech text (unchanged).
           _ComparisonCard(
-            title: 'النص الصحيح',
+            title: context.l10n.quizCorrectText,
             text: state.correctText,
             icon: Icons.auto_stories_rounded,
             color: Colors.green,
@@ -1183,7 +1190,7 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: AppSpacing.xl),
             ElevatedButton(
               onPressed: () => context.pop(),
-              child: const Text('العودة'),
+              child: Text(context.l10n.backAction),
             ),
           ],
         ),

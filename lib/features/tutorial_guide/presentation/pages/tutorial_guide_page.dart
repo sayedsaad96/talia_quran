@@ -50,7 +50,7 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
     final sections = _filteredSections;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: context.textDirection,
       child: Scaffold(
         backgroundColor: isDark
             ? AppColors.darkBackground
@@ -192,7 +192,7 @@ class _SearchField extends StatelessWidget {
     return TextField(
       controller: controller,
       onChanged: onChanged,
-      textDirection: TextDirection.rtl,
+      textDirection: context.textDirection,
       decoration: InputDecoration(
         hintText: 'ابحث عن ميزة أو خطوة استخدام',
         prefixIcon: Icon(Icons.search_rounded, color: primary),

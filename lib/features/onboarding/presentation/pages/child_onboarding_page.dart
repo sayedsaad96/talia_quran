@@ -11,14 +11,42 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
 
-class ChildOnboardingPage extends StatelessWidget {
+class ChildOnboardingPage extends StatefulWidget {
   const ChildOnboardingPage({super.key});
 
   static const _seenKey = 'child_onboarding_seen';
 
+  @override
+  State<ChildOnboardingPage> createState() => _ChildOnboardingPageState();
+}
+
+class _ChildOnboardingPageState extends State<ChildOnboardingPage> {
+  bool _checkingSeen = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _redirectIfAlreadySeen();
+  }
+
+  Future<void> _redirectIfAlreadySeen() async {
+    final prefs = await SharedPreferences.getInstance();
+    final seen = prefs.getBool(ChildOnboardingPage._seenKey) ?? false;
+    if (!mounted) return;
+    if (!seen) {
+      setState(() => _checkingSeen = false);
+      return;
+    }
+
+    final location = await MemorizationNavigationResolver(
+      getIt<MemorizationPlusRepository>(),
+    ).childOnboardingLocation();
+    if (mounted) context.go(location);
+  }
+
   Future<void> _startKidsPath(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool(_seenKey, true);
+    await prefs.setBool(ChildOnboardingPage._seenKey, true);
     final location = await MemorizationNavigationResolver(
       getIt<MemorizationPlusRepository>(),
     ).childOnboardingLocation();
@@ -27,6 +55,10 @@ class ChildOnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_checkingSeen) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final isDark = context.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final textColor = isDark
@@ -86,7 +118,11 @@ class ChildOnboardingPage extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: () => context.go(AppRoutes.onboarding),
-                icon: const Icon(Icons.arrow_back_rounded),
+                icon: Icon(
+                  Directionality.of(context) == TextDirection.rtl
+                      ? Icons.arrow_forward_rounded
+                      : Icons.arrow_back_rounded,
+                ),
                 color: subTextColor,
               ),
               const SizedBox(height: AppSpacing.sm),

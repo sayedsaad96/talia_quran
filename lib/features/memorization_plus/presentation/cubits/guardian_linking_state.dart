@@ -75,10 +75,21 @@ class GuardianLinkingBlocked extends GuardianLinkingState {
   List<Object?> get props => [message];
 }
 
+enum GuardianLinkingErrorKind { failure, timeout }
+
 class GuardianLinkingError extends GuardianLinkingState {
-  const GuardianLinkingError(this.message);
+  const GuardianLinkingError(
+    this.message, {
+    this.kind = GuardianLinkingErrorKind.failure,
+  });
+
+  const GuardianLinkingError.timeout()
+    : message = '',
+      kind = GuardianLinkingErrorKind.timeout;
+
   final String message;
+  final GuardianLinkingErrorKind kind;
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, kind];
 }

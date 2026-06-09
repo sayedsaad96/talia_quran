@@ -17,6 +17,9 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
   final GetParentDashboardUsecase _getDashboard;
   final ParentAccessUsecase _parentAccess;
   final ParentRemoteLinkUsecase _remoteLink;
+  int _feedbackEventId = 0;
+
+  int _nextFeedbackEventId() => ++_feedbackEventId;
 
   Future<void> load({required int surahId}) async {
     emit(const ParentDashboardLoading());
@@ -31,7 +34,16 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
 
   Future<void> setPin(String pin, {required int surahId}) async {
     if (!_isValidPin(pin)) {
-      emit(const ParentDashboardError('أدخل رمزًا من 4 أرقام'));
+      final settings = (await _parentAccess.getSettings()).getOrElse(
+        () => const ParentSettings(),
+      );
+      emit(
+        ParentDashboardNeedsPin(
+          settings: settings,
+          feedback: const ParentDashboardFeedback.pinInvalid(),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      );
       return;
     }
     emit(const ParentDashboardLoading());
@@ -44,7 +56,17 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
 
   Future<void> unlock(String pin, {required int surahId}) async {
     if (!_isValidPin(pin)) {
-      emit(const ParentDashboardError('أدخل رمزًا من 4 أرقام'));
+      final settings = (await _parentAccess.getSettings()).getOrElse(
+        () => const ParentSettings(),
+      );
+      emit(
+        ParentDashboardLocked(
+          settings: settings,
+          surahId: surahId,
+          feedback: const ParentDashboardFeedback.pinInvalid(),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      );
       return;
     }
     emit(const ParentDashboardLoading());
@@ -58,7 +80,8 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
         ParentDashboardLocked(
           settings: settings,
           surahId: surahId,
-          message: 'رمز غير صحيح',
+          feedback: const ParentDashboardFeedback.pinIncorrect(),
+          feedbackEventId: _nextFeedbackEventId(),
         ),
       );
       return;
@@ -66,7 +89,10 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
     await refresh(surahId: surahId);
   }
 
-  Future<void> refresh({required int surahId}) async {
+  Future<void> refresh({
+    required int surahId,
+    ParentDashboardFeedback? feedback,
+  }) async {
     final dashboardResult = await _getDashboard(
       GetParentDashboardParams(surahId: surahId),
     );
@@ -78,6 +104,8 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
           dashboard: dashboard,
           remoteChildren: remoteResult.getOrElse(() => const []),
           surahId: surahId,
+          feedback: feedback,
+          feedbackEventId: feedback != null ? _nextFeedbackEventId() : 0,
         ),
       ),
     );
@@ -88,8 +116,16 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
     if (current is! ParentDashboardLoaded) return;
     final result = await _parentAccess.saveReward(title);
     result.fold(
-      (failure) => emit(current.copyWith(message: failure.message)),
-      (_) => refresh(surahId: current.surahId),
+      (failure) => emit(
+        current.copyWith(
+          feedback: ParentDashboardFeedback.failure(failure.message),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      ),
+      (_) => refresh(
+        surahId: current.surahId,
+        feedback: const ParentDashboardFeedback.rewardAdded(),
+      ),
     );
   }
 
@@ -107,7 +143,12 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
     );
     final result = await _parentAccess.saveSettings(settings);
     await result.fold(
-      (failure) async => emit(current.copyWith(message: failure.message)),
+      (failure) async => emit(
+        current.copyWith(
+          feedback: ParentDashboardFeedback.failure(failure.message),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      ),
       (_) async {
         final prefs = getIt<SharedPreferences>();
         await prefs.setBool(
@@ -131,7 +172,10 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
         } else {
           await notificationService.cancelKidsReviewReminder();
         }
-        await refresh(surahId: current.surahId);
+        await refresh(
+          surahId: current.surahId,
+          feedback: const ParentDashboardFeedback.reminderSaved(),
+        );
       },
     );
   }
@@ -144,8 +188,16 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
       title: title,
     );
     result.fold(
-      (failure) => emit(current.copyWith(message: failure.message)),
-      (_) => refresh(surahId: current.surahId),
+      (failure) => emit(
+        current.copyWith(
+          feedback: ParentDashboardFeedback.failure(failure.message),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      ),
+      (_) => refresh(
+        surahId: current.surahId,
+        feedback: const ParentDashboardFeedback.remoteRewardAdded(),
+      ),
     );
   }
 
@@ -155,7 +207,10 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
     final result = await _remoteLink.acceptGuardianPairingCode(token);
     await result.fold(
       (failure) async => emit(ParentDashboardError(failure.message)),
-      (_) async => refresh(surahId: surahId),
+      (_) async => refresh(
+        surahId: surahId,
+        feedback: const ParentDashboardFeedback.childLinked(),
+      ),
     );
   }
 

@@ -17,6 +17,7 @@ import 'package:talia_quran/core/services/achievement_service.dart';
 import 'package:talia_quran/core/services/streak_service.dart';
 import 'package:talia_quran/core/services/xp_service.dart';
 import 'package:talia_quran/core/theme/theme_cubit.dart';
+import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:talia_quran/features/hifz/domain/usecases/get_hifz_progress_usecase.dart';
 import 'package:talia_quran/features/hifz/presentation/cubits/hifz_session_cubit.dart';
@@ -117,6 +118,83 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('memorization hub'), findsOneWidget);
+    });
+
+    testWidgets('shows parent tools for signed-in adult parent mode', (
+      tester,
+    ) async {
+      await _registerHomeDependencies(
+        _homeState(
+          isKids: false,
+          selectedTrack: MemorizationTrack.adults,
+          isParentMode: true,
+        ),
+      );
+
+      final router = _homeRouter();
+      await tester.pumpWidget(
+        _AppShell(router: router, signedIn: true, child: const HomePage()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Parent / Guardian Tools'), findsOneWidget);
+      expect(
+        find.text('Monitor your child’s progress and rewards'),
+        findsOneWidget,
+      );
+      expect(find.text('Open Parent Dashboard'), findsOneWidget);
+    });
+
+    testWidgets('hides parent tools for child users', (tester) async {
+      await _registerHomeDependencies(
+        _homeState(
+          isKids: true,
+          selectedTrack: MemorizationTrack.kids,
+          isParentMode: true,
+        ),
+      );
+
+      final router = _homeRouter();
+      await tester.pumpWidget(
+        _AppShell(router: router, signedIn: true, child: const HomePage()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Parent / Guardian Tools'), findsNothing);
+    });
+
+    testWidgets('hides parent tools without parent mode', (tester) async {
+      await _registerHomeDependencies(
+        _homeState(isKids: false, selectedTrack: MemorizationTrack.adults),
+      );
+
+      final router = _homeRouter();
+      await tester.pumpWidget(
+        _AppShell(router: router, signedIn: true, child: const HomePage()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Parent / Guardian Tools'), findsNothing);
+    });
+
+    testWidgets('hides parent tools for guest adult parent mode', (
+      tester,
+    ) async {
+      await _registerHomeDependencies(
+        _homeState(
+          isKids: false,
+          selectedTrack: MemorizationTrack.adults,
+          isParentMode: true,
+        ),
+      );
+
+      final router = _homeRouter();
+      await tester.pumpWidget(
+        _AppShell(router: router, child: const HomePage()),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Parent / Guardian Tools'), findsNothing);
     });
 
     testWidgets('labels Kids resume by the current stage', (tester) async {
@@ -251,7 +329,7 @@ void main() {
         AppRoutes.memorizationPlusDailyPlan: 'kids hub',
         AppRoutes.hifz: 'kids hub',
         AppRoutes.hifzSession: 'kids hub',
-        '${AppRoutes.memorizationPlusJourney}/114': 'kids journey',
+        '${AppRoutes.memorizationPlusKidsJourney}/114': 'kids journey',
         '${AppRoutes.hifzSession}?surahId=114&startAyah=1': 'kids listen',
       }.entries) {
         final router = _guardRouter(initialLocation: entry.key);
@@ -263,6 +341,35 @@ void main() {
         router.dispose();
         await tester.pumpWidget(const SizedBox.shrink());
       }
+    });
+
+    testWidgets('protects parent dashboard from Kids profiles', (tester) async {
+      await _registerRouteDependencies(_profile(MemorizationPath.child));
+
+      final router = _guardRouter(initialLocation: AppRoutes.parentDashboard);
+      await tester.pumpWidget(_LocalizedRouter(router));
+      await tester.pumpAndSettle();
+
+      expect(find.text('kids hub'), findsOneWidget);
+      expect(find.text('parent dashboard'), findsNothing);
+
+      router.dispose();
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('allows adult profiles to reach parent dashboard', (
+      tester,
+    ) async {
+      await _registerRouteDependencies(_profile(MemorizationPath.adult));
+
+      final router = _guardRouter(initialLocation: AppRoutes.parentDashboard);
+      await tester.pumpWidget(_LocalizedRouter(router));
+      await tester.pumpAndSettle();
+
+      expect(find.text('parent dashboard'), findsOneWidget);
+
+      router.dispose();
+      await tester.pumpWidget(const SizedBox.shrink());
     });
   });
 
@@ -367,6 +474,14 @@ Future<void> _registerHomeDependencies(HomeLoaded state) async {
 
   getIt.registerSingleton<SharedPreferences>(prefs);
   getIt.registerSingleton<XpService>(_FakeXpService());
+  getIt.registerSingleton<MemorizationPlusRepository>(
+    _profileRepository(
+      _profile(
+        state.isKids ? MemorizationPath.child : MemorizationPath.adult,
+        isParentGuardian: state.isParentMode,
+      ),
+    ),
+  );
   getIt.registerFactory<HomeCubit>(() => _FakeHomeCubit(state));
   getIt.registerFactory<StreakCubit>(
     () => _FakeStreakCubit(
@@ -412,6 +527,11 @@ GoRouter _homeRouter() {
         builder: (_, _) => const Scaffold(body: Center(child: Text('quran'))),
       ),
       GoRoute(
+        path: AppRoutes.parentDashboard,
+        builder: (_, _) =>
+            const Scaffold(body: Center(child: Text('parent dashboard'))),
+      ),
+      GoRoute(
         path: AppRoutes.tutorialGuide,
         builder: (_, _) =>
             const Scaffold(body: Center(child: Text('tutorial'))),
@@ -450,7 +570,12 @@ GoRouter _guardRouter({required String initialLocation}) {
         builder: (_, _) => const Text('kids hub'),
       ),
       GoRoute(
-        path: '${AppRoutes.memorizationPlusJourney}/:surahId',
+        path: AppRoutes.parentDashboard,
+        redirect: (_, _) => MemorizationRouteGuard.parentDashboardRedirect(),
+        builder: (_, _) => const Text('parent dashboard'),
+      ),
+      GoRoute(
+        path: '${AppRoutes.memorizationPlusKidsJourney}/:surahId',
         redirect: (_, _) => MemorizationRouteGuard.kidsOnlyRedirect(),
         builder: (_, _) => const Text('kids journey'),
       ),
@@ -463,16 +588,17 @@ GoRouter _guardRouter({required String initialLocation}) {
 }
 
 class _AppShell extends StatelessWidget {
-  const _AppShell({this.child, this.router});
+  const _AppShell({this.child, this.router, this.signedIn = false});
 
   final Widget? child;
   final GoRouter? router;
+  final bool signedIn;
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<AuthCubit>(create: (_) => _FakeAuthCubit()),
+        BlocProvider<AuthCubit>(create: (_) => _FakeAuthCubit(signedIn)),
         BlocProvider<ProfileCubit>(create: (_) => _FakeProfileCubit()),
         BlocProvider<ThemeCubit>(
           create: (_) => ThemeCubit(getIt<SharedPreferences>())..loadTheme(),
@@ -530,6 +656,7 @@ class _LocalizedRouter extends StatelessWidget {
 HomeLoaded _homeState({
   required bool isKids,
   required MemorizationTrack selectedTrack,
+  bool isParentMode = false,
   String? lastRestorableLocation,
 }) {
   return HomeLoaded(
@@ -537,6 +664,7 @@ HomeLoaded _homeState({
     hifzSurahProgress: const [],
     greeting: 'Assalamu alaikum',
     selectedTrack: selectedTrack,
+    isParentMode: isParentMode,
     isKids: isKids,
     lastRestorableLocation: lastRestorableLocation,
     activityStartDate: DateTime.utc(2026, 1, 1),
@@ -566,14 +694,17 @@ OverallProgress _progress({int kidsPoints = 0, int kidsStars = 0}) {
   );
 }
 
-MemorizationProfile _profile(MemorizationPath path) {
+MemorizationProfile _profile(
+  MemorizationPath path, {
+  bool isParentGuardian = false,
+}) {
   final now = DateTime.utc(2026, 1, 1);
   return MemorizationProfile(
     schemaVersion: 1,
     selectedPath: path,
     guardianLinkStatus: GuardianLinkStatus.none,
     guardianOnboardingStatus: GuardianOnboardingStatus.skipped,
-    isParentGuardian: false,
+    isParentGuardian: isParentGuardian,
     createdAt: now,
     updatedAt: now,
   );
@@ -637,7 +768,18 @@ class _FakeStreakCubit extends Cubit<StreakState> implements StreakCubit {
 }
 
 class _FakeAuthCubit extends Cubit<AuthState> implements AuthCubit {
-  _FakeAuthCubit() : super(const AuthUnauthenticated());
+  _FakeAuthCubit(bool signedIn)
+    : super(
+        signedIn
+            ? const AuthAuthenticated(
+                user: AppUser(
+                  id: 'adult-parent',
+                  email: 'parent@example.com',
+                  displayName: 'Parent',
+                ),
+              )
+            : const AuthUnauthenticated(),
+      );
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_home_page.dart';
@@ -58,6 +59,34 @@ void main() {
       await tester.pump();
 
       expect(tapped, ['mushaf', 'journey', 'missions']);
+    });
+
+    testWidgets('Mushaf action targets Kids Quran mode, not adult Quran', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      String? location;
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedHomeContent(
+            state: _loadedState,
+            onMushafTap: () =>
+                location = kidsQuranReaderLocation(_loadedState.surahId),
+            onJourneyTap: () {},
+            onMissionTap: () {},
+          ),
+        ),
+      );
+
+      await tester.tap(find.byKey(const ValueKey('kids-home-nav-mushaf')));
+      await tester.pump();
+
+      expect(location, '${AppRoutes.memorizationPlusKidsQuran}?surahId=114');
+      expect(location, isNot(AppRoutes.quran));
     });
 
     testWidgets(

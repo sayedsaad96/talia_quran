@@ -107,9 +107,9 @@ class _SurahDetailViewState extends State<_SurahDetailView> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('حدث خطأ أثناء حفظ العلامة المرجعية'),
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text(context.l10n.bookmarkSaveError),
+            duration: const Duration(seconds: 2),
           ),
         );
       }

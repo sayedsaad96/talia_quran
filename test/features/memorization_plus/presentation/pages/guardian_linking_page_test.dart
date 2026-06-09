@@ -41,11 +41,16 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      find.text('Guardian linking requires signing in first'),
+      find.text(
+        'Sign in to access guardian tools. Your local progress remains on this device.',
+      ),
       findsOneWidget,
     );
     expect(find.text('Sign in or create account'), findsOneWidget);
     expect(find.text('Continue Kids memorization'), findsOneWidget);
+    expect(find.textContaining('cloud', findRichText: true), findsNothing);
+    expect(find.textContaining('sync', findRichText: true), findsNothing);
+    expect(find.textContaining('backup', findRichText: true), findsNothing);
     expect(find.text('Link guardian now'), findsNothing);
     expect(repository.createPairingCalls, 0);
   });

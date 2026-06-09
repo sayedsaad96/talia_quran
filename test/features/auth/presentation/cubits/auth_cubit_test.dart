@@ -120,7 +120,10 @@ void main() {
           email: anyNamed('email'),
           password: anyNamed('password'),
         ),
-      ).thenAnswer((_) async => const Right(testUser));
+      ).thenAnswer((_) async {
+        authStreamController.add(testUser);
+        return const Right(testUser);
+      });
 
       final expectation = expectLater(
         cubit.stream,
@@ -164,7 +167,10 @@ void main() {
           password: anyNamed('password'),
           displayName: anyNamed('displayName'),
         ),
-      ).thenAnswer((_) async => const Right(testUser));
+      ).thenAnswer((_) async {
+        authStreamController.add(testUser);
+        return const Right(testUser);
+      });
 
       final expectation = expectLater(
         cubit.stream,
@@ -213,7 +219,10 @@ void main() {
     test('emits Loading then Unauthenticated on success', () async {
       when(
         mockAuthRepository.signOut(),
-      ).thenAnswer((_) async => const Right(unit));
+      ).thenAnswer((_) async {
+        authStreamController.add(null);
+        return const Right(unit);
+      });
 
       final expectation = expectLater(
         cubit.stream,

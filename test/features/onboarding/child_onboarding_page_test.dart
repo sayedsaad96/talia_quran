@@ -103,6 +103,32 @@ void main() {
     expect(find.text('kids home'), findsOneWidget);
     expect(find.text('kids setup'), findsNothing);
   });
+
+  testWidgets('skips orientation when it was already seen', (tester) async {
+    SharedPreferences.setMockInitialValues({'child_onboarding_seen': true});
+    getIt.registerSingleton<MemorizationPlusRepository>(
+      _ChildOnboardingRepository(profile: _profile(MemorizationPath.child)),
+    );
+    final router = GoRouter(
+      initialLocation: AppRoutes.childOnboarding,
+      routes: [
+        GoRoute(
+          path: AppRoutes.childOnboarding,
+          builder: (_, _) => const ChildOnboardingPage(),
+        ),
+        GoRoute(
+          path: AppRoutes.memorizationPlusKidsHome,
+          builder: (_, _) => const Scaffold(body: Text('kids home')),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(_LocalizedRouter(router));
+    await tester.pumpAndSettle();
+
+    expect(find.text('kids home'), findsOneWidget);
+    expect(find.text('Kids Mode'), findsNothing);
+  });
 }
 
 class _LocalizedRouter extends StatelessWidget {

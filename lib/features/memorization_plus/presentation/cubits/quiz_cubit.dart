@@ -5,6 +5,7 @@ import '../../../../core/services/achievement_service.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
+import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/utils/arabic_normalizer.dart';
 
 part 'quiz_state.dart';
@@ -37,7 +38,7 @@ class QuizCubit extends Cubit<QuizState> {
       );
 
       if (ayahs.isEmpty) {
-        emit(const QuizError('لم يتم العثور على بيانات السورة'));
+        emit(const QuizError(CubitMessageCodes.quizSurahNotFound));
         return;
       }
 
@@ -74,7 +75,7 @@ class QuizCubit extends Cubit<QuizState> {
             .toSet();
 
         if (allowedAyahNumbers.isEmpty) {
-          emit(const QuizError('لا يمكن اختبار آيات خارج خطتك أو سجلاتك'));
+          emit(const QuizError(CubitMessageCodes.quizAyahsOutsidePlan));
           return;
         }
 
@@ -109,7 +110,7 @@ class QuizCubit extends Cubit<QuizState> {
       }
 
       if (_items.isEmpty) {
-        emit(const QuizError('لا توجد آيات محفوظة لاختبارها في هذه السورة'));
+        emit(const QuizError(CubitMessageCodes.quizNoMemorizedAyahs));
         return;
       }
 
@@ -119,7 +120,7 @@ class QuizCubit extends Cubit<QuizState> {
 
       _emitCurrentQuestion();
     } catch (e) {
-      emit(QuizError('حدث خطأ: $e'));
+      emit(QuizError('${CubitMessageCodes.quizUnexpectedErrorPrefix}$e'));
     }
   }
 

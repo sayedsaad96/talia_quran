@@ -8,6 +8,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/achievement_service.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../widgets/certificate_widget.dart';
 
 class CertificatePage extends StatefulWidget {
@@ -195,9 +197,16 @@ class _CertificatePageState extends State<CertificatePage> {
   }
 
   void _showSaveOptions() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final sheetColor = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final dividerColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A1A1A),
+      backgroundColor: sheetColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -208,26 +217,25 @@ class _CertificatePageState extends State<CertificatePage> {
           children: [
             Text(
               context.l10n.saveFormatTitle,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
+              style: AppTypography.titleMedium.copyWith(
+                color: textColor,
                 fontWeight: FontWeight.bold,
                 fontFamily: 'Amiri',
               ),
             ),
             const SizedBox(height: 24),
             ListTile(
-              leading: const Icon(Icons.image_rounded, color: Colors.blue),
+              leading: const Icon(Icons.image_rounded, color: AppColors.primary),
               title: Text(
                 context.l10n.saveAsImage,
-                style: const TextStyle(color: Colors.white),
+                style: AppTypography.bodyLarge.copyWith(color: textColor),
               ),
               onTap: () {
                 Navigator.pop(context);
                 _saveToGallery();
               },
             ),
-            const Divider(color: Colors.white12),
+            Divider(color: dividerColor),
             ListTile(
               leading: const Icon(
                 Icons.picture_as_pdf_rounded,
@@ -235,7 +243,7 @@ class _CertificatePageState extends State<CertificatePage> {
               ),
               title: Text(
                 context.l10n.saveAsPdf,
-                style: const TextStyle(color: Colors.white),
+                style: AppTypography.bodyLarge.copyWith(color: textColor),
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -250,14 +258,14 @@ class _CertificatePageState extends State<CertificatePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        backgroundColor: Colors.black,
-        body: Stack(
-          children: [
-            // 1. Certificate Viewer (Full Screen)
-            Positioned.fill(
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // 1. Certificate Viewer (Full Screen, Arabic layout)
+          Positioned.fill(
+            child: Directionality(
+              textDirection: TextDirection.rtl,
               child: SafeArea(
                 child: InteractiveViewer(
                   minScale: 1.0,
@@ -270,9 +278,7 @@ class _CertificatePageState extends State<CertificatePage> {
                         child: CertificateWidget(
                           userName: widget.userName,
                           award: widget.award,
-                          completionDate: widget
-                              .award
-                              .earnedAt, // L02 FIX: Use actual earned date
+                          completionDate: widget.award.earnedAt,
                         ),
                       ),
                     ),
@@ -280,95 +286,95 @@ class _CertificatePageState extends State<CertificatePage> {
                 ),
               ),
             ),
+          ),
 
-            // 2. Back Button (Top Right)
-            Positioned(
-              top: 16,
-              right: 16,
-              child: SafeArea(
-                child: Material(
-                  color: Colors.black54,
-                  shape: const CircleBorder(),
-                  clipBehavior: Clip.antiAlias,
-                  child: IconButton(
-                    icon: const Icon(Icons.close_rounded, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
+          // 2. Close button (ambient reading direction)
+          PositionedDirectional(
+            top: 16,
+            start: 16,
+            child: SafeArea(
+              child: Material(
+                color: Colors.black54,
+                shape: const CircleBorder(),
+                clipBehavior: Clip.antiAlias,
+                child: IconButton(
+                  icon: const Icon(Icons.close_rounded, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
                 ),
               ),
             ),
+          ),
 
-            // 3. Action Buttons (Floating at bottom left)
-            Positioned(
-              bottom: 24,
-              left: 24,
-              child: SafeArea(
-                child: _isSaving
-                    ? Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: const BoxDecoration(
-                          color: Colors.black54,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const CircularProgressIndicator(
-                          color: Color(0xFFC9A84C),
-                        ),
-                      )
-                    : Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ElevatedButton.icon(
-                            onPressed: _share,
-                            icon: const Icon(Icons.share_rounded),
-                            label: Text(
-                              context.l10n.share,
-                              style: const TextStyle(
-                                fontFamily: 'Amiri',
-                                fontSize: 16,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFFC9A84C),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 20,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton.icon(
-                            onPressed: _showSaveOptions,
-                            icon: const Icon(Icons.download_rounded),
-                            label: Text(
-                              context.l10n.save,
-                              style: const TextStyle(
-                                fontFamily: 'Amiri',
-                                fontSize: 16,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white24,
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 12,
-                                horizontal: 20,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ],
+          // 3. Action Buttons (ambient reading direction)
+          PositionedDirectional(
+            bottom: 24,
+            start: 24,
+            child: SafeArea(
+              child: _isSaving
+                  ? Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: const BoxDecoration(
+                        color: Colors.black54,
+                        shape: BoxShape.circle,
                       ),
-              ),
+                      child: const CircularProgressIndicator(
+                        color: Color(0xFFC9A84C),
+                      ),
+                    )
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ElevatedButton.icon(
+                          onPressed: _share,
+                          icon: const Icon(Icons.share_rounded),
+                          label: Text(
+                            context.l10n.share,
+                            style: const TextStyle(
+                              fontFamily: 'Amiri',
+                              fontSize: 16,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFC9A84C),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 20,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        ElevatedButton.icon(
+                          onPressed: _showSaveOptions,
+                          icon: const Icon(Icons.download_rounded),
+                          label: Text(
+                            context.l10n.save,
+                            style: const TextStyle(
+                              fontFamily: 'Amiri',
+                              fontSize: 16,
+                            ),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white24,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                              horizontal: 20,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

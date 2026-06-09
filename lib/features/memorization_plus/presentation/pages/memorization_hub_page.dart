@@ -12,13 +12,32 @@ import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../navigation/memorization_navigation_resolver.dart';
 
-class MemorizationHubPage extends StatelessWidget {
+class MemorizationHubPage extends StatefulWidget {
   const MemorizationHubPage({super.key});
 
-  Future<MemorizationNavigationTargets> _targets() =>
+  @override
+  State<MemorizationHubPage> createState() => _MemorizationHubPageState();
+}
+
+class _MemorizationHubPageState extends State<MemorizationHubPage> {
+  late Future<MemorizationNavigationTargets> _targetsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _targetsFuture = _loadTargets();
+  }
+
+  Future<MemorizationNavigationTargets> _loadTargets() =>
       MemorizationNavigationResolver(
         getIt<MemorizationPlusRepository>(),
       ).resolve();
+
+  void _retryTargets() {
+    setState(() {
+      _targetsFuture = _loadTargets();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,10 +47,16 @@ class MemorizationHubPage extends StatelessWidget {
           ? AppColors.darkBackground
           : AppColors.lightBackground,
       body: FutureBuilder<MemorizationNavigationTargets>(
-        future: _targets(),
+        future: _targetsFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: LoadingWidget());
+          }
+          if (snapshot.hasError) {
+            return ErrorStateWidget(
+              message: context.l10n.errorOccurred,
+              onRetry: _retryTargets,
+            );
           }
           return CustomScrollView(
             slivers: [

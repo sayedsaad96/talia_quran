@@ -61,7 +61,7 @@ class _GuardianLinkingView extends StatelessWidget {
               if (!isGuest &&
                   (state is GuardianLinkingLoading ||
                       state is GuardianLinkingInitial)) {
-                return const Center(child: CircularProgressIndicator());
+                return const _GuardianLinkingLoading();
               }
 
               return ListView(
@@ -104,12 +104,23 @@ class _GuardianLinkingView extends StatelessWidget {
                             ? ErrorInfoBannerType.warning
                             : ErrorInfoBannerType.error,
                         title: state is GuardianLinkingBlocked
-                            ? 'الربط متوقف مؤقتاً'
-                            : 'تعذر ربط ولي الأمر',
+                            ? context.l10n.guardianLinkingTemporarilyBlocked
+                            : context.l10n.guardianLinkingFailedTitle,
                         message: state is GuardianLinkingError
-                            ? state.message
+                            ? (state.kind == GuardianLinkingErrorKind.timeout
+                                  ? context.l10n.guardianLinkingTimeoutMessage
+                                  : state.message)
                             : (state as GuardianLinkingBlocked).message,
                       ),
+                      if (state is GuardianLinkingError) ...[
+                        const SizedBox(height: AppSpacing.md),
+                        OutlinedButton.icon(
+                          onPressed: () =>
+                              context.read<GuardianLinkingCubit>().load(),
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: Text(context.l10n.tryAgain),
+                        ),
+                      ],
                       const SizedBox(height: AppSpacing.lg),
                     ],
                     if (state is GuardianLinkingPending)
@@ -156,6 +167,73 @@ class _GuardianLinkingView extends StatelessWidget {
       getIt<MemorizationPlusRepository>(),
     ).guardianLinkedLocation();
     if (context.mounted) context.go(location);
+  }
+}
+
+/// Loading view for authenticated users. After a short delay it reveals an
+/// escape hatch so the user is never trapped on an indefinite spinner with the
+/// system back gesture disabled by the surrounding [PopScope].
+class _GuardianLinkingLoading extends StatefulWidget {
+  const _GuardianLinkingLoading();
+
+  @override
+  State<_GuardianLinkingLoading> createState() =>
+      _GuardianLinkingLoadingState();
+}
+
+class _GuardianLinkingLoadingState extends State<_GuardianLinkingLoading> {
+  Timer? _timer;
+  bool _slow = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(const Duration(seconds: 6), () {
+      if (mounted) setState(() => _slow = true);
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const CircularProgressIndicator(),
+          if (_slow) ...[
+            const SizedBox(height: AppSpacing.lg),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.pagePadding,
+              ),
+              child: Text(
+                context.l10n.guardianLinkingSlowHint,
+                textAlign: TextAlign.center,
+                style: AppTypography.bodyMedium,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            OutlinedButton.icon(
+              onPressed: () => context
+                  .read<GuardianLinkingCubit>()
+                  .continueWithoutGuardian(),
+              icon: Icon(
+                context.isArabic
+                    ? Icons.arrow_back_rounded
+                    : Icons.arrow_forward_rounded,
+              ),
+              label: Text(context.l10n.continueWithoutGuardian),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }
 
@@ -265,12 +343,10 @@ class _PairingCardState extends State<_PairingCard> {
   void initState() {
     super.initState();
     _remaining = _calculateRemaining();
-    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) {
       if (!mounted) return;
       setState(() => _remaining = _calculateRemaining());
-      if (_remaining > Duration.zero) {
-        context.read<GuardianLinkingCubit>().checkLinkStatus();
-      }
+      context.read<GuardianLinkingCubit>().checkLinkStatus();
     });
   }
 

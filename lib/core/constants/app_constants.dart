@@ -8,15 +8,9 @@ abstract class AppConstants {
   static const List<int> spacedRepetitionIntervals = [1, 3, 7, 14, 30, 90];
 
   // Storage keys
-  static const String kLastReadSurah = 'last_read_surah';
-  static const String kLastReadAyah = 'last_read_ayah';
-  static const String kStreakCount = 'streak_count';
-  static const String kLastActiveDate = 'last_active_date';
   static const String kHifzProgress = 'hifz_progress';
   static const String kHifzCheckpointProgress = 'hifz_checkpoint_progress';
   static const String kHifzPathMode = 'hifz_path_mode';
-  static const String kAzkarDone = 'azkar_done';
-  static const String kFontSize = 'quran_font_size';
   static const String kReadPages = 'read_pages';
 
   // Audio base URL (EveryAyah CDN)

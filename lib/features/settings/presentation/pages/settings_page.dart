@@ -10,10 +10,13 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/locale_cubit.dart';
+import '../../../../core/services/app_version_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_cubit.dart';
+import '../../../auth/domain/entities/app_user.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
 import '../cubits/profile_cubit.dart';
@@ -49,7 +52,14 @@ class _SettingsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
 
-    return BlocConsumer<SettingsCubit, SettingsState>(
+    return BlocListener<ProfileCubit, ProfileState>(
+      listenWhen: (_, state) => state is ProfileError,
+      listener: (context, state) {
+        if (state is ProfileError) {
+          _showSettingsError(context, state.message);
+        }
+      },
+      child: BlocConsumer<SettingsCubit, SettingsState>(
       listener: (context, state) {
         if (state.errorMessage != null) {
           _showSettingsError(context, state.errorMessage!);
@@ -78,39 +88,48 @@ class _SettingsView extends StatelessWidget {
                 ),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    // ─── Account (Google Sign-In) ───────────────────────
                     _SettingsSection(
-                      title: context.l10n.account,
-                      children: [_AccountSection(isDark: isDark)],
+                      title: context.l10n.settingsSectionAccount,
+                      children: [
+                        _AccountSection(isDark: isDark),
+                        _SettingsDivider(isDark: isDark),
+                        _ProfileSettingTile(isDark: isDark),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _SettingsSection(
-                      title: context.l10n.profile,
-                      children: [_ProfileSettingTile(isDark: isDark)],
+                      title: context.l10n.settingsSectionAppearance,
+                      children: [
+                        _SettingsInlineHeader(
+                          isDark: isDark,
+                          icon: Icons.translate_rounded,
+                          title: context.l10n.language,
+                        ),
+                        _SettingsDivider(isDark: isDark),
+                        _LocaleSettingTile(isDark: isDark),
+                        _SettingsDivider(isDark: isDark),
+                        _SettingsInlineHeader(
+                          isDark: isDark,
+                          icon: Icons.palette_rounded,
+                          title: context.l10n.theme,
+                        ),
+                        _SettingsDivider(isDark: isDark),
+                        _ThemeSettingTile(isDark: isDark),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.lg),
-
-                    // ─── Parent Mode Toggle (for adults track) ──────────
-                    if (state.selectedTrack == 'adults') ...[
-                      _SettingsSection(
-                        title: context.l10n.parentGuardianMode,
-                        children: [
-                          _ParentModeToggle(
-                            isDark: isDark,
-                            isParentMode: state.isParentMode,
-                            onChanged: context
-                                .read<SettingsCubit>()
-                                .toggleParentMode,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-
-                    if (state.memorizationProfile?.hasSelectedPath == true) ...[
-                      _SettingsSection(
-                        title: context.l10n.memorizationPath,
-                        children: [
+                    _SettingsSection(
+                      title: context.l10n.settingsSectionQuranMemorization,
+                      children: [
+                        _AccuracySettingTile(isDark: isDark),
+                        _SettingsDivider(isDark: isDark),
+                        _MemorizationPathSummaryTile(
+                          isDark: isDark,
+                          profile: state.memorizationProfile,
+                        ),
+                        if (state.memorizationProfile?.hasSelectedPath ==
+                            true) ...[
+                          _SettingsDivider(isDark: isDark),
                           _ResetMemorizationPathTile(
                             isDark: isDark,
                             onReset: context
@@ -118,57 +137,67 @@ class _SettingsView extends StatelessWidget {
                                 .resetMemorizationIdentity,
                           ),
                         ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
-                    ],
-
-                    // ─── Parent Dashboard (conditional) ─────────────────
-                    if (state.shouldShowParentSection) ...[
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    if (state.selectedTrack == 'adults' ||
+                        state.shouldShowParentSection) ...[
                       _SettingsSection(
-                        title: context.l10n.kidsAndGuardian,
-                        children: [_ParentDashboardTile(isDark: isDark)],
+                        title: context.l10n.settingsSectionKidsGuardian,
+                        children: [
+                          if (state.selectedTrack == 'adults')
+                            _ParentModeToggle(
+                              isDark: isDark,
+                              isParentMode: state.isParentMode,
+                              onChanged: context
+                                  .read<SettingsCubit>()
+                                  .toggleParentMode,
+                            ),
+                          if (state.selectedTrack == 'adults' &&
+                              state.shouldShowParentSection)
+                            _SettingsDivider(isDark: isDark),
+                          if (state.shouldShowParentSection)
+                            _ParentDashboardTile(isDark: isDark),
+                        ],
                       ),
                       const SizedBox(height: AppSpacing.lg),
                     ],
-
                     _SettingsSection(
-                      title: context.l10n.theme,
-                      children: [_ThemeSettingTile(isDark: isDark)],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.language,
-                      children: [_LocaleSettingTile(isDark: isDark)],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.recitationAccuracy,
-                      children: [_AccuracySettingTile(isDark: isDark)],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.notifications,
+                      title: context.l10n.settingsSectionProgressAchievements,
                       children: [_NotificationSettingTile(isDark: isDark)],
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _SettingsSection(
-                      title: context.isArabic ? 'المساعدة' : 'Help',
+                      title: context.l10n.settingsSectionHelpTutorial,
                       children: [_TutorialGuideTile(isDark: isDark)],
                     ),
                     const SizedBox(height: AppSpacing.lg),
                     _SettingsSection(
-                      title: context.l10n.about,
+                      title: context.l10n.settingsSectionPrivacySecurity,
                       children: [
                         _PrivacyPolicyTile(isDark: isDark),
-                        Divider(
-                          height: 0.5,
-                          color: isDark
-                              ? AppColors.darkDivider
-                              : AppColors.lightDivider,
-                          indent: 56,
+                        BlocBuilder<AuthCubit, AuthState>(
+                          builder: (context, authState) {
+                            if (authState is! AuthAuthenticated) {
+                              return const SizedBox.shrink();
+                            }
+                            return Column(
+                              children: [
+                                _SettingsDivider(isDark: isDark),
+                                _DeleteAccountTile(
+                                  isDark: isDark,
+                                  email: authState.user.email,
+                                ),
+                              ],
+                            );
+                          },
                         ),
-                        _AboutTile(isDark: isDark),
                       ],
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    _SettingsSection(
+                      title: context.l10n.settingsSectionAboutTalia,
+                      children: [_AboutTile(isDark: isDark)],
                     ),
                   ]),
                 ),
@@ -177,6 +206,7 @@ class _SettingsView extends StatelessWidget {
           ),
         );
       },
+      ),
     );
   }
 
@@ -190,7 +220,9 @@ class _SettingsView extends StatelessWidget {
       scrolledUnderElevation: 0.5,
       leading: IconButton(
         icon: Icon(
-          Icons.arrow_back_ios_rounded,
+          context.isArabic
+              ? Icons.arrow_forward_ios_rounded
+              : Icons.arrow_back_ios_rounded,
           color: isDark
               ? AppColors.darkTextPrimary
               : AppColors.lightTextPrimary,

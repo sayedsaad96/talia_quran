@@ -8,8 +8,10 @@ import '../../features/memorization_plus/domain/entities/memorization_entities.d
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../constants/app_constants.dart';
 import '../di/injection.dart';
+import '../l10n/app_localizations.dart';
 
 import '../../features/home/presentation/pages/home_page.dart';
+import '../../features/quran/presentation/pages/kids_quran_reader_page.dart';
 import '../../features/quran/presentation/pages/quran_page.dart';
 import '../../features/quran/presentation/pages/quran_reader_page.dart';
 import '../../features/hifz/presentation/pages/hifz_page.dart';
@@ -64,9 +66,10 @@ abstract class AppRoutes {
       '/memorization-plus/daily-plan';
   static const String memorizationPlusKidsJourney =
       '/memorization-plus/kids-journey';
-  static const String memorizationPlusJourney = '/memorization-plus/journey';
   static const String memorizationPlusKids = '/memorization-plus/kids';
   static const String memorizationPlusKidsHome = '/memorization-plus/kids-home';
+  static const String memorizationPlusKidsQuran =
+      '/memorization-plus/kids-quran';
   static const String memorizationPlusKidsStage =
       '/memorization-plus/kids-stage';
   static const String memorizationPlusKidsCompletion =
@@ -164,6 +167,20 @@ class MemorizationRouteGuard {
     final profile = await _readProfile();
     if (profile == null || profile.isChild) return null;
     return AppRoutes.memorizationPlus;
+  }
+
+  static Future<String?> parentDashboardRedirect() async {
+    try {
+      final authState = getIt<AuthCubit>().state;
+      if (authState is! AuthAuthenticated && authState is! AuthInitial) {
+        return AppRoutes.login;
+      }
+    } catch (_) {
+      // Tests and isolated guard callers may not register AuthCubit.
+    }
+
+    final profile = await _readProfile();
+    return profile?.isChild == true ? AppRoutes.memorizationPlusKidsHome : null;
   }
 
   static Future<String?> hifzRedirect() async {
@@ -288,7 +305,8 @@ abstract class AppRouter {
         path: '/certificate',
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
-          final userName = extra?['userName'] as String? ?? 'مستخدم تالية';
+          final l10n = AppLocalizations.of(context);
+          final userName = extra?['userName'] as String? ?? l10n.taliaUser;
 
           CertificateAward? award;
           final rawAward = extra?['award'];
@@ -299,8 +317,8 @@ abstract class AppRouter {
           }
 
           if (award == null) {
-            return const Scaffold(
-              body: Center(child: Text('لم يتم العثور على الشهادة')),
+            return Scaffold(
+              body: Center(child: Text(l10n.certificateNotFound)),
             );
           }
           return CertificatePage(award: award, userName: userName);
@@ -444,19 +462,6 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
-        path: '${AppRoutes.memorizationPlusJourney}/:surahId',
-        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
-        builder: (context, state) {
-          final surahId =
-              int.tryParse(state.pathParameters['surahId'] ?? '') ?? 1;
-          if (!_isValidSurahId(surahId)) {
-            return const PathSelectionPage();
-          }
-          return KidsGamifiedJourneyPage(surahId: surahId);
-        },
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationPlusKids,
         redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
         builder: (context, state) {
@@ -495,6 +500,23 @@ abstract class AppRouter {
             return const PathSelectionPage();
           }
           return KidsGamifiedHomePage(surahId: surahId);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationPlusKidsQuran,
+        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
+        builder: (context, state) {
+          final surahId = int.tryParse(
+            state.uri.queryParameters['surahId'] ?? '',
+          );
+          final pageNumber = int.tryParse(
+            state.uri.queryParameters['pageNumber'] ?? '',
+          );
+          return KidsQuranReaderPage(
+            surahId: _isValidSurahId(surahId) ? surahId : null,
+            pageNumber: pageNumber,
+          );
         },
       ),
       GoRoute(
@@ -550,6 +572,8 @@ abstract class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.parentDashboard,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.parentDashboardRedirect(),
         builder: (context, state) {
           final surahId =
               int.tryParse(state.uri.queryParameters['surahId'] ?? '') ?? 1;
@@ -724,7 +748,7 @@ abstract class AppRouter {
   }
 
   static KidsJourneyStageStatus _parseKidsJourneyStageStatus(String? value) {
-    if (value == null || value.isEmpty) return KidsJourneyStageStatus.current;
+    if (value == null || value.isEmpty) return KidsJourneyStageStatus.locked;
     for (final status in KidsJourneyStageStatus.values) {
       if (status.name == value) return status;
     }

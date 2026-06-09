@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import '../../features/progress/domain/entities/progress_entities.dart';
 import '../services/achievement_service.dart';
 import 'app_localizations.dart';
+import 'cubit_message_codes.dart';
 
 extension TaliaLocalizationHelpers on BuildContext {
   AppLocalizations get _l10n => AppLocalizations.of(this);
@@ -131,5 +132,37 @@ extension TaliaLocalizationHelpers on BuildContext {
       return l10n.certificateTitleSurah;
     }
     return l10n.certificateTitleSurahNamed(name);
+  }
+
+  /// Resolves cubit/repository message codes to localized user-facing text.
+  String localizedCubitMessage(String message) {
+    final l10n = _l10n;
+
+    if (message.startsWith(CubitMessageCodes.hifzSurahLockedPrefix)) {
+      final parts = message.split('|');
+      if (parts.length >= 3) {
+        final surahName = _isArabic ? parts[1] : parts[2];
+        return l10n.hifzSurahLockedMessage(surahName);
+      }
+    }
+
+    if (message.startsWith(CubitMessageCodes.quizUnexpectedErrorPrefix)) {
+      final error = message.substring(
+        CubitMessageCodes.quizUnexpectedErrorPrefix.length,
+      );
+      return l10n.quizUnexpectedError(error);
+    }
+
+    return switch (message) {
+      CubitMessageCodes.hifzAudioPlaybackFailed => l10n.hifzAudioPlaybackFailed,
+      CubitMessageCodes.hifzReviewSaveFailed => l10n.hifzReviewSaveFailed,
+      CubitMessageCodes.hifzMemorizationSaveFailed =>
+        l10n.hifzMemorizationSaveFailed,
+      CubitMessageCodes.kidsAudioPlaybackFailed => l10n.kidsAudioPlaybackFailed,
+      CubitMessageCodes.quizSurahNotFound => l10n.quizSurahNotFound,
+      CubitMessageCodes.quizAyahsOutsidePlan => l10n.quizAyahsOutsidePlan,
+      CubitMessageCodes.quizNoMemorizedAyahs => l10n.quizNoMemorizedAyahs,
+      _ => message,
+    };
   }
 }

@@ -50,7 +50,9 @@ class AuthCubit extends Cubit<AuthState> {
     if (isClosed) return;
     result.fold(
       (failure) => emit(AuthError(failure.toString())),
-      (user) => emit(AuthAuthenticated(user: user)),
+      (_) {
+        // Auth state stream emits AuthAuthenticated when Supabase session updates.
+      },
     );
   }
 
@@ -63,7 +65,9 @@ class AuthCubit extends Cubit<AuthState> {
     if (isClosed) return;
     result.fold(
       (failure) => emit(AuthError(failure.toString())),
-      (user) => emit(AuthAuthenticated(user: user)),
+      (_) {
+        // Auth state stream emits AuthAuthenticated when Supabase session updates.
+      },
     );
   }
 
@@ -73,7 +77,9 @@ class AuthCubit extends Cubit<AuthState> {
     if (isClosed) return;
     result.fold(
       (failure) => emit(AuthError(failure.toString())),
-      (_) => emit(const AuthUnauthenticated()),
+      (_) {
+        // Auth state stream emits AuthUnauthenticated when Supabase session clears.
+      },
     );
   }
 

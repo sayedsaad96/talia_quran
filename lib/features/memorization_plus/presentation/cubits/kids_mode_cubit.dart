@@ -9,6 +9,7 @@ import '../../../../core/services/xp_service.dart'; // RISK-5 FIX
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
+import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/services/quran_audio_service.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 
@@ -127,8 +128,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         emit(
           (state as KidsModeLoaded).copyWith(
             isPlaying: false,
-            audioError:
-                'لم يعمل الصوت الآن. جرّب مرة أخرى أو اطلب من ولي الأمر الاتصال بالإنترنت.',
+            audioError: CubitMessageCodes.kidsAudioPlaybackFailed,
           ),
         );
       }

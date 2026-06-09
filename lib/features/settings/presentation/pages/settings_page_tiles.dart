@@ -11,31 +11,194 @@ class _SettingsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final border = (isDark ? AppColors.darkDivider : AppColors.lightDivider)
+        .withValues(alpha: isDark ? 0.55 : 0.8);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          padding: const EdgeInsetsDirectional.only(
+            start: AppSpacing.xs,
+            bottom: AppSpacing.sm,
+          ),
           child: Text(
             title,
             style: AppTypography.labelMedium.copyWith(
               color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
-              letterSpacing: 0.8,
+              letterSpacing: 0,
+              fontWeight: FontWeight.w800,
             ),
           ),
         ),
-        Container(
-          decoration: BoxDecoration(
-            color: surface,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: border, width: 0.5),
+        Material(
+          color: surface,
+          elevation: isDark ? 0 : 1,
+          shadowColor: Colors.black.withValues(alpha: 0.05),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          clipBehavior: Clip.antiAlias,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(color: border, width: 0.6),
+            ),
+            child: Column(children: children),
           ),
-          child: Column(children: children),
         ),
       ],
-    ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.04);
+    ).animate().fadeIn(duration: 260.ms).slideY(begin: 0.025, end: 0);
+  }
+}
+
+class _SettingsDivider extends StatelessWidget {
+  const _SettingsDivider({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(
+      height: 0.5,
+      color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+      indent: 64,
+    );
+  }
+}
+
+class _SettingsTrailingChevron extends StatelessWidget {
+  const _SettingsTrailingChevron({required this.color});
+
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Icon(
+      context.isArabic
+          ? Icons.arrow_back_ios_new_rounded
+          : Icons.arrow_forward_ios_rounded,
+      size: 16,
+      color: color,
+    );
+  }
+}
+
+class _SettingsInlineHeader extends StatelessWidget {
+  const _SettingsInlineHeader({
+    required this.isDark,
+    required this.icon,
+    required this.title,
+  });
+
+  final bool isDark;
+  final IconData icon;
+  final String title;
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+    final iconColor = isDark ? AppColors.primaryLight : AppColors.primary;
+
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor, size: 20),
+          const SizedBox(width: AppSpacing.sm),
+          Text(
+            title,
+            style: AppTypography.labelMedium.copyWith(
+              color: textColor,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MemorizationPathSummaryTile extends StatelessWidget {
+  const _MemorizationPathSummaryTile({
+    required this.isDark,
+    required this.profile,
+  });
+
+  final bool isDark;
+  final MemorizationProfile? profile;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+    final selectedPath = profile?.selectedPath;
+    final title = switch (selectedPath) {
+      MemorizationPath.adult => context.l10n.memorizationPathAdultsTitle,
+      MemorizationPath.child => context.l10n.memorizationPathKidsTitle,
+      _ => context.l10n.settingsMemorizationPathNotSelected,
+    };
+    final subtitle = switch (selectedPath) {
+      MemorizationPath.adult => context.l10n.memorizationPathAdultsDesc,
+      MemorizationPath.child => context.l10n.memorizationPathKidsDesc,
+      _ => context.l10n.settingsMemorizationPathNotSelectedDesc,
+    };
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.md,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.route_rounded, color: primary),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.memorizationPath,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: subtextColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  title,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: AppTypography.labelSmall.copyWith(color: subtextColor),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -45,6 +208,12 @@ class _ParentDashboardTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authState = context.watch<AuthCubit>().state;
+    final isGuest = authState is! AuthAuthenticated;
+    final subtitle = isGuest
+        ? context.l10n.parentDashboardGuestSubtitle
+        : context.l10n.parentDashboardSubtitle;
+
     return InkWell(
       onTap: () => unawaited(_openParentDashboard(context)),
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -82,7 +251,7 @@ class _ParentDashboardTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    context.l10n.parentDashboardSubtitle,
+                    subtitle,
                     style: AppTypography.labelSmall.copyWith(
                       color: isDark
                           ? AppColors.darkTextSecondary
@@ -92,7 +261,11 @@ class _ParentDashboardTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+            _SettingsTrailingChevron(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
           ],
         ),
       ),
@@ -100,6 +273,11 @@ class _ParentDashboardTile extends StatelessWidget {
   }
 
   Future<void> _openParentDashboard(BuildContext context) async {
+    final authState = context.read<AuthCubit>().state;
+    if (authState is! AuthAuthenticated) {
+      unawaited(context.push(AppRoutes.login));
+      return;
+    }
     final location = await MemorizationNavigationResolver(
       getIt<MemorizationPlusRepository>(),
     ).parentDashboardLocation();
@@ -190,65 +368,10 @@ class _ResetMemorizationPathTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () async {
-        const confirmText = 'إعادة ضبط';
-        final confirmController = TextEditingController();
         final confirmed = await showDialog<bool>(
           context: context,
-          builder: (dialogContext) => StatefulBuilder(
-            builder: (context, setDialogState) {
-              final canConfirm = confirmController.text.trim() == confirmText;
-              return AlertDialog(
-                title: Text(
-                  context.l10n.resetMemorizationPathQuestion,
-                  style: const TextStyle(fontFamily: 'Amiri'),
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(context.l10n.resetMemorizationIdentityWarning),
-                    const SizedBox(height: AppSpacing.md),
-                    const _SettingsChecklistLine(
-                      icon: Icons.check_circle_rounded,
-                      color: Color(0xFF2D8E4C),
-                      text: 'سيبقى: الإنجازات، السجل، الشهادات',
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    const _SettingsChecklistLine(
-                      icon: Icons.warning_amber_rounded,
-                      color: Colors.orange,
-                      text: 'سيتغير: اختيار المسار والخطة الحالية',
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    const Text('اكتب "إعادة ضبط" لتأكيد العملية.'),
-                    const SizedBox(height: AppSpacing.sm),
-                    TextField(
-                      controller: confirmController,
-                      onChanged: (_) => setDialogState(() {}),
-                      decoration: const InputDecoration(hintText: confirmText),
-                    ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(dialogContext, false),
-                    child: Text(context.l10n.cancel),
-                  ),
-                  FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.error,
-                    ),
-                    onPressed: canConfirm
-                        ? () => Navigator.pop(dialogContext, true)
-                        : null,
-                    child: Text(context.l10n.confirmResetMemorizationPath),
-                  ),
-                ],
-              );
-            },
-          ),
+          builder: (dialogContext) => const _ResetMemorizationPathDialog(),
         );
-        confirmController.dispose();
         if (confirmed == true) await onReset();
       },
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
@@ -295,10 +418,86 @@ class _ResetMemorizationPathTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+            _SettingsTrailingChevron(
+              color: isDark
+                  ? AppColors.darkTextSecondary
+                  : AppColors.lightTextSecondary,
+            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ResetMemorizationPathDialog extends StatefulWidget {
+  const _ResetMemorizationPathDialog();
+
+  @override
+  State<_ResetMemorizationPathDialog> createState() =>
+      _ResetMemorizationPathDialogState();
+}
+
+class _ResetMemorizationPathDialogState
+    extends State<_ResetMemorizationPathDialog> {
+  final _confirmController = TextEditingController();
+
+  @override
+  void dispose() {
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final confirmText = context.l10n.settingsResetPathConfirmPhrase;
+    final canConfirm = _confirmController.text.trim() == confirmText;
+
+    return AlertDialog(
+      title: Text(
+        context.l10n.resetMemorizationPathQuestion,
+        style: const TextStyle(fontFamily: 'Amiri'),
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(context.l10n.resetMemorizationIdentityWarning),
+            const SizedBox(height: AppSpacing.md),
+            _SettingsChecklistLine(
+              icon: Icons.check_circle_rounded,
+              color: const Color(0xFF2D8E4C),
+              text: context.l10n.settingsResetPathKeeps,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            _SettingsChecklistLine(
+              icon: Icons.warning_amber_rounded,
+              color: Colors.orange,
+              text: context.l10n.settingsResetPathChanges,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(context.l10n.settingsResetPathInstruction),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _confirmController,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(hintText: confirmText),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(context.l10n.cancel),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+          onPressed: canConfirm ? () => Navigator.pop(context, true) : null,
+          child: Text(context.l10n.confirmResetMemorizationPath),
+        ),
+      ],
     );
   }
 }
@@ -348,11 +547,7 @@ class _ThemeSettingTile extends StatelessWidget {
               isDark: isDark,
               onTap: () => context.read<ThemeCubit>().setTheme(ThemeMode.light),
             ),
-            Divider(
-              height: 0.5,
-              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-              indent: 56,
-            ),
+            _SettingsDivider(isDark: isDark),
             _ThemeOption(
               label: context.l10n.darkMode,
               icon: Icons.dark_mode_rounded,
@@ -361,11 +556,7 @@ class _ThemeSettingTile extends StatelessWidget {
               isDark: isDark,
               onTap: () => context.read<ThemeCubit>().setTheme(ThemeMode.dark),
             ),
-            Divider(
-              height: 0.5,
-              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-              indent: 56,
-            ),
+            _SettingsDivider(isDark: isDark),
             _ThemeOption(
               label: context.l10n.systemDefault,
               icon: Icons.brightness_auto_rounded,
@@ -487,11 +678,7 @@ class _LocaleSettingTile extends StatelessWidget {
               onTap: () =>
                   context.read<LocaleCubit>().setLocale(const Locale('ar')),
             ),
-            Divider(
-              height: 0.5,
-              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-              indent: 56,
-            ),
+            _SettingsDivider(isDark: isDark),
             _LocaleOption(
               label: 'English',
               sublabel: context.l10n.english,
@@ -614,7 +801,7 @@ class _TutorialGuideTile extends StatelessWidget {
         : AppColors.lightTextSecondary;
 
     return InkWell(
-      onTap: () => context.push('/tutorial-guide'),
+      onTap: () => context.push(AppRoutes.tutorialGuide),
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       child: Padding(
         padding: const EdgeInsets.symmetric(
@@ -653,11 +840,7 @@ class _TutorialGuideTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 16,
-              color: subtextColor,
-            ),
+            _SettingsTrailingChevron(color: subtextColor),
           ],
         ),
       ),
@@ -711,9 +894,7 @@ class _PrivacyPolicyTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    context.isArabic
-                        ? 'كيف نحفظ بياناتك وخصوصيتك'
-                        : 'How your data and privacy are handled',
+                    context.l10n.settingsPrivacyPolicySubtitle,
                     style: AppTypography.labelSmall.copyWith(
                       color: subtextColor,
                     ),
@@ -721,11 +902,7 @@ class _PrivacyPolicyTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 16,
-              color: subtextColor,
-            ),
+            _SettingsTrailingChevron(color: subtextColor),
           ],
         ),
       ),
@@ -733,16 +910,38 @@ class _PrivacyPolicyTile extends StatelessWidget {
   }
 }
 
-class _AboutTile extends StatelessWidget {
+class _AboutTile extends StatefulWidget {
   const _AboutTile({required this.isDark});
   final bool isDark;
 
   @override
+  State<_AboutTile> createState() => _AboutTileState();
+}
+
+class _AboutTileState extends State<_AboutTile> {
+  AppVersionInfo _versionInfo = const AppVersionInfo.unavailable();
+
+  @override
+  void initState() {
+    super.initState();
+    unawaited(_loadVersionInfo());
+  }
+
+  Future<void> _loadVersionInfo() async {
+    final provider = getIt.isRegistered<AppVersionInfoProvider>()
+        ? getIt<AppVersionInfoProvider>()
+        : const PackageInfoAppVersionInfoProvider();
+    final info = await provider.getVersionInfo();
+    if (!mounted) return;
+    setState(() => _versionInfo = info);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final textColor = isDark
+    final textColor = widget.isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
-    final subtextColor = isDark
+    final subtextColor = widget.isDark
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
 
@@ -779,7 +978,11 @@ class _AboutTile extends StatelessWidget {
                   style: AppTypography.titleLarge.copyWith(color: textColor),
                 ),
                 Text(
-                  'Version 1.0.0',
+                  context.l10n.settingsVersion(_versionInfo.version),
+                  style: AppTypography.bodySmall.copyWith(color: subtextColor),
+                ),
+                Text(
+                  context.l10n.settingsBuild(_versionInfo.buildNumber),
                   style: AppTypography.bodySmall.copyWith(color: subtextColor),
                 ),
                 const SizedBox(height: 4),
@@ -1339,7 +1542,10 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
       time,
       alwaysUse24HourFormat: false,
     );
-    return formatted.replaceAll('AM', 'ص').replaceAll('PM', 'م');
+    if (context.isArabic) {
+      return formatted.replaceAll('AM', 'ص').replaceAll('PM', 'م');
+    }
+    return formatted;
   }
 
   Future<void> _pickTime(
@@ -1371,6 +1577,12 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     }
   }
 
+  Future<void> _ensureNotificationPermissionIfEnabling(bool enabled) async {
+    if (enabled) {
+      await getIt<TaliaNotificationService>().requestPermissions();
+    }
+  }
+
   Future<void> _toggleReview(bool value) async {
     final previous = _reviewEnabled;
     setState(() {
@@ -1379,6 +1591,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     });
 
     try {
+      await _ensureNotificationPermissionIfEnabling(value);
       final saved = await getIt<SharedPreferences>().setBool(_reviewKey, value);
       if (!saved) {
         throw StateError('Failed to save daily review notification setting');
@@ -1417,6 +1630,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     });
 
     try {
+      await _ensureNotificationPermissionIfEnabling(value);
       final saved = await getIt<SharedPreferences>().setBool(_streakKey, value);
       if (!saved) {
         throw StateError('Failed to save streak notification setting');
@@ -1449,6 +1663,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     });
 
     try {
+      await _ensureNotificationPermissionIfEnabling(value);
       final saved = await getIt<SharedPreferences>().setBool(
         _morningAzkarKey,
         value,
@@ -1483,6 +1698,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     });
 
     try {
+      await _ensureNotificationPermissionIfEnabling(value);
       final saved = await getIt<SharedPreferences>().setBool(
         _eveningAzkarKey,
         value,
@@ -1517,6 +1733,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     });
 
     try {
+      await _ensureNotificationPermissionIfEnabling(value);
       final saved = await getIt<SharedPreferences>().setBool(
         _dailyDuaKey,
         value,
@@ -1555,16 +1772,31 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     required Color textColor,
     required Color subtextColor,
   }) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTapEdit,
+    final effectiveOpacity = isEnabled ? 1.0 : 0.64;
+
+    return InkWell(
+      onTap: onTapEdit,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: AnimatedOpacity(
+        opacity: effectiveOpacity,
+        duration: const Duration(milliseconds: 180),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsetsDirectional.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm,
+          ),
           child: Row(
             children: [
-              Icon(icon, color: primaryColor),
-              const SizedBox(width: 16),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.11),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: primaryColor, size: 21),
+              ),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -1573,10 +1805,13 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
                       title,
                       style: AppTypography.bodyMedium.copyWith(
                         color: textColor,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Row(
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 6,
                       children: [
                         Text(
                           context.l10n.notificationEverydayAt(
@@ -1586,17 +1821,17 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
                             color: subtextColor,
                           ),
                         ),
-                        const SizedBox(width: 4),
                         Icon(
                           Icons.edit_rounded,
                           size: 14,
-                          color: primaryColor.withValues(alpha: 0.7),
+                          color: primaryColor.withValues(alpha: 0.72),
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
+              const SizedBox(width: AppSpacing.sm),
               Switch(
                 value: isEnabled,
                 onChanged: isSaving ? null : onToggle,
@@ -1618,9 +1853,6 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
     final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
-    final divider = widget.isDark
-        ? AppColors.darkDivider
-        : AppColors.lightDivider;
 
     return Column(
       children: [
@@ -1643,7 +1875,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
                 .scheduleDailyReviewReminder(hour: h, minute: m),
           ),
         ),
-        Divider(height: 0.5, color: divider, indent: 56),
+        _SettingsDivider(isDark: widget.isDark),
         _buildTimeEditorTile(
           title: context.l10n.streakProtection,
           time: _streakTime,
@@ -1667,7 +1899,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
                 ),
           ),
         ),
-        Divider(height: 0.5, color: divider, indent: 56),
+        _SettingsDivider(isDark: widget.isDark),
         _buildTimeEditorTile(
           title: context.l10n.morningAzkarReminder,
           time: _morningAzkarTime,
@@ -1687,7 +1919,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
                 .scheduleMorningAzkarReminder(hour: h, minute: m),
           ),
         ),
-        Divider(height: 0.5, color: divider, indent: 56),
+        _SettingsDivider(isDark: widget.isDark),
         _buildTimeEditorTile(
           title: context.l10n.eveningAzkarReminder,
           time: _eveningAzkarTime,
@@ -1707,7 +1939,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
                 .scheduleEveningAzkarReminder(hour: h, minute: m),
           ),
         ),
-        Divider(height: 0.5, color: divider, indent: 56),
+        _SettingsDivider(isDark: widget.isDark),
         _buildTimeEditorTile(
           title: context.l10n.dailyDuaReminder,
           time: _dailyDuaTime,
@@ -1733,6 +1965,67 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
 }
 
 // ─── Account Section (Email & Password Auth) ─────────────────────────────────
+
+class _AccountAvatar extends StatelessWidget {
+  const _AccountAvatar({
+    required this.isDark,
+    required this.icon,
+    this.label,
+    this.isSignedIn = false,
+  });
+
+  final bool isDark;
+  final IconData icon;
+  final String? label;
+  final bool isSignedIn;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+
+    return Container(
+      width: 58,
+      height: 58,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        gradient: isSignedIn ? AppColors.primaryGradient : null,
+        color: isSignedIn ? null : primary.withValues(alpha: 0.12),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: Colors.white.withValues(alpha: isDark ? 0.08 : 0.45),
+          width: 1,
+        ),
+      ),
+      child: label == null
+          ? Icon(icon, color: primary, size: 28)
+          : Text(
+              label!,
+              style: AppTypography.titleMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+    );
+  }
+}
+
+String _accountInitials(AppUser user) {
+  final source = user.displayName.trim().isNotEmpty
+      ? user.displayName.trim()
+      : user.email.trim();
+  if (source.isEmpty) return 'T';
+
+  final parts = source
+      .split(RegExp(r'\s+'))
+      .where((part) => part.trim().isNotEmpty)
+      .toList();
+  if (parts.length >= 2) {
+    return '${parts.first.characters.first}${parts.last.characters.first}'
+        .toUpperCase();
+  }
+
+  return source.characters.take(2).toString().toUpperCase();
+}
 
 class _AccountSection extends StatefulWidget {
   const _AccountSection({required this.isDark});
@@ -1765,11 +2058,11 @@ class _AccountSectionState extends State<_AccountSection> {
         } else if (state is AuthAccountDeleted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(_accountDeletedMessage(context)),
+              content: Text(context.l10n.settingsAccountDeletedMessage),
               backgroundColor: Colors.green.shade700,
             ),
           );
-          context.go(AppRoutes.home);
+          context.go(AppRoutes.login);
         }
       },
       builder: (context, state) {
@@ -1786,17 +2079,20 @@ class _AccountSectionState extends State<_AccountSection> {
           return Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(AppSpacing.md),
+                padding: const EdgeInsetsDirectional.fromSTEB(
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.md,
+                  AppSpacing.lg,
+                ),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: primary.withValues(alpha: 0.15),
-                      child: Icon(
-                        Icons.person_rounded,
-                        color: primary,
-                        size: 26,
-                      ),
+                    _AccountAvatar(
+                      isDark: widget.isDark,
+                      icon: Icons.person_rounded,
+                      label: _accountInitials(user),
+                      isSignedIn: true,
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
@@ -1817,23 +2113,40 @@ class _AccountSectionState extends State<_AccountSection> {
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.verified_user_rounded,
-                                size: 12,
-                                color: Colors.green.shade500,
+                          const SizedBox(height: AppSpacing.sm),
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Container(
+                              padding: const EdgeInsetsDirectional.symmetric(
+                                horizontal: AppSpacing.sm,
+                                vertical: 4,
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                context.l10n.profileSavedToCloud,
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: Colors.green.shade500,
-                                  fontSize: 10,
+                              decoration: BoxDecoration(
+                                color: Colors.green.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(999),
+                                border: Border.all(
+                                  color: Colors.green.withValues(alpha: 0.22),
                                 ),
                               ),
-                            ],
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.verified_user_rounded,
+                                    size: 13,
+                                    color: Colors.green.shade600,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    context.l10n.settingsSignedInStatus,
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: Colors.green.shade700,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -1853,9 +2166,9 @@ class _AccountSectionState extends State<_AccountSection> {
                 onTap: () => _confirmSignOut(context),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
+                  padding: const EdgeInsetsDirectional.symmetric(
                     horizontal: AppSpacing.md,
-                    vertical: AppSpacing.md,
+                    vertical: AppSpacing.sm,
                   ),
                   child: Row(
                     children: [
@@ -1875,69 +2188,13 @@ class _AccountSectionState extends State<_AccountSection> {
                         ),
                       ),
                       const SizedBox(width: AppSpacing.md),
-                      Text(
-                        context.l10n.signOut,
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Divider(
-                height: 0.5,
-                color: widget.isDark
-                    ? AppColors.darkDivider
-                    : AppColors.lightDivider,
-                indent: 16,
-                endIndent: 16,
-              ),
-              InkWell(
-                onTap: () => _confirmDeleteAccount(context, user.email),
-                borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(AppSpacing.radiusLg),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                    vertical: AppSpacing.md,
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusSm,
-                          ),
-                        ),
-                        child: const Icon(
-                          Icons.delete_forever_rounded,
-                          color: Colors.red,
-                          size: 18,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _deleteAccountTitle(context),
-                              style: AppTypography.bodyMedium.copyWith(
-                                color: Colors.red,
-                              ),
-                            ),
-                            Text(
-                              _deleteAccountSubtitle(context),
-                              style: AppTypography.labelSmall.copyWith(
-                                color: subtextColor,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          context.l10n.signOut,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: Colors.red,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ],
@@ -1950,41 +2207,68 @@ class _AccountSectionState extends State<_AccountSection> {
 
         // ─── Unauthenticated view (Redirect to Main Login) ───────────
         return Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsetsDirectional.fromSTEB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.lg,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Icon(Icons.cloud_upload_outlined, color: primary, size: 22),
-                  const SizedBox(width: 10),
+                  _AccountAvatar(
+                    isDark: widget.isDark,
+                    icon: Icons.person_outline_rounded,
+                  ),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
-                    child: Text(
-                      context.l10n.guestModeWarning,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: subtextColor,
-                        height: 1.5,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.settingsGuestStatusTitle,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: textColor,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          context.l10n.settingsGuestStatusSubtitle,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: subtextColor,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.md),
-              FilledButton(
-                onPressed: () => context.push(AppRoutes.login),
-                style: FilledButton.styleFrom(
-                  backgroundColor: primary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  ),
-                ),
-                child: Text(
-                  context.l10n.signIn,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: FilledButton.icon(
+                  onPressed: () => context.push(AppRoutes.login),
+                  icon: const Icon(Icons.login_rounded, size: 18),
+                  label: Text(context.l10n.settingsSignInCreateAccount),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: primary,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsetsDirectional.symmetric(
+                      horizontal: AppSpacing.md,
+                      vertical: 13,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    ),
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
                   ),
                 ),
               ),
@@ -2037,36 +2321,77 @@ class _AccountSectionState extends State<_AccountSection> {
       ),
     );
   }
+}
 
-  String _accountDeletedMessage(BuildContext context) => context.isArabic
-      ? 'تم حذف الحساب السحابي. بقي تقدمك المحلي محفوظاً على هذا الجهاز.'
-      : 'Cloud account deleted. Your local progress remains on this device.';
+class _DeleteAccountTile extends StatelessWidget {
+  const _DeleteAccountTile({required this.isDark, required this.email});
 
-  String _deleteAccountTitle(BuildContext context) =>
-      context.isArabic ? 'حذف الحساب' : 'Delete account';
+  final bool isDark;
+  final String email;
 
-  String _deleteAccountSubtitle(BuildContext context) => context.isArabic
-      ? 'يحذف الحساب السحابي فقط'
-      : 'Deletes the cloud account only';
+  @override
+  Widget build(BuildContext context) {
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
-  String _deleteAccountWarning(BuildContext context, String email) {
-    if (context.isArabic) {
-      return 'سيتم حذف حساب Supabase المرتبط بـ $email وبياناته السحابية.\n\n'
-          'لن يتم حذف تقدم القرآن المحلي، أو الحفظ، أو مسار الأطفال، أو الحفظ الذكي من هذا الجهاز.\n\n'
-          'هل تريد المتابعة؟';
-    }
-
-    return 'This deletes the Supabase account for $email and its cloud data.\n\n'
-        'Local Quran, Hifz, Kids, and Smart memorization progress on this device will not be deleted.\n\n'
-        'Do you want to continue?';
+    return InkWell(
+      onTap: () => _confirmDeleteAccount(context, email),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.delete_forever_rounded,
+                color: Colors.red,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.settingsDeleteAccountTitle,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: Colors.red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Text(
+                    context.l10n.settingsDeleteAccountSubtitle,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: subtextColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            _SettingsTrailingChevron(color: subtextColor),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _confirmDeleteAccount(BuildContext context, String email) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text(_deleteAccountTitle(context)),
-        content: Text(_deleteAccountWarning(context, email)),
+        title: Text(context.l10n.settingsDeleteAccountTitle),
+        content: Text(context.l10n.settingsDeleteAccountWarning(email)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),

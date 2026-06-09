@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/memorization_entities.dart';
@@ -5,42 +7,70 @@ import '../../domain/repositories/memorization_plus_repository.dart';
 import 'guardian_linking_state.dart';
 
 class GuardianLinkingCubit extends Cubit<GuardianLinkingState> {
-  GuardianLinkingCubit(this._repository)
-    : super(const GuardianLinkingInitial());
+  GuardianLinkingCubit(
+    this._repository, {
+    Duration initialLoadTimeout = const Duration(seconds: 12),
+  }) : _initialLoadTimeout = initialLoadTimeout,
+       super(const GuardianLinkingInitial());
 
   final MemorizationPlusRepository _repository;
+  final Duration _initialLoadTimeout;
+  int _loadRequestId = 0;
 
   Future<void> load() async {
+    final requestId = ++_loadRequestId;
     emit(const GuardianLinkingLoading());
-    await _refreshLinkStatus(emitPendingSession: true);
+    try {
+      await _refreshLinkStatus(
+        emitPendingSession: true,
+        canEmit: () => !isClosed && requestId == _loadRequestId,
+      ).timeout(_initialLoadTimeout);
+    } on TimeoutException {
+      if (isClosed || requestId != _loadRequestId) return;
+      _loadRequestId++;
+      emit(const GuardianLinkingError.timeout());
+    } catch (error) {
+      if (isClosed || requestId != _loadRequestId) return;
+      emit(GuardianLinkingError(error.toString()));
+    }
   }
 
   Future<void> checkLinkStatus() async {
     await _refreshLinkStatus(emitPendingSession: false);
   }
 
-  Future<void> _refreshLinkStatus({required bool emitPendingSession}) async {
+  Future<void> _refreshLinkStatus({
+    required bool emitPendingSession,
+    bool Function()? canEmit,
+  }) async {
+    bool canUpdate() => canEmit?.call() ?? !isClosed;
+    void emitIfActive(GuardianLinkingState state) {
+      if (canUpdate()) emit(state);
+    }
+
     final profileResult = await _repository.refreshChildGuardianLink();
     await profileResult.fold(
-      (failure) async => emit(GuardianLinkingError(failure.message)),
+      (failure) async => emitIfActive(GuardianLinkingError(failure.message)),
       (profile) async {
+        if (!canUpdate()) return;
         if (profile.isGuardianLinked) {
-          emit(GuardianLinkingLinked(profile: profile));
+          emitIfActive(GuardianLinkingLinked(profile: profile));
           return;
         }
         final sessionResult = await _repository.refreshPairingSession();
         sessionResult.fold(
-          (failure) => emit(GuardianLinkingError(failure.message)),
+          (failure) => emitIfActive(GuardianLinkingError(failure.message)),
           (session) {
+            if (!canUpdate()) return;
             if (session == null) {
               if (emitPendingSession) {
-                emit(GuardianLinkingRequired(profile: profile));
+                emitIfActive(GuardianLinkingRequired(profile: profile));
               }
               return;
             }
             if (emitPendingSession ||
                 session.status != PairingSessionStatus.pending) {
-              _emitSession(session, profile);
+              _emitSession(session, profile, emitState: emitIfActive);
             }
           },
         );
@@ -75,22 +105,27 @@ class GuardianLinkingCubit extends Cubit<GuardianLinkingState> {
     );
   }
 
-  void _emitSession(PairingSession session, MemorizationProfile profile) {
+  void _emitSession(
+    PairingSession session,
+    MemorizationProfile profile, {
+    void Function(GuardianLinkingState state)? emitState,
+  }) {
+    final emitNext = emitState ?? emit;
     switch (session.status) {
       case PairingSessionStatus.pending:
         if (session.isExpired) {
-          emit(GuardianLinkingExpired(session: session));
+          emitNext(GuardianLinkingExpired(session: session));
         } else {
-          emit(GuardianLinkingPending(session: session));
+          emitNext(GuardianLinkingPending(session: session));
         }
       case PairingSessionStatus.expired:
-        emit(GuardianLinkingExpired(session: session));
+        emitNext(GuardianLinkingExpired(session: session));
       case PairingSessionStatus.used:
-        emit(GuardianLinkingUsed(session: session));
+        emitNext(GuardianLinkingUsed(session: session));
       case PairingSessionStatus.completed:
-        emit(GuardianLinkingLinked(profile: profile));
+        emitNext(GuardianLinkingLinked(profile: profile));
       case PairingSessionStatus.cancelled:
-        emit(GuardianLinkingRequired(profile: profile));
+        emitNext(GuardianLinkingRequired(profile: profile));
     }
   }
 }
