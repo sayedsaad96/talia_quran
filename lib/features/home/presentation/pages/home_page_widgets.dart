@@ -724,6 +724,92 @@ class _QuickActionButton extends StatelessWidget {
   }
 }
 
+class _ParentGuardianToolsCard extends StatelessWidget {
+  const _ParentGuardianToolsCard({required this.isDark});
+
+  final bool isDark;
+
+  Future<void> _openDashboard(BuildContext context) async {
+    final location = await MemorizationNavigationResolver(
+      getIt<MemorizationPlusRepository>(),
+    ).parentDashboardLocation();
+    if (context.mounted) unawaited(context.push(location));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: primary.withValues(alpha: 0.18)),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: isDark ? 0.08 : 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(Icons.family_restroom_rounded, color: primary),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.homeParentToolsTitle,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  context.l10n.homeParentToolsSubtitle,
+                  style: AppTypography.bodySmall.copyWith(
+                    color: subTextColor,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: FilledButton.icon(
+                    onPressed: () => unawaited(_openDashboard(context)),
+                    icon: const Icon(Icons.dashboard_rounded, size: 18),
+                    label: Text(context.l10n.homeParentToolsAction),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 240.ms).slideY(begin: 0.03);
+  }
+}
+
 class _SignInNudgeBanner extends StatefulWidget {
   const _SignInNudgeBanner({required this.isDark});
 
@@ -801,18 +887,15 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        context.isArabic
-                            ? 'إدارة الحساب'
-                            : 'Manage your account',
+                        context.l10n.guestUpgradeTitle,
                         style: AppTypography.titleSmall.copyWith(
                           color: textColor,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       Text(
-                        context.isArabic
-                            ? 'سجّل الدخول للوصول إلى خيارات الحساب والاستعادة.'
-                            : 'Sign in for account and recovery options.',
+                        '${context.l10n.guestUpgradeMessage} '
+                        '${context.l10n.guestUpgradeLocalProgress}',
                         style: AppTypography.labelSmall.copyWith(
                           color: subTextColor,
                         ),
@@ -821,7 +904,7 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
                   ),
                 ),
                 TextButton(
-                  onPressed: () => context.push(AppRoutes.settings),
+                  onPressed: () => context.push(AppRoutes.login),
                   child: Text(context.l10n.signIn),
                 ),
                 IconButton(

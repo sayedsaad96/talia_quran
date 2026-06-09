@@ -173,4 +173,8 @@ class MemorizationNavigationResolver {
 
   static bool _isValidSurahId(int? surahId) =>
       surahId != null && surahId >= 1 && surahId <= 114;
+
+  /// Safe fallback when a kids screen cannot pop and must return home.
+  static String kidsHomeFallbackLocation(int surahId) =>
+      _kidsHomeLocation(_isValidSurahId(surahId) ? surahId : 1);
 }

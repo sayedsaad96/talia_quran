@@ -54,7 +54,10 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
             return const Center(child: LoadingWidget());
           }
           if (state is AzkarError) {
-            return ErrorStateWidget(message: state.message);
+            return ErrorStateWidget(
+              message: state.message,
+              onRetry: () => context.read<AzkarCubit>().load(widget.category),
+            );
           }
           if (state is AzkarLoaded) {
             return _buildContent(context, state, isDark);

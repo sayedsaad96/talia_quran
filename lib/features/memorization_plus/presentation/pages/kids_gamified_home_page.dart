@@ -35,6 +35,10 @@ class KidsGamifiedHomePage extends StatelessWidget {
   }
 }
 
+@visibleForTesting
+String kidsQuranReaderLocation(int surahId) =>
+    '${AppRoutes.memorizationPlusKidsQuran}?surahId=$surahId';
+
 class _KidsGamifiedHomeView extends StatelessWidget {
   const _KidsGamifiedHomeView({required this.surahId, this.childName});
 
@@ -73,7 +77,8 @@ class _KidsGamifiedHomeView extends StatelessWidget {
             childName: childName,
             onRefresh: () =>
                 context.read<KidsJourneyCubit>().load(surahId: surahId),
-            onMushafTap: () => context.go(AppRoutes.quran),
+            onMushafTap: () =>
+                context.push(kidsQuranReaderLocation(state.surahId)),
             onJourneyTap: () => context.push(
               '${AppRoutes.memorizationPlusKidsJourney}?surahId=${state.surahId}',
             ),

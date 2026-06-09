@@ -5,11 +5,11 @@ import 'package:path_provider/path_provider.dart';
 
 import '../services/audio_cache_service.dart';
 import '../services/app_session_service.dart';
+import '../services/app_version_service.dart';
 import '../services/notification_service.dart';
 import '../services/streak_reader.dart';
 import '../services/streak_service.dart';
 import '../services/xp_service.dart';
-import '../services/subscription_service.dart';
 import '../services/achievement_service.dart';
 import '../theme/theme_cubit.dart';
 import '../l10n/locale_cubit.dart';
@@ -23,7 +23,6 @@ import '../../features/quran/domain/usecases/get_surahs_usecase.dart';
 import '../../features/quran/presentation/cubits/surah_list_cubit.dart';
 import '../../features/quran/presentation/cubits/surah_detail_cubit.dart';
 import '../../features/quran/presentation/cubits/quran_page_cubit.dart';
-import '../../features/quran/presentation/cubits/search_quran_cubit.dart';
 import '../../features/hifz/data/datasources/hifz_local_datasource.dart';
 import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dart';
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
@@ -59,6 +58,7 @@ import '../../features/memorization_plus/presentation/cubits/parent_dashboard_cu
 import '../../features/memorization_plus/presentation/cubits/custom_plan_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/memorization_identity_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/quiz_cubit.dart';
+import '../../features/onboarding/presentation/cubits/onboarding_cubit.dart';
 import '../../features/settings/presentation/cubits/profile_cubit.dart';
 import '../../features/settings/presentation/cubits/settings_cubit.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
@@ -120,6 +120,9 @@ Future<void> configureDependencies() async {
   getIt.registerSingleton<AppSessionService>(
     AppSessionService(getIt<SharedPreferences>()),
   );
+  getIt.registerLazySingleton<AppVersionInfoProvider>(
+    () => const PackageInfoAppVersionInfoProvider(),
+  );
   getIt.registerLazySingleton<TaliaNotificationService>(
     TaliaNotificationService.new,
   );
@@ -149,7 +152,6 @@ Future<void> configureDependencies() async {
   getIt.registerSingleton<StreakService>(StreakService(getIt<Isar>()));
   getIt.registerSingleton<StreakReader>(getIt<StreakService>());
   getIt.registerSingleton<XpService>(XpService(getIt<Isar>()));
-  getIt.registerSingleton<SubscriptionService>(SubscriptionService());
   getIt.registerSingleton<AchievementService>(
     AchievementService(
       getIt<SharedPreferences>(),
@@ -282,6 +284,7 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<ParentRemoteLinkUsecase>(
     () => ParentRemoteLinkUsecase(getIt<MemorizationPlusRepository>()),
   );
+
   // ─── Cubits ─────────────────────────────────────────────────────────────────
   getIt.registerFactory<ProgressCubit>(
     () => ProgressCubit(
@@ -301,9 +304,6 @@ Future<void> configureDependencies() async {
       getIt<SaveReadPageUsecase>(),
       getIt<StreakService>(),
     ),
-  );
-  getIt.registerFactory<SearchQuranCubit>(
-    () => SearchQuranCubit(getIt<QuranRepository>()),
   );
   getIt.registerFactory<HifzCubit>(
     () => HifzCubit(
@@ -344,6 +344,13 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<MemorizationIdentityCubit>(
     () => MemorizationIdentityCubit(
       repository: getIt<MemorizationPlusRepository>(),
+      pathResolver: getIt<MemorizationPathResolver>(),
+    ),
+  );
+  getIt.registerFactory<OnboardingCubit>(
+    () => OnboardingCubit(
+      prefs: getIt<SharedPreferences>(),
+      memorizationRepository: getIt<MemorizationPlusRepository>(),
       pathResolver: getIt<MemorizationPathResolver>(),
     ),
   );

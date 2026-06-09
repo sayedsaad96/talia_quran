@@ -26,12 +26,14 @@ class DailyPlanLoaded extends DailyPlanState {
     this.lastEvaluatedAyah,
     this.lastRating,
     this.newAwards = const [],
+    this.actionError,
   });
   final DailyPlan plan;
   final int surahId;
   final int? lastEvaluatedAyah;
   final PerformanceRating? lastRating;
   final List<CertificateAward> newAwards;
+  final String? actionError;
 
   bool get allDone => plan.completedCount >= plan.totalItems;
 
@@ -42,6 +44,7 @@ class DailyPlanLoaded extends DailyPlanState {
     lastEvaluatedAyah,
     lastRating,
     newAwards,
+    actionError,
   ];
 }
 

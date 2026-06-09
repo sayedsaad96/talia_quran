@@ -1,8 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/error_info_banner.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../onboarding/presentation/cubits/onboarding_cubit.dart';
 import '../../presentation/cubits/auth_cubit.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 
@@ -61,6 +68,36 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  /// After a successful sign-in, route child profiles into the guardian-linking
+  /// flow (which auto-forwards to the kids journey if already linked) so the
+  /// child + sign-in onboarding branch is not dropped at the adult home shell.
+  Future<void> _routeAfterLogin(BuildContext context) async {
+    if (!context.mounted) return;
+    context.go(await _resolvePostLoginDestination());
+  }
+
+  Future<String> _resolvePostLoginDestination() async {
+    try {
+      final profileResult = await getIt<MemorizationPlusRepository>()
+          .getMemorizationProfile();
+      final isChild = profileResult.fold(
+        (_) => _isChildFromOnboardingPrefs(),
+        (profile) => profile.isChild,
+      );
+      return isChild ? AppRoutes.memorizationPlusGuardianLinking : '/';
+    } catch (_) {
+      return _isChildFromOnboardingPrefs()
+          ? AppRoutes.memorizationPlusGuardianLinking
+          : '/';
+    }
+  }
+
+  bool _isChildFromOnboardingPrefs() {
+    final prefs = getIt<SharedPreferences>();
+    return prefs.getString(OnboardingCubit.userTypeKey) ==
+        OnboardingUserType.child.storageValue;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -75,7 +112,7 @@ class _LoginPageState extends State<LoginPage> {
               context.read<ProfileCubit>().updateProfile(
                 name: state.user.displayName,
               );
-              context.go('/');
+              unawaited(_routeAfterLogin(context));
             }
             if (state is AuthPasswordResetSent) {
               setState(

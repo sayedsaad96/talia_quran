@@ -167,6 +167,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   int _nearRevisionCount = 5;
   int _farRevisionCount = 3;
   PlanTargetUser _targetUser = PlanTargetUser.adult;
+  bool _didLoadSurahNames = false;
 
   /// Surah names loaded from data layer (1-indexed, index 0 is placeholder)
   List<String> _surahNames = [''];
@@ -175,6 +176,13 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   @override
   void initState() {
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didLoadSurahNames) return;
+    _didLoadSurahNames = true;
     _loadSurahNames();
   }
 
@@ -182,8 +190,12 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     try {
       final surahs = await getIt<QuranLocalDatasource>().getSurahs();
       if (mounted) {
+        final isArabic = context.isArabic;
         setState(() {
-          _surahNames = ['', ...surahs.map((s) => s.nameAr)];
+          _surahNames = [
+            '',
+            ...surahs.map((s) => isArabic ? s.nameAr : s.nameEn),
+          ];
           _surahAyahCounts = [0, ...surahs.map((s) => s.ayahCount)];
           _clampStartAyahForSurah();
         });
@@ -191,8 +203,12 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     } catch (_) {
       // Fallback: generate placeholder names
       if (mounted) {
+        final surahLabel = context.l10n.surah;
         setState(() {
-          _surahNames = List.generate(115, (i) => i == 0 ? '' : 'سورة $i');
+          _surahNames = List.generate(
+            115,
+            (i) => i == 0 ? '' : '$surahLabel $i',
+          );
           _surahAyahCounts = _standardSurahAyahCounts;
           _clampStartAyahForSurah();
         });
@@ -295,7 +311,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   }
 
   Future<void> _showDeletePlanConfirmation(BuildContext context) async {
-    const confirmText = 'حذف الخطة';
+    final confirmText = context.l10n.customPlanDeleteConfirmPhrase;
     final confirmController = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
@@ -303,43 +319,43 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
         builder: (context, setDialogState) {
           final canConfirm = confirmController.text.trim() == confirmText;
           return AlertDialog(
-            title: const Text('تأكيد حذف الخطة'),
+            title: Text(context.l10n.customPlanDeleteTitle),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _ChecklistLine(
+                _ChecklistLine(
                   icon: Icons.check_circle_rounded,
-                  color: Color(0xFF2D8E4C),
-                  text: 'سيبقى: الإنجازات، السجل، الشهادات',
+                  color: const Color(0xFF2D8E4C),
+                  text: context.l10n.customPlanDeleteKeeps,
                 ),
                 const SizedBox(height: 10),
-                const _ChecklistLine(
+                _ChecklistLine(
                   icon: Icons.warning_amber_rounded,
                   color: Colors.orange,
-                  text: 'سيُحذف: الخطة الحالية فقط',
+                  text: context.l10n.customPlanDeleteRemoves,
                 ),
                 const SizedBox(height: AppSpacing.md),
-                const Text('اكتب "حذف الخطة" لتأكيد العملية.'),
+                Text(context.l10n.customPlanDeleteInstruction),
                 const SizedBox(height: AppSpacing.sm),
                 TextField(
                   controller: confirmController,
                   onChanged: (_) => setDialogState(() {}),
-                  decoration: const InputDecoration(hintText: confirmText),
+                  decoration: InputDecoration(hintText: confirmText),
                 ),
               ],
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext, false),
-                child: const Text('إلغاء'),
+                child: Text(context.l10n.cancel),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: AppColors.error),
                 onPressed: canConfirm
                     ? () => Navigator.pop(dialogContext, true)
                     : null,
-                child: const Text('تأكيد حذف الخطة'),
+                child: Text(context.l10n.customPlanDeleteAction),
               ),
             ],
           );
@@ -366,7 +382,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
           if (state is CustomPlanSaved) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: const Text('تم حفظ الخطة بنجاح ✅'),
+                content: Text(context.l10n.customPlanSaved),
                 backgroundColor: AppColors.primary,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
@@ -422,7 +438,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'خطتك المخصصة',
+                              context.l10n.customPlanTitle,
                               style: AppTypography.displaySmall.copyWith(
                                 color: Colors.white,
                                 fontFamily: 'Amiri',
@@ -430,7 +446,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'صمّم نظام حفظ يناسبك',
+                              context.l10n.customPlanSubtitle,
                               style: AppTypography.bodyMedium.copyWith(
                                 color: Colors.white70,
                               ),
@@ -458,17 +474,17 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                         // ── Plan Name ──
                         _SectionTitle(
                           icon: Icons.edit_rounded,
-                          title: 'اسم الخطة',
+                          title: context.l10n.customPlanName,
                           isDark: isDark,
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         _StyledTextField(
                           controller: _nameController,
-                          hintText: 'مثال: خطتي لحفظ جزء عمّ',
+                          hintText: context.l10n.customPlanNameHint,
                           isDark: isDark,
                           validator: (v) {
                             if (v == null || v.trim().isEmpty) {
-                              return 'يرجى إدخال اسم للخطة';
+                              return context.l10n.customPlanNameRequired;
                             }
                             return null;
                           },
@@ -479,7 +495,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                         // ── Target User (Child/Adult) ──
                         _SectionTitle(
                           icon: Icons.people_alt_rounded,
-                          title: 'الخطة لمن؟',
+                          title: context.l10n.customPlanTargetUserTitle,
                           isDark: isDark,
                         ),
                         const SizedBox(height: AppSpacing.sm),
@@ -513,7 +529,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                                   const SizedBox(width: 8),
                                   Expanded(
                                     child: Text(
-                                      'سيتم تفعيل ميزات ولي الأمر والمتابعة تلقائياً 👨\u200d👧',
+                                      context.l10n.customPlanChildFeaturesNote,
                                       style: AppTypography.bodySmall.copyWith(
                                         color: const Color(0xFF2D8E4C),
                                         fontFamily: 'Amiri',
@@ -530,7 +546,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                         // ── Surah Range ──
                         _SectionTitle(
                           icon: Icons.menu_book_rounded,
-                          title: 'نطاق السور',
+                          title: context.l10n.customPlanSurahRange,
                           isDark: isDark,
                         ),
                         const SizedBox(height: AppSpacing.sm),
@@ -541,16 +557,16 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                         // ── Daily Load ──
                         _SectionTitle(
                           icon: Icons.today_rounded,
-                          title: 'الحِمل اليومي',
+                          title: context.l10n.customPlanDailyLoad,
                           isDark: isDark,
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         _buildSliderCard(
-                          title: 'آيات جديدة يومياً',
+                          title: context.l10n.customPlanNewAyahsPerDay,
                           value: _newAyahsPerDay,
                           min: 1,
                           max: 10,
-                          suffix: 'آية',
+                          suffix: context.l10n.customPlanAyahUnit,
                           icon: Icons.auto_stories_rounded,
                           color: Colors.amber,
                           isDark: isDark,
@@ -562,16 +578,16 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                         // ── Schedule ──
                         _SectionTitle(
                           icon: Icons.calendar_month_rounded,
-                          title: 'الجدول الزمني',
+                          title: context.l10n.customPlanSchedule,
                           isDark: isDark,
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         _buildSliderCard(
-                          title: 'أيام الحفظ في الأسبوع',
+                          title: context.l10n.customPlanDaysPerWeek,
                           value: _availableDays,
                           min: 1,
                           max: 7,
-                          suffix: 'يوم',
+                          suffix: context.l10n.customPlanDayUnit,
                           icon: Icons.date_range_rounded,
                           color: Colors.blueAccent,
                           isDark: isDark,
@@ -579,11 +595,11 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                         ),
                         const SizedBox(height: AppSpacing.sm),
                         _buildSliderCard(
-                          title: 'مدة الجلسة',
+                          title: context.l10n.customPlanSessionDuration,
                           value: _sessionMinutes,
                           min: 10,
                           max: 120,
-                          suffix: 'دقيقة',
+                          suffix: context.l10n.customPlanMinuteUnit,
                           icon: Icons.timer_rounded,
                           color: Colors.teal,
                           isDark: isDark,
@@ -596,7 +612,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                         // ── Difficulty ──
                         _SectionTitle(
                           icon: Icons.tune_rounded,
-                          title: 'مستوى الصعوبة',
+                          title: context.l10n.customPlanDifficulty,
                           isDark: isDark,
                         ),
                         const SizedBox(height: AppSpacing.sm),
@@ -609,11 +625,11 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                           tilePadding: EdgeInsets.zero,
                           title: _SectionTitle(
                             icon: Icons.replay_rounded,
-                            title: 'تخصيص متقدم',
+                            title: context.l10n.customPlanAdvanced,
                             isDark: isDark,
                           ),
-                          subtitle: const Text(
-                            'إعدادات المراجعة القريبة والبعيدة',
+                          subtitle: Text(
+                            context.l10n.customPlanAdvancedSubtitle,
                           ),
                           children: [
                             const SizedBox(height: AppSpacing.sm),
@@ -636,10 +652,10 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                           difficulty: _difficulty,
                           startSurah: _startSurahId < _surahNames.length
                               ? _surahNames[_startSurahId]
-                              : 'سورة $_startSurahId',
+                              : '${context.l10n.surah} $_startSurahId',
                           endSurah: _endSurahId < _surahNames.length
                               ? _surahNames[_endSurahId]
-                              : 'سورة $_endSurahId',
+                              : '${context.l10n.surah} $_endSurahId',
                         ),
 
                         const SizedBox(height: AppSpacing.xl),
@@ -665,7 +681,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                                 const Icon(Icons.save_rounded),
                                 const SizedBox(width: 12),
                                 Text(
-                                  'حفظ وبدء الخطة',
+                                  context.l10n.customPlanSaveAndStart,
                                   style: AppTypography.titleMedium.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -687,7 +703,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                               color: Colors.redAccent,
                             ),
                             label: Text(
-                              'حذف الخطة الحالية',
+                              context.l10n.customPlanDeleteCurrent,
                               style: AppTypography.bodyMedium.copyWith(
                                 color: Colors.redAccent,
                               ),
@@ -727,7 +743,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
       child: Column(
         children: [
           _buildDropdownRow(
-            label: 'من سورة',
+            label: context.l10n.customPlanFromSurah,
             value: _startSurahId,
             icon: Icons.first_page_rounded,
             isDark: isDark,
@@ -743,7 +759,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 : Colors.black.withValues(alpha: 0.06),
           ),
           _buildDropdownRow(
-            label: 'إلى سورة',
+            label: context.l10n.customPlanToSurah,
             value: _endSurahId,
             icon: Icons.last_page_rounded,
             isDark: isDark,
@@ -770,7 +786,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
               ),
               const SizedBox(width: AppSpacing.sm),
               Text(
-                'من آية رقم',
+                context.l10n.customPlanFromAyah,
                 style: AppTypography.bodyMedium.copyWith(
                   color: isDark
                       ? AppColors.darkTextPrimary
@@ -810,10 +826,10 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                     final parsed = int.tryParse((v ?? '').trim());
                     final maxAyah = _ayahCountForSurah(_startSurahId);
                     if (parsed == null || parsed < 1) {
-                      return 'أدخل رقم آية صحيح';
+                      return context.l10n.customPlanInvalidAyah;
                     }
                     if (parsed > maxAyah) {
-                      return 'هذه السورة فيها $maxAyah آيات';
+                      return context.l10n.customPlanSurahAyahLimit(maxAyah);
                     }
                     return null;
                   },
@@ -868,7 +884,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
             (i) => DropdownMenuItem(
               value: i + 1,
               child: Text(
-                '${i + 1}. ${(i + 1) < _surahNames.length ? _surahNames[i + 1] : 'سورة ${i + 1}'}',
+                '${i + 1}. ${(i + 1) < _surahNames.length ? _surahNames[i + 1] : '${context.l10n.surah} ${i + 1}'}',
               ),
             ),
           ),
@@ -967,10 +983,15 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
 
   Widget _buildTargetUserSelector(bool isDark) {
     final items = [
-      (PlanTargetUser.adult, 'كبير', Icons.person_rounded, AppColors.primary),
+      (
+        PlanTargetUser.adult,
+        context.l10n.customPlanAdult,
+        Icons.person_rounded,
+        AppColors.primary,
+      ),
       (
         PlanTargetUser.child,
-        'طفل',
+        context.l10n.customPlanChild,
         Icons.child_care_rounded,
         const Color(0xFF2D8E4C),
       ),
@@ -1032,19 +1053,19 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     final items = [
       (
         MemorizationDifficulty.easy,
-        'سهل',
+        context.l10n.customPlanDifficultyEasy,
         Icons.sentiment_satisfied_rounded,
         Colors.green,
       ),
       (
         MemorizationDifficulty.moderate,
-        'متوسط',
+        context.l10n.customPlanDifficultyModerate,
         Icons.sentiment_neutral_rounded,
         Colors.amber,
       ),
       (
         MemorizationDifficulty.challenging,
-        'صعب',
+        context.l10n.customPlanDifficultyChallenging,
         Icons.sentiment_dissatisfied_rounded,
         Colors.redAccent,
       ),
@@ -1118,8 +1139,8 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
         children: [
           // Near revision toggle
           _buildToggleRow(
-            title: 'المراجعة القريبة',
-            subtitle: 'مراجعة آيات آخر 5 أيام',
+            title: context.l10n.customPlanNearRevision,
+            subtitle: context.l10n.customPlanNearRevisionSubtitle,
             value: _enableNearRevision,
             icon: Icons.update_rounded,
             color: Colors.blueAccent,
@@ -1129,7 +1150,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
           if (_enableNearRevision) ...[
             const SizedBox(height: AppSpacing.sm),
             _buildMiniSlider(
-              label: 'عدد آيات المراجعة القريبة',
+              label: context.l10n.customPlanNearRevisionCount,
               value: _nearRevisionCount,
               min: 1,
               max: 15,
@@ -1146,8 +1167,8 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
           ),
           // Far revision toggle
           _buildToggleRow(
-            title: 'المراجعة البعيدة',
-            subtitle: 'تكرار ذكي للآيات القديمة',
+            title: context.l10n.customPlanFarRevision,
+            subtitle: context.l10n.customPlanFarRevisionSubtitle,
             value: _enableFarRevision,
             icon: Icons.history_rounded,
             color: Colors.deepPurple,
@@ -1157,7 +1178,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
           if (_enableFarRevision) ...[
             const SizedBox(height: AppSpacing.sm),
             _buildMiniSlider(
-              label: 'عدد آيات المراجعة البعيدة',
+              label: context.l10n.customPlanFarRevisionCount,
               value: _farRevisionCount,
               min: 1,
               max: 10,
@@ -1279,11 +1300,13 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     String durationText;
     if (months > 12) {
       final years = (months / 12.0);
-      durationText = '${years.toStringAsFixed(1)} سنة تقريباً';
+      durationText = context.l10n.customPlanApproxYears(
+        years.toStringAsFixed(1),
+      );
     } else if (months > 1) {
-      durationText = '$months شهر تقريباً';
+      durationText = context.l10n.customPlanApproxMonths(months);
     } else {
-      durationText = '$weeks أسبوع تقريباً';
+      durationText = context.l10n.customPlanApproxWeeks(weeks);
     }
 
     return Container(
@@ -1318,7 +1341,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'المدة المقدّرة للإنهاء',
+                  context.l10n.customPlanEstimatedDuration,
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark
                         ? AppColors.darkTextSecondary
@@ -1336,7 +1359,10 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                   ),
                 ),
                 Text(
-                  '$totalSurahs سورة · ~$totalAyahsEstimate آية',
+                  context.l10n.customPlanEstimatedScope(
+                    totalSurahs,
+                    totalAyahsEstimate,
+                  ),
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark
                         ? AppColors.darkTextSecondary
@@ -1375,12 +1401,12 @@ class _PresetSelector extends StatelessWidget {
   Widget build(BuildContext context) {
     final presets = [
       (
-        'خفيف',
-        '3 آيات/يوم • 5 أيام • 10 دقائق',
+        context.l10n.customPlanPresetLight,
+        context.l10n.customPlanPresetLightDesc,
         Icons.spa_rounded,
         Colors.green,
         () => onSelect(
-          name: 'خطة خفيفة',
+          name: context.l10n.customPlanPresetLightName,
           newAyahs: 3,
           days: 5,
           minutes: 10,
@@ -1388,12 +1414,12 @@ class _PresetSelector extends StatelessWidget {
         ),
       ),
       (
-        'متوازن',
-        '5 آيات/يوم • 6 أيام • 15 دقيقة',
+        context.l10n.customPlanPresetBalanced,
+        context.l10n.customPlanPresetBalancedDesc,
         Icons.balance_rounded,
         AppColors.primary,
         () => onSelect(
-          name: 'خطة متوازنة',
+          name: context.l10n.customPlanPresetBalancedName,
           newAyahs: 5,
           days: 6,
           minutes: 15,
@@ -1401,12 +1427,12 @@ class _PresetSelector extends StatelessWidget {
         ),
       ),
       (
-        'مكثف',
-        '10 آيات/يوم • كل الأسبوع • 30 دقيقة',
+        context.l10n.customPlanPresetIntensive,
+        context.l10n.customPlanPresetIntensiveDesc,
         Icons.local_fire_department_rounded,
         Colors.deepOrange,
         () => onSelect(
-          name: 'خطة مكثفة',
+          name: context.l10n.customPlanPresetIntensiveName,
           newAyahs: 10,
           days: 7,
           minutes: 30,
@@ -1414,12 +1440,12 @@ class _PresetSelector extends StatelessWidget {
         ),
       ),
       (
-        'جزء عم',
-        'من الناس إلى الفيل • 3 آيات/يوم',
+        context.l10n.customPlanPresetJuzAmma,
+        context.l10n.customPlanPresetJuzAmmaDesc,
         Icons.auto_stories_rounded,
         Colors.purple,
         () => onSelect(
-          name: 'خطة جزء عم',
+          name: context.l10n.customPlanPresetJuzAmmaName,
           newAyahs: 3,
           days: 5,
           minutes: 10,
@@ -1435,7 +1461,7 @@ class _PresetSelector extends StatelessWidget {
       children: [
         _SectionTitle(
           icon: Icons.bolt_rounded,
-          title: 'اختر قالباً سريعاً',
+          title: context.l10n.customPlanQuickPresetTitle,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -1504,9 +1530,11 @@ class _PlanSummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final difficultyLabel = switch (difficulty) {
-      MemorizationDifficulty.easy => 'سهل',
-      MemorizationDifficulty.moderate => 'متوسط',
-      MemorizationDifficulty.challenging => 'صعب',
+      MemorizationDifficulty.easy => context.l10n.customPlanDifficultyEasy,
+      MemorizationDifficulty.moderate =>
+        context.l10n.customPlanDifficultyModerate,
+      MemorizationDifficulty.challenging =>
+        context.l10n.customPlanDifficultyChallenging,
     };
 
     return Container(
@@ -1520,13 +1548,18 @@ class _PlanSummaryCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'ملخص الخطة',
+            context.l10n.customPlanSummaryTitle,
             style: AppTypography.titleLarge.copyWith(fontFamily: 'Amiri'),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text('النطاق: $startSurah ← $endSurah'),
-          Text('$ayahsPerDay آيات يومياً • $daysPerWeek أيام أسبوعياً'),
-          Text('$sessionMinutes دقيقة للجلسة • مستوى $difficultyLabel'),
+          Text(context.l10n.customPlanSummaryRange(startSurah, endSurah)),
+          Text(context.l10n.customPlanSummaryLoad(ayahsPerDay, daysPerWeek)),
+          Text(
+            context.l10n.customPlanSummarySession(
+              sessionMinutes,
+              difficultyLabel,
+            ),
+          ),
         ],
       ),
     );

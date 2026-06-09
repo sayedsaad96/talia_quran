@@ -87,7 +87,7 @@ class _PathSelectionView extends StatelessWidget {
                   const SizedBox(height: 20),
                   ErrorInfoBanner(
                     type: ErrorInfoBannerType.error,
-                    title: 'تعذر حفظ اختيارك',
+                    title: context.l10n.memorizationPathSelectionFailedTitle,
                     message: state.message,
                   ),
                 ],
@@ -170,7 +170,7 @@ class _PathSelectionView extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'ماذا سيحدث بعد ذلك؟',
+                context.l10n.memorizationPathConfirmTitle,
                 style: AppTypography.headlineSmall.copyWith(
                   fontFamily: 'Amiri',
                 ),
@@ -189,7 +189,7 @@ class _PathSelectionView extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'يمكن تغييره من الإعدادات لاحقاً بدون فقدان تقدمك.',
+                      context.l10n.memorizationPathCanChangeLater,
                       style: AppTypography.bodySmall,
                     ),
                   ),
@@ -198,11 +198,11 @@ class _PathSelectionView extends StatelessWidget {
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: () => Navigator.pop(sheetContext, true),
-                child: const Text('تأكيد'),
+                child: Text(context.l10n.confirm),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(sheetContext, false),
-                child: const Text('رجوع'),
+                child: Text(context.l10n.goBack),
               ),
             ],
           ),

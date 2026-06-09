@@ -33,17 +33,39 @@ class DailyPlanPage extends StatelessWidget {
   }
 }
 
-class _DailyPlanView extends StatelessWidget {
+class _DailyPlanView extends StatefulWidget {
   const _DailyPlanView({required this.surahId});
   final int surahId;
 
   @override
+  State<_DailyPlanView> createState() => _DailyPlanViewState();
+}
+
+class _DailyPlanViewState extends State<_DailyPlanView> {
+  bool _completionCelebrationShown = false;
+
+  @override
   Widget build(BuildContext context) {
+    final surahId = widget.surahId;
     final isDark = context.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
 
     return BlocConsumer<DailyPlanCubit, DailyPlanState>(
+      listenWhen: (previous, current) {
+        if (current is DailyPlanLoaded && current.actionError != null) {
+          return previous is! DailyPlanLoaded ||
+              previous.actionError != current.actionError;
+        }
+        return true;
+      },
       listener: (context, state) {
+        if (state is DailyPlanLoaded && state.actionError != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(state.actionError!)),
+          );
+          return;
+        }
+
         if (state is DailyPlanKidsRedirect) {
           context.go(AppRoutes.memorizationPlusKidsHome);
           return;
@@ -60,6 +82,8 @@ class _DailyPlanView extends StatelessWidget {
             state.plan.totalItems > 0 &&
             state.plan.completedCount >= state.plan.totalItems &&
             state.lastEvaluatedAyah != null) {
+          if (_completionCelebrationShown) return;
+          _completionCelebrationShown = true;
           HapticFeedback.heavyImpact();
           _showCompletionCelebration(context, isDark, primary, state.plan);
         }
@@ -349,14 +373,14 @@ class _DailyPlanView extends StatelessWidget {
       actions: [
         IconButton(
           icon: const Icon(Icons.settings_suggest_rounded, color: Colors.white),
-          tooltip: 'إعدادات مسار الحفظ الذكي',
+          tooltip: context.l10n.dailyPlanSettingsTooltip,
           onPressed: () => context.push(AppRoutes.memorizationPlusCustomPlan),
         ),
         IconButton(
           icon: const Icon(Icons.refresh_rounded, color: Colors.white),
-          tooltip: 'تحديث الخطة',
+          tooltip: context.l10n.dailyPlanRefreshTooltip,
           onPressed: () =>
-              context.read<DailyPlanCubit>().refresh(surahId: surahId),
+              context.read<DailyPlanCubit>().refresh(surahId: widget.surahId),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
@@ -379,14 +403,17 @@ class _DailyPlanView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'خطتك اليومية',
+                    context.l10n.dailyPlanHeaderTitle,
                     style: AppTypography.headlineLarge.copyWith(
                       color: Colors.white,
                       fontFamily: 'Amiri',
                     ),
                   ),
                   Text(
-                    '${plan.totalItems} عنصر • ${plan.completedCount} مكتمل',
+                    context.l10n.dailyPlanHeaderSummary(
+                      plan.totalItems,
+                      plan.completedCount,
+                    ),
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white70,
                     ),
@@ -454,7 +481,10 @@ class _PlanProgressHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '${plan.completedCount} من ${plan.totalItems}',
+                  context.l10n.dailyPlanProgressCount(
+                    plan.completedCount,
+                    plan.totalItems,
+                  ),
                   style: AppTypography.titleLarge.copyWith(
                     color: primary,
                     fontWeight: FontWeight.w700,
@@ -462,8 +492,10 @@ class _PlanProgressHeader extends StatelessWidget {
                 ),
                 Text(
                   plan.completedCount >= plan.totalItems
-                      ? '✅ أحسنت! أكملت خطتك اليوم'
-                      : 'تبقّى ${plan.totalItems - plan.completedCount} عناصر',
+                      ? context.l10n.dailyPlanAllDoneShort
+                      : context.l10n.dailyPlanRemainingItems(
+                          plan.totalItems - plan.completedCount,
+                        ),
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark
                         ? AppColors.darkTextSecondary
@@ -687,7 +719,7 @@ class _AyahPlanTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'آية ${planAyah.ayahNumber}',
+                  context.l10n.dailyPlanAyahTitle(planAyah.ayahNumber),
                   style: AppTypography.titleMedium.copyWith(
                     color: isDark
                         ? AppColors.darkTextPrimary
@@ -712,8 +744,10 @@ class _AyahPlanTile extends StatelessWidget {
             ),
             subtitle: planAyah.record != null
                 ? Text(
-                    'قوة: ${planAyah.record!.strengthLevel} • '
-                    'مراجعات: ${planAyah.record!.totalReviews}',
+                    context.l10n.dailyPlanRecordStats(
+                      planAyah.record!.strengthLevel,
+                      planAyah.record!.totalReviews,
+                    ),
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark
                           ? AppColors.darkTextHint
@@ -721,7 +755,7 @@ class _AyahPlanTile extends StatelessWidget {
                     ),
                   )
                 : Text(
-                    'جديدة',
+                    context.l10n.dailyPlanNewLabel,
                     style: AppTypography.bodySmall.copyWith(color: primary),
                   ),
           ),
@@ -759,34 +793,59 @@ class _AyahPlanTile extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.sm),
                   // ── Rating buttons ──────────────────────────────────────
-                  Row(
-                    children: [
-                      _EvalButton(
-                        label: context.l10n.performanceWeak,
-                        description: context.l10n.dailyPlanRatingWeakDesc,
-                        icon: Icons.sentiment_dissatisfied_rounded,
-                        color: Colors.red,
-                        onTap: () => _evaluate(context, PerformanceRating.weak),
-                      ),
-                      const SizedBox(width: 8),
-                      _EvalButton(
-                        label: context.l10n.performanceAverage,
-                        description: context.l10n.dailyPlanRatingAverageDesc,
-                        icon: Icons.sentiment_neutral_rounded,
-                        color: const Color(0xFFFF8C42),
-                        onTap: () =>
-                            _evaluate(context, PerformanceRating.average),
-                      ),
-                      const SizedBox(width: 8),
-                      _EvalButton(
-                        label: context.l10n.performanceExcellent,
-                        description: context.l10n.dailyPlanRatingExcellentDesc,
-                        icon: Icons.sentiment_very_satisfied_rounded,
-                        color: const Color(0xFF2D8E4C),
-                        onTap: () =>
-                            _evaluate(context, PerformanceRating.excellent),
-                      ),
-                    ],
+                  LayoutBuilder(
+                    builder: (context, constraints) {
+                      final useColumn = constraints.maxWidth < 340;
+                      final buttons = [
+                        _EvalButton(
+                          label: context.l10n.performanceWeak,
+                          description: context.l10n.dailyPlanRatingWeakDesc,
+                          icon: Icons.sentiment_dissatisfied_rounded,
+                          color: Colors.red,
+                          expanded: !useColumn,
+                          onTap: () =>
+                              _evaluate(context, PerformanceRating.weak),
+                        ),
+                        _EvalButton(
+                          label: context.l10n.performanceAverage,
+                          description: context.l10n.dailyPlanRatingAverageDesc,
+                          icon: Icons.sentiment_neutral_rounded,
+                          color: const Color(0xFFFF8C42),
+                          expanded: !useColumn,
+                          onTap: () =>
+                              _evaluate(context, PerformanceRating.average),
+                        ),
+                        _EvalButton(
+                          label: context.l10n.performanceExcellent,
+                          description: context.l10n.dailyPlanRatingExcellentDesc,
+                          icon: Icons.sentiment_very_satisfied_rounded,
+                          color: const Color(0xFF2D8E4C),
+                          expanded: !useColumn,
+                          onTap: () =>
+                              _evaluate(context, PerformanceRating.excellent),
+                        ),
+                      ];
+
+                      if (useColumn) {
+                        return Column(
+                          children: [
+                            for (var i = 0; i < buttons.length; i++) ...[
+                              if (i > 0) const SizedBox(height: 8),
+                              buttons[i],
+                            ],
+                          ],
+                        );
+                      }
+
+                      return Row(
+                        children: [
+                          for (var i = 0; i < buttons.length; i++) ...[
+                            if (i > 0) const SizedBox(width: 8),
+                            buttons[i],
+                          ],
+                        ],
+                      );
+                    },
                   ),
                 ],
               ),
@@ -809,53 +868,56 @@ class _EvalButton extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.onTap,
+    this.expanded = true,
   });
   final String label;
   final String description;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final bool expanded;
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          onTap();
-        },
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-            border: Border.all(color: color.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 20),
-              const SizedBox(height: 2),
-              Text(
-                label,
-                style: AppTypography.labelSmall.copyWith(color: color),
+    final button = GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        onTap();
+      },
+      child: Container(
+        width: expanded ? null : double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 20),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: AppTypography.labelSmall.copyWith(color: color),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              description,
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.labelSmall.copyWith(
+                color: color.withValues(alpha: 0.82),
+                fontSize: 10,
+                height: 1.2,
               ),
-              const SizedBox(height: 2),
-              Text(
-                description,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: AppTypography.labelSmall.copyWith(
-                  color: color.withValues(alpha: 0.82),
-                  fontSize: 10,
-                  height: 1.2,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
+
+    return expanded ? Expanded(child: button) : button;
   }
 }
 
@@ -936,7 +998,7 @@ class _EmptyPlan extends StatelessWidget {
             const Text('🎉', style: TextStyle(fontSize: 64)),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'أحسنت! لا توجد مراجعات مطلوبة اليوم',
+              context.l10n.dailyPlanEmptyTitle,
               style: AppTypography.headlineSmall.copyWith(
                 color: isDark
                     ? AppColors.darkTextPrimary
@@ -947,7 +1009,7 @@ class _EmptyPlan extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.md),
             Text(
-              'تفقّد غداً لمتابعة جدولك',
+              context.l10n.dailyPlanEmptySubtitle,
               style: AppTypography.bodyMedium.copyWith(
                 color: isDark
                     ? AppColors.darkTextSecondary

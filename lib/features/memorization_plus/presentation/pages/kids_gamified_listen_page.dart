@@ -9,6 +9,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../cubits/kids_mode_cubit.dart';
+import '../navigation/memorization_navigation_resolver.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_ayah_card.dart';
 
@@ -88,7 +89,7 @@ class _KidsGamifiedListenView extends StatelessWidget {
             return;
           }
           if (state.isCompleted) {
-            context.push(
+            context.pushReplacement(
               '${AppRoutes.memorizationPlusKidsCompletion}'
               '?surahId=${state.surahId}'
               '&completedAyahNumber=${state.ayahNumber}'
@@ -116,7 +117,13 @@ class _KidsGamifiedListenView extends StatelessWidget {
 
           return KidsGamifiedListenContent(
             state: state,
-            onBack: () => context.canPop() ? context.pop() : context.go('/'),
+            onBack: () => context.canPop()
+                ? context.pop()
+                : context.go(
+                    MemorizationNavigationResolver.kidsHomeFallbackLocation(
+                      surahId,
+                    ),
+                  ),
             onPlayPause: () {
               final cubit = context.read<KidsModeCubit>();
               if (state.isPlaying) {

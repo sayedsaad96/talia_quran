@@ -198,7 +198,7 @@ class PrivacyPolicyPage extends StatelessWidget {
         onPressed: () => Navigator.of(context).maybePop(),
       ),
       title: Text(
-        isAr ? 'سياسة الخصوصية' : 'Privacy Policy',
+        context.l10n.privacyPolicy,
         style: AppTypography.headlineSmall.copyWith(
           color: isDark
               ? AppColors.darkTextPrimary

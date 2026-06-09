@@ -19,6 +19,9 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../memorization_plus/domain/entities/memorization_entities.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../../streak/presentation/cubits/streak_cubit.dart';
@@ -130,6 +133,26 @@ class _HomeContent extends StatelessWidget {
 
         if (state.lastRestorableLocation == null)
           SliverToBoxAdapter(child: _TutorialPromptBanner(isDark: isDark)),
+
+        if (!isKids && state.selectedTrack == MemorizationTrack.adults)
+          SliverToBoxAdapter(
+            child: BlocBuilder<AuthCubit, AuthState>(
+              builder: (context, authState) {
+                if (!state.isParentMode || authState is! AuthAuthenticated) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.md,
+                    AppSpacing.pagePadding,
+                    0,
+                  ),
+                  child: _ParentGuardianToolsCard(isDark: isDark),
+                );
+              },
+            ),
+          ),
 
         // ─── Daily Wird Card ────────────────────────────────────────────────
         SliverToBoxAdapter(

@@ -143,6 +143,8 @@
   "chooseMemorizationPath": "Choose your memorization path",
   "audioPlayError": "Failed to play audio. Check your connection.",
   "micPermissionError": "The app needs microphone permission for voice recitation. Please allow it from device settings.",
+  "speechUnavailableError": "Voice recitation is unavailable on this device right now.",
+  "openSettingsAction": "Open Settings",
   "account": "Account",
   "accuracyLevel": "Accuracy Level",
   "streakProtection": "Streak Protection",
@@ -175,7 +177,7 @@
   "authSignoutFailed": "Failed to sign out",
   "authGenericError": "Something went wrong. Try again.",
   "profileSavedToCloud": "Signed in to your account",
-  "guestModeWarning": "Sign in to manage your account and recovery options.",
+  "guestModeWarning": "Sign in to manage your account, recovery, and family features.",
   "signOutWarning": "Do you want to sign out? Local progress on this device will remain available.",
   "dailyReviewReminder": "Daily Review Reminder",
   "dailyReviewTime": "Everyday at 8:00 PM",
@@ -233,7 +235,7 @@
     }
   },
   "saveProgress": "Save your progress",
-  "syncProgressDesc": "Sign in to manage your account and recovery options",
+  "syncProgressDesc": "Sign in to manage your account, recovery, and family features",
   "later": "Later",
   "congratulations": "Congratulations!",
   "completedJuzAmma": "You have successfully memorized Juz Amma.",
@@ -267,7 +269,7 @@
   "debugCertHalfQuran": "Half Quran",
   "debugCertFullQuran": "Full Quran",
   "backupProgressTitle": "Manage your account",
-  "backupProgressDesc": "Sign in from Settings to manage your account",
+  "backupProgressDesc": "Sign in from Settings to manage your account and family features",
   "azkarSubtitle": "Remember Allah often",
   "zikrCount": "{count} zikr",
   "azkarCount": "{count} azkar",
@@ -305,6 +307,7 @@
   "certificateGallerySaveSuccess": "Certificate saved to gallery ✓",
   "certificateSaveError": "An error occurred while saving",
   "certificatePdfError": "An error occurred while creating the PDF",
+  "certificateNotFound": "Certificate not found",
   "shareCertificateJuz": "By Allah's grace, I memorized Juz {juz} of the Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙",
   "shareCertificateSurah": "By Allah's grace, I memorized Surah {surahName} of the Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙",
   "shareCertificateHalfQuran": "By Allah's grace, I memorized half of the Holy Quran 📖\nJoin me on Talia for Quran memorization 🌙",
@@ -370,10 +373,50 @@
     }
   },
   "memorizationPathReset": "Memorization path has been reset",
+  "settingsSectionAccount": "Account",
+  "settingsSectionAppearance": "Appearance",
+  "settingsSectionQuranMemorization": "Quran & Memorization",
+  "settingsSectionKidsGuardian": "Kids & Guardian",
+  "settingsSectionProgressAchievements": "Progress & Achievements",
+  "settingsSectionHelpTutorial": "Help & Tutorial",
+  "settingsSectionPrivacySecurity": "Privacy & Security",
+  "settingsSectionAboutTalia": "About Talia",
+  "settingsGuestStatusTitle": "Using Talia as guest",
+  "settingsGuestStatusSubtitle": "Your local progress remains on this device. Create an account for account management and family features.",
+  "settingsSignInCreateAccount": "Sign in / Create account",
+  "settingsSignedInStatus": "Signed in to your account",
+  "settingsPrivacyPolicySubtitle": "How your data and privacy are handled",
+  "settingsMemorizationPathNotSelected": "No path selected",
+  "settingsMemorizationPathNotSelectedDesc": "Choose adult or kids memorization when you start Memorization Plus.",
+  "settingsResetPathKeeps": "Keeps: achievements, history, and certificates",
+  "settingsResetPathChanges": "Changes: selected path and current plan",
+  "settingsResetPathInstruction": "Type \"Reset path\" to confirm.",
+  "settingsResetPathConfirmPhrase": "Reset path",
+  "settingsDeleteAccountTitle": "Delete account",
+  "settingsDeleteAccountSubtitle": "Deletes the cloud account only",
+  "settingsDeleteAccountWarning": "This deletes the Supabase account for {email} and its cloud data.\n\nLocal Quran, Hifz, Kids, and Smart memorization progress on this device will not be deleted.\n\nDo you want to continue?",
+  "@settingsDeleteAccountWarning": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "settingsAccountDeletedMessage": "Cloud account deleted. Your local progress remains on this device.",
+  "settingsVersion": "Version {version}",
+  "@settingsVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "settingsBuild": "Build {buildNumber}",
+  "@settingsBuild": {
+    "placeholders": {
+      "buildNumber": {}
+    }
+  },
   "resetMemorizationPath": "Reset / Change path",
   "memorizationPath": "Memorization Path",
   "kidsAndGuardian": "Kids and Guardian",
-  "parentDashboardTitle": "Guardian Dashboard",
+  "parentDashboardTitle": "Parent Dashboard",
   "parentDashboardSubtitle": "Track your child's memorization, rewards, and remote link",
   "parentModeSubtitle": "Enable this to follow your child's memorization and remote link",
   "resetMemorizationPathQuestion": "Reset memorization path?",
@@ -418,10 +461,62 @@
   "guardianPairingStepOpenDashboard": "Go to Settings > Guardian Dashboard",
   "guardianPairingStepScanOrEnterCode": "Scan the QR code or enter the code manually",
   "guardianRegenerateCode": "Regenerate code",
-  "guardianSignInRequired": "Guardian linking requires signing in first",
+  "guardianSignInRequired": "Sign in to access guardian tools. Your local progress remains on this device.",
   "guardianSignInAction": "Sign in or create account",
   "guardianGuestContinueKids": "Continue Kids memorization",
-  "splashSubtitle": "Quran memorization app",
+  "guardianLinkingTemporarilyBlocked": "Linking temporarily blocked",
+  "guardianLinkingFailedTitle": "Failed to link guardian",
+  "guardianLinkingTimeoutMessage": "Guardian linking took too long. Check your connection and try again, or continue without guardian for now.",
+  "splashSubtitle": "Read, memorize, review, and grow with the Quran.",
+  "splashFeatureRead": "Read",
+  "splashFeatureMemorize": "Memorize",
+  "splashFeatureReview": "Review",
+  "splashFeatureGrow": "Grow",
+  "onboardingWelcomeTitle": "Welcome to Talia",
+  "onboardingWelcomeSubtitle": "A complete Quran journey for daily reading, memorization, review, Azkar, and steady progress.",
+  "onboardingUserTypeTitle": "Who is using Talia?",
+  "onboardingUserTypeSubtitle": "Choose the experience that fits this device. You can change memorization paths later from settings.",
+  "onboardingUserTypeAdult": "Adult",
+  "onboardingUserTypeAdultDesc": "A focused Quran workspace for reading, memorization, review, and progress.",
+  "onboardingUserTypeChild": "Child",
+  "onboardingUserTypeChildDesc": "A simpler memorization journey with missions, repetition, stars, and rewards.",
+  "onboardingMainGoalTitle": "Choose your main goal",
+  "onboardingMainGoalSubtitle": "This sets the first destination after setup. The rest of Talia remains available.",
+  "onboardingGoalDailyReading": "Daily Reading",
+  "onboardingGoalDailyReadingDesc": "Start with the Quran reader and a clear daily portion.",
+  "onboardingGoalMemorizationDesc": "Set up Memorization Plus for a structured adult path.",
+  "onboardingGoalSmartReview": "Review / Improve retention",
+  "onboardingGoalSmartReviewDesc": "Save review as your goal and start from the existing memorization setup.",
+  "onboardingGoalAzkarDesc": "Begin with morning, evening, and general Azkar.",
+  "onboardingGoalKidsJourney": "Kids Quran Journey",
+  "onboardingGoalKidsJourneyDesc": "Start the child-friendly Quran memorization path.",
+  "onboardingGoalKidsRewards": "Memorization with rewards",
+  "onboardingGoalKidsRewardsDesc": "Use listening, repetition, points, and stars to encourage consistency.",
+  "onboardingSmartReviewNoteTitle": "Review setup",
+  "onboardingSmartReviewNoteDesc": "Talia will save review as your goal and route you to the existing memorization setup. A separate Smart Coach is not enabled in this step.",
+  "onboardingHighlightsTitle": "What Talia includes",
+  "onboardingHighlightsAdultSubtitle": "A focused set of tools for steady Quran habits.",
+  "onboardingHighlightsChildSubtitle": "A protected child journey with local guest access.",
+  "onboardingFeatureQuranReader": "Quran reader",
+  "onboardingFeatureQuranReaderDesc": "Read from a respectful Mushaf-style experience.",
+  "onboardingFeatureMemorizationPlus": "Memorization Plus",
+  "onboardingFeatureMemorizationPlusDesc": "Use plans, daily practice, and review-adjacent tools.",
+  "onboardingFeatureKidsJourney": "Kids gamified journey",
+  "onboardingFeatureKidsJourneyDesc": "Guide children through small missions with rewards.",
+  "onboardingFeatureProgressCertificates": "Progress and certificates",
+  "onboardingFeatureProgressCertificatesDesc": "Track visible progress and celebrate milestones.",
+  "onboardingFeatureAzkar": "Azkar",
+  "onboardingFeatureAzkarDesc": "Keep daily remembrance close to your Quran routine.",
+  "onboardingFeatureGuardian": "Guardian linking",
+  "onboardingFeatureGuardianDesc": "Guardian follow-up requires sign-in, while child guest mode remains available.",
+  "onboardingFinalTitle": "Final setup",
+  "onboardingFinalSubtitle": "Confirm your path and choose whether to continue locally or sign in.",
+  "onboardingSummaryUserType": "User type",
+  "onboardingSummaryGoal": "Main goal",
+  "onboardingGuardianNoteTitle": "Guardian follow-up",
+  "onboardingGuardianNoteDesc": "Guardian linking requires sign-in. A child can still continue as a guest on this device.",
+  "onboardingContinueAsGuest": "Continue as guest",
+  "onboardingSignInCreate": "Sign in / Create account",
   "onboardingSkip": "Skip",
   "onboardingStartNow": "Start now",
   "onboardingQuranTitle": "A real Mushaf experience",
@@ -565,7 +660,6 @@
   "qcfPocFullPageSupported": "Full page rendering is available in a constrained preview.",
   "qcfPocNoLimitations": "No limitation observed in this isolated POC.",
   "qcfPocLimitationInstruction": "Any limitation listed here must be reviewed before production Hifz screens change.",
-  "parentDashboardTitle": "Parent Dashboard",
   "parentDashboardCardSubtitle": "Track child's memorization & rewards",
   "viewDashboard": "View Dashboard",
   "resumeWhereYouLeft": "Resume where you left off",
@@ -795,6 +889,7 @@
   "quizPassedLabel": "Passed",
   "quizNeedsPracticeLabel": "Needs practice",
   "backAction": "Back",
+  "hifzKidsRedirectedFromAdult": "This path is for adults. You will be taken to the Kids path.",
   "parentDashboardLastSession": "Last session",
   "parentDashboardNoSessionsYet": "No sessions recorded yet.",
   "parentDashboardSessionSummary": "Surah {surahId} • Ayah {ayahNumber}\n{repeats} repeats • {points} points",
@@ -818,6 +913,11 @@
   "parentDashboardPinMismatch": "PIN codes do not match",
   "parentDashboardPinHelp": "This code protects the parent dashboard on this device",
   "parentDashboardPinConfirm": "Confirm PIN",
+  "parentDashboardCreatePinTitle": "Create parent PIN",
+  "parentDashboardSavePinButton": "Save PIN",
+  "parentDashboardEnterPinTitle": "Enter parent PIN",
+  "parentDashboardEnterButton": "Enter",
+  "parentDashboardEnterLinkingCode": "Enter linking code",
   "parentDashboardResetPin": "Reset on this device — a new code will be required",
   "parentDashboardTodaySummary": "Today",
   "parentDashboardTodayEmpty": "Today: no sessions yet. Encourage a short session.",
@@ -885,25 +985,287 @@
       }
     }
   },
-  "guardianLinkingTemporarilyBlocked": "Linking temporarily blocked",
-  "guardianLinkingFailedTitle": "Failed to link guardian",
-  "guardianLinkingTimeoutMessage": "Guardian linking took too long. Check your connection and try again, or continue without guardian for now.",
+  "dailyPlanSettingsTooltip": "Smart memorization path settings",
+  "dailyPlanRefreshTooltip": "Refresh plan",
+  "dailyPlanHeaderTitle": "Today's Plan",
+  "dailyPlanHeaderSummary": "{total} items • {completed} completed",
+  "@dailyPlanHeaderSummary": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "completed": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanProgressCount": "{completed} of {total}",
+  "@dailyPlanProgressCount": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanAllDoneShort": "Well done! You completed your plan today",
+  "dailyPlanRemainingItems": "{count} items remaining",
+  "@dailyPlanRemainingItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanAyahTitle": "Ayah {ayahNumber}",
+  "@dailyPlanAyahTitle": {
+    "placeholders": {
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanRecordStats": "Strength: {strength} • Reviews: {reviews}",
+  "@dailyPlanRecordStats": {
+    "placeholders": {
+      "strength": {
+        "type": "int"
+      },
+      "reviews": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanNewLabel": "New",
+  "dailyPlanEmptyTitle": "Well done! No reviews are due today",
+  "dailyPlanEmptySubtitle": "Check again tomorrow to continue your schedule",
+  "customPlanDeleteConfirmPhrase": "Delete plan",
+  "customPlanDeleteTitle": "Confirm plan deletion",
+  "customPlanDeleteKeeps": "Keeps: achievements, history, and certificates",
+  "customPlanDeleteRemoves": "Deletes: current plan only",
+  "customPlanDeleteInstruction": "Type \"Delete plan\" to confirm.",
+  "customPlanDeleteAction": "Confirm delete",
+  "customPlanSaved": "Plan saved successfully ✅",
+  "customPlanTitle": "Your custom plan",
+  "customPlanSubtitle": "Design a memorization system that fits you",
+  "customPlanName": "Plan name",
+  "customPlanNameHint": "Example: My Juz Amma plan",
+  "customPlanNameRequired": "Enter a plan name",
+  "customPlanTargetUserTitle": "Who is this plan for?",
+  "customPlanChildFeaturesNote": "Parent follow-up features will be enabled automatically.",
+  "customPlanSurahRange": "Surah range",
+  "customPlanDailyLoad": "Daily load",
+  "customPlanNewAyahsPerDay": "New ayahs per day",
+  "customPlanAyahUnit": "ayah",
+  "customPlanSchedule": "Schedule",
+  "customPlanDaysPerWeek": "Memorization days per week",
+  "customPlanDayUnit": "day",
+  "customPlanSessionDuration": "Session duration",
+  "customPlanMinuteUnit": "min",
+  "customPlanDifficulty": "Difficulty level",
+  "customPlanAdvanced": "Advanced settings",
+  "customPlanAdvancedSubtitle": "Near and far review settings",
+  "customPlanSaveAndStart": "Save and start plan",
+  "customPlanDeleteCurrent": "Delete current plan",
+  "customPlanFromSurah": "From Surah",
+  "customPlanToSurah": "To Surah",
+  "customPlanFromAyah": "From ayah number",
+  "customPlanInvalidAyah": "Enter a valid ayah number",
+  "customPlanSurahAyahLimit": "This Surah has {maxAyah} ayahs",
+  "@customPlanSurahAyahLimit": {
+    "placeholders": {
+      "maxAyah": {
+        "type": "int"
+      }
+    }
+  },
+  "customPlanAdult": "Adult",
+  "customPlanChild": "Child",
+  "customPlanDifficultyEasy": "Easy",
+  "customPlanDifficultyModerate": "Moderate",
+  "customPlanDifficultyChallenging": "Challenging",
+  "customPlanNearRevision": "Near review",
+  "customPlanNearRevisionSubtitle": "Review ayahs from the last 5 days",
+  "customPlanNearRevisionCount": "Near review ayah count",
+  "customPlanFarRevision": "Far review",
+  "customPlanFarRevisionSubtitle": "Smart repetition for older ayahs",
+  "customPlanFarRevisionCount": "Far review ayah count",
+  "customPlanEstimatedDuration": "Estimated completion time",
+  "customPlanApproxWeeks": "{count} weeks approx.",
+  "@customPlanApproxWeeks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "customPlanApproxMonths": "{count} months approx.",
+  "@customPlanApproxMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "customPlanApproxYears": "{count} years approx.",
+  "@customPlanApproxYears": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "customPlanEstimatedScope": "{surahs} Surahs • ~{ayahs} ayahs",
+  "@customPlanEstimatedScope": {
+    "placeholders": {
+      "surahs": {
+        "type": "int"
+      },
+      "ayahs": {
+        "type": "int"
+      }
+    }
+  },
+  "customPlanQuickPresetTitle": "Choose a quick template",
+  "customPlanPresetLight": "Light",
+  "customPlanPresetLightDesc": "3 ayahs/day • 5 days • 10 minutes",
+  "customPlanPresetLightName": "Light plan",
+  "customPlanPresetBalanced": "Balanced",
+  "customPlanPresetBalancedDesc": "5 ayahs/day • 6 days • 15 minutes",
+  "customPlanPresetBalancedName": "Balanced plan",
+  "customPlanPresetIntensive": "Intensive",
+  "customPlanPresetIntensiveDesc": "10 ayahs/day • every day • 30 minutes",
+  "customPlanPresetIntensiveName": "Intensive plan",
+  "customPlanPresetJuzAmma": "Juz Amma",
+  "customPlanPresetJuzAmmaDesc": "From An-Nas to Al-Fil • 3 ayahs/day",
+  "customPlanPresetJuzAmmaName": "Juz Amma plan",
+  "customPlanSummaryTitle": "Plan summary",
+  "customPlanSummaryRange": "Range: {startSurah} → {endSurah}",
+  "@customPlanSummaryRange": {
+    "placeholders": {
+      "startSurah": {},
+      "endSurah": {}
+    }
+  },
+  "customPlanSummaryLoad": "{ayahsPerDay} ayahs daily • {daysPerWeek} days weekly",
+  "@customPlanSummaryLoad": {
+    "placeholders": {
+      "ayahsPerDay": {
+        "type": "int"
+      },
+      "daysPerWeek": {
+        "type": "int"
+      }
+    }
+  },
+  "customPlanSummarySession": "{minutes} minutes per session • {difficulty} level",
+  "@customPlanSummarySession": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "difficulty": {}
+    }
+  },
+  "quizAyahNumberTitle": "Ayah {ayahNumber}",
+  "@quizAyahNumberTitle": {
+    "placeholders": {
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "quizRecitePrompt": "Tap the microphone and recite the ayah",
+  "quizHintLabel": "Hint: {hint}",
+  "@quizHintLabel": {
+    "placeholders": {
+      "hint": {}
+    }
+  },
+  "quizListenAyahTitle": "Listen to the ayah",
+  "quizListenAyahSubtitle": "Listen before reciting to remember the correct pronunciation",
+  "quizListeningStatus": "Listening...",
+  "quizTapToSpeak": "Tap to speak",
+  "quizTapToRecordAgain": "Tap to record again",
+  "quizRecordBeforeChecking": "Please record your voice before checking",
+  "quizCheckAnswer": "Check answer",
+  "quizManualEvaluation": "Manual evaluation",
+  "quizManualEvaluationHelp": "If the microphone does not work, rate the recitation using the same scale as the app.",
+  "quizRetryMicrophone": "Retry microphone",
+  "quizSkipAyah": "Skip ayah",
+  "quizAnswerPassedTitle": "Well done! ✨",
+  "quizAnswerNeedsPracticeTitle": "Let's review it together 💪",
+  "quizMatchPercent": "Match: {percent}%",
+  "@quizMatchPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "quizCorrectText": "Correct text",
+  "memorizationPathSelectionFailedTitle": "Could not save your choice",
+  "memorizationPathConfirmTitle": "What happens next?",
+  "memorizationPathCanChangeLater": "You can change this later from Settings without losing progress.",
+  "parentDashboardLinkAction": "Link",
+  "parentDashboardRemoteRewardTitle": "Reward for the child",
+  "parentDashboardScanChildCodeTitle": "Scan child code",
+  "homeParentToolsTitle": "Parent / Guardian Tools",
+  "homeParentToolsSubtitle": "Monitor your child’s progress and rewards",
+  "homeParentToolsAction": "Open Parent Dashboard",
+  "guestUpgradeTitle": "Manage your account",
+  "guestUpgradeMessage": "Create an account for account management and family features.",
+  "guestUpgradeLocalProgress": "Your local progress remains on this device.",
+  "parentDashboardGuestSubtitle": "Sign in to manage your account and access guardian tools. Your local progress remains on this device.",
+  "kidsQuranTitle": "Kids Quran",
+  "kidsQuranSubtitle": "Read quietly and move between pages at your pace.",
+  "kidsQuranBackToHome": "Back to Kids Home",
+  "kidsQuranPageLabel": "Page {pageNumber}",
+  "@kidsQuranPageLabel": {
+    "placeholders": {
+      "pageNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsQuranSwipeHint": "Swipe gently for the next page",
   "parentDashboardPinInvalid": "Enter a 4-digit code",
   "parentDashboardPinIncorrect": "Incorrect code",
+  "parentDashboardLinking": "Verifying pairing code…",
+  "parentDashboardUnlinking": "Removing guardian link…",
   "parentDashboardRewardAdded": "Reward added",
   "parentDashboardRemoteRewardAdded": "Reward sent to child",
   "parentDashboardChildLinked": "Child linked successfully",
   "parentDashboardReminderSaved": "Reminder updated",
   "guardianLinkingSlowHint": "This is taking longer than expected. You can continue and link later.",
+  "bookmarkSaveError": "Failed to save bookmark",
+  "longPressToUndo": "Long-press to undo",
   "hifzReviewPassedTitle": "Review passed",
   "hifzReviewTimeTitle": "Time to review",
   "hifzReviewFullSurahHint": "Review the full surah before finishing it",
   "hifzReviewRangeHint": "Review ayahs {startAyah} to {endAyah} before moving to the next ayah",
-  "@hifzReviewRangeHint": {"placeholders": {"startAyah": {"type": "int"}, "endAyah": {"type": "int"}}},
+  "@hifzReviewRangeHint": {
+    "placeholders": {
+      "startAyah": {
+        "type": "int"
+      },
+      "endAyah": {
+        "type": "int"
+      }
+    }
+  },
   "hifzEvaluatingReview": "Evaluating review…",
   "hifzLeaveSessionMessage": "Do you want to leave the memorization session? Your current progress will be saved.",
   "hifzAyahNumberLabel": "Ayah {ayahNumber}",
-  "@hifzAyahNumberLabel": {"placeholders": {"ayahNumber": {"type": "int"}}},
+  "@hifzAyahNumberLabel": {
+    "placeholders": {
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
   "hifzEvaluatingAyah": "Evaluating...",
   "hifzRecordingAyahHint": "Recording, recite from memory...",
   "hifzExcellentMemorization": "Excellent! Perfect memorization.",
@@ -914,5 +1276,28 @@
   "hifzFinishSession": "Finish session",
   "hifzNextAyah": "Next ayah",
   "hifzReviewNotPassed": "Review not passed. Try again.",
-  "hifzStartRecitation": "Start recitation"
+  "hifzStartRecitation": "Start recitation",
+  "hifzAudioPlaybackFailed": "Audio playback failed. Check your internet connection.",
+  "hifzReviewSaveFailed": "Failed to save review progress. Try again.",
+  "hifzMemorizationSaveFailed": "Failed to save memorization progress. Try again.",
+  "hifzSurahLockedMessage": "This surah is locked. Complete {surahName} first to unlock it.",
+  "@hifzSurahLockedMessage": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsAudioPlaybackFailed": "Audio didn't work. Try again or ask a parent to check the internet connection.",
+  "quizSurahNotFound": "Surah data not found",
+  "quizAyahsOutsidePlan": "Cannot quiz ayahs outside your plan or records",
+  "quizNoMemorizedAyahs": "No memorized ayahs to quiz in this surah",
+  "quizUnexpectedError": "Something went wrong: {error}",
+  "@quizUnexpectedError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

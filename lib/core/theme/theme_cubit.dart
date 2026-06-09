@@ -18,7 +18,7 @@ class ThemeCubit extends Cubit<ThemeMode> {
       _ => ThemeMode.system,
     };
     emit(mode);
-    _applyStatusBar(mode == ThemeMode.dark);
+    _applyStatusBarForMode(mode);
   }
 
   Future<void> setTheme(ThemeMode mode) async {
@@ -29,7 +29,7 @@ class ThemeCubit extends Cubit<ThemeMode> {
     };
     await _prefs.setString(_key, value);
     emit(mode);
-    _applyStatusBar(mode == ThemeMode.dark);
+    _applyStatusBarForMode(mode);
   }
 
   Future<void> toggleTheme() async {
@@ -37,9 +37,26 @@ class ThemeCubit extends Cubit<ThemeMode> {
     await setTheme(next);
   }
 
-  bool get isDark => state == ThemeMode.dark;
+  bool get isDark {
+    return switch (state) {
+      ThemeMode.dark => true,
+      ThemeMode.light => false,
+      ThemeMode.system =>
+        WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+            Brightness.dark,
+    };
+  }
 
-  /// M0-T5a: Apply status bar styling that adapts to dark/light mode
+  void _applyStatusBarForMode(ThemeMode mode) {
+    final isDark = switch (mode) {
+      ThemeMode.dark => true,
+      ThemeMode.light => false,
+      ThemeMode.system =>
+        WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+            Brightness.dark,
+    };
+    _applyStatusBar(isDark);
+  }
   void _applyStatusBar(bool isDark) {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(

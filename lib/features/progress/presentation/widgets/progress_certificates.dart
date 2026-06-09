@@ -34,7 +34,19 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) return const SizedBox.shrink();
+    if (_isLoading) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(
+            title: context.l10n.myCertificates,
+            padding: EdgeInsets.zero,
+          ),
+          const SizedBox(height: AppSpacing.md),
+          const Center(child: LoadingWidget()),
+        ],
+      );
+    }
 
     if (_certificates.isEmpty) {
       return Column(
@@ -98,8 +110,8 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
               children: List.generate(_certificates.length, (index) {
                 final cert = _certificates[index];
                 return Padding(
-                  padding: EdgeInsets.only(
-                    right: index < _certificates.length - 1 ? AppSpacing.md : 0,
+                  padding: EdgeInsetsDirectional.only(
+                    end: index < _certificates.length - 1 ? AppSpacing.md : 0,
                   ),
                   child: SizedBox(
                     width: 240,

@@ -124,7 +124,13 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
 
     final evaluateFailure = result.fold((f) => f, (_) => null);
     if (evaluateFailure != null) {
-      emit(DailyPlanError(evaluateFailure.message));
+      emit(
+        DailyPlanLoaded(
+          plan: current.plan,
+          surahId: current.surahId,
+          actionError: evaluateFailure.message,
+        ),
+      );
       return;
     }
 
@@ -145,7 +151,13 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
       final saveResult = await _saveDailyPlan(updatedPlan);
       final saveFailure = saveResult.fold((f) => f, (_) => null);
       if (saveFailure != null) {
-        emit(DailyPlanError(saveFailure.message));
+        emit(
+          DailyPlanLoaded(
+            plan: current.plan,
+            surahId: current.surahId,
+            actionError: saveFailure.message,
+          ),
+        );
         return;
       }
     }

@@ -146,6 +146,8 @@
   "chooseMemorizationPath": "اختر مسار الحفظ المناسب لك",
   "audioPlayError": "فشل تشغيل الصوت. تحقق من الاتصال بالإنترنت.",
   "micPermissionError": "يحتاج التطبيق إذن الميكروفون للتسميع الصوتي. يرجى السماح من إعدادات الجهاز.",
+  "speechUnavailableError": "التسميع الصوتي غير متاح على هذا الجهاز حالياً.",
+  "openSettingsAction": "فتح الإعدادات",
   "account": "الحساب",
   "accuracyLevel": "مستوى الدقة",
   "streakProtection": "حماية السلسلة",
@@ -178,7 +180,7 @@
   "authSignoutFailed": "حدث خطأ أثناء تسجيل الخروج",
   "authGenericError": "حدث خطأ، حاول مرة أخرى",
   "profileSavedToCloud": "تم تسجيل الدخول إلى حسابك",
-  "guestModeWarning": "سجّل دخولك لإدارة حسابك وخيارات الاستعادة.",
+  "guestModeWarning": "سجّل دخولك لإدارة حسابك وخيارات الاستعادة وميزات العائلة.",
   "signOutWarning": "هل تريد تسجيل الخروج؟ سيبقى تقدمك المحلي متاحًا على هذا الجهاز.",
   "dailyReviewReminder": "تذكير المراجعة اليومية",
   "dailyReviewTime": "كل يوم الساعة ٨:٠٠ مساءً",
@@ -236,7 +238,7 @@
     }
   },
   "saveProgress": "احفظ تقدمك",
-  "syncProgressDesc": "قم بتسجيل الدخول لإدارة حسابك وخيارات الاستعادة",
+  "syncProgressDesc": "سجّل دخولك لإدارة حسابك وخيارات الاستعادة وميزات العائلة",
   "later": "لاحقاً",
   "congratulations": "مبارك!",
   "completedJuzAmma": "لقد أتممت حفظ جزء عم بنجاح.",
@@ -270,7 +272,7 @@
   "debugCertHalfQuran": "نصف القرآن",
   "debugCertFullQuran": "ختم القرآن",
   "backupProgressTitle": "إدارة الحساب",
-  "backupProgressDesc": "سجّل دخولك من الإعدادات لإدارة حسابك",
+  "backupProgressDesc": "سجّل دخولك من الإعدادات لإدارة حسابك وميزات العائلة",
   "azkarSubtitle": "اذكر الله كثيراً",
   "zikrCount": "{count} ذكر",
   "azkarCount": "{count} أذكار",
@@ -308,6 +310,7 @@
   "certificateGallerySaveSuccess": "تم حفظ الشهادة في الاستوديو بنجاح ✓",
   "certificateSaveError": "حدث خطأ أثناء الحفظ",
   "certificatePdfError": "حدث خطأ أثناء إنشاء ملف PDF",
+  "certificateNotFound": "لم يتم العثور على الشهادة",
   "shareCertificateJuz": "بفضل الله أتممت حفظ الجزء {juz} من القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙",
   "shareCertificateSurah": "بفضل الله أتممت حفظ سورة {surahName} من القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙",
   "shareCertificateHalfQuran": "بفضل الله أتممت حفظ نصف القرآن الكريم 📖\nانضم إليّ في تطبيق تالية لحفظ القرآن 🌙",
@@ -373,6 +376,46 @@
     }
   },
   "memorizationPathReset": "تمت إعادة ضبط مسار الحفظ",
+  "settingsSectionAccount": "الحساب",
+  "settingsSectionAppearance": "المظهر",
+  "settingsSectionQuranMemorization": "القرآن والحفظ",
+  "settingsSectionKidsGuardian": "الأطفال وولي الأمر",
+  "settingsSectionProgressAchievements": "التقدم والإنجازات",
+  "settingsSectionHelpTutorial": "المساعدة والدليل",
+  "settingsSectionPrivacySecurity": "الخصوصية والأمان",
+  "settingsSectionAboutTalia": "حول تالية",
+  "settingsGuestStatusTitle": "تستخدم تالية كضيف",
+  "settingsGuestStatusSubtitle": "يبقى تقدمك المحلي على هذا الجهاز. أنشئ حساباً لإدارة الحساب وميزات العائلة.",
+  "settingsSignInCreateAccount": "تسجيل الدخول / إنشاء حساب",
+  "settingsSignedInStatus": "تم تسجيل الدخول إلى حسابك",
+  "settingsPrivacyPolicySubtitle": "كيف نحفظ بياناتك وخصوصيتك",
+  "settingsMemorizationPathNotSelected": "لم يتم اختيار مسار",
+  "settingsMemorizationPathNotSelectedDesc": "اختر مسار الكبار أو الأطفال عند بدء الحفظ بلس.",
+  "settingsResetPathKeeps": "سيبقى: الإنجازات والسجل والشهادات",
+  "settingsResetPathChanges": "سيتغير: المسار المختار والخطة الحالية",
+  "settingsResetPathInstruction": "اكتب \"إعادة ضبط\" لتأكيد العملية.",
+  "settingsResetPathConfirmPhrase": "إعادة ضبط",
+  "settingsDeleteAccountTitle": "حذف الحساب",
+  "settingsDeleteAccountSubtitle": "يحذف الحساب السحابي فقط",
+  "settingsDeleteAccountWarning": "سيتم حذف حساب Supabase المرتبط بـ {email} وبياناته السحابية.\n\nلن يتم حذف تقدم القرآن المحلي، أو الحفظ، أو مسار الأطفال، أو الحفظ الذكي من هذا الجهاز.\n\nهل تريد المتابعة؟",
+  "@settingsDeleteAccountWarning": {
+    "placeholders": {
+      "email": {}
+    }
+  },
+  "settingsAccountDeletedMessage": "تم حذف الحساب السحابي. بقي تقدمك المحلي محفوظاً على هذا الجهاز.",
+  "settingsVersion": "الإصدار {version}",
+  "@settingsVersion": {
+    "placeholders": {
+      "version": {}
+    }
+  },
+  "settingsBuild": "رقم البناء {buildNumber}",
+  "@settingsBuild": {
+    "placeholders": {
+      "buildNumber": {}
+    }
+  },
   "resetMemorizationPath": "إعادة ضبط / تغيير المسار",
   "memorizationPath": "مسار الحفظ",
   "kidsAndGuardian": "الأطفال وولي الأمر",
@@ -421,10 +464,62 @@
   "guardianPairingStepOpenDashboard": "اذهب إلى الإعدادات > لوحة ولي الأمر",
   "guardianPairingStepScanOrEnterCode": "امسح رمز QR أو أدخل الرمز يدوياً",
   "guardianRegenerateCode": "تجديد الرمز",
-  "guardianSignInRequired": "ربط ولي الأمر يتطلب تسجيل الدخول أولاً",
+  "guardianSignInRequired": "سجّل دخولك للوصول إلى أدوات ولي الأمر. يبقى تقدمك المحلي على هذا الجهاز.",
   "guardianSignInAction": "تسجيل الدخول أو إنشاء حساب",
   "guardianGuestContinueKids": "متابعة حفظ الأطفال",
-  "splashSubtitle": "تطبيق تحفيظ القرآن الكريم",
+  "guardianLinkingTemporarilyBlocked": "الربط متوقف مؤقتاً",
+  "guardianLinkingFailedTitle": "تعذر ربط ولي الأمر",
+  "guardianLinkingTimeoutMessage": "استغرق ربط ولي الأمر وقتاً طويلاً. تحقق من الاتصال وحاول مجدداً، أو تابع بدون ولي أمر الآن.",
+  "splashSubtitle": "اقرأ، احفظ، راجع، وانمُ مع القرآن.",
+  "splashFeatureRead": "اقرأ",
+  "splashFeatureMemorize": "احفظ",
+  "splashFeatureReview": "راجع",
+  "splashFeatureGrow": "انمُ",
+  "onboardingWelcomeTitle": "مرحباً بك في تالية",
+  "onboardingWelcomeSubtitle": "رحلة قرآنية متكاملة للقراءة اليومية والحفظ والمراجعة والأذكار والتقدم المستمر.",
+  "onboardingUserTypeTitle": "من سيستخدم تالية؟",
+  "onboardingUserTypeSubtitle": "اختر التجربة المناسبة لهذا الجهاز. يمكنك تغيير مسار الحفظ لاحقاً من الإعدادات.",
+  "onboardingUserTypeAdult": "بالغ",
+  "onboardingUserTypeAdultDesc": "مساحة قرآنية مركزة للقراءة والحفظ والمراجعة ومتابعة التقدم.",
+  "onboardingUserTypeChild": "طفل",
+  "onboardingUserTypeChildDesc": "رحلة حفظ أبسط بالمهام والتكرار والنجوم والمكافآت.",
+  "onboardingMainGoalTitle": "اختر هدفك الرئيسي",
+  "onboardingMainGoalSubtitle": "هذا يحدد أول وجهة بعد الإعداد، مع بقاء باقي تالية متاحاً.",
+  "onboardingGoalDailyReading": "قراءة يومية",
+  "onboardingGoalDailyReadingDesc": "ابدأ بقارئ القرآن وورد يومي واضح.",
+  "onboardingGoalMemorizationDesc": "جهّز نظام الحفظ لمسار بالغ منظم.",
+  "onboardingGoalSmartReview": "مراجعة وتحسين التثبيت",
+  "onboardingGoalSmartReviewDesc": "سنحفظ المراجعة كهدف ونبدأ من إعداد الحفظ الحالي.",
+  "onboardingGoalAzkarDesc": "ابدأ بأذكار الصباح والمساء والأذكار العامة.",
+  "onboardingGoalKidsJourney": "رحلة القرآن للأطفال",
+  "onboardingGoalKidsJourneyDesc": "ابدأ مسار الحفظ المناسب للأطفال.",
+  "onboardingGoalKidsRewards": "حفظ مع المكافآت",
+  "onboardingGoalKidsRewardsDesc": "استخدم الاستماع والتكرار والنقاط والنجوم لتشجيع الاستمرار.",
+  "onboardingSmartReviewNoteTitle": "إعداد المراجعة",
+  "onboardingSmartReviewNoteDesc": "سيحفظ تالية المراجعة كهدف ويوجهك إلى إعداد الحفظ الحالي. لا يتم تفعيل مدرب ذكي مستقل في هذه الخطوة.",
+  "onboardingHighlightsTitle": "ماذا يقدم تالية؟",
+  "onboardingHighlightsAdultSubtitle": "مجموعة أدوات مركزة لبناء عادة قرآنية ثابتة.",
+  "onboardingHighlightsChildSubtitle": "رحلة طفل محمية مع استمرار وضع الضيف المحلي.",
+  "onboardingFeatureQuranReader": "قارئ القرآن",
+  "onboardingFeatureQuranReaderDesc": "اقرأ بتجربة قريبة من المصحف وبأسلوب هادئ.",
+  "onboardingFeatureMemorizationPlus": "نظام الحفظ",
+  "onboardingFeatureMemorizationPlusDesc": "استخدم الخطط والتدريب اليومي وأدوات المراجعة الحالية.",
+  "onboardingFeatureKidsJourney": "رحلة أطفال تفاعلية",
+  "onboardingFeatureKidsJourneyDesc": "وجّه الطفل عبر مهام صغيرة ومكافآت مشجعة.",
+  "onboardingFeatureProgressCertificates": "التقدم والشهادات",
+  "onboardingFeatureProgressCertificatesDesc": "تابع التقدم بوضوح واحتفل بالإنجازات.",
+  "onboardingFeatureAzkar": "الأذكار",
+  "onboardingFeatureAzkarDesc": "اجعل الذكر اليومي قريباً من روتينك القرآني.",
+  "onboardingFeatureGuardian": "ربط ولي الأمر",
+  "onboardingFeatureGuardianDesc": "متابعة ولي الأمر تتطلب تسجيل الدخول، مع بقاء وضع الطفل الضيف متاحاً.",
+  "onboardingFinalTitle": "الإعداد النهائي",
+  "onboardingFinalSubtitle": "راجع المسار واختر المتابعة محلياً أو تسجيل الدخول.",
+  "onboardingSummaryUserType": "نوع المستخدم",
+  "onboardingSummaryGoal": "الهدف الرئيسي",
+  "onboardingGuardianNoteTitle": "متابعة ولي الأمر",
+  "onboardingGuardianNoteDesc": "ربط ولي الأمر يتطلب تسجيل الدخول. يستطيع الطفل المتابعة كضيف على هذا الجهاز.",
+  "onboardingContinueAsGuest": "المتابعة كضيف",
+  "onboardingSignInCreate": "تسجيل الدخول / إنشاء حساب",
   "onboardingSkip": "تخطي",
   "onboardingStartNow": "ابدأ الآن",
   "onboardingQuranTitle": "تجربة المصحف الحقيقي",
@@ -797,6 +892,7 @@
   "quizPassedLabel": "ناجحة",
   "quizNeedsPracticeLabel": "تحتاج تدريباً",
   "backAction": "العودة",
+  "hifzKidsRedirectedFromAdult": "هذا المسار مخصص للبالغين. سيتم توجيهك لمسار الأطفال.",
   "parentDashboardLastSession": "آخر جلسة",
   "parentDashboardNoSessionsYet": "لا توجد جلسات مسجلة بعد.",
   "parentDashboardSessionSummary": "سورة {surahId} • آية {ayahNumber}\n{repeats} تكرارات • {points} نقطة",
@@ -820,6 +916,11 @@
   "parentDashboardPinMismatch": "رمزا PIN غير متطابقين",
   "parentDashboardPinHelp": "هذا الرمز يحمي لوحة ولي الأمر على هذا الجهاز",
   "parentDashboardPinConfirm": "تأكيد PIN",
+  "parentDashboardCreatePinTitle": "أنشئ رمز ولي الأمر",
+  "parentDashboardSavePinButton": "حفظ الرمز",
+  "parentDashboardEnterPinTitle": "أدخل رمز ولي الأمر",
+  "parentDashboardEnterButton": "دخول",
+  "parentDashboardEnterLinkingCode": "إدخال رمز الربط",
   "parentDashboardResetPin": "إعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد",
   "parentDashboardTodaySummary": "ملخص اليوم",
   "parentDashboardTodayEmpty": "اليوم: لا توجد جلسات بعد. شجعه على جلسة قصيرة.",
@@ -887,25 +988,287 @@
       }
     }
   },
-  "guardianLinkingTemporarilyBlocked": "الربط متوقف مؤقتاً",
-  "guardianLinkingFailedTitle": "تعذر ربط ولي الأمر",
-  "guardianLinkingTimeoutMessage": "استغرق ربط ولي الأمر وقتاً طويلاً. تحقق من الاتصال وحاول مجدداً، أو تابع بدون ولي أمر الآن.",
+  "dailyPlanSettingsTooltip": "إعدادات مسار الحفظ الذكي",
+  "dailyPlanRefreshTooltip": "تحديث الخطة",
+  "dailyPlanHeaderTitle": "خطتك اليومية",
+  "dailyPlanHeaderSummary": "{total} عنصر • {completed} مكتمل",
+  "@dailyPlanHeaderSummary": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      },
+      "completed": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanProgressCount": "{completed} من {total}",
+  "@dailyPlanProgressCount": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanAllDoneShort": "✅ أحسنت! أكملت خطتك اليوم",
+  "dailyPlanRemainingItems": "تبقّى {count} عناصر",
+  "@dailyPlanRemainingItems": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanAyahTitle": "آية {ayahNumber}",
+  "@dailyPlanAyahTitle": {
+    "placeholders": {
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanRecordStats": "قوة: {strength} • مراجعات: {reviews}",
+  "@dailyPlanRecordStats": {
+    "placeholders": {
+      "strength": {
+        "type": "int"
+      },
+      "reviews": {
+        "type": "int"
+      }
+    }
+  },
+  "dailyPlanNewLabel": "جديدة",
+  "dailyPlanEmptyTitle": "أحسنت! لا توجد مراجعات مطلوبة اليوم",
+  "dailyPlanEmptySubtitle": "تفقّد غداً لمتابعة جدولك",
+  "customPlanDeleteConfirmPhrase": "حذف الخطة",
+  "customPlanDeleteTitle": "تأكيد حذف الخطة",
+  "customPlanDeleteKeeps": "سيبقى: الإنجازات، السجل، الشهادات",
+  "customPlanDeleteRemoves": "سيُحذف: الخطة الحالية فقط",
+  "customPlanDeleteInstruction": "اكتب \"حذف الخطة\" لتأكيد العملية.",
+  "customPlanDeleteAction": "تأكيد حذف الخطة",
+  "customPlanSaved": "تم حفظ الخطة بنجاح ✅",
+  "customPlanTitle": "خطتك المخصصة",
+  "customPlanSubtitle": "صمّم نظام حفظ يناسبك",
+  "customPlanName": "اسم الخطة",
+  "customPlanNameHint": "مثال: خطتي لحفظ جزء عمّ",
+  "customPlanNameRequired": "يرجى إدخال اسم للخطة",
+  "customPlanTargetUserTitle": "الخطة لمن؟",
+  "customPlanChildFeaturesNote": "سيتم تفعيل ميزات ولي الأمر والمتابعة تلقائياً.",
+  "customPlanSurahRange": "نطاق السور",
+  "customPlanDailyLoad": "الحِمل اليومي",
+  "customPlanNewAyahsPerDay": "آيات جديدة يومياً",
+  "customPlanAyahUnit": "آية",
+  "customPlanSchedule": "الجدول الزمني",
+  "customPlanDaysPerWeek": "أيام الحفظ في الأسبوع",
+  "customPlanDayUnit": "يوم",
+  "customPlanSessionDuration": "مدة الجلسة",
+  "customPlanMinuteUnit": "دقيقة",
+  "customPlanDifficulty": "مستوى الصعوبة",
+  "customPlanAdvanced": "تخصيص متقدم",
+  "customPlanAdvancedSubtitle": "إعدادات المراجعة القريبة والبعيدة",
+  "customPlanSaveAndStart": "حفظ وبدء الخطة",
+  "customPlanDeleteCurrent": "حذف الخطة الحالية",
+  "customPlanFromSurah": "من سورة",
+  "customPlanToSurah": "إلى سورة",
+  "customPlanFromAyah": "من آية رقم",
+  "customPlanInvalidAyah": "أدخل رقم آية صحيح",
+  "customPlanSurahAyahLimit": "هذه السورة فيها {maxAyah} آيات",
+  "@customPlanSurahAyahLimit": {
+    "placeholders": {
+      "maxAyah": {
+        "type": "int"
+      }
+    }
+  },
+  "customPlanAdult": "كبير",
+  "customPlanChild": "طفل",
+  "customPlanDifficultyEasy": "سهل",
+  "customPlanDifficultyModerate": "متوسط",
+  "customPlanDifficultyChallenging": "صعب",
+  "customPlanNearRevision": "المراجعة القريبة",
+  "customPlanNearRevisionSubtitle": "مراجعة آيات آخر 5 أيام",
+  "customPlanNearRevisionCount": "عدد آيات المراجعة القريبة",
+  "customPlanFarRevision": "المراجعة البعيدة",
+  "customPlanFarRevisionSubtitle": "تكرار ذكي للآيات القديمة",
+  "customPlanFarRevisionCount": "عدد آيات المراجعة البعيدة",
+  "customPlanEstimatedDuration": "المدة المقدّرة للإنهاء",
+  "customPlanApproxWeeks": "{count} أسبوع تقريباً",
+  "@customPlanApproxWeeks": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "customPlanApproxMonths": "{count} شهر تقريباً",
+  "@customPlanApproxMonths": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "customPlanApproxYears": "{count} سنة تقريباً",
+  "@customPlanApproxYears": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
+  "customPlanEstimatedScope": "{surahs} سورة • ~{ayahs} آية",
+  "@customPlanEstimatedScope": {
+    "placeholders": {
+      "surahs": {
+        "type": "int"
+      },
+      "ayahs": {
+        "type": "int"
+      }
+    }
+  },
+  "customPlanQuickPresetTitle": "اختر قالباً سريعاً",
+  "customPlanPresetLight": "خفيف",
+  "customPlanPresetLightDesc": "3 آيات/يوم • 5 أيام • 10 دقائق",
+  "customPlanPresetLightName": "خطة خفيفة",
+  "customPlanPresetBalanced": "متوازن",
+  "customPlanPresetBalancedDesc": "5 آيات/يوم • 6 أيام • 15 دقيقة",
+  "customPlanPresetBalancedName": "خطة متوازنة",
+  "customPlanPresetIntensive": "مكثف",
+  "customPlanPresetIntensiveDesc": "10 آيات/يوم • كل الأسبوع • 30 دقيقة",
+  "customPlanPresetIntensiveName": "خطة مكثفة",
+  "customPlanPresetJuzAmma": "جزء عم",
+  "customPlanPresetJuzAmmaDesc": "من الناس إلى الفيل • 3 آيات/يوم",
+  "customPlanPresetJuzAmmaName": "خطة جزء عم",
+  "customPlanSummaryTitle": "ملخص الخطة",
+  "customPlanSummaryRange": "النطاق: {startSurah} ← {endSurah}",
+  "@customPlanSummaryRange": {
+    "placeholders": {
+      "startSurah": {},
+      "endSurah": {}
+    }
+  },
+  "customPlanSummaryLoad": "{ayahsPerDay} آيات يومياً • {daysPerWeek} أيام أسبوعياً",
+  "@customPlanSummaryLoad": {
+    "placeholders": {
+      "ayahsPerDay": {
+        "type": "int"
+      },
+      "daysPerWeek": {
+        "type": "int"
+      }
+    }
+  },
+  "customPlanSummarySession": "{minutes} دقيقة للجلسة • مستوى {difficulty}",
+  "@customPlanSummarySession": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "difficulty": {}
+    }
+  },
+  "quizAyahNumberTitle": "الآية رقم {ayahNumber}",
+  "@quizAyahNumberTitle": {
+    "placeholders": {
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "quizRecitePrompt": "اضغط على المايكروفون وقم بتسميع الآية",
+  "quizHintLabel": "تلميح: {hint}",
+  "@quizHintLabel": {
+    "placeholders": {
+      "hint": {}
+    }
+  },
+  "quizListenAyahTitle": "استمع للآية",
+  "quizListenAyahSubtitle": "استمع قبل التسميع لتتذكر النطق الصحيح",
+  "quizListeningStatus": "جاري الاستماع...",
+  "quizTapToSpeak": "انقر للتحدث",
+  "quizTapToRecordAgain": "انقر لإعادة التسجيل",
+  "quizRecordBeforeChecking": "يرجى تسجيل الصوت أولاً قبل التحقق",
+  "quizCheckAnswer": "تحقق من الإجابة",
+  "quizManualEvaluation": "التقييم اليدوي",
+  "quizManualEvaluationHelp": "إذا لم يعمل الميكروفون، قيّم التسميع بنفس المقياس المستخدم في التطبيق.",
+  "quizRetryMicrophone": "إعادة محاولة الميكروفون",
+  "quizSkipAyah": "تخطي الآية",
+  "quizAnswerPassedTitle": "أحسنت! ✨",
+  "quizAnswerNeedsPracticeTitle": "نراجعها معاً 💪",
+  "quizMatchPercent": "نسبة التطابق: {percent}%",
+  "@quizMatchPercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "quizCorrectText": "النص الصحيح",
+  "memorizationPathSelectionFailedTitle": "تعذر حفظ اختيارك",
+  "memorizationPathConfirmTitle": "ماذا سيحدث بعد ذلك؟",
+  "memorizationPathCanChangeLater": "يمكن تغييره من الإعدادات لاحقاً بدون فقدان تقدمك.",
+  "parentDashboardLinkAction": "ربط",
+  "parentDashboardRemoteRewardTitle": "مكافأة للطفل",
+  "parentDashboardScanChildCodeTitle": "مسح رمز الطفل",
+  "homeParentToolsTitle": "أدوات ولي الأمر",
+  "homeParentToolsSubtitle": "تابع تقدم طفلك ومكافآته",
+  "homeParentToolsAction": "فتح لوحة ولي الأمر",
+  "guestUpgradeTitle": "إدارة الحساب",
+  "guestUpgradeMessage": "أنشئ حساباً لإدارة الحساب وميزات العائلة.",
+  "guestUpgradeLocalProgress": "يبقى تقدمك المحلي على هذا الجهاز.",
+  "parentDashboardGuestSubtitle": "سجّل دخولك لإدارة حسابك والوصول إلى أدوات ولي الأمر. يبقى تقدمك المحلي على هذا الجهاز.",
+  "kidsQuranTitle": "قرآن الأطفال",
+  "kidsQuranSubtitle": "اقرأ بهدوء وتنقل بين الصفحات على مهلك.",
+  "kidsQuranBackToHome": "العودة لصفحة الأطفال",
+  "kidsQuranPageLabel": "صفحة {pageNumber}",
+  "@kidsQuranPageLabel": {
+    "placeholders": {
+      "pageNumber": {
+        "type": "int"
+      }
+    }
+  },
+  "kidsQuranSwipeHint": "اسحب بهدوء للصفحة التالية",
   "parentDashboardPinInvalid": "أدخل رمزًا من 4 أرقام",
   "parentDashboardPinIncorrect": "رمز غير صحيح",
+  "parentDashboardLinking": "جارٍ التحقق من رمز الربط…",
+  "parentDashboardUnlinking": "جارٍ إزالة ربط ولي الأمر…",
   "parentDashboardRewardAdded": "تمت إضافة المكافأة",
   "parentDashboardRemoteRewardAdded": "تم إرسال المكافأة للطفل",
   "parentDashboardChildLinked": "تم ربط الطفل بنجاح",
   "parentDashboardReminderSaved": "تم تحديث التذكير",
   "guardianLinkingSlowHint": "تستغرق العملية وقتًا أطول من المعتاد. يمكنك المتابعة والربط لاحقًا.",
+  "bookmarkSaveError": "حدث خطأ أثناء حفظ العلامة المرجعية",
+  "longPressToUndo": "اضغط مطولاً للتراجع",
   "hifzReviewPassedTitle": "تم اجتياز المراجعة",
   "hifzReviewTimeTitle": "حان وقت المراجعة",
   "hifzReviewFullSurahHint": "راجع السورة كاملة قبل إنهائها",
   "hifzReviewRangeHint": "راجع الآيات من {startAyah} إلى {endAyah} قبل الانتقال للآية التالية",
-  "@hifzReviewRangeHint": {"placeholders": {"startAyah": {"type": "int"}, "endAyah": {"type": "int"}}},
+  "@hifzReviewRangeHint": {
+    "placeholders": {
+      "startAyah": {
+        "type": "int"
+      },
+      "endAyah": {
+        "type": "int"
+      }
+    }
+  },
   "hifzEvaluatingReview": "جارِ تقييم المراجعة...",
   "hifzLeaveSessionMessage": "هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.",
   "hifzAyahNumberLabel": "آية {ayahNumber}",
-  "@hifzAyahNumberLabel": {"placeholders": {"ayahNumber": {"type": "int"}}},
+  "@hifzAyahNumberLabel": {
+    "placeholders": {
+      "ayahNumber": {
+        "type": "int"
+      }
+    }
+  },
   "hifzEvaluatingAyah": "جارِ التقييم...",
   "hifzRecordingAyahHint": "يتم التسجيل، اقرأ الآية من حفظك...",
   "hifzExcellentMemorization": "ممتاز! حفظ متقن.",
@@ -916,5 +1279,28 @@
   "hifzFinishSession": "إنهاء الجلسة",
   "hifzNextAyah": "الآية التالية",
   "hifzReviewNotPassed": "لم يتم اجتياز المراجعة. حاول مرة أخرى.",
-  "hifzStartRecitation": "ابدأ التسميع"
+  "hifzStartRecitation": "ابدأ التسميع",
+  "hifzAudioPlaybackFailed": "فشل تشغيل الصوت. تحقق من الاتصال بالإنترنت.",
+  "hifzReviewSaveFailed": "فشل حفظ تقدم المراجعة. حاول مرة أخرى.",
+  "hifzMemorizationSaveFailed": "فشل حفظ تقدم الحفظ. حاول مرة أخرى.",
+  "hifzSurahLockedMessage": "هذه السورة مقفلة حالياً. أكمل حفظ سورة {surahName} أولاً لفتحها.",
+  "@hifzSurahLockedMessage": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      }
+    }
+  },
+  "kidsAudioPlaybackFailed": "لم يعمل الصوت الآن. جرّب مرة أخرى أو اطلب من ولي الأمر الاتصال بالإنترنت.",
+  "quizSurahNotFound": "لم يتم العثور على بيانات السورة",
+  "quizAyahsOutsidePlan": "لا يمكن اختبار آيات خارج خطتك أو سجلاتك",
+  "quizNoMemorizedAyahs": "لا توجد آيات محفوظة لاختبارها في هذه السورة",
+  "quizUnexpectedError": "حدث خطأ: {error}",
+  "@quizUnexpectedError": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  }
 }

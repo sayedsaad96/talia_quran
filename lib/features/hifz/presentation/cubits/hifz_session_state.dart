@@ -15,6 +15,14 @@ class HifzSessionLoading extends HifzSessionState {
   const HifzSessionLoading();
 }
 
+enum HifzSpeechIssue {
+  permissionDenied,
+  permissionPermanentlyDenied,
+  unavailable,
+}
+
+enum HifzSessionIssue { kidsRedirectedFromAdultHifz }
+
 class HifzSessionLoaded extends HifzSessionState {
   const HifzSessionLoaded({
     required this.surah,
@@ -27,6 +35,7 @@ class HifzSessionLoaded extends HifzSessionState {
     this.similarityScore,
     this.isEvaluating = false,
     this.audioError,
+    this.speechIssue,
     this.passThreshold = 0.85, // BUG-2 FIX: dynamic threshold from settings
     this.segments = const [],
     this.passedCheckpointKeys = const {},
@@ -47,6 +56,7 @@ class HifzSessionLoaded extends HifzSessionState {
   final double? similarityScore;
   final bool isEvaluating;
   final String? audioError;
+  final HifzSpeechIssue? speechIssue;
   final double passThreshold;
   final List<HifzSegment> segments;
   final Set<String> passedCheckpointKeys;
@@ -67,6 +77,8 @@ class HifzSessionLoaded extends HifzSessionState {
     bool? isEvaluating,
     String? audioError,
     bool clearAudioError = false,
+    HifzSpeechIssue? speechIssue,
+    bool clearSpeechIssue = false,
     double? passThreshold,
     List<HifzSegment>? segments,
     Set<String>? passedCheckpointKeys,
@@ -89,6 +101,7 @@ class HifzSessionLoaded extends HifzSessionState {
           : (similarityScore ?? this.similarityScore),
       isEvaluating: isEvaluating ?? this.isEvaluating,
       audioError: clearAudioError ? null : (audioError ?? this.audioError),
+      speechIssue: clearSpeechIssue ? null : (speechIssue ?? this.speechIssue),
       passThreshold: passThreshold ?? this.passThreshold,
       segments: segments ?? this.segments,
       passedCheckpointKeys: passedCheckpointKeys ?? this.passedCheckpointKeys,
@@ -115,6 +128,7 @@ class HifzSessionLoaded extends HifzSessionState {
     similarityScore,
     isEvaluating,
     audioError,
+    speechIssue,
     passThreshold,
     segments,
     passedCheckpointKeys,
@@ -125,14 +139,19 @@ class HifzSessionLoaded extends HifzSessionState {
 }
 
 class HifzSessionError extends HifzSessionState {
-  const HifzSessionError(this.message, {this.redirectToKidsHome = false});
+  const HifzSessionError(
+    this.message, {
+    this.redirectToKidsHome = false,
+    this.issue,
+  });
   final String message;
+  final HifzSessionIssue? issue;
 
   /// T-06: When true the UI should redirect the user to the kids-home screen
   /// instead of showing a generic error dialog.
   final bool redirectToKidsHome;
   @override
-  List<Object?> get props => [message, redirectToKidsHome];
+  List<Object?> get props => [message, redirectToKidsHome, issue];
 }
 
 /// Emitted (briefly) when one or more certificates are newly earned.

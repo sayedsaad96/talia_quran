@@ -55,7 +55,10 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
           ? AppColors.darkBackground
           : AppColors.lightBackground,
       appBar: AppBar(
-        title: Text('لوحة ولي الأمر', style: AppTypography.titleLarge),
+        title: Text(
+          context.l10n.parentDashboardTitle,
+          style: AppTypography.titleLarge,
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
@@ -90,6 +93,14 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
               state is ParentDashboardInitial) {
             return const Center(child: LoadingWidget());
           }
+          if (state is ParentDashboardLinking ||
+              state is ParentDashboardUnlinking) {
+            return _ParentDashboardBusy(
+              message: state is ParentDashboardLinking
+                  ? context.l10n.parentDashboardLinking
+                  : context.l10n.parentDashboardUnlinking,
+            );
+          }
           if (state is ParentDashboardError) {
             return ErrorStateWidget(
               message: state.message,
@@ -100,8 +111,8 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
           }
           if (state is ParentDashboardNeedsPin) {
             return _PinGate(
-              title: 'أنشئ رمز ولي الأمر',
-              buttonText: 'حفظ الرمز',
+              title: context.l10n.parentDashboardCreatePinTitle,
+              buttonText: context.l10n.parentDashboardSavePinButton,
               controller: _pinController,
               requiresConfirmation: true,
               onSubmit: (pin) => context.read<ParentDashboardCubit>().setPin(
@@ -112,8 +123,8 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
           }
           if (state is ParentDashboardLocked) {
             return _PinGate(
-              title: 'أدخل رمز ولي الأمر',
-              buttonText: 'دخول',
+              title: context.l10n.parentDashboardEnterPinTitle,
+              buttonText: context.l10n.parentDashboardEnterButton,
               controller: _pinController,
               onSubmit: (pin) => context.read<ParentDashboardCubit>().unlock(
                 pin,
@@ -216,7 +227,7 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
     final token = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('إدخال رمز الربط'),
+        title: Text(context.l10n.parentDashboardEnterLinkingCode),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(hintText: 'talia-kids-link:...'),
@@ -224,11 +235,11 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: const Text('ربط'),
+            child: Text(context.l10n.parentDashboardLinkAction),
           ),
         ],
       ),
@@ -250,15 +261,17 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
     final title = await showDialog<String>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('مكافأة للطفل'),
+        title: Text(context.l10n.parentDashboardRemoteRewardTitle),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: 'مثال: نزهة قصيرة'),
+          decoration: InputDecoration(
+            hintText: context.l10n.parentDashboardRewardHint,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('إلغاء'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, controller.text.trim()),
@@ -329,6 +342,35 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
           FilledButton(
             onPressed: () => Navigator.pop(context),
             child: Text(context.l10n.parentDashboardDone),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ParentDashboardBusy extends StatelessWidget {
+  const _ParentDashboardBusy({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const LoadingWidget(),
+          const SizedBox(height: AppSpacing.lg),
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.pagePadding,
+            ),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: AppTypography.bodyMedium,
+            ),
           ),
         ],
       ),
@@ -490,24 +532,47 @@ class _TodaySummaryCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.md),
           Text(sentence, style: AppTypography.bodyMedium),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: onAddReward,
-                  icon: const Icon(Icons.card_giftcard_rounded),
-                  label: Text(context.l10n.parentDashboardAddReward),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: onShowLastLog,
-                  icon: const Icon(Icons.history_rounded),
-                  label: Text(context.l10n.parentDashboardShowLastSession),
-                ),
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth < 360) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: onAddReward,
+                      icon: const Icon(Icons.card_giftcard_rounded),
+                      label: Text(context.l10n.parentDashboardAddReward),
+                    ),
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: onShowLastLog,
+                      icon: const Icon(Icons.history_rounded),
+                      label: Text(context.l10n.parentDashboardShowLastSession),
+                    ),
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(
+                    child: FilledButton.icon(
+                      onPressed: onAddReward,
+                      icon: const Icon(Icons.card_giftcard_rounded),
+                      label: Text(context.l10n.parentDashboardAddReward),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onShowLastLog,
+                      icon: const Icon(Icons.history_rounded),
+                      label: Text(context.l10n.parentDashboardShowLastSession),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -815,7 +880,9 @@ class _QrScannerPageState extends State<_QrScannerPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('مسح رمز الطفل')),
+      appBar: AppBar(
+        title: Text(context.l10n.parentDashboardScanChildCodeTitle),
+      ),
       body: MobileScanner(
         onDetect: (capture) {
           if (_done) return;

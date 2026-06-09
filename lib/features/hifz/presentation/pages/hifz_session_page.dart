@@ -4,10 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -104,7 +106,7 @@ class _HifzSessionView extends StatelessWidget {
               return const Center(child: LoadingWidget());
             }
             if (state is HifzSessionError) {
-              return ErrorStateWidget(message: state.message);
+              return ErrorStateWidget(message: _errorMessage(context, state));
             }
             if (state is HifzSessionLoaded) {
               return _FullSurahSession(state: state, isDark: isDark);
@@ -123,6 +125,14 @@ class _HifzSessionView extends StatelessWidget {
         '/hifz/session?surahId=${state.surah.id}&startAyah=${ayah.numberInSurah}',
       ),
     );
+  }
+
+  String _errorMessage(BuildContext context, HifzSessionError state) {
+    return switch (state.issue) {
+      HifzSessionIssue.kidsRedirectedFromAdultHifz =>
+        context.l10n.hifzKidsRedirectedFromAdult,
+      null => context.localizedCubitMessage(state.message),
+    };
   }
 }
 
@@ -357,7 +367,7 @@ class _FullSurahSession extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            state.audioError!,
+                            context.localizedCubitMessage(state.audioError!),
                             style: AppTypography.bodySmall.copyWith(
                               color: Colors.red,
                             ),
@@ -366,6 +376,9 @@ class _FullSurahSession extends StatelessWidget {
                       ],
                     ),
                   ),
+
+                if (state.speechIssue != null)
+                  _SpeechIssueBanner(issue: state.speechIssue!),
 
                 // Controls Area
                 if (!hasCheckpoint &&
@@ -523,6 +536,78 @@ class _FullSurahSession extends StatelessWidget {
   }
 }
 
+class _SpeechIssueBanner extends StatelessWidget {
+  const _SpeechIssueBanner({required this.issue});
+
+  final HifzSpeechIssue issue;
+
+  @override
+  Widget build(BuildContext context) {
+    final showOpenSettings =
+        issue == HifzSpeechIssue.permissionPermanentlyDenied ||
+        issue == HifzSpeechIssue.unavailable;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.sm),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.error.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+        border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.mic_off_rounded,
+                color: AppColors.error,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  _message(context),
+                  style: AppTypography.bodySmall.copyWith(
+                    color: AppColors.error,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            children: [
+              TextButton.icon(
+                onPressed: () =>
+                    context.read<HifzSessionCubit>().startRecording(),
+                icon: const Icon(Icons.refresh_rounded),
+                label: Text(context.l10n.tryAgainAction),
+              ),
+              if (showOpenSettings)
+                TextButton.icon(
+                  onPressed: () => unawaited(openAppSettings()),
+                  icon: const Icon(Icons.settings_rounded),
+                  label: Text(context.l10n.openSettingsAction),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _message(BuildContext context) => switch (issue) {
+    HifzSpeechIssue.permissionDenied => context.l10n.micPermissionError,
+    HifzSpeechIssue.permissionPermanentlyDenied =>
+      context.l10n.micPermissionError,
+    HifzSpeechIssue.unavailable => context.l10n.speechUnavailableError,
+  };
+}
+
 class _EvaluationResult extends StatelessWidget {
   const _EvaluationResult({
     required this.state,
@@ -578,7 +663,7 @@ class _EvaluationResult extends StatelessWidget {
             color: isDark ? Colors.white54 : Colors.black54,
           ),
           textAlign: TextAlign.center,
-          textDirection: context.textDirection,
+          textDirection: TextDirection.rtl,
         ),
       ],
     );
@@ -634,7 +719,7 @@ class _CheckpointReviewCard extends StatelessWidget {
                 ),
           style: AppTypography.bodyLarge.copyWith(color: textColor),
           textAlign: TextAlign.center,
-          textDirection: TextDirection.rtl,
+          textDirection: context.textDirection,
         ),
         if (state.isEvaluating) ...[
           const SizedBox(height: AppSpacing.lg),

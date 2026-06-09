@@ -426,6 +426,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'The app needs microphone permission for voice recitation. Please allow it from device settings.';
 
   @override
+  String get speechUnavailableError =>
+      'Voice recitation is unavailable on this device right now.';
+
+  @override
+  String get openSettingsAction => 'Open Settings';
+
+  @override
   String get account => 'Account';
 
   @override
@@ -527,7 +534,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guestModeWarning =>
-      'Sign in to manage your account and recovery options.';
+      'Sign in to manage your account, recovery, and family features.';
 
   @override
   String get signOutWarning =>
@@ -689,7 +696,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get syncProgressDesc =>
-      'Sign in to manage your account and recovery options';
+      'Sign in to manage your account, recovery, and family features';
 
   @override
   String get later => 'Later';
@@ -801,7 +808,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get backupProgressDesc =>
-      'Sign in from Settings to manage your account';
+      'Sign in from Settings to manage your account and family features';
 
   @override
   String get azkarSubtitle => 'Remember Allah often';
@@ -935,6 +942,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get certificatePdfError => 'An error occurred while creating the PDF';
+
+  @override
+  String get certificateNotFound => 'Certificate not found';
 
   @override
   String shareCertificateJuz(Object juz) {
@@ -1128,6 +1138,93 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memorizationPathReset => 'Memorization path has been reset';
 
   @override
+  String get settingsSectionAccount => 'Account';
+
+  @override
+  String get settingsSectionAppearance => 'Appearance';
+
+  @override
+  String get settingsSectionQuranMemorization => 'Quran & Memorization';
+
+  @override
+  String get settingsSectionKidsGuardian => 'Kids & Guardian';
+
+  @override
+  String get settingsSectionProgressAchievements => 'Progress & Achievements';
+
+  @override
+  String get settingsSectionHelpTutorial => 'Help & Tutorial';
+
+  @override
+  String get settingsSectionPrivacySecurity => 'Privacy & Security';
+
+  @override
+  String get settingsSectionAboutTalia => 'About Talia';
+
+  @override
+  String get settingsGuestStatusTitle => 'Using Talia as guest';
+
+  @override
+  String get settingsGuestStatusSubtitle =>
+      'Your local progress remains on this device. Create an account for account management and family features.';
+
+  @override
+  String get settingsSignInCreateAccount => 'Sign in / Create account';
+
+  @override
+  String get settingsSignedInStatus => 'Signed in to your account';
+
+  @override
+  String get settingsPrivacyPolicySubtitle =>
+      'How your data and privacy are handled';
+
+  @override
+  String get settingsMemorizationPathNotSelected => 'No path selected';
+
+  @override
+  String get settingsMemorizationPathNotSelectedDesc =>
+      'Choose adult or kids memorization when you start Memorization Plus.';
+
+  @override
+  String get settingsResetPathKeeps =>
+      'Keeps: achievements, history, and certificates';
+
+  @override
+  String get settingsResetPathChanges =>
+      'Changes: selected path and current plan';
+
+  @override
+  String get settingsResetPathInstruction => 'Type \"Reset path\" to confirm.';
+
+  @override
+  String get settingsResetPathConfirmPhrase => 'Reset path';
+
+  @override
+  String get settingsDeleteAccountTitle => 'Delete account';
+
+  @override
+  String get settingsDeleteAccountSubtitle => 'Deletes the cloud account only';
+
+  @override
+  String settingsDeleteAccountWarning(Object email) {
+    return 'This deletes the Supabase account for $email and its cloud data.\n\nLocal Quran, Hifz, Kids, and Smart memorization progress on this device will not be deleted.\n\nDo you want to continue?';
+  }
+
+  @override
+  String get settingsAccountDeletedMessage =>
+      'Cloud account deleted. Your local progress remains on this device.';
+
+  @override
+  String settingsVersion(Object version) {
+    return 'Version $version';
+  }
+
+  @override
+  String settingsBuild(Object buildNumber) {
+    return 'Build $buildNumber';
+  }
+
+  @override
   String get resetMemorizationPath => 'Reset / Change path';
 
   @override
@@ -1239,7 +1336,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guardianSignInRequired =>
-      'Guardian linking requires signing in first';
+      'Sign in to access guardian tools. Your local progress remains on this device.';
 
   @override
   String get guardianSignInAction => 'Sign in or create account';
@@ -1248,7 +1345,188 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guardianGuestContinueKids => 'Continue Kids memorization';
 
   @override
-  String get splashSubtitle => 'Quran memorization app';
+  String get guardianLinkingTemporarilyBlocked => 'Linking temporarily blocked';
+
+  @override
+  String get guardianLinkingFailedTitle => 'Failed to link guardian';
+
+  @override
+  String get guardianLinkingTimeoutMessage =>
+      'Guardian linking took too long. Check your connection and try again, or continue without guardian for now.';
+
+  @override
+  String get splashSubtitle =>
+      'Read, memorize, review, and grow with the Quran.';
+
+  @override
+  String get splashFeatureRead => 'Read';
+
+  @override
+  String get splashFeatureMemorize => 'Memorize';
+
+  @override
+  String get splashFeatureReview => 'Review';
+
+  @override
+  String get splashFeatureGrow => 'Grow';
+
+  @override
+  String get onboardingWelcomeTitle => 'Welcome to Talia';
+
+  @override
+  String get onboardingWelcomeSubtitle =>
+      'A complete Quran journey for daily reading, memorization, review, Azkar, and steady progress.';
+
+  @override
+  String get onboardingUserTypeTitle => 'Who is using Talia?';
+
+  @override
+  String get onboardingUserTypeSubtitle =>
+      'Choose the experience that fits this device. You can change memorization paths later from settings.';
+
+  @override
+  String get onboardingUserTypeAdult => 'Adult';
+
+  @override
+  String get onboardingUserTypeAdultDesc =>
+      'A focused Quran workspace for reading, memorization, review, and progress.';
+
+  @override
+  String get onboardingUserTypeChild => 'Child';
+
+  @override
+  String get onboardingUserTypeChildDesc =>
+      'A simpler memorization journey with missions, repetition, stars, and rewards.';
+
+  @override
+  String get onboardingMainGoalTitle => 'Choose your main goal';
+
+  @override
+  String get onboardingMainGoalSubtitle =>
+      'This sets the first destination after setup. The rest of Talia remains available.';
+
+  @override
+  String get onboardingGoalDailyReading => 'Daily Reading';
+
+  @override
+  String get onboardingGoalDailyReadingDesc =>
+      'Start with the Quran reader and a clear daily portion.';
+
+  @override
+  String get onboardingGoalMemorizationDesc =>
+      'Set up Memorization Plus for a structured adult path.';
+
+  @override
+  String get onboardingGoalSmartReview => 'Review / Improve retention';
+
+  @override
+  String get onboardingGoalSmartReviewDesc =>
+      'Save review as your goal and start from the existing memorization setup.';
+
+  @override
+  String get onboardingGoalAzkarDesc =>
+      'Begin with morning, evening, and general Azkar.';
+
+  @override
+  String get onboardingGoalKidsJourney => 'Kids Quran Journey';
+
+  @override
+  String get onboardingGoalKidsJourneyDesc =>
+      'Start the child-friendly Quran memorization path.';
+
+  @override
+  String get onboardingGoalKidsRewards => 'Memorization with rewards';
+
+  @override
+  String get onboardingGoalKidsRewardsDesc =>
+      'Use listening, repetition, points, and stars to encourage consistency.';
+
+  @override
+  String get onboardingSmartReviewNoteTitle => 'Review setup';
+
+  @override
+  String get onboardingSmartReviewNoteDesc =>
+      'Talia will save review as your goal and route you to the existing memorization setup. A separate Smart Coach is not enabled in this step.';
+
+  @override
+  String get onboardingHighlightsTitle => 'What Talia includes';
+
+  @override
+  String get onboardingHighlightsAdultSubtitle =>
+      'A focused set of tools for steady Quran habits.';
+
+  @override
+  String get onboardingHighlightsChildSubtitle =>
+      'A protected child journey with local guest access.';
+
+  @override
+  String get onboardingFeatureQuranReader => 'Quran reader';
+
+  @override
+  String get onboardingFeatureQuranReaderDesc =>
+      'Read from a respectful Mushaf-style experience.';
+
+  @override
+  String get onboardingFeatureMemorizationPlus => 'Memorization Plus';
+
+  @override
+  String get onboardingFeatureMemorizationPlusDesc =>
+      'Use plans, daily practice, and review-adjacent tools.';
+
+  @override
+  String get onboardingFeatureKidsJourney => 'Kids gamified journey';
+
+  @override
+  String get onboardingFeatureKidsJourneyDesc =>
+      'Guide children through small missions with rewards.';
+
+  @override
+  String get onboardingFeatureProgressCertificates =>
+      'Progress and certificates';
+
+  @override
+  String get onboardingFeatureProgressCertificatesDesc =>
+      'Track visible progress and celebrate milestones.';
+
+  @override
+  String get onboardingFeatureAzkar => 'Azkar';
+
+  @override
+  String get onboardingFeatureAzkarDesc =>
+      'Keep daily remembrance close to your Quran routine.';
+
+  @override
+  String get onboardingFeatureGuardian => 'Guardian linking';
+
+  @override
+  String get onboardingFeatureGuardianDesc =>
+      'Guardian follow-up requires sign-in, while child guest mode remains available.';
+
+  @override
+  String get onboardingFinalTitle => 'Final setup';
+
+  @override
+  String get onboardingFinalSubtitle =>
+      'Confirm your path and choose whether to continue locally or sign in.';
+
+  @override
+  String get onboardingSummaryUserType => 'User type';
+
+  @override
+  String get onboardingSummaryGoal => 'Main goal';
+
+  @override
+  String get onboardingGuardianNoteTitle => 'Guardian follow-up';
+
+  @override
+  String get onboardingGuardianNoteDesc =>
+      'Guardian linking requires sign-in. A child can still continue as a guest on this device.';
+
+  @override
+  String get onboardingContinueAsGuest => 'Continue as guest';
+
+  @override
+  String get onboardingSignInCreate => 'Sign in / Create account';
 
   @override
   String get onboardingSkip => 'Skip';
@@ -1888,6 +2166,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get backAction => 'Back';
 
   @override
+  String get hifzKidsRedirectedFromAdult =>
+      'This path is for adults. You will be taken to the Kids path.';
+
+  @override
   String get parentDashboardLastSession => 'Last session';
 
   @override
@@ -1915,6 +2197,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentDashboardPinConfirm => 'Confirm PIN';
+
+  @override
+  String get parentDashboardCreatePinTitle => 'Create parent PIN';
+
+  @override
+  String get parentDashboardSavePinButton => 'Save PIN';
+
+  @override
+  String get parentDashboardEnterPinTitle => 'Enter parent PIN';
+
+  @override
+  String get parentDashboardEnterButton => 'Enter';
+
+  @override
+  String get parentDashboardEnterLinkingCode => 'Enter linking code';
 
   @override
   String get parentDashboardResetPin =>
@@ -2019,20 +2316,411 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get guardianLinkingTemporarilyBlocked => 'Linking temporarily blocked';
+  String get dailyPlanSettingsTooltip => 'Smart memorization path settings';
 
   @override
-  String get guardianLinkingFailedTitle => 'Failed to link guardian';
+  String get dailyPlanRefreshTooltip => 'Refresh plan';
 
   @override
-  String get guardianLinkingTimeoutMessage =>
-      'Guardian linking took too long. Check your connection and try again, or continue without guardian for now.';
+  String get dailyPlanHeaderTitle => 'Today\'s Plan';
+
+  @override
+  String dailyPlanHeaderSummary(int total, int completed) {
+    return '$total items • $completed completed';
+  }
+
+  @override
+  String dailyPlanProgressCount(int completed, int total) {
+    return '$completed of $total';
+  }
+
+  @override
+  String get dailyPlanAllDoneShort =>
+      'Well done! You completed your plan today';
+
+  @override
+  String dailyPlanRemainingItems(int count) {
+    return '$count items remaining';
+  }
+
+  @override
+  String dailyPlanAyahTitle(int ayahNumber) {
+    return 'Ayah $ayahNumber';
+  }
+
+  @override
+  String dailyPlanRecordStats(int strength, int reviews) {
+    return 'Strength: $strength • Reviews: $reviews';
+  }
+
+  @override
+  String get dailyPlanNewLabel => 'New';
+
+  @override
+  String get dailyPlanEmptyTitle => 'Well done! No reviews are due today';
+
+  @override
+  String get dailyPlanEmptySubtitle =>
+      'Check again tomorrow to continue your schedule';
+
+  @override
+  String get customPlanDeleteConfirmPhrase => 'Delete plan';
+
+  @override
+  String get customPlanDeleteTitle => 'Confirm plan deletion';
+
+  @override
+  String get customPlanDeleteKeeps =>
+      'Keeps: achievements, history, and certificates';
+
+  @override
+  String get customPlanDeleteRemoves => 'Deletes: current plan only';
+
+  @override
+  String get customPlanDeleteInstruction => 'Type \"Delete plan\" to confirm.';
+
+  @override
+  String get customPlanDeleteAction => 'Confirm delete';
+
+  @override
+  String get customPlanSaved => 'Plan saved successfully ✅';
+
+  @override
+  String get customPlanTitle => 'Your custom plan';
+
+  @override
+  String get customPlanSubtitle => 'Design a memorization system that fits you';
+
+  @override
+  String get customPlanName => 'Plan name';
+
+  @override
+  String get customPlanNameHint => 'Example: My Juz Amma plan';
+
+  @override
+  String get customPlanNameRequired => 'Enter a plan name';
+
+  @override
+  String get customPlanTargetUserTitle => 'Who is this plan for?';
+
+  @override
+  String get customPlanChildFeaturesNote =>
+      'Parent follow-up features will be enabled automatically.';
+
+  @override
+  String get customPlanSurahRange => 'Surah range';
+
+  @override
+  String get customPlanDailyLoad => 'Daily load';
+
+  @override
+  String get customPlanNewAyahsPerDay => 'New ayahs per day';
+
+  @override
+  String get customPlanAyahUnit => 'ayah';
+
+  @override
+  String get customPlanSchedule => 'Schedule';
+
+  @override
+  String get customPlanDaysPerWeek => 'Memorization days per week';
+
+  @override
+  String get customPlanDayUnit => 'day';
+
+  @override
+  String get customPlanSessionDuration => 'Session duration';
+
+  @override
+  String get customPlanMinuteUnit => 'min';
+
+  @override
+  String get customPlanDifficulty => 'Difficulty level';
+
+  @override
+  String get customPlanAdvanced => 'Advanced settings';
+
+  @override
+  String get customPlanAdvancedSubtitle => 'Near and far review settings';
+
+  @override
+  String get customPlanSaveAndStart => 'Save and start plan';
+
+  @override
+  String get customPlanDeleteCurrent => 'Delete current plan';
+
+  @override
+  String get customPlanFromSurah => 'From Surah';
+
+  @override
+  String get customPlanToSurah => 'To Surah';
+
+  @override
+  String get customPlanFromAyah => 'From ayah number';
+
+  @override
+  String get customPlanInvalidAyah => 'Enter a valid ayah number';
+
+  @override
+  String customPlanSurahAyahLimit(int maxAyah) {
+    return 'This Surah has $maxAyah ayahs';
+  }
+
+  @override
+  String get customPlanAdult => 'Adult';
+
+  @override
+  String get customPlanChild => 'Child';
+
+  @override
+  String get customPlanDifficultyEasy => 'Easy';
+
+  @override
+  String get customPlanDifficultyModerate => 'Moderate';
+
+  @override
+  String get customPlanDifficultyChallenging => 'Challenging';
+
+  @override
+  String get customPlanNearRevision => 'Near review';
+
+  @override
+  String get customPlanNearRevisionSubtitle =>
+      'Review ayahs from the last 5 days';
+
+  @override
+  String get customPlanNearRevisionCount => 'Near review ayah count';
+
+  @override
+  String get customPlanFarRevision => 'Far review';
+
+  @override
+  String get customPlanFarRevisionSubtitle =>
+      'Smart repetition for older ayahs';
+
+  @override
+  String get customPlanFarRevisionCount => 'Far review ayah count';
+
+  @override
+  String get customPlanEstimatedDuration => 'Estimated completion time';
+
+  @override
+  String customPlanApproxWeeks(int count) {
+    return '$count weeks approx.';
+  }
+
+  @override
+  String customPlanApproxMonths(int count) {
+    return '$count months approx.';
+  }
+
+  @override
+  String customPlanApproxYears(String count) {
+    return '$count years approx.';
+  }
+
+  @override
+  String customPlanEstimatedScope(int surahs, int ayahs) {
+    return '$surahs Surahs • ~$ayahs ayahs';
+  }
+
+  @override
+  String get customPlanQuickPresetTitle => 'Choose a quick template';
+
+  @override
+  String get customPlanPresetLight => 'Light';
+
+  @override
+  String get customPlanPresetLightDesc => '3 ayahs/day • 5 days • 10 minutes';
+
+  @override
+  String get customPlanPresetLightName => 'Light plan';
+
+  @override
+  String get customPlanPresetBalanced => 'Balanced';
+
+  @override
+  String get customPlanPresetBalancedDesc =>
+      '5 ayahs/day • 6 days • 15 minutes';
+
+  @override
+  String get customPlanPresetBalancedName => 'Balanced plan';
+
+  @override
+  String get customPlanPresetIntensive => 'Intensive';
+
+  @override
+  String get customPlanPresetIntensiveDesc =>
+      '10 ayahs/day • every day • 30 minutes';
+
+  @override
+  String get customPlanPresetIntensiveName => 'Intensive plan';
+
+  @override
+  String get customPlanPresetJuzAmma => 'Juz Amma';
+
+  @override
+  String get customPlanPresetJuzAmmaDesc =>
+      'From An-Nas to Al-Fil • 3 ayahs/day';
+
+  @override
+  String get customPlanPresetJuzAmmaName => 'Juz Amma plan';
+
+  @override
+  String get customPlanSummaryTitle => 'Plan summary';
+
+  @override
+  String customPlanSummaryRange(Object startSurah, Object endSurah) {
+    return 'Range: $startSurah → $endSurah';
+  }
+
+  @override
+  String customPlanSummaryLoad(int ayahsPerDay, int daysPerWeek) {
+    return '$ayahsPerDay ayahs daily • $daysPerWeek days weekly';
+  }
+
+  @override
+  String customPlanSummarySession(int minutes, Object difficulty) {
+    return '$minutes minutes per session • $difficulty level';
+  }
+
+  @override
+  String quizAyahNumberTitle(int ayahNumber) {
+    return 'Ayah $ayahNumber';
+  }
+
+  @override
+  String get quizRecitePrompt => 'Tap the microphone and recite the ayah';
+
+  @override
+  String quizHintLabel(Object hint) {
+    return 'Hint: $hint';
+  }
+
+  @override
+  String get quizListenAyahTitle => 'Listen to the ayah';
+
+  @override
+  String get quizListenAyahSubtitle =>
+      'Listen before reciting to remember the correct pronunciation';
+
+  @override
+  String get quizListeningStatus => 'Listening...';
+
+  @override
+  String get quizTapToSpeak => 'Tap to speak';
+
+  @override
+  String get quizTapToRecordAgain => 'Tap to record again';
+
+  @override
+  String get quizRecordBeforeChecking =>
+      'Please record your voice before checking';
+
+  @override
+  String get quizCheckAnswer => 'Check answer';
+
+  @override
+  String get quizManualEvaluation => 'Manual evaluation';
+
+  @override
+  String get quizManualEvaluationHelp =>
+      'If the microphone does not work, rate the recitation using the same scale as the app.';
+
+  @override
+  String get quizRetryMicrophone => 'Retry microphone';
+
+  @override
+  String get quizSkipAyah => 'Skip ayah';
+
+  @override
+  String get quizAnswerPassedTitle => 'Well done! ✨';
+
+  @override
+  String get quizAnswerNeedsPracticeTitle => 'Let\'s review it together 💪';
+
+  @override
+  String quizMatchPercent(int percent) {
+    return 'Match: $percent%';
+  }
+
+  @override
+  String get quizCorrectText => 'Correct text';
+
+  @override
+  String get memorizationPathSelectionFailedTitle =>
+      'Could not save your choice';
+
+  @override
+  String get memorizationPathConfirmTitle => 'What happens next?';
+
+  @override
+  String get memorizationPathCanChangeLater =>
+      'You can change this later from Settings without losing progress.';
+
+  @override
+  String get parentDashboardLinkAction => 'Link';
+
+  @override
+  String get parentDashboardRemoteRewardTitle => 'Reward for the child';
+
+  @override
+  String get parentDashboardScanChildCodeTitle => 'Scan child code';
+
+  @override
+  String get homeParentToolsTitle => 'Parent / Guardian Tools';
+
+  @override
+  String get homeParentToolsSubtitle =>
+      'Monitor your child’s progress and rewards';
+
+  @override
+  String get homeParentToolsAction => 'Open Parent Dashboard';
+
+  @override
+  String get guestUpgradeTitle => 'Manage your account';
+
+  @override
+  String get guestUpgradeMessage =>
+      'Create an account for account management and family features.';
+
+  @override
+  String get guestUpgradeLocalProgress =>
+      'Your local progress remains on this device.';
+
+  @override
+  String get parentDashboardGuestSubtitle =>
+      'Sign in to manage your account and access guardian tools. Your local progress remains on this device.';
+
+  @override
+  String get kidsQuranTitle => 'Kids Quran';
+
+  @override
+  String get kidsQuranSubtitle =>
+      'Read quietly and move between pages at your pace.';
+
+  @override
+  String get kidsQuranBackToHome => 'Back to Kids Home';
+
+  @override
+  String kidsQuranPageLabel(int pageNumber) {
+    return 'Page $pageNumber';
+  }
+
+  @override
+  String get kidsQuranSwipeHint => 'Swipe gently for the next page';
 
   @override
   String get parentDashboardPinInvalid => 'Enter a 4-digit code';
 
   @override
   String get parentDashboardPinIncorrect => 'Incorrect code';
+
+  @override
+  String get parentDashboardLinking => 'Verifying pairing code…';
+
+  @override
+  String get parentDashboardUnlinking => 'Removing guardian link…';
 
   @override
   String get parentDashboardRewardAdded => 'Reward added';
@@ -2049,6 +2737,12 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get guardianLinkingSlowHint =>
       'This is taking longer than expected. You can continue and link later.';
+
+  @override
+  String get bookmarkSaveError => 'Failed to save bookmark';
+
+  @override
+  String get longPressToUndo => 'Long-press to undo';
 
   @override
   String get hifzReviewPassedTitle => 'Review passed';
@@ -2110,4 +2804,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hifzStartRecitation => 'Start recitation';
+
+  @override
+  String get hifzAudioPlaybackFailed =>
+      'Audio playback failed. Check your internet connection.';
+
+  @override
+  String get hifzReviewSaveFailed =>
+      'Failed to save review progress. Try again.';
+
+  @override
+  String get hifzMemorizationSaveFailed =>
+      'Failed to save memorization progress. Try again.';
+
+  @override
+  String hifzSurahLockedMessage(String surahName) {
+    return 'This surah is locked. Complete $surahName first to unlock it.';
+  }
+
+  @override
+  String get kidsAudioPlaybackFailed =>
+      'Audio didn\'t work. Try again or ask a parent to check the internet connection.';
+
+  @override
+  String get quizSurahNotFound => 'Surah data not found';
+
+  @override
+  String get quizAyahsOutsidePlan =>
+      'Cannot quiz ayahs outside your plan or records';
+
+  @override
+  String get quizNoMemorizedAyahs => 'No memorized ayahs to quiz in this surah';
+
+  @override
+  String quizUnexpectedError(String error) {
+    return 'Something went wrong: $error';
+  }
 }

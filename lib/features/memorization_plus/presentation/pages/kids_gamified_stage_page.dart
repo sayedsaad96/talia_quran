@@ -6,6 +6,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../navigation/memorization_navigation_resolver.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_stage_details.dart';
 
@@ -28,12 +29,30 @@ class KidsGamifiedStagePage extends StatelessWidget {
     return KidsGamifiedStageContent(
       stage: stage,
       surahName: resolvedSurahName,
-      onBack: () => context.canPop() ? context.pop() : context.go('/'),
-      onStartMission: onStartMission ?? () => _startMission(context, stage),
+      onBack: () => context.canPop()
+          ? context.pop()
+          : context.go(
+              MemorizationNavigationResolver.kidsHomeFallbackLocation(
+                stage.surahId,
+              ),
+            ),
+      onStartMission: stage.isUnlocked
+          ? (onStartMission ?? () => _startMission(context, stage))
+          : null,
+    );
+  }
+
+  void _showLockedStageMessage(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(context.l10n.kidsGamifiedLockedStage)),
     );
   }
 
   void _startMission(BuildContext context, KidsJourneyStage stage) {
+    if (!stage.isUnlocked) {
+      _showLockedStageMessage(context);
+      return;
+    }
     final startAyah = stage.nextAyahToStart;
     context.push(
       '${AppRoutes.memorizationPlusKids}?surahId=${stage.surahId}&ayahNumber=$startAyah',
@@ -54,7 +73,7 @@ class KidsGamifiedStageContent extends StatelessWidget {
   final KidsJourneyStage stage;
   final String surahName;
   final VoidCallback onBack;
-  final VoidCallback onStartMission;
+  final VoidCallback? onStartMission;
 
   @override
   Widget build(BuildContext context) {

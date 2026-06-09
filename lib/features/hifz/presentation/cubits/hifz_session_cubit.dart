@@ -2,11 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'dart:async';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:string_similarity/string_similarity.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import '../../../../core/constants/speech_constants.dart';
+import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../domain/hifz_unlock_rules.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../quran/domain/usecases/get_surahs_usecase.dart';
@@ -89,7 +92,34 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
   bool _speechEnabled = false;
 
   Future<void> _initSpeech() async {
-    _speechEnabled = await _speechToText.initialize();
+    try {
+      _speechEnabled = await _speechToText.initialize(
+        onError: _handleSpeechError,
+        onStatus: _handleSpeechStatus,
+      );
+    } catch (e, stack) {
+      _speechEnabled = false;
+      TaliaLogger.e('Failed to initialize speech recognition', e, stack);
+    }
+  }
+
+  void _handleSpeechError(SpeechRecognitionError error) {
+    if (isClosed || state is! HifzSessionLoaded) return;
+    final current = state as HifzSessionLoaded;
+    emit(
+      current.copyWith(
+        isRecording: false,
+        speechIssue: error.permanent
+            ? HifzSpeechIssue.unavailable
+            : HifzSpeechIssue.permissionDenied,
+      ),
+    );
+  }
+
+  void _handleSpeechStatus(String status) {
+    if (status == 'notListening' || status == 'done') {
+      TaliaLogger.d('Speech recognition status: $status');
+    }
   }
 
   AyahProgressModel _toProgressModel(AyahProgress progress) {
@@ -116,8 +146,9 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
       if (isKids) {
         emit(
           const HifzSessionError(
-            'هذا المسار مخصص للبالغين. سيتم توجيهك لمسار الأطفال.',
+            '',
             redirectToKidsHome: true,
+            issue: HifzSessionIssue.kidsRedirectedFromAdultHifz,
           ),
         );
         return;
@@ -275,7 +306,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
       emit(
         st.copyWith(
           isPlaying: false,
-          audioError: 'فشل تشغيل الصوت. تحقق من الاتصال بالإنترنت.',
+          audioError: CubitMessageCodes.hifzAudioPlaybackFailed,
         ),
       );
       // Clear the error after showing it
@@ -318,7 +349,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     if (targetIndex <= 0) return null;
 
     final requiredSurah = orderedSurahs[targetIndex - 1];
-    return 'هذه السورة مقفلة حالياً. أكمل حفظ سورة ${requiredSurah.nameAr} أولاً لفتحها.';
+    return '${CubitMessageCodes.hifzSurahLockedPrefix}${requiredSurah.nameAr}|${requiredSurah.nameEn}';
   }
 
   Future<void> pauseAudio() async {
@@ -338,19 +369,13 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     if (!status.isGranted) {
       status = await Permission.microphone.request();
       if (!status.isGranted) {
-        // UX-013: Emit error so UI can guide the user
         emit(
           st.copyWith(
-            audioError:
-                'يحتاج التطبيق إذن الميكروفون للتسميع الصوتي. يرجى السماح من إعدادات الجهاز.',
+            speechIssue: status.isPermanentlyDenied
+                ? HifzSpeechIssue.permissionPermanentlyDenied
+                : HifzSpeechIssue.permissionDenied,
           ),
         );
-        Future.delayed(const Duration(seconds: 5), () {
-          if (isClosed) return;
-          if (state is HifzSessionLoaded) {
-            emit((state as HifzSessionLoaded).copyWith(clearAudioError: true));
-          }
-        });
         return;
       }
     }
@@ -365,6 +390,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
           isRecording: true,
           clearScore: true,
           recognizedText: '',
+          clearSpeechIssue: true,
           clearCompletedCheckpoint: true,
           isCheckpointReviewActive: st.requiredCheckpoint != null,
         ),
@@ -379,11 +405,13 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
             );
           }
         },
-        localeId: 'ar-SA',
+        localeId: kArabicSpeechLocaleId,
         pauseFor: const Duration(
           seconds: 5,
         ), // auto-stop if silent for 5 seconds
       );
+    } else {
+      emit(st.copyWith(speechIssue: HifzSpeechIssue.unavailable));
     }
   }
 
@@ -444,7 +472,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
           emit(
             st.copyWith(
               isEvaluating: false,
-              audioError: 'فشل حفظ تقدم المراجعة. حاول مرة أخرى.',
+              audioError: CubitMessageCodes.hifzReviewSaveFailed,
               isCheckpointReviewActive: false,
             ),
           );
@@ -493,7 +521,7 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
           emit(
             st.copyWith(
               isEvaluating: false,
-              audioError: 'فشل حفظ تقدم الحفظ. حاول مرة أخرى.',
+              audioError: CubitMessageCodes.hifzMemorizationSaveFailed,
             ),
           );
           Future.delayed(const Duration(seconds: 4), () {
