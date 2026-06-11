@@ -48,12 +48,9 @@ class AuthCubit extends Cubit<AuthState> {
       displayName: displayName,
     );
     if (isClosed) return;
-    result.fold(
-      (failure) => emit(AuthError(failure.toString())),
-      (_) {
-        // Auth state stream emits AuthAuthenticated when Supabase session updates.
-      },
-    );
+    result.fold((failure) => emit(AuthError(failure.toString())), (_) {
+      // Auth state stream emits AuthAuthenticated when Supabase session updates.
+    });
   }
 
   Future<void> signIn({required String email, required String password}) async {
@@ -63,24 +60,18 @@ class AuthCubit extends Cubit<AuthState> {
       password: password,
     );
     if (isClosed) return;
-    result.fold(
-      (failure) => emit(AuthError(failure.toString())),
-      (_) {
-        // Auth state stream emits AuthAuthenticated when Supabase session updates.
-      },
-    );
+    result.fold((failure) => emit(AuthError(failure.toString())), (_) {
+      // Auth state stream emits AuthAuthenticated when Supabase session updates.
+    });
   }
 
   Future<void> signOut() async {
     emit(const AuthLoading());
     final result = await _authRepository.signOut();
     if (isClosed) return;
-    result.fold(
-      (failure) => emit(AuthError(failure.toString())),
-      (_) {
-        // Auth state stream emits AuthUnauthenticated when Supabase session clears.
-      },
-    );
+    result.fold((failure) => emit(AuthError(failure.toString())), (_) {
+      // Auth state stream emits AuthUnauthenticated when Supabase session clears.
+    });
   }
 
   Future<void> deleteAccount() async {

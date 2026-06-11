@@ -128,34 +128,6 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
           as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);
 
   @override
-  _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> resetPassword(String? email) =>
-      (super.noSuchMethod(
-            Invocation.method(#resetPassword, [email]),
-            returnValue: _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>.value(
-              _FakeEither_0<_i6.Failure, _i2.Unit>(
-                this,
-                Invocation.method(#resetPassword, [email]),
-              ),
-            ),
-          )
-          as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);
-
-  @override
-  _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> updatePassword(
-    String? newPassword,
-  ) =>
-      (super.noSuchMethod(
-            Invocation.method(#updatePassword, [newPassword]),
-            returnValue: _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>.value(
-              _FakeEither_0<_i6.Failure, _i2.Unit>(
-                this,
-                Invocation.method(#updatePassword, [newPassword]),
-              ),
-            ),
-          )
-          as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);
-
-  @override
   _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> syncProgressToCloud() =>
       (super.noSuchMethod(
             Invocation.method(#syncProgressToCloud, []),
@@ -189,4 +161,32 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
             returnValueForMissingStub: _i4.Future<void>.value(),
           )
           as _i4.Future<void>);
+
+  @override
+  _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> resetPassword(String? email) =>
+      (super.noSuchMethod(
+            Invocation.method(#resetPassword, [email]),
+            returnValue: _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>.value(
+              _FakeEither_0<_i6.Failure, _i2.Unit>(
+                this,
+                Invocation.method(#resetPassword, [email]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);
+
+  @override
+  _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> updatePassword(
+    String? newPassword,
+  ) =>
+      (super.noSuchMethod(
+            Invocation.method(#updatePassword, [newPassword]),
+            returnValue: _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>.value(
+              _FakeEither_0<_i6.Failure, _i2.Unit>(
+                this,
+                Invocation.method(#updatePassword, [newPassword]),
+              ),
+            ),
+          )
+          as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);
 }

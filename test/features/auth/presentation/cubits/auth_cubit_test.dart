@@ -217,9 +217,7 @@ void main() {
     tearDown(() => cubit.close());
 
     test('emits Loading then Unauthenticated on success', () async {
-      when(
-        mockAuthRepository.signOut(),
-      ).thenAnswer((_) async {
+      when(mockAuthRepository.signOut()).thenAnswer((_) async {
         authStreamController.add(null);
         return const Right(unit);
       });

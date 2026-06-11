@@ -60,152 +60,152 @@ class _SettingsView extends StatelessWidget {
         }
       },
       child: BlocConsumer<SettingsCubit, SettingsState>(
-      listener: (context, state) {
-        if (state.errorMessage != null) {
-          _showSettingsError(context, state.errorMessage!);
-          context.read<SettingsCubit>().clearTransientMessages();
-        } else if (state.showMemorizationPathResetSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.l10n.memorizationPathReset)),
-          );
-          context.read<SettingsCubit>().clearTransientMessages();
-        }
-      },
-      builder: (context, state) {
-        return Scaffold(
-          backgroundColor: isDark
-              ? AppColors.darkBackground
-              : AppColors.lightBackground,
-          body: CustomScrollView(
-            slivers: [
-              _buildAppBar(context, isDark),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.pagePadding,
-                  AppSpacing.lg,
-                  AppSpacing.pagePadding,
-                  120,
-                ),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    _SettingsSection(
-                      title: context.l10n.settingsSectionAccount,
-                      children: [
-                        _AccountSection(isDark: isDark),
-                        _SettingsDivider(isDark: isDark),
-                        _ProfileSettingTile(isDark: isDark),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.settingsSectionAppearance,
-                      children: [
-                        _SettingsInlineHeader(
-                          isDark: isDark,
-                          icon: Icons.translate_rounded,
-                          title: context.l10n.language,
-                        ),
-                        _SettingsDivider(isDark: isDark),
-                        _LocaleSettingTile(isDark: isDark),
-                        _SettingsDivider(isDark: isDark),
-                        _SettingsInlineHeader(
-                          isDark: isDark,
-                          icon: Icons.palette_rounded,
-                          title: context.l10n.theme,
-                        ),
-                        _SettingsDivider(isDark: isDark),
-                        _ThemeSettingTile(isDark: isDark),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.settingsSectionQuranMemorization,
-                      children: [
-                        _AccuracySettingTile(isDark: isDark),
-                        _SettingsDivider(isDark: isDark),
-                        _MemorizationPathSummaryTile(
-                          isDark: isDark,
-                          profile: state.memorizationProfile,
-                        ),
-                        if (state.memorizationProfile?.hasSelectedPath ==
-                            true) ...[
-                          _SettingsDivider(isDark: isDark),
-                          _ResetMemorizationPathTile(
-                            isDark: isDark,
-                            onReset: context
-                                .read<SettingsCubit>()
-                                .resetMemorizationIdentity,
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    if (state.selectedTrack == 'adults' ||
-                        state.shouldShowParentSection) ...[
+        listener: (context, state) {
+          if (state.errorMessage != null) {
+            _showSettingsError(context, state.errorMessage!);
+            context.read<SettingsCubit>().clearTransientMessages();
+          } else if (state.showMemorizationPathResetSuccess) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(context.l10n.memorizationPathReset)),
+            );
+            context.read<SettingsCubit>().clearTransientMessages();
+          }
+        },
+        builder: (context, state) {
+          return Scaffold(
+            backgroundColor: isDark
+                ? AppColors.darkBackground
+                : AppColors.lightBackground,
+            body: CustomScrollView(
+              slivers: [
+                _buildAppBar(context, isDark),
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.lg,
+                    AppSpacing.pagePadding,
+                    120,
+                  ),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
                       _SettingsSection(
-                        title: context.l10n.settingsSectionKidsGuardian,
+                        title: context.l10n.settingsSectionAccount,
                         children: [
-                          if (state.selectedTrack == 'adults')
-                            _ParentModeToggle(
-                              isDark: isDark,
-                              isParentMode: state.isParentMode,
-                              onChanged: context
-                                  .read<SettingsCubit>()
-                                  .toggleParentMode,
-                            ),
-                          if (state.selectedTrack == 'adults' &&
-                              state.shouldShowParentSection)
-                            _SettingsDivider(isDark: isDark),
-                          if (state.shouldShowParentSection)
-                            _ParentDashboardTile(isDark: isDark),
+                          _AccountSection(isDark: isDark),
+                          _SettingsDivider(isDark: isDark),
+                          _ProfileSettingTile(isDark: isDark),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                    ],
-                    _SettingsSection(
-                      title: context.l10n.settingsSectionProgressAchievements,
-                      children: [_NotificationSettingTile(isDark: isDark)],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.settingsSectionHelpTutorial,
-                      children: [_TutorialGuideTile(isDark: isDark)],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.settingsSectionPrivacySecurity,
-                      children: [
-                        _PrivacyPolicyTile(isDark: isDark),
-                        BlocBuilder<AuthCubit, AuthState>(
-                          builder: (context, authState) {
-                            if (authState is! AuthAuthenticated) {
-                              return const SizedBox.shrink();
-                            }
-                            return Column(
-                              children: [
-                                _SettingsDivider(isDark: isDark),
-                                _DeleteAccountTile(
-                                  isDark: isDark,
-                                  email: authState.user.email,
-                                ),
-                              ],
-                            );
-                          },
+                      _SettingsSection(
+                        title: context.l10n.settingsSectionAppearance,
+                        children: [
+                          _SettingsInlineHeader(
+                            isDark: isDark,
+                            icon: Icons.translate_rounded,
+                            title: context.l10n.language,
+                          ),
+                          _SettingsDivider(isDark: isDark),
+                          _LocaleSettingTile(isDark: isDark),
+                          _SettingsDivider(isDark: isDark),
+                          _SettingsInlineHeader(
+                            isDark: isDark,
+                            icon: Icons.palette_rounded,
+                            title: context.l10n.theme,
+                          ),
+                          _SettingsDivider(isDark: isDark),
+                          _ThemeSettingTile(isDark: isDark),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _SettingsSection(
+                        title: context.l10n.settingsSectionQuranMemorization,
+                        children: [
+                          _AccuracySettingTile(isDark: isDark),
+                          _SettingsDivider(isDark: isDark),
+                          _MemorizationPathSummaryTile(
+                            isDark: isDark,
+                            profile: state.memorizationProfile,
+                          ),
+                          if (state.memorizationProfile?.hasSelectedPath ==
+                              true) ...[
+                            _SettingsDivider(isDark: isDark),
+                            _ResetMemorizationPathTile(
+                              isDark: isDark,
+                              onReset: context
+                                  .read<SettingsCubit>()
+                                  .resetMemorizationIdentity,
+                            ),
+                          ],
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      if (state.selectedTrack == 'adults' ||
+                          state.shouldShowParentSection) ...[
+                        _SettingsSection(
+                          title: context.l10n.settingsSectionKidsGuardian,
+                          children: [
+                            if (state.selectedTrack == 'adults')
+                              _ParentModeToggle(
+                                isDark: isDark,
+                                isParentMode: state.isParentMode,
+                                onChanged: context
+                                    .read<SettingsCubit>()
+                                    .toggleParentMode,
+                              ),
+                            if (state.selectedTrack == 'adults' &&
+                                state.shouldShowParentSection)
+                              _SettingsDivider(isDark: isDark),
+                            if (state.shouldShowParentSection)
+                              _ParentDashboardTile(isDark: isDark),
+                          ],
                         ),
+                        const SizedBox(height: AppSpacing.lg),
                       ],
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-                    _SettingsSection(
-                      title: context.l10n.settingsSectionAboutTalia,
-                      children: [_AboutTile(isDark: isDark)],
-                    ),
-                  ]),
+                      _SettingsSection(
+                        title: context.l10n.settingsSectionProgressAchievements,
+                        children: [_NotificationSettingTile(isDark: isDark)],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _SettingsSection(
+                        title: context.l10n.settingsSectionHelpTutorial,
+                        children: [_TutorialGuideTile(isDark: isDark)],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _SettingsSection(
+                        title: context.l10n.settingsSectionPrivacySecurity,
+                        children: [
+                          _PrivacyPolicyTile(isDark: isDark),
+                          BlocBuilder<AuthCubit, AuthState>(
+                            builder: (context, authState) {
+                              if (authState is! AuthAuthenticated) {
+                                return const SizedBox.shrink();
+                              }
+                              return Column(
+                                children: [
+                                  _SettingsDivider(isDark: isDark),
+                                  _DeleteAccountTile(
+                                    isDark: isDark,
+                                    email: authState.user.email,
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      _SettingsSection(
+                        title: context.l10n.settingsSectionAboutTalia,
+                        children: [_AboutTile(isDark: isDark)],
+                      ),
+                    ]),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
+              ],
+            ),
+          );
+        },
       ),
     );
   }

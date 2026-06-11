@@ -62,7 +62,12 @@ class AppCard extends StatelessWidget {
       margin: margin,
       decoration: cardDecoration,
       clipBehavior: clipBehavior,
-      child: padding != null ? Padding(padding: padding!, child: child) : child,
+      child: Material(
+        type: MaterialType.transparency,
+        child: padding != null
+            ? Padding(padding: padding!, child: child)
+            : child,
+      ),
     );
 
     if (onTap != null) {

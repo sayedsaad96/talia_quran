@@ -202,7 +202,9 @@ class _CertificatePageState extends State<CertificatePage> {
     final textColor = isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
-    final dividerColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final dividerColor = isDark
+        ? AppColors.darkDivider
+        : AppColors.lightDivider;
 
     showModalBottomSheet(
       context: context,
@@ -225,7 +227,10 @@ class _CertificatePageState extends State<CertificatePage> {
             ),
             const SizedBox(height: 24),
             ListTile(
-              leading: const Icon(Icons.image_rounded, color: AppColors.primary),
+              leading: const Icon(
+                Icons.image_rounded,
+                color: AppColors.primary,
+              ),
               title: Text(
                 context.l10n.saveAsImage,
                 style: AppTypography.bodyLarge.copyWith(color: textColor),

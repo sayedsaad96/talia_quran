@@ -82,14 +82,29 @@ Future<void> _bootstrapAndRun() async {
 
   const supabaseConfig = SupabaseConfig.fromDartDefine;
 
+  // Debug-only: log config status without printing secret values.
+  assert(() {
+    TaliaLogger.d(
+      'BEFORE SUPABASE INIT | '
+      'configured=${supabaseConfig.isConfigured} | '
+      'url=${supabaseConfig.url} | '
+      'keyLength=${supabaseConfig.anonKey.length}',
+    );
+    return true;
+  }());
+
   // OFFLINE-FIRST: Supabase config is supplied through --dart-define.
   // If absent, continue in offline mode; local Quran, Hifz, Azkar, progress,
   // and memorization features must remain reachable.
   if (supabaseConfig.isConfigured) {
     await Supabase.initialize(
       url: supabaseConfig.url.trim(),
-      anonKey: supabaseConfig.anonKey.trim(),
+      publishableKey: supabaseConfig.anonKey.trim(),
     );
+
+    TaliaLogger.d('SUPABASE INIT SUCCESS');
+  } else {
+    TaliaLogger.w('SUPABASE INIT SKIPPED');
   }
   // If Supabase is not configured, auth/cloud features return friendly offline
   // errors while local-first features continue to work.

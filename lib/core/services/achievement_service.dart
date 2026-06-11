@@ -11,6 +11,25 @@ import '../../features/quran/data/datasources/quran_local_datasource.dart';
 // to receive CertificateAward and CertificateType without import changes.
 export '../../features/certificate/domain/entities/certificate_award.dart';
 
+/// Product policy (Sprint 9B — Shared Family / Device-Wide Achievements):
+///
+/// Certificates are shared across the Talia device/profile experience.
+/// [AchievementService] intentionally combines memorized ayahs from Hifz
+/// progress and **all** memorized Memorization Plus review records, regardless
+/// of [ReviewRecordCreatedByMode]. This means every path that can mark an ayah
+/// as memorized — adult MemPlus, Kids Mode, legacy Hifz, migrated records, and
+/// pre-tagging `unknown` records — may contribute to Surah, Juz, Half-Quran,
+/// and Full-Quran certificates.
+///
+/// This is intentional. Certificates reflect total memorization progress in
+/// Talia, not only adult Smart Memorization progress. They represent a shared
+/// family / device-wide achievement, preserving legacy certificates and treating
+/// the Quran completion journey as a unified milestone.
+///
+/// **Do not add source filtering here** unless the certificate product policy
+/// changes. Adult SRS source filters ([ReviewRecordFilters.isAdultCompatible]
+/// and [ReviewRecordFilters.isAdultRetentionCompatible]) apply to Smart Coach,
+/// Quiz, and Progress smart stats only — not to [AchievementService].
 class AchievementService {
   AchievementService(this._prefs, this._hifzDs, this._memPlusDs, this._quranDs);
 

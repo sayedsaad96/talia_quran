@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/memorization/review_due_evaluator.dart';
+
 enum AyahStatus { notStarted, learning, review, memorized }
 
 class AyahProgress extends Equatable {
@@ -19,7 +21,11 @@ class AyahProgress extends Equatable {
   final DateTime nextReviewDate;
   final DateTime lastReviewDate;
 
-  bool get isDue => DateTime.now().toUtc().isAfter(nextReviewDate);
+  bool get isDue => const ReviewDueEvaluator().isDue(
+    now: DateTime.now().toUtc(),
+    scheduledAt: nextReviewDate,
+    policy: ReviewDuePolicy.afterScheduledTime,
+  );
 
   AyahProgress copyWith({
     AyahStatus? status,

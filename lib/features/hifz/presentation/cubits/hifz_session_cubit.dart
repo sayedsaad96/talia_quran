@@ -405,10 +405,12 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
             );
           }
         },
-        localeId: kArabicSpeechLocaleId,
-        pauseFor: const Duration(
-          seconds: 5,
-        ), // auto-stop if silent for 5 seconds
+        listenOptions: SpeechListenOptions(
+          localeId: kArabicSpeechLocaleId,
+          pauseFor: const Duration(
+            seconds: 5,
+          ), // auto-stop if silent for 5 seconds
+        ),
       );
     } else {
       emit(st.copyWith(speechIssue: HifzSpeechIssue.unavailable));

@@ -5,8 +5,14 @@ class SupabaseConfig {
       'taliaquran://auth/update-password';
 
   static const fromDartDefine = SupabaseConfig(
-    url: String.fromEnvironment('SUPABASE_URL'),
-    anonKey: String.fromEnvironment('SUPABASE_ANON_KEY'),
+    url: String.fromEnvironment(
+      'SUPABASE_URL',
+      defaultValue: 'https://vxsqwozctxkvhgxkciua.supabase.co',
+    ),
+    anonKey: String.fromEnvironment(
+      'SUPABASE_ANON_KEY',
+      defaultValue: 'sb_publishable_B3vTCMcf1HV76SiEhQkeHA_i8EEKZq4',
+    ),
   );
 
   static const passwordRecoveryRedirectTo = String.fromEnvironment(
@@ -17,5 +23,8 @@ class SupabaseConfig {
   final String url;
   final String anonKey;
 
-  bool get isConfigured => url.trim().isNotEmpty && anonKey.trim().isNotEmpty;
+  /// Returns true only when both values look like real Supabase credentials.
+  /// A URL must start with `https://` to rule out placeholder strings.
+  bool get isConfigured =>
+      url.trim().startsWith('https://') && anonKey.trim().isNotEmpty;
 }

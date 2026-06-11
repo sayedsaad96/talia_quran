@@ -57,6 +57,7 @@ class ThemeCubit extends Cubit<ThemeMode> {
     };
     _applyStatusBar(isDark);
   }
+
   void _applyStatusBar(bool isDark) {
     SystemChrome.setSystemUIOverlayStyle(
       SystemUiOverlayStyle(

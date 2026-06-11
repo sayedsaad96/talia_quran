@@ -1,243 +1,334 @@
 # Talia Quran — Full Production Readiness Audit
 
-_Audit date: 2026-06-08 · Flutter 3.41.8 / Dart 3.11.5 · App version `1.0.0+1`_
-_Method: feature-by-feature, screen-by-screen, flow-by-flow, layer-by-layer review of `lib/` + routing + tests, with `flutter analyze` and `flutter test` executed._
-
-> **Important context for severity calibration:** Talia (تالية) is an **Arabic-first** Quran-memorization app. The app name, default direction (RTL), splash, and most copy are Arabic; **English is a secondary locale**. Therefore pure "English copy is missing / Arabic-only" gaps are graded as **quality issues (P1/P2)** rather than hard release blockers, _except_ where they make a core flow unusable in English. Devotional content (Qur'an ayāt, hadith, du'ā in Azkar/tips) is intentionally Arabic and is **not** treated as a localization defect.
+**Date:** 2026-06-10
+**Auditor:** AI Audit Suite (Architect, QA, PM, UX, Performance, Release)
 
 ---
 
-## 1. Executive Verdict
+## Executive Verdict
 
-**CONDITIONALLY READY.**
+### Conditionally Ready
 
-The app is structurally healthy and shippable for its **primary Arabic audience** after a focused round of P1 fixes. Objective signals are strong:
+The application is functionally complete with strong architecture foundations, excellent test coverage for a Flutter project (459 passing tests), and a well-designed Smart Coach engine. However, **localization issues, missing data layers, and architectural debt block immediate release** for a global audience.
 
-- `flutter analyze` → **No issues found** (clean, 0 warnings).
-- `flutter test` → **404 passed, 0 failed, 0 skipped**.
-- Clean Architecture is consistently applied (data / domain / presentation), DI is centralized, BLoC/Cubit lifecycle is disciplined (subscriptions cancelled, controllers/audio/speech disposed).
-- Routing is offline-safe, kids/adult paths are separated by route guards and covered by tests, and the app boots into a friendly error screen instead of a red crash screen.
-
-**No P0 hard-crash blockers were found.** The blockers are **functional/UX correctness** issues (a few broken CTAs, kids navigation escaping into the adult shell, a backend dependency for account deletion) plus **English-localization polish**. None crash the app, but several damage the first-run/auth funnel and the kids experience enough to warrant fixing before a wide / English-market release.
+The app is ready for an **Arabic-first production launch** (targeting Arabic-speaking users) but **NOT ready for an English/Arabic bilingual launch** without fixing the P0 localization issues.
 
 ---
 
-## 2. Release Blockers (P0 / P1)
+## Release Score: **72 / 100**
 
-### P0 — Hard blockers (crash / broken core / data loss)
-**None identified.** Build is clean, tests pass, no unguarded crash paths or data-loss flows were found.
-
-### P1 — Must fix before wide release
-| # | Blocker | Where | Why it blocks |
-|---|---------|-------|---------------|
-| B1 | **Adult "Sign in / Create account" from onboarding never opens `/login`** — for adults `_routeAfterOnboarding` ignores `intent` and returns the goal route (e.g. `/quran`). | `features/onboarding/presentation/cubits/onboarding_cubit.dart:132-138` | The primary account-creation CTA silently drops the user into guest content; the auth funnel is broken for the majority (adult) path. |
-| B2 | **Home guest "Sign in" CTA navigates to Settings, not Login** | `features/home/presentation/pages/home_page_widgets.dart:907` | Misleading CTA; users tapping "Sign in" land on a settings list, not a login screen. |
-| B3 | **Kids back-navigation exits into the adult home shell** (`context.go('/')` fallback on journey/stage/listen back when the nav stack is empty). | `kids_gamified_journey_page.dart:66`, `kids_gamified_stage_page.dart:31` | A child taps back and is dropped into the full adult bottom-nav app, breaking the kids "walled garden". |
-| B4 | **Account deletion depends on a Supabase RPC `delete_current_user`** that must be deployed in prod. | `features/auth/data/repositories/auth_repository_impl.dart:299` | If the RPC is not deployed, deletion fails. There **is** graceful error handling (no crash), but a store-required "delete account" must actually work. **Verify the RPC is live before submission.** |
-| B5 | **Guardian pairing polling stops when the code timer hits 0** — child stops polling `checkLinkStatus()` after expiry. | `features/memorization_plus/presentation/pages/guardian_linking_page.dart:346-351` | A parent who links right around expiry may never be detected; child is stuck until manual regenerate. |
-| B6 | **Account deletion gives no warning that local progress (Isar/SharedPreferences) is retained**, and post-delete routes to home (not login). | `settings_page_tiles.dart` delete flow + `auth_repository_impl.deleteAccount` | Privacy/disclosure correctness; user may believe all data is gone. |
-| B7 | **Stage-lock not enforced on deep links** — `KidsStageDetails` always enables "Start", and a deep link with missing `status` defaults to `current`. | `app_router.dart:750-755`, kids stage page | Locked stages can be started via URL/extra, bypassing progression. |
-| B8 | **Arabic-only strings still surfaced from cubits regardless of locale** (English users see Arabic): `hifz_session_cubit.dart` audio/save errors (307, 350, 473, 522); `quiz_cubit.dart`; `kids_mode_cubit.dart`; `auth_repository_impl.dart` error strings. | listed files | Degraded English experience on error paths. P1 for an English release, P2 for Arabic-only release. |
+| Category | Score | Notes |
+|---|---|---|
+| Architecture | 68 | Clean Architecture base, but God class, empty layers, SRP violations |
+| UX | 65 | Good flow design, but Arabic-only errors and surah name gaps in Coach |
+| UI | 78 | Polished M3 themes, consistent spacing, Cupertino transitions |
+| Performance | 85 | Clean analyzer, portrait lock, QCF fonts bundled, no leaks found |
+| Localization | 40 | **Critical gap** — auth errors, startup failure, and tutorial categories hardcoded in Arabic |
+| Smart Coach | 72 | Excellent engine design, but route coupling and temporal dependency issues |
+| Stability | 80 | 459/461 tests pass; framework error handling in place |
+| Testing | 70 | Good unit/widget coverage, but no E2E/integration tests |
+| Release Readiness | 65 | Conditionally ready — P0 fixes required before bilingual launch |
 
 ---
 
-## 3. Feature-by-Feature Review
+## Release Blockers
 
-| Feature | Status | Screens | Severity | Issue | Recommended fix | Blocks release? |
-|---------|--------|---------|----------|-------|-----------------|-----------------|
-| Splash | Working | `splash_page` | P3 | Fixed 2.5s delay on every cold start; reads magic key `'isFirstTimeAppOpen'` instead of `OnboardingCubit.firstOpenKey`. | Use the constant; consider shortening delay for returning users. | No |
-| Onboarding (adult) | Partially working | `onboarding_page` + cubit | **P1** | Adult "Sign in" CTA routes to content, not `/login` (B1). Skip vs "Continue as guest" diverge (skip → home w/ defaults; guest → deep goal route). Skip/complete errors only render on the final step. | Honor `intent==signIn` for adults; unify skip/guest; surface errors globally. | **Yes** |
-| Onboarding (child) | Working (Arabic-only) | `child_onboarding_page` | P1/P2 | Entire screen built with `isArabic ? … : …` inline strings (bypasses ARB but renders both langs); back icon not RTL-flipped; back returns to full onboarding. | Move to ARB; flip chevron; route back to a sensible parent. | No |
-| Guest mode | Working | (all public routes) | P2 | Guest = unauthenticated; nearly all routes public; only parent dashboard gated. Home shows upgrade banner. CTA bug (B2). | Fix B2; otherwise correct. | No (except B2) |
-| Authentication | Working | `login_page`, `update_password_page`, `auth_cubit` | P1 | Login reachable & functional; error messages localized via fragile **Arabic substring matching**; repo returns Arabic-only strings. `signIn/signUp` emit `AuthAuthenticated` manually **and** via stream → possible double navigation. | Return error **codes** from repo, map to l10n in UI; rely on a single emission source. | No |
-| Path selection | Working | `path_selection_page` | OK | Fully l10n, RTL-correct, confirm sheet + loading + error. `entryRedirect` auto-skips if a path exists. | — | No |
-| Adult memorization | Partially working | `memorization_hub`, `daily_plan`, `custom_plan_setup`, `quiz` | P1 | Daily-plan (self-rating) and Hifz STT session are **parallel products**, not a connected flow. Completion bottom sheet **re-fires on rebuild/refresh** (no "shown once" guard). Hub rebuilds a new `Future` every build. | Add a completion-shown guard; memoize hub future; document/connect the two memorization surfaces. | No (UX) |
-| Hifz / Hifz session | Working | `hifz_page`, `hifz_session_page` + cubit | P1/P2 | Strong session UX (STT, checkpoints, audio errors). Empty path-state shows message **without a CTA** to path selection. STT locale `'ar-SA'` here vs `'ar_SA'` in quiz — inconsistency. Cubit emits Arabic-only errors (B8). | Add CTA; unify STT locale id; localize cubit strings. | No |
-| Smart memorization / custom plan | Working | `custom_plan_setup` | P2 | No dedicated error UI for `CustomPlanError`; `PlanTargetUser.child` selectable on adult-only route. | Add error surface; hide child target on adult gate. | No |
-| Quiz | Working | `quiz_page` + cubit | P1 | Functional with manual fallback. Each `_QuestionView` creates its own `SpeechToText`; `dispose` only `stop()` not `cancel()`; locale mismatch with Hifz. Arabic-only cubit errors. | `cancel()` STT on dispose; unify locale; localize. | No |
-| Quran reading | Working | `quran_page`, `quran_reader_page` | P2 | Solid mushaf reader w/ read-confirmation gate; juz/hizb labels hardcoded Arabic (`'الجزء…'`, `'الحزب…'`); mushaf palette hardcoded hex; `loadPage` re-emits loading on each swipe (minor flicker). | Localize labels; tokenize palette; avoid loading re-emit on swipe. | No |
-| Quran — Surah detail (legacy) | **Dead code** | `surah_detail_page.dart` | **P1** | ~690-line page **not registered in router / not imported**; recreates all `TapGestureRecognizer`s on every `build()`. Superseded by `QuranReaderPage`. | Delete the page + its dead cubit wiring, or document why it's retained. | No |
-| Kids path | Partially working | kids home/journey/stage/listen/completion | **P1** | Back escapes to adult shell (B3); stage-lock bypass via deep link (B7); triple-duplicate "Mission" CTAs on home; listen→completion uses `push` (stacks); completion "Next" defaults visible until async check (wrong on last ayah briefly). | Route kids back → kids home; enforce lock; dedupe CTAs; `pushReplacement`; default Next hidden until resolved. | **Yes (B3/B7)** |
-| Kids Quran mode | Working (best-in-class) | `kids_quran_reader_page` | P2 | Proper dark/light adaptation; back icon RTL-aware. Minor: `_currentDetail = state.detail` assigned during `build()` (side effect). | Move assignment out of build. | No |
-| Kids "recording" | Misleading | `kids_mode_cubit:187-195` | P2 | "Recording" is a 1.5s animation, **not** real speech recognition. | Confirm this is the intended product behavior or label it as "repeat after me". | No |
-| Guardian linking | Working | `guardian_linking_page` + cubit | P1 | QR/code create + parent accept via Supabase. Poll stops at expiry (B5); 30s poll interval is slow; raw `error.toString()` to UI. | Keep polling through expiry; shorten interval; map errors. | No (except B5) |
-| Parent dashboard | Working | `parent_dashboard_page` + cubit | P2/P3 | Auth-gated + child-blocked + PIN gate; QR scanner & manual token; feedback dedup. `disableParentMode` has no UI; reminder toggle has no time picker; side-by-side `Expanded` buttons overflow risk; `MobileScanner` no explicit controller dispose. | Wire/remove dead path; add time picker; constrain buttons. | No |
-| Progress tracking | Working | `progress_page` + widgets | P2/P3 | Loading/error/retry present. Certificates list loading returns empty `SizedBox`; horizontal list uses `right:` padding only (clips in RTL). | Add spinner; use directional padding. | No |
-| Azkar | Working | `azkar_page`, `azkar_category_page`, `general_azkar_page` | P1 | Counter UX strong. **Category error states have no retry**; hub card chevron not RTL-aware. Daily "tips" are Qur'an/hadith/du'ā (intentionally Arabic — _not_ a defect; the "Daily tip" chrome/label should be localized though). | Add `onRetry`; flip chevron; localize chrome only. | No |
-| Settings | Working | `settings_page`, `settings_page_tiles` | P1 | Language/theme switch + persist correctly. Notification **time labels forced Arabic suffix (ص/م) in English** (`:1545`); no OS permission prompt before enabling notifications; auth/delete errors Arabic-only. | Locale-aware time format; request OS permission; localize errors. | No |
-| Language switching | Working | `LocaleCubit` | OK | Persists to `app_locale`, applied at root, instant. | — | No |
-| Theme switching | Working | `ThemeCubit` | P2 | Persists `theme_mode`; instant. In `system` mode the status-bar brightness is derived from a stored bool, not actual platform brightness. | Use platform brightness for `system`. | No |
-| Profile / account | Working | `profile_cubit` | P2 | Local-only profile (no cloud sync); `ProfileError` never rendered in UI; default name `'مستخدم تالية'` Arabic. | Render error; localize default. | No |
-| Account deletion | Risky | settings delete flow | **P1** | Depends on Supabase RPC (B4); no re-auth; local data retained without disclosure (B6); post-delete → home. | Verify RPC; disclose local-data behavior; route to login. | **Yes (verify B4)** |
-| Privacy / legal | Working | `privacy_policy_page` | P2 | Bilingual body; reachable from settings; app-bar title hardcoded (not l10n). | Localize the title. | No |
-| Tutorial / help | Working (Arabic-only) | `tutorial_guide_*` | P2 | Entire help content + categories Arabic-only; search filters Arabic only. Acceptable for Arabic-first launch; a gap for English users. | Provide English content (or hide for `en` until translated). | No (Arabic launch) |
-| Certificate | Working | `certificate_page`, `certificate_widget` | P1/P2 | Share/save/PDF + permissions + orientation handling solid. Save bottom sheet hardcodes a dark theme; certificate copy Arabic-only. | Theme the sheet; provide EN certificate copy if targeting EN. | No |
-| Notifications | Working | `notification_service`, settings | P1 | Scheduled once on first launch; refreshed on resume. No runtime OS-permission request from the settings toggles (requested fire-and-forget at startup only). | Prompt for permission when a toggle is enabled. | No |
-| Navigation / routing | Working | `app_router` | OK | StatefulShell preserves tab state; offline-safe redirects with per-route try/catch + global `onException` no-op; auth gate for remote routes. | — | No |
-| Supabase integration | Working (offline-first) | `main.dart`, `auth_repository_impl` | OK | Configured via `--dart-define`; absent config → offline mode, local features remain reachable. | Ensure prod `--dart-define` values + delete RPC at build time. | No (verify) |
-| Local storage / cache | Working | Isar + SharedPreferences | OK | Isar opened with 5 schemas; SP→Isar migration on startup; audio cache service. | — | No |
-| Offline behavior | Working | router + repos | OK | Redirect failures swallowed; local-first features function without network. | — | No |
+### P0 — Critical (Must Fix Before Release)
+
+| # | Issue | File | Impact | Release Blocking |
+|---|---|---|---|---|
+| **P0-1** | **Auth error messages hardcoded in Arabic only** | `lib/features/auth/data/repositories/auth_repository_impl.dart:581-633` | English users see Arabic text for all auth errors (login, signup, password reset, account deletion, cloud sync) | **Yes** |
+| **P0-2** | **Startup failure screen is Arabic-only** | `lib/main.dart:186-187` | If the app fails to bootstrap, English users see Arabic text with no English fallback | **Yes** |
+| **P0-3** | **ErrorWidget.builder hardcoded Arabic** | `lib/main.dart:40-41` | Framework-level errors show Arabic text to all users in production | **Yes** |
+| **P0-4** | **Coach surah name maps only 2 of 114 surahs** | `lib/features/home/presentation/pages/home_page_widgets.dart:1439-1455` | Smart Coach recommendations show raw surah numbers for 112/114 surahs, making recommendations confusing | **Yes** |
+| **P0-5** | **Tutorial guide categories hardcoded Arabic** | `lib/features/tutorial_guide/presentation/pages/tutorial_guide_page.dart:23-31` | English users see Arabic category names ('الكل', 'البدء', etc.) | **Yes** |
+
+### P1 — High
+
+| # | Issue | File | Impact | Release Blocking |
+|---|---|---|---|---|
+| **P1-1** | **MemorizationPlusRepositoryImpl is a 1414-line God class** | `lib/features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart` | Violates SRP; handles profile, plans, kids, parent, Supabase, PIN hashing, guardian linking. High maintenance risk | No, but high future risk |
+| **P1-2** | **SmartCoachEngine embeds routing strings** | `lib/core/memorization/smart_coach_engine.dart:207-216` | Pure logic layer couples to UI routing; cannot test recommendations without routing knowledge | No, but impedes testing |
+| **P1-3** | **Domain entity uses DateTime.now() in getter** | `lib/features/memorization_plus/domain/entities/memorization_entities.dart:53-62` | `AyahReviewRecord.reviewClassification` is non-deterministic; creates new clock-dependent value on every access | No, but causes test flakiness |
+| **P1-4** | **Direct SharedPreferences.getInstance() bypassing DI** | `notification_service.dart:151,441`, `child_onboarding_page.dart:33,48`, `memorization_plus_repository_impl.dart:317,354` | 3 files bypass DI singleton; creates unnecessary instances and hinders testability | No |
+| **P1-5** | **13 empty directories in feature structure** | Multiple empty `data/`, `domain/` subdirectories across `home/`, `xp/`, `settings/`, `progress/`, `certificate/` | Indicates incomplete features; dead code confusion for new developers | No |
+| **P1-6** | **Home feature data layer entirely empty (6 empty dirs)** | `lib/features/home/data/datasources/`, `models/`, `repositories/`, `domain/entities/`, `repositories/` | Home depends on direct service injection rather than proper layer separation | No, but architecture violation |
+| **P1-7** | **XP feature has no presentation layer** | `lib/features/xp/` — no cubits, pages, or widgets | XP/achievement system has no user-facing UI anywhere | No |
+| **P1-8** | **Kids concurrency lock is fragile** | `memorization_plus_repository_impl.dart:30,1201-1228` | Custom `Map<String, Completer>` lock may leak entries on exceptions | No |
+| **P1-9** | **1 missing localization key (1068 Arabic vs 1067 English)** | `app_ar.arb` vs `app_en.arb` | Minor mismatch — 1 key defined in Arabic but missing in English | No |
+| **P1-10** | **2 failing tests** | `test/features/tutorial_guide/tutorial_guide_page_test.dart` | ListTile ink splash visibility assertion failures in both LTR and RTL tests | No, but erodes confidence |
+| **P1-11** | **Partial snapshot failure kills entire recommendation** | `lib/core/memorization/memorization_progress_reader.dart` | If any single data source fails (e.g., kids progress), the entire snapshot fails even for adults | No |
 
 ---
 
-## 4. Screen-by-Screen UX Review
+## Feature-by-Feature Audit
 
-| Screen | Issue | Severity | Recommendation |
-|--------|-------|----------|----------------|
-| Splash | Always-on 2.5s delay; hardcoded gradient hex | P3 | Tokenize colors; shorten for returning users |
-| Onboarding | Free-swipe applies silent defaults; no global loading/error overlay; Next hidden but swipe-through allowed | P1/P2 | Gate progression; global error/loading |
-| Child onboarding | Inline AR/EN strings; back chevron not flipped; blank spinner during redirect | P1/P2 | ARB + directional icon + message |
-| Login | "Skip" wording overloaded (also onboarding skip); no "continue as guest" explanation | P2 | Clarify copy |
-| Update password | Public route reachable w/o recovery session → cryptic submit error; shared obscure toggle | P2/P3 | Guard route; separate toggles |
-| Home | Hardcoded brand `'تالية'`/basmala; many inline AR/EN; **guest CTA → settings**; duplicate settings entry (hero gear + quick action) | P1/P3 | Fix CTA (B2); ARB; dedupe entry |
-| Quran list | Hero whites on gradient (intentional); good states | P3 | — |
-| Quran reader | Arabic juz/hizb labels; hardcoded mushaf palette; loading re-emit on swipe | P2 | Localize + tokenize + avoid flicker |
-| Hifz list | Empty path-state has no CTA; many `Colors.white`/hex on gradients | P1/P2 | Add CTA; tokenize |
-| Hifz session | Heavy `Colors.*` semantic colors; silent clear on empty STT | P2 | Token map; user feedback |
-| Memorization hub | ~30 inline AR/EN strings; new `Future` each build; duplicate "Review Quiz" title | P1 | ARB; memoize future |
-| Daily plan | Completion sheet repeats; 3 rating buttons overflow on narrow screens; hardcoded section colors | P1/P2 | Shown-once guard; wrap buttons |
-| Custom plan | No `CustomPlanError` UI; child target on adult route | P2 | Add error UI |
-| Quiz | Per-question STT; `Colors.*` heavy; emoji in progress chip | P1/P2 | `cancel()` STT; tokenize |
-| Kids home | Triple duplicate Mission CTA; inline AR/EN; fixed kids palette (intentional) | P2/P3 | Dedupe; ARB |
-| Kids journey | **Back → adult shell**; nested double-scroll; fixed 172px cards | P1/P2 | Route to kids home; flatten scroll |
-| Kids stage | **Back → adult shell**; **lock not enforced** | P1 | Fix back + enforce lock |
-| Kids listen | listen→completion stacks (`push`); play label duplicates title | P2/P3 | `pushReplacement` |
-| Kids completion | "Next" shown until async check resolves (wrong on last ayah); no error UI on fetch fail | P2 | Default hidden until resolved |
-| Guardian linking | Poll stops at expiry; English-only semantic label; QR white (intentional) | P1/P2 | Keep polling |
-| Parent dashboard | Side-by-side buttons overflow; reminder toggle lacks time picker; scanner dispose | P2/P3 | Constrain; add picker |
-| Progress | Certificates empty `SizedBox` loading; RTL padding clip | P2 | Spinner + directional padding |
-| Azkar hub | Chevron not RTL-aware; tip "chrome" not localized | P1/P2 | Flip chevron; localize labels |
-| Azkar category / general | **Error states lack retry**; back icon not directional; reader `Colors.*` | P1/P2 | Add `onRetry`; directional icon |
-| Settings | Time labels forced ص/م in EN; red/green hardcoded; unused `isLoading` | P1/P2/P3 | Locale time fmt; tokenize |
-| Privacy policy | App-bar title hardcoded | P2 | Localize |
-| Tutorial | Arabic-only content/categories/search | P2 | EN content or hide for EN |
-| Certificate | Save sheet hardcoded dark; close button top-right awkward in LTR; Arabic-only copy | P1/P2 | Theme sheet; EN copy |
+| Feature | Status | User Value | Code Quality | UX Quality | Risk | Notes |
+|---|---|---|---|---|---|---|
+| **Splash/Onboarding** | Working | High | Good | Good | Low | Well-tested (14 tests) |
+| **Auth (Login/Register)** | Working | High | Fair | Good | **High** | All error strings hardcoded Arabic |
+| **Guest Mode** | Working | High | Good | Good | Low | Well-implemented offline-first |
+| **Quran Reading** | Working | High | Good | Good | Low | QCF integration, bookmarks, page tracking |
+| **Surah Browsing** | Working | High | Good | Good | Low | Search, filtering |
+| **Hifz** | Working | High | Good | Good | Low | Legacy feature, well-tested |
+| **Memorization Plus** | Working | High | Fair | Good | Medium | God class in repo, otherwise solid |
+| **Daily Plans** | Working | High | Good | Good | Low | Caching, evaluation flow |
+| **Smart Coach** | Working | High | Good | Good | Medium | Route coupling, DateTime.now() issue |
+| **Kids Experience** | Working | High | Good | Good | Medium | Most well-tested area (21 tests) |
+| **Parent Dashboard** | Working | Medium | Good | Good | Low | PIN, rewards, QR linking |
+| **Custom Plans** | Working | Medium | Good | Good | Low | |
+| **Progress** | Working | High | Good | Good | Low | |
+| **Azkar** | Working | High | Good | Good | Low | Morning/evening/general |
+| **Streak** | Working | Medium | Good | N/A | Low | No presentation layer needed |
+| **XP/Achievements** | **Partially Working** | Medium | Good | **Missing UI** | Medium | No achievement UI visible to users |
+| **Settings** | Working | High | Good | Good | Low | Well-tested (5 tests) |
+| **Tutorial Guide** | Working | Medium | Fair | Fair | Medium | Arabic category names, ListTile issue |
+| **Certificate** | **Partially Working** | Low | Minimal | Fair | Low | No data layer |
+| **Notifications** | Working | Medium | Good | Good | Low | Local push, 6 reminder types |
+| **Cloud Sync (Supabase)** | Working | Medium | Fair | N/A | Medium | Requires dart-define; RPC functions required server-side |
 
 ---
 
-## 5. Code Quality Findings
+## Screen-by-Screen Audit
+
+| Screen | Status | UX | States | Responsive | Accessibility | Notes |
+|---|---|---|---|---|---|---|
+| SplashPage | Good | Clean | Single | OK | OK | Native splash configured |
+| OnboardingPage | Good | Clear flow | Loading/Error | OK | OK | Smart goal selection |
+| LoginPage | Good | Clean | All states | OK | OK | |
+| HomePage | Good | Rich content | All states | OK | OK | Daily wird, coach card, resume cards |
+| QuranPage | Good | Searchable | Loading/Empty | OK | OK | Surah list |
+| QuranReaderPage | Good | Clean reader | Loading/Error | OK | OK | Page nav, bookmarks, audio |
+| MemorizationHubPage | Good | Path-aware | All states | OK | OK | Adult vs kids content |
+| DailyPlanPage | Good | Clear cards | All states | OK | OK | Ayah evaluation flow |
+| QuizPage | Good | Interactive | All states | OK | OK | Speech + manual rating |
+| KidsGamifiedHomePage | Good | Fun UI | All states | OK | OK | Well-tested |
+| KidsGamifiedListenPage | Good | Audio + mic | All states | OK | OK | 3x repeat loop |
+| KidsGamifiedJourneyPage | Good | Stage map | All states | OK | OK | House cards |
+| ProgressPage | Good | Stats + heatmap | All states | OK | OK | |
+| SettingsPage | Good | Organized | All states | OK | OK | LTR/RTL tested |
+| TutorialGuidePage | Fair | Searchable | OK | OK | OK | **Arabic-only categories** |
+| CertificatePage | Fair | Simple | OK | OK | OK | Missing data layer |
+| PrivacyPolicyPage | Good | Clean | Single | OK | OK | LTR/RTL tested |
+
+---
+
+## Smart Coach Audit
 
 ### Architecture
-- **Strong.** Clean Architecture (`data` / `domain` / `presentation`) is consistent across all features. Use-cases wrap repositories; repositories return `Either<Failure, T>` (dartz). DI is fully centralized in `core/di/injection.dart` (singletons for services/repos, factories for cubits).
-- **Dead code to remove:** `quran/.../surah_detail_page.dart` (unreachable, heavy), `qcf_rendering_poc_page.dart` (debug-only, fine), `HifzCubit.selectPath()`, `KidsJourneyCubit.createRemoteLinkQr()`, `GuardianLinkingCubit.acceptCode()`, `ParentDashboardCubit.disableParentMode()`, `OnboardingCubit.nextStep/previousStep`, pref key `onboarding_skipped` (written, never read).
-- **Leftover template test:** `test/widget_test.dart` is the default "Counter increments" smoke test — replace with a real app smoke test.
+```
+GetSmartCoachRecommendationUsecase
+  → GetMemorizationSnapshotUsecase
+    → MemorizationProgressReaderImpl (3 data sources)
+  → SmartCoachEngine (6 + 2 priority tiers)
+  → SmartCoachRecommendation
+```
 
-### State management
-- **Good lifecycle hygiene:** cubits cancel stream subscriptions in `close()` (home, progress, auth, hifz session); `AudioPlayer`/`SpeechToText` and controllers disposed.
-- `AuthCubit.signIn/signUp` emit `AuthAuthenticated` directly **and** via the `authStateChanges` stream → risk of double emission / double navigation. Pick one source of truth.
-- `OnboardingState.copyWith` clears `errorMessage` on any partial emit (line 72) — errors can be lost on step change.
-- `daily_plan_cubit` emits `DailyPlanError` without restoring the previously loaded plan → user loses in-progress UI on a transient failure.
+### Verdict: **Conditionally Ready**
 
-### Routing / guards
-- Offline-safe by design: per-route `try/catch` returning safe fallbacks + global `onException` no-op. Kids/adult separation enforced via `kidsOnlyRedirect` / `adultOnlyRedirect`, **covered by tests** (`memorization_route_guard_test.dart`, `app_router_route_policy_test.dart`).
-- **Guard gap:** `kidsOnlyRedirect` and `adultOnlyRedirect` both **allow `null` profiles** (a profile-less user can reach kids/adult routes). Acceptable for local-first guest access but worth tightening if strict separation is required.
+**Strengths:**
+- Clean separation: engine is a pure `const` class with no dependencies
+- 6 well-defined priority tiers with documented tie-breakers
+- Excellent test coverage (smart_coach_engine_test.dart)
+- Immutable output model (`SmartCoachRecommendation` extends `Equatable`)
+- 8 recommendation kinds covering weak review, near/far/memorized due, daily plan, hifz, and kids
 
-### Storage
-- Isar opened once with 5 schemas; SharedPreferences→Isar migrations run on startup (`migrateFromSharedPreferencesIfNeeded`, `migrateReviewRecordsToIsarIfNeeded`). Bookmarks/azkar counters in SharedPreferences.
-- `azkar_cubit.increment()` is `void async` with unawaited prefs writes → possible race on very rapid taps.
+**Weaknesses:**
+1. **Route coupling** — Engine constructs concrete app routes (`_dailyPlanRoute`, `_quizRouteWithAyah`). A pure engine should return data, not routing strings
+2. **`DateTime.now()` in domain entity getter** — `AyahReviewRecord.reviewClassification` creates a new clock-dependent value on every access, making results non-deterministic
+3. **Partial snapshot failure** — `MemorizationProgressReaderImpl` returns `Left(failure)` if any single source fails, even for users who don't need that data
+4. **No time abstraction** — `DateTime.now()` used throughout the codebase with no `Clock` interface for testability
+5. **Only 2 of 114 surahs mapped** in coach UI labels (home_page_widgets.dart:1439-1455)
 
-### Supabase
-- Initialized only when `--dart-define` config present; otherwise offline. Auth errors mapped from Arabic substring matching (fragile). **Account deletion relies on RPC `delete_current_user`** — must be deployed.
-
-### Localization
-- ARB-based `AppLocalizations` (ar/en) with a **localization regression test** guarding against re-introduced hardcoded Arabic in key memorization screens. However:
-  - **Arabic-only literals remain in cubits/services** surfaced to UI regardless of locale (auth repo, hifz session cubit, quiz cubit, kids mode cubit).
-  - **Bilingual `isArabic ? … : …` ternaries** (home: 26, hub: 16, kids home: 3, etc.) render the correct language but bypass ARB — maintainability debt, not a user-facing break.
-  - Several **directional icons hardcoded** (`arrow_back_ios`, `arrow_forward_ios`) instead of locale-aware chevrons in azkar.
-
-### Tests
-- **404 tests, all passing.** Good coverage of repositories, cubits, route policy, localization regression, kids flows, RTL/narrow widget tests.
-- Gaps: no test for the adult onboarding→login intent path (the B1 bug slipped through); no test for kids back-navigation target; limited coverage of error/retry states.
-
----
-
-## 6. Performance Findings
-
-- **Startup:** Bootstrap is sensible — fonts bundled (`allowRuntimeFetching = false`), notifications permission request **not awaited** before `runApp` (good, avoids hang), Isar opened once. Splash adds a fixed 2.5s delay on every launch (P3).
-- **Navigation:** `StatefulShellRoute.indexedStack` preserves tab Navigator stacks → no rebuild thrash switching tabs.
-- **Rebuilds / build-method cost:**
-  - `memorization_hub_page` creates a **new `Future` on every build** in a `FutureBuilder` → redundant async work each rebuild (P1, easy fix: hoist the future).
-  - Dead `surah_detail_page` recreates all `TapGestureRecognizer`s every `build()` — irrelevant while dead, must not be revived as-is (P1 if revived).
-  - `kids_quran_reader_page` assigns state in `build()` (side effect) (P2).
-  - `quran_reader_page` re-emits loading on each page swipe → brief flicker (P2).
-- **Cache:** `QuranReadConfirmationGate` is in-memory only (resets across restarts — intended anti-gaming). Audio cache service present.
-- **Memory:** No leaks found in audited screens — controllers, timers, `AudioPlayer`, `SpeechToText` are disposed/cancelled. `MobileScanner` in parent QR page relies on widget disposal (no explicit controller dispose) (P3).
-- **Animations:** confetti/animate usage is bounded; no runaway controllers found.
-- **Lists:** 114-surah lists use `ListView.builder` / `SliverChildBuilderDelegate` (lazy) — fine.
+### Memorization Science Alignment
+- SM-2-like scheduling via `ScheduleNextReviewUsecase` with strength progression (0-10)
+- Spaced repetition principles followed: weak→1 day, excellent→interval×2.5 (cap 180 days)
+- Near revision window = 5 days (appropriate)
+- Memorization threshold at strength >= 6
+- Overall: sound implementation, but no explicit forgetting-curve modeling
 
 ---
 
-## 7. Responsive / RTL / Theme Findings
+## Architecture Findings
 
-- **RTL/LTR:** Core is RTL-correct (MaterialApp locale-driven; login/settings wrap `Directionality`; onboarding flips chevrons). **Defects:** child onboarding, azkar hub/category back icons, and certificate chrome use non-directional icons / forced RTL.
-- **Arabic:** Renders correctly throughout (Amiri / Noto Naskh fonts bundled; QCF mushaf fonts loaded at startup).
-- **English:** Functional but **incomplete** — tutorial/help Arabic-only, several cubit/service error strings Arabic-only, notification time suffix forced to ص/م, some Arabic-only default names and certificate copy. Acceptable for Arabic-first launch; **must be addressed for an English-market release**.
-- **Dark / light:** Theme system is well-built (`AppTheme.light/dark`, `ColorScheme`, typed `AppColors`). Most screens respect it. **Hardcoded `Colors.*`/hex** appear widely but largely on **gradient overlays / semantic accents** (record=red, success=green) and kids' intentionally-bright palette — mostly cosmetic (P2/P3). `system` theme mode derives status-bar brightness from a stored bool rather than platform brightness (P2). Certificate save sheet hardcodes a dark theme (P1/P2).
-- **Small screens / overflow risk:** daily-plan 3-rating button row, parent dashboard side-by-side `Expanded` buttons, and fixed-width kids cards are overflow risks on narrow devices (P2).
+### Strengths
+- Clean Architecture base with data/domain/presentation layers
+- Well-structured DI via `get_it` with proper singleton/factory distinction
+- GoRouter with StatefulShellRoute for tab state preservation
+- Solid offline-first design with Isar + SharedPreferences
+- Auth notifier pattern bridges Cubit to GoRouter correctly
 
----
-
-## 8. Test Results
-
-All commands run on Flutter 3.41.8 / Dart 3.11.5 (Windows). The Cursor sandbox does not support filesystem isolation on Windows, so commands were run outside the sandbox.
-
-| Command | Result |
-|---------|--------|
-| `flutter clean` | n/a (sandbox-blocked on first attempt; not required after rerun) |
-| `flutter pub get` | **Got dependencies!** (60 packages have newer incompatible versions — informational only) |
-| `flutter analyze` | **No issues found!** (ran in 912.1s) |
-| `flutter test` | **All tests passed!** — `+404`, **0 failed, 0 skipped** (golden tag excluded) |
-| `flutter test --coverage` | Not run (skipped; full test suite already passed) |
-| `flutter build apk --debug` | **Skipped** (per release audit scope) |
-| `flutter build appbundle --debug` | **Skipped** (per release audit scope) |
-
-> **Build note:** APK/appbundle builds were intentionally skipped during this audit. Run `flutter build apk --debug` and/or `flutter build appbundle --debug` locally before store submission. Release configs were **not** modified.
+### Violations & Risks
+| Issue | Severity | Location |
+|---|---|---|
+| **God class** — 1414-line repository handling 10+ responsibilities | P1 | `memorization_plus_repository_impl.dart` |
+| **Route coupling** in pure logic engine | P1 | `smart_coach_engine.dart` |
+| **Temporal dependency** in domain entity | P1 | `memorization_entities.dart:53-62` |
+| **13 empty directories** — incomplete feature layers | P1 | `home/`, `xp/`, `settings/`, `progress/`, `certificate/` |
+| **Core services for domain logic** — streak, XP, achievement in core/ | P2 | `core/services/` |
+| **Cubit over-injection** — HifzSessionCubit with 13+ deps | P2 | `hifz_session_cubit.dart` |
+| **Mixed storage** — SharedPrefs + Isar for related data | P2 | Cross-cutting |
+| **Static services not in DI** — HapticService, QuranAudioService | P2 | `core/services/` |
+| **Oprhaned generated files** — 2 dead `.g.dart` files | P3 | `azkar/`, `hifz/` models |
 
 ---
 
-## 9. Required Fix Plan Before Release
+## Performance Findings
 
-### P0 — (none)
-No hard crash/data-loss blockers identified.
-
-### P1 — Fix before wide / English release
-- [ ] **B1** Adult "Sign in / Create account" must route to `/login` — honor `intent == signIn` in `onboarding_cubit._routeAfterOnboarding` for adults.
-- [ ] **B2** Home guest "Sign in" CTA → `/login` (not `/settings`).
-- [ ] **B3** Kids back-navigation fallback → kids home, never adult `/`.
-- [ ] **B4** Verify Supabase `delete_current_user` RPC is deployed in production (store requirement).
-- [ ] **B5** Guardian pairing: keep polling through/after code expiry; shorten interval.
-- [ ] **B6** Disclose local-data retention on account delete; route post-delete to login.
-- [ ] **B7** Enforce kids stage-lock on deep links / extras.
-- [ ] **B8** Move Arabic-only cubit/service error strings (auth repo, hifz session, quiz, kids mode) into ARB; localize notification time format.
-- [ ] Daily-plan completion sheet: add a "shown once" guard.
-- [ ] Memorization hub: hoist the `FutureBuilder` future (perf) + add error/empty handling.
-- [ ] Azkar category/general error states: add `onRetry`.
-- [ ] Notifications: request OS permission when a toggle is enabled.
-- [ ] Remove or document the dead `surah_detail_page.dart`.
-
-### P2 — Strongly recommended
-- [x] Unify STT locale id (`ar-SA` vs `ar_SA`) and call `cancel()` (not just `stop()`) on quiz STT dispose.
-- [x] `system` theme mode: use platform brightness for status bar.
-- [x] RTL chevrons in child onboarding, azkar, certificate chrome.
-- [x] Tokenize hardcoded `Colors.*`/hex where a theme token exists; theme the certificate save sheet.
-- [x] Constrain overflow-risk rows (daily-plan ratings, parent dashboard buttons).
-- [x] `daily_plan_cubit`: preserve loaded plan on transient evaluate failure.
-- [x] `AuthCubit`: single emission source to avoid double navigation.
-- [x] Certificates list: show a loading spinner; fix RTL padding.
-
-### P3 — Polish / cleanup
-- [ ] Replace default `widget_test.dart` counter test with a real smoke test.
-- [ ] Remove dead methods/keys (`HifzCubit.selectPath`, `createRemoteLinkQr`, `acceptCode`, `disableParentMode`, `nextStep/previousStep`, `onboarding_skipped`).
-- [ ] Splash: use `OnboardingCubit.firstOpenKey` constant; consider shorter delay.
-- [ ] Localize privacy-policy title and bilingual inline ternaries (migrate to ARB over time).
+| Area | Result | Notes |
+|---|---|---|
+| **Flutter Analyze** | ✅ No issues found | 0 errors, 0 warnings |
+| **Startup** | Good | Fonts bundled (no runtime fetch), Isar sync, notifications async |
+| **Portrait lock** | ✅ | Both orientations locked |
+| **QCF fonts** | ✅ | Loaded at startup via `QcfFontLoader` |
+| **Expensive widgets** | None found | Shimmer for loading, efficient list rendering |
+| **Animation** | ✅ | `flutter_animate` used sparingly |
+| **Storage** | Good | Isar for structured data, SharedPrefs for settings |
+| **Memory** | No leaks found | Cubits disposed properly, no unreleased listeners detected |
+| **Images** | No oversized assets found | Proper asset management |
+| **Page transitions** | Cupertino on both platforms | Consistent, performant |
 
 ---
 
-## 10. Final Recommendation
+## Localization Findings
 
-**Release after fixes (Conditionally Ready).**
+| Area | Status | Issues |
+|---|---|---|
+| **Arabic (AR)** | ✅ Complete | 1068 keys, RTL support |
+| **English (EN)** | ⚠️ 1 key missing | 1067 keys — missing 1 translation |
+| **Auth errors** | ❌ **All hardcoded Arabic** | 26 error strings (see P0-1) |
+| **Startup failure** | ❌ **Arabic-only** | `_StartupFailureApp` (P0-2) |
+| **ErrorWidget** | ❌ **Arabic-only** | Production error widget (P0-3) |
+| **Coach UI** | ❌ **Hardcoded fallback** | `_coachSurahName` only maps 2 surahs (P0-4) |
+| **Tutorial categories** | ❌ **Hardcoded Arabic** | Category names (P0-5) |
+| **Smart Coach card text** | ⚠️ Mixed | Uses `context.isArabic` ternary patterns instead of l10n |
+| **ARB structure** | ✅ Clean | Proper descriptions, well-organized |
 
-- For an **Arabic-first launch:** ship after fixing the functional P1s — **B1, B2, B3, B4, B5, B6, B7** (auth funnel, kids walled-garden, account-deletion correctness). The Arabic experience is otherwise polished, analyze is clean, and 404 tests pass.
-- For an **English-market launch:** additionally complete **B8** and the localization items (tutorial/help, cubit/service error strings, notification time format, certificate copy) so English users don't hit Arabic-only screens and errors.
+---
 
-The codebase is well-architected and stable; there are **no P0 crash blockers**, and the remaining work is a contained, well-scoped list of correctness and localization fixes rather than structural rework.
+## Theme Findings
+
+| Area | Status | Notes |
+|---|---|---|
+| **Light theme** | ✅ Polished | M3, consistent colors, proper contrast |
+| **Dark theme** | ✅ Polished | Good surface hierarchy, readable |
+| **Hardcoded colors** | ✅ None found | All via `AppColors` constants |
+| **Typography** | ✅ Good | Amiri + Noto Naskh Arabic for Arabic, system for English |
+| **Cupertino transitions** | ⚠️ Both platforms | Android gets iOS-style transitions (parity, but debatable) |
+
+---
+
+## Responsive Design Findings
+
+| Area | Status | Notes |
+|---|---|---|
+| **Small phones (320px)** | ⚠️ Testing exists | Kids gamified RTL narrow test passes |
+| **Large phones** | ✅ Good | Default design target |
+| **Tablets** | ⚠️ Untested | No tablet-specific layouts found |
+| **Desktop** | ❌ Not supported | Portrait-locked, mobile-first |
+| **Text scaling** | ⚠️ Not verified | No explicit accessibility text scale testing |
+
+---
+
+## Testing Findings
+
+### Results
+- **flutter analyze:** ✅ No issues found
+- **flutter test:** ✅ **459 passed, 2 failed**
+  - Failing: `test/features/tutorial_guide/tutorial_guide_page_test.dart` — both LTR and RTL tests fail due to ListTile ink splash visibility assertion
+
+### Coverage Areas
+| Area | Test Count | Coverage Quality |
+|---|---|---|
+| Core memorization | 4 | Good (engine, classifier, evaluator, reader) |
+| Core services | 5 | Good |
+| Core router | 2 | Adequate |
+| Memorization Plus | 21 | **Excellent** (entities, datasource, repo, cubits, pages, widgets) |
+| Hifz | 5 | Good |
+| Quran | 4 | Good |
+| Settings | 5 | Good |
+| Auth | 3 | Adequate |
+| Onboarding | 2 | Adequate |
+| Progress | 2 | Adequate |
+| Home | 1 | Minimal |
+| Tutorial Guide | 1 | Minimal (2 failing sub-tests) |
+
+### Gaps
+| Missing Area | Impact |
+|---|---|
+| **No integration/E2E tests** | Full user flows never tested end-to-end |
+| **No notification tests** | Critical path untested |
+| **No deep link tests** | Password recovery flow untested |
+| **No offline-mode tests** | Core offline path untested |
+| **No cloud sync tests** | Sync conflict resolution untested |
+| **No performance benchmarks** | No baseline for regression |
+| **Home feature tests (1 only)** | Critical page minimally tested |
+| **`widget_test.dart` outdated** | Still testing Flutter counter template |
+
+---
+
+## Required Fix Plan
+
+### P0 Critical (Before Release)
+
+| # | Fix | File(s) | Effort |
+|---|---|---|---|
+| 1 | Localize all auth error messages via l10n | `auth_repository_impl.dart` | 2-3 hrs |
+| 2 | Localize `_StartupFailureApp` with locale awareness | `main.dart` | 30 min |
+| 3 | Localize `ErrorWidget.builder` with locale awareness | `main.dart` | 15 min |
+| 4 | Implement full surah name lookup in coach UI (114 surahs) | `home_page_widgets.dart:1439-1455` | 1-2 hrs |
+| 5 | Localize tutorial guide categories | `tutorial_guide_page.dart:23-31` | 30 min |
+
+### P1 High
+
+| # | Fix | File(s) | Effort |
+|---|---|---|---|
+| 1 | Extract daily plan generation from repository into dedicated service | `memorization_plus_repository_impl.dart` | 4-6 hrs |
+| 2 | Decouple routes from SmartCoachEngine (return data, not routes) | `smart_coach_engine.dart` | 2-3 hrs |
+| 3 | Inject time provider into ReviewClassifier/AyahReviewRecord | `memorization_entities.dart` | 1-2 hrs |
+| 4 | Fix 3 direct SharedPreferences.getInstance() calls | 3 files | 1 hr |
+| 5 | Clean up 13 empty directories | Multiple | 1 hr |
+| 6 | Add XP presentation layer (at minimum a summary on progress page) | `features/xp/` | 3-4 hrs |
+| 7 | Fix fragile kids award concurrency lock | `memorization_plus_repository_impl.dart` | 2 hrs |
+| 8 | Add missing English ARB key | `app_en.arb` | 15 min |
+| 9 | Fix 2 failing tutorial guide tests | `tutorial_guide_page_test.dart` + `tutorial_guide_page.dart` | 1 hr |
+| 10 | Graceful partial failure in MemorizationProgressReader | `memorization_progress_reader.dart` | 1-2 hrs |
+
+### P2 Medium
+
+| # | Fix | File(s) | Effort |
+|---|---|---|---|
+| 1 | Fix DailyPlanCubit commit-before-save ordering | `daily_plan_cubit.dart` | 1 hr |
+| 2 | Add time/Clock abstraction for DateTime.now() | Across codebase | 3-4 hrs |
+| 3 | Remove orphaned `.g.dart` files | 2 files | 15 min |
+| 4 | Register HapticService and QuranAudioService in DI | `injection.dart` | 1 hr |
+| 5 | Build integration test infrastructure | `test/` | 4-6 hrs |
+
+### P3 Low
+
+| # | Fix | File(s) | Effort |
+|---|---|---|---|
+| 1 | Clean up unused static delegates in app_localizations.dart | `app_localizations.dart` | 15 min |
+| 2 | Add tablet layout adaptations | Multiple | TBD |
+| 3 | Add widget_test.dart replacement | `test/widget_test.dart` | 30 min |
+
+---
+
+## Final Recommendation
+
+### Release After P0/P1 Fixes
+
+**For Arabic-only launch:** The app is very close to ready. Fix P0 items 2-5 (startup, error widget, coach surah names, tutorial categories) and the app can ship to Arabic-speaking users. Arabic auth error messages are acceptable for an Arabic-only release.
+
+**For bilingual (Arabic + English) launch:** All P0 items must be fixed. The auth error localization (P0-1) is the single biggest blocker — currently English users receive Arabic text for every authentication failure. This is a showstopper for any non-Arabic-speaking user.
+
+**P1 items** should be fixed within the first 2 post-release sprints. The God class (P1-1) and route coupling (P1-2) are the highest-priority architectural debt items. The XP feature's missing UI (P1-7) means the entire achievement/XP system is invisible to users.
+
+### Verdict
+| Scenario | Verdict |
+|---|---|
+| Arabic-only release | **Release Now** (with P0-2,3,4,5 fixes) |
+| Bilingual release | **Not Ready** (P0-1 blocks English users) |
+| Full global release | **Not Ready** (all P0 + P1-1,2,3,7,10 required) |
+
+**Score: 72/100** — Strong foundations with targeted localization and architecture gaps that are well-understood and scoped for remediation.
