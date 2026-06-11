@@ -1302,6 +1302,11 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
   }
 
   (String, String, IconData, String) _action(BuildContext context) {
+    final coach = widget.state.coachRecommendation;
+    if (coach != null) {
+      return _coachAction(context, coach);
+    }
+
     if (widget.isKids) {
       return (
         context.isArabic ? 'المهمة الحالية' : 'Current Mission',
@@ -1352,6 +1357,123 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
       Icons.auto_awesome_rounded,
       AppRoutes.memorizationHub,
     );
+  }
+
+  (String, String, IconData, String) _coachAction(
+    BuildContext context,
+    SmartCoachRecommendation coach,
+  ) {
+    final surahLabel = _coachSurahLabel(context, coach.surahId);
+    final ayahLabel = _coachAyahLabel(context, coach);
+
+    return switch (coach.kind) {
+      SmartCoachRecommendationKind.reviewDueNear => (
+        context.isArabic
+            ? 'راجع قبل الحفظ الجديد'
+            : 'Review before new content',
+        context.isArabic
+            ? 'مراجعة قريبة مستحقة في $surahLabel$ayahLabel.'
+            : 'Near revision due in $surahLabel$ayahLabel.',
+        Icons.history_rounded,
+        coach.route,
+      ),
+      SmartCoachRecommendationKind.reviewDueFar => (
+        context.isArabic ? 'مراجعة بعيدة مستحقة' : 'Long-term review due',
+        context.isArabic
+            ? 'حان وقت مراجعة $surahLabel$ayahLabel.'
+            : 'Time to review $surahLabel$ayahLabel.',
+        Icons.schedule_rounded,
+        coach.route,
+      ),
+      SmartCoachRecommendationKind.memorizedReviewDue => (
+        context.l10n.smartCoachMemorizedReviewDueTitle,
+        context.l10n.smartCoachMemorizedReviewDueSubtitle(
+          _coachSurahName(context, coach.surahId),
+        ),
+        Icons.verified_rounded,
+        coach.route,
+      ),
+      SmartCoachRecommendationKind.reviewWeakAyah => (
+        context.isArabic ? 'راجع الآية الصعبة' : 'Review a difficult ayah',
+        context.isArabic
+            ? 'آخر مراجعة كانت صعبة في $surahLabel$ayahLabel.'
+            : 'Your last review was difficult for $surahLabel$ayahLabel.',
+        Icons.healing_rounded,
+        coach.route,
+      ),
+      SmartCoachRecommendationKind.continueDailyPlan => (
+        context.isArabic ? 'أكمل خطة اليوم' : "Continue today's plan",
+        context.isArabic
+            ? '${coach.completedCount}/${coach.totalCount} من مهام اليوم.'
+            : '${coach.completedCount} of ${coach.totalCount} items done today.',
+        Icons.today_rounded,
+        coach.route,
+      ),
+      SmartCoachRecommendationKind.memorizeNewAyahs => (
+        context.isArabic ? 'احفظ آيات جديدة' : 'Memorize new ayahs',
+        context.isArabic
+            ? 'ابدأ بالآيات الجديدة في $surahLabel$ayahLabel.'
+            : 'Start new ayahs in $surahLabel$ayahLabel.',
+        Icons.auto_awesome_rounded,
+        coach.route,
+      ),
+      SmartCoachRecommendationKind.kidsCurrentMission => (
+        context.isArabic ? 'المهمة الحالية' : 'Current Mission',
+        context.isArabic
+            ? 'تابع مهمة الطفل الحالية.'
+            : "Continue the child's current mission.",
+        Icons.star_rounded,
+        coach.route,
+      ),
+      SmartCoachRecommendationKind.hifzReviewDue => (
+        context.isArabic ? 'مراجعة الحفظ' : 'Hifz review due',
+        context.isArabic
+            ? 'لديك آيات مستحقة للمراجعة في $surahLabel$ayahLabel.'
+            : 'You have ayahs due for review in $surahLabel$ayahLabel.',
+        Icons.psychology_alt_rounded,
+        coach.route,
+      ),
+    };
+  }
+
+  String _coachSurahName(BuildContext context, int? surahId) {
+    if (surahId == null) {
+      return context.isArabic ? 'السورة' : 'your surah';
+    }
+    if (context.isArabic) {
+      return switch (surahId) {
+        67 => 'الملك',
+        1 => 'الفاتحة',
+        _ => '$surahId',
+      };
+    }
+    return switch (surahId) {
+      67 => 'Al-Mulk',
+      1 => 'Al-Fatihah',
+      _ => '$surahId',
+    };
+  }
+
+  String _coachSurahLabel(BuildContext context, int? surahId) {
+    if (surahId == null) {
+      return context.isArabic ? 'السورة' : 'your surah';
+    }
+    if (context.isArabic) return 'سورة $surahId';
+    return switch (surahId) {
+      67 => 'Surah Al-Mulk',
+      1 => 'Surah Al-Fatihah',
+      _ => 'Surah $surahId',
+    };
+  }
+
+  String _coachAyahLabel(BuildContext context, SmartCoachRecommendation coach) {
+    final start = coach.startAyah;
+    final end = coach.endAyah;
+    if (start == null) return '';
+    if (end == null || end == start) {
+      return context.isArabic ? '، الآية $start' : ', ayah $start';
+    }
+    return context.isArabic ? '، الآيات $start–$end' : ', ayahs $start–$end';
   }
 
   @override

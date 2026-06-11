@@ -837,6 +837,8 @@
   "dailyPlanNewAyahs": "New ayahs to memorize",
   "dailyPlanNearRevision": "Near review (last 5 days)",
   "dailyPlanFarRevision": "Far review",
+  "dailyPlanRetentionReview": "Retention Review",
+  "dailyPlanRetentionReviewHint": "Optional review for ayahs you have already memorized.",
   "dailyPlanCompletedTitle": "MashaAllah! You completed Today's Plan",
   "dailyPlanCompletedSubtitle": "You completed {count} items successfully.\nKeep going with this steady pace.",
   "@dailyPlanCompletedSubtitle": {
@@ -1292,6 +1294,15 @@
   "quizSurahNotFound": "Surah data not found",
   "quizAyahsOutsidePlan": "Cannot quiz ayahs outside your plan or records",
   "quizNoMemorizedAyahs": "No memorized ayahs to quiz in this surah",
+  "smartCoachMemorizedReviewDueTitle": "Retention review due",
+  "smartCoachMemorizedReviewDueSubtitle": "Review memorized ayahs in Surah {surahName} to keep them strong.",
+  "@smartCoachMemorizedReviewDueSubtitle": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      }
+    }
+  },
   "quizUnexpectedError": "Something went wrong: {error}",
   "@quizUnexpectedError": {
     "placeholders": {

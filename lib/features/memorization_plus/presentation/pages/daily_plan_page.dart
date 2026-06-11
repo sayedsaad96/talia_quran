@@ -60,9 +60,9 @@ class _DailyPlanViewState extends State<_DailyPlanView> {
       },
       listener: (context, state) {
         if (state is DailyPlanLoaded && state.actionError != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.actionError!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.actionError!)));
           return;
         }
 
@@ -77,10 +77,10 @@ class _DailyPlanViewState extends State<_DailyPlanView> {
           return;
         }
 
-        // UX-011: Show celebration when all items are completed
+        // UX-011: Show celebration only when all *required* items are done.
+        // P0 hotfix: retention-only completion must NOT trigger this.
         if (state is DailyPlanLoaded &&
-            state.plan.totalItems > 0 &&
-            state.plan.completedCount >= state.plan.totalItems &&
+            state.plan.isRequiredPlanCompleted &&
             state.lastEvaluatedAyah != null) {
           if (_completionCelebrationShown) return;
           _completionCelebrationShown = true;
@@ -169,7 +169,7 @@ class _DailyPlanViewState extends State<_DailyPlanView> {
               return CustomScrollView(
                 slivers: [
                   _buildAppBar(context, isDark, primary, plan),
-                  if (plan.totalItems == 0)
+                  if (plan.totalItems == 0 && !plan.hasRetentionReview)
                     SliverFillRemaining(child: _EmptyPlan(isDark: isDark))
                   else ...[
                     // Progress header
@@ -225,6 +225,15 @@ class _DailyPlanViewState extends State<_DailyPlanView> {
                         primary: const Color(0xFFFF8C42),
                         evaluatingAyah: evaluatingAyah,
                         sectionColor: const Color(0xFFFF8C42),
+                      ),
+
+                    // Optional retention review (Sprint 10B)
+                    if (plan.hasRetentionReview)
+                      _RetentionReviewSection(
+                        plan: plan,
+                        isDark: isDark,
+                        primary: primary,
+                        evaluatingAyah: evaluatingAyah,
                       ),
 
                     const SliverToBoxAdapter(child: SizedBox(height: 120)),
@@ -412,7 +421,7 @@ class _DailyPlanViewState extends State<_DailyPlanView> {
                   Text(
                     context.l10n.dailyPlanHeaderSummary(
                       plan.totalItems,
-                      plan.completedCount,
+                      plan.requiredCompletedCount,
                     ),
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white70,
@@ -462,9 +471,9 @@ class _PlanProgressHeader extends StatelessWidget {
           CircularPercentIndicator(
             radius: 36,
             lineWidth: 5,
-            percent: plan.progress,
+            percent: plan.requiredProgress,
             center: Text(
-              '${(plan.progress * 100).toInt()}%',
+              '${(plan.requiredProgress * 100).toInt()}%',
               style: AppTypography.labelSmall.copyWith(
                 color: primary,
                 fontWeight: FontWeight.w700,
@@ -482,7 +491,7 @@ class _PlanProgressHeader extends StatelessWidget {
               children: [
                 Text(
                   context.l10n.dailyPlanProgressCount(
-                    plan.completedCount,
+                    plan.requiredCompletedCount,
                     plan.totalItems,
                   ),
                   style: AppTypography.titleLarge.copyWith(
@@ -491,10 +500,10 @@ class _PlanProgressHeader extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  plan.completedCount >= plan.totalItems
+                  plan.isRequiredPlanCompleted
                       ? context.l10n.dailyPlanAllDoneShort
                       : context.l10n.dailyPlanRemainingItems(
-                          plan.totalItems - plan.completedCount,
+                          plan.totalItems - plan.requiredCompletedCount,
                         ),
                   style: AppTypography.bodySmall.copyWith(
                     color: isDark
@@ -507,6 +516,91 @@ class _PlanProgressHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Retention Review Section (optional, collapsed by default) ───────────────
+
+class _RetentionReviewSection extends StatefulWidget {
+  const _RetentionReviewSection({
+    required this.plan,
+    required this.isDark,
+    required this.primary,
+    this.evaluatingAyah,
+  });
+
+  final DailyPlan plan;
+  final bool isDark;
+  final Color primary;
+  final int? evaluatingAyah;
+
+  @override
+  State<_RetentionReviewSection> createState() =>
+      _RetentionReviewSectionState();
+}
+
+class _RetentionReviewSectionState extends State<_RetentionReviewSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    const sectionColor = Color(0xFF6B5B95);
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.pagePadding,
+          AppSpacing.lg,
+          AppSpacing.pagePadding,
+          AppSpacing.sm,
+        ),
+        child: Material(
+          color: widget.isDark ? AppColors.darkCard : AppColors.lightCard,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          child: ExpansionTile(
+            initiallyExpanded: _expanded,
+            onExpansionChanged: (value) => setState(() => _expanded = value),
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.xs,
+            ),
+            childrenPadding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            title: Text(
+              '🔒 ${context.l10n.dailyPlanRetentionReview}',
+              style: AppTypography.titleMedium.copyWith(
+                color: sectionColor,
+                fontFamily: 'Amiri',
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            subtitle: Text(
+              context.l10n.dailyPlanRetentionReviewHint,
+              style: AppTypography.bodySmall.copyWith(
+                color: widget.isDark
+                    ? AppColors.darkTextSecondary
+                    : AppColors.lightTextSecondary,
+                fontFamily: 'Amiri',
+              ),
+            ),
+            children: [
+              for (final ayah in widget.plan.retentionReview)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: 4,
+                  ),
+                  child: _AyahPlanTile(
+                    planAyah: ayah,
+                    plan: widget.plan,
+                    isDark: widget.isDark,
+                    primary: widget.primary,
+                    isEvaluating: widget.evaluatingAyah == ayah.ayahNumber,
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -817,7 +911,8 @@ class _AyahPlanTile extends StatelessWidget {
                         ),
                         _EvalButton(
                           label: context.l10n.performanceExcellent,
-                          description: context.l10n.dailyPlanRatingExcellentDesc,
+                          description:
+                              context.l10n.dailyPlanRatingExcellentDesc,
                           icon: Icons.sentiment_very_satisfied_rounded,
                           color: const Color(0xFF2D8E4C),
                           expanded: !useColumn,
@@ -896,10 +991,7 @@ class _EvalButton extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 20),
             const SizedBox(height: 2),
-            Text(
-              label,
-              style: AppTypography.labelSmall.copyWith(color: color),
-            ),
+            Text(label, style: AppTypography.labelSmall.copyWith(color: color)),
             const SizedBox(height: 2),
             Text(
               description,

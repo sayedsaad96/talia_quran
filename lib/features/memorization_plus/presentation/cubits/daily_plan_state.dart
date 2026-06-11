@@ -35,7 +35,9 @@ class DailyPlanLoaded extends DailyPlanState {
   final List<CertificateAward> newAwards;
   final String? actionError;
 
-  bool get allDone => plan.completedCount >= plan.totalItems;
+  /// True only when all *required* ayahs are completed.
+  /// Retention-only completion does NOT set this to true.
+  bool get allDone => plan.isRequiredPlanCompleted;
 
   @override
   List<Object?> get props => [

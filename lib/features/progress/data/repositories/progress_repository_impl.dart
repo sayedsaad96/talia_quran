@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/memorization/review_record_filters.dart';
 import '../../../../core/services/streak_reader.dart';
 import '../../../hifz/data/datasources/hifz_local_datasource.dart';
 import '../../../hifz/domain/entities/hifz_entities.dart';
@@ -138,12 +139,17 @@ class ProgressRepositoryImpl implements ProgressRepository {
         reviewAyahs: reviewAyahs,
       );
 
-      // Smart memorization system data
+      // Smart memorization system data.
+      // Sprint 8B: kidsMode and hifz records are excluded from smart stats so
+      // that kids-path completions do not inflate the adult user's memorized
+      // count on the Progress page.
       final memPlusRecords = await _memPlusDs.getAllReviewRecords();
       final smartMemorizedAyahs = memPlusRecords
+          .where(ReviewRecordFilters.isAdultCompatible)
           .where((r) => r.strengthLevel >= 6)
           .length;
       final smartReviewAyahs = memPlusRecords
+          .where(ReviewRecordFilters.isAdultCompatible)
           .where((r) => r.strengthLevel < 6 && r.strengthLevel > 0)
           .length;
 

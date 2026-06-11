@@ -28,6 +28,7 @@ class HomeLoaded extends HomeState {
     this.lastRestorableLocation,
     this.activityCountsByDay = const {},
     required this.activityStartDate,
+    this.coachRecommendation,
   });
 
   final OverallProgress progress;
@@ -46,6 +47,7 @@ class HomeLoaded extends HomeState {
   final String? lastRestorableLocation;
   final Map<String, int> activityCountsByDay;
   final DateTime activityStartDate;
+  final SmartCoachRecommendation? coachRecommendation;
 
   @override
   List<Object?> get props => [
@@ -60,6 +62,7 @@ class HomeLoaded extends HomeState {
     lastRestorableLocation,
     activityCountsByDay,
     activityStartDate,
+    coachRecommendation,
   ];
 }
 

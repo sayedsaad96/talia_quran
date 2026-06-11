@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/memorization/review_classification.dart';
+
 export 'memorization_profile.dart';
 export 'pairing_session.dart';
 export 'smart_memorization_settings.dart';
@@ -15,6 +17,29 @@ enum KidsJourneyStageStatus { locked, current, completed, needsReview }
 enum ParentRewardStatus { locked, unlocked, claimed }
 
 enum PlanTargetUser { adult, child }
+
+/// Identifies the originating write path for an [AyahReviewRecord].
+///
+/// Used to safely separate adult and kids memorization records that share the
+/// same Isar collection.  New records receive an explicit tag at the write site;
+/// records that existed before this field was introduced are treated as
+/// [unknown] (their `createdByModeIndex` is `null` in Isar).
+enum ReviewRecordCreatedByMode {
+  /// Written by the Adult MemPlus path (DailyPlanCubit or QuizCubit).
+  adultMemPlus,
+
+  /// Written by KidsModeCubit via MarkAyahMemorizedUsecase.
+  kidsMode,
+
+  /// Reserved for future Hifz SRS integration.
+  hifz,
+
+  /// Written during SharedPreferences → Isar migration; source is ambiguous.
+  migration,
+
+  /// Existing records that predate source-metadata tagging.
+  unknown,
+}
 
 // ─── Memorization Identity (Moved to separate files) ──────────
 
@@ -32,6 +57,7 @@ class AyahReviewRecord extends Equatable {
     required this.nextReviewDate,
     required this.totalReviews,
     required this.lastRating,
+    this.createdByMode = ReviewRecordCreatedByMode.unknown,
   });
 
   final int surahId;
@@ -48,29 +74,32 @@ class AyahReviewRecord extends Equatable {
   final int totalReviews;
   final PerformanceRating? lastRating;
 
-  bool get isDue => !DateTime.now().toUtc().isBefore(nextReviewDate.toUtc());
-  bool get isNew => totalReviews == 0;
-  bool get isMemorized => strengthLevel >= 6;
+  /// Source metadata added in Sprint 7B. Records written before this field
+  /// was introduced default to [ReviewRecordCreatedByMode.unknown].
+  final ReviewRecordCreatedByMode createdByMode;
+
+  ReviewClassification get reviewClassification =>
+      const ReviewClassifier().classify(
+        ReviewClassificationInput(
+          now: DateTime.now().toUtc(),
+          lastReviewedAt: lastReviewedAt,
+          nextReviewDate: nextReviewDate,
+          strengthLevel: strengthLevel,
+          totalReviews: totalReviews,
+        ),
+      );
+
+  bool get isDue => reviewClassification.isDue;
+  bool get isNew => reviewClassification.isNew;
+  bool get isMemorized => reviewClassification.isMemorized;
+  bool get isMemorizedDue => reviewClassification.isMemorizedDue;
+  bool get isVisibleForReview => reviewClassification.isVisibleForReview;
 
   /// Near revision: reviewed within last 5 days
-  bool get isNearRevision {
-    if (isNew) return false;
-    final diff = DateTime.now()
-        .toUtc()
-        .difference(lastReviewedAt.toUtc())
-        .inDays;
-    return diff <= 5 && !isMemorized;
-  }
+  bool get isNearRevision => reviewClassification.isNearRevision;
 
   /// Far revision: reviewed more than 5 days ago
-  bool get isFarRevision {
-    if (isNew) return false;
-    final diff = DateTime.now()
-        .toUtc()
-        .difference(lastReviewedAt.toUtc())
-        .inDays;
-    return diff > 5 && !isMemorized;
-  }
+  bool get isFarRevision => reviewClassification.isFarRevision;
 
   String get key => '${surahId}_$ayahNumber';
 
@@ -81,6 +110,7 @@ class AyahReviewRecord extends Equatable {
     DateTime? nextReviewDate,
     int? totalReviews,
     PerformanceRating? lastRating,
+    ReviewRecordCreatedByMode? createdByMode,
   }) => AyahReviewRecord(
     surahId: surahId,
     ayahNumber: ayahNumber,
@@ -90,6 +120,7 @@ class AyahReviewRecord extends Equatable {
     nextReviewDate: nextReviewDate ?? this.nextReviewDate,
     totalReviews: totalReviews ?? this.totalReviews,
     lastRating: lastRating ?? this.lastRating,
+    createdByMode: createdByMode ?? this.createdByMode,
   );
 
   @override
@@ -101,6 +132,7 @@ class AyahReviewRecord extends Equatable {
     nextReviewDate,
     totalReviews,
     lastRating,
+    createdByMode,
   ];
 }
 
@@ -133,6 +165,7 @@ class DailyPlan extends Equatable {
     required this.nearRevision,
     required this.farRevision,
     required this.completedAyahNums,
+    this.retentionReview = const [],
   });
 
   final DateTime generatedAt;
@@ -142,10 +175,61 @@ class DailyPlan extends Equatable {
   final List<DailyPlanAyah> farRevision;
   final List<int> completedAyahNums;
 
+  /// Optional memorized-due retention items (Sprint 10B). Not part of required
+  /// daily workload.
+  final List<DailyPlanAyah> retentionReview;
+
   int get totalItems =>
       newAyahs.length + nearRevision.length + farRevision.length;
+
+  // ── Required-only progress helpers (P0 hotfix: retention must not count) ──
+
+  /// All ayahs that are part of the required daily workload (new + revisions).
+  List<DailyPlanAyah> get requiredAyahs => [
+    ...newAyahs,
+    ...nearRevision,
+    ...farRevision,
+  ];
+
+  /// Composite identity keys for required ayahs. Uses `surahId:ayahNumber`
+  /// to remain correct if multiple surahs ever share a plan.
+  Set<String> get _requiredAyahKeys =>
+      requiredAyahs.map((a) => '${a.surahId}:${a.ayahNumber}').toSet();
+
+  /// Returns how many required ayahs have been completed.
+  /// Retention completions are excluded.
+  int get requiredCompletedCount => completedAyahNums
+      .where((n) => _requiredAyahKeys.contains('$surahId:$n'))
+      .length;
+
+  /// Required plan progress in [0.0, 1.0]. Always 0 when there are no
+  /// required items (retention-only day).
+  double get requiredProgress =>
+      totalItems == 0 ? 0 : requiredCompletedCount / totalItems;
+
+  /// True when all required items are completed. Never true for a
+  /// retention-only day (totalItems == 0).
+  bool get isRequiredPlanCompleted =>
+      totalItems > 0 && requiredCompletedCount >= totalItems;
+
+  // ── Legacy aliases (kept for retention visual-check compatibility) ──────
+
+  /// Total completed ayahs including optional retention completions.
+  /// Do NOT use for required-plan progress or completion gating.
   int get completedCount => completedAyahNums.length;
-  double get progress => totalItems == 0 ? 0 : completedCount / totalItems;
+
+  /// Overall progress including optional retention.
+  /// Do NOT use for required-plan progress display.
+  double get progress =>
+      totalItems == 0 ? 0 : requiredCompletedCount / totalItems;
+
+  bool get hasRetentionReview => retentionReview.isNotEmpty;
+
+  int get optionalRetentionCount => retentionReview.length;
+
+  int get completedRetentionCount => retentionReview
+      .where((ayah) => completedAyahNums.contains(ayah.ayahNumber))
+      .length;
 
   bool isCompleted(int ayahNumber) => completedAyahNums.contains(ayahNumber);
 
@@ -158,6 +242,7 @@ class DailyPlan extends Equatable {
       nearRevision: nearRevision,
       farRevision: farRevision,
       completedAyahNums: [...completedAyahNums, ayahNumber],
+      retentionReview: retentionReview,
     );
   }
 
@@ -169,6 +254,7 @@ class DailyPlan extends Equatable {
     nearRevision,
     farRevision,
     completedAyahNums,
+    retentionReview,
   ];
 }
 

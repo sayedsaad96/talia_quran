@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../domain/entities/memorization_entities.dart';
 import '../models/isar_ayah_review_record.dart';
 import '../models/memorization_models.dart';
 
@@ -191,6 +192,12 @@ class MemorizationPlusLocalDatasourceImpl
               : _tryParse(raw, AyahReviewRecordModel.fromJson);
         })
         .whereType<AyahReviewRecordModel>()
+        // Tag migrated records as `migration` — they are permanently ambiguous.
+        .map(
+          (m) => AyahReviewRecordModel.fromEntity(
+            m.copyWith(createdByMode: ReviewRecordCreatedByMode.migration),
+          ),
+        )
         .toList();
 
     await isar.writeTxn(() async {

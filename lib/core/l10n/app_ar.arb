@@ -840,6 +840,8 @@
   "dailyPlanNewAyahs": "آيات جديدة للحفظ",
   "dailyPlanNearRevision": "مراجعة قريبة (آخر ٥ أيام)",
   "dailyPlanFarRevision": "مراجعة بعيدة",
+  "dailyPlanRetentionReview": "مراجعة تثبيت",
+  "dailyPlanRetentionReviewHint": "مراجعة اختيارية لتثبيت الآيات التي حفظتها بالفعل.",
   "dailyPlanCompletedTitle": "ما شاء الله! أكملت خطة اليوم",
   "dailyPlanCompletedSubtitle": "أتممت {count} عناصر بنجاح.\nثابر على هذا المستوى.",
   "@dailyPlanCompletedSubtitle": {
@@ -1295,6 +1297,15 @@
   "quizSurahNotFound": "لم يتم العثور على بيانات السورة",
   "quizAyahsOutsidePlan": "لا يمكن اختبار آيات خارج خطتك أو سجلاتك",
   "quizNoMemorizedAyahs": "لا توجد آيات محفوظة لاختبارها في هذه السورة",
+  "smartCoachMemorizedReviewDueTitle": "مراجعة تثبيت مستحقة",
+  "smartCoachMemorizedReviewDueSubtitle": "راجع الآيات المحفوظة من سورة {surahName} لتثبيت حفظك.",
+  "@smartCoachMemorizedReviewDueSubtitle": {
+    "placeholders": {
+      "surahName": {
+        "type": "String"
+      }
+    }
+  },
   "quizUnexpectedError": "حدث خطأ: {error}",
   "@quizUnexpectedError": {
     "placeholders": {

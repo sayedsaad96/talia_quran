@@ -49,6 +49,7 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
         ...cachedPlan.newAyahs,
         ...cachedPlan.nearRevision,
         ...cachedPlan.farRevision,
+        ...cachedPlan.retentionReview,
       ];
       final hasMissingText = allAyahs.any(
         (a) =>
@@ -119,6 +120,7 @@ class DailyPlanCubit extends Cubit<DailyPlanState> {
         surahId: surahId,
         ayahNumber: ayahNumber,
         rating: rating,
+        createdByMode: ReviewRecordCreatedByMode.adultMemPlus,
       ),
     );
 

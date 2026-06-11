@@ -51,10 +51,14 @@ abstract class MemorizationPlusRepository {
     required int surahId,
     required int ayahNumber,
     required PerformanceRating rating,
+    ReviewRecordCreatedByMode createdByMode =
+        ReviewRecordCreatedByMode.adultMemPlus,
   });
   Future<Either<Failure, AyahReviewRecord>> markAyahMemorized({
     required int surahId,
     required int ayahNumber,
+    ReviewRecordCreatedByMode createdByMode =
+        ReviewRecordCreatedByMode.kidsMode,
   });
 
   // ─── Kids progress ──────────────────────────────────────────────────────────

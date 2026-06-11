@@ -139,6 +139,8 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
   Future<Either<Failure, AyahReviewRecord>> markAyahMemorized({
     required int surahId,
     required int ayahNumber,
+    ReviewRecordCreatedByMode createdByMode =
+        ReviewRecordCreatedByMode.kidsMode,
   }) async {
     expect(surahId, 114);
     expect(ayahNumber, 1);

@@ -3788,6 +3788,18 @@ abstract class AppLocalizations {
   /// **'مراجعة بعيدة'**
   String get dailyPlanFarRevision;
 
+  /// No description provided for @dailyPlanRetentionReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة تثبيت'**
+  String get dailyPlanRetentionReview;
+
+  /// No description provided for @dailyPlanRetentionReviewHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة اختيارية لتثبيت الآيات التي حفظتها بالفعل.'**
+  String get dailyPlanRetentionReviewHint;
+
   /// No description provided for @dailyPlanCompletedTitle.
   ///
   /// In ar, this message translates to:
@@ -5142,6 +5154,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'لا توجد آيات محفوظة لاختبارها في هذه السورة'**
   String get quizNoMemorizedAyahs;
+
+  /// No description provided for @smartCoachMemorizedReviewDueTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة تثبيت مستحقة'**
+  String get smartCoachMemorizedReviewDueTitle;
+
+  /// No description provided for @smartCoachMemorizedReviewDueSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع الآيات المحفوظة من سورة {surahName} لتثبيت حفظك.'**
+  String smartCoachMemorizedReviewDueSubtitle(String surahName);
 
   /// No description provided for @quizUnexpectedError.
   ///

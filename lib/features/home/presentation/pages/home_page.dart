@@ -16,6 +16,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/memorization/smart_coach_recommendation.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';

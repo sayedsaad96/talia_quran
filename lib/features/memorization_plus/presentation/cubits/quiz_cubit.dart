@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/memorization/review_record_filters.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
@@ -42,12 +43,15 @@ class QuizCubit extends Cubit<QuizState> {
         return;
       }
 
-      // Get review records to find which ayahs the user has studied
+      // Get review records to find which ayahs the user has studied.
+      // Sprint 8B: kidsMode and hifz records are excluded so that kids-path
+      // completions do not appear as adult quiz items.
       final recordsResult = await _repository.getAllReviewRecords();
       final records = recordsResult.fold((_) => <AyahReviewRecord>[], (r) => r);
 
       final surahRecords = records
           .where((r) => r.surahId == surahId && r.totalReviews > 0)
+          .where(ReviewRecordFilters.isAdultCompatible)
           .toList();
       final reviewedAyahNumbers = surahRecords.map((r) => r.ayahNumber).toSet();
 
@@ -157,6 +161,7 @@ class QuizCubit extends Cubit<QuizState> {
       surahId: current.surahId,
       ayahNumber: current.ayahNumber,
       rating: rating,
+      createdByMode: ReviewRecordCreatedByMode.adultMemPlus,
     );
     final failure = result.fold((f) => f, (_) => null);
     if (failure == null) {
@@ -194,6 +199,7 @@ class QuizCubit extends Cubit<QuizState> {
       surahId: current.surahId,
       ayahNumber: current.ayahNumber,
       rating: rating,
+      createdByMode: ReviewRecordCreatedByMode.adultMemPlus,
     );
     final failure = result.fold((f) => f, (_) => null);
     if (failure == null) {

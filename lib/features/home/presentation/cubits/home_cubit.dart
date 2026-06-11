@@ -13,6 +13,8 @@ import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../../core/memorization/memorization_path_resolver.dart';
+import '../../../../core/memorization/smart_coach_recommendation.dart';
+import '../../../../core/memorization/usecases/get_smart_coach_recommendation_usecase.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../domain/usecases/get_activity_heatmap_usecase.dart';
 
@@ -27,6 +29,7 @@ class HomeCubit extends Cubit<HomeState> {
   final AppSessionService _sessionService;
   final GetActivityHeatmapUsecase _getHeatmap;
   final MemorizationPathResolver _pathResolver;
+  final GetSmartCoachRecommendationUsecase _getCoachRecommendation;
   late final StreamSubscription<void> _pathChangesSub;
 
   HomeCubit(
@@ -38,6 +41,7 @@ class HomeCubit extends Cubit<HomeState> {
     this._sessionService,
     this._getHeatmap,
     this._pathResolver,
+    this._getCoachRecommendation,
   ) : super(const HomeInitial()) {
     _pathChangesSub = _pathResolver.changes.listen((_) {
       if (!isClosed) {
@@ -60,6 +64,7 @@ class HomeCubit extends Cubit<HomeState> {
     final quranPageFuture = _getQuranPage(pageNumber);
     final planFuture = _getCustomPlan();
     final heatmapFuture = _getHeatmap();
+    final coachFuture = _getCoachRecommendation();
 
     final progressResult = await progressFuture;
     final hifzResult = await hifzFuture;
@@ -71,6 +76,9 @@ class HomeCubit extends Cubit<HomeState> {
     final planResult = await planFuture;
     planResult.fold((l) => null, (plan) => customPlan = plan);
     final heatmap = await heatmapFuture;
+    SmartCoachRecommendation? coachRecommendation;
+    final coachResult = await coachFuture;
+    coachResult.fold((_) => null, (r) => coachRecommendation = r);
 
     // Load last restorable location for "Continue Reading" chip
     final lastLocation = _sessionService.getLastRestorableLocation();
@@ -104,6 +112,7 @@ class HomeCubit extends Cubit<HomeState> {
           lastRestorableLocation: lastLocation,
           activityCountsByDay: heatmap.countsByDay,
           activityStartDate: heatmap.startDate,
+          coachRecommendation: coachRecommendation,
         ),
       );
     });

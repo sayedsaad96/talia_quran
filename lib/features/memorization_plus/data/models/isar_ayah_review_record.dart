@@ -22,6 +22,14 @@ class IsarAyahReviewRecord {
 
   int? lastRatingIndex;
 
+  /// Source metadata added in Sprint 7B.
+  ///
+  /// Stores [ReviewRecordCreatedByMode.index].  Records written before this
+  /// field was introduced have `null` here, which [toModel] maps to
+  /// [ReviewRecordCreatedByMode.unknown].  No Isar migration is required —
+  /// Isar treats a new nullable field on existing documents as `null`.
+  int? createdByModeIndex;
+
   AyahReviewRecordModel toModel() {
     return AyahReviewRecordModel(
       surahId: surahId,
@@ -37,6 +45,12 @@ class IsarAyahReviewRecord {
               lastRatingIndex! >= PerformanceRating.values.length
           ? null
           : PerformanceRating.values[lastRatingIndex!],
+      createdByMode:
+          createdByModeIndex == null ||
+              createdByModeIndex! < 0 ||
+              createdByModeIndex! >= ReviewRecordCreatedByMode.values.length
+          ? ReviewRecordCreatedByMode.unknown
+          : ReviewRecordCreatedByMode.values[createdByModeIndex!],
     );
   }
 
@@ -50,6 +64,7 @@ class IsarAyahReviewRecord {
       ..lastReviewedAt = model.lastReviewedAt
       ..nextReviewDate = model.nextReviewDate
       ..totalReviews = model.totalReviews
-      ..lastRatingIndex = model.lastRating?.index;
+      ..lastRatingIndex = model.lastRating?.index
+      ..createdByModeIndex = model.createdByMode.index;
   }
 }

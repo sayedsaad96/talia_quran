@@ -244,7 +244,11 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       }
 
       final markResult = await _markAyahMemorized(
-        MarkAyahMemorizedParams(surahId: st.surahId, ayahNumber: st.ayahNumber),
+        MarkAyahMemorizedParams(
+          surahId: st.surahId,
+          ayahNumber: st.ayahNumber,
+          createdByMode: ReviewRecordCreatedByMode.kidsMode,
+        ),
       );
       final markFailure = markResult.fold((f) => f, (_) => null);
       if (markFailure != null) {

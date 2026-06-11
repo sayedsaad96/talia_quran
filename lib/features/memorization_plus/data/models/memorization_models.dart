@@ -164,6 +164,7 @@ class AyahReviewRecordModel extends AyahReviewRecord {
     required super.nextReviewDate,
     required super.totalReviews,
     required super.lastRating,
+    super.createdByMode = ReviewRecordCreatedByMode.unknown,
   });
 
   factory AyahReviewRecordModel.initial(int surahId, int ayahNumber) {
@@ -178,11 +179,13 @@ class AyahReviewRecordModel extends AyahReviewRecord {
       nextReviewDate: now,
       totalReviews: 0,
       lastRating: null,
+      createdByMode: ReviewRecordCreatedByMode.unknown,
     );
   }
 
   factory AyahReviewRecordModel.fromJson(Map<String, dynamic> json) {
     final ratingIndex = json['lastRating'] as int?;
+    final modeIndex = json['createdByMode'] as int?;
     return AyahReviewRecordModel(
       surahId: json['surahId'] as int,
       ayahNumber: json['ayahNumber'] as int,
@@ -194,6 +197,12 @@ class AyahReviewRecordModel extends AyahReviewRecord {
       lastRating: ratingIndex != null
           ? PerformanceRating.values[ratingIndex]
           : null,
+      createdByMode:
+          modeIndex != null &&
+              modeIndex >= 0 &&
+              modeIndex < ReviewRecordCreatedByMode.values.length
+          ? ReviewRecordCreatedByMode.values[modeIndex]
+          : ReviewRecordCreatedByMode.unknown,
     );
   }
 
@@ -206,6 +215,7 @@ class AyahReviewRecordModel extends AyahReviewRecord {
     'nextReviewDate': nextReviewDate.toIso8601String(),
     'totalReviews': totalReviews,
     'lastRating': lastRating?.index,
+    'createdByMode': createdByMode.index,
   };
 
   /// Promote from domain entity
@@ -219,6 +229,7 @@ class AyahReviewRecordModel extends AyahReviewRecord {
         nextReviewDate: r.nextReviewDate,
         totalReviews: r.totalReviews,
         lastRating: r.lastRating,
+        createdByMode: r.createdByMode,
       );
 }
 
@@ -417,28 +428,33 @@ class DailyPlanModel extends DailyPlan {
     required super.nearRevision,
     required super.farRevision,
     required super.completedAyahNums,
+    super.retentionReview = const [],
   });
 
   factory DailyPlanModel.fromJson(Map<String, dynamic> json) {
-    List<DailyPlanAyah> parseList(List<dynamic> raw) => raw
-        .map(
-          (e) => DailyPlanAyah(
-            surahId: e['surahId'] as int,
-            ayahNumber: e['ayahNumber'] as int,
-            ayahText: e['ayahText'] as String? ?? '...',
-            record: null, // Records fetched live; not stored in cache
-          ),
-        )
-        .toList();
+    List<DailyPlanAyah> parseList(List<dynamic>? raw) {
+      if (raw == null || raw.isEmpty) return const [];
+      return raw
+          .map(
+            (e) => DailyPlanAyah(
+              surahId: e['surahId'] as int,
+              ayahNumber: e['ayahNumber'] as int,
+              ayahText: e['ayahText'] as String? ?? '...',
+              record: null, // Records fetched live; not stored in cache
+            ),
+          )
+          .toList();
+    }
 
     return DailyPlanModel(
       generatedAt: DateTime.parse(json['generatedAt'] as String),
       surahId: json['surahId'] as int,
-      newAyahs: parseList(json['newAyahs'] as List<dynamic>),
-      nearRevision: parseList(json['nearRevision'] as List<dynamic>),
-      farRevision: parseList(json['farRevision'] as List<dynamic>),
-      completedAyahNums: (json['completedAyahNums'] as List<dynamic>)
+      newAyahs: parseList(json['newAyahs'] as List<dynamic>?),
+      nearRevision: parseList(json['nearRevision'] as List<dynamic>?),
+      farRevision: parseList(json['farRevision'] as List<dynamic>?),
+      completedAyahNums: (json['completedAyahNums'] as List<dynamic>? ?? [])
           .cast<int>(),
+      retentionReview: parseList(json['retentionReview'] as List<dynamic>?),
     );
   }
 
@@ -460,6 +476,7 @@ class DailyPlanModel extends DailyPlan {
       'nearRevision': toList(nearRevision),
       'farRevision': toList(farRevision),
       'completedAyahNums': completedAyahNums,
+      'retentionReview': toList(retentionReview),
     };
   }
 
@@ -470,6 +487,7 @@ class DailyPlanModel extends DailyPlan {
     nearRevision: p.nearRevision,
     farRevision: p.farRevision,
     completedAyahNums: p.completedAyahNums,
+    retentionReview: p.retentionReview,
   );
 }
 

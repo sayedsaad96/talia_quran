@@ -376,12 +376,15 @@ class MockMemorizationPlusRepository extends _i1.Mock
     required int? surahId,
     required int? ayahNumber,
     required _i6.PerformanceRating? rating,
+    _i6.ReviewRecordCreatedByMode createdByMode =
+        _i6.ReviewRecordCreatedByMode.adultMemPlus,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#evaluateAyah, [], {
               #surahId: surahId,
               #ayahNumber: ayahNumber,
               #rating: rating,
+              #createdByMode: createdByMode,
             }),
             returnValue:
                 _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord>>.value(
@@ -391,6 +394,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
                       #surahId: surahId,
                       #ayahNumber: ayahNumber,
                       #rating: rating,
+                      #createdByMode: createdByMode,
                     }),
                   ),
                 ),
@@ -401,11 +405,14 @@ class MockMemorizationPlusRepository extends _i1.Mock
   _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord>> markAyahMemorized({
     required int? surahId,
     required int? ayahNumber,
+    _i6.ReviewRecordCreatedByMode createdByMode =
+        _i6.ReviewRecordCreatedByMode.kidsMode,
   }) =>
       (super.noSuchMethod(
             Invocation.method(#markAyahMemorized, [], {
               #surahId: surahId,
               #ayahNumber: ayahNumber,
+              #createdByMode: createdByMode,
             }),
             returnValue:
                 _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord>>.value(
@@ -414,6 +421,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
                     Invocation.method(#markAyahMemorized, [], {
                       #surahId: surahId,
                       #ayahNumber: ayahNumber,
+                      #createdByMode: createdByMode,
                     }),
                   ),
                 ),

@@ -14,6 +14,10 @@ import '../services/achievement_service.dart';
 import '../theme/theme_cubit.dart';
 import '../l10n/locale_cubit.dart';
 import '../memorization/memorization_path_resolver.dart';
+import '../memorization/smart_coach_engine.dart';
+import '../memorization/usecases/get_smart_coach_recommendation_usecase.dart';
+import '../memorization/memorization_progress_reader.dart';
+import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
 import '../../features/quran/data/repositories/quran_repository_impl.dart';
@@ -191,6 +195,23 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<MemorizationPathResolver>(
     () => MemorizationPathResolver(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<MemorizationProgressReader>(
+    () => MemorizationProgressReaderImpl(
+      getIt<MemorizationPlusRepository>(),
+      getIt<HifzRepository>(),
+      getIt<AppSessionService>(),
+    ),
+  );
+  getIt.registerLazySingleton<GetMemorizationSnapshotUsecase>(
+    () => GetMemorizationSnapshotUsecase(getIt<MemorizationProgressReader>()),
+  );
+  getIt.registerLazySingleton<SmartCoachEngine>(() => const SmartCoachEngine());
+  getIt.registerLazySingleton<GetSmartCoachRecommendationUsecase>(
+    () => GetSmartCoachRecommendationUsecase(
+      getIt<GetMemorizationSnapshotUsecase>(),
+      getIt<SmartCoachEngine>(),
+    ),
   );
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(getIt<Isar>()),
@@ -413,6 +434,7 @@ Future<void> configureDependencies() async {
       getIt<AppSessionService>(),
       GetActivityHeatmapUsecase(getIt<Isar>()),
       getIt<MemorizationPathResolver>(),
+      getIt<GetSmartCoachRecommendationUsecase>(),
     ),
   );
   getIt.registerFactory<StreakCubit>(() => StreakCubit(getIt<StreakService>()));

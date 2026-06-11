@@ -155,10 +155,12 @@ class EvaluateMemorizationParams {
     required this.surahId,
     required this.ayahNumber,
     required this.rating,
+    this.createdByMode = ReviewRecordCreatedByMode.adultMemPlus,
   });
   final int surahId;
   final int ayahNumber;
   final PerformanceRating rating;
+  final ReviewRecordCreatedByMode createdByMode;
 }
 
 class EvaluateMemorizationUsecase
@@ -173,6 +175,7 @@ class EvaluateMemorizationUsecase
     surahId: params.surahId,
     ayahNumber: params.ayahNumber,
     rating: params.rating,
+    createdByMode: params.createdByMode,
   );
 }
 
@@ -182,9 +185,11 @@ class MarkAyahMemorizedParams {
   const MarkAyahMemorizedParams({
     required this.surahId,
     required this.ayahNumber,
+    this.createdByMode = ReviewRecordCreatedByMode.kidsMode,
   });
   final int surahId;
   final int ayahNumber;
+  final ReviewRecordCreatedByMode createdByMode;
 }
 
 class MarkAyahMemorizedUsecase
@@ -198,6 +203,7 @@ class MarkAyahMemorizedUsecase
   ) => _repository.markAyahMemorized(
     surahId: params.surahId,
     ayahNumber: params.ayahNumber,
+    createdByMode: params.createdByMode,
   );
 }
 

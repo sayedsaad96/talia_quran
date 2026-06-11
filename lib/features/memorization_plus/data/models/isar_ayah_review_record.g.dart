@@ -28,34 +28,39 @@ const IsarAyahReviewRecordSchema = CollectionSchema(
       name: r'compositeKey',
       type: IsarType.string,
     ),
-    r'intervalDays': PropertySchema(
+    r'createdByModeIndex': PropertySchema(
       id: 2,
+      name: r'createdByModeIndex',
+      type: IsarType.long,
+    ),
+    r'intervalDays': PropertySchema(
+      id: 3,
       name: r'intervalDays',
       type: IsarType.long,
     ),
     r'lastRatingIndex': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'lastRatingIndex',
       type: IsarType.long,
     ),
     r'lastReviewedAt': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'lastReviewedAt',
       type: IsarType.dateTime,
     ),
     r'nextReviewDate': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'nextReviewDate',
       type: IsarType.dateTime,
     ),
     r'strengthLevel': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'strengthLevel',
       type: IsarType.long,
     ),
-    r'surahId': PropertySchema(id: 7, name: r'surahId', type: IsarType.long),
+    r'surahId': PropertySchema(id: 8, name: r'surahId', type: IsarType.long),
     r'totalReviews': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'totalReviews',
       type: IsarType.long,
     ),
@@ -106,13 +111,14 @@ void _isarAyahReviewRecordSerialize(
 ) {
   writer.writeLong(offsets[0], object.ayahNumber);
   writer.writeString(offsets[1], object.compositeKey);
-  writer.writeLong(offsets[2], object.intervalDays);
-  writer.writeLong(offsets[3], object.lastRatingIndex);
-  writer.writeDateTime(offsets[4], object.lastReviewedAt);
-  writer.writeDateTime(offsets[5], object.nextReviewDate);
-  writer.writeLong(offsets[6], object.strengthLevel);
-  writer.writeLong(offsets[7], object.surahId);
-  writer.writeLong(offsets[8], object.totalReviews);
+  writer.writeLong(offsets[2], object.createdByModeIndex);
+  writer.writeLong(offsets[3], object.intervalDays);
+  writer.writeLong(offsets[4], object.lastRatingIndex);
+  writer.writeDateTime(offsets[5], object.lastReviewedAt);
+  writer.writeDateTime(offsets[6], object.nextReviewDate);
+  writer.writeLong(offsets[7], object.strengthLevel);
+  writer.writeLong(offsets[8], object.surahId);
+  writer.writeLong(offsets[9], object.totalReviews);
 }
 
 IsarAyahReviewRecord _isarAyahReviewRecordDeserialize(
@@ -124,14 +130,15 @@ IsarAyahReviewRecord _isarAyahReviewRecordDeserialize(
   final object = IsarAyahReviewRecord();
   object.ayahNumber = reader.readLong(offsets[0]);
   object.compositeKey = reader.readString(offsets[1]);
+  object.createdByModeIndex = reader.readLongOrNull(offsets[2]);
   object.id = id;
-  object.intervalDays = reader.readLong(offsets[2]);
-  object.lastRatingIndex = reader.readLongOrNull(offsets[3]);
-  object.lastReviewedAt = reader.readDateTime(offsets[4]);
-  object.nextReviewDate = reader.readDateTime(offsets[5]);
-  object.strengthLevel = reader.readLong(offsets[6]);
-  object.surahId = reader.readLong(offsets[7]);
-  object.totalReviews = reader.readLong(offsets[8]);
+  object.intervalDays = reader.readLong(offsets[3]);
+  object.lastRatingIndex = reader.readLongOrNull(offsets[4]);
+  object.lastReviewedAt = reader.readDateTime(offsets[5]);
+  object.nextReviewDate = reader.readDateTime(offsets[6]);
+  object.strengthLevel = reader.readLong(offsets[7]);
+  object.surahId = reader.readLong(offsets[8]);
+  object.totalReviews = reader.readLong(offsets[9]);
   return object;
 }
 
@@ -147,18 +154,20 @@ P _isarAyahReviewRecordDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readLong(offset)) as P;
-    case 3:
       return (reader.readLongOrNull(offset)) as P;
+    case 3:
+      return (reader.readLong(offset)) as P;
     case 4:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 5:
       return (reader.readDateTime(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 7:
       return (reader.readLong(offset)) as P;
     case 8:
+      return (reader.readLong(offset)) as P;
+    case 9:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -637,6 +646,103 @@ extension IsarAyahReviewRecordQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(
         FilterCondition.greaterThan(property: r'compositeKey', value: ''),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarAyahReviewRecord,
+    IsarAyahReviewRecord,
+    QAfterFilterCondition
+  >
+  createdByModeIndexIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNull(property: r'createdByModeIndex'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarAyahReviewRecord,
+    IsarAyahReviewRecord,
+    QAfterFilterCondition
+  >
+  createdByModeIndexIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        const FilterCondition.isNotNull(property: r'createdByModeIndex'),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarAyahReviewRecord,
+    IsarAyahReviewRecord,
+    QAfterFilterCondition
+  >
+  createdByModeIndexEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.equalTo(property: r'createdByModeIndex', value: value),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarAyahReviewRecord,
+    IsarAyahReviewRecord,
+    QAfterFilterCondition
+  >
+  createdByModeIndexGreaterThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.greaterThan(
+          include: include,
+          property: r'createdByModeIndex',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarAyahReviewRecord,
+    IsarAyahReviewRecord,
+    QAfterFilterCondition
+  >
+  createdByModeIndexLessThan(int? value, {bool include = false}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.lessThan(
+          include: include,
+          property: r'createdByModeIndex',
+          value: value,
+        ),
+      );
+    });
+  }
+
+  QueryBuilder<
+    IsarAyahReviewRecord,
+    IsarAyahReviewRecord,
+    QAfterFilterCondition
+  >
+  createdByModeIndexBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(
+        FilterCondition.between(
+          property: r'createdByModeIndex',
+          lower: lower,
+          includeLower: includeLower,
+          upper: upper,
+          includeUpper: includeUpper,
+        ),
       );
     });
   }
@@ -1283,6 +1389,20 @@ extension IsarAyahReviewRecordQuerySortBy
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+  sortByCreatedByModeIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdByModeIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+  sortByCreatedByModeIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdByModeIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
   sortByIntervalDays() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'intervalDays', Sort.asc);
@@ -1408,6 +1528,20 @@ extension IsarAyahReviewRecordQuerySortThenBy
   thenByCompositeKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'compositeKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+  thenByCreatedByModeIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdByModeIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+  thenByCreatedByModeIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdByModeIndex', Sort.desc);
     });
   }
 
@@ -1541,6 +1675,13 @@ extension IsarAyahReviewRecordQueryWhereDistinct
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+  distinctByCreatedByModeIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'createdByModeIndex');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
   distinctByIntervalDays() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'intervalDays');
@@ -1614,6 +1755,13 @@ extension IsarAyahReviewRecordQueryProperty
   compositeKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'compositeKey');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, int?, QQueryOperations>
+  createdByModeIndexProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'createdByModeIndex');
     });
   }
 

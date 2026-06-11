@@ -2063,6 +2063,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyPlanFarRevision => 'Far review';
 
   @override
+  String get dailyPlanRetentionReview => 'Retention Review';
+
+  @override
+  String get dailyPlanRetentionReviewHint =>
+      'Optional review for ayahs you have already memorized.';
+
+  @override
   String get dailyPlanCompletedTitle =>
       'MashaAllah! You completed Today\'s Plan';
 
@@ -2835,6 +2842,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quizNoMemorizedAyahs => 'No memorized ayahs to quiz in this surah';
+
+  @override
+  String get smartCoachMemorizedReviewDueTitle => 'Retention review due';
+
+  @override
+  String smartCoachMemorizedReviewDueSubtitle(String surahName) {
+    return 'Review memorized ayahs in Surah $surahName to keep them strong.';
+  }
 
   @override
   String quizUnexpectedError(String error) {

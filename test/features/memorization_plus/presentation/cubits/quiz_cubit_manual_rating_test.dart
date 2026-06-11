@@ -27,6 +27,8 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
     required int surahId,
     required int ayahNumber,
     required PerformanceRating rating,
+    ReviewRecordCreatedByMode createdByMode =
+        ReviewRecordCreatedByMode.adultMemPlus,
   }) async {
     evaluatedRating = rating;
     return Right(record.copyWith(lastRating: rating));

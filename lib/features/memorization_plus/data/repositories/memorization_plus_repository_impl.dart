@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/memorization/review_record_filters.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 import '../../../../features/quran/domain/entities/quran_entities.dart';
 import '../../domain/entities/memorization_entities.dart';
@@ -424,6 +425,8 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     }
   }
 
+  static const _retentionReviewLimit = 3;
+
   // ─── Daily plan ─────────────────────────────────────────────────────────────
   @override
   Future<Either<Failure, DailyPlan>> generateDailyPlan({
@@ -466,6 +469,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         final List<DailyPlanAyah> newAyahs = [];
         final List<DailyPlanAyah> nearRevision = [];
         final List<DailyPlanAyah> farRevision = [];
+        final List<DailyPlanAyah> retentionReview = [];
 
         final firstAyah =
             customPlan != null && currentSurahId == customPlan.startSurahId
@@ -491,7 +495,9 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
                 ),
               );
             }
-          } else if (record.isDue) {
+          } else {
+            final classification = record.reviewClassification;
+            if (!classification.isDue) continue;
             final planAyah = DailyPlanAyah(
               surahId: currentSurahId,
               ayahNumber: i,
@@ -500,15 +506,37 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
             );
             // BUG-7 FIX: apply custom plan revision limits
             if (customPlan?.enableNearRevision != false &&
-                record.isNearRevision &&
+                classification.isNearRevision &&
                 nearRevision.length < nearRevisionLimit) {
               nearRevision.add(planAyah);
             } else if (customPlan?.enableFarRevision != false &&
-                record.isFarRevision &&
+                classification.isFarRevision &&
                 farRevision.length < farRevisionLimit) {
               farRevision.add(planAyah);
             }
           }
+        }
+
+        final retentionCandidates =
+            surahRecords.values
+                .where(ReviewRecordFilters.isDailyPlanRetentionEligible)
+                .toList()
+              ..sort(ReviewRecordFilters.compareMemorizedDue);
+        for (final record in retentionCandidates.take(_retentionReviewLimit)) {
+          String ayahText = 'النص غير متوفر';
+          try {
+            ayahText = ayahs
+                .firstWhere((a) => a.numberInSurah == record.ayahNumber)
+                .text;
+          } catch (_) {}
+          retentionReview.add(
+            DailyPlanAyah(
+              surahId: currentSurahId,
+              ayahNumber: record.ayahNumber,
+              ayahText: ayahText,
+              record: record,
+            ),
+          );
         }
 
         bestPlan = DailyPlan(
@@ -519,10 +547,11 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
           nearRevision: nearRevision,
           farRevision: farRevision,
           completedAyahNums: const [],
+          retentionReview: retentionReview,
         );
 
-        if (bestPlan.totalItems > 0) {
-          break; // Found active items
+        if (bestPlan.totalItems > 0 || bestPlan.hasRetentionReview) {
+          break; // Found active required or optional retention items
         }
 
         currentSurahId++;
@@ -535,6 +564,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         nearRevision: const [],
         farRevision: const [],
         completedAyahNums: const [],
+        retentionReview: const [],
       );
 
       // Cache the plan
@@ -621,12 +651,18 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     required int surahId,
     required int ayahNumber,
     required PerformanceRating rating,
+    ReviewRecordCreatedByMode createdByMode =
+        ReviewRecordCreatedByMode.adultMemPlus,
   }) async {
     try {
       final existing = await _datasource.getReviewRecord(surahId, ayahNumber);
 
+      // Stamp the source on the current record so the scheduler propagates it
+      // via copyWith.  This also upgrades pre-tagging `unknown` records to the
+      // correct source on their next write.
       final current =
-          existing ?? AyahReviewRecordModel.initial(surahId, ayahNumber);
+          (existing ?? AyahReviewRecordModel.initial(surahId, ayahNumber))
+              .copyWith(createdByMode: createdByMode);
 
       final updated = _scheduler.schedule(current, rating);
       await _datasource.saveReviewRecord(
@@ -643,6 +679,8 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   Future<Either<Failure, AyahReviewRecord>> markAyahMemorized({
     required int surahId,
     required int ayahNumber,
+    ReviewRecordCreatedByMode createdByMode =
+        ReviewRecordCreatedByMode.kidsMode,
   }) async {
     try {
       final existing = await _datasource.getReviewRecord(surahId, ayahNumber);
@@ -661,6 +699,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         nextReviewDate: now.add(Duration(days: intervalDays)),
         totalReviews: current.totalReviews + 1,
         lastRating: PerformanceRating.excellent,
+        createdByMode: createdByMode,
       );
 
       await _datasource.saveReviewRecord(

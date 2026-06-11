@@ -2047,6 +2047,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyPlanFarRevision => 'مراجعة بعيدة';
 
   @override
+  String get dailyPlanRetentionReview => 'مراجعة تثبيت';
+
+  @override
+  String get dailyPlanRetentionReviewHint =>
+      'مراجعة اختيارية لتثبيت الآيات التي حفظتها بالفعل.';
+
+  @override
   String get dailyPlanCompletedTitle => 'ما شاء الله! أكملت خطة اليوم';
 
   @override
@@ -2802,6 +2809,14 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get quizNoMemorizedAyahs =>
       'لا توجد آيات محفوظة لاختبارها في هذه السورة';
+
+  @override
+  String get smartCoachMemorizedReviewDueTitle => 'مراجعة تثبيت مستحقة';
+
+  @override
+  String smartCoachMemorizedReviewDueSubtitle(String surahName) {
+    return 'راجع الآيات المحفوظة من سورة $surahName لتثبيت حفظك.';
+  }
 
   @override
   String quizUnexpectedError(String error) {

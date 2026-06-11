@@ -212,7 +212,7 @@ class _QuestionViewState extends State<_QuestionView> {
         onResult: (val) => setState(() {
           _recognizedWords = val.recognizedWords;
         }),
-        localeId: kArabicSpeechLocaleId,
+        listenOptions: stt.SpeechListenOptions(localeId: kArabicSpeechLocaleId),
       );
     } else {
       setState(() => _isListening = false);
