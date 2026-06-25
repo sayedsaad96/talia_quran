@@ -18,6 +18,8 @@ import '../memorization/smart_coach_engine.dart';
 import '../memorization/usecases/get_smart_coach_recommendation_usecase.dart';
 import '../memorization/memorization_progress_reader.dart';
 import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
+import '../memorization/v2/session_adapters.dart';
+import '../memorization/v2/session_engine.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
 import '../../features/quran/data/repositories/quran_repository_impl.dart';
@@ -51,6 +53,8 @@ import '../../features/home/presentation/cubits/home_cubit.dart';
 import '../../features/home/domain/usecases/get_activity_heatmap_usecase.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
+import '../../features/memorization_plus/data/models/isar_v2_session.dart';
+import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
@@ -61,6 +65,7 @@ import '../../features/memorization_plus/presentation/cubits/kids_mode_cubit.dar
 import '../../features/memorization_plus/presentation/cubits/parent_dashboard_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/custom_plan_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/memorization_identity_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/memorization_session_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/quiz_cubit.dart';
 import '../../features/onboarding/presentation/cubits/onboarding_cubit.dart';
 import '../../features/settings/presentation/cubits/profile_cubit.dart';
@@ -86,11 +91,15 @@ Future<void> configureDependencies() async {
   final isar = await Isar.open([
     IsarAyahProgressSchema,
     IsarAyahReviewRecordSchema,
+    IsarV2SessionSchema, // V2 session persistence
     StreakIsarSchema,
     XpIsarSchema,
     DailyActivityIsarSchema, // For yearly activity heatmap
   ], directory: dir.path);
   getIt.registerSingleton<Isar>(isar);
+  getIt.registerLazySingleton<V2SessionLocalDatasource>(
+    () => V2SessionLocalDatasource(getIt<Isar>()),
+  );
 
   // Migrate old SharedPreferences Hifz data to Isar if needed
   final hifzDatasource = IsarHifzLocalDatasourceImpl(isar, sharedPrefs);
@@ -207,6 +216,24 @@ Future<void> configureDependencies() async {
     () => GetMemorizationSnapshotUsecase(getIt<MemorizationProgressReader>()),
   );
   getIt.registerLazySingleton<SmartCoachEngine>(() => const SmartCoachEngine());
+  getIt.registerLazySingleton<V2SessionEngine>(() => V2SessionEngine());
+  getIt.registerLazySingleton<V2SessionReviewAdapter>(
+    () => V2SessionReviewAdapter(
+      repository: getIt<MemorizationPlusRepository>(),
+      scheduler: getIt<ScheduleNextReviewUsecase>(),
+    ),
+  );
+  getIt.registerLazySingleton<V2SessionProgressAdapter>(
+    () =>
+        V2SessionProgressAdapter(datasource: getIt<V2SessionLocalDatasource>()),
+  );
+  getIt.registerLazySingleton<V2SessionGamificationAdapter>(
+    () => V2SessionGamificationAdapter(
+      streakService: getIt<StreakService>(),
+      xpService: getIt<XpService>(),
+      achievementService: getIt<AchievementService>(),
+    ),
+  );
   getIt.registerLazySingleton<GetSmartCoachRecommendationUsecase>(
     () => GetSmartCoachRecommendationUsecase(
       getIt<GetMemorizationSnapshotUsecase>(),
@@ -214,7 +241,7 @@ Future<void> configureDependencies() async {
     ),
   );
   getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(getIt<Isar>()),
+    () => AuthRepositoryImpl(getIt<Isar>(), getIt<SharedPreferences>()),
   );
 
   // ─── Usecases ───────────────────────────────────────────────────────────────
@@ -415,6 +442,16 @@ Future<void> configureDependencies() async {
       getIt<GetParentDashboardUsecase>(),
       getIt<ParentAccessUsecase>(),
       getIt<ParentRemoteLinkUsecase>(),
+    ),
+  );
+  getIt.registerFactory<MemorizationSessionCubit>(
+    () => MemorizationSessionCubit(
+      quranRepository: getIt<QuranRepository>(),
+      memorizationRepository: getIt<MemorizationPlusRepository>(),
+      sessionEngine: getIt<V2SessionEngine>(),
+      reviewAdapter: getIt<V2SessionReviewAdapter>(),
+      progressAdapter: getIt<V2SessionProgressAdapter>(),
+      gamificationAdapter: getIt<V2SessionGamificationAdapter>(),
     ),
   );
   getIt.registerFactory<QuizCubit>(

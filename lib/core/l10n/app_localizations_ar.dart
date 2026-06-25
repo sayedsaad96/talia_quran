@@ -1132,7 +1132,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get memorizationPathReset => 'تمت إعادة ضبط مسار الحفظ';
+  String get memorizationPathReset => 'تمت اعادة ضبط مسار الحفظ';
 
   @override
   String get settingsSectionAccount => 'الحساب';
@@ -1190,10 +1190,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settingsResetPathInstruction =>
-      'اكتب \"إعادة ضبط\" لتأكيد العملية.';
+      'اكتب \"اعادة ضبط\" لتأكيد العملية.';
 
   @override
-  String get settingsResetPathConfirmPhrase => 'إعادة ضبط';
+  String get settingsResetPathConfirmPhrase => 'اعادة ضبط';
 
   @override
   String get settingsDeleteAccountTitle => 'حذف الحساب';
@@ -1221,7 +1221,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get resetMemorizationPath => 'إعادة ضبط / تغيير المسار';
+  String get resetMemorizationPath => 'اعادة ضبط / تغيير المسار';
 
   @override
   String get memorizationPath => 'مسار الحفظ';
@@ -1240,7 +1240,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get parentModeSubtitle => 'فعّل لمتابعة حفظ طفلك والربط عن بعد';
 
   @override
-  String get resetMemorizationPathQuestion => 'إعادة ضبط مسار الحفظ؟';
+  String get resetMemorizationPathQuestion => 'اعادة ضبط مسار الحفظ؟';
 
   @override
   String get resetMemorizationIdentityWarning =>
@@ -1250,7 +1250,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get confirmResetMemorizationPath => 'تأكيد إعادة الضبط';
 
   @override
-  String get resetMemorizationPathTileTitle => 'إعادة ضبط المسار';
+  String get resetMemorizationPathTileTitle => 'اعادة ضبط المسار';
 
   @override
   String get resetMemorizationPathTileSubtitle =>
@@ -2205,7 +2205,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get parentDashboardResetPin =>
-      'إعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد';
+      'اعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد';
 
   @override
   String get parentDashboardTodaySummary => 'ملخص اليوم';

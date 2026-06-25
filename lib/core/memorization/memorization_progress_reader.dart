@@ -2,7 +2,10 @@ import 'package:dartz/dartz.dart';
 
 import '../error/app_failure.dart';
 import '../services/app_session_service.dart';
+import '../utils/talia_logger.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
+import '../../features/hifz/domain/entities/hifz_entities.dart';
+import '../../features/memorization_plus/domain/entities/memorization_entities.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'memorization_snapshot.dart';
 
@@ -29,52 +32,47 @@ class MemorizationProgressReaderImpl implements MemorizationProgressReader {
   Future<Either<Failure, MemorizationSnapshot>> readSnapshot() async {
     final profileResult = await _memorizationPlusRepository
         .getMemorizationProfile();
-    Failure? failure = profileResult.fold((f) => f, (_) => null);
+    final failure = profileResult.fold((f) => f, (_) => null);
     if (failure != null) return Left(failure);
     final profile = profileResult.getOrElse(
       () => throw StateError('profile expected'),
     );
 
-    final reviewRecordsResult = await _memorizationPlusRepository
-        .getAllReviewRecords();
-    failure = reviewRecordsResult.fold((f) => f, (_) => null);
-    if (failure != null) return Left(failure);
-    final reviewRecords = reviewRecordsResult.getOrElse(() => const []);
-
-    final cachedPlanResult = await _memorizationPlusRepository
-        .getCachedDailyPlan();
-    failure = cachedPlanResult.fold((f) => f, (_) => null);
-    if (failure != null) return Left(failure);
-    final cachedDailyPlan = cachedPlanResult.getOrElse(() => null);
-
-    final customPlanResult = await _memorizationPlusRepository.getCustomPlan();
-    failure = customPlanResult.fold((f) => f, (_) => null);
-    if (failure != null) return Left(failure);
-    final customPlan = customPlanResult.getOrElse(() => null);
-
-    final kidsProgressResult = await _memorizationPlusRepository
-        .getKidsProgress();
-    failure = kidsProgressResult.fold((f) => f, (_) => null);
-    if (failure != null) return Left(failure);
-    final kidsProgress = kidsProgressResult.getOrElse(
-      () => throw StateError('kids progress expected'),
+    final reviewRecords = await _readOptional(
+      label: 'Smart Coach review records',
+      read: _memorizationPlusRepository.getAllReviewRecords,
+      fallback: const <AyahReviewRecord>[],
     );
-
-    final kidsLogsResult = await _memorizationPlusRepository
-        .getKidsSessionLogs();
-    failure = kidsLogsResult.fold((f) => f, (_) => null);
-    if (failure != null) return Left(failure);
-    final kidsSessionLogs = kidsLogsResult.getOrElse(() => const []);
-
-    final hifzDueResult = await _hifzRepository.getDueReviews();
-    failure = hifzDueResult.fold((f) => f, (_) => null);
-    if (failure != null) return Left(failure);
-    final hifzDueReviews = hifzDueResult.getOrElse(() => const []);
-
-    final hifzSurahResult = await _hifzRepository.getAllSurahProgress();
-    failure = hifzSurahResult.fold((f) => f, (_) => null);
-    if (failure != null) return Left(failure);
-    final hifzSurahProgress = hifzSurahResult.getOrElse(() => const []);
+    final cachedDailyPlan = await _readOptional<DailyPlan?>(
+      label: 'Smart Coach cached daily plan',
+      read: _memorizationPlusRepository.getCachedDailyPlan,
+      fallback: null,
+    );
+    final customPlan = await _readOptional<CustomMemorizationPlan?>(
+      label: 'Smart Coach custom plan',
+      read: _memorizationPlusRepository.getCustomPlan,
+      fallback: null,
+    );
+    final kidsProgress = await _readOptional<KidsProgress?>(
+      label: 'Smart Coach kids progress',
+      read: _memorizationPlusRepository.getKidsProgress,
+      fallback: null,
+    );
+    final kidsSessionLogs = await _readOptional(
+      label: 'Smart Coach kids session logs',
+      read: _memorizationPlusRepository.getKidsSessionLogs,
+      fallback: const <KidsSessionLog>[],
+    );
+    final hifzDueReviews = await _readOptional(
+      label: 'Smart Coach Hifz due reviews',
+      read: _hifzRepository.getDueReviews,
+      fallback: const <AyahProgress>[],
+    );
+    final hifzSurahProgress = await _readOptional(
+      label: 'Smart Coach Hifz surah progress',
+      read: _hifzRepository.getAllSurahProgress,
+      fallback: const <SurahHifzProgress>[],
+    );
 
     return Right(
       MemorizationSnapshot(
@@ -89,5 +87,22 @@ class MemorizationProgressReaderImpl implements MemorizationProgressReader {
         kidsSessionLogs: kidsSessionLogs,
       ),
     );
+  }
+
+  Future<T> _readOptional<T>({
+    required String label,
+    required Future<Either<Failure, T>> Function() read,
+    required T fallback,
+  }) async {
+    try {
+      final result = await read();
+      return result.fold((failure) {
+        TaliaLogger.w('$label unavailable; using partial snapshot', failure);
+        return fallback;
+      }, (value) => value);
+    } catch (error, stack) {
+      TaliaLogger.w('$label threw; using partial snapshot', error, stack);
+      return fallback;
+    }
   }
 }

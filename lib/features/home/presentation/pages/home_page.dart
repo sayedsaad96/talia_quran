@@ -7,6 +7,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
@@ -29,15 +30,82 @@ import '../../../streak/presentation/cubits/streak_cubit.dart';
 import '../cubits/home_cubit.dart';
 part 'home_page_widgets.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage>
+    with WidgetsBindingObserver {
+  // Track whether the app was backgrounded so we only trigger a reload on a
+  // real resume (background → foreground), not on every lifecycle tick.
+  bool _wasInBackground = false;
+  late final HomeCubit _homeCubit;
+  late final StreakCubit _streakCubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _homeCubit = getIt<HomeCubit>()..load();
+    _streakCubit = getIt<StreakCubit>()..loadStreak();
+    WidgetsBinding.instance.addObserver(this);
+    AppRouter.router.routerDelegate.addListener(_onRouteChanged);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // No need to subscribe to a RouteObserver for shell routes since we use GoRouter listener now
+  }
+
+  void _onRouteChanged() {
+    // Reload when coming back to the Home tab
+    _reloadProgress();
+  }
+
+  @override
+  void dispose() {
+    AppRouter.router.routerDelegate.removeListener(_onRouteChanged);
+    WidgetsBinding.instance.removeObserver(this);
+    _homeCubit.close();
+    _streakCubit.close();
+    super.dispose();
+  }
+
+  /// Triggered whenever the app lifecycle changes.
+  ///
+  /// GoRouter's tab navigation does NOT push/pop routes in the traditional
+  /// Navigator sense, so RouteAware.didPopNext() never fires when the user
+  /// switches back to the Home tab from the Quran reader. Using the app
+  /// lifecycle is the reliable cross-platform solution: the Quran reader
+  /// pushes a full-screen route that puts the app in an "inactive" state on
+  /// iOS and triggers a pause/resume cycle on Android.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _wasInBackground = true;
+    }
+    if (state == AppLifecycleState.resumed && _wasInBackground) {
+      _wasInBackground = false;
+      _reloadProgress();
+    }
+  }
+
+  void _reloadProgress() {
+    if (!mounted) return;
+    _homeCubit.load();
+    _streakCubit.loadStreak();
+  }
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => getIt<HomeCubit>()..load()),
-        BlocProvider(create: (_) => getIt<StreakCubit>()..loadStreak()),
+        BlocProvider.value(value: _homeCubit),
+        BlocProvider.value(value: _streakCubit),
       ],
       child: BlocBuilder<ThemeCubit, ThemeMode>(
         builder: (context, _) => const _HomeView(),

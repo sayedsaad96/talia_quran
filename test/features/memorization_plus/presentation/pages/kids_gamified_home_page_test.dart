@@ -22,6 +22,7 @@ void main() {
         _TestApp(
           child: KidsGamifiedHomeContent(
             state: _loadedState,
+            onHomeTap: () => tapped.add('home'),
             onMushafTap: () => tapped.add('mushaf'),
             onJourneyTap: () => tapped.add('journey'),
             onMissionTap: () => tapped.add('missions'),
@@ -35,6 +36,7 @@ void main() {
       expect(find.text('Last mission'), findsOneWidget);
       expect(find.text('Memorization House 2'), findsOneWidget);
 
+      expect(find.text('Home'), findsWidgets);
       expect(find.text('Mushaf'), findsWidgets);
       expect(find.text('My journey'), findsWidgets);
       expect(find.text('Missions'), findsWidgets);
@@ -51,6 +53,8 @@ void main() {
         findsNothing,
       );
 
+      await tester.tap(find.byKey(const ValueKey('kids-home-nav-home')));
+      await tester.pump();
       await tester.tap(find.byKey(const ValueKey('kids-home-nav-mushaf')));
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('kids-home-nav-journey')));
@@ -58,7 +62,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('kids-home-nav-missions')));
       await tester.pump();
 
-      expect(tapped, ['mushaf', 'journey', 'missions']);
+      expect(tapped, ['home', 'mushaf', 'journey', 'missions']);
     });
 
     testWidgets('Mushaf action targets Kids Quran mode, not adult Quran', (
@@ -74,6 +78,7 @@ void main() {
         _TestApp(
           child: KidsGamifiedHomeContent(
             state: _loadedState,
+            onHomeTap: () {},
             onMushafTap: () =>
                 location = kidsQuranReaderLocation(_loadedState.surahId),
             onJourneyTap: () {},
@@ -113,6 +118,7 @@ void main() {
           _TestApp(
             child: KidsGamifiedHomeContent(
               state: firstTimeState,
+              onHomeTap: () {},
               onMushafTap: () {},
               onJourneyTap: () {},
               onMissionTap: () {},
@@ -141,6 +147,7 @@ void main() {
           child: KidsGamifiedHomeContent(
             state: _loadedState,
             childName: 'يوسف',
+            onHomeTap: () {},
             onMushafTap: () {},
             onJourneyTap: () {},
             onMissionTap: () {},
@@ -164,6 +171,7 @@ void main() {
         _TestApp(
           child: KidsGamifiedHomeContent(
             state: _loadedState,
+            onHomeTap: () => tapped.add('home'),
             onMushafTap: () => tapped.add('mushaf'),
             onJourneyTap: () => tapped.add('journey'),
             onMissionTap: () => tapped.add('missions'),
@@ -171,6 +179,8 @@ void main() {
         ),
       );
 
+      await tester.tap(find.byKey(const ValueKey('kids-home-nav-home')));
+      await tester.pump();
       await tester.tap(find.byKey(const ValueKey('kids-home-nav-mushaf')));
       await tester.pump();
       await tester.tap(find.byKey(const ValueKey('kids-home-nav-journey')));
@@ -178,7 +188,7 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('kids-home-nav-missions')));
       await tester.pump();
 
-      expect(tapped, ['mushaf', 'journey', 'missions']);
+      expect(tapped, ['home', 'mushaf', 'journey', 'missions']);
     });
   });
 }

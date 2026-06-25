@@ -27,7 +27,8 @@ class KidsMissionCard extends StatelessWidget {
     final subtitle = currentStage == null
         ? context.l10n.kidsFirstMissionSubtitle
         : [
-            ?surahName,
+            // ignore: use_null_aware_elements
+            if (surahName != null) surahName!,
             context.l10n.kidsGamifiedAyahRange(
               currentStage.startAyah,
               currentStage.endAyah,

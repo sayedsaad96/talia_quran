@@ -31,7 +31,7 @@ abstract class AuthRepository {
   Future<Either<Failure, Unit>> pullProgressFromCloud();
 
   /// Resend confirmation email
-  Future<void> resendConfirmation(String email);
+  Future<Either<Failure, Unit>> resendConfirmation(String email);
 
   /// Send a password reset email
   Future<Either<Failure, Unit>> resetPassword(String email);

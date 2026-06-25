@@ -9,6 +9,7 @@ enum SmartCoachRecommendationKind {
   continueDailyPlan,
   memorizeNewAyahs,
   kidsCurrentMission,
+  continueV2Session,
   hifzReviewDue,
 }
 
@@ -40,8 +41,8 @@ enum SmartCoachExplanationCode {
   /// New ayahs are waiting to be memorized in the daily plan.
   newAyahsAvailable,
 
-  /// Legacy Hifz session has ayahs due for review.
-  hifzReviewDue,
+  /// V2 Session has ayahs pending or in remediation.
+  continueV2Session,
 
   /// Child profile has an active memorization mission.
   kidsMissionAvailable,

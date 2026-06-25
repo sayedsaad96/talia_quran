@@ -650,12 +650,13 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                           daysPerWeek: _availableDays,
                           sessionMinutes: _sessionMinutes,
                           difficulty: _difficulty,
-                          startSurah: _startSurahId < _surahNames.length
-                              ? _surahNames[_startSurahId]
-                              : '${context.l10n.surah} $_startSurahId',
-                          endSurah: _endSurahId < _surahNames.length
+                          // عرض النطاق بالترتيب التقليدي: من (عدد أكبر) إلى (عدد أصغر)
+                          startSurah: _endSurahId < _surahNames.length
                               ? _surahNames[_endSurahId]
                               : '${context.l10n.surah} $_endSurahId',
+                          endSurah: _startSurahId < _surahNames.length
+                              ? _surahNames[_startSurahId]
+                              : '${context.l10n.surah} $_startSurahId',
                         ),
 
                         const SizedBox(height: AppSpacing.xl),
@@ -742,14 +743,19 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
       ),
       child: Column(
         children: [
+          // "من سورة" يعرض النهاية العددية (_endSurahId) لتوافق ترتيب الحفظ التقليدي
+          // (مثال جزء عم: من الناس 114 ← إلى النبأ 78)
           _buildDropdownRow(
             label: context.l10n.customPlanFromSurah,
-            value: _startSurahId,
+            value: _endSurahId,
             icon: Icons.first_page_rounded,
             isDark: isDark,
             onChanged: (v) {
               setState(() {
-                _setStartSurah(v);
+                _endSurahId = v;
+                // إذا أصبحت نهاية أصغر من البداية العددية، اضبط البداية لتطابقها
+                if (_startSurahId > v) _startSurahId = v;
+                _clampStartAyahForSurah();
               });
             },
           ),
@@ -760,13 +766,12 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
           ),
           _buildDropdownRow(
             label: context.l10n.customPlanToSurah,
-            value: _endSurahId,
+            value: _startSurahId,
             icon: Icons.last_page_rounded,
             isDark: isDark,
             onChanged: (v) {
               setState(() {
-                _endSurahId = v;
-                if (_startSurahId > v) _setStartSurah(v);
+                _setStartSurah(v);
               });
             },
           ),
@@ -1450,8 +1455,8 @@ class _PresetSelector extends StatelessWidget {
           days: 5,
           minutes: 10,
           difficulty: MemorizationDifficulty.easy,
-          startSurahId: 114,
-          endSurahId: 105,
+          startSurahId: 78,  // سورة النبأ (بداية جزء عم)
+          endSurahId: 114,   // سورة الناس (نهاية جزء عم)
         ),
       ),
     ];

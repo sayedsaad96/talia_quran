@@ -15,8 +15,16 @@ class SmartCoachEngine {
       return _kidsRecommendation(snapshot);
     }
     if (snapshot.profile.isAdult) {
-      return _adultMemPlusRecommendation(snapshot) ??
-          _hifzDueRecommendation(snapshot);
+      final memPlusRec = _adultMemPlusRecommendation(snapshot) ??
+          _continueV2SessionRecommendation(snapshot);
+      if (memPlusRec != null) return memPlusRec;
+
+      if (snapshot.hifzDueReviews.isNotEmpty) {
+        return const SmartCoachRecommendation(
+          kind: SmartCoachRecommendationKind.hifzReviewDue,
+          route: '/hifz',
+        );
+      }
     }
     return null;
   }
@@ -154,19 +162,23 @@ class SmartCoachEngine {
     return null;
   }
 
-  // ── Priority 7: Hifz due fallback ─────────────────────────────────────────
-  SmartCoachRecommendation? _hifzDueRecommendation(
+  // ── Priority 7: Continue V2 Session ─────────────────────────────────────────
+  SmartCoachRecommendation? _continueV2SessionRecommendation(
     MemorizationSnapshot snapshot,
   ) {
-    if (snapshot.hifzDueReviews.isEmpty) return null;
-    final due = snapshot.hifzDueReviews.first;
-    return SmartCoachRecommendation(
-      kind: SmartCoachRecommendationKind.hifzReviewDue,
-      explanationCode: SmartCoachExplanationCode.hifzReviewDue,
-      route: '/hifz',
-      surahId: due.surahId,
-      startAyah: due.ayahNumber,
-    );
+    final loc = snapshot.lastRestorableLocation;
+    if (loc != null && loc.startsWith('/memorization-v2/session')) {
+      final uri = Uri.tryParse(loc);
+      final surahIdStr = uri?.queryParameters['surahId'];
+      final surahId = surahIdStr != null ? int.tryParse(surahIdStr) : null;
+      return SmartCoachRecommendation(
+        kind: SmartCoachRecommendationKind.continueV2Session,
+        explanationCode: SmartCoachExplanationCode.continueV2Session,
+        route: loc,
+        surahId: surahId,
+      );
+    }
+    return null;
   }
 
   // ── Priority 8: Kids current mission ──────────────────────────────────────

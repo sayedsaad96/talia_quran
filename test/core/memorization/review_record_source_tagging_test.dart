@@ -52,6 +52,7 @@ void main() {
         ReviewRecordCreatedByMode.hifz,
         ReviewRecordCreatedByMode.migration,
         ReviewRecordCreatedByMode.unknown,
+        ReviewRecordCreatedByMode.v2Session, // V2 addition
       ]);
     });
 
@@ -59,6 +60,12 @@ void main() {
       // Isar stores index; unknown must remain index 4 so new entries
       // can default to it without collision with existing stored values.
       expect(ReviewRecordCreatedByMode.unknown.index, 4);
+    });
+
+    test('v2Session has index 5 (appended after unknown)', () {
+      // v2Session must be the last value — appended after unknown.
+      // Isar records with index 5 will map to v2Session.
+      expect(ReviewRecordCreatedByMode.v2Session.index, 5);
     });
   });
 

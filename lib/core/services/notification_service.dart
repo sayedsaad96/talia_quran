@@ -136,8 +136,8 @@ class TaliaNotificationService {
 
   Future<void> _configureLocalTimezone() async {
     try {
-      final String localTimezone = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(localTimezone));
+      final localTimezone = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(localTimezone.identifier));
     } catch (_) {
       // Fallback
     }

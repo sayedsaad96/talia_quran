@@ -48,7 +48,11 @@ const IsarAyahProgressSchema = CollectionSchema(
       type: IsarType.byte,
       enumMap: _IsarAyahProgressstatusEnumValueMap,
     ),
-    r'surahId': PropertySchema(id: 6, name: r'surahId', type: IsarType.long),
+    r'surahId': PropertySchema(
+      id: 6,
+      name: r'surahId',
+      type: IsarType.long,
+    )
   },
   estimateSize: _isarAyahProgressEstimateSize,
   serialize: _isarAyahProgressSerialize,
@@ -66,9 +70,9 @@ const IsarAyahProgressSchema = CollectionSchema(
           name: r'compositeKey',
           type: IndexType.hash,
           caseSensitive: true,
-        ),
+        )
       ],
-    ),
+    )
   },
   links: {},
   embeddedSchemas: {},
@@ -118,7 +122,7 @@ IsarAyahProgress _isarAyahProgressDeserialize(
   object.repetitions = reader.readLong(offsets[4]);
   object.status =
       _IsarAyahProgressstatusValueEnumMap[reader.readByteOrNull(offsets[5])] ??
-      AyahStatus.notStarted;
+          AyahStatus.notStarted;
   object.surahId = reader.readLong(offsets[6]);
   return object;
 }
@@ -141,11 +145,9 @@ P _isarAyahProgressDeserializeProp<P>(
     case 4:
       return (reader.readLong(offset)) as P;
     case 5:
-      return (_IsarAyahProgressstatusValueEnumMap[reader.readByteOrNull(
-                offset,
-              )] ??
-              AyahStatus.notStarted)
-          as P;
+      return (_IsarAyahProgressstatusValueEnumMap[
+              reader.readByteOrNull(offset)] ??
+          AyahStatus.notStarted) as P;
     case 6:
       return (reader.readLong(offset)) as P;
     default:
@@ -175,10 +177,7 @@ List<IsarLinkBase<dynamic>> _isarAyahProgressGetLinks(IsarAyahProgress object) {
 }
 
 void _isarAyahProgressAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  IsarAyahProgress object,
-) {
+    IsarCollection<dynamic> col, Id id, IsarAyahProgress object) {
   object.id = id;
 }
 
@@ -200,15 +199,13 @@ extension IsarAyahProgressByIndex on IsarCollection<IsarAyahProgress> {
   }
 
   Future<List<IsarAyahProgress?>> getAllByCompositeKey(
-    List<String> compositeKeyValues,
-  ) {
+      List<String> compositeKeyValues) {
     final values = compositeKeyValues.map((e) => [e]).toList();
     return getAllByIndex(r'compositeKey', values);
   }
 
   List<IsarAyahProgress?> getAllByCompositeKeySync(
-    List<String> compositeKeyValues,
-  ) {
+      List<String> compositeKeyValues) {
     final values = compositeKeyValues.map((e) => [e]).toList();
     return getAllByIndexSync(r'compositeKey', values);
   }
@@ -235,10 +232,8 @@ extension IsarAyahProgressByIndex on IsarCollection<IsarAyahProgress> {
     return putAllByIndex(r'compositeKey', objects);
   }
 
-  List<Id> putAllByCompositeKeySync(
-    List<IsarAyahProgress> objects, {
-    bool saveLinks = true,
-  }) {
+  List<Id> putAllByCompositeKeySync(List<IsarAyahProgress> objects,
+      {bool saveLinks = true}) {
     return putAllByIndexSync(r'compositeKey', objects, saveLinks: saveLinks);
   }
 }
@@ -255,15 +250,17 @@ extension IsarAyahProgressQueryWhereSort
 extension IsarAyahProgressQueryWhere
     on QueryBuilder<IsarAyahProgress, IsarAyahProgress, QWhereClause> {
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterWhereClause> idEqualTo(
-    Id id,
-  ) {
+      Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterWhereClause>
-  idNotEqualTo(Id id) {
+      idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -286,7 +283,7 @@ extension IsarAyahProgressQueryWhere
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterWhereClause>
-  idGreaterThan(Id id, {bool include = false}) {
+      idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -295,7 +292,7 @@ extension IsarAyahProgressQueryWhere
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterWhereClause>
-  idLessThan(Id id, {bool include = false}) {
+      idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -310,68 +307,56 @@ extension IsarAyahProgressQueryWhere
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterWhereClause>
-  compositeKeyEqualTo(String compositeKey) {
+      compositeKeyEqualTo(String compositeKey) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'compositeKey',
-          value: [compositeKey],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'compositeKey',
+        value: [compositeKey],
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterWhereClause>
-  compositeKeyNotEqualTo(String compositeKey) {
+      compositeKeyNotEqualTo(String compositeKey) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'compositeKey',
-                lower: [],
-                upper: [compositeKey],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'compositeKey',
-                lower: [compositeKey],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'compositeKey',
+              lower: [],
+              upper: [compositeKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'compositeKey',
+              lower: [compositeKey],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'compositeKey',
-                lower: [compositeKey],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'compositeKey',
-                lower: [],
-                upper: [compositeKey],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'compositeKey',
+              lower: [compositeKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'compositeKey',
+              lower: [],
+              upper: [compositeKey],
+              includeUpper: false,
+            ));
       }
     });
   }
@@ -380,111 +365,109 @@ extension IsarAyahProgressQueryWhere
 extension IsarAyahProgressQueryFilter
     on QueryBuilder<IsarAyahProgress, IsarAyahProgress, QFilterCondition> {
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  ayahNumberEqualTo(int value) {
+      ayahNumberEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'ayahNumber', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ayahNumber',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  ayahNumberGreaterThan(int value, {bool include = false}) {
+      ayahNumberGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'ayahNumber',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ayahNumber',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  ayahNumberLessThan(int value, {bool include = false}) {
+      ayahNumberLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'ayahNumber',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ayahNumber',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  ayahNumberBetween(
+      ayahNumberBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'ayahNumber',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ayahNumber',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  compositeKeyEqualTo(String value, {bool caseSensitive = true}) {
+      compositeKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  compositeKeyGreaterThan(
+      compositeKeyGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  compositeKeyLessThan(
+      compositeKeyLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  compositeKeyBetween(
+      compositeKeyBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -492,416 +475,420 @@ extension IsarAyahProgressQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'compositeKey',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'compositeKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  compositeKeyStartsWith(String value, {bool caseSensitive = true}) {
+      compositeKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  compositeKeyEndsWith(String value, {bool caseSensitive = true}) {
+      compositeKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  compositeKeyContains(String value, {bool caseSensitive = true}) {
+      compositeKeyContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  compositeKeyMatches(String pattern, {bool caseSensitive = true}) {
+      compositeKeyMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'compositeKey',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'compositeKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  compositeKeyIsEmpty() {
+      compositeKeyIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'compositeKey', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'compositeKey',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  compositeKeyIsNotEmpty() {
+      compositeKeyIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'compositeKey', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'compositeKey',
+        value: '',
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  idEqualTo(Id value) {
+      idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  idGreaterThan(Id value, {bool include = false}) {
+      idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  idLessThan(Id value, {bool include = false}) {
+      idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  idBetween(
+      idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  lastReviewDateEqualTo(DateTime value) {
+      lastReviewDateEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'lastReviewDate', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastReviewDate',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  lastReviewDateGreaterThan(DateTime value, {bool include = false}) {
+      lastReviewDateGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'lastReviewDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastReviewDate',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  lastReviewDateLessThan(DateTime value, {bool include = false}) {
+      lastReviewDateLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'lastReviewDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastReviewDate',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  lastReviewDateBetween(
+      lastReviewDateBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'lastReviewDate',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastReviewDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  nextReviewDateEqualTo(DateTime value) {
+      nextReviewDateEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'nextReviewDate', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'nextReviewDate',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  nextReviewDateGreaterThan(DateTime value, {bool include = false}) {
+      nextReviewDateGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'nextReviewDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'nextReviewDate',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  nextReviewDateLessThan(DateTime value, {bool include = false}) {
+      nextReviewDateLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'nextReviewDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'nextReviewDate',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  nextReviewDateBetween(
+      nextReviewDateBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'nextReviewDate',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'nextReviewDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  repetitionsEqualTo(int value) {
+      repetitionsEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'repetitions', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'repetitions',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  repetitionsGreaterThan(int value, {bool include = false}) {
+      repetitionsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'repetitions',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'repetitions',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  repetitionsLessThan(int value, {bool include = false}) {
+      repetitionsLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'repetitions',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'repetitions',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  repetitionsBetween(
+      repetitionsBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'repetitions',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'repetitions',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  statusEqualTo(AyahStatus value) {
+      statusEqualTo(AyahStatus value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'status', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'status',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  statusGreaterThan(AyahStatus value, {bool include = false}) {
+      statusGreaterThan(
+    AyahStatus value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'status',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'status',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  statusLessThan(AyahStatus value, {bool include = false}) {
+      statusLessThan(
+    AyahStatus value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'status',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'status',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  statusBetween(
+      statusBetween(
     AyahStatus lower,
     AyahStatus upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'status',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'status',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  surahIdEqualTo(int value) {
+      surahIdEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'surahId', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'surahId',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  surahIdGreaterThan(int value, {bool include = false}) {
+      surahIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'surahId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'surahId',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  surahIdLessThan(int value, {bool include = false}) {
+      surahIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'surahId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'surahId',
+        value: value,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterFilterCondition>
-  surahIdBetween(
+      surahIdBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'surahId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'surahId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
@@ -915,98 +902,98 @@ extension IsarAyahProgressQueryLinks
 extension IsarAyahProgressQuerySortBy
     on QueryBuilder<IsarAyahProgress, IsarAyahProgress, QSortBy> {
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByAyahNumber() {
+      sortByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByAyahNumberDesc() {
+      sortByAyahNumberDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByCompositeKey() {
+      sortByCompositeKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'compositeKey', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByCompositeKeyDesc() {
+      sortByCompositeKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'compositeKey', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByLastReviewDate() {
+      sortByLastReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByLastReviewDateDesc() {
+      sortByLastReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByNextReviewDate() {
+      sortByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByNextReviewDateDesc() {
+      sortByNextReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByRepetitions() {
+      sortByRepetitions() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'repetitions', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByRepetitionsDesc() {
+      sortByRepetitionsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'repetitions', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByStatus() {
+      sortByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortByStatusDesc() {
+      sortByStatusDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortBySurahId() {
+      sortBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  sortBySurahIdDesc() {
+      sortBySurahIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.desc);
     });
@@ -1016,28 +1003,28 @@ extension IsarAyahProgressQuerySortBy
 extension IsarAyahProgressQuerySortThenBy
     on QueryBuilder<IsarAyahProgress, IsarAyahProgress, QSortThenBy> {
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByAyahNumber() {
+      thenByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByAyahNumberDesc() {
+      thenByAyahNumberDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByCompositeKey() {
+      thenByCompositeKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'compositeKey', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByCompositeKeyDesc() {
+      thenByCompositeKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'compositeKey', Sort.desc);
     });
@@ -1050,77 +1037,77 @@ extension IsarAyahProgressQuerySortThenBy
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByIdDesc() {
+      thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByLastReviewDate() {
+      thenByLastReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByLastReviewDateDesc() {
+      thenByLastReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByNextReviewDate() {
+      thenByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByNextReviewDateDesc() {
+      thenByNextReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByRepetitions() {
+      thenByRepetitions() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'repetitions', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByRepetitionsDesc() {
+      thenByRepetitionsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'repetitions', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByStatus() {
+      thenByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenByStatusDesc() {
+      thenByStatusDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'status', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenBySurahId() {
+      thenBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QAfterSortBy>
-  thenBySurahIdDesc() {
+      thenBySurahIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.desc);
     });
@@ -1130,49 +1117,49 @@ extension IsarAyahProgressQuerySortThenBy
 extension IsarAyahProgressQueryWhereDistinct
     on QueryBuilder<IsarAyahProgress, IsarAyahProgress, QDistinct> {
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QDistinct>
-  distinctByAyahNumber() {
+      distinctByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'ayahNumber');
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QDistinct>
-  distinctByCompositeKey({bool caseSensitive = true}) {
+      distinctByCompositeKey({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'compositeKey', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QDistinct>
-  distinctByLastReviewDate() {
+      distinctByLastReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastReviewDate');
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QDistinct>
-  distinctByNextReviewDate() {
+      distinctByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'nextReviewDate');
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QDistinct>
-  distinctByRepetitions() {
+      distinctByRepetitions() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'repetitions');
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QDistinct>
-  distinctByStatus() {
+      distinctByStatus() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'status');
     });
   }
 
   QueryBuilder<IsarAyahProgress, IsarAyahProgress, QDistinct>
-  distinctBySurahId() {
+      distinctBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'surahId');
     });
@@ -1194,21 +1181,21 @@ extension IsarAyahProgressQueryProperty
   }
 
   QueryBuilder<IsarAyahProgress, String, QQueryOperations>
-  compositeKeyProperty() {
+      compositeKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'compositeKey');
     });
   }
 
   QueryBuilder<IsarAyahProgress, DateTime, QQueryOperations>
-  lastReviewDateProperty() {
+      lastReviewDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastReviewDate');
     });
   }
 
   QueryBuilder<IsarAyahProgress, DateTime, QQueryOperations>
-  nextReviewDateProperty() {
+      nextReviewDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nextReviewDate');
     });
@@ -1221,7 +1208,7 @@ extension IsarAyahProgressQueryProperty
   }
 
   QueryBuilder<IsarAyahProgress, AyahStatus, QQueryOperations>
-  statusProperty() {
+      statusProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'status');
     });

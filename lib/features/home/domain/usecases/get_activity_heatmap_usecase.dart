@@ -25,18 +25,34 @@ class ActivityHeatmapData {
 class GetActivityHeatmapUsecase {
   const GetActivityHeatmapUsecase(this._isar);
 
+  static const int historyDays = 730;
+
   final Isar _isar;
 
   Future<ActivityHeatmapData> call() async {
     try {
+      final now = DateTime.now();
+      final fallbackStartDate = now.subtract(
+        const Duration(days: historyDays ~/ 2),
+      );
+      final oldestVisibleDay = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(const Duration(days: historyDays));
+      final oldestVisibleDayKey = _dayKey(oldestVisibleDay);
       final allProgress = await _isar.isarAyahProgress.where().findAll();
-      final dailyRecords = await _isar.dailyActivityIsars.where().findAll();
+      final dailyRecords = await _isar.dailyActivityIsars
+          .where()
+          .dayKeyGreaterThan(oldestVisibleDayKey - 1)
+          .findAll();
 
       final map = <String, int>{};
       DateTime? earliestDate;
 
       for (final progress in allProgress) {
         final date = progress.lastReviewDate;
+        if (date.isBefore(oldestVisibleDay)) continue;
         if (earliestDate == null || date.isBefore(earliestDate)) {
           earliestDate = date;
         }
@@ -58,16 +74,19 @@ class GetActivityHeatmapUsecase {
 
       return ActivityHeatmapData(
         countsByDay: map,
-        startDate:
-            earliestDate ?? DateTime.now().subtract(const Duration(days: 365)),
+        startDate: earliestDate ?? fallbackStartDate,
       );
     } catch (_) {
       return ActivityHeatmapData(
         countsByDay: const {},
-        startDate: DateTime.now().subtract(const Duration(days: 365)),
+        startDate: DateTime.now().subtract(
+          const Duration(days: historyDays ~/ 2),
+        ),
       );
     }
   }
+
+  int _dayKey(DateTime date) => date.year * 10000 + date.month * 100 + date.day;
 
   DateTime _dateFromDayKey(int dayKey) {
     final year = dayKey ~/ 10000;

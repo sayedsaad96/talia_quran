@@ -58,12 +58,16 @@ const IsarAyahReviewRecordSchema = CollectionSchema(
       name: r'strengthLevel',
       type: IsarType.long,
     ),
-    r'surahId': PropertySchema(id: 8, name: r'surahId', type: IsarType.long),
+    r'surahId': PropertySchema(
+      id: 8,
+      name: r'surahId',
+      type: IsarType.long,
+    ),
     r'totalReviews': PropertySchema(
       id: 9,
       name: r'totalReviews',
       type: IsarType.long,
-    ),
+    )
   },
   estimateSize: _isarAyahReviewRecordEstimateSize,
   serialize: _isarAyahReviewRecordSerialize,
@@ -81,9 +85,9 @@ const IsarAyahReviewRecordSchema = CollectionSchema(
           name: r'compositeKey',
           type: IndexType.hash,
           caseSensitive: true,
-        ),
+        )
       ],
-    ),
+    )
   },
   links: {},
   embeddedSchemas: {},
@@ -179,16 +183,12 @@ Id _isarAyahReviewRecordGetId(IsarAyahReviewRecord object) {
 }
 
 List<IsarLinkBase<dynamic>> _isarAyahReviewRecordGetLinks(
-  IsarAyahReviewRecord object,
-) {
+    IsarAyahReviewRecord object) {
   return [];
 }
 
 void _isarAyahReviewRecordAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  IsarAyahReviewRecord object,
-) {
+    IsarCollection<dynamic> col, Id id, IsarAyahReviewRecord object) {
   object.id = id;
 }
 
@@ -210,15 +210,13 @@ extension IsarAyahReviewRecordByIndex on IsarCollection<IsarAyahReviewRecord> {
   }
 
   Future<List<IsarAyahReviewRecord?>> getAllByCompositeKey(
-    List<String> compositeKeyValues,
-  ) {
+      List<String> compositeKeyValues) {
     final values = compositeKeyValues.map((e) => [e]).toList();
     return getAllByIndex(r'compositeKey', values);
   }
 
   List<IsarAyahReviewRecord?> getAllByCompositeKeySync(
-    List<String> compositeKeyValues,
-  ) {
+      List<String> compositeKeyValues) {
     final values = compositeKeyValues.map((e) => [e]).toList();
     return getAllByIndexSync(r'compositeKey', values);
   }
@@ -237,10 +235,8 @@ extension IsarAyahReviewRecordByIndex on IsarCollection<IsarAyahReviewRecord> {
     return putByIndex(r'compositeKey', object);
   }
 
-  Id putByCompositeKeySync(
-    IsarAyahReviewRecord object, {
-    bool saveLinks = true,
-  }) {
+  Id putByCompositeKeySync(IsarAyahReviewRecord object,
+      {bool saveLinks = true}) {
     return putByIndexSync(r'compositeKey', object, saveLinks: saveLinks);
   }
 
@@ -248,10 +244,8 @@ extension IsarAyahReviewRecordByIndex on IsarCollection<IsarAyahReviewRecord> {
     return putAllByIndex(r'compositeKey', objects);
   }
 
-  List<Id> putAllByCompositeKeySync(
-    List<IsarAyahReviewRecord> objects, {
-    bool saveLinks = true,
-  }) {
+  List<Id> putAllByCompositeKeySync(List<IsarAyahReviewRecord> objects,
+      {bool saveLinks = true}) {
     return putAllByIndexSync(r'compositeKey', objects, saveLinks: saveLinks);
   }
 }
@@ -259,7 +253,7 @@ extension IsarAyahReviewRecordByIndex on IsarCollection<IsarAyahReviewRecord> {
 extension IsarAyahReviewRecordQueryWhereSort
     on QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QWhere> {
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhere>
-  anyId() {
+      anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
@@ -269,14 +263,17 @@ extension IsarAyahReviewRecordQueryWhereSort
 extension IsarAyahReviewRecordQueryWhere
     on QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QWhereClause> {
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
-  idEqualTo(Id id) {
+      idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
-  idNotEqualTo(Id id) {
+      idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -299,7 +296,7 @@ extension IsarAyahReviewRecordQueryWhere
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
-  idGreaterThan(Id id, {bool include = false}) {
+      idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -308,7 +305,7 @@ extension IsarAyahReviewRecordQueryWhere
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
-  idLessThan(Id id, {bool include = false}) {
+      idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -317,225 +314,174 @@ extension IsarAyahReviewRecordQueryWhere
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
-  idBetween(
+      idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
-  compositeKeyEqualTo(String compositeKey) {
+      compositeKeyEqualTo(String compositeKey) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'compositeKey',
-          value: [compositeKey],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'compositeKey',
+        value: [compositeKey],
+      ));
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
-  compositeKeyNotEqualTo(String compositeKey) {
+      compositeKeyNotEqualTo(String compositeKey) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'compositeKey',
-                lower: [],
-                upper: [compositeKey],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'compositeKey',
-                lower: [compositeKey],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'compositeKey',
+              lower: [],
+              upper: [compositeKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'compositeKey',
+              lower: [compositeKey],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'compositeKey',
-                lower: [compositeKey],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'compositeKey',
-                lower: [],
-                upper: [compositeKey],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'compositeKey',
+              lower: [compositeKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'compositeKey',
+              lower: [],
+              upper: [compositeKey],
+              includeUpper: false,
+            ));
       }
     });
   }
 }
 
-extension IsarAyahReviewRecordQueryFilter
-    on
-        QueryBuilder<
-          IsarAyahReviewRecord,
-          IsarAyahReviewRecord,
-          QFilterCondition
-        > {
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  ayahNumberEqualTo(int value) {
+extension IsarAyahReviewRecordQueryFilter on QueryBuilder<IsarAyahReviewRecord,
+    IsarAyahReviewRecord, QFilterCondition> {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ayahNumberEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'ayahNumber', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ayahNumber',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  ayahNumberGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ayahNumberGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'ayahNumber',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ayahNumber',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  ayahNumberLessThan(int value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ayahNumberLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'ayahNumber',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ayahNumber',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  ayahNumberBetween(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ayahNumberBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'ayahNumber',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ayahNumber',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  compositeKeyEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> compositeKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  compositeKeyGreaterThan(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> compositeKeyGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  compositeKeyLessThan(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> compositeKeyLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  compositeKeyBetween(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> compositeKeyBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -543,958 +489,773 @@ extension IsarAyahReviewRecordQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'compositeKey',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'compositeKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  compositeKeyStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> compositeKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  compositeKeyEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> compositeKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  compositeKeyContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+          QAfterFilterCondition>
+      compositeKeyContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'compositeKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'compositeKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  compositeKeyMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+          QAfterFilterCondition>
+      compositeKeyMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'compositeKey',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'compositeKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  compositeKeyIsEmpty() {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> compositeKeyIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'compositeKey', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'compositeKey',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  compositeKeyIsNotEmpty() {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> compositeKeyIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'compositeKey', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'compositeKey',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  createdByModeIndexIsNull() {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> createdByModeIndexIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'createdByModeIndex'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'createdByModeIndex',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  createdByModeIndexIsNotNull() {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> createdByModeIndexIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'createdByModeIndex'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'createdByModeIndex',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  createdByModeIndexEqualTo(int? value) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> createdByModeIndexEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'createdByModeIndex', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'createdByModeIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  createdByModeIndexGreaterThan(int? value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> createdByModeIndexGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'createdByModeIndex',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'createdByModeIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  createdByModeIndexLessThan(int? value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> createdByModeIndexLessThan(
+    int? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'createdByModeIndex',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'createdByModeIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  createdByModeIndexBetween(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> createdByModeIndexBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'createdByModeIndex',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'createdByModeIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  idEqualTo(Id value) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  idGreaterThan(Id value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  idLessThan(Id value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  idBetween(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  intervalDaysEqualTo(int value) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> intervalDaysEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'intervalDays', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'intervalDays',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  intervalDaysGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> intervalDaysGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'intervalDays',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'intervalDays',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  intervalDaysLessThan(int value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> intervalDaysLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'intervalDays',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'intervalDays',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  intervalDaysBetween(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> intervalDaysBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'intervalDays',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'intervalDays',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  lastRatingIndexIsNull() {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lastRatingIndexIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'lastRatingIndex'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastRatingIndex',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  lastRatingIndexIsNotNull() {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lastRatingIndexIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'lastRatingIndex'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastRatingIndex',
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  lastRatingIndexEqualTo(int? value) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lastRatingIndexEqualTo(int? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'lastRatingIndex', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastRatingIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  lastRatingIndexGreaterThan(int? value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lastRatingIndexGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'lastRatingIndex',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastRatingIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  lastRatingIndexLessThan(int? value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lastRatingIndexLessThan(
+    int? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'lastRatingIndex',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastRatingIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  lastRatingIndexBetween(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lastRatingIndexBetween(
     int? lower,
     int? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'lastRatingIndex',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastRatingIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  lastReviewedAtEqualTo(DateTime value) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lastReviewedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'lastReviewedAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastReviewedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  lastReviewedAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lastReviewedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'lastReviewedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastReviewedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  lastReviewedAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lastReviewedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'lastReviewedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastReviewedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  lastReviewedAtBetween(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lastReviewedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'lastReviewedAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastReviewedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  nextReviewDateEqualTo(DateTime value) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> nextReviewDateEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'nextReviewDate', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'nextReviewDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  nextReviewDateGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> nextReviewDateGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'nextReviewDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'nextReviewDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  nextReviewDateLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> nextReviewDateLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'nextReviewDate',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'nextReviewDate',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  nextReviewDateBetween(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> nextReviewDateBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'nextReviewDate',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'nextReviewDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  strengthLevelEqualTo(int value) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> strengthLevelEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'strengthLevel', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'strengthLevel',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  strengthLevelGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> strengthLevelGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'strengthLevel',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'strengthLevel',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  strengthLevelLessThan(int value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> strengthLevelLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'strengthLevel',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'strengthLevel',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  strengthLevelBetween(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> strengthLevelBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'strengthLevel',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'strengthLevel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  surahIdEqualTo(int value) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> surahIdEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'surahId', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'surahId',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  surahIdGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> surahIdGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'surahId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'surahId',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  surahIdLessThan(int value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> surahIdLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'surahId',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'surahId',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  surahIdBetween(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> surahIdBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'surahId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'surahId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  totalReviewsEqualTo(int value) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> totalReviewsEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'totalReviews', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'totalReviews',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  totalReviewsGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> totalReviewsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'totalReviews',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'totalReviews',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  totalReviewsLessThan(int value, {bool include = false}) {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> totalReviewsLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'totalReviews',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'totalReviews',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    IsarAyahReviewRecord,
-    IsarAyahReviewRecord,
-    QAfterFilterCondition
-  >
-  totalReviewsBetween(
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> totalReviewsBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'totalReviews',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'totalReviews',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
 
-extension IsarAyahReviewRecordQueryObject
-    on
-        QueryBuilder<
-          IsarAyahReviewRecord,
-          IsarAyahReviewRecord,
-          QFilterCondition
-        > {}
+extension IsarAyahReviewRecordQueryObject on QueryBuilder<IsarAyahReviewRecord,
+    IsarAyahReviewRecord, QFilterCondition> {}
 
-extension IsarAyahReviewRecordQueryLinks
-    on
-        QueryBuilder<
-          IsarAyahReviewRecord,
-          IsarAyahReviewRecord,
-          QFilterCondition
-        > {}
+extension IsarAyahReviewRecordQueryLinks on QueryBuilder<IsarAyahReviewRecord,
+    IsarAyahReviewRecord, QFilterCondition> {}
 
 extension IsarAyahReviewRecordQuerySortBy
     on QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QSortBy> {
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByAyahNumber() {
+      sortByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByAyahNumberDesc() {
+      sortByAyahNumberDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByCompositeKey() {
+      sortByCompositeKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'compositeKey', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByCompositeKeyDesc() {
+      sortByCompositeKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'compositeKey', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByCreatedByModeIndex() {
+      sortByCreatedByModeIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdByModeIndex', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByCreatedByModeIndexDesc() {
+      sortByCreatedByModeIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdByModeIndex', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByIntervalDays() {
+      sortByIntervalDays() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'intervalDays', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByIntervalDaysDesc() {
+      sortByIntervalDaysDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'intervalDays', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByLastRatingIndex() {
+      sortByLastRatingIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastRatingIndex', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByLastRatingIndexDesc() {
+      sortByLastRatingIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastRatingIndex', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByLastReviewedAt() {
+      sortByLastReviewedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewedAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByLastReviewedAtDesc() {
+      sortByLastReviewedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewedAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByNextReviewDate() {
+      sortByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByNextReviewDateDesc() {
+      sortByNextReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByStrengthLevel() {
+      sortByStrengthLevel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'strengthLevel', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByStrengthLevelDesc() {
+      sortByStrengthLevelDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'strengthLevel', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortBySurahId() {
+      sortBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortBySurahIdDesc() {
+      sortBySurahIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByTotalReviews() {
+      sortByTotalReviews() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalReviews', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  sortByTotalReviewsDesc() {
+      sortByTotalReviewsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalReviews', Sort.desc);
     });
@@ -1504,154 +1265,154 @@ extension IsarAyahReviewRecordQuerySortBy
 extension IsarAyahReviewRecordQuerySortThenBy
     on QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QSortThenBy> {
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByAyahNumber() {
+      thenByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByAyahNumberDesc() {
+      thenByAyahNumberDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByCompositeKey() {
+      thenByCompositeKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'compositeKey', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByCompositeKeyDesc() {
+      thenByCompositeKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'compositeKey', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByCreatedByModeIndex() {
+      thenByCreatedByModeIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdByModeIndex', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByCreatedByModeIndexDesc() {
+      thenByCreatedByModeIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdByModeIndex', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenById() {
+      thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByIdDesc() {
+      thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByIntervalDays() {
+      thenByIntervalDays() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'intervalDays', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByIntervalDaysDesc() {
+      thenByIntervalDaysDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'intervalDays', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByLastRatingIndex() {
+      thenByLastRatingIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastRatingIndex', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByLastRatingIndexDesc() {
+      thenByLastRatingIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastRatingIndex', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByLastReviewedAt() {
+      thenByLastReviewedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewedAt', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByLastReviewedAtDesc() {
+      thenByLastReviewedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastReviewedAt', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByNextReviewDate() {
+      thenByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByNextReviewDateDesc() {
+      thenByNextReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByStrengthLevel() {
+      thenByStrengthLevel() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'strengthLevel', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByStrengthLevelDesc() {
+      thenByStrengthLevelDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'strengthLevel', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenBySurahId() {
+      thenBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenBySurahIdDesc() {
+      thenBySurahIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'surahId', Sort.desc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByTotalReviews() {
+      thenByTotalReviews() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalReviews', Sort.asc);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
-  thenByTotalReviewsDesc() {
+      thenByTotalReviewsDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalReviews', Sort.desc);
     });
@@ -1661,83 +1422,78 @@ extension IsarAyahReviewRecordQuerySortThenBy
 extension IsarAyahReviewRecordQueryWhereDistinct
     on QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct> {
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
-  distinctByAyahNumber() {
+      distinctByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'ayahNumber');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
-  distinctByCompositeKey({bool caseSensitive = true}) {
+      distinctByCompositeKey({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'compositeKey', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
-  distinctByCreatedByModeIndex() {
+      distinctByCreatedByModeIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdByModeIndex');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
-  distinctByIntervalDays() {
+      distinctByIntervalDays() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'intervalDays');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
-  distinctByLastRatingIndex() {
+      distinctByLastRatingIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastRatingIndex');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
-  distinctByLastReviewedAt() {
+      distinctByLastReviewedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastReviewedAt');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
-  distinctByNextReviewDate() {
+      distinctByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'nextReviewDate');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
-  distinctByStrengthLevel() {
+      distinctByStrengthLevel() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'strengthLevel');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
-  distinctBySurahId() {
+      distinctBySurahId() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'surahId');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
-  distinctByTotalReviews() {
+      distinctByTotalReviews() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'totalReviews');
     });
   }
 }
 
-extension IsarAyahReviewRecordQueryProperty
-    on
-        QueryBuilder<
-          IsarAyahReviewRecord,
-          IsarAyahReviewRecord,
-          QQueryProperty
-        > {
+extension IsarAyahReviewRecordQueryProperty on QueryBuilder<
+    IsarAyahReviewRecord, IsarAyahReviewRecord, QQueryProperty> {
   QueryBuilder<IsarAyahReviewRecord, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
@@ -1745,56 +1501,56 @@ extension IsarAyahReviewRecordQueryProperty
   }
 
   QueryBuilder<IsarAyahReviewRecord, int, QQueryOperations>
-  ayahNumberProperty() {
+      ayahNumberProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'ayahNumber');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, String, QQueryOperations>
-  compositeKeyProperty() {
+      compositeKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'compositeKey');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, int?, QQueryOperations>
-  createdByModeIndexProperty() {
+      createdByModeIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdByModeIndex');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, int, QQueryOperations>
-  intervalDaysProperty() {
+      intervalDaysProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'intervalDays');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, int?, QQueryOperations>
-  lastRatingIndexProperty() {
+      lastRatingIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastRatingIndex');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, DateTime, QQueryOperations>
-  lastReviewedAtProperty() {
+      lastReviewedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastReviewedAt');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, DateTime, QQueryOperations>
-  nextReviewDateProperty() {
+      nextReviewDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nextReviewDate');
     });
   }
 
   QueryBuilder<IsarAyahReviewRecord, int, QQueryOperations>
-  strengthLevelProperty() {
+      strengthLevelProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'strengthLevel');
     });
@@ -1807,7 +1563,7 @@ extension IsarAyahReviewRecordQueryProperty
   }
 
   QueryBuilder<IsarAyahReviewRecord, int, QQueryOperations>
-  totalReviewsProperty() {
+      totalReviewsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'totalReviews');
     });

@@ -75,6 +75,7 @@ class _KidsGamifiedHomeView extends StatelessWidget {
           return KidsGamifiedHomeContent(
             state: state,
             childName: childName,
+            onHomeTap: () => context.go(AppRoutes.home),
             onRefresh: () =>
                 context.read<KidsJourneyCubit>().load(surahId: surahId),
             onMushafTap: () =>
@@ -118,6 +119,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
   const KidsGamifiedHomeContent({
     super.key,
     required this.state,
+    required this.onHomeTap,
     required this.onMushafTap,
     required this.onJourneyTap,
     required this.onMissionTap,
@@ -127,6 +129,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
   });
 
   final KidsJourneyLoaded state;
+  final VoidCallback onHomeTap;
   final VoidCallback onMushafTap;
   final VoidCallback onJourneyTap;
   final VoidCallback onMissionTap;
@@ -141,6 +144,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         bottomNavigationBar: _KidsHomeBottomNav(
+          onHomeTap: onHomeTap,
           onMushafTap: onMushafTap,
           onJourneyTap: onJourneyTap,
           onMissionTap: onMissionTap,
@@ -275,11 +279,13 @@ class _KidsStartHerePanel extends StatelessWidget {
 
 class _KidsHomeBottomNav extends StatelessWidget {
   const _KidsHomeBottomNav({
+    required this.onHomeTap,
     required this.onMushafTap,
     required this.onJourneyTap,
     required this.onMissionTap,
   });
 
+  final VoidCallback onHomeTap;
   final VoidCallback onMushafTap;
   final VoidCallback onJourneyTap;
   final VoidCallback onMissionTap;
@@ -290,7 +296,7 @@ class _KidsHomeBottomNav extends StatelessWidget {
 
     return NavigationBar(
       key: const ValueKey('kids-home-bottom-nav'),
-      selectedIndex: 2,
+      selectedIndex: 3,
       backgroundColor: KidsTheme.nightSkyMid,
       indicatorColor: KidsTheme.goldStar.withValues(alpha: 0.18),
       labelBehavior: isCompact
@@ -299,14 +305,22 @@ class _KidsHomeBottomNav extends StatelessWidget {
       onDestinationSelected: (index) {
         switch (index) {
           case 0:
-            onMushafTap();
+            onHomeTap();
           case 1:
-            onJourneyTap();
+            onMushafTap();
           case 2:
+            onJourneyTap();
+          case 3:
             onMissionTap();
         }
       },
       destinations: [
+        NavigationDestination(
+          key: const ValueKey('kids-home-nav-home'),
+          icon: const Icon(Icons.home_outlined),
+          selectedIcon: const Icon(Icons.home_rounded),
+          label: context.l10n.home,
+        ),
         NavigationDestination(
           key: const ValueKey('kids-home-nav-mushaf'),
           icon: const Icon(Icons.menu_book_outlined),

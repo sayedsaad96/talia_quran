@@ -18,6 +18,7 @@ class MemorizationProfile extends Equatable {
     required this.updatedAt,
     this.linkedChildId,
     this.guardianId,
+    this.childAge,
   });
 
   factory MemorizationProfile.empty() {
@@ -44,10 +45,21 @@ class MemorizationProfile extends Equatable {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// Age of the child in years. Null for adult profiles or when unknown.
+  /// Used by V2 Block Review exception (Product Rules §14.3):
+  ///   childAge < 8  → Block Review optional
+  ///   childAge >= 8 → Block Review required
+  ///   null          → Block Review required (safe default)
+  final int? childAge;
+
   bool get hasSelectedPath => selectedPath != null;
   bool get isAdult => selectedPath == MemorizationPath.adult;
   bool get isChild => selectedPath == MemorizationPath.child;
   bool get isGuardianLinked => guardianLinkStatus == GuardianLinkStatus.linked;
+
+  /// Whether Block Review is required for V2 sessions (Product Rules §14.3).
+  /// Returns true for adults, unknown age, or children aged 8+.
+  bool get isBlockReviewRequired => !isChild || (childAge ?? 8) >= 8;
 
   MemorizationTrack? get legacyTrack => isAdult
       ? MemorizationTrack.adults
@@ -72,6 +84,8 @@ class MemorizationProfile extends Equatable {
     bool clearGuardianId = false,
     DateTime? createdAt,
     DateTime? updatedAt,
+    int? childAge,
+    bool clearChildAge = false,
   }) => MemorizationProfile(
     schemaVersion: schemaVersion ?? this.schemaVersion,
     selectedPath: clearSelectedPath
@@ -87,6 +101,7 @@ class MemorizationProfile extends Equatable {
     guardianId: clearGuardianId ? null : (guardianId ?? this.guardianId),
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? DateTime.now().toUtc(),
+    childAge: clearChildAge ? null : (childAge ?? this.childAge),
   );
 
   @override
@@ -100,5 +115,6 @@ class MemorizationProfile extends Equatable {
     guardianId,
     createdAt,
     updatedAt,
+    childAge,
   ];
 }

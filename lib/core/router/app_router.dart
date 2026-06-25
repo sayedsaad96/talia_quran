@@ -35,6 +35,7 @@ import '../../features/memorization_plus/presentation/pages/parent_dashboard_pag
 import '../../features/memorization_plus/presentation/pages/custom_plan_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/quiz_page.dart';
 import '../../features/memorization_plus/presentation/pages/qcf_rendering_poc_page.dart';
+import '../../features/memorization_plus/presentation/pages/v2_session_page.dart';
 import '../../features/memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/child_onboarding_page.dart';
@@ -78,6 +79,7 @@ abstract class AppRoutes {
   static const String memorizationPlusCustomPlan =
       '/memorization-plus/custom-plan';
   static const String memorizationPlusQuiz = '/memorization-plus/quiz';
+  static const String memorizationV2Session = '/memorization-v2/session';
   static const String qcfRenderingPoc = '/debug/qcf-rendering-poc';
   static const String login = '/login';
   static const String updatePassword = '/auth/update-password';
@@ -122,6 +124,7 @@ final _publicRoutes = <String>[
   AppRoutes.tutorialGuide,
   AppRoutes.privacyPolicy,
   AppRoutes.memorizationPlus,
+  AppRoutes.memorizationV2Session,
   if (kDebugMode) AppRoutes.qcfRenderingPoc,
 ];
 
@@ -609,6 +612,34 @@ abstract class AppRouter {
               ? rawAyahNumbers.whereType<int>().toList()
               : _parseAyahNumbers(state.uri.queryParameters['ayahNumbers']);
           return QuizPage(surahId: surahId!, ayahNumbers: ayahNumbers);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationV2Session,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.adultOnlyRedirect(),
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final surahId =
+              extra?['surahId'] as int? ??
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+          final startAyah =
+              extra?['startAyah'] as int? ??
+              int.tryParse(state.uri.queryParameters['startAyah'] ?? '') ??
+              1;
+          final blockSize =
+              extra?['blockSize'] as int? ??
+              int.tryParse(state.uri.queryParameters['blockSize'] ?? '') ??
+              5;
+          if (!_isValidSurahId(surahId) || startAyah < 1 || blockSize < 1) {
+            return const PathSelectionPage();
+          }
+          return V2SessionPage(
+            surahId: surahId!,
+            startAyah: startAyah,
+            blockSize: blockSize,
+          );
         },
       ),
 

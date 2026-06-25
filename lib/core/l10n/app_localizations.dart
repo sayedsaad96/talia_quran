@@ -2190,7 +2190,7 @@ abstract class AppLocalizations {
   /// No description provided for @memorizationPathReset.
   ///
   /// In ar, this message translates to:
-  /// **'تمت إعادة ضبط مسار الحفظ'**
+  /// **'تمت اعادة ضبط مسار الحفظ'**
   String get memorizationPathReset;
 
   /// No description provided for @settingsSectionAccount.
@@ -2298,13 +2298,13 @@ abstract class AppLocalizations {
   /// No description provided for @settingsResetPathInstruction.
   ///
   /// In ar, this message translates to:
-  /// **'اكتب \"إعادة ضبط\" لتأكيد العملية.'**
+  /// **'اكتب \"اعادة ضبط\" لتأكيد العملية.'**
   String get settingsResetPathInstruction;
 
   /// No description provided for @settingsResetPathConfirmPhrase.
   ///
   /// In ar, this message translates to:
-  /// **'إعادة ضبط'**
+  /// **'اعادة ضبط'**
   String get settingsResetPathConfirmPhrase;
 
   /// No description provided for @settingsDeleteAccountTitle.
@@ -2346,7 +2346,7 @@ abstract class AppLocalizations {
   /// No description provided for @resetMemorizationPath.
   ///
   /// In ar, this message translates to:
-  /// **'إعادة ضبط / تغيير المسار'**
+  /// **'اعادة ضبط / تغيير المسار'**
   String get resetMemorizationPath;
 
   /// No description provided for @memorizationPath.
@@ -2382,7 +2382,7 @@ abstract class AppLocalizations {
   /// No description provided for @resetMemorizationPathQuestion.
   ///
   /// In ar, this message translates to:
-  /// **'إعادة ضبط مسار الحفظ؟'**
+  /// **'اعادة ضبط مسار الحفظ؟'**
   String get resetMemorizationPathQuestion;
 
   /// No description provided for @resetMemorizationIdentityWarning.
@@ -2400,7 +2400,7 @@ abstract class AppLocalizations {
   /// No description provided for @resetMemorizationPathTileTitle.
   ///
   /// In ar, this message translates to:
-  /// **'إعادة ضبط المسار'**
+  /// **'اعادة ضبط المسار'**
   String get resetMemorizationPathTileTitle;
 
   /// No description provided for @resetMemorizationPathTileSubtitle.
@@ -4072,7 +4072,7 @@ abstract class AppLocalizations {
   /// No description provided for @parentDashboardResetPin.
   ///
   /// In ar, this message translates to:
-  /// **'إعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد'**
+  /// **'اعادة ضبط على هذا الجهاز — سيطلب إنشاء رمز جديد'**
   String get parentDashboardResetPin;
 
   /// No description provided for @parentDashboardTodaySummary.

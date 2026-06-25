@@ -21,6 +21,7 @@ void main() {
         KidsGamifiedHomeContent(
           state: _journeyState,
           childName: 'يوسف',
+          onHomeTap: () {},
           onMushafTap: () {},
           onJourneyTap: () {},
           onMissionTap: () {},

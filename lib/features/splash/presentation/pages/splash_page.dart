@@ -131,36 +131,40 @@ class _SplashPageState extends State<SplashPage>
                         ),
                       ),
                       const SizedBox(height: AppSpacing.xl),
-                      Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: AppSpacing.sm,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          _SplashFeatureHint(
-                            progress: _interval(0.42, 0.72),
-                            icon: Icons.menu_book_rounded,
-                            label: context.l10n.splashFeatureRead,
-                            color: primary,
-                          ),
-                          _SplashFeatureHint(
-                            progress: _interval(0.52, 0.82),
-                            icon: Icons.psychology_alt_rounded,
-                            label: context.l10n.splashFeatureMemorize,
-                            color: AppColors.gold,
-                          ),
-                          _SplashFeatureHint(
-                            progress: _interval(0.62, 0.92),
-                            icon: Icons.rate_review_rounded,
-                            label: context.l10n.splashFeatureReview,
-                            color: AppColors.info,
-                          ),
-                          _SplashFeatureHint(
-                            progress: _interval(0.72, 1.0),
-                            icon: Icons.workspace_premium_rounded,
-                            label: context.l10n.splashFeatureGrow,
-                            color: AppColors.warning,
-                          ),
-                        ],
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _SplashFeatureHint(
+                              progress: _interval(0.42, 0.72),
+                              icon: Icons.menu_book_rounded,
+                              label: context.l10n.splashFeatureRead,
+                              color: primary,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            _SplashFeatureHint(
+                              progress: _interval(0.52, 0.82),
+                              icon: Icons.psychology_alt_rounded,
+                              label: context.l10n.splashFeatureMemorize,
+                              color: AppColors.gold,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            _SplashFeatureHint(
+                              progress: _interval(0.62, 0.92),
+                              icon: Icons.rate_review_rounded,
+                              label: context.l10n.splashFeatureReview,
+                              color: AppColors.info,
+                            ),
+                            const SizedBox(width: AppSpacing.sm),
+                            _SplashFeatureHint(
+                              progress: _interval(0.72, 1.0),
+                              icon: Icons.workspace_premium_rounded,
+                              label: context.l10n.splashFeatureGrow,
+                              color: AppColors.warning,
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   );
@@ -220,7 +224,15 @@ class _LogoMark extends StatelessWidget {
               color: primary.withValues(alpha: 0.1),
             ),
           ),
-          Icon(Icons.auto_stories_rounded, color: primary, size: 62),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Image.asset(
+              'assets/images/logo.png',
+              width: 72,
+              height: 72,
+              fit: BoxFit.cover,
+            ),
+          ),
         ],
       ),
     );

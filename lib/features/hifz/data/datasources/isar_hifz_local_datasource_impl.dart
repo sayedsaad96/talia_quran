@@ -50,6 +50,11 @@ class IsarHifzLocalDatasourceImpl implements HifzLocalDatasource {
       });
     }
 
+    // Remove legacy keys to free space and prevent accidental re-migration
+    for (final k in keys) {
+      await _prefs.remove(k);
+    }
+
     // Mark as migrated
     await _prefs.setBool(_migrationKey, true);
   }

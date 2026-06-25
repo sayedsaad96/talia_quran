@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:dartz/dartz.dart';
 import 'package:isar/isar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/error/app_failure.dart';
@@ -29,13 +30,20 @@ class ServerFailure extends Failure {
 }
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl(this._isar);
+  AuthRepositoryImpl(this._isar, this._prefs);
 
-  // Safe getter — checks if Supabase was initialized before accessing the client.
-  // Returns null-safe access; throws if called when definitely initialized.
-  static bool get _isSupabaseInitialized {
+  final Isar _isar;
+  final SharedPreferences _prefs;
+  static const Set<String> _authScopedPreferenceKeys = {
+    // Copied from the authenticated Supabase display name on login. Keep
+    // local-first Quran, Hifz, Memorization Plus, bookmarks, theme, and locale
+    // intact so signing out does not destroy guest/offline progress.
+    'user_profile',
+  };
+
+  bool get _isSupabaseInitialized {
     try {
-      Supabase.instance.client; // will throw StateError if not initialized
+      Supabase.instance.client;
       return true;
     } catch (_) {
       return false;
@@ -45,7 +53,6 @@ class AuthRepositoryImpl implements AuthRepository {
   // Lazy getter — defers access until first use so the app doesn't crash
   // when Supabase was not initialized (offline / missing .env).
   SupabaseClient get _supabase => Supabase.instance.client;
-  final Isar _isar;
 
   Either<Failure, SupabaseClient> _clientOrFailure() {
     if (!_isSupabaseInitialized) {
@@ -205,11 +212,27 @@ class AuthRepositoryImpl implements AuthRepository {
   // ─── Resend Confirmation ─────────────────────────────────────────────────
 
   @override
-  Future<void> resendConfirmation(String email) async {
-    if (!_isSupabaseInitialized) {
-      throw const AuthException('Supabase is not configured');
+  Future<Either<Failure, Unit>> resendConfirmation(String email) async {
+    try {
+      final clientResult = _clientOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      await client.auth.resend(type: OtpType.signup, email: email);
+      return const Right(unit);
+    } on AuthException catch (e) {
+      TaliaLogger.w('Resend confirmation error', e);
+      return Left(AuthFailure(_mapAuthError(e.message)));
+    } catch (e) {
+      TaliaLogger.w('Unexpected resend confirmation error', e);
+      return const Left(AuthFailure('فشل إعادة الإرسال، حاول مرة أخرى'));
     }
-    await _supabase.auth.resend(type: OtpType.signup, email: email);
   }
 
   // ─── Reset Password ───────────────────────────────────────────────────────
@@ -272,6 +295,7 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       if (!_isSupabaseInitialized) return const Right(unit);
       await _supabase.auth.signOut();
+      await _clearLocalUserData();
       return const Right(unit);
     } catch (e) {
       TaliaLogger.w('Sign-out error', e);
@@ -302,6 +326,7 @@ class AuthRepositoryImpl implements AuthRepository {
       } catch (e) {
         TaliaLogger.w('Post-delete sign-out cleanup failed', e);
       }
+      await _clearLocalUserData();
       return const Right(unit);
     } on PostgrestException catch (e) {
       TaliaLogger.w('Account deletion RPC error', e);
@@ -311,7 +336,7 @@ class AuthRepositoryImpl implements AuthRepository {
           message.contains('schema cache')) {
         return const Left(
           ServerFailure(
-            'حذف الحساب يحتاج تفعيل وظيفة Supabase delete_current_user أولاً.',
+            'تعذر حذف الحساب حالياً. يرجى المحاولة مرة أخرى لاحقاً.',
           ),
         );
       }
@@ -441,10 +466,7 @@ class AuthRepositoryImpl implements AuthRepository {
       params: {
         'p_current_streak': streak.currentStreak,
         'p_longest_streak': streak.longestStreak,
-        'p_last_activity_date': streak.lastActivityDate
-            ?.toIso8601String()
-            .split('T')
-            .first,
+        'p_last_activity_date': _toDateOnlyString(streak.lastActivityDate),
         'p_freezes_available': streak.freezesAvailable,
       },
     );
@@ -558,6 +580,12 @@ class AuthRepositoryImpl implements AuthRepository {
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
+  Future<void> _clearLocalUserData() async {
+    for (final key in _authScopedPreferenceKeys) {
+      await _prefs.remove(key);
+    }
+  }
+
   AyahStatus _parseAyahStatus(String status) {
     switch (status) {
       case 'learning':
@@ -570,6 +598,9 @@ class AuthRepositoryImpl implements AuthRepository {
         return AyahStatus.notStarted;
     }
   }
+
+  String? _toDateOnlyString(DateTime? value) =>
+      value?.toIso8601String().substring(0, 10);
 
   /// Maps Supabase auth error messages to Arabic user-friendly messages
   String _mapAuthError(String message) {

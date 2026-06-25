@@ -39,6 +39,10 @@ enum ReviewRecordCreatedByMode {
 
   /// Existing records that predate source-metadata tagging.
   unknown,
+
+  /// Created by a Memorization V2 session (MemorizationSessionCubit).
+  /// Treated as adult-compatible for Smart Coach and Quiz filtering.
+  v2Session,
 }
 
 // ─── Memorization Identity (Moved to separate files) ──────────

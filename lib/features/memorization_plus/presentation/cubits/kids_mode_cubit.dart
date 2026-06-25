@@ -10,7 +10,7 @@ import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
 
 import '../../../../core/l10n/cubit_message_codes.dart';
-import '../../../../core/services/quran_audio_service.dart';
+import '../../../../core/services/audio_cache_service.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 
 part 'kids_mode_state.dart';
@@ -120,9 +120,15 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   Future<void> _playAyah(int surahId, int ayahNumber) async {
     try {
-      final url = QuranAudioService.buildUrl(surahId, ayahNumber);
-      await _player.setUrl(url);
-      await _player.play();
+      // Cache-first playback: reuses the same cache the adult V2 path uses, so
+      // the 3× loop below plays the 2nd/3rd iterations from disk instead of
+      // re-downloading. Source URL is identical (AudioCacheService builds it
+      // via QuranAudioService.buildUrl internally).
+      final source = await AudioCacheService.instance.getAudioSource(
+        surahId,
+        ayahNumber,
+      );
+      await AudioCacheService.playFromSource(_player, source);
     } catch (_) {
       if (state is KidsModeLoaded) {
         emit(

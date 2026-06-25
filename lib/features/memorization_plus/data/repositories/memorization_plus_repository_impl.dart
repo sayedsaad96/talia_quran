@@ -30,10 +30,32 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   final _scheduler = const ScheduleNextReviewUsecase();
   final Map<String, Future<void>> _kidsAwardLocks = {};
 
-  /// Lazy Supabase getter — safe to reference but individual methods that call
-  /// Supabase must still handle StateError / no-network gracefully via try-catch.
-  /// All Supabase-using methods in this repo already have `catch (e)` blocks.
-  SupabaseClient get _supabase => Supabase.instance.client;
+  bool get _isSupabaseReady {
+    try {
+      Supabase.instance.client;
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  SupabaseClient get _supabase {
+    if (!_isSupabaseReady) {
+      throw StateError('Supabase is not initialized');
+    }
+    return Supabase.instance.client;
+  }
+
+
+
+  Either<Failure, SupabaseClient> _supabaseOrFailure() {
+    if (!_isSupabaseReady) {
+      return const Left(
+        NetworkFailure('المزامنة السحابية غير مهيأة في هذا الإصدار'),
+      );
+    }
+    return Right(_supabase);
+  }
 
   // ─── Identity profile ──────────────────────────────────────────────────────
   @override
@@ -148,7 +170,17 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     try {
       final result = await acceptChildLinkToken(codeOrQrData);
       return await result.fold((failure) async => Left(failure), (_) async {
-        final userId = _supabase.auth.currentUser?.id;
+        final clientResult = _supabaseOrFailure();
+        final clientFailure = clientResult.fold(
+          (failure) => failure,
+          (_) => null,
+        );
+        if (clientFailure != null) return Left(clientFailure);
+        final client = clientResult.getOrElse(
+          () => throw StateError('unreachable'),
+        );
+
+        final userId = client.auth.currentUser?.id;
         final profile = await _loadProfile();
         final linkedChildId = !profile.isChild && userId != null
             ? await _latestActiveChildIdForParent(userId)
@@ -265,7 +297,17 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     try {
       final profile = await _loadProfile();
       if (!profile.isChild) return Right(profile);
-      final user = _supabase.auth.currentUser;
+      final clientResult = _supabaseOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Right(profile);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      final user = client.auth.currentUser;
       if (user == null) return Right(profile);
 
       final guardianId = await _activeGuardianIdForChild(user.id);
@@ -995,7 +1037,17 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, String>> createChildLinkToken() async {
     try {
-      if (_supabase.auth.currentUser == null) {
+      final clientResult = _supabaseOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      if (client.auth.currentUser == null) {
         return const Left(
           NetworkFailure('Guardian linking requires signing in first'),
         );
@@ -1013,7 +1065,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       // Hash the token with SHA-256 (matches what the DB used to do)
       final tokenHash = sha256.convert(utf8.encode(token)).toString();
 
-      await _supabase.rpc(
+      await client.rpc(
         'create_child_link_request_with_hash',
         params: {'p_token_hash': tokenHash},
       );
@@ -1027,7 +1079,17 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, void>> acceptChildLinkToken(String token) async {
     try {
-      if (_supabase.auth.currentUser == null) {
+      final clientResult = _supabaseOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      if (client.auth.currentUser == null) {
         return const Left(
           NetworkFailure('سجّل الدخول أولاً على جهاز ولي الأمر'),
         );
@@ -1035,7 +1097,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       // Hash the token client-side (no pgcrypto needed)
       final rawToken = _extractToken(token).toUpperCase().trim();
       final tokenHash = sha256.convert(utf8.encode(rawToken)).toString();
-      await _supabase.rpc(
+      await client.rpc(
         'accept_child_link_token_with_hash',
         params: {'p_token_hash': tokenHash},
       );
@@ -1048,11 +1110,21 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, void>> syncKidsProgressToCloud() async {
     try {
-      final user = _supabase.auth.currentUser;
+      final clientResult = _supabaseOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      final user = client.auth.currentUser;
       if (user == null) return const Right(null);
 
       final progress = await _datasource.getKidsProgress();
-      await _supabase.rpc(
+      await client.rpc(
         'upsert_kids_progress_cloud',
         params: {
           'p_total_points': progress.totalPoints,
@@ -1073,7 +1145,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
           synced.add(log);
           continue;
         }
-        await _supabase.rpc(
+        await client.rpc(
           'insert_kids_session_log',
           params: {
             'p_local_id': log.id,
@@ -1100,12 +1172,22 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, List<RemoteChildSummary>>> getRemoteChildren() async {
     try {
-      final user = _supabase.auth.currentUser;
+      final clientResult = _supabaseOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      final user = client.auth.currentUser;
       if (user == null) {
         return const Left(NetworkFailure('سجّل الدخول أولاً'));
       }
 
-      final links = await _supabase
+      final links = await client
           .from('parent_child_links')
           .select('child_user_id')
           .eq('parent_user_id', user.id)
@@ -1114,23 +1196,23 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       final children = <RemoteChildSummary>[];
       for (final link in links) {
         final childId = link['child_user_id'] as String;
-        final profileRows = await _supabase
+        final profileRows = await client
             .from('profiles')
             .select('display_name')
             .eq('id', childId)
             .limit(1);
-        final progressRows = await _supabase
+        final progressRows = await client
             .from('kids_progress_cloud')
             .select()
             .eq('child_user_id', childId)
             .limit(1);
-        final logRows = await _supabase
+        final logRows = await client
             .from('kids_session_logs')
             .select()
             .eq('child_user_id', childId)
             .order('completed_at', ascending: false)
             .limit(30);
-        final rewardRows = await _supabase
+        final rewardRows = await client
             .from('parent_rewards')
             .select()
             .eq('child_user_id', childId)
@@ -1166,16 +1248,26 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       if (trimmed.isEmpty) {
         return const Left(CacheFailure('اكتب اسم المكافأة أولاً'));
       }
-      final user = _supabase.auth.currentUser;
+      final clientResult = _supabaseOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      final user = client.auth.currentUser;
       if (user == null) {
         return const Left(NetworkFailure('سجّل الدخول أولاً'));
       }
-      await _supabase.from('parent_rewards').insert({
+      await client.from('parent_rewards').insert({
         'parent_user_id': user.id,
         'child_user_id': childUserId,
         'title': trimmed,
       });
-      final rows = await _supabase
+      final rows = await client
           .from('parent_rewards')
           .select()
           .eq('child_user_id', childUserId)

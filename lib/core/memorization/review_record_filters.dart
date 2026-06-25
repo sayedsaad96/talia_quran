@@ -18,6 +18,13 @@ import '../../features/memorization_plus/domain/entities/memorization_entities.d
 /// |               | backward compatibility but not treated as trusted adult.    |
 /// | unknown       | Pre-Sprint 7B records. Kept for backward compatibility.     |
 ///
+/// ## Source semantics (V2 addition — Memorization V2)
+///
+/// | Mode          | Meaning                                                      |
+/// |---------------|--------------------------------------------------------------|
+/// | v2Session     | Written by MemorizationSessionCubit (Memorization V2).      |
+/// |               | Adult-compatible — included in Smart Coach, Quiz, Progress. |
+///
 /// ## Usage
 ///
 /// ```dart
@@ -76,14 +83,16 @@ class ReviewRecordFilters {
   /// Returns `true` when the record carries a trustworthy explicit source tag.
   ///
   /// Trusted sources: [ReviewRecordCreatedByMode.adultMemPlus],
-  /// [ReviewRecordCreatedByMode.kidsMode], [ReviewRecordCreatedByMode.hifz].
+  /// [ReviewRecordCreatedByMode.kidsMode], [ReviewRecordCreatedByMode.hifz],
+  /// [ReviewRecordCreatedByMode.v2Session].
   ///
   /// Note that `kidsMode` is trusted in the sense that we know its origin,
   /// but it must still be excluded from adult consumers via [isAdultCompatible].
   static bool isTrustedSource(AyahReviewRecord record) =>
       record.createdByMode == ReviewRecordCreatedByMode.adultMemPlus ||
       record.createdByMode == ReviewRecordCreatedByMode.kidsMode ||
-      record.createdByMode == ReviewRecordCreatedByMode.hifz;
+      record.createdByMode == ReviewRecordCreatedByMode.hifz ||
+      record.createdByMode == ReviewRecordCreatedByMode.v2Session;
 
   // ── Adult consumer policies ───────────────────────────────────────────────
 
@@ -121,9 +130,27 @@ class ReviewRecordFilters {
   /// Stricter than [isAdultCompatible]: only fully trusted adult MemPlus
   /// memorized-due records. Excludes `unknown`, `migration`, `kidsMode`, and
   /// `hifz`.
-  static bool isDailyPlanRetentionEligible(AyahReviewRecord record) =>
-      record.createdByMode == ReviewRecordCreatedByMode.adultMemPlus &&
-      record.reviewClassification.isMemorizedDue;
+  ///
+  /// Sprint 4.5: [ReviewRecordCreatedByMode.v2Session] is now included so
+  /// that V2 adult memorization records appear in retention review — keeping
+  /// Daily Plan consistent with Smart Coach, Progress, and AchievementService,
+  /// which already treat `v2Session` as adult-compatible. The record must
+  /// still be `isMemorizedDue`.
+  static bool isDailyPlanRetentionEligible(AyahReviewRecord record) {
+    // Source allowlist — explicit positive list, not a negative filter, so
+    // any future mode defaults to excluded (fail-closed).
+    switch (record.createdByMode) {
+      case ReviewRecordCreatedByMode.adultMemPlus:
+      case ReviewRecordCreatedByMode.v2Session:
+        break;
+      case ReviewRecordCreatedByMode.kidsMode:
+      case ReviewRecordCreatedByMode.hifz:
+      case ReviewRecordCreatedByMode.migration:
+      case ReviewRecordCreatedByMode.unknown:
+        return false;
+    }
+    return record.reviewClassification.isMemorizedDue;
+  }
 
   /// Tie-breaker for memorized-due ordering (Smart Coach + Daily Plan).
   ///

@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/memorization/v2/v2_feature_flag.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/ayah_listen_button.dart';
@@ -100,35 +101,7 @@ class _DailyPlanViewState extends State<_DailyPlanView> {
           floatingActionButton:
               currentPlan != null && currentPlan.totalItems > 0
               ? FloatingActionButton.extended(
-                  onPressed: () {
-                    // Extract all ayahs for today
-                    final ayahs = [
-                      ...currentPlan!.newAyahs,
-                      ...currentPlan.nearRevision,
-                      ...currentPlan.farRevision,
-                    ];
-                    final numbers = ayahs
-                        .map((a) => a.ayahNumber)
-                        .toSet()
-                        .toList();
-                    if (numbers.isNotEmpty) {
-                      final quizLocation = Uri(
-                        path: '/memorization-plus/quiz',
-                        queryParameters: {
-                          'surahId': '$surahId',
-                          'ayahNumbers': numbers.join(','),
-                        },
-                      ).toString();
-                      context.push(quizLocation).then((_) {
-                        // Refresh plan after quiz
-                        if (context.mounted) {
-                          context.read<DailyPlanCubit>().refresh(
-                            surahId: surahId,
-                          );
-                        }
-                      });
-                    }
-                  },
+                  onPressed: () => _openPracticeFlow(context, currentPlan!),
                   backgroundColor: primary,
                   icon: const Icon(Icons.quiz_rounded, color: Colors.white),
                   label: Text(
@@ -246,6 +219,38 @@ class _DailyPlanViewState extends State<_DailyPlanView> {
         );
       },
     );
+  }
+
+  Future<void> _openPracticeFlow(BuildContext context, DailyPlan plan) async {
+    final ayahs = [...plan.newAyahs, ...plan.nearRevision, ...plan.farRevision];
+    final numbers = ayahs.map((a) => a.ayahNumber).toSet().toList();
+    if (numbers.isEmpty) return;
+
+    final v2Enabled = await V2FeatureFlag.isAdultEnabled();
+    if (!context.mounted) return;
+
+    final location = v2Enabled
+        ? Uri(
+            path: AppRoutes.memorizationV2Session,
+            queryParameters: {
+              'surahId': '${widget.surahId}',
+              'startAyah':
+                  '${plan.newAyahs.isNotEmpty ? plan.newAyahs.first.ayahNumber : numbers.first}',
+              'blockSize':
+                  '${plan.newAyahs.isNotEmpty ? plan.newAyahs.length : numbers.length}',
+            },
+          ).toString()
+        : Uri(
+            path: AppRoutes.memorizationPlusQuiz,
+            queryParameters: {
+              'surahId': '${widget.surahId}',
+              'ayahNumbers': numbers.join(','),
+            },
+          ).toString();
+
+    await context.push(location);
+    if (!context.mounted) return;
+    await context.read<DailyPlanCubit>().refresh(surahId: widget.surahId);
   }
 
   void _showCompletionCelebration(

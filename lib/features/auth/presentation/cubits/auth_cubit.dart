@@ -86,12 +86,12 @@ class AuthCubit extends Cubit<AuthState> {
 
   /// Resend confirmation email for unconfirmed accounts
   Future<void> resendConfirmation(String email) async {
-    try {
-      await _authRepository.resendConfirmation(email);
-      if (!isClosed) emit(const AuthResendConfirmationSuccess());
-    } catch (_) {
-      if (!isClosed) emit(const AuthError('فشل إعادة الإرسال، حاول مرة أخرى'));
-    }
+    final result = await _authRepository.resendConfirmation(email);
+    if (isClosed) return;
+    result.fold(
+      (failure) => emit(AuthError(failure.toString())),
+      (_) => emit(const AuthResendConfirmationSuccess()),
+    );
   }
 
   /// Send a password reset email

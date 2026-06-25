@@ -15,9 +15,13 @@ class StreakCubit extends Cubit<StreakState> {
   Future<void> loadStreak() async {
     try {
       final entity = await _streakService.getStreak();
-      emit(StreakLoaded(streak: entity));
+      if (!isClosed) {
+        emit(StreakLoaded(streak: entity));
+      }
     } catch (e) {
-      emit(StreakError(e.toString()));
+      if (!isClosed) {
+        emit(StreakError(e.toString()));
+      }
     }
   }
 
@@ -26,11 +30,15 @@ class StreakCubit extends Cubit<StreakState> {
       final result = await _streakService.recordActivity();
       if (result.isNewActivity) {
         final entity = await _streakService.getStreak();
-        emit(StreakLoaded(streak: entity));
+        if (!isClosed) {
+          emit(StreakLoaded(streak: entity));
+        }
       }
       return result;
     } catch (e) {
-      emit(StreakError(e.toString()));
+      if (!isClosed) {
+        emit(StreakError(e.toString()));
+      }
       return const StreakResult.sameDay();
     }
   }

@@ -7,11 +7,10 @@ class SupabaseConfig {
   static const fromDartDefine = SupabaseConfig(
     url: String.fromEnvironment(
       'SUPABASE_URL',
-      defaultValue: 'https://vxsqwozctxkvhgxkciua.supabase.co',
+      defaultValue: '',
     ),
     anonKey: String.fromEnvironment(
       'SUPABASE_ANON_KEY',
-      defaultValue: 'sb_publishable_B3vTCMcf1HV76SiEhQkeHA_i8EEKZq4',
     ),
   );
 

@@ -62,10 +62,13 @@ class MemorizationNavigationResolver {
 
   Future<String> parentDashboardLocation() async {
     final surahId = await _activeKidsSurahId();
-    if (!_isValidSurahId(surahId)) return AppRoutes.memorizationHub;
+    // Always return the parent dashboard route with a valid surahId.
+    // Falling back to memorizationHub would push a shell branch route via
+    // context.push, causing a Navigator-key conflict (keyReservation assert).
+    final resolvedSurahId = _isValidSurahId(surahId) ? surahId! : 1;
     return Uri(
       path: AppRoutes.parentDashboard,
-      queryParameters: {'surahId': '$surahId'},
+      queryParameters: {'surahId': '$resolvedSurahId'},
     ).toString();
   }
 

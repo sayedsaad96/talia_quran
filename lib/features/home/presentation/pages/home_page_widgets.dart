@@ -103,35 +103,21 @@ class _HeroHeader extends StatelessWidget {
                   ).animate().fadeIn(duration: 350.ms),
                   const SizedBox(height: AppSpacing.md),
                   Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         'تالية',
-                        style: AppTypography.displayMedium.copyWith(
-                          fontFamily: 'Amiri',
+                        style: AppTypography.headlineLarge.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
-                          shadows: const [
-                            Shadow(
-                              color: Color(0x99000000),
-                              blurRadius: 18,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
+                          fontFamily: 'Amiri',
+                          fontSize: 32,
                         ),
                       ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
-                      const SizedBox(width: 12),
-                      const Icon(
-                        Icons.menu_book_rounded,
-                        color: Colors.white,
-                        size: 38,
-                        shadows: [
-                          Shadow(
-                            color: Color(0x99000000),
-                            blurRadius: 18,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
+                      const SizedBox(width: 8),
+                      Image.asset(
+                        'assets/images/logo.png',
+                        width: 32,
+                        height: 32,
                       ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
                     ],
                   ),
@@ -1194,15 +1180,10 @@ class _ResumeSessionCard extends StatelessWidget {
 
   String _surahLabel(BuildContext context, int? surahId) {
     if (surahId == null) return context.l10n.surah;
-    if (context.isArabic) return '${context.l10n.surah} $surahId';
-    return switch (surahId) {
-      1 => 'Surah Al-Fatihah',
-      2 => 'Surah Al-Baqarah',
-      112 => 'Surah Al-Ikhlas',
-      113 => 'Surah Al-Falaq',
-      114 => 'Surah An-Nas',
-      _ => 'Surah $surahId',
-    };
+    if (context.isArabic) {
+      return '${context.l10n.surah} ${SurahNames.nameAr(surahId)}';
+    }
+    return 'Surah ${SurahNames.nameEn(surahId)}';
   }
 
   @override
@@ -1425,12 +1406,20 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
         Icons.star_rounded,
         coach.route,
       ),
-      SmartCoachRecommendationKind.hifzReviewDue => (
-        context.isArabic ? 'مراجعة الحفظ' : 'Hifz review due',
+      SmartCoachRecommendationKind.continueV2Session => (
+        context.isArabic ? 'متابعة جلسة الحفظ' : 'Continue Session',
         context.isArabic
-            ? 'لديك آيات مستحقة للمراجعة في $surahLabel$ayahLabel.'
-            : 'You have ayahs due for review in $surahLabel$ayahLabel.',
-        Icons.psychology_alt_rounded,
+            ? 'لديك جلسة حفظ مفتوحة لم تكتمل في $surahLabel.'
+            : 'You have an incomplete memorization session in $surahLabel.',
+        Icons.play_circle_fill_rounded,
+        coach.route,
+      ),
+      SmartCoachRecommendationKind.hifzReviewDue => (
+        context.isArabic ? 'مراجعة الحفظ مستحقة' : 'Hifz review due',
+        context.isArabic
+            ? 'راجع مواضع الحفظ المستحقة في مسار الحفظ.'
+            : 'Review due items in your Hifz path.',
+        Icons.menu_book_rounded,
         coach.route,
       ),
     };
@@ -1440,30 +1429,18 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
     if (surahId == null) {
       return context.isArabic ? 'السورة' : 'your surah';
     }
-    if (context.isArabic) {
-      return switch (surahId) {
-        67 => 'الملك',
-        1 => 'الفاتحة',
-        _ => '$surahId',
-      };
-    }
-    return switch (surahId) {
-      67 => 'Al-Mulk',
-      1 => 'Al-Fatihah',
-      _ => '$surahId',
-    };
+    return context.isArabic
+        ? SurahNames.nameAr(surahId)
+        : SurahNames.nameEn(surahId);
   }
 
   String _coachSurahLabel(BuildContext context, int? surahId) {
     if (surahId == null) {
       return context.isArabic ? 'السورة' : 'your surah';
     }
-    if (context.isArabic) return 'سورة $surahId';
-    return switch (surahId) {
-      67 => 'Surah Al-Mulk',
-      1 => 'Surah Al-Fatihah',
-      _ => 'Surah $surahId',
-    };
+    return context.isArabic
+        ? 'سورة ${SurahNames.nameAr(surahId)}'
+        : 'Surah ${SurahNames.nameEn(surahId)}';
   }
 
   String _coachAyahLabel(BuildContext context, SmartCoachRecommendation coach) {

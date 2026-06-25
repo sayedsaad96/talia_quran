@@ -20,6 +20,7 @@ import '../../../certificate/presentation/widgets/certificate_celebration_dialog
 import '../../domain/entities/hifz_entities.dart';
 import '../cubits/hifz_session_cubit.dart';
 
+@Deprecated('Use V2 session pages instead. Will be removed in v3.0')
 class HifzSessionPage extends StatelessWidget {
   const HifzSessionPage({
     super.key,

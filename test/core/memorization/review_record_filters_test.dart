@@ -296,10 +296,9 @@ void main() {
     });
 
     test('excludes adultMemPlus non-due memorized', () {
-      final now = DateTime.utc(2026, 6, 10, 12);
       expect(
         ReviewRecordFilters.isDailyPlanRetentionEligible(
-          memorizedDueRecord(nextReviewDate: now.add(const Duration(days: 5))),
+          memorizedDueRecord(nextReviewDate: DateTime.utc(2099, 12, 31)),
         ),
         isFalse,
       );
@@ -309,6 +308,29 @@ void main() {
       expect(
         ReviewRecordFilters.isDailyPlanRetentionEligible(
           memorizedDueRecord(strengthLevel: 4),
+        ),
+        isFalse,
+      );
+    });
+
+    // Sprint 4.5: V2 adult records are now eligible for retention review,
+    // consistent with Smart Coach, Progress, and AchievementService.
+    test('includes v2Session memorized-due', () {
+      expect(
+        ReviewRecordFilters.isDailyPlanRetentionEligible(
+          memorizedDueRecord(mode: ReviewRecordCreatedByMode.v2Session),
+        ),
+        isTrue,
+      );
+    });
+
+    test('excludes v2Session non-due memorized', () {
+      expect(
+        ReviewRecordFilters.isDailyPlanRetentionEligible(
+          memorizedDueRecord(
+            mode: ReviewRecordCreatedByMode.v2Session,
+            nextReviewDate: DateTime.utc(2099, 12, 31),
+          ),
         ),
         isFalse,
       );

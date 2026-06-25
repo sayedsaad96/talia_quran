@@ -5,7 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:string_similarity/string_similarity.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/constants/speech_constants.dart';
@@ -25,10 +25,11 @@ import '../../../../core/services/xp_service.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../settings/domain/repositories/settings_repository.dart';
 import '../../../../core/utils/talia_logger.dart';
-import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../../core/memorization/v2/recitation_evaluator.dart';
 
 part 'hifz_session_state.dart';
 
+@Deprecated('Use MemorizationSessionCubit instead. Will be removed in v3.0')
 class HifzSessionCubit extends Cubit<HifzSessionState> {
   HifzSessionCubit(
     this._getSurahs,
@@ -443,7 +444,6 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
     final expectedText = checkpoint == null
         ? ayah.text
         : _checkpointExpectedText(checkpoint);
-    final normalizedExpected = ArabicNormalizer.normalize(expectedText);
     final normalizedSpoken = ArabicNormalizer.normalize(st.recognizedText);
 
     // BUG-010: If STT returned empty, don't count as failure
@@ -454,9 +454,13 @@ class HifzSessionCubit extends Cubit<HifzSessionState> {
       return;
     }
 
-    double score = 0.0;
-    // Dice's Coefficient to find similarity
-    score = normalizedExpected.similarityTo(normalizedSpoken);
+    // Calculate similarity using V2 engine evaluator
+    const evaluator = V2RecitationEvaluator(passThreshold: 0.0);
+    final evalResult = evaluator.evaluate(
+      targetText: expectedText,
+      spokenText: st.recognizedText,
+    );
+    final double score = evalResult.similarityScore;
 
     final threshold = _settings.getSimilarityThreshold();
     final pass = score >= threshold;
