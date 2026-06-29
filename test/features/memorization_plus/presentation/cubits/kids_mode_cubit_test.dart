@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/services/achievement_service.dart';
 import 'package:talia_quran/core/services/streak_service.dart';
 import 'package:talia_quran/core/services/xp_service.dart';
@@ -41,6 +42,7 @@ void main() {
         quranRepository,
         streakService,
         xpService,
+        _FakeKidsRecitationRecorder(),
       );
     });
 
@@ -86,6 +88,67 @@ void main() {
         expect(achievementService.checkCalls, 1);
       },
     );
+
+    test(
+      'startRecording does not complete when no recitation is captured',
+      () async {
+        await cubit.close();
+        cubit = KidsModeCubit(
+          GetKidsProgressUsecase(repository),
+          AwardKidsPointsUsecase(repository),
+          MarkAyahMemorizedUsecase(repository),
+          SaveKidsSessionLogUsecase(repository),
+          achievementService,
+          quranRepository,
+          streakService,
+          xpService,
+          _FakeKidsRecitationRecorder(
+            result: const KidsRecitationCaptureResult.notCaptured(),
+          ),
+        );
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+
+        await cubit.startRecording();
+
+        final state = cubit.state as KidsModeLoaded;
+        expect(state.isCompleted, isFalse);
+        expect(state.isRecording, isFalse);
+        expect(
+          state.recordingError,
+          CubitMessageCodes.kidsRecordingNotCaptured,
+        );
+        expect(repository.awardCalls, 0);
+        expect(repository.markCalls, 0);
+        expect(repository.saveLogCalls, 0);
+      },
+    );
+
+    test('startRecording completes after recitation is captured', () async {
+      repository.awardCompleter = Completer()
+        ..complete(
+          Right(
+            KidsCompletionResult(
+              progress: const KidsProgress.initial().addPoints(14),
+              pointsEarned: 14,
+              starsEarned: 1,
+              alreadyCompleted: false,
+            ),
+          ),
+        );
+
+      await cubit.load(114, 1, 'ayah text');
+      cubit.debugSetLoopCount(3);
+
+      await cubit.startRecording();
+
+      final state = cubit.state as KidsModeLoaded;
+      expect(state.isCompleted, isTrue);
+      expect(repository.awardCalls, 1);
+      expect(repository.markCalls, 1);
+      expect(repository.saveLogCalls, 1);
+    });
   });
 }
 
@@ -211,4 +274,18 @@ class _FakeXpService implements XpService {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeKidsRecitationRecorder implements KidsRecitationRecorder {
+  _FakeKidsRecitationRecorder({
+    this.result = const KidsRecitationCaptureResult.captured(),
+  });
+
+  final KidsRecitationCaptureResult result;
+
+  @override
+  Future<KidsRecitationCaptureResult> capture() async => result;
+
+  @override
+  Future<void> dispose() async {}
 }

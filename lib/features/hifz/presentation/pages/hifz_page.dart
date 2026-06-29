@@ -343,7 +343,7 @@ class _HifzSurahTile extends StatelessWidget {
           ).showSnackBar(SnackBar(content: Text(lockedText)));
           return;
         }
-        context.push('/hifz/session?surahId=${surah.id}&startAyah=1');
+        context.push('/memorization-v2/session?surahId=${surah.id}&startAyah=1');
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),

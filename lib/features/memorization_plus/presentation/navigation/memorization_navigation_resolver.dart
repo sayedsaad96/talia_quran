@@ -25,25 +25,28 @@ class MemorizationNavigationResolver {
 
   Future<MemorizationNavigationTargets> resolve() async {
     final profile = await _profile();
-    final cachedPlanSurahId = await _cachedPlanSurahId();
+    final customPlan = await _customPlan();
+    final cachedPlanSurahId = await _cachedPlanSurahId(customPlan);
     final adultPlanSurahId =
-        cachedPlanSurahId ?? await _activeAdultPlanSurahId();
+        cachedPlanSurahId ?? await _activeAdultPlanSurahId(customPlan);
     final quizSurahId = await _reviewQuizSurahId(cachedPlanSurahId);
     final kidsSurahId = await _activeKidsSurahId();
 
     return MemorizationNavigationTargets(
       profile: profile,
-      todayPlanLocation: _dailyPlanLocation(adultPlanSurahId),
-      reviewQuizLocation: _quizLocation(quizSurahId),
+      todayPlanLocation: _v2SessionLocation(adultPlanSurahId),
+      reviewQuizLocation: _v2SessionLocation(quizSurahId),
       kidsHomeLocation: _kidsHomeLocation(kidsSurahId),
       kidsJourneyLocation: _kidsJourneyLocation(kidsSurahId),
     );
   }
 
   Future<String> adultEntryLocation() async {
+    final customPlan = await _customPlan();
     final surahId =
-        await _cachedPlanSurahId() ?? await _activeAdultPlanSurahId();
-    return _dailyPlanLocation(surahId);
+        await _cachedPlanSurahId(customPlan) ??
+        await _activeAdultPlanSurahId(customPlan);
+    return _v2SessionLocation(surahId);
   }
 
   Future<String> childOnboardingLocation() async {
@@ -77,21 +80,44 @@ class MemorizationNavigationResolver {
     return result.fold((_) => null, (profile) => profile);
   }
 
-  Future<int?> _activeAdultPlanSurahId() async {
-    final customPlan = await _customPlan();
-    if (customPlan != null &&
-        customPlan.isActive &&
-        customPlan.targetUser == PlanTargetUser.adult &&
-        _isValidSurahId(customPlan.startSurahId)) {
-      return customPlan.startSurahId;
+  Future<int?> _activeAdultPlanSurahId([CustomMemorizationPlan? customPlan]) async {
+    final plan = customPlan ?? await _customPlan();
+    if (plan != null &&
+        plan.isActive &&
+        plan.targetUser == PlanTargetUser.adult) {
+      // startSurahId is always the memorization entry point ("من" surah).
+      // Direction is determined by startSurahId vs endSurahId comparison.
+      final entrySurah = plan.startSurahId;
+      if (_isValidSurahId(entrySurah)) return entrySurah;
     }
 
     return null;
   }
 
-  Future<int?> _cachedPlanSurahId() async {
+  Future<int?> _cachedPlanSurahId([CustomMemorizationPlan? customPlan]) async {
     final cachedPlan = await _cachedPlan();
-    return _isValidSurahId(cachedPlan?.surahId) ? cachedPlan!.surahId : null;
+    final cachedSurahId = cachedPlan?.surahId;
+    if (!_isValidSurahId(cachedSurahId)) return null;
+
+    // If there is an active adult custom plan, the cached surahId must be
+    // within the plan's range [min(start,end), max(start,end)].
+    // If not (e.g. stale cache from before a plan change), discard the cache
+    // so the correct entry point (startSurahId) is used instead.
+    final plan = customPlan ?? await _customPlan();
+    if (plan != null &&
+        plan.isActive &&
+        plan.targetUser == PlanTargetUser.adult) {
+      final lo = plan.startSurahId <= plan.endSurahId
+          ? plan.startSurahId
+          : plan.endSurahId;
+      final hi = plan.startSurahId <= plan.endSurahId
+          ? plan.endSurahId
+          : plan.startSurahId;
+      final inRange = cachedSurahId! >= lo && cachedSurahId <= hi;
+      if (!inRange) return null;
+    }
+
+    return cachedSurahId;
   }
 
   Future<int?> _reviewQuizSurahId(int? adultPlanSurahId) async {
@@ -142,19 +168,11 @@ class MemorizationNavigationResolver {
     return result.fold((_) => null, (plan) => plan);
   }
 
-  static String _dailyPlanLocation(int? surahId) {
+  static String _v2SessionLocation(int? surahId, {int startAyah = 1}) {
     if (!_isValidSurahId(surahId)) return AppRoutes.memorizationPlusCustomPlan;
     return Uri(
-      path: AppRoutes.memorizationPlusDailyPlan,
-      queryParameters: {'surahId': '$surahId'},
-    ).toString();
-  }
-
-  static String _quizLocation(int? surahId) {
-    if (!_isValidSurahId(surahId)) return AppRoutes.memorizationPlusCustomPlan;
-    return Uri(
-      path: AppRoutes.memorizationPlusQuiz,
-      queryParameters: {'surahId': '$surahId'},
+      path: AppRoutes.memorizationV2Session,
+      queryParameters: {'surahId': '$surahId', 'startAyah': '$startAyah'},
     ).toString();
   }
 
@@ -181,3 +199,4 @@ class MemorizationNavigationResolver {
   static String kidsHomeFallbackLocation(int surahId) =>
       _kidsHomeLocation(_isValidSurahId(surahId) ? surahId : 1);
 }
+

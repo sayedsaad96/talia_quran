@@ -16,25 +16,6 @@ const _removedLiterals = <String, List<String>>{
   'lib/features/azkar/presentation/pages/azkar_category_page.dart': [
     'اضغط مطولاً للتراجع',
   ],
-  'lib/features/hifz/presentation/pages/hifz_session_page.dart': [
-    'هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.',
-    'ابدأ التسميع',
-    'إنهاء التسميع',
-    'جارِ التقييم...',
-    'جارِ تقييم المراجعة...',
-    'يتم التسجيل، اقرأ الآية من حفظك...',
-    'ممتاز! حفظ متقن.',
-    'تحتاج إلى مراجعة هذه الآية.',
-    'لم يتم التعرف على صوت',
-    'لم يتم اجتياز المراجعة. حاول مرة أخرى.',
-    'Do you want to leave the memorization session? Your current progress will be saved.',
-    'Evaluating...',
-    'Recording, recite from memory...',
-    'Finish Session',
-    'Excellent! Perfect memorization.',
-    'You need to review this Ayah.',
-    'No voice recognized',
-  ],
 };
 
 void main() {
@@ -92,21 +73,5 @@ void main() {
       });
     });
 
-    test('Hifz session does not use inline localized ternary strings', () {
-      const path =
-          'lib/features/hifz/presentation/pages/hifz_session_page.dart';
-      final contents = File(path).readAsStringSync();
-      final localizedStringTernary = RegExp(
-        r'''context\.isArabic\s*\?\s*(?:\([^)]*)?['"]''',
-        multiLine: true,
-      );
-
-      expect(
-        localizedStringTernary.hasMatch(contents),
-        isFalse,
-        reason:
-            'Use l10n keys for UI copy instead of context.isArabic string ternaries.',
-      );
-    });
   });
 }

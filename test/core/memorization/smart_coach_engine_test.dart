@@ -40,7 +40,7 @@ void main() {
       expect(recommendation?.kind, SmartCoachRecommendationKind.reviewDueNear);
       expect(recommendation?.surahId, 67);
       expect(recommendation?.startAyah, 1);
-      expect(recommendation?.route, contains('daily-plan'));
+      expect(recommendation?.route, contains('session'));
     });
 
     test('recommends weak due ayah via quiz route', () {
@@ -75,7 +75,7 @@ void main() {
 
       expect(recommendation?.kind, SmartCoachRecommendationKind.reviewWeakAyah);
       expect(recommendation?.startAyah, 5);
-      expect(recommendation?.route, contains('quiz'));
+      expect(recommendation?.route, contains('session'));
     });
 
     test('recommends continuing incomplete daily plan when nothing is due', () {
@@ -155,7 +155,7 @@ void main() {
       expect(recommendation?.kind, SmartCoachRecommendationKind.reviewWeakAyah);
       expect(
         recommendation?.route,
-        '/memorization-plus/quiz?surahId=67&ayahNumbers=5',
+        '/memorization-v2/session?surahId=67&startAyah=5',
       );
     });
 
@@ -178,7 +178,7 @@ void main() {
         );
         expect(
           recommendation?.route,
-          '/memorization-plus/quiz?surahId=67&ayahNumbers=7',
+          '/memorization-v2/session?surahId=67&startAyah=7',
         );
       },
     );
@@ -217,12 +217,12 @@ void main() {
 
       expect(
         engine.recommend(nearSnapshot)?.route,
-        contains('daily-plan'),
+        contains('session'),
         reason: 'near revision uses daily-plan route',
       );
       expect(
         engine.recommend(farSnapshot)?.route,
-        contains('daily-plan'),
+        contains('session'),
         reason: 'far revision uses daily-plan route',
       );
     });
@@ -243,7 +243,7 @@ void main() {
         ],
       );
 
-      expect(engine.recommend(snapshot)?.route, '/hifz');
+      expect(engine.recommend(snapshot)?.route, '/memorization-v2/session?surahId=1&startAyah=1');
     });
 
     test('kids route is exactly kids-home', () {
@@ -500,8 +500,8 @@ void main() {
       // ayah 6: oldest date (days 3), and lowest strength among tied dates is ayah 7
       // Both 6 and 7 share days=3; ayah 7 has lower strength (6 < 8), so ayah 7 wins.
       expect(recommendation?.startAyah, 7);
-      expect(recommendation?.route, contains('quiz'));
-      expect(recommendation?.route, contains('ayahNumbers=7'));
+      expect(recommendation?.route, contains('session'));
+      expect(recommendation?.route, contains('startAyah=7'));
     });
 
     test('prioritizes weak due ayah over memorized-due retention review', () {
@@ -717,7 +717,7 @@ void main() {
       final recommendation = engine.recommend(snapshot);
 
       expect(recommendation?.kind, SmartCoachRecommendationKind.hifzReviewDue);
-      expect(recommendation?.route, '/hifz');
+      expect(recommendation?.route, '/memorization-v2/session?surahId=1&startAyah=1');
     });
 
     test('prioritizes memorized-due over Hifz fallback', () {
@@ -743,7 +743,7 @@ void main() {
         recommendation?.kind,
         SmartCoachRecommendationKind.memorizedReviewDue,
       );
-      expect(recommendation?.route, contains('quiz'));
+      expect(recommendation?.route, contains('session'));
     });
 
     test('returns kids mission for child profile', () {
@@ -930,7 +930,7 @@ void main() {
         ],
       );
       final recommendation = engine.recommend(snapshot);
-      expect(recommendation?.route, contains('quiz'));
+      expect(recommendation?.route, contains('session'));
       expect(recommendation?.route, contains('11'));
     });
 
@@ -963,8 +963,8 @@ void main() {
           recommendation?.kind,
           SmartCoachRecommendationKind.memorizedReviewDue,
         );
-        expect(recommendation?.route, contains('daily-plan'));
-        expect(recommendation?.route, isNot(contains('quiz')));
+        expect(recommendation?.route, contains('session'));
+        
       },
     );
 
@@ -983,7 +983,7 @@ void main() {
           cachedDailyPlan: _dailyPlan(now: now),
         );
         final recommendation = engine.recommend(snapshot);
-        expect(recommendation?.route, contains('quiz'));
+        expect(recommendation?.route, contains('session'));
         expect(recommendation?.route, contains('5'));
       },
     );
@@ -1006,7 +1006,7 @@ void main() {
           recommendation?.kind,
           SmartCoachRecommendationKind.memorizedReviewDue,
         );
-        expect(recommendation?.route, contains('quiz'));
+        expect(recommendation?.route, contains('session'));
       },
     );
 

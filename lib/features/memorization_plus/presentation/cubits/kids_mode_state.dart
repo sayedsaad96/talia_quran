@@ -36,7 +36,8 @@ class KidsModeLoaded extends KidsModeState {
     this.mustListenFirst = false, // BUG-4 FIX: guard for listen-before-complete
     this.audioError,
     this.isBuffering = false, // true while audio URL is loading/buffering
-    this.isRecording = false, // true during the mic-recording animation phase
+    this.isRecording = false, // true while microphone capture is active
+    this.recordingError,
     this.sessionStarsEarned = 0,
   });
 
@@ -55,8 +56,9 @@ class KidsModeLoaded extends KidsModeState {
   /// True while just_audio is loading/buffering the audio URL.
   final bool isBuffering;
 
-  /// True during the brief microphone-recording animation before completion.
+  /// True while microphone capture is active.
   final bool isRecording;
+  final String? recordingError;
   final int sessionStarsEarned;
 
   KidsModeLoaded copyWith({
@@ -70,6 +72,8 @@ class KidsModeLoaded extends KidsModeState {
     bool clearAudioError = false,
     bool? isBuffering,
     bool? isRecording,
+    String? recordingError,
+    bool clearRecordingError = false,
     int? sessionStarsEarned,
   }) => KidsModeLoaded(
     surahId: surahId,
@@ -85,6 +89,9 @@ class KidsModeLoaded extends KidsModeState {
     audioError: clearAudioError ? null : audioError ?? this.audioError,
     isBuffering: isBuffering ?? this.isBuffering,
     isRecording: isRecording ?? this.isRecording,
+    recordingError: clearRecordingError
+        ? null
+        : recordingError ?? this.recordingError,
     sessionStarsEarned: sessionStarsEarned ?? this.sessionStarsEarned,
   );
 
@@ -101,6 +108,7 @@ class KidsModeLoaded extends KidsModeState {
     audioError,
     isBuffering,
     isRecording,
+    recordingError,
     sessionStarsEarned,
   ];
 }

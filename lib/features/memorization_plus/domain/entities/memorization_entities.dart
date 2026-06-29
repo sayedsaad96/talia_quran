@@ -679,12 +679,15 @@ class CustomMemorizationPlan extends Equatable {
   bool get isForChild => targetUser == PlanTargetUser.child;
 
   /// Estimated days to finish based on **actual** surah ayah counts.
+  /// Works for both ascending (startSurahId < endSurahId) and descending plans.
   int get estimatedDays {
     int totalAyahs = 0;
-    for (int s = startSurahId; s <= endSurahId; s++) {
+    final lo = startSurahId <= endSurahId ? startSurahId : endSurahId;
+    final hi = startSurahId <= endSurahId ? endSurahId : startSurahId;
+    for (int s = lo; s <= hi; s++) {
       totalAyahs += _surahAyahCounts[s] ?? 20;
     }
-    // Subtract ayahs before startAyah in the first surah
+    // Subtract ayahs before startAyah in the first memorized surah (startSurahId)
     if (startAyah > 1) {
       totalAyahs -= (startAyah - 1);
     }

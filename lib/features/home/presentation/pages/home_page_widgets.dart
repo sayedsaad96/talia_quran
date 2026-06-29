@@ -33,8 +33,8 @@ class _HeroHeader extends StatelessWidget {
           Positioned.fill(
             child: Image.asset(
               'assets/images/mosque_bg.png',
-              fit: BoxFit.cover,
-              alignment: Alignment.centerLeft,
+              fit: BoxFit.contain,
+              //alignment: Alignment.centerLeft,
             ),
           ),
           Positioned.fill(
@@ -105,7 +105,7 @@ class _HeroHeader extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        'تالية',
+                        'تاليــة',
                         style: AppTypography.headlineLarge.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w800,
@@ -1030,23 +1030,27 @@ class _ResumeSessionCard extends StatelessWidget {
   final bool isDark;
   final bool isKids;
 
-  String _normalizedLocation() {
+  String? _normalizedLocation() {
     final uri = Uri.tryParse(location);
-    if (!isKids || uri?.path != AppRoutes.hifzSession) return location;
+    if (uri == null) return location;
 
-    final surahId = int.tryParse(uri!.queryParameters['surahId'] ?? '');
-    final startAyah = int.tryParse(uri.queryParameters['startAyah'] ?? '');
-    if (surahId != null &&
-        surahId >= 1 &&
-        surahId <= 114 &&
-        startAyah != null &&
-        startAyah > 0) {
-      final query = Uri(
-        queryParameters: {'surahId': '$surahId', 'ayahNumber': '$startAyah'},
-      ).query;
-      return '${AppRoutes.memorizationPlusKids}?$query';
+    if (!isKids) {
+      if (uri.path == AppRoutes.hifz) {
+        final surahId = int.tryParse(uri.queryParameters['surahId'] ?? '');
+        if (surahId != null && surahId >= 1 && surahId <= 114) {
+          final startAyah = int.tryParse(uri.queryParameters['startAyah'] ?? '') ??
+                            int.tryParse(uri.queryParameters['ayahNumber'] ?? '');
+          final ayah = startAyah != null && startAyah > 0 ? startAyah : 1;
+          final query = Uri(
+            queryParameters: {'surahId': '$surahId', 'startAyah': '$ayah'},
+          ).query;
+          return '${AppRoutes.memorizationV2Session}?$query';
+        }
+        return null;
+      }
     }
-    return AppRoutes.memorizationPlusKidsHome;
+
+    return location;
   }
 
   _ResumeInfo _info(BuildContext context) {
@@ -1089,31 +1093,6 @@ class _ResumeSessionCard extends StatelessWidget {
         icon: Icons.menu_book_rounded,
       );
     }
-    if (isKids && uri.path == AppRoutes.hifzSession) {
-      return _kidsStageInfo(context, surahId, startAyah);
-    }
-    if (uri.path == AppRoutes.hifzSession) {
-      final surah = _surahLabel(context, surahId);
-      return _ResumeInfo(
-        title: context.isArabic ? 'تابع $surah' : 'Continue $surah',
-        description: startAyah == null
-            ? context.l10n.incompleteHifzSession
-            : context.isArabic
-            ? 'من الآية $startAyah'
-            : 'From ayah $startAyah',
-        icon: Icons.psychology_alt_rounded,
-      );
-    }
-    if (uri.path == AppRoutes.memorizationPlusDailyPlan) {
-      final surah = _surahLabel(context, surahId);
-      return _ResumeInfo(
-        title: context.isArabic ? 'تابع خطة اليوم' : "Continue Today's Plan",
-        description: surahId == null
-            ? context.l10n.dailyMemorizationPlan
-            : surah,
-        icon: Icons.today_rounded,
-      );
-    }
     if (uri.path == AppRoutes.memorizationPlusKids) {
       return _kidsStageInfo(context, surahId, startAyah);
     }
@@ -1138,15 +1117,6 @@ class _ResumeSessionCard extends StatelessWidget {
         title: context.isArabic ? 'تابع رحلة الطفل' : 'Continue Kids Journey',
         description: context.isArabic ? 'خريطة $surah' : '$surah map',
         icon: Icons.map_rounded,
-      );
-    }
-    if (uri.path == AppRoutes.memorizationPlusQuiz) {
-      return _ResumeInfo(
-        title: context.isArabic
-            ? 'تابع اختبار المراجعة'
-            : 'Continue Review Quiz',
-        description: context.l10n.previousHifzQuiz,
-        icon: Icons.quiz_rounded,
       );
     }
     return _ResumeInfo(
@@ -1189,6 +1159,8 @@ class _ResumeSessionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resumeLocation = _normalizedLocation();
+    if (resumeLocation == null) return const SizedBox.shrink();
+
     final info = _info(context);
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final textColor = isDark

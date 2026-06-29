@@ -37,10 +37,7 @@ class AppSessionService {
       case '/login':
       case '/certificate':
         return false;
-      case '/hifz/session':
-        return _isValidSurahId(_readInt(uri, 'surahId')) &&
-            (_readInt(uri, 'startAyah') ?? 0) > 0;
-      case '/memorization-plus/daily-plan':
+      case '/memorization-v2/session':
         return _isValidSurahId(_readInt(uri, 'surahId'));
       case '/memorization-plus/kids-journey':
       case '/memorization-plus/parent-dashboard':
@@ -48,8 +45,7 @@ class AppSessionService {
       case '/memorization-plus/kids':
         return _isValidSurahId(_readInt(uri, 'surahId')) &&
             (_readInt(uri, 'ayahNumber') ?? 0) > 0;
-      case '/memorization-plus/quiz':
-        return _isValidSurahId(_readInt(uri, 'surahId'));
+
     }
 
     final segments = uri.pathSegments;

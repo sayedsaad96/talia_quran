@@ -28,6 +28,7 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
   }
 
   void _submit() {
+    setState(() => _error = null);
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
     context.read<AuthCubit>().updatePassword(_passwordController.text);
@@ -47,13 +48,19 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
           ),
         ),
         body: BlocConsumer<AuthCubit, AuthState>(
-          listener: (context, state) async {
+          listener: (context, state) {
             if (state is AuthPasswordUpdated) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(context.l10n.passwordUpdated)),
-              );
-              await context.read<AuthCubit>().signOut();
-              if (context.mounted) context.go('/login');
+              // signOut is handled in the repository right after updateUser,
+              // so we just navigate to login and show a success snackbar.
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(context.l10n.passwordUpdated),
+                    duration: const Duration(seconds: 4),
+                  ),
+                );
+                context.go('/login');
+              }
             }
             if (state is AuthError) {
               setState(() => _error = state.message);

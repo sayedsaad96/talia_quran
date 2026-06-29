@@ -6,10 +6,8 @@ void main() {
     test('guest users can open local-first memorization routes', () {
       const localRoutes = [
         AppRoutes.memorizationPlus,
-        AppRoutes.memorizationPlusDailyPlan,
-        AppRoutes.memorizationPlusCustomPlan,
-        AppRoutes.memorizationPlusQuiz,
-        AppRoutes.memorizationPlusKidsHome,
+            AppRoutes.memorizationPlusCustomPlan,
+            AppRoutes.memorizationPlusKidsHome,
         AppRoutes.memorizationPlusKidsJourney,
         AppRoutes.memorizationPlusKids,
         AppRoutes.memorizationPlusKidsStage,

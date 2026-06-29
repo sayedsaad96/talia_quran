@@ -20,9 +20,9 @@ class SmartCoachEngine {
       if (memPlusRec != null) return memPlusRec;
 
       if (snapshot.hifzDueReviews.isNotEmpty) {
-        return const SmartCoachRecommendation(
+        return SmartCoachRecommendation(
           kind: SmartCoachRecommendationKind.hifzReviewDue,
-          route: '/hifz',
+          route: _v2SessionRoute(snapshot.hifzDueReviews.first.surahId, 1),
         );
       }
     }
@@ -50,7 +50,7 @@ class SmartCoachEngine {
         kind: SmartCoachRecommendationKind.reviewWeakAyah,
         explanationCode: SmartCoachExplanationCode.weakAyahDue,
         record: weakDue.first,
-        routeBuilder: _quizRouteWithAyah,
+        routeBuilder: _v2SessionRoute,
       );
     }
 
@@ -102,18 +102,11 @@ class SmartCoachEngine {
     }).toList()..sort(ReviewRecordFilters.compareMemorizedDue);
     if (memorizedDue.isNotEmpty) {
       final record = memorizedDue.first;
-      final plan = snapshot.cachedDailyPlan;
-      final retentionInDailyPlan =
-          plan != null &&
-          plan.surahId == record.surahId &&
-          plan.retentionReview.any((a) => a.ayahNumber == record.ayahNumber);
       return _ayahRecommendation(
         kind: SmartCoachRecommendationKind.memorizedReviewDue,
         explanationCode: SmartCoachExplanationCode.memorizedRetentionDue,
         record: record,
-        routeBuilder: retentionInDailyPlan
-            ? (surahId, _) => _dailyPlanRoute(surahId)
-            : _quizRouteWithAyah,
+        routeBuilder: _v2SessionRoute,
       );
     }
 
@@ -139,7 +132,7 @@ class SmartCoachEngine {
         return SmartCoachRecommendation(
           kind: SmartCoachRecommendationKind.continueDailyPlan,
           explanationCode: SmartCoachExplanationCode.continueDailyPlan,
-          route: _dailyPlanRoute(plan.surahId),
+          route: _v2SessionRoute(plan.surahId, 1),
           surahId: plan.surahId,
           completedCount: plan.requiredCompletedCount,
           totalCount: plan.requiredCompletedCount + pendingCount,
@@ -151,7 +144,7 @@ class SmartCoachEngine {
         return SmartCoachRecommendation(
           kind: SmartCoachRecommendationKind.memorizeNewAyahs,
           explanationCode: SmartCoachExplanationCode.newAyahsAvailable,
-          route: _dailyPlanRoute(plan.surahId),
+          route: _v2SessionRoute(plan.surahId, pendingNew.first.ayahNumber),
           surahId: plan.surahId,
           startAyah: pendingNew.first.ayahNumber,
           endAyah: pendingNew.last.ayahNumber,
@@ -220,7 +213,7 @@ class SmartCoachEngine {
   }) {
     final route = routeBuilder != null
         ? routeBuilder(record.surahId, record.ayahNumber)
-        : _dailyPlanRoute(record.surahId);
+        : _v2SessionRoute(record.surahId, record.ayahNumber);
     return SmartCoachRecommendation(
       kind: kind,
       explanationCode: explanationCode,
@@ -233,16 +226,8 @@ class SmartCoachEngine {
 
   // ── Route builders ─────────────────────────────────────────────────────────
 
-  static String _dailyPlanRoute(int surahId) =>
-      '/memorization-plus/daily-plan?surahId=$surahId';
-
-  /// Produces a quiz route with the exact ayah number embedded so the router's
-  /// existing [_parseAyahNumbers] query-parameter handler can filter the quiz
-  /// to only that ayah.
-  ///
-  /// Format: `/memorization-plus/quiz?surahId={id}&ayahNumbers={ayahNumber}`
-  static String _quizRouteWithAyah(int surahId, int ayahNumber) =>
-      '/memorization-plus/quiz?surahId=$surahId&ayahNumbers=$ayahNumber';
+  static String _v2SessionRoute(int surahId, int startAyah) =>
+      '/memorization-v2/session?surahId=$surahId&startAyah=$startAyah';
 
   // ── Comparators ────────────────────────────────────────────────────────────
 

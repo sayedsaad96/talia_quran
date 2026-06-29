@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_constants.dart';
@@ -26,6 +27,16 @@ class SettingsCubit extends Cubit<SettingsState> {
     final profileResult = await _repository.getMemorizationProfile();
     final profile = profileResult.fold((_) => null, (profile) => profile);
 
+    String? version;
+    String? buildNumber;
+    try {
+      final info = await PackageInfo.fromPlatform();
+      version = info.version.trim().isEmpty ? null : info.version.trim();
+      buildNumber = info.buildNumber.trim().isEmpty ? null : info.buildNumber.trim();
+    } catch (_) {
+      // fallback: leave null so UI shows '—'
+    }
+
     emit(
       SettingsState(
         memorizationProfile: profile,
@@ -37,6 +48,8 @@ class SettingsCubit extends Cubit<SettingsState> {
             _prefs.getBool('mem_plus_is_parent_mode') ??
             false,
         showMemorizationPathResetSuccess: showPathResetSuccess,
+        appVersion: version,
+        appBuildNumber: buildNumber,
       ),
     );
   }

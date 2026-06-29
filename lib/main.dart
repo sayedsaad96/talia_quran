@@ -9,6 +9,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'core/config/supabase_config.dart';
 import 'core/di/injection.dart';
+import 'core/services/hifz_migration_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/utils/talia_logger.dart';
 
@@ -122,6 +123,12 @@ Future<void> _bootstrapAndRun() async {
   unawaited(
     notificationService.requestPermissions(),
   ); // intentionally not awaited
+
+  // One-time data migration: Hifz → MemorizationPlus V2.
+  // Runs in the background after app starts — no startup delay.
+  unawaited(
+    getIt<HifzMigrationService>().runIfNeeded(),
+  );
 
   final prefs = getIt<SharedPreferences>();
 

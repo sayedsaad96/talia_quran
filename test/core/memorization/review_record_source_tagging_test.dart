@@ -287,26 +287,6 @@ void main() {
 
   // ─── Domain params tests ───────────────────────────────────────────────────
 
-  group('EvaluateMemorizationParams', () {
-    test('defaults createdByMode to adultMemPlus', () {
-      final params = EvaluateMemorizationParams(
-        surahId: 1,
-        ayahNumber: 1,
-        rating: PerformanceRating.excellent,
-      );
-      expect(params.createdByMode, ReviewRecordCreatedByMode.adultMemPlus);
-    });
-
-    test('can be explicitly set to adultMemPlus', () {
-      final params = EvaluateMemorizationParams(
-        surahId: 1,
-        ayahNumber: 1,
-        rating: PerformanceRating.excellent,
-        createdByMode: ReviewRecordCreatedByMode.adultMemPlus,
-      );
-      expect(params.createdByMode, ReviewRecordCreatedByMode.adultMemPlus);
-    });
-  });
 
   group('MarkAyahMemorizedParams', () {
     test('defaults createdByMode to kidsMode', () {

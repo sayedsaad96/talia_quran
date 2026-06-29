@@ -30,6 +30,7 @@ abstract class MemorizationPlusLocalDatasource {
   // Daily plan cache
   Future<DailyPlanModel?> getCachedDailyPlan();
   Future<void> saveDailyPlan(DailyPlanModel plan);
+  Future<void> clearDailyPlanCache();
 
   // Kids progress
   Future<KidsProgressModel> getKidsProgress();
@@ -288,6 +289,9 @@ class MemorizationPlusLocalDatasourceImpl
   @override
   Future<void> saveDailyPlan(DailyPlanModel plan) =>
       _setStringOrThrow(_kDailyPlan, jsonEncode(plan.toJson()));
+
+  @override
+  Future<void> clearDailyPlanCache() async => _prefs.remove(_kDailyPlan);
 
   // ─── Kids progress ───────────────────────────────────────────────────────────
   @override

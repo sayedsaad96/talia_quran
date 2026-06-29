@@ -10,9 +10,9 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/locale_cubit.dart';
-import '../../../../core/services/app_version_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../auth/domain/entities/app_user.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
@@ -221,8 +221,8 @@ class _SettingsView extends StatelessWidget {
       leading: IconButton(
         icon: Icon(
           context.isArabic
-              ? Icons.arrow_forward_ios_rounded
-              : Icons.arrow_back_ios_rounded,
+              ? Icons.arrow_back_ios_rounded
+              : Icons.arrow_forward_ios_rounded,
           color: isDark
               ? AppColors.darkTextPrimary
               : AppColors.lightTextPrimary,

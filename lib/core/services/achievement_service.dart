@@ -115,7 +115,7 @@ class AchievementService {
               id: id,
               titleAr: 'شهادة حفظ الجزء ${_juzNames[juz - 1]}',
               type: CertificateType.juz,
-              earnedAt: DateTime.now(),
+              earnedAt: DateTime.now().toUtc(),
               juzNumber: juz,
             );
             earned.add(award);
@@ -147,7 +147,7 @@ class AchievementService {
               id: id,
               titleAr: 'شهادة حفظ سورة ${surah.nameAr}',
               type: CertificateType.surah,
-              earnedAt: DateTime.now(),
+              earnedAt: DateTime.now().toUtc(),
               surahId: surah.id,
               surahNameAr: surah.nameAr,
               surahNameEn: surah.nameEn,
@@ -182,7 +182,7 @@ class AchievementService {
             id: id,
             titleAr: 'شهادة حفظ نصف القرآن الكريم',
             type: CertificateType.halfQuran,
-            earnedAt: DateTime.now(),
+            earnedAt: DateTime.now().toUtc(),
           );
           earned.add(award);
           alreadyEarnedIds.add(id);
@@ -198,7 +198,7 @@ class AchievementService {
             id: id,
             titleAr: 'شهادة ختم القرآن الكريم كاملاً',
             type: CertificateType.fullQuran,
-            earnedAt: DateTime.now(),
+            earnedAt: DateTime.now().toUtc(),
           );
           earned.add(award);
           alreadyEarnedIds.add(id);

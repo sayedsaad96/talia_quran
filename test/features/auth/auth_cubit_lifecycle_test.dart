@@ -8,6 +8,7 @@ library;
 
 import 'dart:async';
 
+import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
@@ -35,6 +36,7 @@ void main() {
       mockRepo.passwordRecoveryChanges,
     ).thenAnswer((_) => passwordRecoveryStreamCtrl.stream);
     when(mockRepo.currentUser).thenReturn(currentUser);
+    when(mockRepo.pullProgressFromCloud()).thenAnswer((_) async => const Right(unit));
     return AuthCubit(mockRepo);
   }
 

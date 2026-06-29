@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import '../services/audio_cache_service.dart';
 import '../services/app_session_service.dart';
 import '../services/app_version_service.dart';
+import '../services/hifz_migration_service.dart';
 import '../services/notification_service.dart';
 import '../services/streak_reader.dart';
 import '../services/streak_service.dart';
@@ -37,7 +38,6 @@ import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/hifz/domain/usecases/get_hifz_progress_usecase.dart';
 import '../../features/hifz/domain/usecases/save_ayah_progress_usecase.dart';
 import '../../features/hifz/presentation/cubits/hifz_cubit.dart';
-import '../../features/hifz/presentation/cubits/hifz_session_cubit.dart';
 import '../../features/azkar/data/datasources/azkar_local_datasource.dart';
 import '../../features/azkar/data/repositories/azkar_repository_impl.dart';
 import '../../features/azkar/domain/repositories/azkar_repository.dart';
@@ -58,15 +58,14 @@ import '../../features/memorization_plus/data/datasources/v2_session_local_datas
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
-import '../../features/memorization_plus/presentation/cubits/daily_plan_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/guardian_linking_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/kids_memorization_session_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/parent_dashboard_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/custom_plan_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/memorization_identity_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/memorization_session_cubit.dart';
-import '../../features/memorization_plus/presentation/cubits/quiz_cubit.dart';
 import '../../features/onboarding/presentation/cubits/onboarding_cubit.dart';
 import '../../features/settings/presentation/cubits/profile_cubit.dart';
 import '../../features/settings/presentation/cubits/settings_cubit.dart';
@@ -193,6 +192,14 @@ Future<void> configureDependencies() async {
       getIt<QuranLocalDatasource>(),
     ),
   );
+  // One-time Hifz → V2 migration service (registered after both repos are ready).
+  getIt.registerLazySingleton<HifzMigrationService>(
+    () => HifzMigrationService(
+      hifzRepository: getIt<HifzRepository>(),
+      memPlusRepository: getIt<MemorizationPlusRepository>(),
+      prefs: getIt<SharedPreferences>(),
+    ),
+  );
   getIt.registerLazySingleton<AzkarRepository>(
     () => AzkarRepositoryImpl(getIt<AzkarLocalDatasource>()),
   );
@@ -217,6 +224,12 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<SmartCoachEngine>(() => const SmartCoachEngine());
   getIt.registerLazySingleton<V2SessionEngine>(() => V2SessionEngine());
+  // P0-01 FIX: ScheduleNextReviewUsecase is required by V2SessionReviewAdapter
+  // but was never registered — caused a GetIt crash on first V2 session use.
+  // The class is const with no dependencies, so a lazy singleton is sufficient.
+  getIt.registerLazySingleton<ScheduleNextReviewUsecase>(
+    () => const ScheduleNextReviewUsecase(),
+  );
   getIt.registerLazySingleton<V2SessionReviewAdapter>(
     () => V2SessionReviewAdapter(
       repository: getIt<MemorizationPlusRepository>(),
@@ -290,17 +303,8 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<GetAzkarUsecase>(
     () => GetAzkarUsecase(getIt<AzkarRepository>()),
   );
-  getIt.registerLazySingleton<GenerateDailyPlanUsecase>(
-    () => GenerateDailyPlanUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<EvaluateMemorizationUsecase>(
-    () => EvaluateMemorizationUsecase(getIt<MemorizationPlusRepository>()),
-  );
   getIt.registerLazySingleton<MarkAyahMemorizedUsecase>(
     () => MarkAyahMemorizedUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<GetCachedDailyPlanUsecase>(
-    () => GetCachedDailyPlanUsecase(getIt<MemorizationPlusRepository>()),
   );
   getIt.registerLazySingleton<GetKidsProgressUsecase>(
     () => GetKidsProgressUsecase(getIt<MemorizationPlusRepository>()),
@@ -313,9 +317,6 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<GetCustomPlanUsecase>(
     () => GetCustomPlanUsecase(getIt<MemorizationPlusRepository>()),
-  );
-  getIt.registerLazySingleton<SaveDailyPlanUsecase>(
-    () => SaveDailyPlanUsecase(getIt<MemorizationPlusRepository>()),
   );
   getIt.registerLazySingleton<GetKidsJourneyUsecase>(
     () => GetKidsJourneyUsecase(getIt<MemorizationPlusRepository>()),
@@ -363,26 +364,6 @@ Future<void> configureDependencies() async {
       getIt<MemorizationPathResolver>(),
     ),
   );
-  getIt.registerFactory<HifzSessionCubit>(
-    () => HifzSessionCubit(
-      getIt<GetSurahsUsecase>(),
-      getIt<GetSurahDetailUsecase>(),
-      getIt<SaveAyahProgressUsecase>(),
-      getIt<GetProgressForSurahUsecase>(),
-      getIt<GetHifzProgressUsecase>(),
-      getIt<GetHifzPathUsecase>(),
-      getIt<GenerateHifzSegmentsUsecase>(),
-      getIt<CheckNextAyahUnlockUsecase>(),
-      getIt<GetNextRequiredReviewCheckpointUsecase>(),
-      getIt<GetPassedCheckpointKeysUsecase>(),
-      getIt<MarkCheckpointReviewPassedUsecase>(),
-      getIt<SettingsRepository>(),
-      getIt<StreakService>(),
-      getIt<XpService>(),
-      getIt<AchievementService>(),
-      getIt<MemorizationPlusRepository>(), // T-06: for defensive kids check
-    ),
-  );
   getIt.registerFactory<AzkarCubit>(
     () => AzkarCubit(getIt<GetAzkarUsecase>(), getIt<SharedPreferences>()),
   );
@@ -402,18 +383,6 @@ Future<void> configureDependencies() async {
       pathResolver: getIt<MemorizationPathResolver>(),
     ),
   );
-  getIt.registerFactory<DailyPlanCubit>(
-    () => DailyPlanCubit(
-      getIt<GenerateDailyPlanUsecase>(),
-      getIt<GetCachedDailyPlanUsecase>(),
-      getIt<EvaluateMemorizationUsecase>(),
-      getIt<SaveDailyPlanUsecase>(),
-      getIt<AchievementService>(),
-      getIt<StreakService>(), // RISK-5 FIX
-      getIt<XpService>(), // RISK-5 FIX
-      getIt<MemorizationPathResolver>(),
-    ),
-  );
   getIt.registerFactory<KidsModeCubit>(
     () => KidsModeCubit(
       getIt<GetKidsProgressUsecase>(),
@@ -424,6 +393,19 @@ Future<void> configureDependencies() async {
       getIt<QuranRepository>(),
       getIt<StreakService>(), // RISK-5 FIX
       getIt<XpService>(), // RISK-5 FIX
+    ),
+  );
+  getIt.registerFactory<KidsMemorizationSessionCubit>(
+    () => KidsMemorizationSessionCubit(
+      quranRepository: getIt<QuranRepository>(),
+      memorizationRepository: getIt<MemorizationPlusRepository>(),
+      sessionEngine: getIt<V2SessionEngine>(),
+      reviewAdapter: getIt<V2SessionReviewAdapter>(),
+      progressAdapter: getIt<V2SessionProgressAdapter>(),
+      gamificationAdapter: getIt<V2SessionGamificationAdapter>(),
+      achievementService: getIt<AchievementService>(),
+      awardKidsPoints: getIt<AwardKidsPointsUsecase>(),
+      markAyahMemorized: getIt<MarkAyahMemorizedUsecase>(),
     ),
   );
   getIt.registerFactory<CustomPlanCubit>(
@@ -452,13 +434,6 @@ Future<void> configureDependencies() async {
       reviewAdapter: getIt<V2SessionReviewAdapter>(),
       progressAdapter: getIt<V2SessionProgressAdapter>(),
       gamificationAdapter: getIt<V2SessionGamificationAdapter>(),
-    ),
-  );
-  getIt.registerFactory<QuizCubit>(
-    () => QuizCubit(
-      getIt<MemorizationPlusRepository>(),
-      getIt<QuranRepository>(),
-      getIt<AchievementService>(),
     ),
   );
   getIt.registerFactory<HomeCubit>(

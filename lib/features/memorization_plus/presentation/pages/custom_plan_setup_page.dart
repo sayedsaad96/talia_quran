@@ -311,58 +311,19 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   }
 
   Future<void> _showDeletePlanConfirmation(BuildContext context) async {
-    final confirmText = context.l10n.customPlanDeleteConfirmPhrase;
-    final confirmController = TextEditingController();
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) {
-          final canConfirm = confirmController.text.trim() == confirmText;
-          return AlertDialog(
-            title: Text(context.l10n.customPlanDeleteTitle),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _ChecklistLine(
-                  icon: Icons.check_circle_rounded,
-                  color: const Color(0xFF2D8E4C),
-                  text: context.l10n.customPlanDeleteKeeps,
-                ),
-                const SizedBox(height: 10),
-                _ChecklistLine(
-                  icon: Icons.warning_amber_rounded,
-                  color: Colors.orange,
-                  text: context.l10n.customPlanDeleteRemoves,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(context.l10n.customPlanDeleteInstruction),
-                const SizedBox(height: AppSpacing.sm),
-                TextField(
-                  controller: confirmController,
-                  onChanged: (_) => setDialogState(() {}),
-                  decoration: InputDecoration(hintText: confirmText),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text(context.l10n.cancel),
-              ),
-              FilledButton(
-                style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-                onPressed: canConfirm
-                    ? () => Navigator.pop(dialogContext, true)
-                    : null,
-                child: Text(context.l10n.customPlanDeleteAction),
-              ),
-            ],
-          );
-        },
+      builder: (dialogContext) => _DeletePlanDialog(
+        confirmText: context.l10n.customPlanDeleteConfirmPhrase,
+        title: context.l10n.customPlanDeleteTitle,
+        keepsText: context.l10n.customPlanDeleteKeeps,
+        removesText: context.l10n.customPlanDeleteRemoves,
+        instructionText: context.l10n.customPlanDeleteInstruction,
+        cancelText: context.l10n.cancel,
+        actionText: context.l10n.customPlanDeleteAction,
       ),
     );
-    confirmController.dispose();
+
     if (confirmed == true && context.mounted) {
       unawaited(context.read<CustomPlanCubit>().deletePlan());
     }
@@ -390,7 +351,8 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 ),
               ),
             );
-            // Navigate to daily plan with the custom plan's start surah
+            // Navigate to daily plan starting from startSurahId
+            // ("من سورة" = the user-selected memorization entry point).
             context.pushReplacement(
               '/memorization-plus/daily-plan?surahId=${state.plan.startSurahId}',
             );
@@ -435,7 +397,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                           AppSpacing.md,
                         ),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Text(
                               context.l10n.customPlanTitle,
@@ -650,13 +612,13 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                           daysPerWeek: _availableDays,
                           sessionMinutes: _sessionMinutes,
                           difficulty: _difficulty,
-                          // عرض النطاق بالترتيب التقليدي: من (عدد أكبر) إلى (عدد أصغر)
-                          startSurah: _endSurahId < _surahNames.length
-                              ? _surahNames[_endSurahId]
-                              : '${context.l10n.surah} $_endSurahId',
-                          endSurah: _startSurahId < _surahNames.length
+                          // "من" = startSurahId (entry point), "إلى" = endSurahId (exit point)
+                          startSurah: _startSurahId < _surahNames.length
                               ? _surahNames[_startSurahId]
                               : '${context.l10n.surah} $_startSurahId',
+                          endSurah: _endSurahId < _surahNames.length
+                              ? _surahNames[_endSurahId]
+                              : '${context.l10n.surah} $_endSurahId',
                         ),
 
                         const SizedBox(height: AppSpacing.xl),
@@ -743,19 +705,17 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
       ),
       child: Column(
         children: [
-          // "من سورة" يعرض النهاية العددية (_endSurahId) لتوافق ترتيب الحفظ التقليدي
-          // (مثال جزء عم: من الناس 114 ← إلى النبأ 78)
+          // "من سورة" = نقطة البداية العددية الأصغر (_startSurahId)
+          // مثال جزء عم: من سورة النبأ (78) ... إلى سورة الناس (114)
+          // الحفظ يسير تنازلياً: endSurahId (الناس) ← startSurahId (النبأ)
           _buildDropdownRow(
             label: context.l10n.customPlanFromSurah,
-            value: _endSurahId,
+            value: _startSurahId,
             icon: Icons.first_page_rounded,
             isDark: isDark,
             onChanged: (v) {
               setState(() {
-                _endSurahId = v;
-                // إذا أصبحت نهاية أصغر من البداية العددية، اضبط البداية لتطابقها
-                if (_startSurahId > v) _startSurahId = v;
-                _clampStartAyahForSurah();
+                _setStartSurah(v);
               });
             },
           ),
@@ -764,14 +724,19 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 ? Colors.white.withValues(alpha: 0.06)
                 : Colors.black.withValues(alpha: 0.06),
           ),
+          // "إلى سورة" = نقطة النهاية العددية الأكبر (_endSurahId)
+          // مثال جزء عم: إلى سورة الناس (114)
           _buildDropdownRow(
             label: context.l10n.customPlanToSurah,
-            value: _startSurahId,
+            value: _endSurahId,
             icon: Icons.last_page_rounded,
             isDark: isDark,
             onChanged: (v) {
               setState(() {
-                _setStartSurah(v);
+                _endSurahId = v;
+                // إذا أصبحت النهاية أصغر من البداية، اضبط البداية لتطابقها
+                if (_startSurahId > v) _startSurahId = v;
+                _clampStartAyahForSurah();
               });
             },
           ),
@@ -1294,7 +1259,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
 
   Widget _buildEstimatedDuration(bool isDark) {
     // rough estimate
-    final totalSurahs = _endSurahId - _startSurahId + 1;
+    final totalSurahs = (_endSurahId - _startSurahId).abs() + 1;
     final totalAyahsEstimate = totalSurahs * 20; // rough avg
     final sessionsPerWeek = _availableDays;
     final ayahsPerSession = _newAyahsPerDay;
@@ -1455,8 +1420,8 @@ class _PresetSelector extends StatelessWidget {
           days: 5,
           minutes: 10,
           difficulty: MemorizationDifficulty.easy,
-          startSurahId: 78,  // سورة النبأ (بداية جزء عم)
-          endSurahId: 114,   // سورة الناس (نهاية جزء عم)
+          startSurahId: 114, // سورة الناس = بداية الحفظ (من)
+          endSurahId: 78, // سورة النبأ = نهاية الحفظ (إلى)
         ),
       ),
     ];
@@ -1685,6 +1650,92 @@ class _StyledTextField extends StatelessWidget {
           vertical: AppSpacing.md,
         ),
       ),
+    );
+  }
+}
+
+class _DeletePlanDialog extends StatefulWidget {
+  const _DeletePlanDialog({
+    required this.confirmText,
+    required this.title,
+    required this.keepsText,
+    required this.removesText,
+    required this.instructionText,
+    required this.cancelText,
+    required this.actionText,
+  });
+
+  final String confirmText;
+  final String title;
+  final String keepsText;
+  final String removesText;
+  final String instructionText;
+  final String cancelText;
+  final String actionText;
+
+  @override
+  State<_DeletePlanDialog> createState() => _DeletePlanDialogState();
+}
+
+class _DeletePlanDialogState extends State<_DeletePlanDialog> {
+  late final TextEditingController _confirmController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confirmController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _confirmController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _ChecklistLine(
+              icon: Icons.check_circle_rounded,
+              color: const Color(0xFF2D8E4C),
+              text: widget.keepsText,
+            ),
+            const SizedBox(height: 10),
+            _ChecklistLine(
+              icon: Icons.warning_amber_rounded,
+              color: Colors.orange,
+              text: widget.removesText,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(widget.instructionText),
+            const SizedBox(height: AppSpacing.sm),
+            TextField(
+              controller: _confirmController,
+              onChanged: (_) => setState(() {}),
+              decoration: InputDecoration(hintText: widget.confirmText),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(widget.cancelText),
+        ),
+        FilledButton(
+          style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+          onPressed: _confirmController.text.trim() == widget.confirmText
+              ? () => Navigator.pop(context, true)
+              : null,
+          child: Text(widget.actionText),
+        ),
+      ],
     );
   }
 }

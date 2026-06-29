@@ -6,6 +6,9 @@ abstract final class CubitMessageCodes {
   static const hifzSurahLockedPrefix = '@hifz/surah_locked|';
 
   static const kidsAudioPlaybackFailed = '@kids/audio_playback_failed';
+  static const kidsMicPermissionDenied = '@kids/mic_permission_denied';
+  static const kidsRecordingUnavailable = '@kids/recording_unavailable';
+  static const kidsRecordingNotCaptured = '@kids/recording_not_captured';
 
   static const quizSurahNotFound = '@quiz/surah_not_found';
   static const quizAyahsOutsidePlan = '@quiz/ayahs_outside_plan';

@@ -15,7 +15,6 @@ import '../../features/quran/presentation/pages/kids_quran_reader_page.dart';
 import '../../features/quran/presentation/pages/quran_page.dart';
 import '../../features/quran/presentation/pages/quran_reader_page.dart';
 import '../../features/hifz/presentation/pages/hifz_page.dart';
-import '../../features/hifz/presentation/pages/hifz_session_page.dart';
 import '../../features/azkar/presentation/pages/azkar_page.dart';
 import '../../features/azkar/presentation/pages/azkar_category_page.dart';
 import '../../features/azkar/presentation/pages/general_azkar_page.dart';
@@ -24,7 +23,6 @@ import '../../features/progress/presentation/pages/progress_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/memorization_plus/presentation/pages/path_selection_page.dart';
 import '../../features/memorization_plus/presentation/pages/guardian_linking_page.dart';
-import '../../features/memorization_plus/presentation/pages/daily_plan_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_completion_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_home_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
@@ -33,9 +31,9 @@ import '../../features/memorization_plus/presentation/pages/kids_gamified_stage_
 import '../../features/memorization_plus/presentation/pages/memorization_hub_page.dart';
 import '../../features/memorization_plus/presentation/pages/parent_dashboard_page.dart';
 import '../../features/memorization_plus/presentation/pages/custom_plan_setup_page.dart';
-import '../../features/memorization_plus/presentation/pages/quiz_page.dart';
 import '../../features/memorization_plus/presentation/pages/qcf_rendering_poc_page.dart';
 import '../../features/memorization_plus/presentation/pages/v2_session_page.dart';
+import '../../features/memorization_plus/presentation/pages/v2/kids_v2_session_page.dart';
 import '../../features/memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/child_onboarding_page.dart';
@@ -45,6 +43,7 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/update_password_page.dart';
 import '../../features/tutorial_guide/presentation/pages/tutorial_guide_page.dart';
 import '../../features/settings/presentation/pages/privacy_policy_page.dart';
+import '../memorization/v2/v2_feature_flag.dart';
 import '../services/achievement_service.dart';
 import '../widgets/app_shell.dart';
 
@@ -58,13 +57,10 @@ abstract class AppRoutes {
   static const String memorizationHub = '/memorization';
   static const String azkar = '/azkar';
   static const String progress = '/progress';
-  static const String hifzSession = '/hifz/session';
   static const String settings = '/settings';
   static const String memorizationPlus = '/memorization-plus';
   static const String memorizationPlusGuardianLinking =
       '/memorization-plus/guardian-linking';
-  static const String memorizationPlusDailyPlan =
-      '/memorization-plus/daily-plan';
   static const String memorizationPlusKidsJourney =
       '/memorization-plus/kids-journey';
   static const String memorizationPlusKids = '/memorization-plus/kids';
@@ -78,8 +74,9 @@ abstract class AppRoutes {
   static const String parentDashboard = '/memorization-plus/parent-dashboard';
   static const String memorizationPlusCustomPlan =
       '/memorization-plus/custom-plan';
-  static const String memorizationPlusQuiz = '/memorization-plus/quiz';
   static const String memorizationV2Session = '/memorization-v2/session';
+  static const String memorizationV2KidsSession =
+      '/memorization-v2/kids-session';
   static const String qcfRenderingPoc = '/debug/qcf-rendering-poc';
   static const String login = '/login';
   static const String updatePassword = '/auth/update-password';
@@ -166,6 +163,18 @@ class MemorizationRouteGuard {
     return profile?.isChild == true ? AppRoutes.memorizationPlusKidsHome : null;
   }
 
+  /// Guard for the V2 memorization session route.
+  ///
+  /// Checks condition:
+  ///   1. Profile must be adult (kids go to their own home).
+  static Future<String?> v2SessionRedirect() async {
+    // Check 1: adult-only guard.
+    final profile = await _readProfile();
+    if (profile?.isChild == true) return AppRoutes.memorizationPlusKidsHome;
+
+    return null; // proceed to V2SessionPage
+  }
+
   static Future<String?> kidsOnlyRedirect() async {
     final profile = await _readProfile();
     if (profile == null || profile.isChild) return null;
@@ -203,28 +212,6 @@ class MemorizationRouteGuard {
     }
   }
 
-  static Future<String?> hifzSessionRedirect(GoRouterState state) async {
-    final profile = await _readProfile();
-    if (profile?.isChild != true) return null;
-
-    final extra = state.extra as Map<String, dynamic>?;
-    final surahId =
-        extra?['surahId'] as int? ??
-        int.tryParse(state.uri.queryParameters['surahId'] ?? '');
-    final startAyah =
-        extra?['startAyah'] as int? ??
-        int.tryParse(state.uri.queryParameters['startAyah'] ?? '');
-
-    if (AppRouter._isValidSurahId(surahId) &&
-        startAyah != null &&
-        startAyah > 0) {
-      return AppRouter._kidsListenLocation(
-        surahId: surahId!,
-        ayahNumber: startAyah,
-      );
-    }
-    return AppRoutes.memorizationPlusKidsHome;
-  }
 }
 
 abstract class AppRouter {
@@ -347,25 +334,6 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
-        path: AppRoutes.hifzSession,
-        redirect: (context, state) =>
-            MemorizationRouteGuard.hifzSessionRedirect(state),
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>?;
-          final surahId =
-              extra?['surahId'] as int? ??
-              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
-          final startAyah =
-              extra?['startAyah'] as int? ??
-              int.tryParse(state.uri.queryParameters['startAyah'] ?? '');
-          return HifzSessionPage(
-            surahId: _isValidSurahId(surahId) ? surahId! : 1,
-            startAyah: startAyah != null && startAyah > 0 ? startAyah : 1,
-          );
-        },
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
         path: '/azkar/:category',
         builder: (context, state) {
           final category = state.pathParameters['category'] ?? 'morning';
@@ -431,22 +399,6 @@ abstract class AppRouter {
           }
         },
         builder: (context, state) => const GuardianLinkingPage(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: AppRoutes.memorizationPlusDailyPlan,
-        redirect: (context, state) =>
-            MemorizationRouteGuard.adultOnlyRedirect(),
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>?;
-          final surahId =
-              extra?['surahId'] as int? ??
-              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
-          if (!_isValidSurahId(surahId)) {
-            return const CustomPlanSetupPage();
-          }
-          return DailyPlanPage(surahId: surahId!);
-        },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -572,6 +524,32 @@ abstract class AppRouter {
           );
         },
       ),
+      // ── Kids V2 session (Listen → Try to Remember → Complete) ─────────────
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationV2KidsSession,
+        redirect: (context, state) async {
+          final kidsBlock = await MemorizationRouteGuard.kidsOnlyRedirect();
+          if (kidsBlock != null) return kidsBlock;
+          final enabled = await V2FeatureFlag.isKidsEnabled();
+          if (!enabled) return AppRoutes.memorizationPlusKidsHome;
+          return null;
+        },
+        builder: (context, state) {
+          final surahId = int.tryParse(
+            state.uri.queryParameters['surahId'] ?? '',
+          );
+          final ayahNumber = int.tryParse(
+            state.uri.queryParameters['ayahNumber'] ?? '',
+          );
+          if (!_isValidSurahId(surahId) ||
+              ayahNumber == null ||
+              ayahNumber < 1) {
+            return const PathSelectionPage();
+          }
+          return KidsV2SessionPage(surahId: surahId!, ayahNumber: ayahNumber);
+        },
+      ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.parentDashboard,
@@ -594,31 +572,9 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
-        path: AppRoutes.memorizationPlusQuiz,
-        redirect: (context, state) =>
-            MemorizationRouteGuard.adultOnlyRedirect(),
-        builder: (context, state) {
-          final extra = state.extra as Map<String, dynamic>?;
-          final surahId =
-              extra?['surahId'] as int? ??
-              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
-          if (!_isValidSurahId(surahId)) {
-            return const PathSelectionPage();
-          }
-          final rawAyahNumbers = extra?['ayahNumbers'];
-          final ayahNumbers = rawAyahNumbers is List<int>
-              ? rawAyahNumbers
-              : rawAyahNumbers is List
-              ? rawAyahNumbers.whereType<int>().toList()
-              : _parseAyahNumbers(state.uri.queryParameters['ayahNumbers']);
-          return QuizPage(surahId: surahId!, ayahNumbers: ayahNumbers);
-        },
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationV2Session,
         redirect: (context, state) =>
-            MemorizationRouteGuard.adultOnlyRedirect(),
+            MemorizationRouteGuard.v2SessionRedirect(),
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final surahId =
@@ -724,15 +680,7 @@ abstract class AppRouter {
   static bool _isValidSurahId(int? surahId) =>
       surahId != null && surahId >= 1 && surahId <= 114;
 
-  static String _kidsListenLocation({
-    required int surahId,
-    required int ayahNumber,
-  }) {
-    final query = Uri(
-      queryParameters: {'surahId': '$surahId', 'ayahNumber': '$ayahNumber'},
-    ).query;
-    return '${AppRoutes.memorizationPlusKids}?$query';
-  }
+
 
   static KidsJourneyStage? _parseKidsJourneyStage(GoRouterState state) {
     final extra = state.extra;

@@ -39,6 +39,10 @@ abstract class AppColors {
   static const Color darkTextSecondary = Color(0xFFA8B0BC);
   static const Color darkTextHint = Color(0xFF5A6370);
 
+  // ─── Kids Mode Colors ────────────────────────────────────────────────────────
+  /// Vibrant playful green for Kids Mode UI elements
+  static const Color kidsGreen = Color(0xFF27AE60);
+
   // ─── Semantic Colors ─────────────────────────────────────────────────────────
   static const Color success = Color(0xFF2E7D5E);
   static const Color warning = Color(0xFFD4821A);

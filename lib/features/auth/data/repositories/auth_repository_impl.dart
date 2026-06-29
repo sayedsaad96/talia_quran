@@ -278,6 +278,22 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       await client.auth.updateUser(UserAttributes(password: newPassword));
+
+      // Sign out immediately after a successful password update so the
+      // recovery session is fully cleared. This prevents the app from
+      // staying authenticated under an old recovery token, which would
+      // cause login failures when the user tries to sign in with the new
+      // password.
+      try {
+        await client.auth.signOut();
+        await _clearLocalUserData();
+      } catch (signOutError) {
+        TaliaLogger.w(
+          'Post-password-update sign-out failed (non-fatal)',
+          signOutError,
+        );
+      }
+
       return const Right(unit);
     } on AuthException catch (e) {
       TaliaLogger.w('Password update error', e);
@@ -645,6 +661,15 @@ class AuthRepositoryImpl implements AuthRepository {
         lower.contains('connection') ||
         lower.contains('socket')) {
       return 'لا يوجد اتصال بالإنترنت';
+    }
+
+    // Same password as the current one
+    if (lower.contains('same password') ||
+        lower.contains('should be different') ||
+        lower.contains('different from') ||
+        lower.contains('password_same_as_old') ||
+        lower.contains('new password should be different')) {
+      return 'كلمة المرور الجديدة مطابقة للقديمة. يرجى اختيار كلمة مرور مختلفة.';
     }
 
     // Missing/expired password recovery session

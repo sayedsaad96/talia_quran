@@ -46,7 +46,7 @@ void main() {
         ],
       );
       final session = await _sessionServiceWithLocation(
-        '/memorization-plus/daily-plan?surahId=67',
+        '/memorization-v2/session?surahId=67',
       );
       final reader = MemorizationProgressReaderImpl(memPlus, hifz, session);
 
@@ -59,7 +59,7 @@ void main() {
       expect(snapshot.hifzDueReviews, hasLength(1));
       expect(
         snapshot.lastRestorableLocation,
-        '/memorization-plus/daily-plan?surahId=67',
+        '/memorization-v2/session?surahId=67',
       );
       expect(memPlus.writeCallCount, 0);
       expect(hifz.writeCallCount, 0);

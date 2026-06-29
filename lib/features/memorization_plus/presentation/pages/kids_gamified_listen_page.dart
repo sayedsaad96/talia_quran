@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
@@ -65,6 +66,10 @@ class _KidsGamifiedListenView extends StatelessWidget {
               prev?.audioError != current.audioError) {
             return true;
           }
+          if (current.recordingError != null &&
+              prev?.recordingError != current.recordingError) {
+            return true;
+          }
           final wasCompleted = prev?.isCompleted ?? false;
           return current.isCompleted && !wasCompleted;
         },
@@ -83,7 +88,17 @@ class _KidsGamifiedListenView extends StatelessWidget {
           if (state.audioError != null) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(context.l10n.kidsGamifiedAudioUnavailable),
+                content: Text(context.localizedCubitMessage(state.audioError!)),
+              ),
+            );
+            return;
+          }
+          if (state.recordingError != null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  context.localizedCubitMessage(state.recordingError!),
+                ),
               ),
             );
             return;

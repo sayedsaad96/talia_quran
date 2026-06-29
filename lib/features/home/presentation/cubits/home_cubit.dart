@@ -97,6 +97,9 @@ class HomeCubit extends Cubit<HomeState> {
     final isParentMode = profile?.isParentGuardian ?? false;
     final isKids = profile?.isChild ?? false;
 
+    // P1-05 FIX: Guard against emitting after the cubit was closed during the
+    // 7 awaits above. Emitting on a closed cubit throws a StateError.
+    if (isClosed) return;
     progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
       final hifzProgress = hifzResult.getOrElse(() => []);
       emit(

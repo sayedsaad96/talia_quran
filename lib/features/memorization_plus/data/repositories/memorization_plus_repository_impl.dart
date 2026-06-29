@@ -46,8 +46,6 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     return Supabase.instance.client;
   }
 
-
-
   Either<Failure, SupabaseClient> _supabaseOrFailure() {
     if (!_isSupabaseReady) {
       return const Left(
@@ -483,16 +481,31 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       final effectiveNewPerDay = customPlan?.newAyahsPerDay ?? newAyahsPerDay;
       final nearRevisionLimit = customPlan?.nearRevisionCount ?? 10;
       final farRevisionLimit = customPlan?.farRevisionCount ?? 5;
-      // Respect the custom plan's endSurahId boundary
-      final maxSurahId = customPlan?.endSurahId ?? 114;
 
-      int currentSurahId = customPlan?.startSurahId ?? surahId;
-      if (surahId > currentSurahId) {
+      // Direction-aware memorization:
+      //   startSurahId = where memorization BEGINS  (the "من" surah)
+      //   endSurahId   = where memorization ENDS    (the "إلى" surah)
+      //
+      //   If startSurahId <= endSurahId → ASCENDING  (e.g. Al-Fatiha 1 → An-Nas 114)
+      //   If startSurahId >  endSurahId → DESCENDING (e.g. An-Nas 114 → An-Naba 78)
+      final planStartSurahId = customPlan?.startSurahId ?? surahId;
+      final planEndSurahId = customPlan?.endSurahId ?? planStartSurahId;
+      final isDescending = planStartSurahId > planEndSurahId;
+
+      // Honour a cached/caller surahId as a resume point if it lies within range.
+      int currentSurahId = planStartSurahId;
+      final lo = isDescending ? planEndSurahId : planStartSurahId;
+      final hi = isDescending ? planStartSurahId : planEndSurahId;
+      if (surahId >= lo && surahId <= hi && surahId != planStartSurahId) {
         currentSurahId = surahId;
       }
+
       DailyPlan? bestPlan;
 
-      while (currentSurahId <= maxSurahId) {
+      // Direction-aware loop
+      while (isDescending
+          ? currentSurahId >= planEndSurahId
+          : currentSurahId <= planEndSurahId) {
         final surahRecords = {
           for (final r in allRecords.where((r) => r.surahId == currentSurahId))
             r.ayahNumber: r,
@@ -513,6 +526,8 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         final List<DailyPlanAyah> farRevision = [];
         final List<DailyPlanAyah> retentionReview = [];
 
+        // startAyah applies only to the first surah in the memorization order
+        // (i.e. startSurahId itself), not to any other surah in the range.
         final firstAyah =
             customPlan != null && currentSurahId == customPlan.startSurahId
             ? customPlan.startAyah.clamp(1, totalAyahs)
@@ -593,15 +608,20 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         );
 
         if (bestPlan.totalItems > 0 || bestPlan.hasRetentionReview) {
-          break; // Found active required or optional retention items
+          break;
         }
 
-        currentSurahId++;
+        // Advance in the memorization direction
+        if (isDescending) {
+          currentSurahId--;
+        } else {
+          currentSurahId++;
+        }
       }
 
       bestPlan ??= DailyPlan(
         generatedAt: DateTime.now().toUtc(),
-        surahId: maxSurahId,
+        surahId: planEndSurahId,
         newAyahs: const [],
         nearRevision: const [],
         farRevision: const [],
@@ -619,6 +639,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   }
 
   @override
+
   Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() async {
     try {
       final cached = await _datasource.getCachedDailyPlan();
@@ -1402,8 +1423,11 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         rewards.every((r) => r.status != ParentRewardStatus.locked)) {
       return;
     }
-    final now = DateTime.now();
-    final weekStart = DateTime(
+    // P1-06 FIX: Use UTC to match completedAt (stored as UTC at line ~883).
+    // Mixing local weekStart with UTC logs shifted week boundaries by the
+    // timezone offset (e.g. UTC+3 in Egypt).
+    final now = DateTime.now().toUtc();
+    final weekStart = DateTime.utc(
       now.year,
       now.month,
       now.day,
@@ -1420,7 +1444,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         return ParentRewardModel.fromEntity(
           reward.copyWith(
             status: ParentRewardStatus.unlocked,
-            unlockedAt: DateTime.now(),
+            unlockedAt: DateTime.now().toUtc(),
           ),
         );
       }
@@ -1489,6 +1513,14 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       await _datasource.saveCustomPlan(
         CustomMemorizationPlanModel.fromEntity(plan),
       );
+      // Clear the cached daily plan so that a stale surahId from a previous
+      // session does not override the correct entry point (endSurahId) when
+      // the user returns to the app after saving a new plan.
+      try {
+        await _datasource.clearDailyPlanCache();
+      } catch (_) {
+        // Non-critical: cache clearing failure should not block plan saving.
+      }
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

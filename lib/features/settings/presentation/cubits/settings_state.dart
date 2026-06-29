@@ -13,6 +13,8 @@ class SettingsState extends Equatable {
     this.isLoading = false,
     this.errorMessage,
     this.showMemorizationPathResetSuccess = false,
+    this.appVersion,
+    this.appBuildNumber,
   });
 
   final String? selectedTrack;
@@ -22,6 +24,8 @@ class SettingsState extends Equatable {
   final bool isLoading;
   final String? errorMessage;
   final bool showMemorizationPathResetSuccess;
+  final String? appVersion;
+  final String? appBuildNumber;
 
   bool get shouldShowParentSection {
     return selectedTrack == 'adults' && isParentMode;
@@ -36,6 +40,8 @@ class SettingsState extends Equatable {
     String? errorMessage,
     bool clearError = false,
     bool? showMemorizationPathResetSuccess,
+    String? appVersion,
+    String? appBuildNumber,
   }) {
     return SettingsState(
       selectedTrack: selectedTrack ?? this.selectedTrack,
@@ -47,6 +53,8 @@ class SettingsState extends Equatable {
       showMemorizationPathResetSuccess:
           showMemorizationPathResetSuccess ??
           this.showMemorizationPathResetSuccess,
+      appVersion: appVersion ?? this.appVersion,
+      appBuildNumber: appBuildNumber ?? this.appBuildNumber,
     );
   }
 
@@ -59,5 +67,7 @@ class SettingsState extends Equatable {
     isLoading,
     errorMessage,
     showMemorizationPathResetSuccess,
+    appVersion,
+    appBuildNumber,
   ];
 }

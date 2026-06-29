@@ -55,7 +55,7 @@ void main() {
             startAyah: 1,
           ),
           lastRestorableLocation:
-              '${AppRoutes.memorizationPlusDailyPlan}?surahId=2',
+              '${AppRoutes.memorizationV2Session}?surahId=2',
         ),
       );
 
@@ -79,7 +79,7 @@ void main() {
             route: '/memorization-plus/quiz?surahId=67&ayahNumbers=1',
           ),
           lastRestorableLocation:
-              '${AppRoutes.memorizationPlusDailyPlan}?surahId=2',
+              '${AppRoutes.memorizationV2Session}?surahId=2',
         ),
       );
 
@@ -369,7 +369,7 @@ void main() {
             route: '/memorization-plus/quiz?surahId=67&ayahNumbers=5',
           ),
           lastRestorableLocation:
-              '${AppRoutes.memorizationPlusDailyPlan}?surahId=2',
+              '${AppRoutes.memorizationV2Session}?surahId=2',
         ),
       );
 
@@ -503,12 +503,12 @@ Future<void> _pumpHome(
     routes: [
       GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage()),
       GoRoute(
-        path: AppRoutes.memorizationPlusDailyPlan,
+        path: AppRoutes.memorizationV2Session,
         builder: (_, _) =>
             const Scaffold(body: Center(child: Text('coach-nav-daily-plan'))),
       ),
       GoRoute(
-        path: AppRoutes.memorizationPlusQuiz,
+        path: AppRoutes.memorizationV2Session,
         builder: (_, _) =>
             const Scaffold(body: Center(child: Text('coach-nav-quiz'))),
       ),

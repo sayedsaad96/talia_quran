@@ -265,6 +265,8 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
 
   @override
   Future<void> saveDailyPlan(DailyPlanModel plan) async {}
+  @override
+  Future<void> clearDailyPlanCache() async {}
 
   @override
   Future<KidsProgressModel> getKidsProgress() async =>

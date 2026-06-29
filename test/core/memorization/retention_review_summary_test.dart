@@ -259,7 +259,7 @@ void main() {
 
       expect(
         recommendation?.route,
-        '/memorization-plus/quiz?surahId=1&ayahNumbers=5',
+        '/memorization-v2/session?surahId=1&startAyah=5',
       );
     });
 

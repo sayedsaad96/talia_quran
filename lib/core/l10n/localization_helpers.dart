@@ -159,6 +159,15 @@ extension TaliaLocalizationHelpers on BuildContext {
       CubitMessageCodes.hifzMemorizationSaveFailed =>
         l10n.hifzMemorizationSaveFailed,
       CubitMessageCodes.kidsAudioPlaybackFailed => l10n.kidsAudioPlaybackFailed,
+      CubitMessageCodes.kidsMicPermissionDenied => l10n.micPermissionError,
+      CubitMessageCodes.kidsRecordingUnavailable =>
+        _isArabic
+            ? 'لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.'
+            : 'The microphone did not work. Try again or ask a parent for help.',
+      CubitMessageCodes.kidsRecordingNotCaptured =>
+        _isArabic
+            ? 'لم نسمع تلاوتك بوضوح. اضغط وسجّل الآية مرة أخرى.'
+            : 'We could not hear your recitation clearly. Please record the ayah again.',
       CubitMessageCodes.quizSurahNotFound => l10n.quizSurahNotFound,
       CubitMessageCodes.quizAyahsOutsidePlan => l10n.quizAyahsOutsidePlan,
       CubitMessageCodes.quizNoMemorizedAyahs => l10n.quizNoMemorizedAyahs,

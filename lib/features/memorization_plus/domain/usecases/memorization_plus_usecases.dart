@@ -124,60 +124,9 @@ class SaveSmartMemorizationSettingsUsecase
       _repository.saveSmartSettings(params);
 }
 
-// ─── GenerateDailyPlanUsecase ─────────────────────────────────────────────────
 
-class GenerateDailyPlanParams {
-  const GenerateDailyPlanParams({
-    required this.surahId,
-    this.newAyahsPerDay = 5,
-  });
-  final int surahId;
-  final int newAyahsPerDay;
-}
 
-class GenerateDailyPlanUsecase
-    implements UseCase<DailyPlan, GenerateDailyPlanParams> {
-  const GenerateDailyPlanUsecase(this._repository);
-  final MemorizationPlusRepository _repository;
 
-  @override
-  Future<Either<Failure, DailyPlan>> call(GenerateDailyPlanParams params) =>
-      _repository.generateDailyPlan(
-        surahId: params.surahId,
-        newAyahsPerDay: params.newAyahsPerDay,
-      );
-}
-
-// ─── EvaluateMemorizationUsecase ──────────────────────────────────────────────
-
-class EvaluateMemorizationParams {
-  const EvaluateMemorizationParams({
-    required this.surahId,
-    required this.ayahNumber,
-    required this.rating,
-    this.createdByMode = ReviewRecordCreatedByMode.adultMemPlus,
-  });
-  final int surahId;
-  final int ayahNumber;
-  final PerformanceRating rating;
-  final ReviewRecordCreatedByMode createdByMode;
-}
-
-class EvaluateMemorizationUsecase
-    implements UseCase<AyahReviewRecord, EvaluateMemorizationParams> {
-  const EvaluateMemorizationUsecase(this._repository);
-  final MemorizationPlusRepository _repository;
-
-  @override
-  Future<Either<Failure, AyahReviewRecord>> call(
-    EvaluateMemorizationParams params,
-  ) => _repository.evaluateAyah(
-    surahId: params.surahId,
-    ayahNumber: params.ayahNumber,
-    rating: params.rating,
-    createdByMode: params.createdByMode,
-  );
-}
 
 // ─── MarkAyahMemorizedUsecase ────────────────────────────────────────────────
 
@@ -406,14 +355,6 @@ class ParentRemoteLinkUsecase {
   );
 }
 
-class GetCachedDailyPlanUsecase implements UseCaseNoParams<DailyPlan?> {
-  const GetCachedDailyPlanUsecase(this._repository);
-  final MemorizationPlusRepository _repository;
-
-  @override
-  Future<Either<Failure, DailyPlan?>> call() =>
-      _repository.getCachedDailyPlan();
-}
 
 // ─── GetCustomPlanUsecase ─────────────────────────────────────────────────────
 
@@ -426,13 +367,3 @@ class GetCustomPlanUsecase implements UseCaseNoParams<CustomMemorizationPlan?> {
       _repository.getCustomPlan();
 }
 
-// ─── SaveDailyPlanUsecase ─────────────────────────────────────────────────────
-
-class SaveDailyPlanUsecase implements UseCase<void, DailyPlan> {
-  const SaveDailyPlanUsecase(this._repository);
-  final MemorizationPlusRepository _repository;
-
-  @override
-  Future<Either<Failure, void>> call(DailyPlan plan) =>
-      _repository.saveDailyPlan(plan);
-}

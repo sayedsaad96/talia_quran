@@ -74,7 +74,7 @@ class _SettingsTrailingChevron extends StatelessWidget {
   Widget build(BuildContext context) {
     return Icon(
       context.isArabic
-          ? Icons.arrow_back_ios_new_rounded
+          ? Icons.arrow_back_ios_rounded
           : Icons.arrow_forward_ios_rounded,
       size: 16,
       color: color,
@@ -143,6 +143,7 @@ class _MemorizationPathSummaryTile extends StatelessWidget {
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
     final selectedPath = profile?.selectedPath;
+    final hasPath = selectedPath != null;
     final title = switch (selectedPath) {
       MemorizationPath.adult => context.l10n.memorizationPathAdultsTitle,
       MemorizationPath.child => context.l10n.memorizationPathKidsTitle,
@@ -154,7 +155,7 @@ class _MemorizationPathSummaryTile extends StatelessWidget {
       _ => context.l10n.settingsMemorizationPathNotSelectedDesc,
     };
 
-    return Padding(
+    final content = Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
         vertical: AppSpacing.md,
@@ -165,10 +166,15 @@ class _MemorizationPathSummaryTile extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.12),
+              color: hasPath
+                  ? primary.withValues(alpha: 0.12)
+                  : AppColors.error.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.route_rounded, color: primary),
+            child: Icon(
+              Icons.route_rounded,
+              color: hasPath ? primary : AppColors.error,
+            ),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -185,7 +191,7 @@ class _MemorizationPathSummaryTile extends StatelessWidget {
                 Text(
                   title,
                   style: AppTypography.bodyMedium.copyWith(
-                    color: textColor,
+                    color: hasPath ? textColor : AppColors.error,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -196,9 +202,20 @@ class _MemorizationPathSummaryTile extends StatelessWidget {
               ],
             ),
           ),
+          if (!hasPath) const _SettingsTrailingChevron(color: AppColors.error),
         ],
       ),
     );
+
+    if (!hasPath) {
+      return InkWell(
+        onTap: () => context.push(AppRoutes.memorizationPlus),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: content,
+      );
+    }
+
+    return content;
   }
 }
 
@@ -910,91 +927,79 @@ class _PrivacyPolicyTile extends StatelessWidget {
   }
 }
 
-class _AboutTile extends StatefulWidget {
+class _AboutTile extends StatelessWidget {
   const _AboutTile({required this.isDark});
   final bool isDark;
 
   @override
-  State<_AboutTile> createState() => _AboutTileState();
-}
-
-class _AboutTileState extends State<_AboutTile> {
-  AppVersionInfo _versionInfo = const AppVersionInfo.unavailable();
-
-  @override
-  void initState() {
-    super.initState();
-    unawaited(_loadVersionInfo());
-  }
-
-  Future<void> _loadVersionInfo() async {
-    final provider = getIt.isRegistered<AppVersionInfoProvider>()
-        ? getIt<AppVersionInfoProvider>()
-        : const PackageInfoAppVersionInfoProvider();
-    final info = await provider.getVersionInfo();
-    if (!mounted) return;
-    setState(() => _versionInfo = info);
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final textColor = widget.isDark
+    final textColor = isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
-    final subtextColor = widget.isDark
+    final subtextColor = isDark
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-            child: Center(
-              child: Text(
-                context.l10n.appName.substring(0, 1),
-                style: const TextStyle(
-                  fontFamily: 'Amiri',
-                  color: Colors.white,
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
+    return BlocBuilder<SettingsCubit, SettingsState>(
+      builder: (context, state) {
+        final version = state.appVersion ?? '—';
+        final buildNumber = state.appBuildNumber ?? '—';
+
+        return Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+                child: Center(
+                  child: Image.asset(
+                    'assets/images/logo.png',
+                    width: 46,
+                    height: 46,
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      context.l10n.settingsAppBrand,
+                      style: AppTypography.titleLarge.copyWith(
+                        color: textColor,
+                      ),
+                    ),
+                    Text(
+                      context.l10n.settingsVersion(version),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: subtextColor,
+                      ),
+                    ),
+                    Text(
+                      context.l10n.settingsBuild(buildNumber),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: subtextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      context.l10n.taliaDescription,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: subtextColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.l10n.settingsAppBrand,
-                  style: AppTypography.titleLarge.copyWith(color: textColor),
-                ),
-                Text(
-                  context.l10n.settingsVersion(_versionInfo.version),
-                  style: AppTypography.bodySmall.copyWith(color: subtextColor),
-                ),
-                Text(
-                  context.l10n.settingsBuild(_versionInfo.buildNumber),
-                  style: AppTypography.bodySmall.copyWith(color: subtextColor),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  context.l10n.taliaDescription,
-                  style: AppTypography.labelSmall.copyWith(color: subtextColor),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
