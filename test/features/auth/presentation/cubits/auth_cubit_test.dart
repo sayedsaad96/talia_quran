@@ -32,6 +32,8 @@ void main() {
       mockAuthRepository.passwordRecoveryChanges,
     ).thenAnswer((_) => passwordRecoveryStreamController.stream);
     when(mockAuthRepository.currentUser).thenReturn(currentUser);
+    when(mockAuthRepository.pullProgressFromCloud())
+        .thenAnswer((_) async => const Right(unit));
     return AuthCubit(mockAuthRepository);
   }
 

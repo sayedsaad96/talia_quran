@@ -164,7 +164,19 @@ class AyahReviewRecordModel extends AyahReviewRecord {
     required super.nextReviewDate,
     required super.totalReviews,
     required super.lastRating,
+    super.easeFactor = 2.5,
+    super.lapses = 0,
+    super.difficulty = 5.0,
+    super.stability = 0.0,
+    super.reviewState = ReviewState.newCard,
     super.createdByMode = ReviewRecordCreatedByMode.unknown,
+    super.predictedRetrievability,
+    super.predictedFsrsIntervalDays,
+    super.predictedFsrsDueDate,
+    super.predictedRecallProbability,
+    super.schedulerVsFsrsGapDays,
+    super.schedulerVsFsrsRatio,
+    super.schedulerEarlierThanFsrs,
   });
 
   factory AyahReviewRecordModel.initial(int surahId, int ayahNumber) {
@@ -179,13 +191,26 @@ class AyahReviewRecordModel extends AyahReviewRecord {
       nextReviewDate: now,
       totalReviews: 0,
       lastRating: null,
+      easeFactor: 2.5,
+      lapses: 0,
+      difficulty: 5.0,
+      stability: 0.0,
+      reviewState: ReviewState.newCard,
       createdByMode: ReviewRecordCreatedByMode.unknown,
+      predictedRetrievability: null,
+      predictedFsrsIntervalDays: null,
+      predictedFsrsDueDate: null,
+      predictedRecallProbability: null,
+      schedulerVsFsrsGapDays: null,
+      schedulerVsFsrsRatio: null,
+      schedulerEarlierThanFsrs: null,
     );
   }
 
   factory AyahReviewRecordModel.fromJson(Map<String, dynamic> json) {
     final ratingIndex = json['lastRating'] as int?;
     final modeIndex = json['createdByMode'] as int?;
+    final reviewStateIndex = json['reviewState'] as int?;
     return AyahReviewRecordModel(
       surahId: json['surahId'] as int,
       ayahNumber: json['ayahNumber'] as int,
@@ -197,12 +222,29 @@ class AyahReviewRecordModel extends AyahReviewRecord {
       lastRating: ratingIndex != null
           ? PerformanceRating.values[ratingIndex]
           : null,
+      easeFactor: (json['easeFactor'] as num?)?.toDouble() ?? 2.5,
+      lapses: json['lapses'] as int? ?? 0,
+      difficulty: (json['difficulty'] as num?)?.toDouble() ?? 5.0,
+      stability: (json['stability'] as num?)?.toDouble() ?? 0.0,
+      reviewState:
+          reviewStateIndex != null &&
+              reviewStateIndex >= 0 &&
+              reviewStateIndex < ReviewState.values.length
+          ? ReviewState.values[reviewStateIndex]
+          : ReviewState.newCard,
       createdByMode:
           modeIndex != null &&
               modeIndex >= 0 &&
               modeIndex < ReviewRecordCreatedByMode.values.length
           ? ReviewRecordCreatedByMode.values[modeIndex]
           : ReviewRecordCreatedByMode.unknown,
+      predictedRetrievability: (json['predictedRetrievability'] as num?)?.toDouble(),
+      predictedFsrsIntervalDays: json['predictedFsrsIntervalDays'] as int?,
+      predictedFsrsDueDate: json['predictedFsrsDueDate'] != null ? DateTime.parse(json['predictedFsrsDueDate'] as String) : null,
+      predictedRecallProbability: (json['predictedRecallProbability'] as num?)?.toDouble(),
+      schedulerVsFsrsGapDays: json['schedulerVsFsrsGapDays'] as int?,
+      schedulerVsFsrsRatio: (json['schedulerVsFsrsRatio'] as num?)?.toDouble(),
+      schedulerEarlierThanFsrs: json['schedulerEarlierThanFsrs'] as bool?,
     );
   }
 
@@ -215,7 +257,19 @@ class AyahReviewRecordModel extends AyahReviewRecord {
     'nextReviewDate': nextReviewDate.toIso8601String(),
     'totalReviews': totalReviews,
     'lastRating': lastRating?.index,
+    'easeFactor': easeFactor,
+    'lapses': lapses,
+    'difficulty': difficulty,
+    'stability': stability,
+    'reviewState': reviewState.index,
     'createdByMode': createdByMode.index,
+    'predictedRetrievability': predictedRetrievability,
+    'predictedFsrsIntervalDays': predictedFsrsIntervalDays,
+    'predictedFsrsDueDate': predictedFsrsDueDate?.toIso8601String(),
+    'predictedRecallProbability': predictedRecallProbability,
+    'schedulerVsFsrsGapDays': schedulerVsFsrsGapDays,
+    'schedulerVsFsrsRatio': schedulerVsFsrsRatio,
+    'schedulerEarlierThanFsrs': schedulerEarlierThanFsrs,
   };
 
   /// Promote from domain entity
@@ -229,7 +283,19 @@ class AyahReviewRecordModel extends AyahReviewRecord {
         nextReviewDate: r.nextReviewDate,
         totalReviews: r.totalReviews,
         lastRating: r.lastRating,
+        easeFactor: r.easeFactor,
+        lapses: r.lapses,
+        difficulty: r.difficulty,
+        stability: r.stability,
+        reviewState: r.reviewState,
         createdByMode: r.createdByMode,
+        predictedRetrievability: r.predictedRetrievability,
+        predictedFsrsIntervalDays: r.predictedFsrsIntervalDays,
+        predictedFsrsDueDate: r.predictedFsrsDueDate,
+        predictedRecallProbability: r.predictedRecallProbability,
+        schedulerVsFsrsGapDays: r.schedulerVsFsrsGapDays,
+        schedulerVsFsrsRatio: r.schedulerVsFsrsRatio,
+        schedulerEarlierThanFsrs: r.schedulerEarlierThanFsrs,
       );
 }
 

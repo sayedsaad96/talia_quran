@@ -33,38 +33,98 @@ const IsarAyahReviewRecordSchema = CollectionSchema(
       name: r'createdByModeIndex',
       type: IsarType.long,
     ),
-    r'intervalDays': PropertySchema(
+    r'difficulty': PropertySchema(
       id: 3,
+      name: r'difficulty',
+      type: IsarType.double,
+    ),
+    r'easeFactor': PropertySchema(
+      id: 4,
+      name: r'easeFactor',
+      type: IsarType.double,
+    ),
+    r'intervalDays': PropertySchema(
+      id: 5,
       name: r'intervalDays',
       type: IsarType.long,
     ),
+    r'lapses': PropertySchema(
+      id: 6,
+      name: r'lapses',
+      type: IsarType.long,
+    ),
     r'lastRatingIndex': PropertySchema(
-      id: 4,
+      id: 7,
       name: r'lastRatingIndex',
       type: IsarType.long,
     ),
     r'lastReviewedAt': PropertySchema(
-      id: 5,
+      id: 8,
       name: r'lastReviewedAt',
       type: IsarType.dateTime,
     ),
     r'nextReviewDate': PropertySchema(
-      id: 6,
+      id: 9,
       name: r'nextReviewDate',
       type: IsarType.dateTime,
     ),
+    r'predictedFsrsDueDate': PropertySchema(
+      id: 10,
+      name: r'predictedFsrsDueDate',
+      type: IsarType.dateTime,
+    ),
+    r'predictedFsrsIntervalDays': PropertySchema(
+      id: 11,
+      name: r'predictedFsrsIntervalDays',
+      type: IsarType.long,
+    ),
+    r'predictedRecallProbability': PropertySchema(
+      id: 12,
+      name: r'predictedRecallProbability',
+      type: IsarType.double,
+    ),
+    r'predictedRetrievability': PropertySchema(
+      id: 13,
+      name: r'predictedRetrievability',
+      type: IsarType.double,
+    ),
+    r'reviewStateIndex': PropertySchema(
+      id: 14,
+      name: r'reviewStateIndex',
+      type: IsarType.long,
+    ),
+    r'schedulerEarlierThanFsrs': PropertySchema(
+      id: 15,
+      name: r'schedulerEarlierThanFsrs',
+      type: IsarType.bool,
+    ),
+    r'schedulerVsFsrsGapDays': PropertySchema(
+      id: 16,
+      name: r'schedulerVsFsrsGapDays',
+      type: IsarType.long,
+    ),
+    r'schedulerVsFsrsRatio': PropertySchema(
+      id: 17,
+      name: r'schedulerVsFsrsRatio',
+      type: IsarType.double,
+    ),
+    r'stability': PropertySchema(
+      id: 18,
+      name: r'stability',
+      type: IsarType.double,
+    ),
     r'strengthLevel': PropertySchema(
-      id: 7,
+      id: 19,
       name: r'strengthLevel',
       type: IsarType.long,
     ),
     r'surahId': PropertySchema(
-      id: 8,
+      id: 20,
       name: r'surahId',
       type: IsarType.long,
     ),
     r'totalReviews': PropertySchema(
-      id: 9,
+      id: 21,
       name: r'totalReviews',
       type: IsarType.long,
     )
@@ -116,13 +176,25 @@ void _isarAyahReviewRecordSerialize(
   writer.writeLong(offsets[0], object.ayahNumber);
   writer.writeString(offsets[1], object.compositeKey);
   writer.writeLong(offsets[2], object.createdByModeIndex);
-  writer.writeLong(offsets[3], object.intervalDays);
-  writer.writeLong(offsets[4], object.lastRatingIndex);
-  writer.writeDateTime(offsets[5], object.lastReviewedAt);
-  writer.writeDateTime(offsets[6], object.nextReviewDate);
-  writer.writeLong(offsets[7], object.strengthLevel);
-  writer.writeLong(offsets[8], object.surahId);
-  writer.writeLong(offsets[9], object.totalReviews);
+  writer.writeDouble(offsets[3], object.difficulty);
+  writer.writeDouble(offsets[4], object.easeFactor);
+  writer.writeLong(offsets[5], object.intervalDays);
+  writer.writeLong(offsets[6], object.lapses);
+  writer.writeLong(offsets[7], object.lastRatingIndex);
+  writer.writeDateTime(offsets[8], object.lastReviewedAt);
+  writer.writeDateTime(offsets[9], object.nextReviewDate);
+  writer.writeDateTime(offsets[10], object.predictedFsrsDueDate);
+  writer.writeLong(offsets[11], object.predictedFsrsIntervalDays);
+  writer.writeDouble(offsets[12], object.predictedRecallProbability);
+  writer.writeDouble(offsets[13], object.predictedRetrievability);
+  writer.writeLong(offsets[14], object.reviewStateIndex);
+  writer.writeBool(offsets[15], object.schedulerEarlierThanFsrs);
+  writer.writeLong(offsets[16], object.schedulerVsFsrsGapDays);
+  writer.writeDouble(offsets[17], object.schedulerVsFsrsRatio);
+  writer.writeDouble(offsets[18], object.stability);
+  writer.writeLong(offsets[19], object.strengthLevel);
+  writer.writeLong(offsets[20], object.surahId);
+  writer.writeLong(offsets[21], object.totalReviews);
 }
 
 IsarAyahReviewRecord _isarAyahReviewRecordDeserialize(
@@ -135,14 +207,26 @@ IsarAyahReviewRecord _isarAyahReviewRecordDeserialize(
   object.ayahNumber = reader.readLong(offsets[0]);
   object.compositeKey = reader.readString(offsets[1]);
   object.createdByModeIndex = reader.readLongOrNull(offsets[2]);
+  object.difficulty = reader.readDoubleOrNull(offsets[3]);
+  object.easeFactor = reader.readDoubleOrNull(offsets[4]);
   object.id = id;
-  object.intervalDays = reader.readLong(offsets[3]);
-  object.lastRatingIndex = reader.readLongOrNull(offsets[4]);
-  object.lastReviewedAt = reader.readDateTime(offsets[5]);
-  object.nextReviewDate = reader.readDateTime(offsets[6]);
-  object.strengthLevel = reader.readLong(offsets[7]);
-  object.surahId = reader.readLong(offsets[8]);
-  object.totalReviews = reader.readLong(offsets[9]);
+  object.intervalDays = reader.readLong(offsets[5]);
+  object.lapses = reader.readLongOrNull(offsets[6]);
+  object.lastRatingIndex = reader.readLongOrNull(offsets[7]);
+  object.lastReviewedAt = reader.readDateTime(offsets[8]);
+  object.nextReviewDate = reader.readDateTime(offsets[9]);
+  object.predictedFsrsDueDate = reader.readDateTimeOrNull(offsets[10]);
+  object.predictedFsrsIntervalDays = reader.readLongOrNull(offsets[11]);
+  object.predictedRecallProbability = reader.readDoubleOrNull(offsets[12]);
+  object.predictedRetrievability = reader.readDoubleOrNull(offsets[13]);
+  object.reviewStateIndex = reader.readLongOrNull(offsets[14]);
+  object.schedulerEarlierThanFsrs = reader.readBoolOrNull(offsets[15]);
+  object.schedulerVsFsrsGapDays = reader.readLongOrNull(offsets[16]);
+  object.schedulerVsFsrsRatio = reader.readDoubleOrNull(offsets[17]);
+  object.stability = reader.readDoubleOrNull(offsets[18]);
+  object.strengthLevel = reader.readLong(offsets[19]);
+  object.surahId = reader.readLong(offsets[20]);
+  object.totalReviews = reader.readLong(offsets[21]);
   return object;
 }
 
@@ -160,18 +244,42 @@ P _isarAyahReviewRecordDeserializeProp<P>(
     case 2:
       return (reader.readLongOrNull(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 4:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 5:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 6:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 7:
-      return (reader.readLong(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 8:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 9:
+      return (reader.readDateTime(offset)) as P;
+    case 10:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 11:
+      return (reader.readLongOrNull(offset)) as P;
+    case 12:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 13:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 14:
+      return (reader.readLongOrNull(offset)) as P;
+    case 15:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 16:
+      return (reader.readLongOrNull(offset)) as P;
+    case 17:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 18:
+      return (reader.readDoubleOrNull(offset)) as P;
+    case 19:
+      return (reader.readLong(offset)) as P;
+    case 20:
+      return (reader.readLong(offset)) as P;
+    case 21:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -647,6 +755,174 @@ extension IsarAyahReviewRecordQueryFilter on QueryBuilder<IsarAyahReviewRecord,
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> difficultyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'difficulty',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> difficultyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'difficulty',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> difficultyEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'difficulty',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> difficultyGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'difficulty',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> difficultyLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'difficulty',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> difficultyBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'difficulty',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> easeFactorIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'easeFactor',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> easeFactorIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'easeFactor',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> easeFactorEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'easeFactor',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> easeFactorGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'easeFactor',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> easeFactorLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'easeFactor',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> easeFactorBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'easeFactor',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
       QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -750,6 +1026,80 @@ extension IsarAyahReviewRecordQueryFilter on QueryBuilder<IsarAyahReviewRecord,
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'intervalDays',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lapsesIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lapses',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lapsesIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lapses',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lapsesEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lapses',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lapsesGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lapses',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lapsesLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lapses',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> lapsesBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lapses',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -940,6 +1290,666 @@ extension IsarAyahReviewRecordQueryFilter on QueryBuilder<IsarAyahReviewRecord,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsDueDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'predictedFsrsDueDate',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsDueDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'predictedFsrsDueDate',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsDueDateEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'predictedFsrsDueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsDueDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'predictedFsrsDueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsDueDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'predictedFsrsDueDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsDueDateBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'predictedFsrsDueDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsIntervalDaysIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'predictedFsrsIntervalDays',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsIntervalDaysIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'predictedFsrsIntervalDays',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsIntervalDaysEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'predictedFsrsIntervalDays',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsIntervalDaysGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'predictedFsrsIntervalDays',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsIntervalDaysLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'predictedFsrsIntervalDays',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedFsrsIntervalDaysBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'predictedFsrsIntervalDays',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRecallProbabilityIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'predictedRecallProbability',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRecallProbabilityIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'predictedRecallProbability',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRecallProbabilityEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'predictedRecallProbability',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRecallProbabilityGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'predictedRecallProbability',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRecallProbabilityLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'predictedRecallProbability',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRecallProbabilityBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'predictedRecallProbability',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRetrievabilityIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'predictedRetrievability',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRetrievabilityIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'predictedRetrievability',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRetrievabilityEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'predictedRetrievability',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRetrievabilityGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'predictedRetrievability',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRetrievabilityLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'predictedRetrievability',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> predictedRetrievabilityBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'predictedRetrievability',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> reviewStateIndexIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'reviewStateIndex',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> reviewStateIndexIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'reviewStateIndex',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> reviewStateIndexEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'reviewStateIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> reviewStateIndexGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'reviewStateIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> reviewStateIndexLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'reviewStateIndex',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> reviewStateIndexBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'reviewStateIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerEarlierThanFsrsIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'schedulerEarlierThanFsrs',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerEarlierThanFsrsIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'schedulerEarlierThanFsrs',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerEarlierThanFsrsEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'schedulerEarlierThanFsrs',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsGapDaysIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'schedulerVsFsrsGapDays',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsGapDaysIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'schedulerVsFsrsGapDays',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsGapDaysEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'schedulerVsFsrsGapDays',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsGapDaysGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'schedulerVsFsrsGapDays',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsGapDaysLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'schedulerVsFsrsGapDays',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsGapDaysBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'schedulerVsFsrsGapDays',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsRatioIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'schedulerVsFsrsRatio',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsRatioIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'schedulerVsFsrsRatio',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsRatioEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'schedulerVsFsrsRatio',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsRatioGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'schedulerVsFsrsRatio',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsRatioLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'schedulerVsFsrsRatio',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> schedulerVsFsrsRatioBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'schedulerVsFsrsRatio',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> stabilityIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'stability',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> stabilityIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'stability',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> stabilityEqualTo(
+    double? value, {
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'stability',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> stabilityGreaterThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'stability',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> stabilityLessThan(
+    double? value, {
+    bool include = false,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'stability',
+        value: value,
+        epsilon: epsilon,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> stabilityBetween(
+    double? lower,
+    double? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    double epsilon = Query.epsilon,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'stability',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        epsilon: epsilon,
       ));
     });
   }
@@ -1164,6 +2174,34 @@ extension IsarAyahReviewRecordQuerySortBy
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByDifficulty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'difficulty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByDifficultyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'difficulty', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByEaseFactor() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'easeFactor', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByEaseFactorDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'easeFactor', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
       sortByIntervalDays() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'intervalDays', Sort.asc);
@@ -1174,6 +2212,20 @@ extension IsarAyahReviewRecordQuerySortBy
       sortByIntervalDaysDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'intervalDays', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByLapses() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lapses', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByLapsesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lapses', Sort.desc);
     });
   }
 
@@ -1216,6 +2268,132 @@ extension IsarAyahReviewRecordQuerySortBy
       sortByNextReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByPredictedFsrsDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedFsrsDueDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByPredictedFsrsDueDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedFsrsDueDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByPredictedFsrsIntervalDays() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedFsrsIntervalDays', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByPredictedFsrsIntervalDaysDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedFsrsIntervalDays', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByPredictedRecallProbability() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedRecallProbability', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByPredictedRecallProbabilityDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedRecallProbability', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByPredictedRetrievability() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedRetrievability', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByPredictedRetrievabilityDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedRetrievability', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByReviewStateIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reviewStateIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByReviewStateIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reviewStateIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortBySchedulerEarlierThanFsrs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerEarlierThanFsrs', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortBySchedulerEarlierThanFsrsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerEarlierThanFsrs', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortBySchedulerVsFsrsGapDays() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerVsFsrsGapDays', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortBySchedulerVsFsrsGapDaysDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerVsFsrsGapDays', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortBySchedulerVsFsrsRatio() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerVsFsrsRatio', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortBySchedulerVsFsrsRatioDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerVsFsrsRatio', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByStability() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'stability', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByStabilityDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'stability', Sort.desc);
     });
   }
 
@@ -1307,6 +2485,34 @@ extension IsarAyahReviewRecordQuerySortThenBy
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByDifficulty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'difficulty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByDifficultyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'difficulty', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByEaseFactor() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'easeFactor', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByEaseFactorDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'easeFactor', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
       thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1331,6 +2537,20 @@ extension IsarAyahReviewRecordQuerySortThenBy
       thenByIntervalDaysDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'intervalDays', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByLapses() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lapses', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByLapsesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lapses', Sort.desc);
     });
   }
 
@@ -1373,6 +2593,132 @@ extension IsarAyahReviewRecordQuerySortThenBy
       thenByNextReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByPredictedFsrsDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedFsrsDueDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByPredictedFsrsDueDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedFsrsDueDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByPredictedFsrsIntervalDays() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedFsrsIntervalDays', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByPredictedFsrsIntervalDaysDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedFsrsIntervalDays', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByPredictedRecallProbability() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedRecallProbability', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByPredictedRecallProbabilityDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedRecallProbability', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByPredictedRetrievability() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedRetrievability', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByPredictedRetrievabilityDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'predictedRetrievability', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByReviewStateIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reviewStateIndex', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByReviewStateIndexDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'reviewStateIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenBySchedulerEarlierThanFsrs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerEarlierThanFsrs', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenBySchedulerEarlierThanFsrsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerEarlierThanFsrs', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenBySchedulerVsFsrsGapDays() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerVsFsrsGapDays', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenBySchedulerVsFsrsGapDaysDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerVsFsrsGapDays', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenBySchedulerVsFsrsRatio() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerVsFsrsRatio', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenBySchedulerVsFsrsRatioDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'schedulerVsFsrsRatio', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByStability() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'stability', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByStabilityDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'stability', Sort.desc);
     });
   }
 
@@ -1443,9 +2789,30 @@ extension IsarAyahReviewRecordQueryWhereDistinct
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctByDifficulty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'difficulty');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctByEaseFactor() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'easeFactor');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
       distinctByIntervalDays() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'intervalDays');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctByLapses() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lapses');
     });
   }
 
@@ -1467,6 +2834,69 @@ extension IsarAyahReviewRecordQueryWhereDistinct
       distinctByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'nextReviewDate');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctByPredictedFsrsDueDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'predictedFsrsDueDate');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctByPredictedFsrsIntervalDays() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'predictedFsrsIntervalDays');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctByPredictedRecallProbability() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'predictedRecallProbability');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctByPredictedRetrievability() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'predictedRetrievability');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctByReviewStateIndex() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'reviewStateIndex');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctBySchedulerEarlierThanFsrs() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'schedulerEarlierThanFsrs');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctBySchedulerVsFsrsGapDays() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'schedulerVsFsrsGapDays');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctBySchedulerVsFsrsRatio() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'schedulerVsFsrsRatio');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctByStability() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'stability');
     });
   }
 
@@ -1521,10 +2951,30 @@ extension IsarAyahReviewRecordQueryProperty on QueryBuilder<
     });
   }
 
+  QueryBuilder<IsarAyahReviewRecord, double?, QQueryOperations>
+      difficultyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'difficulty');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, double?, QQueryOperations>
+      easeFactorProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'easeFactor');
+    });
+  }
+
   QueryBuilder<IsarAyahReviewRecord, int, QQueryOperations>
       intervalDaysProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'intervalDays');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, int?, QQueryOperations> lapsesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lapses');
     });
   }
 
@@ -1546,6 +2996,69 @@ extension IsarAyahReviewRecordQueryProperty on QueryBuilder<
       nextReviewDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nextReviewDate');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, DateTime?, QQueryOperations>
+      predictedFsrsDueDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'predictedFsrsDueDate');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, int?, QQueryOperations>
+      predictedFsrsIntervalDaysProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'predictedFsrsIntervalDays');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, double?, QQueryOperations>
+      predictedRecallProbabilityProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'predictedRecallProbability');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, double?, QQueryOperations>
+      predictedRetrievabilityProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'predictedRetrievability');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, int?, QQueryOperations>
+      reviewStateIndexProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'reviewStateIndex');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, bool?, QQueryOperations>
+      schedulerEarlierThanFsrsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'schedulerEarlierThanFsrs');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, int?, QQueryOperations>
+      schedulerVsFsrsGapDaysProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'schedulerVsFsrsGapDays');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, double?, QQueryOperations>
+      schedulerVsFsrsRatioProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'schedulerVsFsrsRatio');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, double?, QQueryOperations>
+      stabilityProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'stability');
     });
   }
 

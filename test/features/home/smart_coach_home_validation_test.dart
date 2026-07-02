@@ -13,6 +13,8 @@ import 'package:talia_quran/core/services/achievement_service.dart';
 import 'package:talia_quran/core/services/app_session_service.dart';
 import 'package:talia_quran/core/services/xp_service.dart';
 import 'package:talia_quran/core/theme/theme_cubit.dart';
+import 'package:talia_quran/core/journey/journey_feature_flags.dart';
+import 'package:talia_quran/core/journey/unified_journey_action.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:talia_quran/features/home/presentation/cubits/home_cubit.dart';
@@ -40,6 +42,7 @@ void main() {
   });
 
   tearDown(() async {
+    JourneyFeatureFlags.unifiedJourneyEnabled = false;
     await getIt.reset();
   });
 
@@ -62,7 +65,7 @@ void main() {
       await _pumpHome(tester);
       await tester.pumpAndSettle();
 
-      expect(find.text('Continue Today\'s Plan'), findsOneWidget);
+      expect(find.text('Resume where you left off'), findsOneWidget);
       expect(find.text('Review before new content'), findsNothing);
       expect(find.text('Resume'), findsOneWidget);
     });
@@ -86,7 +89,7 @@ void main() {
       await _pumpHome(tester);
       await tester.pumpAndSettle();
 
-      expect(find.text('Continue Today\'s Plan'), findsOneWidget);
+      expect(find.text('Resume where you left off'), findsOneWidget);
       expect(find.text('Retention review due'), findsNothing);
       expect(find.text('Resume'), findsOneWidget);
     });
@@ -232,6 +235,47 @@ void main() {
         find.textContaining('Near revision due in Surah Al-Mulk'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('Hero Card Parity Test - Resume Session (Adults, Surah)', (tester) async {
+      final state = _homeLoaded(
+        lastRestorableLocation: '/quran/surah/2',
+      );
+
+      // 1. Test Legacy Parity
+      JourneyFeatureFlags.unifiedJourneyEnabled = false;
+      await _registerHome(state);
+      await _pumpHome(tester, locale: const Locale('en'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Continue Surah Al-Baqarah'), findsOneWidget);
+      expect(find.text('Last saved reading'), findsOneWidget);
+
+      // 2. Test Unified Parity
+      JourneyFeatureFlags.unifiedJourneyEnabled = true;
+      
+      // We also need to inject a unified action for this test since our static cubit doesn't evaluate the engine.
+      final unifiedState = state.copyWith(
+        heroAction: const UnifiedJourneyAction(
+          title: 'Resume Session', // The raw engine output
+          subtitle: 'Continue where you left off',
+          route: '/quran/surah/2',
+          priority: UnifiedJourneyPriority.p1ActiveSession,
+          source: 'AppSessionService',
+          actionType: UnifiedJourneyActionType.resumeSession,
+          intent: JourneyIntent.resume,
+          metadata: {'pathSegment2': '2'},
+        ),
+      );
+
+      await getIt.reset();
+      await _registerHome(unifiedState);
+      await _pumpHome(tester, locale: const Locale('en'));
+      await tester.pumpAndSettle();
+
+      // Should be identically transformed by the mapper!
+      expect(find.text('Continue Surah Al-Baqarah'), findsOneWidget);
+      expect(find.text('Last saved reading'), findsOneWidget);
     });
 
     testWidgets('renders Arabic Smart Coach copy without exceptions', (
@@ -415,6 +459,58 @@ void main() {
       expect(find.text('Review before new content'), findsOneWidget);
     });
   });
+
+  group('Feature Flag tests', () {
+    testWidgets('UnifiedHeroActionCard does not render when flag OFF', (tester) async {
+      JourneyFeatureFlags.unifiedJourneyEnabled = false;
+      
+      final state = _homeLoaded(
+        lastRestorableLocation: '${AppRoutes.memorizationV2Session}?surahId=2',
+      ).copyWith(
+        heroAction: const UnifiedJourneyAction(
+          priority: UnifiedJourneyPriority.p2CriticalAlert,
+          intent: JourneyIntent.resume,
+          title: 'Unified Title',
+          subtitle: 'Unified Subtitle',
+          route: '/route',
+          source: 'Test',
+          actionType: UnifiedJourneyActionType.criticalAlert,
+        ),
+      );
+      await _registerHome(state);
+
+      await _pumpHome(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unified Title'), findsNothing);
+      expect(find.text('Resume'), findsOneWidget); // Legacy ResumeSessionCard
+    });
+
+    testWidgets('UnifiedHeroActionCard renders when flag ON', (tester) async {
+      JourneyFeatureFlags.unifiedJourneyEnabled = true;
+      
+      final state = _homeLoaded(
+        lastRestorableLocation: '${AppRoutes.memorizationV2Session}?surahId=2',
+      ).copyWith(
+        heroAction: const UnifiedJourneyAction(
+          priority: UnifiedJourneyPriority.p2CriticalAlert,
+          intent: JourneyIntent.resume,
+          title: 'Unified Title',
+          subtitle: 'Unified Subtitle',
+          route: '/route',
+          source: 'Test',
+          actionType: UnifiedJourneyActionType.criticalAlert,
+        ),
+      );
+      await _registerHome(state);
+
+      await _pumpHome(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Unified Title'), findsOneWidget);
+      expect(find.text('Resume'), findsNothing); // Legacy hidden
+    });
+  });
 }
 
 SmartCoachRecommendation _coach({
@@ -460,6 +556,8 @@ Future<void> _registerHome(HomeLoaded state) async {
   getIt.registerSingleton<MemorizationPlusRepository>(
     _NoopMemorizationPlusRepository(),
   );
+  getIt.registerFactory<AuthCubit>(() => _FakeAuthCubit(false));
+  getIt.registerFactory<ProfileCubit>(() => _FakeProfileCubit());
   getIt.registerFactory<HomeCubit>(() => _StaticHomeCubit(state));
   getIt.registerFactory<StreakCubit>(
     () => _FakeStreakCubit(
@@ -503,12 +601,12 @@ Future<void> _pumpHome(
     routes: [
       GoRoute(path: AppRoutes.home, builder: (_, _) => const HomePage()),
       GoRoute(
-        path: AppRoutes.memorizationV2Session,
+        path: '/memorization-plus/daily-plan',
         builder: (_, _) =>
             const Scaffold(body: Center(child: Text('coach-nav-daily-plan'))),
       ),
       GoRoute(
-        path: AppRoutes.memorizationV2Session,
+        path: '/memorization-plus/quiz',
         builder: (_, _) =>
             const Scaffold(body: Center(child: Text('coach-nav-quiz'))),
       ),

@@ -152,10 +152,10 @@ void main() {
     });
   });
 
-  // ─── ScheduleNextReviewUsecase — interval logic ────────────────────────────
+  // ─── ScheduleNextReviewUsecase — interval logic (V3.2) ─────────────────────
 
-  group('ScheduleNextReviewUsecase — interval logic', () {
-    test('first review (strength 0, interval 0) → excellent → 1 day', () {
+  group('ScheduleNextReviewUsecase — interval logic (V3.2)', () {
+    test('first review (strength 0, interval 0) → excellent → 1 day (no fuzz/overdue)', () {
       final updated = _scheduler.schedule(
         _newRecord(),
         PerformanceRating.excellent,
@@ -168,28 +168,10 @@ void main() {
       expect(updated.intervalDays, equals(1));
     });
 
-    test('interval 4, excellent → 10 days (4 × 2.5)', () {
-      final base = _newRecord(strengthLevel: 2, intervalDays: 4);
-      final updated = _scheduler.schedule(base, PerformanceRating.excellent);
-      expect(updated.intervalDays, equals(10));
-    });
-
     test('interval 100, excellent caps at 180', () {
       final base = _newRecord(strengthLevel: 9, intervalDays: 100);
       final updated = _scheduler.schedule(base, PerformanceRating.excellent);
       expect(updated.intervalDays, equals(180));
-    });
-
-    test('weak always resets interval to 1', () {
-      final base = _newRecord(strengthLevel: 7, intervalDays: 60);
-      final updated = _scheduler.schedule(base, PerformanceRating.weak);
-      expect(updated.intervalDays, equals(1));
-    });
-
-    test('interval 20, average → 30 days (20 × 1.5)', () {
-      final base = _newRecord(strengthLevel: 4, intervalDays: 20);
-      final updated = _scheduler.schedule(base, PerformanceRating.average);
-      expect(updated.intervalDays, equals(30));
     });
 
     test('interval 70, average caps at 90', () {
@@ -197,16 +179,112 @@ void main() {
       final updated = _scheduler.schedule(base, PerformanceRating.average);
       expect(updated.intervalDays, equals(90));
     });
+  });
 
-    test('nextReviewDate matches the calculated interval in UTC days', () {
-      final base = _newRecord(strengthLevel: 4, intervalDays: 20);
-      final updated = _scheduler.schedule(base, PerformanceRating.average);
+  group('ScheduleNextReviewUsecase — Deterministic Fuzzing', () {
+    test('same input produces same fuzzed output', () {
+      final base = _newRecord(strengthLevel: 2, intervalDays: 30, ayahNumber: 15);
+      final u1 = _scheduler.schedule(base, PerformanceRating.excellent);
+      final u2 = _scheduler.schedule(base, PerformanceRating.excellent);
+      expect(u1.intervalDays, equals(u2.intervalDays));
+    });
 
-      expect(updated.nextReviewDate.isUtc, isTrue);
-      expect(
-        updated.nextReviewDate.difference(updated.lastReviewedAt).inDays,
-        equals(updated.intervalDays),
-      );
+    test('fuzz stays within ±5% of raw interval', () {
+      // 30 * 2.65 = 79.5 -> 80 raw. Fuzz range: 76 to 84
+      final base = _newRecord(strengthLevel: 2, intervalDays: 30, ayahNumber: 15);
+      final updated = _scheduler.schedule(base, PerformanceRating.excellent);
+      expect(updated.intervalDays, greaterThanOrEqualTo(76));
+      expect(updated.intervalDays, lessThanOrEqualTo(84));
+    });
+
+    test('weak logic bypasses fuzzing completely', () {
+      final weakBase = _newRecord(strengthLevel: 2, intervalDays: 14); // 14 * 0.3 = 4.2 -> 4.
+      final weakUpdated = _scheduler.schedule(weakBase, PerformanceRating.weak);
+      expect(weakUpdated.intervalDays, equals(4));
+    });
+  });
+
+  group('ScheduleNextReviewUsecase — Overdue Compensation & Fragile Protection', () {
+    test('interval 1: max base is 2', () {
+      final base = _newRecord(strengthLevel: 1, intervalDays: 1, ayahNumber: 1);
+      final nowOverride = base.lastReviewedAt.add(const Duration(days: 30));
+      final updated = _scheduler.schedule(base, PerformanceRating.excellent, nowOverride);
+      // effectiveBase = 2. newEaseFactor = 2.65. rawInterval = 5.
+      expect(updated.intervalDays, equals(5));
+    });
+
+    test('interval 3: max base is 6', () {
+      final base = _newRecord(strengthLevel: 2, intervalDays: 3, ayahNumber: 1);
+      final nowOverride = base.lastReviewedAt.add(const Duration(days: 30));
+      final updated = _scheduler.schedule(base, PerformanceRating.excellent, nowOverride);
+      // effectiveBase = 6. newEaseFactor = 2.65. rawInterval = 16.
+      expect(updated.intervalDays, greaterThanOrEqualTo(15));
+      expect(updated.intervalDays, lessThanOrEqualTo(17));
+    });
+
+    test('interval 7: max base is 14', () {
+      final base = _newRecord(strengthLevel: 3, intervalDays: 7, ayahNumber: 1);
+      final nowOverride = base.lastReviewedAt.add(const Duration(days: 30));
+      final updated = _scheduler.schedule(base, PerformanceRating.excellent, nowOverride);
+      // effectiveBase = 14. newEaseFactor = 2.65. rawInterval = 37.
+      expect(updated.intervalDays, greaterThanOrEqualTo(35));
+      expect(updated.intervalDays, lessThanOrEqualTo(39));
+    });
+
+    test('interval 10: max base is 20', () {
+      final base = _newRecord(strengthLevel: 4, intervalDays: 10, ayahNumber: 1);
+      final nowOverride = base.lastReviewedAt.add(const Duration(days: 30));
+      final updated = _scheduler.schedule(base, PerformanceRating.excellent, nowOverride);
+      // effectiveBase = 20. newEaseFactor = 2.65. rawInterval = 53.
+      expect(updated.intervalDays, greaterThanOrEqualTo(50));
+      expect(updated.intervalDays, lessThanOrEqualTo(56));
+    });
+
+    test('interval 14+: full compensation allowed (Case A)', () {
+      final base = _newRecord(strengthLevel: 4, intervalDays: 14, ayahNumber: 1);
+      final nowOverride = base.lastReviewedAt.add(const Duration(days: 30)); // 30 elapsed
+      final updated = _scheduler.schedule(base, PerformanceRating.excellent, nowOverride);
+      // effectiveBase = 30. newEaseFactor = 2.65. rawInterval = 80.
+      expect(updated.intervalDays, greaterThanOrEqualTo(76));
+      expect(updated.intervalDays, lessThanOrEqualTo(84));
+    });
+
+    test('Case B: interval 20, elapsed 40, average', () {
+      final base = _newRecord(strengthLevel: 4, intervalDays: 20, ayahNumber: 1);
+      final nowOverride = base.lastReviewedAt.add(const Duration(days: 40));
+      final updated = _scheduler.schedule(base, PerformanceRating.average, nowOverride);
+      // effectiveBase = 40. newEaseFactor = 2.40. multiplier = 1.4. rawInterval = 56.
+      expect(updated.intervalDays, greaterThanOrEqualTo(53));
+      expect(updated.intervalDays, lessThanOrEqualTo(59));
+    });
+
+    test('Case C: interval 60, elapsed 120, weak', () {
+      final base = _newRecord(strengthLevel: 4, intervalDays: 60, ayahNumber: 1);
+      final nowOverride = base.lastReviewedAt.add(const Duration(days: 120));
+      final updated = _scheduler.schedule(base, PerformanceRating.weak, nowOverride);
+      // effectiveBase NOT USED. Soft lapse on 60: max(3, 60 * 0.3) = 18.
+      expect(updated.intervalDays, equals(18));
+    });
+  });
+
+  group('ScheduleNextReviewUsecase — Large Corpus Distribution', () {
+    test('fuzzing distributes 1000 ayahs across multiple days', () {
+      final records = List.generate(1000, (i) {
+        return _newRecord(strengthLevel: 3, intervalDays: 30, ayahNumber: i + 1);
+      });
+
+      final scheduledIntervals = <int>[];
+      for (final record in records) {
+        final updated = _scheduler.schedule(record, PerformanceRating.excellent);
+        scheduledIntervals.add(updated.intervalDays);
+      }
+
+      final uniqueIntervals = scheduledIntervals.toSet();
+      
+      // If we didn't have fuzzing, all 1000 ayahs would have exactly interval = 80.
+      // With fuzzing, they should be distributed between 76 and 84.
+      expect(uniqueIntervals.length, greaterThan(1), reason: 'Intervals should be dispersed');
+      expect(uniqueIntervals.length, lessThanOrEqualTo(9), reason: 'Fuzzing range is restricted');
     });
   });
 

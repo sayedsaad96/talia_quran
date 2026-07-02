@@ -5172,6 +5172,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'حدث خطأ: {error}'**
   String quizUnexpectedError(String error);
+
+  /// No description provided for @homeContinueTodaysPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل خطة اليوم'**
+  String get homeContinueTodaysPlan;
+
+  /// No description provided for @homeCurrentMission.
+  ///
+  /// In ar, this message translates to:
+  /// **'المهمة الحالية'**
+  String get homeCurrentMission;
+
+  /// No description provided for @homeStartKidsMission.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ مهمة الطفل الحالية.'**
+  String get homeStartKidsMission;
+
+  /// No description provided for @homeChooseKidsPath.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر مسار الطفل أو تابع المهمة الحالية.'**
+  String get homeChooseKidsPath;
+
+  /// No description provided for @homeTodaysPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطة اليوم'**
+  String get homeTodaysPlan;
 }
 
 class _AppLocalizationsDelegate

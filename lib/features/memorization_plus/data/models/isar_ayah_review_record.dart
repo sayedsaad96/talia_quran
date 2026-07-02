@@ -22,6 +22,12 @@ class IsarAyahReviewRecord {
 
   int? lastRatingIndex;
 
+  /// SM-2 derived multiplier for the next interval
+  double? easeFactor;
+
+  /// Number of times this ayah was rated as weak after being reviewed
+  int? lapses;
+
   /// Source metadata added in Sprint 7B.
   ///
   /// Stores [ReviewRecordCreatedByMode.index].  Records written before this
@@ -29,6 +35,31 @@ class IsarAyahReviewRecord {
   /// [ReviewRecordCreatedByMode.unknown].  No Isar migration is required —
   /// Isar treats a new nullable field on existing documents as `null`.
   int? createdByModeIndex;
+
+  /// FSRS: Current difficulty level
+  double? difficulty;
+
+  /// FSRS: Memory stability (in days)
+  double? stability;
+
+  /// FSRS: Current state of the card
+  int? reviewStateIndex;
+
+  /// FSRS: Shadow predicted retrievability
+  double? predictedRetrievability;
+
+  /// FSRS: Shadow predicted interval
+  int? predictedFsrsIntervalDays;
+
+  /// FSRS: Shadow predicted next review date
+  DateTime? predictedFsrsDueDate;
+
+  /// FSRS: Future shadow probability of recall
+  double? predictedRecallProbability;
+
+  int? schedulerVsFsrsGapDays;
+  double? schedulerVsFsrsRatio;
+  bool? schedulerEarlierThanFsrs;
 
   AyahReviewRecordModel toModel() {
     return AyahReviewRecordModel(
@@ -51,6 +82,23 @@ class IsarAyahReviewRecord {
               createdByModeIndex! >= ReviewRecordCreatedByMode.values.length
           ? ReviewRecordCreatedByMode.unknown
           : ReviewRecordCreatedByMode.values[createdByModeIndex!],
+      easeFactor: easeFactor ?? 2.5,
+      lapses: lapses ?? 0,
+      difficulty: difficulty ?? 5.0,
+      stability: stability ?? 0.0,
+      reviewState:
+          reviewStateIndex == null ||
+              reviewStateIndex! < 0 ||
+              reviewStateIndex! >= ReviewState.values.length
+          ? ReviewState.newCard
+          : ReviewState.values[reviewStateIndex!],
+      predictedRetrievability: predictedRetrievability,
+      predictedFsrsIntervalDays: predictedFsrsIntervalDays,
+      predictedFsrsDueDate: predictedFsrsDueDate,
+      predictedRecallProbability: predictedRecallProbability,
+      schedulerVsFsrsGapDays: schedulerVsFsrsGapDays,
+      schedulerVsFsrsRatio: schedulerVsFsrsRatio,
+      schedulerEarlierThanFsrs: schedulerEarlierThanFsrs,
     );
   }
 
@@ -65,6 +113,18 @@ class IsarAyahReviewRecord {
       ..nextReviewDate = model.nextReviewDate
       ..totalReviews = model.totalReviews
       ..lastRatingIndex = model.lastRating?.index
-      ..createdByModeIndex = model.createdByMode.index;
+      ..easeFactor = model.easeFactor
+      ..lapses = model.lapses
+      ..difficulty = model.difficulty
+      ..stability = model.stability
+      ..reviewStateIndex = model.reviewState.index
+      ..createdByModeIndex = model.createdByMode.index
+      ..predictedRetrievability = model.predictedRetrievability
+      ..predictedFsrsIntervalDays = model.predictedFsrsIntervalDays
+      ..predictedFsrsDueDate = model.predictedFsrsDueDate
+      ..predictedRecallProbability = model.predictedRecallProbability
+      ..schedulerVsFsrsGapDays = model.schedulerVsFsrsGapDays
+      ..schedulerVsFsrsRatio = model.schedulerVsFsrsRatio
+      ..schedulerEarlierThanFsrs = model.schedulerEarlierThanFsrs;
   }
 }

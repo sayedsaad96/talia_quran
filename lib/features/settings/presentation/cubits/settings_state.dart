@@ -27,8 +27,18 @@ class SettingsState extends Equatable {
   final String? appVersion;
   final String? appBuildNumber;
 
+  bool get isAdultPath {
+    return selectedTrack == 'adults' ||
+        memorizationProfile?.selectedPath == MemorizationPath.adult;
+  }
+
+  bool get isKidsPath {
+    return selectedTrack == 'kids' ||
+        memorizationProfile?.selectedPath == MemorizationPath.child;
+  }
+
   bool get shouldShowParentSection {
-    return selectedTrack == 'adults' && isParentMode;
+    return isAdultPath && isParentMode;
   }
 
   SettingsState copyWith({

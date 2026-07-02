@@ -89,9 +89,9 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon/icon.png"
+  image_path: "assets/images/logo_new.png"
   adaptive_icon_background: "#061811" # لون أخضر داكن جداً يطابق خلفية الشعار
-  adaptive_icon_foreground: "assets/icon/icon.png"
+  adaptive_icon_foreground: "assets/images/logo_new.png"
 
 flutter_native_splash:
   color: "#ffffff"
@@ -120,6 +120,7 @@ flutter:
     - assets/fonts/
     - assets/images/
     - assets/images/kids/
+    - assets/images/onboarding/
     
 
   # An image asset can refer to one or more resolution-specific "variants", see

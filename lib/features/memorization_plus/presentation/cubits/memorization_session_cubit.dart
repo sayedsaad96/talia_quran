@@ -136,12 +136,18 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     required V2SessionReviewAdapter reviewAdapter,
     required V2SessionProgressAdapter progressAdapter,
     required V2SessionGamificationAdapter gamificationAdapter,
+    AudioPlayer? audioPlayer,
+    SpeechToText? speechToText,
+    AudioCacheService? audioCacheService,
   }) : _quranRepo = quranRepository,
        _memRepo = memorizationRepository,
        _engine = sessionEngine,
        _reviewAdapter = reviewAdapter,
        _progressAdapter = progressAdapter,
        _gamificationAdapter = gamificationAdapter,
+       _player = audioPlayer ?? AudioPlayer(),
+       _speechToText = speechToText ?? SpeechToText(),
+       _audioCache = audioCacheService ?? AudioCacheService.instance,
        super(const MSInitial()) {
     _initSpeech();
     _playerStateSub = _player.playerStateStream.listen((playerState) {
@@ -162,7 +168,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
 
   // ── STT ──────────────────────────────────────────────────────────────────
 
-  final SpeechToText _speechToText = SpeechToText();
+  final SpeechToText _speechToText;
   bool _speechEnabled = false;
 
   Future<void> _initSpeech() async {
@@ -198,7 +204,8 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
 
   // ── Audio ────────────────────────────────────────────────────────────────
 
-  final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer _player;
+  final AudioCacheService _audioCache;
   StreamSubscription<PlayerState>? _playerStateSub;
 
   // ── Session lifecycle ────────────────────────────────────────────────────
@@ -427,7 +434,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
 
     final ayah = st.sessionState.currentAyah;
     try {
-      final audioSource = await AudioCacheService.instance.getAudioSource(
+      final audioSource = await _audioCache.getAudioSource(
         st.sessionState.surahId,
         ayah.numberInSurah,
       );
@@ -552,7 +559,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   /// Prefetches audio for all ayahs in the block.
   Future<void> _prefetchBlockAudio(int surahId, List<Ayah> blockAyahs) async {
     final numbers = blockAyahs.map((a) => a.numberInSurah).toList();
-    await AudioCacheService.instance.prefetchSession(
+    await _audioCache.prefetchSession(
       surahId: surahId,
       ayahNumbers: numbers,
     );

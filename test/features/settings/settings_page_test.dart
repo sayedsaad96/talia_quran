@@ -377,6 +377,7 @@ Future<_FakeMemorizationRepository> _registerSettingsDependencies({
       getIt<MemorizationPlusRepository>(),
       getIt<SharedPreferences>(),
       getIt<MemorizationPathResolver>(),
+      getIt<AppVersionInfoProvider>(),
     ),
   );
 
@@ -531,6 +532,9 @@ class _FakeAuthRepository implements AuthRepository {
     _user = null;
     return const Right(unit);
   }
+
+  @override
+  Future<Either<Failure, Unit>> pullProgressFromCloud() async => const Right(unit);
 
   Future<void> dispose() async {
     await _authController.close();

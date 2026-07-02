@@ -115,7 +115,7 @@ class _HeroHeader extends StatelessWidget {
                       ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
                       const SizedBox(width: 8),
                       Image.asset(
-                        'assets/images/logo.png',
+                        'assets/images/logo_new.png',
                         width: 32,
                         height: 32,
                       ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
@@ -1262,17 +1262,15 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
 
     if (widget.isKids) {
       return (
-        context.isArabic ? 'المهمة الحالية' : 'Current Mission',
-        context.isArabic
-            ? 'ابدأ مهمة الطفل الحالية.'
-            : "Start the child's current mission.",
+        context.l10n.homeCurrentMission,
+        context.l10n.homeStartKidsMission,
         Icons.star_rounded,
         AppRoutes.memorizationHub,
       );
     }
     if (widget.state.customPlan != null) {
       return (
-        context.isArabic ? 'أكمل خطة اليوم' : "Continue Today's Plan",
+        context.l10n.homeContinueTodaysPlan,
         context.l10n.planReadySmallStep,
         Icons.psychology_alt_rounded,
         AppRoutes.memorizationHub,
@@ -1296,16 +1294,14 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
     }
     if (_goal == 'child') {
       return (
-        context.isArabic ? 'المهمة الحالية' : 'Current Mission',
-        context.isArabic
-            ? 'اختر مسار الطفل أو تابع المهمة الحالية.'
-            : 'Choose the kids path or continue the current mission.',
+        context.l10n.homeCurrentMission,
+        context.l10n.homeChooseKidsPath,
         Icons.auto_stories_rounded,
         AppRoutes.memorizationHub,
       );
     }
     return (
-      context.isArabic ? 'خطة اليوم' : "Today's Plan",
+      context.l10n.homeTodaysPlan,
       context.l10n.chooseReadingOrMemorization,
       Icons.auto_awesome_rounded,
       AppRoutes.memorizationHub,

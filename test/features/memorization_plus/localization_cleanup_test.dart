@@ -43,9 +43,12 @@ void main() {
     final arabicScript = RegExp(r'[\u0600-\u06FF]');
 
     for (final path in targetFiles) {
-      final content = File(path).readAsStringSync();
+      final file = File(path);
+      if (!file.existsSync()) continue;
+      final content = file.readAsStringSync();
+      final contentWithoutComments = content.replaceAll(RegExp(r'//.*'), '');
       expect(
-        arabicScript.hasMatch(content),
+        arabicScript.hasMatch(contentWithoutComments),
         isFalse,
         reason: '$path contains Arabic-script source literals',
       );

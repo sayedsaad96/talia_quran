@@ -1,19 +1,24 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/memorization/memorization_path_resolver.dart';
+import '../../../../core/services/app_version_service.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'settings_state.dart';
 
 class SettingsCubit extends Cubit<SettingsState> {
-  SettingsCubit(this._repository, this._prefs, this._pathResolver)
-    : super(const SettingsState());
+  SettingsCubit(
+    this._repository,
+    this._prefs,
+    this._pathResolver,
+    this._versionInfoProvider,
+  ) : super(const SettingsState());
 
   final MemorizationPlusRepository _repository;
   final SharedPreferences _prefs;
   final MemorizationPathResolver _pathResolver;
+  final AppVersionInfoProvider _versionInfoProvider;
 
   Future<void> load({bool showPathResetSuccess = false}) async {
     emit(
@@ -30,7 +35,7 @@ class SettingsCubit extends Cubit<SettingsState> {
     String? version;
     String? buildNumber;
     try {
-      final info = await PackageInfo.fromPlatform();
+      final info = await _versionInfoProvider.getVersionInfo();
       version = info.version.trim().isEmpty ? null : info.version.trim();
       buildNumber = info.buildNumber.trim().isEmpty ? null : info.buildNumber.trim();
     } catch (_) {

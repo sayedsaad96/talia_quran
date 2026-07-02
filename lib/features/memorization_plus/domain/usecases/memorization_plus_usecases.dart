@@ -1,8 +1,16 @@
+import 'dart:math' as math;
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/utils/usecase.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/memorization_plus_repository.dart';
+
+export 'adaptive_recommendations_usecase.dart';
+export 'fsrs_agreement_usecase.dart';
+export 'leech_analysis_usecase.dart';
+export 'migration_readiness_usecase.dart';
+export 'retention_insights_usecase.dart';
+export 'review_workload_insights_usecase.dart';
 
 // ─── Memorization identity use-cases ─────────────────────────────────────────
 
@@ -162,29 +170,64 @@ class MarkAyahMemorizedUsecase
 class ScheduleNextReviewUsecase {
   const ScheduleNextReviewUsecase();
 
-  AyahReviewRecord schedule(AyahReviewRecord record, PerformanceRating rating) {
+  int _applyFuzz(int interval, int ayahNumber) {
+    if (interval <= 2) return interval;
+    final random = math.Random(ayahNumber + interval);
+    final multiplier = 0.95 + (random.nextDouble() * 0.10);
+    return (interval * multiplier).round();
+  }
+
+  AyahReviewRecord schedule(
+    AyahReviewRecord record,
+    PerformanceRating rating, [
+    DateTime? nowOverride,
+  ]) {
     // UTC: all SM-2 scheduling dates must be UTC for cross-timezone consistency.
-    final now = DateTime.now().toUtc();
+    final now = nowOverride ?? DateTime.now().toUtc();
     final int newStrength;
-    final int newInterval;
+    int newInterval;
+    double newEaseFactor = record.easeFactor;
+    int newLapses = record.lapses;
+
+    // Overdue Compensation Logic
+    final actualElapsedDays = now.difference(record.lastReviewedAt).inDays;
+    int effectiveBase;
+
+    if (record.intervalDays < 14) {
+      final maxAllowedBase = record.intervalDays * 2;
+      effectiveBase = math.min(actualElapsedDays, maxAllowedBase);
+      effectiveBase = math.max(record.intervalDays, effectiveBase);
+    } else {
+      effectiveBase = math.max(record.intervalDays, actualElapsedDays);
+    }
 
     switch (rating) {
       case PerformanceRating.excellent:
         newStrength = (record.strengthLevel + 1).clamp(0, 10);
-        // Aggressively space out: current interval * 2.5 (min 1 day)
-        newInterval = record.strengthLevel == 0
-            ? 1
-            : (record.intervalDays * 2.5).round().clamp(1, 180);
+        newEaseFactor = (record.easeFactor + 0.15).clamp(1.3, 3.3);
+        if (record.strengthLevel == 0) {
+          newInterval = 1;
+        } else {
+          final int rawInterval = (effectiveBase * newEaseFactor).round();
+          newInterval = _applyFuzz(rawInterval, record.ayahNumber).clamp(1, 180);
+        }
       case PerformanceRating.average:
         newStrength = record.strengthLevel; // no change
-        // Moderate spacing: current interval * 1.5
-        newInterval = record.strengthLevel == 0
-            ? 1
-            : (record.intervalDays * 1.5).round().clamp(1, 90);
+        newEaseFactor = (record.easeFactor - 0.10).clamp(1.3, 3.3);
+        if (record.strengthLevel == 0) {
+          newInterval = 1;
+        } else {
+          final int rawInterval = (effectiveBase * math.max(1.2, newEaseFactor - 1.0)).round();
+          newInterval = _applyFuzz(rawInterval, record.ayahNumber).clamp(1, 90);
+        }
       case PerformanceRating.weak:
         newStrength = (record.strengthLevel - 1).clamp(0, 10);
-        // Reset to 1 day — review tomorrow
-        newInterval = 1;
+        newEaseFactor = (record.easeFactor - 0.20).clamp(1.3, 3.3);
+        newLapses = record.lapses + 1;
+        // Soft lapse based on interval size (Overdue compensation not applied to weak)
+        newInterval = record.intervalDays <= 7
+            ? math.max(1, (record.intervalDays * 0.5).round())
+            : math.max(3, (record.intervalDays * 0.3).round());
     }
 
     return record.copyWith(
@@ -194,10 +237,123 @@ class ScheduleNextReviewUsecase {
       nextReviewDate: now.add(Duration(days: newInterval)),
       totalReviews: record.totalReviews + 1,
       lastRating: rating,
+      easeFactor: newEaseFactor,
+      lapses: newLapses,
     );
   }
 }
 
+// ─── FsrsStateTrackerUsecase (V3.3 Preparation) ──────────────────────────────
+
+/// Passive state tracking for future FSRS adoption.
+class FsrsStateTrackerUsecase {
+  const FsrsStateTrackerUsecase();
+
+  AyahReviewRecord update(
+    AyahReviewRecord record,
+    PerformanceRating rating, [
+    DateTime? nowOverride,
+  ]) {
+    final now = nowOverride ?? DateTime.now().toUtc();
+    
+    // Difficulty Tracking
+    double newDifficulty = record.difficulty;
+    if (rating == PerformanceRating.excellent) {
+      newDifficulty -= 0.05;
+    } else if (rating == PerformanceRating.weak) {
+      newDifficulty += 0.10;
+    }
+    newDifficulty = newDifficulty.clamp(1.0, 10.0);
+
+    // Stability Tracking (Using actual elapsed days)
+    final actualElapsedDays = math.max(0, now.difference(record.lastReviewedAt).inDays);
+    double newStability = record.stability;
+    
+    if (rating == PerformanceRating.excellent) {
+      newStability += actualElapsedDays;
+    } else if (rating == PerformanceRating.average) {
+      newStability += actualElapsedDays * 0.5;
+    } else if (rating == PerformanceRating.weak) {
+      newStability *= 0.5;
+    }
+    if (newStability < 0) newStability = 0.0;
+
+    // Review State Tracking
+    ReviewState newState = record.reviewState;
+    switch (record.reviewState) {
+      case ReviewState.newCard:
+        newState = ReviewState.learning;
+      case ReviewState.learning:
+        newState = rating == PerformanceRating.weak ? ReviewState.learning : ReviewState.review;
+      case ReviewState.review:
+        newState = rating == PerformanceRating.weak ? ReviewState.relearning : ReviewState.review;
+      case ReviewState.relearning:
+        newState = rating == PerformanceRating.weak ? ReviewState.relearning : ReviewState.review;
+    }
+
+    return record.copyWith(
+      difficulty: newDifficulty,
+      stability: newStability,
+      reviewState: newState,
+    );
+  }
+}
+
+// ─── FsrsPredictionUsecase (V3.4 Shadow Mode) ────────────────────────────────
+
+/// Generates FSRS shadow predictions without affecting current scheduling.
+class FsrsPredictionUsecase {
+  const FsrsPredictionUsecase();
+
+  AyahReviewRecord predict(
+    AyahReviewRecord record,
+    int actualElapsedDays, [
+    DateTime? nowOverride,
+  ]) {
+    final now = nowOverride ?? DateTime.now().toUtc();
+
+    // Retrievability Prediction
+    final retrievability = math.exp(
+      -(actualElapsedDays / math.max(record.stability, 1.0))
+    ).clamp(0.0, 1.0);
+
+    // Interval Prediction
+    final predictedInterval = (record.stability * (11 - record.difficulty) / 5)
+        .round()
+        .clamp(1, 365);
+
+    final predictedDueDate = now.add(Duration(days: predictedInterval));
+
+    return record.copyWith(
+      predictedRetrievability: retrievability,
+      predictedFsrsIntervalDays: predictedInterval,
+      predictedFsrsDueDate: predictedDueDate,
+      predictedRecallProbability: retrievability, // Shadow field for future V4
+    );
+  }
+}
+
+// ─── FsrsComparisonUsecase (V3.5 Analytics) ───────────────────────────────────
+
+/// Compares FSRS shadow predictions against the V3.2 Scheduler
+class FsrsComparisonUsecase {
+  const FsrsComparisonUsecase();
+
+  AyahReviewRecord compare(AyahReviewRecord record) {
+    final predictedFsrs = record.predictedFsrsIntervalDays ?? 1;
+
+    final gap = predictedFsrs - record.intervalDays;
+    final rawRatio = predictedFsrs / math.max(record.intervalDays, 1);
+    final clampedRatio = rawRatio.clamp(0.0, 100.0);
+    final earlier = record.intervalDays < predictedFsrs;
+
+    return record.copyWith(
+      schedulerVsFsrsGapDays: gap,
+      schedulerVsFsrsRatio: clampedRatio,
+      schedulerEarlierThanFsrs: earlier,
+    );
+  }
+}
 // ─── GetKidsProgressUsecase ───────────────────────────────────────────────────
 
 class GetKidsProgressUsecase implements UseCaseNoParams<KidsProgress> {

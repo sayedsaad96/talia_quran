@@ -957,7 +957,7 @@ class _AboutTile extends StatelessWidget {
                 ),
                 child: Center(
                   child: Image.asset(
-                    'assets/images/logo.png',
+                    'assets/images/logo_new.png',
                     width: 46,
                     height: 46,
                   ),

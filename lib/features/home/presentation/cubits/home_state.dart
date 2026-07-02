@@ -16,6 +16,8 @@ class HomeLoading extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
+  final UnifiedJourneyAction? heroAction;
+
   const HomeLoaded({
     required this.progress,
     required this.hifzSurahProgress,
@@ -29,7 +31,40 @@ class HomeLoaded extends HomeState {
     this.activityCountsByDay = const {},
     required this.activityStartDate,
     this.coachRecommendation,
+    this.heroAction,
   });
+
+  HomeLoaded copyWith({
+    OverallProgress? progress,
+    List<SurahHifzProgress>? hifzSurahProgress,
+    String? greeting,
+    QuranPageDetail? dailyWirdPageDetail,
+    CustomMemorizationPlan? customPlan,
+    MemorizationTrack? selectedTrack,
+    bool? isParentMode,
+    bool? isKids,
+    String? lastRestorableLocation,
+    Map<String, int>? activityCountsByDay,
+    DateTime? activityStartDate,
+    SmartCoachRecommendation? coachRecommendation,
+    UnifiedJourneyAction? heroAction,
+  }) {
+    return HomeLoaded(
+      progress: progress ?? this.progress,
+      hifzSurahProgress: hifzSurahProgress ?? this.hifzSurahProgress,
+      greeting: greeting ?? this.greeting,
+      dailyWirdPageDetail: dailyWirdPageDetail ?? this.dailyWirdPageDetail,
+      customPlan: customPlan ?? this.customPlan,
+      selectedTrack: selectedTrack ?? this.selectedTrack,
+      isParentMode: isParentMode ?? this.isParentMode,
+      isKids: isKids ?? this.isKids,
+      lastRestorableLocation: lastRestorableLocation ?? this.lastRestorableLocation,
+      activityCountsByDay: activityCountsByDay ?? this.activityCountsByDay,
+      activityStartDate: activityStartDate ?? this.activityStartDate,
+      coachRecommendation: coachRecommendation ?? this.coachRecommendation,
+      heroAction: heroAction ?? this.heroAction,
+    );
+  }
 
   final OverallProgress progress;
   final List<SurahHifzProgress> hifzSurahProgress;
@@ -63,6 +98,7 @@ class HomeLoaded extends HomeState {
     activityCountsByDay,
     activityStartDate,
     coachRecommendation,
+    heroAction,
   ];
 }
 

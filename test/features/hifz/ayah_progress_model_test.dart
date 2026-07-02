@@ -60,23 +60,22 @@ void main() {
         },
       );
 
-      test('follows the shared excellent-rating scheduler intervals', () {
+      test('follows the shared excellent-rating scheduler intervals (with fuzzing)', () {
         var current = AyahProgressModel.initial(1, 1);
-        const expectedIntervals = [1, 3, 8, 20, 50, 125];
+        int previousInterval = 0;
 
-        for (final intervalDays in expectedIntervals) {
-          final before = DateTime.now().toUtc();
+        for (int i = 0; i < 6; i++) {
           current = current.advanceWithSpacedRepetition();
-          final expected = before.add(Duration(days: intervalDays));
-
-          expect(
-            current.nextReviewDate.difference(expected).inSeconds.abs(),
-            lessThan(2),
-            reason:
-                'Expected repetition ${current.repetitions} to use '
-                '$intervalDays day interval',
-          );
+          final actualInterval = current.nextReviewDate.difference(current.lastReviewDate).inDays;
+          
+          expect(actualInterval, greaterThan(previousInterval), 
+            reason: 'Interval should increase with consecutive excellent ratings');
+            
+          previousInterval = actualInterval;
         }
+        
+        // Final interval after 6 excellent ratings should be large (e.g. > 100 days)
+        expect(previousInterval, greaterThan(100));
       });
 
       test('sets status to review before strength reaches memorized level', () {

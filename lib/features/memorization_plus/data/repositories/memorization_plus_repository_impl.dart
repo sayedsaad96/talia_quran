@@ -28,6 +28,9 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   final QuranRepository _quranRepository;
 
   final _scheduler = const ScheduleNextReviewUsecase();
+  final _fsrsTracker = const FsrsStateTrackerUsecase();
+  final _fsrsPrediction = const FsrsPredictionUsecase();
+  final _fsrsComparison = const FsrsComparisonUsecase();
   final Map<String, Future<void>> _kidsAwardLocks = {};
 
   bool get _isSupabaseReady {
@@ -727,12 +730,19 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
           (existing ?? AyahReviewRecordModel.initial(surahId, ayahNumber))
               .copyWith(createdByMode: createdByMode);
 
-      final updated = _scheduler.schedule(current, rating);
+      final now = DateTime.now().toUtc();
+      final actualElapsedDays = max(0, now.difference(current.lastReviewedAt).inDays);
+
+      final updated = _scheduler.schedule(current, rating, now);
+      final fsrsUpdated = _fsrsTracker.update(updated, rating, now);
+      final fsrsPredicted = _fsrsPrediction.predict(fsrsUpdated, actualElapsedDays, now);
+      final fsrsCompared = _fsrsComparison.compare(fsrsPredicted);
+      
       await _datasource.saveReviewRecord(
-        AyahReviewRecordModel.fromEntity(updated),
+        AyahReviewRecordModel.fromEntity(fsrsCompared),
       );
 
-      return Right(updated);
+      return Right(fsrsCompared);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }

@@ -220,7 +220,7 @@ class CertificateWidget extends StatelessWidget {
                               children: [
                                 // ─── اللوجو (أعلى) ───────────────────
                                 Image.asset(
-                                  'assets/images/logo.png',
+                                  'assets/images/logo_new.png',
                                   width: 50,
                                   height: 70,
                                   fit: BoxFit.contain,

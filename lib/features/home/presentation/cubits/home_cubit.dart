@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../progress/domain/usecases/get_progress_usecase.dart';
 import '../../../hifz/domain/usecases/get_hifz_progress_usecase.dart';
@@ -17,6 +18,11 @@ import '../../../../core/memorization/smart_coach_recommendation.dart';
 import '../../../../core/memorization/usecases/get_smart_coach_recommendation_usecase.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../domain/usecases/get_activity_heatmap_usecase.dart';
+import '../../../../core/journey/unified_journey_action.dart';
+import '../../../../core/journey/unified_journey_engine.dart';
+import '../../../../core/journey/unified_journey_input.dart';
+import '../../../memorization_plus/domain/services/memorization_insights_aggregator.dart';
+import '../../../../core/utils/talia_logger.dart';
 
 part 'home_state.dart';
 
@@ -30,6 +36,8 @@ class HomeCubit extends Cubit<HomeState> {
   final GetActivityHeatmapUsecase _getHeatmap;
   final MemorizationPathResolver _pathResolver;
   final GetSmartCoachRecommendationUsecase _getCoachRecommendation;
+  final UnifiedJourneyEngine _journeyEngine;
+  final SharedPreferences _prefs;
   late final StreamSubscription<void> _pathChangesSub;
 
   HomeCubit(
@@ -42,6 +50,8 @@ class HomeCubit extends Cubit<HomeState> {
     this._getHeatmap,
     this._pathResolver,
     this._getCoachRecommendation,
+    this._journeyEngine,
+    this._prefs,
   ) : super(const HomeInitial()) {
     _pathChangesSub = _pathResolver.changes.listen((_) {
       if (!isClosed) {
@@ -100,6 +110,22 @@ class HomeCubit extends Cubit<HomeState> {
     // P1-05 FIX: Guard against emitting after the cubit was closed during the
     // 7 awaits above. Emitting on a closed cubit throws a StateError.
     if (isClosed) return;
+    // Sprint C: Unified Journey Hero Action Evaluation
+    UnifiedJourneyAction? heroAction;
+    try {
+      heroAction = await _evaluateUnifiedAction(
+        lastLocation: lastLocation,
+        coachRecommendation: coachRecommendation,
+        customPlan: customPlan,
+        dailyWirdDetail: dailyWirdDetail,
+        isKids: isKids,
+      );
+    } catch (e, s) {
+      TaliaLogger.w('Failed to evaluate hero action', e, s);
+      // Swallow errors to ensure Home still loads even if engine fails
+    }
+
+    if (isClosed) return;
     progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
       final hifzProgress = hifzResult.getOrElse(() => []);
       emit(
@@ -116,9 +142,70 @@ class HomeCubit extends Cubit<HomeState> {
           activityCountsByDay: heatmap.countsByDay,
           activityStartDate: heatmap.startDate,
           coachRecommendation: coachRecommendation,
+          heroAction: heroAction,
         ),
       );
     });
+  }
+
+  Future<UnifiedJourneyAction?> _evaluateUnifiedAction({
+    required String? lastLocation,
+    required SmartCoachRecommendation? coachRecommendation,
+    required CustomMemorizationPlan? customPlan,
+    required QuranPageDetail? dailyWirdDetail,
+    required bool isKids,
+  }) async {
+    try {
+      final isEnabled = _prefs.getBool('unified_journey_enabled') ?? true;
+      if (!isEnabled) {
+        return null;
+      }
+
+      final recordsResult = await _memorizationRepository.getAllReviewRecords();
+      final records = recordsResult.getOrElse(() => []);
+      
+      const aggregator = MemorizationInsightsAggregator();
+      final insights = aggregator.generate(records, DateTime.now());
+      
+      const adaptiveUsecase = AdaptiveRecommendationsUsecase();
+      final adaptiveReport = adaptiveUsecase.generate(insights);
+      
+      final criticals = adaptiveReport.recommendations
+          .where((r) => (r.priority == RecommendationPriority.critical || r.priority == RecommendationPriority.high) && r.type != RecommendationType.reviewBacklog)
+          .toList();
+      final backlogs = adaptiveReport.recommendations
+          .where((r) => r.type == RecommendationType.reviewBacklog)
+          .toList();
+
+      final input = UnifiedJourneyInput(
+        lastRestorableLocation: lastLocation,
+        hasCriticalLearningAlert: criticals.isNotEmpty,
+        learningAlertTitle: criticals.isNotEmpty ? criticals.first.title : null,
+        learningAlertDescription: criticals.isNotEmpty ? criticals.first.description : null,
+        hasReviewBacklog: backlogs.isNotEmpty,
+        overdueAyahs: insights.dueAyahs,
+        hasSmartPlan: coachRecommendation != null || customPlan != null,
+        isSmartPlanReview: coachRecommendation != null &&
+            (coachRecommendation.kind == SmartCoachRecommendationKind.reviewDueNear ||
+                coachRecommendation.kind == SmartCoachRecommendationKind.reviewDueFar ||
+                coachRecommendation.kind == SmartCoachRecommendationKind.memorizedReviewDue ||
+                coachRecommendation.kind == SmartCoachRecommendationKind.reviewWeakAyah ||
+                coachRecommendation.kind == SmartCoachRecommendationKind.hifzReviewDue),
+        smartPlanTitle: customPlan != null ? 'Custom Plan' : 'Smart Coach',
+        smartPlanRoute: coachRecommendation?.route ?? (customPlan != null ? '/memorization' : null),
+        hasDailyWird: dailyWirdDetail != null,
+        dailyWirdPageNumber: dailyWirdDetail?.pageNumber,
+        isKids: isKids,
+        userGoal: _prefs.getString('user_primary_goal'),
+      );
+
+      final unifiedAction = _journeyEngine.evaluate(input);
+      return unifiedAction;
+    } catch (e, s) {
+      TaliaLogger.w('Failed to evaluate UnifiedJourneyEngine input', e, s);
+      // Swallow errors in shadow mode
+      return null;
+    }
   }
 
   String _greeting() {

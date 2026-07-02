@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/images/logo.png" alt="Talia Logo" width="150" style="border-radius:20px; margin-bottom: 20px;">
+  <img src="assets/images/logo_new.png" alt="Talia Logo" width="150" style="border-radius:20px; margin-bottom: 20px;">
 
   # 🕌 تالية — Talia Quran
 

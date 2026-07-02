@@ -38,11 +38,11 @@ void main() {
   test(
     'restores memorization routes when required query data exists',
     () async {
-      await service.saveLocation('/hifz/session?surahId=2&startAyah=5');
+      await service.saveLocation('/memorization-v2/session?surahId=2&startAyah=5');
 
       expect(
         service.getLastRestorableLocation(),
-        '/hifz/session?surahId=2&startAyah=5',
+        '/memorization-v2/session?surahId=2&startAyah=5',
       );
     },
   );

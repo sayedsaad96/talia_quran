@@ -2822,4 +2822,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String quizUnexpectedError(String error) {
     return 'حدث خطأ: $error';
   }
+
+  @override
+  String get homeContinueTodaysPlan => 'أكمل خطة اليوم';
+
+  @override
+  String get homeCurrentMission => 'المهمة الحالية';
+
+  @override
+  String get homeStartKidsMission => 'ابدأ مهمة الطفل الحالية.';
+
+  @override
+  String get homeChooseKidsPath => 'اختر مسار الطفل أو تابع المهمة الحالية.';
+
+  @override
+  String get homeTodaysPlan => 'خطة اليوم';
 }

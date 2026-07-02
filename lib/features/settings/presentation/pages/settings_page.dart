@@ -140,12 +140,12 @@ class _SettingsView extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      if (state.selectedTrack == 'adults' ||
+                      if (state.isAdultPath ||
                           state.shouldShowParentSection) ...[
                         _SettingsSection(
                           title: context.l10n.settingsSectionKidsGuardian,
                           children: [
-                            if (state.selectedTrack == 'adults')
+                            if (state.isAdultPath)
                               _ParentModeToggle(
                                 isDark: isDark,
                                 isParentMode: state.isParentMode,
@@ -153,7 +153,7 @@ class _SettingsView extends StatelessWidget {
                                     .read<SettingsCubit>()
                                     .toggleParentMode,
                               ),
-                            if (state.selectedTrack == 'adults' &&
+                            if (state.isAdultPath &&
                                 state.shouldShowParentSection)
                               _SettingsDivider(isDark: isDark),
                             if (state.shouldShowParentSection)

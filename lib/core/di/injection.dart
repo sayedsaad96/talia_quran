@@ -43,6 +43,8 @@ import '../../features/azkar/data/repositories/azkar_repository_impl.dart';
 import '../../features/azkar/domain/repositories/azkar_repository.dart';
 import '../../features/azkar/domain/usecases/get_azkar_usecase.dart';
 import '../../features/azkar/presentation/cubits/azkar_cubit.dart';
+import '../journey/journey_diagnostics.dart';
+import '../journey/unified_journey_engine.dart';
 import '../../features/progress/data/datasources/progress_local_datasource.dart';
 import '../../features/progress/data/repositories/progress_repository_impl.dart';
 import '../../features/progress/domain/repositories/progress_repository.dart';
@@ -126,6 +128,7 @@ Future<void> configureDependencies() async {
       getIt<MemorizationPlusRepository>(),
       getIt<SharedPreferences>(),
       getIt<MemorizationPathResolver>(),
+      getIt<AppVersionInfoProvider>(),
     ),
   );
   getIt.registerSingleton<AudioCacheService>(AudioCacheService.instance);
@@ -436,6 +439,10 @@ Future<void> configureDependencies() async {
       gamificationAdapter: getIt<V2SessionGamificationAdapter>(),
     ),
   );
+  
+  getIt.registerSingleton<UnifiedJourneyEngine>(const UnifiedJourneyEngine());
+  getIt.registerSingleton<JourneyDiagnostics>(const NoOpJourneyDiagnostics());
+  
   getIt.registerFactory<HomeCubit>(
     () => HomeCubit(
       getIt<GetProgressUsecase>(),
@@ -447,6 +454,8 @@ Future<void> configureDependencies() async {
       GetActivityHeatmapUsecase(getIt<Isar>()),
       getIt<MemorizationPathResolver>(),
       getIt<GetSmartCoachRecommendationUsecase>(),
+      getIt<UnifiedJourneyEngine>(),
+      getIt<SharedPreferences>(),
     ),
   );
   getIt.registerFactory<StreakCubit>(() => StreakCubit(getIt<StreakService>()));

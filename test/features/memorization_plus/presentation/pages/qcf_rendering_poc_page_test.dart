@@ -24,7 +24,7 @@ void main() {
   ) async {
     expect(AppRoutes.qcfRenderingPoc, '/debug/qcf-rendering-poc');
     expect(AppRoutes.hifz, '/hifz');
-    expect(AppRoutes.memorizationV2Session, '/hifz/session');
+    expect(AppRoutes.memorizationV2Session, '/memorization-v2/session');
 
     await _pumpPoc(tester);
     expect(find.byType(QcfRenderingPocPage), findsOneWidget);

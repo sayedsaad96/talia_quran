@@ -1310,5 +1310,10 @@
         "type": "String"
       }
     }
-  }
+  },
+  "homeContinueTodaysPlan": "Continue Today's Plan",
+  "homeCurrentMission": "Current Mission",
+  "homeStartKidsMission": "Start the child's current mission.",
+  "homeChooseKidsPath": "Choose the kids path or continue the current mission.",
+  "homeTodaysPlan": "Today's Plan"
 }

@@ -2855,4 +2855,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String quizUnexpectedError(String error) {
     return 'Something went wrong: $error';
   }
+
+  @override
+  String get homeContinueTodaysPlan => 'Continue Today\'s Plan';
+
+  @override
+  String get homeCurrentMission => 'Current Mission';
+
+  @override
+  String get homeStartKidsMission => 'Start the child\'s current mission.';
+
+  @override
+  String get homeChooseKidsPath =>
+      'Choose the kids path or continue the current mission.';
+
+  @override
+  String get homeTodaysPlan => 'Today\'s Plan';
 }

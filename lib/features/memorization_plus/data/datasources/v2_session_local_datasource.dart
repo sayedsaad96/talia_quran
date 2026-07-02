@@ -9,7 +9,7 @@ import 'package:isar/isar.dart';
 import '../models/isar_v2_session.dart';
 
 /// Minimal datasource for reading/writing V2 session state from Isar.
-final class V2SessionLocalDatasource {
+class V2SessionLocalDatasource {
   const V2SessionLocalDatasource(this._isar);
 
   final Isar _isar;

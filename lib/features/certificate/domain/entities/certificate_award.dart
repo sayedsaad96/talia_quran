@@ -46,8 +46,8 @@ class CertificateAward extends Equatable {
         id: json['id'] as String,
         titleAr: json['titleAr'] as String,
         type: CertificateType.values.firstWhere(
-          (t) => t.name == json['type'],
-          orElse: () => CertificateType.surah,
+          (e) => e.name == json['type'],
+          orElse: () => CertificateType.juz,
         ),
         earnedAt: DateTime.parse(json['earnedAt'] as String),
         juzNumber: json['juzNumber'] as int?,

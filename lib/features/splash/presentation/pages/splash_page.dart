@@ -90,6 +90,9 @@ class _SplashPageState extends State<SplashPage>
                   final copyValue = Curves.easeOutCubic.transform(
                     _interval(0.22, 0.7),
                   );
+                  final sloganValue = Curves.easeOutCubic.transform(
+                    _interval(0.35, 0.8),
+                  );
 
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -127,6 +130,22 @@ class _SplashPageState extends State<SplashPage>
                                 ),
                               ),
                             ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Opacity(
+                        opacity: sloganValue.clamp(0.0, 1.0),
+                        child: Transform.translate(
+                          offset: Offset(0, 15 * (1 - sloganValue)),
+                          child: Text(
+                            'رفيقك في رحاب القرآن',
+                            textAlign: TextAlign.center,
+                            style: AppTypography.titleMedium.copyWith(
+                              color: primary,
+                              fontFamily: 'Amiri',
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
                       ),
@@ -227,7 +246,7 @@ class _LogoMark extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(18),
             child: Image.asset(
-              'assets/images/logo.png',
+              'assets/images/onboarding/splash_new.png',
               width: 72,
               height: 72,
               fit: BoxFit.cover,

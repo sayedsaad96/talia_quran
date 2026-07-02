@@ -5,6 +5,8 @@ import '../../../../core/memorization/review_classification.dart';
 export 'memorization_profile.dart';
 export 'pairing_session.dart';
 export 'smart_memorization_settings.dart';
+export 'memorization_insights_report.dart';
+export 'memorization_recommendation.dart';
 
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
@@ -47,6 +49,13 @@ enum ReviewRecordCreatedByMode {
 
 // ─── Memorization Identity (Moved to separate files) ──────────
 
+enum ReviewState {
+  newCard,
+  learning,
+  review,
+  relearning,
+}
+
 // ─── AyahReviewRecord ─────────────────────────────────────────────────────────
 
 /// Enhanced per-ayah progress record used exclusively by MemorizationPlus.
@@ -61,7 +70,19 @@ class AyahReviewRecord extends Equatable {
     required this.nextReviewDate,
     required this.totalReviews,
     required this.lastRating,
+    this.easeFactor = 2.5,
+    this.lapses = 0,
+    this.difficulty = 5.0,
+    this.stability = 0.0,
+    this.reviewState = ReviewState.newCard,
     this.createdByMode = ReviewRecordCreatedByMode.unknown,
+    this.predictedRetrievability,
+    this.predictedFsrsIntervalDays,
+    this.predictedFsrsDueDate,
+    this.predictedRecallProbability,
+    this.schedulerVsFsrsGapDays,
+    this.schedulerVsFsrsRatio,
+    this.schedulerEarlierThanFsrs,
   });
 
   final int surahId;
@@ -78,9 +99,48 @@ class AyahReviewRecord extends Equatable {
   final int totalReviews;
   final PerformanceRating? lastRating;
 
+  /// SM-2 derived multiplier for the next interval
+  final double easeFactor;
+
+  /// Number of times this ayah was rated as weak after being reviewed
+  final int lapses;
+
+  /// FSRS: Current difficulty level
+  final double difficulty;
+
+  /// FSRS: Memory stability (in days)
+  final double stability;
+
+  /// FSRS: Current state of the card
+  final ReviewState reviewState;
+
+  /// Preparation for future leech detection (lapses >= 8)
+  bool get isLeech => lapses >= 8;
+
   /// Source metadata added in Sprint 7B. Records written before this field
   /// was introduced default to [ReviewRecordCreatedByMode.unknown].
   final ReviewRecordCreatedByMode createdByMode;
+
+  /// FSRS: Shadow predicted retrievability
+  final double? predictedRetrievability;
+
+  /// FSRS: Shadow predicted interval
+  final int? predictedFsrsIntervalDays;
+
+  /// FSRS: Shadow predicted next review date
+  final DateTime? predictedFsrsDueDate;
+
+  /// FSRS: Future shadow probability of recall
+  final double? predictedRecallProbability;
+
+  /// FSRS Analytics: Gap in days between FSRS predicted interval and Scheduler interval
+  final int? schedulerVsFsrsGapDays;
+
+  /// FSRS Analytics: Ratio of FSRS predicted interval to Scheduler interval
+  final double? schedulerVsFsrsRatio;
+
+  /// FSRS Analytics: True if Scheduler interval is strictly less than FSRS interval
+  final bool? schedulerEarlierThanFsrs;
 
   ReviewClassification get reviewClassification =>
       const ReviewClassifier().classify(
@@ -114,7 +174,19 @@ class AyahReviewRecord extends Equatable {
     DateTime? nextReviewDate,
     int? totalReviews,
     PerformanceRating? lastRating,
+    double? easeFactor,
+    int? lapses,
+    double? difficulty,
+    double? stability,
+    ReviewState? reviewState,
     ReviewRecordCreatedByMode? createdByMode,
+    double? predictedRetrievability,
+    int? predictedFsrsIntervalDays,
+    DateTime? predictedFsrsDueDate,
+    double? predictedRecallProbability,
+    int? schedulerVsFsrsGapDays,
+    double? schedulerVsFsrsRatio,
+    bool? schedulerEarlierThanFsrs,
   }) => AyahReviewRecord(
     surahId: surahId,
     ayahNumber: ayahNumber,
@@ -124,7 +196,19 @@ class AyahReviewRecord extends Equatable {
     nextReviewDate: nextReviewDate ?? this.nextReviewDate,
     totalReviews: totalReviews ?? this.totalReviews,
     lastRating: lastRating ?? this.lastRating,
+    easeFactor: easeFactor ?? this.easeFactor,
+    lapses: lapses ?? this.lapses,
+    difficulty: difficulty ?? this.difficulty,
+    stability: stability ?? this.stability,
+    reviewState: reviewState ?? this.reviewState,
     createdByMode: createdByMode ?? this.createdByMode,
+    predictedRetrievability: predictedRetrievability ?? this.predictedRetrievability,
+    predictedFsrsIntervalDays: predictedFsrsIntervalDays ?? this.predictedFsrsIntervalDays,
+    predictedFsrsDueDate: predictedFsrsDueDate ?? this.predictedFsrsDueDate,
+    predictedRecallProbability: predictedRecallProbability ?? this.predictedRecallProbability,
+    schedulerVsFsrsGapDays: schedulerVsFsrsGapDays ?? this.schedulerVsFsrsGapDays,
+    schedulerVsFsrsRatio: schedulerVsFsrsRatio ?? this.schedulerVsFsrsRatio,
+    schedulerEarlierThanFsrs: schedulerEarlierThanFsrs ?? this.schedulerEarlierThanFsrs,
   );
 
   @override
@@ -136,7 +220,19 @@ class AyahReviewRecord extends Equatable {
     nextReviewDate,
     totalReviews,
     lastRating,
+    easeFactor,
+    lapses,
+    difficulty,
+    stability,
+    reviewState,
     createdByMode,
+    predictedRetrievability,
+    predictedFsrsIntervalDays,
+    predictedFsrsDueDate,
+    predictedRecallProbability,
+    schedulerVsFsrsGapDays,
+    schedulerVsFsrsRatio,
+    schedulerEarlierThanFsrs,
   ];
 }
 
