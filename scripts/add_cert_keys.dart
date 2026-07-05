@@ -12,32 +12,34 @@ void main() {
   arMap['certificateCelebrationMultiple'] = 'لقد حصلت على {count} شهادات جديدة';
   arMap['@certificateCelebrationMultiple'] = {
     'placeholders': {
-      'count': {'type': 'int'}
-    }
+      'count': {'type': 'int'},
+    },
   };
   arMap['certificateCelebrationSingle'] = 'لقد حصلت على {title}';
   arMap['@certificateCelebrationSingle'] = {
     'placeholders': {
-      'title': {'type': 'String'}
-    }
+      'title': {'type': 'String'},
+    },
   };
 
   // Add English keys
-  enMap['certificateCelebrationMultiple'] = 'You earned {count} new certificates!';
+  enMap['certificateCelebrationMultiple'] =
+      'You earned {count} new certificates!';
   enMap['@certificateCelebrationMultiple'] = {
     'placeholders': {
-      'count': {'type': 'int'}
-    }
+      'count': {'type': 'int'},
+    },
   };
-  enMap['certificateCelebrationSingle'] = 'You earned a new certificate!'; // I'll just use title in english too if possible, but the original was "You earned a new certificate!". I'll change the dart code to handle it. Actually let's just make it 'You earned {title}'.
+  enMap['certificateCelebrationSingle'] =
+      'You earned a new certificate!'; // I'll just use title in english too if possible, but the original was "You earned a new certificate!". I'll change the dart code to handle it. Actually let's just make it 'You earned {title}'.
   enMap['certificateCelebrationSingle'] = 'You earned {title}';
   enMap['@certificateCelebrationSingle'] = {
     'placeholders': {
-      'title': {'type': 'String'}
-    }
+      'title': {'type': 'String'},
+    },
   };
 
-  final encoder = JsonEncoder.withIndent('  ');
+  const encoder = JsonEncoder.withIndent('  ');
   arFile.writeAsStringSync(encoder.convert(arMap));
   enFile.writeAsStringSync(encoder.convert(enMap));
   print('Added certificate celebration keys to ARB files.');

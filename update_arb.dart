@@ -13,12 +13,14 @@ void main() {
     'reviewBacklogSubtitle': 'You have {overdue} overdue ayahs',
     '@reviewBacklogSubtitle': {
       'placeholders': {
-        'overdue': {'type': 'String'}
-      }
+        'overdue': {'type': 'String'},
+      },
     },
     'smartPlanCustomTitle': 'Custom Plan',
     'smartPlanReviewTitle': 'Review Plan',
-    'smartPlanTodayTitle': 'Today''s Plan',
+    'smartPlanTodayTitle':
+        'Today'
+        's Plan',
     'smartPlanSubtitle': 'Continue your memorization journey',
     'dailyWirdTitle': 'Daily Wird',
     'dailyWirdSubtitle': 'Read your daily portion',
@@ -28,7 +30,7 @@ void main() {
     'exploreMissionSubtitle': 'Start your current mission',
     'exploreQuranTitle': 'Quran',
     'exploreQuranSubtitle': 'Read the Quran',
-    'parentDashboardLinkHint': 'talia-kids-link:...'
+    'parentDashboardLinkHint': 'talia-kids-link:...',
   };
 
   final keysAr = {
@@ -42,8 +44,8 @@ void main() {
     'reviewBacklogSubtitle': 'لديك {overdue} آيات متأخرة',
     '@reviewBacklogSubtitle': {
       'placeholders': {
-        'overdue': {'type': 'String'}
-      }
+        'overdue': {'type': 'String'},
+      },
     },
     'smartPlanCustomTitle': 'خطة مخصصة',
     'smartPlanReviewTitle': 'خطة المراجعة',
@@ -57,7 +59,7 @@ void main() {
     'exploreMissionSubtitle': 'ابدأ مهمتك الحالية',
     'exploreQuranTitle': 'القرآن الكريم',
     'exploreQuranSubtitle': 'اقرأ القرآن',
-    'parentDashboardLinkHint': 'talia-kids-link:...'
+    'parentDashboardLinkHint': 'talia-kids-link:...',
   };
 
   void updateFile(String path, Map<String, dynamic> newKeys) {
@@ -65,7 +67,7 @@ void main() {
     final str = file.readAsStringSync();
     final Map<String, dynamic> json = jsonDecode(str);
     json.addAll(newKeys);
-    file.writeAsStringSync(JsonEncoder.withIndent('  ').convert(json));
+    file.writeAsStringSync(const JsonEncoder.withIndent('  ').convert(json));
   }
 
   updateFile('lib/core/l10n/app_en.arb', keysEn);

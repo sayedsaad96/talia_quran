@@ -1632,5 +1632,6 @@
   "exploreMissionSubtitle": "Start your current mission",
   "exploreQuranTitle": "Quran",
   "exploreQuranSubtitle": "Read the Quran",
-  "parentDashboardLinkHint": "talia-kids-link:..."
+  "parentDashboardLinkHint": "talia-kids-link:...",
+  "homeActionQuran": "Quran"
 }

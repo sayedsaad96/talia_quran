@@ -2904,7 +2904,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeYourProgress => 'Your Progress';
 
   @override
-  String get homeActionQuran => 'القرآن';
+  String get homeActionQuran => 'Quran';
 
   @override
   String get homeActionReadToday => 'Read today';
