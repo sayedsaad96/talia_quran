@@ -23,10 +23,9 @@ import '../../../../core/services/achievement_service.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../widgets/unified_hero_action_card.dart';
-import '../../../../core/journey/journey_presentation_data.dart';
-import '../../../../core/journey/resume_session_presentation_input.dart';
+import '../../../../core/journey/unified_journey_action_mapper.dart';
 import '../../../../core/journey/resume_session_presentation_mapper.dart';
-import '../../../../core/journey/unified_journey_action.dart';
+import '../../../../core/journey/resume_session_presentation_input.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
@@ -157,17 +156,6 @@ class _HomeContent extends StatelessWidget {
   final HomeLoaded state;
   final bool isDark;
 
-  IconData _getIconForIntent(JourneyIntent intent) {
-    return switch (intent) {
-      JourneyIntent.resume => Icons.play_circle_fill_rounded,
-      JourneyIntent.review => Icons.history_rounded,
-      JourneyIntent.memorize => Icons.auto_awesome_rounded,
-      JourneyIntent.reading => Icons.menu_book_rounded,
-      JourneyIntent.azkar => Icons.volunteer_activism_rounded,
-      JourneyIntent.explore => Icons.explore_rounded,
-    };
-  }
-
   @override
   Widget build(BuildContext context) {
     final isKids = state.isKids;
@@ -185,25 +173,7 @@ class _HomeContent extends StatelessWidget {
           Builder(
             builder: (context) {
               final action = state.heroAction!;
-              JourneyPresentationData presentationData;
-              
-              if (action.actionType == UnifiedJourneyActionType.resumeSession) {
-                presentationData = const ResumeSessionPresentationMapper().map(
-                  ResumeSessionPresentationInput(
-                    route: action.route,
-                    isArabic: context.isArabic,
-                    l10n: context.l10n,
-                    metadata: action.metadata,
-                  ),
-                );
-              } else {
-                presentationData = JourneyPresentationData(
-                  title: action.title,
-                  subtitle: action.subtitle,
-                  icon: _getIconForIntent(action.intent),
-                  route: action.route,
-                );
-              }
+              final presentationData = const UnifiedJourneyActionMapper().map(context, action);
 
               return SliverToBoxAdapter(
                 child: Padding(

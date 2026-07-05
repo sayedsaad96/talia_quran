@@ -97,13 +97,25 @@ class _CertificateCelebrationDialogState
     final isDark = context.isDark;
     final multiple = widget.awards.length > 1;
     final title = context.l10n.congratulations;
+    String getLocalizedTitle(CertificateAward award) {
+      switch (award.type) {
+        case CertificateType.juz:
+          return context.l10n.certificateTitleJuz(award.juzNumber ?? 0);
+        case CertificateType.surah:
+          final name = context.isArabic ? award.surahNameAr : award.surahNameEn;
+          return name != null 
+              ? context.l10n.certificateTitleSurahNamed(name)
+              : context.l10n.certificateTitleSurah;
+        case CertificateType.halfQuran:
+          return context.l10n.certificateTitleHalfQuran;
+        case CertificateType.fullQuran:
+          return context.l10n.certificateTitleFullQuran;
+      }
+    }
+
     final subtitle = multiple
-        ? (context.isArabic
-              ? 'لقد حصلت على ${widget.awards.length} شهادات جديدة'
-              : 'You earned ${widget.awards.length} new certificates!')
-        : (context.isArabic
-              ? 'لقد حصلت على ${widget.awards.first.titleAr}'
-              : 'You earned a new certificate!');
+        ? context.l10n.certificateCelebrationMultiple(widget.awards.length)
+        : context.l10n.certificateCelebrationSingle(getLocalizedTitle(widget.awards.first));
 
     return Dialog(
       backgroundColor: Colors.transparent,

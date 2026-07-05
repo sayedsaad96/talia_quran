@@ -9,7 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../../../quran/data/datasources/quran_local_datasource.dart';
+import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/custom_plan_cubit.dart';
 
@@ -188,21 +188,32 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
 
   Future<void> _loadSurahNames() async {
     try {
-      final surahs = await getIt<QuranLocalDatasource>().getSurahs();
-      if (mounted) {
-        final isArabic = context.isArabic;
-        setState(() {
-          _surahNames = [
-            '',
-            ...surahs.map((s) => isArabic ? s.nameAr : s.nameEn),
-          ];
-          _surahAyahCounts = [0, ...surahs.map((s) => s.ayahCount)];
-          _clampStartAyahForSurah();
-        });
-      }
+      final surahsResult = await getIt<QuranRepository>().getSurahs();
+      surahsResult.fold(
+        (failure) {
+          _loadFallbackSurahNames();
+        },
+        (surahs) {
+          if (mounted) {
+            final isArabic = context.isArabic;
+            setState(() {
+              _surahNames = [
+                '',
+                ...surahs.map((s) => isArabic ? s.nameAr : s.nameEn),
+              ];
+              _surahAyahCounts = [0, ...surahs.map((s) => s.ayahCount)];
+              _clampStartAyahForSurah();
+            });
+          }
+        },
+      );
     } catch (_) {
-      // Fallback: generate placeholder names
-      if (mounted) {
+      _loadFallbackSurahNames();
+    }
+  }
+
+  void _loadFallbackSurahNames() {
+    if (mounted) {
         final surahLabel = context.l10n.surah;
         setState(() {
           _surahNames = List.generate(
@@ -212,7 +223,6 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
           _surahAyahCounts = _standardSurahAyahCounts;
           _clampStartAyahForSurah();
         });
-      }
     }
   }
 

@@ -27,8 +27,6 @@ enum UnifiedJourneyActionType {
 
 class UnifiedJourneyAction {
   const UnifiedJourneyAction({
-    required this.title,
-    required this.subtitle,
     required this.route,
     required this.priority,
     required this.source,
@@ -37,8 +35,6 @@ class UnifiedJourneyAction {
     this.metadata = const {},
   });
 
-  final String title;
-  final String subtitle;
   final String route;
   final UnifiedJourneyPriority priority;
   final String source;

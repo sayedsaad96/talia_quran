@@ -180,8 +180,7 @@ class HomeCubit extends Cubit<HomeState> {
       final input = UnifiedJourneyInput(
         lastRestorableLocation: lastLocation,
         hasCriticalLearningAlert: criticals.isNotEmpty,
-        learningAlertTitle: criticals.isNotEmpty ? criticals.first.title : null,
-        learningAlertDescription: criticals.isNotEmpty ? criticals.first.description : null,
+        learningAlertType: criticals.isNotEmpty ? criticals.first.type : null,
         hasReviewBacklog: backlogs.isNotEmpty,
         overdueAyahs: insights.dueAyahs,
         hasSmartPlan: coachRecommendation != null || customPlan != null,
@@ -191,7 +190,7 @@ class HomeCubit extends Cubit<HomeState> {
                 coachRecommendation.kind == SmartCoachRecommendationKind.memorizedReviewDue ||
                 coachRecommendation.kind == SmartCoachRecommendationKind.reviewWeakAyah ||
                 coachRecommendation.kind == SmartCoachRecommendationKind.hifzReviewDue),
-        smartPlanTitle: customPlan != null ? 'Custom Plan' : 'Smart Coach',
+        smartPlanType: customPlan != null ? SmartPlanType.customPlan : (coachRecommendation != null ? SmartPlanType.reviewPlan : null),
         smartPlanRoute: coachRecommendation?.route ?? (customPlan != null ? '/memorization' : null),
         hasDailyWird: dailyWirdDetail != null,
         dailyWirdPageNumber: dailyWirdDetail?.pageNumber,

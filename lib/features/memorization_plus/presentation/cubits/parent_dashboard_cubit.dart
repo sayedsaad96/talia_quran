@@ -1,9 +1,12 @@
 import 'package:equatable/equatable.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/di/injection.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/l10n/locale_cubit.dart';
+import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
@@ -163,15 +166,14 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
           '${TaliaNotificationService.kidsReminderPreferenceKey}_minute',
           minute,
         );
-        final notificationService = getIt<TaliaNotificationService>();
-        if (enabled) {
-          await notificationService.scheduleKidsReviewReminder(
-            hour: hour,
-            minute: minute,
-          );
-        } else {
-          await notificationService.cancelKidsReviewReminder();
-        }
+        final scheduler = getIt<NotificationScheduler>();
+        // Get l10n to schedule the localized string
+        final locale = getIt<LocaleCubit>().state;
+        final l10n = AppLocalizations.supportedLocales.contains(locale) 
+            ? lookupAppLocalizations(locale) 
+            : lookupAppLocalizations(const Locale('ar'));
+
+        await scheduler.refreshNotifications(l10n);
         await refresh(
           surahId: current.surahId,
           feedback: const ParentDashboardFeedback.reminderSaved(),

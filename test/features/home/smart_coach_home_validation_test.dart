@@ -257,8 +257,6 @@ void main() {
       // We also need to inject a unified action for this test since our static cubit doesn't evaluate the engine.
       final unifiedState = state.copyWith(
         heroAction: const UnifiedJourneyAction(
-          title: 'Resume Session', // The raw engine output
-          subtitle: 'Continue where you left off',
           route: '/quran/surah/2',
           priority: UnifiedJourneyPriority.p1ActiveSession,
           source: 'AppSessionService',
@@ -470,11 +468,10 @@ void main() {
         heroAction: const UnifiedJourneyAction(
           priority: UnifiedJourneyPriority.p2CriticalAlert,
           intent: JourneyIntent.resume,
-          title: 'Unified Title',
-          subtitle: 'Unified Subtitle',
           route: '/route',
           source: 'Test',
           actionType: UnifiedJourneyActionType.criticalAlert,
+          metadata: {'learningAlertType': 'leechRecovery'},
         ),
       );
       await _registerHome(state);
@@ -482,7 +479,7 @@ void main() {
       await _pumpHome(tester);
       await tester.pumpAndSettle();
 
-      expect(find.text('Unified Title'), findsNothing);
+      expect(find.text('Focus on Weak Ayahs'), findsNothing);
       expect(find.text('Resume'), findsOneWidget); // Legacy ResumeSessionCard
     });
 
@@ -495,11 +492,10 @@ void main() {
         heroAction: const UnifiedJourneyAction(
           priority: UnifiedJourneyPriority.p2CriticalAlert,
           intent: JourneyIntent.resume,
-          title: 'Unified Title',
-          subtitle: 'Unified Subtitle',
           route: '/route',
           source: 'Test',
           actionType: UnifiedJourneyActionType.criticalAlert,
+          metadata: {'learningAlertType': 'leechRecovery'},
         ),
       );
       await _registerHome(state);
@@ -507,7 +503,7 @@ void main() {
       await _pumpHome(tester);
       await tester.pumpAndSettle();
 
-      expect(find.text('Unified Title'), findsOneWidget);
+      expect(find.text('Focus on Weak Ayahs'), findsOneWidget);
       expect(find.text('Resume'), findsNothing); // Legacy hidden
     });
   });

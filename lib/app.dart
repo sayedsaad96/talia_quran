@@ -5,16 +5,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'core/l10n/app_localizations.dart';
+import 'core/di/injection.dart';
+import 'core/l10n/locale_cubit.dart';
 import 'core/router/app_router.dart';
+
 import 'core/services/app_session_service.dart';
+import 'core/services/notification_service.dart';
+import 'core/services/notification_scheduler.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
-import 'core/l10n/locale_cubit.dart';
-import 'core/di/injection.dart';
-import 'features/settings/presentation/cubits/profile_cubit.dart';
 import 'features/auth/presentation/cubits/auth_cubit.dart';
-
-import 'core/services/notification_service.dart';
+import 'features/settings/presentation/cubits/profile_cubit.dart';
 
 class TaliaApp extends StatefulWidget {
   const TaliaApp({super.key});
@@ -53,7 +54,9 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       // Refresh notifications on resume to sync timezone/time
-      _notificationService.refreshNotifications();
+      final currentLocale = getIt<LocaleCubit>().state;
+      final l10n = lookupAppLocalizations(currentLocale);
+      getIt<NotificationScheduler>().refreshNotifications(l10n);
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused ||

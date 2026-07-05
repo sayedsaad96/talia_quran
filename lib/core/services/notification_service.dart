@@ -45,17 +45,6 @@ class TaliaNotificationService {
   static const int _dailyDuaScheduleDays = 16;
   static const String _notificationIcon = '@mipmap/launcher_icon';
 
-  // ─── Motivational Messages ──────────────────────────────────────────────────
-  static const List<String> _motivationalMessages = [
-    'القرآن يشتاق إليك! 📖',
-    'خطوة صغيرة اليوم، ثواب كبير غداً ✨',
-    'جلسة حفظ اليوم تنتظرك 🌙',
-    'لا تكسر تسلسلك! 🔥',
-    'آية واحدة تبني لك مكانة في الجنة 💎',
-    'راجع ما حفظته قبل أن تنسى 📚',
-    'اليوم فرصة لإضافة آية جديدة لقلبك 💚',
-  ];
-
   static const List<String> _fallbackDailyDuas = [
     'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.',
     'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى.',
@@ -95,7 +84,7 @@ class TaliaNotificationService {
     tz_data.initializeTimeZones();
 
     // CODE-3 FIX: Detect and set the device's actual local timezone
-    await _configureLocalTimezone();
+    await configureLocalTimezone();
 
     const androidSettings = AndroidInitializationSettings(_notificationIcon);
     const iosSettings = DarwinInitializationSettings(
@@ -134,7 +123,7 @@ class TaliaNotificationService {
     return payload;
   }
 
-  Future<void> _configureLocalTimezone() async {
+  Future<void> configureLocalTimezone() async {
     try {
       final localTimezone = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(localTimezone.identifier));
@@ -143,72 +132,6 @@ class TaliaNotificationService {
     }
   }
 
-  /// Re-schedules all notifications. Useful on app resume or timezone change.
-  Future<void> refreshNotifications() async {
-    if (!_initialized) return;
-    await _configureLocalTimezone();
-
-    final prefs = await SharedPreferences.getInstance();
-    final reviewEnabled = prefs.getBool(dailyReviewPreferenceKey) ?? true;
-    final streakEnabled = prefs.getBool(streakAlertPreferenceKey) ?? true;
-    final morningAzkarEnabled =
-        prefs.getBool(morningAzkarPreferenceKey) ?? true;
-    final eveningAzkarEnabled =
-        prefs.getBool(eveningAzkarPreferenceKey) ?? true;
-    final dailyDuaEnabled = prefs.getBool(dailyDuaPreferenceKey) ?? true;
-    final kidsReviewEnabled = prefs.getBool(kidsReminderPreferenceKey) ?? false;
-
-    if (reviewEnabled) {
-      final hour = prefs.getInt('${dailyReviewPreferenceKey}_hour') ?? 20;
-      final minute = prefs.getInt('${dailyReviewPreferenceKey}_minute') ?? 0;
-      await scheduleDailyReviewReminder(hour: hour, minute: minute);
-    } else {
-      await cancelDailyReviewReminder();
-      if (streakEnabled) {
-        final hour = prefs.getInt('${streakAlertPreferenceKey}_hour') ?? 22;
-        final minute = prefs.getInt('${streakAlertPreferenceKey}_minute') ?? 0;
-        await scheduleStreakProtectionAlert(
-          currentStreak: 1,
-          hour: hour,
-          minute: minute,
-        );
-      }
-    }
-
-    await scheduleDailyAyahReminder();
-
-    if (morningAzkarEnabled) {
-      final hour = prefs.getInt('${morningAzkarPreferenceKey}_hour') ?? 6;
-      final minute = prefs.getInt('${morningAzkarPreferenceKey}_minute') ?? 0;
-      await scheduleMorningAzkarReminder(hour: hour, minute: minute);
-    } else {
-      await cancelMorningAzkarReminder();
-    }
-
-    if (eveningAzkarEnabled) {
-      final hour = prefs.getInt('${eveningAzkarPreferenceKey}_hour') ?? 18;
-      final minute = prefs.getInt('${eveningAzkarPreferenceKey}_minute') ?? 0;
-      await scheduleEveningAzkarReminder(hour: hour, minute: minute);
-    } else {
-      await cancelEveningAzkarReminder();
-    }
-
-    if (dailyDuaEnabled) {
-      final hour = prefs.getInt('${dailyDuaPreferenceKey}_hour') ?? 9;
-      final minute = prefs.getInt('${dailyDuaPreferenceKey}_minute') ?? 0;
-      await scheduleDailyDuaReminder(hour: hour, minute: minute);
-    } else {
-      await cancelDailyDuaReminder();
-    }
-
-    if (kidsReviewEnabled) {
-      final hour = prefs.getInt('${kidsReminderPreferenceKey}_hour') ?? 18;
-      final minute = prefs.getInt('${kidsReminderPreferenceKey}_minute') ?? 30;
-      await scheduleKidsReviewReminder(hour: hour, minute: minute);
-    } else {
-      await cancelKidsReviewReminder();
-    }
-  }
 
   /// Request permissions for local notifications (iOS and Android 13+)
   Future<void> requestPermissions() async {
@@ -233,20 +156,17 @@ class TaliaNotificationService {
   /// Schedules a daily review reminder at the given hour and minute.
   /// Default: 8:00 PM (20:00).
   Future<void> scheduleDailyReviewReminder({
+    required String title,
+    required String body,
     int hour = 20,
     int minute = 0,
-    int pendingReviewCount = 0,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _dailyReviewId);
 
-    final body = pendingReviewCount > 0
-        ? 'لديك $pendingReviewCount آية للمراجعة اليوم'
-        : 'حان وقت مراجعة حفظك اليومي';
-
     await _plugin.zonedSchedule(
       id: _dailyReviewId,
-      title: 'وقت المراجعة اليومية 📖',
+      title: title,
       body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
       notificationDetails: _notificationDetails,
@@ -267,6 +187,8 @@ class TaliaNotificationService {
   /// Schedules a streak protection alert at 10:00 PM.
   /// Only fires if the user hasn't opened the app today.
   Future<void> scheduleStreakProtectionAlert({
+    required String title,
+    required String body,
     required int currentStreak,
     int hour = 22,
     int minute = 0,
@@ -278,8 +200,8 @@ class TaliaNotificationService {
 
     await _plugin.zonedSchedule(
       id: _streakAlertId,
-      title: '⚠️ لا تُضيِّع $currentStreak يوماً!',
-      body: 'لم تراجع حفظك اليوم بعد — لا تزال قادرًا',
+      title: title,
+      body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -297,14 +219,17 @@ class TaliaNotificationService {
   // ─── Daily Ayah Notification ───────────────────────────────────────────────
 
   /// Schedules a daily morning ayah reminder at 7:00 AM.
-  Future<void> scheduleDailyAyahReminder() async {
+  Future<void> scheduleDailyAyahReminder({
+    required String title,
+    required String body,
+  }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _dailyAyahId);
 
     await _plugin.zonedSchedule(
       id: _dailyAyahId,
-      title: 'آية اليوم ✨',
-      body: 'اقرأ وردك اليومي من القرآن الكريم',
+      title: title,
+      body: body,
       scheduledDate: _nextInstanceOfTime(7, 0),
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -323,6 +248,8 @@ class TaliaNotificationService {
 
   /// Schedules a daily morning azkar reminder at 6:00 AM.
   Future<void> scheduleMorningAzkarReminder({
+    required String title,
+    required String body,
     int hour = 6,
     int minute = 0,
   }) async {
@@ -331,8 +258,8 @@ class TaliaNotificationService {
 
     await _plugin.zonedSchedule(
       id: _morningAzkarId,
-      title: 'أذكار الصباح ☀️',
-      body: 'ابدأ يومك بذكر الله وطمأنينة القلب',
+      title: title,
+      body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -349,6 +276,8 @@ class TaliaNotificationService {
 
   /// Schedules a daily evening azkar reminder at 6:00 PM.
   Future<void> scheduleEveningAzkarReminder({
+    required String title,
+    required String body,
     int hour = 18,
     int minute = 0,
   }) async {
@@ -357,8 +286,8 @@ class TaliaNotificationService {
 
     await _plugin.zonedSchedule(
       id: _eveningAzkarId,
-      title: 'أذكار المساء 🌙',
-      body: 'اختم يومك بذكر الله وحفظه',
+      title: title,
+      body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -377,7 +306,11 @@ class TaliaNotificationService {
   ///
   /// A recurring notification would keep the same body forever, so this schedules
   /// the next several days individually and refreshes them when the app resumes.
-  Future<void> scheduleDailyDuaReminder({int hour = 9, int minute = 0}) async {
+  Future<void> scheduleDailyDuaReminder({
+    required String title,
+    int hour = 9, 
+    int minute = 0,
+  }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await cancelDailyDuaReminder();
 
@@ -390,7 +323,7 @@ class TaliaNotificationService {
 
       await _plugin.zonedSchedule(
         id: _dailyDuaBaseId + dayOffset,
-        title: 'دعاء اليوم 🤲',
+        title: title,
         body: body,
         scheduledDate: scheduledDate,
         notificationDetails: _notificationDetails,
@@ -408,6 +341,8 @@ class TaliaNotificationService {
   }
 
   Future<void> scheduleKidsReviewReminder({
+    required String title,
+    required String body,
     int hour = 18,
     int minute = 30,
   }) async {
@@ -416,8 +351,8 @@ class TaliaNotificationService {
 
     await _plugin.zonedSchedule(
       id: _kidsReviewId,
-      title: 'رحلة الطفل تنتظر ⭐',
-      body: 'جلسة قصيرة اليوم تحفظ النجوم والتقدم',
+      title: title,
+      body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -435,7 +370,10 @@ class TaliaNotificationService {
 
   /// Schedules a smart reminder based on the user's average app-open time.
   /// Tracks the last 14 open times and calculates the best reminder time.
-  Future<void> scheduleSmartReminder() async {
+  Future<void> scheduleSmartReminder({
+    required String title,
+    required String body,
+  }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
 
     final prefs = await SharedPreferences.getInstance();
@@ -453,11 +391,6 @@ class TaliaNotificationService {
       final sum = storedHours.map(int.parse).reduce((a, b) => a + b);
       avgHour = (sum / storedHours.length).round();
     }
-
-    // Pick a non-repeating message
-    final usedIndex = prefs.getInt('last_msg_index') ?? 0;
-    final nextIndex = (usedIndex + 1) % _motivationalMessages.length;
-    await prefs.setInt('last_msg_index', nextIndex);
 
     // Cancel old and schedule new
     // M04 FIX: Use separate ID so smart reminder doesn't cancel daily ayah
@@ -477,8 +410,8 @@ class TaliaNotificationService {
 
     await _plugin.zonedSchedule(
       id: _smartReminderId, // M04 FIX
-      title: 'تالية 📖',
-      body: _motivationalMessages[nextIndex],
+      title: title,
+      body: body,
       scheduledDate: scheduledTime,
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -500,7 +433,11 @@ class TaliaNotificationService {
   // ─── Streak Alert (Smart) ──────────────────────────────────────────────────
 
   /// Schedules a streak-specific alert at 9 PM for users with streak > 3 days.
-  Future<void> scheduleStreakAlert(int currentStreak) async {
+  Future<void> scheduleStreakAlert({
+    required String title,
+    required String body,
+    required int currentStreak,
+  }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     if (currentStreak <= 3) return;
 
@@ -521,8 +458,8 @@ class TaliaNotificationService {
 
     await _plugin.zonedSchedule(
       id: _streakAlertId,
-      title: 'تحذير الـ Streak! 🔥',
-      body: 'أيامك الـ $currentStreak على المحك — حافظ على تسلسلك الآن',
+      title: title,
+      body: body,
       scheduledDate: alertTime,
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(

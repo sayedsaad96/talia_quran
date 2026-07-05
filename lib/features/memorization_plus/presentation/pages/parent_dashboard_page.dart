@@ -230,7 +230,9 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
         title: Text(context.l10n.parentDashboardEnterLinkingCode),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(hintText: 'talia-kids-link:...'),
+          decoration: InputDecoration(
+            hintText: context.l10n.parentDashboardLinkHint,
+          ),
         ),
         actions: [
           TextButton(

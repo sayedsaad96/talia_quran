@@ -2,14 +2,19 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'app.dart';
 import 'core/config/supabase_config.dart';
 import 'core/di/injection.dart';
+import 'core/l10n/app_localizations.dart';
+import 'core/l10n/locale_cubit.dart';
 import 'core/services/hifz_migration_service.dart';
+import 'core/services/notification_scheduler.dart';
 import 'core/services/notification_service.dart';
 import 'core/utils/talia_logger.dart';
 
@@ -139,9 +144,6 @@ Future<void> _bootstrapAndRun() async {
       prefs.getBool('notifications_initialized') ?? false;
   if (!notificationsInitialized) {
     // Read (or default) all per-type preferences before first scheduling
-    final reviewEnabled =
-        prefs.getBool(TaliaNotificationService.dailyReviewPreferenceKey) ??
-        true;
     final morningAzkarEnabled =
         prefs.getBool(TaliaNotificationService.morningAzkarPreferenceKey) ??
         true;
@@ -165,20 +167,11 @@ Future<void> _bootstrapAndRun() async {
       dailyDuaEnabled,
     );
 
-    // Schedule each notification exactly once, respecting the defaults above
-    if (reviewEnabled) {
-      await notificationService.scheduleDailyReviewReminder(); // 8:00 PM
-    }
-    await notificationService.scheduleDailyAyahReminder(); // 7:00 AM
-    if (morningAzkarEnabled) {
-      await notificationService.scheduleMorningAzkarReminder(); // 6:00 AM
-    }
-    if (eveningAzkarEnabled) {
-      await notificationService.scheduleEveningAzkarReminder(); // 6:00 PM
-    }
-    if (dailyDuaEnabled) {
-      await notificationService.scheduleDailyDuaReminder(); // 9:00 AM
-    }
+    // Schedule all notifications based on preferences
+    final locale = getIt<LocaleCubit>().state;
+    final l10n = lookupAppLocalizations(locale);
+    final scheduler = getIt<NotificationScheduler>();
+    await scheduler.refreshNotifications(l10n);
 
     await prefs.setBool('notifications_initialized', true);
     // Mark the old azkar flag too so existing installs don't re-run the old block

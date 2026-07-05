@@ -84,7 +84,7 @@ void main() {
           mockQuranRepo.getSurahDetail(tSurahId),
         ).thenAnswer((_) async => const Right(tSurahDetail));
 
-        await expectLater(
+        final expectation = expectLater(
           cubit.stream,
           emitsInOrder([
             const KidsJourneyLoading(),
@@ -98,6 +98,7 @@ void main() {
         );
 
         await cubit.load(surahId: tSurahId);
+        await expectation;
       },
     );
 
@@ -109,7 +110,7 @@ void main() {
         ).thenAnswer((_) async => const Left(CacheFailure('Journey error')));
         when(mockGetProgress()).thenAnswer((_) async => const Right(tProgress));
 
-        await expectLater(
+        final expectation = expectLater(
           cubit.stream,
           emitsInOrder([
             const KidsJourneyLoading(),
@@ -118,6 +119,7 @@ void main() {
         );
 
         await cubit.load(surahId: tSurahId);
+        await expectation;
       },
     );
 
@@ -129,7 +131,7 @@ void main() {
           mockGetProgress(),
         ).thenAnswer((_) async => const Left(CacheFailure('Progress error')));
 
-        await expectLater(
+        final expectation = expectLater(
           cubit.stream,
           emitsInOrder([
             const KidsJourneyLoading(),
@@ -138,6 +140,7 @@ void main() {
         );
 
         await cubit.load(surahId: tSurahId);
+        await expectation;
       },
     );
 
@@ -150,7 +153,7 @@ void main() {
           mockQuranRepo.getSurahDetail(tSurahId),
         ).thenAnswer((_) async => const Left(CacheFailure()));
 
-        await expectLater(
+        final expectation = expectLater(
           cubit.stream,
           emitsInOrder([
             const KidsJourneyLoading(),
@@ -164,6 +167,7 @@ void main() {
         );
 
         await cubit.load(surahId: tSurahId);
+        await expectation;
       },
     );
   });
@@ -189,7 +193,7 @@ void main() {
         mockRemoteLink.createChildLinkToken(),
       ).thenAnswer((_) async => const Right(tToken));
 
-      await expectLater(
+      final expectation = expectLater(
         cubit.stream,
         emitsInOrder([
           initialState.copyWith(isCreatingLink: true, clearMessage: true),
@@ -202,6 +206,7 @@ void main() {
       );
 
       await cubit.createRemoteLinkQr();
+      await expectation;
     });
 
     test('emits states correctly when fails', () async {
@@ -217,7 +222,7 @@ void main() {
         mockRemoteLink.createChildLinkToken(),
       ).thenAnswer((_) async => const Left(NetworkFailure('Network error')));
 
-      await expectLater(
+      final expectation = expectLater(
         cubit.stream,
         emitsInOrder([
           initialState.copyWith(isCreatingLink: true, clearMessage: true),
@@ -230,6 +235,7 @@ void main() {
       );
 
       await cubit.createRemoteLinkQr();
+      await expectation;
     });
   });
 }

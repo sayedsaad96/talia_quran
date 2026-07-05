@@ -34,14 +34,10 @@ class MemorizationRecommendation {
   const MemorizationRecommendation({
     required this.type,
     required this.priority,
-    required this.title,
-    required this.description,
   });
 
   final RecommendationType type;
   final RecommendationPriority priority;
-  final String title;
-  final String description;
 }
 
 class MemorizationRecommendationsReport {

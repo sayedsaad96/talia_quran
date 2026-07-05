@@ -12,6 +12,7 @@ import '../../../memorization_plus/domain/repositories/memorization_plus_reposit
 import '../../../onboarding/presentation/cubits/onboarding_cubit.dart';
 import '../../presentation/cubits/auth_cubit.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
+import '../../domain/entities/auth_error_code.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -412,20 +413,27 @@ class _LoginPageState extends State<LoginPage> {
 
   String _localizedAuthMessage(BuildContext context, String message) {
     final l10n = context.l10n;
-    if (message.contains('مسجل بالفعل')) {
+    if (message == AuthErrorCode.emailAlreadyRegistered.name) {
       return l10n.authEmailAlreadyRegistered;
     }
-    if (message.contains('تأكيد') ||
-        message.contains('تفقّد') ||
-        message.contains('confirmed')) {
+    if (message == AuthErrorCode.emailNotConfirmed.name) {
       return l10n.authConfirmEmailFirst;
     }
-    if (message.contains('غير صحيحة')) return l10n.authInvalidCredentials;
-    if (message.contains('قصيرة')) return l10n.passwordTooShort;
-    if (message.contains('صيغة البريد')) return l10n.invalidEmail;
-    if (message.contains('محاولات كثيرة')) return l10n.authTooManyRequests;
-    if (message.contains('اتصال بالإنترنت')) return l10n.authNoInternet;
-    if (message.contains('لا يوجد حساب')) return l10n.authAccountNotFound;
+    if (message == AuthErrorCode.invalidCredentials.name) return l10n.authInvalidCredentials;
+    if (message == AuthErrorCode.passwordTooShort.name) return l10n.passwordTooShort;
+    if (message == AuthErrorCode.invalidEmailFormat.name) return l10n.invalidEmail;
+    if (message == AuthErrorCode.tooManyRequests.name) return l10n.authTooManyRequests;
+    if (message == AuthErrorCode.networkError.name) return l10n.authNoInternet;
+    if (message == AuthErrorCode.userNotFound.name) return l10n.authAccountNotFound;
+    if (message == AuthErrorCode.samePasswordAsOld.name) {
+      return l10n.authPasswordSameAsOld;
+    }
+    if (message == AuthErrorCode.sessionExpired.name) {
+      return l10n.authSessionExpired;
+    }
+    if (message == AuthErrorCode.unknown.name) return l10n.authGenericError;
+
+    // Fallbacks for legacy/unmapped errors
     if (message.contains('فشل إنشاء الحساب') ||
         message.contains('أثناء إنشاء الحساب')) {
       return l10n.authSignupFailed;

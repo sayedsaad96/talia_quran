@@ -530,6 +530,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get authGenericError => 'حدث خطأ، حاول مرة أخرى';
 
   @override
+  String get authPasswordSameAsOld =>
+      'كلمة المرور الجديدة مطابقة للقديمة. يرجى اختيار كلمة مرور مختلفة.';
+
+  @override
+  String get authSessionExpired =>
+      'رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.';
+
+  @override
   String get profileSavedToCloud => 'تم تسجيل الدخول إلى حسابك';
 
   @override
@@ -2783,7 +2791,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hifzAudioPlaybackFailed =>
-      'فشل تشغيل الصوت. تحقق من الاتصال بالإنترنت.';
+      'فشل تشغيل الصوت. تحقق من الاتصال بالइंटترنت.';
 
   @override
   String get hifzReviewSaveFailed => 'فشل حفظ تقدم المراجعة. حاول مرة أخرى.';
@@ -2836,5 +2844,875 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeChooseKidsPath => 'اختر مسار الطفل أو تابع المهمة الحالية.';
 
   @override
+  String homeDailyWirdPage(Object page) {
+    return 'قراءة الصفحة $page من القرآن الكريم';
+  }
+
+  @override
+  String homeDailyWirdSurah(Object surah) {
+    return 'قراءة سورة $surah من القرآن الكريم';
+  }
+
+  @override
+  String get homeDailyWird => 'الورد اليومي';
+
+  @override
+  String homeDailyWirdSurahPage(Object page, Object surah) {
+    return 'سورة $surah — صفحة $page';
+  }
+
+  @override
   String get homeTodaysPlan => 'خطة اليوم';
+
+  @override
+  String get homeKidsProgress => 'تقدم الطفل';
+
+  @override
+  String get homeYourProgress => 'تقدمك';
+
+  @override
+  String get homeActionQuran => 'القرآن';
+
+  @override
+  String get homeActionReadToday => 'اقرأ وردك';
+
+  @override
+  String get homeActionTodaysPlan => 'خطة اليوم';
+
+  @override
+  String get homeActionContinuePlan => 'تابع حفظك';
+
+  @override
+  String get homeActionProgress => 'التقدم';
+
+  @override
+  String get homeActionReviewGains => 'راجع إنجازك';
+
+  @override
+  String get homeActionSettings => 'الإعدادات';
+
+  @override
+  String get homeActionTuneApp => 'خصص تجربتك';
+
+  @override
+  String get homeGoToSettings => 'انتقل إلى الإعدادات';
+
+  @override
+  String get notificationDailyReviewTitle => 'وقت المراجعة اليومية 📖';
+
+  @override
+  String notificationDailyReviewBodyCount(Object count) {
+    return 'لديك $count آية للمراجعة اليوم';
+  }
+
+  @override
+  String get notificationDailyReviewBody => 'حان وقت مراجعة حفظك اليومي';
+
+  @override
+  String notificationStreakAlertTitle(Object count) {
+    return '⚠️ لا تُضيِّع $count يوماً!';
+  }
+
+  @override
+  String get notificationStreakAlertBody =>
+      'لم تراجع حفظك اليوم بعد — لا تزال قادرًا';
+
+  @override
+  String get notificationDailyAyahTitle => 'آية اليوم ✨';
+
+  @override
+  String get notificationDailyAyahBody => 'اقرأ وردك اليومي من القرآن الكريم';
+
+  @override
+  String get notificationSmartReminderTitle => 'حان وقت وردك! ⏳';
+
+  @override
+  String get notificationSmartReminderBody =>
+      'لم تقرأ وردك اليوم! خصص دقائق للقرآن الآن.';
+
+  @override
+  String get notificationMorningAzkarTitle => 'أذكار الصباح ☀️';
+
+  @override
+  String get notificationMorningAzkarBody =>
+      'ابدأ يومك بذكر الله وطمأنينة القلب';
+
+  @override
+  String get notificationEveningAzkarTitle => 'أذكار المساء 🌙';
+
+  @override
+  String get notificationEveningAzkarBody => 'اختم يومك بذكر الله وحفظه';
+
+  @override
+  String get notificationKidsReviewTitle => 'وقت التسميع يا بطل! 🌟';
+
+  @override
+  String get notificationKidsReviewBody =>
+      'مرحلتك الجديدة جاهزة، هيا نكمل الحفظ!';
+
+  @override
+  String get notificationDailyDuaTitle => 'دعاء اليوم 🤲';
+
+  @override
+  String get homeTourTitle => 'تحتاج جولة سريعة؟';
+
+  @override
+  String get homeTourDesc => 'افتح الدليل متى أردت من هنا أو من المساعدة.';
+
+  @override
+  String get homeTourGuideAction => 'الدليل';
+
+  @override
+  String get journeyReviewBeforeNewTitle => 'راجع قبل الحفظ الجديد';
+
+  @override
+  String journeyReviewBeforeNewDesc(Object surahAyahLabel) {
+    return 'مراجعة قريبة مستحقة في $surahAyahLabel.';
+  }
+
+  @override
+  String get journeyLongTermReviewTitle => 'مراجعة بعيدة مستحقة';
+
+  @override
+  String journeyLongTermReviewDesc(Object surahAyahLabel) {
+    return 'حان وقت مراجعة $surahAyahLabel.';
+  }
+
+  @override
+  String get journeyReviewDifficultAyahTitle => 'راجع الآية الصعبة';
+
+  @override
+  String journeyReviewDifficultAyahDesc(Object surahAyahLabel) {
+    return 'آخر مراجعة كانت صعبة في $surahAyahLabel.';
+  }
+
+  @override
+  String get journeyContinueDailyPlanTitle => 'أكمل خطة اليوم';
+
+  @override
+  String journeyContinueDailyPlanDesc(Object completed, Object total) {
+    return '$completed/$total من مهام اليوم.';
+  }
+
+  @override
+  String get journeyMemorizeNewAyahsTitle => 'احفظ آيات جديدة';
+
+  @override
+  String journeyMemorizeNewAyahsDesc(Object surahAyahLabel) {
+    return 'ابدأ بالآيات الجديدة في $surahAyahLabel.';
+  }
+
+  @override
+  String get journeyCurrentMissionTitle => 'المهمة الحالية';
+
+  @override
+  String get journeyCurrentMissionDesc => 'تابع مهمة الطفل الحالية.';
+
+  @override
+  String get journeyContinueSessionTitle => 'متابعة جلسة الحفظ';
+
+  @override
+  String journeyContinueSessionDesc(Object surahLabel) {
+    return 'لديك جلسة حفظ مفتوحة لم تكتمل في $surahLabel.';
+  }
+
+  @override
+  String get journeyHifzReviewDueTitle => 'مراجعة الحفظ مستحقة';
+
+  @override
+  String get journeyHifzReviewDueDesc =>
+      'راجع مواضع الحفظ المستحقة في مسار الحفظ.';
+
+  @override
+  String get journeyFallbackSurah => 'السورة';
+
+  @override
+  String journeyAyahLabel(Object start) {
+    return '، الآية $start';
+  }
+
+  @override
+  String journeyAyahsLabel(Object end, Object start) {
+    return '، الآيات $start–$end';
+  }
+
+  @override
+  String get tutorialS1Title => 'البداية مع تالية';
+
+  @override
+  String get tutorialS1Cat => 'البدء';
+
+  @override
+  String get tutorialS1Does =>
+      'تالية تبدأ بشاشة افتتاحية ثم تعريف سريع لأول استخدام، وبعدها تعيدك إلى آخر موضع قراءة أو جلسة قابلة للاستئناف.';
+
+  @override
+  String get tutorialS1Open =>
+      'تظهر تلقائيًا عند فتح التطبيق. بعد ذلك استخدم الشريط السفلي للتنقل بين الرئيسية، القرآن، الحفظ، الأذكار، والتقدم.';
+
+  @override
+  String get tutorialS1Useful =>
+      'مفيد للمستخدم الجديد أو لمن يريد فهم خريطة التطبيق قبل البدء بالحفظ أو القراءة.';
+
+  @override
+  String get tutorialS1Step1 => 'أنهِ صفحات التعريف الأولى عند أول تشغيل.';
+
+  @override
+  String get tutorialS1Step2 =>
+      'استخدم الشريط السفلي للانتقال بين أقسام التطبيق الأساسية.';
+
+  @override
+  String get tutorialS1Step3 =>
+      'إذا ظهر زر استكمال القراءة في الرئيسية فاضغطه للعودة إلى آخر موضع محفوظ.';
+
+  @override
+  String get tutorialS1Tip1 =>
+      'ابدأ من الصفحة الرئيسية لأنها تجمع ورد اليوم والتقدم والاختصارات.';
+
+  @override
+  String get tutorialS1Tip2 =>
+      'آخر موضع محفوظ يعمل مع صفحات القرآن وبعض مسارات الحفظ الذكي.';
+
+  @override
+  String get tutorialS1Note1 =>
+      'شاشة البداية والتعريف لا تتغير عند إضافة هذا الدليل.';
+
+  @override
+  String get tutorialS1Note2 =>
+      'تسجيل الدخول اختياري، لكن يفيد في النسخ الاحتياطي السحابي.';
+
+  @override
+  String get tutorialS2Title => 'الصفحة الرئيسية';
+
+  @override
+  String get tutorialS2Cat => 'البدء';
+
+  @override
+  String get tutorialS2Does =>
+      'تعرض تحية باسمك إن وجد، وردًا يوميًا، استكمال القراءة، ملخص التقدم، اختصار الأذكار، الخطة المخصصة، الحفظ الذكي، وخريطة نشاطك.';
+
+  @override
+  String get tutorialS2Open =>
+      'اضغط تبويب الرئيسية من الشريط السفلي، أو ارجع إلى المسار الرئيسي للتطبيق.';
+
+  @override
+  String get tutorialS2Useful =>
+      'أفضل نقطة انطلاق يومية لأنها تجمع ما تحتاجه للقراءة والحفظ والمتابعة في شاشة واحدة.';
+
+  @override
+  String get tutorialS2Step1 =>
+      'اضغط بطاقة الورد اليومي لفتح صفحة القرآن المقترحة.';
+
+  @override
+  String get tutorialS2Step2 =>
+      'استخدم استكمال القراءة للعودة إلى آخر صفحة أو سورة محفوظة.';
+
+  @override
+  String get tutorialS2Step3 => 'افتح الإعدادات من أيقونة الترس أعلى الصفحة.';
+
+  @override
+  String get tutorialS2Step4 =>
+      'اضغط بطاقة الحفظ الذكي للدخول إلى Memorization Plus.';
+
+  @override
+  String get tutorialS2Tip1 => 'راجع صف التقدم يوميًا لمعرفة السلسلة و XP.';
+
+  @override
+  String get tutorialS2Tip2 =>
+      'الخطة المخصصة تظهر في الرئيسية عندما تحفظ خطة من الحفظ الذكي.';
+
+  @override
+  String get tutorialS2Note1 =>
+      'بعض البطاقات تظهر فقط عند وجود بيانات، مثل آخر موضع قراءة أو خطة مخصصة.';
+
+  @override
+  String get tutorialS2Note2 =>
+      'معاينة الشهادات التجريبية تظهر في وضع التطوير فقط وليست جزءًا للمستخدم النهائي.';
+
+  @override
+  String get tutorialS3Title => 'قراءة القرآن وعرض صفحات المصحف';
+
+  @override
+  String get tutorialS3Cat => 'القرآن';
+
+  @override
+  String get tutorialS3Does =>
+      'يوفر تبويب القرآن قائمة السور، عرض الأجزاء والصفحات، قارئ المصحف، تشغيل الآيات، النسخ، العلامات المرجعية، حجم الخط، ووضع التركيز.';
+
+  @override
+  String get tutorialS3Open =>
+      'اضغط تبويب القرآن، ثم اختر سورة من تبويب السور أو صفحة من تبويب الأجزاء. يمكن فتح الصفحة أيضًا من الورد اليومي.';
+
+  @override
+  String get tutorialS3Useful =>
+      'مفيد للورد اليومي، مراجعة آية محددة، القراءة حسب الصفحة، أو التحضير لجلسة حفظ.';
+
+  @override
+  String get tutorialS3Step1 =>
+      'ابحث عن السورة من مربع البحث أو اخترها من القائمة.';
+
+  @override
+  String get tutorialS3Step2 =>
+      'افتح تبويب الأجزاء للوصول إلى صفحات المصحف حسب الجزء.';
+
+  @override
+  String get tutorialS3Step3 =>
+      'داخل القارئ اضغط الآية لعرض إجراءات التشغيل والنسخ والحفظ.';
+
+  @override
+  String get tutorialS3Step4 =>
+      'استخدم زر حجم الخط لتكبير النص، وزر التركيز لتقليل التشتيت.';
+
+  @override
+  String get tutorialS3Step5 =>
+      'في قارئ الصفحة اضغط تأكيد القراءة ليُحتسب تقدم القراءة.';
+
+  @override
+  String get tutorialS3Tip1 =>
+      'البحث يدعم أسماء السور، والبحث النصي في الآيات يعتمد على تطبيع النص العربي.';
+
+  @override
+  String get tutorialS3Tip2 => 'استخدم تشغيل الصوت قبل الحفظ لتثبيت النطق.';
+
+  @override
+  String get tutorialS3Note1 =>
+      'بيانات القرآن محملة من ملفات التطبيق المحلية، لذلك يمكن عرض النص بدون اتصال.';
+
+  @override
+  String get tutorialS3Note2 =>
+      'الصوت قد يحتاج اتصالًا أو ملفًا مخزنًا في الكاش حسب توفره.';
+
+  @override
+  String get tutorialS4Title => 'البحث والعلامات المرجعية';
+
+  @override
+  String get tutorialS4Cat => 'القرآن';
+
+  @override
+  String get tutorialS4Does =>
+      'يسمح لك بالعثور على السور أو الآيات، وحفظ الآيات المهمة كعلامات مرجعية مجمعة حسب السورة.';
+
+  @override
+  String get tutorialS4Open =>
+      'البحث من أعلى تبويب القرآن. العلامات من تبويب العلامات داخل القرآن أو من إجراء الحفظ داخل القارئ.';
+
+  @override
+  String get tutorialS4Useful =>
+      'مفيد لتجميع آيات المراجعة، الآيات المتشابهة، أو مواضع تريد الرجوع إليها لاحقًا.';
+
+  @override
+  String get tutorialS4Step1 => 'اكتب اسم سورة أو كلمة من الآية في مربع البحث.';
+
+  @override
+  String get tutorialS4Step2 => 'افتح الآية أو السورة المطلوبة من النتائج.';
+
+  @override
+  String get tutorialS4Step3 => 'من القارئ اختر علامة مرجعية لحفظ الآية.';
+
+  @override
+  String get tutorialS4Step4 =>
+      'افتح تبويب العلامات للرجوع إلى الآيات المحفوظة أو حذفها بالسحب/التأكيد.';
+
+  @override
+  String get tutorialS4Tip1 =>
+      'احفظ بدايات مقاطع الحفظ كعلامات لتعود إليها بسرعة.';
+
+  @override
+  String get tutorialS4Tip2 => 'استخدم النسخ عند مشاركة آية خارج التطبيق.';
+
+  @override
+  String get tutorialS4Note1 => 'العلامات محفوظة محليًا في SharedPreferences.';
+
+  @override
+  String get tutorialS4Note2 => 'إزالة علامة لا تحذف أي تقدم قراءة أو حفظ.';
+
+  @override
+  String get tutorialS5Title => 'الحفظ خطوة بخطوة';
+
+  @override
+  String get tutorialS5Cat => 'الحفظ';
+
+  @override
+  String get tutorialS5Does =>
+      'يوفر تبويب الحفظ مسارين: مسار البالغين من البداية، ومسار المبتدئين من قصار السور، مع فتح السور تدريجيًا ومتابعة حالة كل آية.';
+
+  @override
+  String get tutorialS5Open =>
+      'اضغط تبويب الحفظ، اختر المسار عند أول استخدام، ثم اختر سورة مفتوحة أو غيّر المسار من زر المسار.';
+
+  @override
+  String get tutorialS5Useful =>
+      'مفيد للحفظ المنهجي بسور كاملة ومراجعات إجبارية تمنع تراكم النسيان.';
+
+  @override
+  String get tutorialS5Step1 => 'اختر مسار البالغين أو المبتدئين.';
+
+  @override
+  String get tutorialS5Step2 => 'افتح سورة متاحة من قائمة السور.';
+
+  @override
+  String get tutorialS5Step3 => 'استمع للآية، ثم ابدأ التسميع عند الحاجة.';
+
+  @override
+  String get tutorialS5Step4 =>
+      'أكمل الآيات المطلوبة، وتعامل مع نقاط المراجعة قبل فتح التالي.';
+
+  @override
+  String get tutorialS5Tip1 =>
+      'استخدم إعداد دقة التسميع من الإعدادات إذا كان التقييم صارمًا أو سهلًا أكثر من اللازم.';
+
+  @override
+  String get tutorialS5Tip2 =>
+      'راجع الآيات التي تظهر في حالة مراجعة قبل الانتقال السريع.';
+
+  @override
+  String get tutorialS5Note1 =>
+      'بعض السور تكون مقفلة حتى يكتمل الشرط السابق في المسار المختار.';
+
+  @override
+  String get tutorialS5Note2 =>
+      'تقدم الحفظ محفوظ محليًا في Isar، وقد يزامن سحابيًا عند تسجيل الدخول.';
+
+  @override
+  String get tutorialS6Title => 'الأذكار اليومية والعداد';
+
+  @override
+  String get tutorialS6Cat => 'الأذكار';
+
+  @override
+  String get tutorialS6Does =>
+      'يحتوي على أذكار الصباح والمساء، أذكار عامة، وأدعية، مع عداد تكرار، فهرس، تغيير حجم الخط، نسخ ومشاركة.';
+
+  @override
+  String get tutorialS6Open =>
+      'اضغط تبويب الأذكار، ثم اختر الصباح أو المساء أو الأذكار العامة أو الأدعية.';
+
+  @override
+  String get tutorialS6Useful =>
+      'مفيد للورد الصباحي والمسائي، جلسات التسبيح، ومشاركة دعاء أو ذكر بسرعة.';
+
+  @override
+  String get tutorialS6Step1 => 'اختر فئة الأذكار المطلوبة.';
+
+  @override
+  String get tutorialS6Step2 => 'اضغط بطاقة الذكر أو العداد لإكمال التكرارات.';
+
+  @override
+  String get tutorialS6Step3 => 'استخدم الفهرس للانتقال إلى ذكر محدد.';
+
+  @override
+  String get tutorialS6Step4 =>
+      'غيّر حجم الخط من زر التنسيق، وانسخ أو شارك الذكر عند الحاجة.';
+
+  @override
+  String get tutorialS6Step5 =>
+      'بعد الإكمال يمكنك اعادة ضبط الجلسة أو العودة للرئيسية.';
+
+  @override
+  String get tutorialS6Tip1 => 'فعّل تذكيرات الصباح والمساء من الإعدادات.';
+
+  @override
+  String get tutorialS6Tip2 => 'استخدم تبويب الأدعية للتذكير اليومي بالدعاء.';
+
+  @override
+  String get tutorialS6Note1 => 'الأذكار محملة من ملفات التطبيق المحلية.';
+
+  @override
+  String get tutorialS6Note2 =>
+      'عداد الأذكار مخصص للجلسة الحالية، وليس شهادة حفظ.';
+
+  @override
+  String get tutorialS7Title => 'الحفظ الذكي والخطة اليومية';
+
+  @override
+  String get tutorialS7Cat => 'الحفظ';
+
+  @override
+  String get tutorialS7Does =>
+      'Memorization Plus ينشئ خطة يومية للبالغين تجمع آيات جديدة ومراجعة قريبة وبعيدة، مع تقييم ممتاز/متوسط/ضعيف واختبار شفهي.';
+
+  @override
+  String get tutorialS7Open =>
+      'من الصفحة الرئيسية أو بطاقة الحفظ الذكي في تبويب الحفظ، ثم اختر مسار البالغين.';
+
+  @override
+  String get tutorialS7Useful =>
+      'مفيد لمن يريد حفظًا متدرجًا مع مراجعة ذكية بدل الاعتماد على الذاكرة وحدها.';
+
+  @override
+  String get tutorialS7Step1 => 'اختر مسار البالغين من شاشة اختيار المسار.';
+
+  @override
+  String get tutorialS7Step2 =>
+      'افتح الخطة اليومية للسورة الأخيرة أو المختارة.';
+
+  @override
+  String get tutorialS7Step3 => 'راجع كل آية ثم قيّمها: ممتاز، متوسط، أو ضعيف.';
+
+  @override
+  String get tutorialS7Step4 =>
+      'ابدأ الاختبار من زر الاختبار لتسميع الآيات صوتيًا.';
+
+  @override
+  String get tutorialS7Step5 =>
+      'استخدم زر التحديث لإعادة توليد الخطة عند الحاجة.';
+
+  @override
+  String get tutorialS7Tip1 =>
+      'قيّم بصدق لأن التقييم يحدد قوة الآية وموعد مراجعتها التالي.';
+
+  @override
+  String get tutorialS7Tip2 =>
+      'ابدأ بعدد آيات قليل إذا كنت تبني عادة يومية جديدة.';
+
+  @override
+  String get tutorialS7Note1 =>
+      'الخطة اليومية تحفظ في SharedPreferences وتستخدم سجلات مراجعة محلية.';
+
+  @override
+  String get tutorialS7Note2 =>
+      'الاختبار يحتاج صلاحية الميكروفون والتعرف على الكلام من الجهاز.';
+
+  @override
+  String get tutorialS8Title => 'الخطة المخصصة';
+
+  @override
+  String get tutorialS8Cat => 'الحفظ';
+
+  @override
+  String get tutorialS8Does =>
+      'تسمح بإنشاء خطة حفظ باسم ونطاق سور وحمل يومي وأيام أسبوعية ومدة جلسة وصعوبة ومراجعة قريبة/بعيدة.';
+
+  @override
+  String get tutorialS8Open =>
+      'افتح الحفظ الذكي، ثم اضغط بطاقة الخطة المخصصة من شاشة اختيار المسار.';
+
+  @override
+  String get tutorialS8Useful =>
+      'مفيدة لمن لديه هدف محدد مثل حفظ جزء معين أو تنظيم حفظ طفل بخطة قصيرة.';
+
+  @override
+  String get tutorialS8Step1 => 'اكتب اسم الخطة وحدد هل هي لك أم لطفل.';
+
+  @override
+  String get tutorialS8Step2 => 'اختر بداية ونهاية نطاق السور.';
+
+  @override
+  String get tutorialS8Step3 =>
+      'اضبط عدد الآيات اليومية وأيام الحفظ ومدة الجلسة.';
+
+  @override
+  String get tutorialS8Step4 => 'اختر مستوى الصعوبة وشغّل أو أوقف المراجعات.';
+
+  @override
+  String get tutorialS8Step5 => 'احفظ الخطة للانتقال إلى الخطة اليومية.';
+
+  @override
+  String get tutorialS8Tip1 =>
+      'اجعل نطاق الخطة صغيرًا في البداية لتسهيل الالتزام.';
+
+  @override
+  String get tutorialS8Tip2 =>
+      'اترك المراجعة القريبة والبعيدة مفعّلتين إن كنت تحفظ يوميًا.';
+
+  @override
+  String get tutorialS8Note1 => 'يمكن حذف الخطة من شاشة الإعداد نفسها.';
+
+  @override
+  String get tutorialS8Note2 =>
+      'الخطة تظهر في الصفحة الرئيسية عند وجود خطة نشطة.';
+
+  @override
+  String get tutorialS9Title => 'وضع الأطفال ولوحة ولي الأمر';
+
+  @override
+  String get tutorialS9Cat => 'الحفظ';
+
+  @override
+  String get tutorialS9Does =>
+      'يوفر رحلة أطفال بمراحل ونجوم ومستويات وتكرار صوتي، مع لوحة ولي أمر للملخص والتذكير والمكافآت والربط عن بعد.';
+
+  @override
+  String get tutorialS9Open =>
+      'من الحفظ الذكي اختر مسار الأطفال. لوحة ولي الأمر تظهر من رحلة الأطفال أو من الإعدادات عند اختيار مسار الأطفال أو تفعيل وضع ولي الأمر.';
+
+  @override
+  String get tutorialS9Useful =>
+      'مفيد للأطفال والمبتدئين، أو للوالد الذي يريد متابعة النجوم والجلسات والمكافآت.';
+
+  @override
+  String get tutorialS9Step1 => 'اختر مسار الأطفال وافتح رحلة السورة.';
+
+  @override
+  String get tutorialS9Step2 => 'ابدأ المرحلة المفتوحة، واستمع للآية وكررها.';
+
+  @override
+  String get tutorialS9Step3 => 'اضغط أنهيت المراجعة لمنح النقاط والنجوم.';
+
+  @override
+  String get tutorialS9Step4 =>
+      'افتح لوحة ولي الأمر لإنشاء رمز، ضبط التذكير، إضافة مكافآت، أو ربط طفل عبر QR/إدخال يدوي.';
+
+  @override
+  String get tutorialS9Tip1 =>
+      'استخدم المكافآت الصغيرة لتحويل الحفظ إلى عادة لطيفة.';
+
+  @override
+  String get tutorialS9Tip2 => 'فعّل تذكير الطفل اليومي من لوحة ولي الأمر.';
+
+  @override
+  String get tutorialS9Note1 => 'المراحل المقفلة تفتح بعد إكمال السابق.';
+
+  @override
+  String get tutorialS9Note2 =>
+      'الربط عن بعد يعتمد على الحساب، بينما تقدم الطفل المحلي محفوظ في الجهاز.';
+
+  @override
+  String get tutorialS10Title => 'التقدم والإنجازات والشهادات';
+
+  @override
+  String get tutorialS10Cat => 'التقدم';
+
+  @override
+  String get tutorialS10Does =>
+      'يعرض إحصاءات القراءة والحفظ، السلسلة اليومية، إنجازات القراءة والحفظ والالتزام، إحصاءات الحفظ الذكي، شهاداتك، ومشاركة التقدم.';
+
+  @override
+  String get tutorialS10Open => 'اضغط تبويب التقدم من الشريط السفلي.';
+
+  @override
+  String get tutorialS10Useful =>
+      'مفيد للمراجعة الأسبوعية، الاحتفال بالإنجازات، ومتابعة الاتساق عبر السلسلة والنشاط.';
+
+  @override
+  String get tutorialS10Step1 =>
+      'راجع البطاقات العليا لمعرفة أيام السلسلة والصفحات المقروءة.';
+
+  @override
+  String get tutorialS10Step2 =>
+      'افتح أقسام القراءة والحفظ لمعرفة الصفحات والآيات والسور والأجزاء.';
+
+  @override
+  String get tutorialS10Step3 =>
+      'بدّل فلاتر الإنجازات بين الكل والقراءة والحفظ والسلسلة.';
+
+  @override
+  String get tutorialS10Step4 =>
+      'اضغط إنجازًا مفتوحًا لعرض التفاصيل والمشاركة.';
+
+  @override
+  String get tutorialS10Step5 =>
+      'افتح شهاداتك عند اكتمال سورة أو جزء أو نصف/كامل القرآن.';
+
+  @override
+  String get tutorialS10Tip1 =>
+      'تأكيد قراءة الصفحة من القارئ هو ما يرفع إحصاءات القراءة.';
+
+  @override
+  String get tutorialS10Tip2 =>
+      'الشهادات تعتمد على اكتمال الحفظ الحقيقي للآيات المطلوبة.';
+
+  @override
+  String get tutorialS10Note1 =>
+      'بعض الإحصاءات تظهر فقط بعد وجود تقدم في الحفظ الذكي أو وضع الأطفال.';
+
+  @override
+  String get tutorialS10Note2 =>
+      'المشاركة ترسل نصًا فقط ولا تنشر تلقائيًا بدون اختيارك.';
+
+  @override
+  String get tutorialS11Title => 'الإعدادات والحساب والإشعارات';
+
+  @override
+  String get tutorialS11Cat => 'الإعدادات';
+
+  @override
+  String get tutorialS11Does =>
+      'تجمع الحساب، الملف الشخصي، وضع ولي الأمر، المظهر، اللغة، دقة التسميع، تذكيرات المراجعة والأذكار والدعاء، ومعلومات التطبيق.';
+
+  @override
+  String get tutorialS11Open =>
+      'اضغط الترس من الصفحة الرئيسية أو افتح مسار الإعدادات.';
+
+  @override
+  String get tutorialS11Useful =>
+      'مفيد لتخصيص التجربة، حماية التقدم، وضبط التذكيرات بما يناسب يومك.';
+
+  @override
+  String get tutorialS11Step1 =>
+      'سجّل الدخول أو أنشئ حسابًا بالبريد وكلمة المرور لإدارة حسابك وخيارات الاستعادة.';
+
+  @override
+  String get tutorialS11Step2 => 'عدّل الاسم والعمر من قسم الملف الشخصي.';
+
+  @override
+  String get tutorialS11Step3 => 'اختر الوضع الفاتح أو الداكن أو إعداد النظام.';
+
+  @override
+  String get tutorialS11Step4 => 'اختر العربية أو English من قسم اللغة.';
+
+  @override
+  String get tutorialS11Step5 => 'اضبط دقة التسميع بين سهل ومتوسط وصعب.';
+
+  @override
+  String get tutorialS11Step6 =>
+      'فعّل أو أوقف تذكيرات المراجعة والسلسلة وأذكار الصباح والمساء والدعاء.';
+
+  @override
+  String get tutorialS11Tip1 => 'اكتب الاسم بالعربية ليظهر أجمل في الشهادات.';
+
+  @override
+  String get tutorialS11Tip2 =>
+      'فعّل وضع ولي الأمر إذا كنت تستخدم مسار البالغين وتريد متابعة طفل.';
+
+  @override
+  String get tutorialS11Note1 => 'الإشعارات تحتاج صلاحيات النظام حتى تعمل.';
+
+  @override
+  String get tutorialS11Note2 =>
+      'تغيير اللغة والمظهر محفوظ محليًا ويطبق على واجهة التطبيق.';
+
+  @override
+  String get tutorialS12Title => 'العمل دون اتصال وحفظ البيانات';
+
+  @override
+  String get tutorialS12Cat => 'الإعدادات';
+
+  @override
+  String get tutorialS12Does =>
+      'يعتمد التطبيق على بيانات محلية للقرآن والأذكار، ويحفظ الإعدادات والعلامات والخطط في SharedPreferences، وتقدم الحفظ والسلسلة و XP في Isar.';
+
+  @override
+  String get tutorialS12Open =>
+      'لا توجد شاشة منفصلة لهذه الميزة؛ تعمل تلقائيًا أثناء استخدام القرآن، الأذكار، الحفظ، التقدم، والإعدادات.';
+
+  @override
+  String get tutorialS12Useful =>
+      'مفيد لفهم ما يعمل محليًا وما يحتاج اتصالًا، وتجنب فقدان التقدم المهم.';
+
+  @override
+  String get tutorialS12Step1 =>
+      'استخدم القرآن والأذكار حتى بدون اتصال لأن النصوص ضمن أصول التطبيق.';
+
+  @override
+  String get tutorialS12Step2 =>
+      'استمر في القراءة والحفظ ليُحفظ التقدم محليًا.';
+
+  @override
+  String get tutorialS12Step3 =>
+      'سجّل الدخول عندما تحتاج إلى ميزات الحساب أو استعادة الوصول.';
+
+  @override
+  String get tutorialS12Tip1 =>
+      'افتح التطبيق بعد تغيير الجهاز أو إعادة التثبيت ثم سجّل الدخول لاسترجاع ما يدعمه الحساب.';
+
+  @override
+  String get tutorialS12Tip2 =>
+      'حافظ على اتصال جيد عند تشغيل الصوت أو استخدام ميزات الحساب.';
+
+  @override
+  String get tutorialS12Note1 =>
+      'حذف بيانات التطبيق من النظام قد يزيل البيانات المحلية غير المتزامنة.';
+
+  @override
+  String get tutorialS12Note2 =>
+      'الاشتراك أو المزايا المدفوعة غير موثقة هنا لأنها غير مفعلة كواجهة مستخدم حالية.';
+
+  @override
+  String get tutorialCategoryTitle => 'الفئة';
+
+  @override
+  String get tutorialWhatItDoesTitle => 'ماذا تفعل؟';
+
+  @override
+  String get tutorialHowToOpenTitle => 'كيف أصل إليها؟';
+
+  @override
+  String get tutorialStepsTitle => 'خطوات الاستخدام';
+
+  @override
+  String get tutorialTipsTitle => 'تلميحات';
+
+  @override
+  String get tutorialNotesTitle => 'ملاحظات فنية';
+
+  @override
+  String get tutorialWhenUsefulTitle => 'متى تكون مفيدة؟';
+
+  @override
+  String certificateCelebrationMultiple(int count) {
+    return 'لقد حصلت على $count شهادات جديدة';
+  }
+
+  @override
+  String certificateCelebrationSingle(String title) {
+    return 'لقد حصلت على $title';
+  }
+
+  @override
+  String get learningAlertReduceNewTitle => 'تقليل الحفظ الجديد';
+
+  @override
+  String get learningAlertReduceNewSubtitle =>
+      'حِملك الدراسي ثقيل، ركز على المراجعة';
+
+  @override
+  String get learningAlertFocusWeakTitle => 'ركز على الآيات الصعبة';
+
+  @override
+  String get learningAlertFocusWeakSubtitle =>
+      'لديك آيات صعبة تحتاج مراجعة مكثفة';
+
+  @override
+  String get learningAlertGenericTitle => 'تنبيه تعليمي';
+
+  @override
+  String get learningAlertGenericSubtitle => 'مطلوب اتخاذ إجراء';
+
+  @override
+  String get reviewBacklogTitle => 'تراكم المراجعة';
+
+  @override
+  String reviewBacklogSubtitle(String overdue) {
+    return 'لديك $overdue آيات متأخرة';
+  }
+
+  @override
+  String get smartPlanCustomTitle => 'خطة مخصصة';
+
+  @override
+  String get smartPlanReviewTitle => 'خطة المراجعة';
+
+  @override
+  String get smartPlanTodayTitle => 'خطة اليوم';
+
+  @override
+  String get smartPlanSubtitle => 'أكمل رحلة حفظك';
+
+  @override
+  String get dailyWirdTitle => 'الورد اليومي';
+
+  @override
+  String get dailyWirdSubtitle => 'اقرأ وردك اليومي';
+
+  @override
+  String get exploreAzkarTitle => 'وقت الذكر';
+
+  @override
+  String get exploreAzkarSubtitle => 'ابدأ أذكارك اليومية';
+
+  @override
+  String get exploreMissionTitle => 'المهمة الحالية';
+
+  @override
+  String get exploreMissionSubtitle => 'ابدأ مهمتك الحالية';
+
+  @override
+  String get exploreQuranTitle => 'القرآن الكريم';
+
+  @override
+  String get exploreQuranSubtitle => 'اقرأ القرآن';
+
+  @override
+  String get parentDashboardLinkHint => 'talia-kids-link:...';
 }

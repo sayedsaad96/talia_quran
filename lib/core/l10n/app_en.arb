@@ -176,6 +176,8 @@
   "authSigninFailed": "Failed to sign in",
   "authSignoutFailed": "Failed to sign out",
   "authGenericError": "Something went wrong. Try again.",
+  "authPasswordSameAsOld": "Password must be different.",
+  "authSessionExpired": "Session expired. Please request a new link.",
   "profileSavedToCloud": "Signed in to your account",
   "guestModeWarning": "Sign in to manage your account, recovery, and family features.",
   "signOutWarning": "Do you want to sign out? Local progress on this device will remain available.",
@@ -620,23 +622,6 @@
     }
   },
   "parentGuardianMode": "I am a parent/guardian",
-  "qcfPocTitle": "QCF rendering proof of concept",
-  "qcfPocIntro": "Temporary visual test screen for Quran rendering inside the memorization area.",
-  "qcfPocNoProduction": "This screen does not change Hifz logic, memorization state, progress, locks, unlocks, or checkpoints.",
-  "qcfPocVisualOnly": "qcf_quran_plus is used here only for visual Quran rendering.",
-  "qcfPocSingleVerse": "Single verse",
-  "qcfPocMultipleVerses": "Multiple verses",
-  "qcfPocLastVerse": "Last verse",
-  "qcfPocFullPage": "Full mushaf page",
-  "qcfPocFindings": "Findings",
-  "qcfPocSupported": "Supported",
-  "qcfPocLimited": "Limited",
-  "qcfPocUnsupported": "Unsupported",
-  "qcfPocStatus": "Status",
-  "qcfPocAlBaqarah255": "Al-Baqarah 255",
-  "qcfPocAlFatihah": "Al-Fatiha 1-7",
-  "qcfPocAlIkhlas": "Al-Ikhlas 1-4",
-  "qcfPocAshSharh8": "Ash-Sharh 8",
   "qcfPocTitle": "QCF rendering proof of concept",
   "qcfPocIntro": "Temporary visual test screen for Quran rendering inside the memorization area.",
   "qcfPocNoProduction": "This screen does not change Hifz logic, memorization state, progress, locks, unlocks, or checkpoints.",
@@ -1315,5 +1300,337 @@
   "homeCurrentMission": "Current Mission",
   "homeStartKidsMission": "Start the child's current mission.",
   "homeChooseKidsPath": "Choose the kids path or continue the current mission.",
-  "homeTodaysPlan": "Today's Plan"
+  "homeDailyWirdPage": "Read page {page} of the Holy Quran",
+  "@homeDailyWirdPage": {
+    "placeholders": {
+      "page": {}
+    }
+  },
+  "homeDailyWirdSurah": "Read Surah {surah} of the Holy Quran",
+  "@homeDailyWirdSurah": {
+    "placeholders": {
+      "surah": {}
+    }
+  },
+  "homeDailyWird": "Daily Wird",
+  "homeDailyWirdSurahPage": "Surah {surah} — Page {page}",
+  "@homeDailyWirdSurahPage": {
+    "placeholders": {
+      "surah": {},
+      "page": {}
+    }
+  },
+  "homeTodaysPlan": "Today's Plan",
+  "homeKidsProgress": "Kids Progress",
+  "homeYourProgress": "Your Progress",
+  "homeGoToSettings": "Go to Settings",
+  "notificationDailyReviewTitle": "Daily Review Time 📖",
+  "notificationDailyReviewBodyCount": "You have {count} ayahs to review today",
+  "@notificationDailyReviewBodyCount": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "notificationDailyReviewBody": "It's time for your daily memorization review",
+  "notificationStreakAlertTitle": "⚠️ Don't lose your {count} day streak!",
+  "@notificationStreakAlertTitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "notificationStreakAlertBody": "You haven't reviewed today yet — you still can",
+  "notificationDailyAyahTitle": "Ayah of the Day ✨",
+  "notificationDailyAyahBody": "Read your daily Wird from the Holy Quran",
+  "notificationSmartReminderTitle": "Wird Time! ⏳",
+  "notificationSmartReminderBody": "You haven't read your Wird today! Take a few minutes for the Quran now.",
+  "notificationMorningAzkarTitle": "Morning Azkar ☀️",
+  "notificationMorningAzkarBody": "Start your day with the remembrance of Allah and peace of mind",
+  "notificationEveningAzkarTitle": "Evening Azkar 🌙",
+  "notificationEveningAzkarBody": "End your day with the remembrance and protection of Allah",
+  "notificationKidsReviewTitle": "Review Time Hero! 🌟",
+  "notificationKidsReviewBody": "Your new stage is ready, let's continue memorizing!",
+  "notificationDailyDuaTitle": "Dua of the Day 🤲",
+  "homeActionReadToday": "Read today",
+  "homeActionTodaysPlan": "Today's Plan",
+  "homeActionContinuePlan": "Continue today's plan",
+  "homeActionProgress": "Progress",
+  "homeActionReviewGains": "Review gains",
+  "homeActionSettings": "Settings",
+  "homeActionTuneApp": "Tune app",
+  "homeTourTitle": "Need a quick tour?",
+  "homeTourDesc": "Open the guide here or later from Help.",
+  "homeTourGuideAction": "Guide",
+  "journeyReviewBeforeNewTitle": "Review before new content",
+  "journeyReviewBeforeNewDesc": "Near revision due in {surahAyahLabel}.",
+  "@journeyReviewBeforeNewDesc": {
+    "placeholders": {
+      "surahAyahLabel": {}
+    }
+  },
+  "journeyLongTermReviewTitle": "Long-term review due",
+  "journeyLongTermReviewDesc": "Time to review {surahAyahLabel}.",
+  "@journeyLongTermReviewDesc": {
+    "placeholders": {
+      "surahAyahLabel": {}
+    }
+  },
+  "journeyReviewDifficultAyahTitle": "Review a difficult ayah",
+  "journeyReviewDifficultAyahDesc": "Your last review was difficult for {surahAyahLabel}.",
+  "@journeyReviewDifficultAyahDesc": {
+    "placeholders": {
+      "surahAyahLabel": {}
+    }
+  },
+  "journeyContinueDailyPlanTitle": "Continue today's plan",
+  "journeyContinueDailyPlanDesc": "{completed} of {total} items done today.",
+  "@journeyContinueDailyPlanDesc": {
+    "placeholders": {
+      "completed": {},
+      "total": {}
+    }
+  },
+  "journeyMemorizeNewAyahsTitle": "Memorize new ayahs",
+  "journeyMemorizeNewAyahsDesc": "Start new ayahs in {surahAyahLabel}.",
+  "@journeyMemorizeNewAyahsDesc": {
+    "placeholders": {
+      "surahAyahLabel": {}
+    }
+  },
+  "journeyCurrentMissionTitle": "Current Mission",
+  "journeyCurrentMissionDesc": "Continue the child's current mission.",
+  "journeyContinueSessionTitle": "Continue Session",
+  "journeyContinueSessionDesc": "You have an incomplete memorization session in {surahLabel}.",
+  "@journeyContinueSessionDesc": {
+    "placeholders": {
+      "surahLabel": {}
+    }
+  },
+  "journeyHifzReviewDueTitle": "Hifz review due",
+  "journeyHifzReviewDueDesc": "Review due items in your Hifz path.",
+  "journeyFallbackSurah": "your surah",
+  "journeyAyahLabel": ", ayah {start}",
+  "@journeyAyahLabel": {
+    "placeholders": {
+      "start": {}
+    }
+  },
+  "journeyAyahsLabel": ", ayahs {start}–{end}",
+  "@journeyAyahsLabel": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "tutorialS1Title": "Guide 1",
+  "tutorialS1Cat": "Category",
+  "tutorialS1Does": "What it does",
+  "tutorialS1Open": "How to open",
+  "tutorialS1Useful": "When useful",
+  "tutorialS1Step1": "Step 1",
+  "tutorialS1Step2": "Step 2",
+  "tutorialS1Step3": "Step 3",
+  "tutorialS1Tip1": "Tip 1",
+  "tutorialS1Tip2": "Tip 2",
+  "tutorialS1Note1": "Note 1",
+  "tutorialS1Note2": "Note 2",
+  "tutorialS2Title": "Guide 2",
+  "tutorialS2Cat": "Category",
+  "tutorialS2Does": "What it does",
+  "tutorialS2Open": "How to open",
+  "tutorialS2Useful": "When useful",
+  "tutorialS2Step1": "Step 1",
+  "tutorialS2Step2": "Step 2",
+  "tutorialS2Step3": "Step 3",
+  "tutorialS2Step4": "Step 4",
+  "tutorialS2Tip1": "Tip 1",
+  "tutorialS2Tip2": "Tip 2",
+  "tutorialS2Note1": "Note 1",
+  "tutorialS2Note2": "Note 2",
+  "tutorialS3Title": "Guide 3",
+  "tutorialS3Cat": "Category",
+  "tutorialS3Does": "What it does",
+  "tutorialS3Open": "How to open",
+  "tutorialS3Useful": "When useful",
+  "tutorialS3Step1": "Step 1",
+  "tutorialS3Step2": "Step 2",
+  "tutorialS3Step3": "Step 3",
+  "tutorialS3Step4": "Step 4",
+  "tutorialS3Step5": "Step 5",
+  "tutorialS3Tip1": "Tip 1",
+  "tutorialS3Tip2": "Tip 2",
+  "tutorialS3Note1": "Note 1",
+  "tutorialS3Note2": "Note 2",
+  "tutorialS4Title": "Guide 4",
+  "tutorialS4Cat": "Category",
+  "tutorialS4Does": "What it does",
+  "tutorialS4Open": "How to open",
+  "tutorialS4Useful": "When useful",
+  "tutorialS4Step1": "Step 1",
+  "tutorialS4Step2": "Step 2",
+  "tutorialS4Step3": "Step 3",
+  "tutorialS4Step4": "Step 4",
+  "tutorialS4Tip1": "Tip 1",
+  "tutorialS4Tip2": "Tip 2",
+  "tutorialS4Note1": "Note 1",
+  "tutorialS4Note2": "Note 2",
+  "tutorialS5Title": "Guide 5",
+  "tutorialS5Cat": "Category",
+  "tutorialS5Does": "What it does",
+  "tutorialS5Open": "How to open",
+  "tutorialS5Useful": "When useful",
+  "tutorialS5Step1": "Step 1",
+  "tutorialS5Step2": "Step 2",
+  "tutorialS5Step3": "Step 3",
+  "tutorialS5Step4": "Step 4",
+  "tutorialS5Tip1": "Tip 1",
+  "tutorialS5Tip2": "Tip 2",
+  "tutorialS5Note1": "Note 1",
+  "tutorialS5Note2": "Note 2",
+  "tutorialS6Title": "Guide 6",
+  "tutorialS6Cat": "Category",
+  "tutorialS6Does": "What it does",
+  "tutorialS6Open": "How to open",
+  "tutorialS6Useful": "When useful",
+  "tutorialS6Step1": "Step 1",
+  "tutorialS6Step2": "Step 2",
+  "tutorialS6Step3": "Step 3",
+  "tutorialS6Step4": "Step 4",
+  "tutorialS6Step5": "Step 5",
+  "tutorialS6Tip1": "Tip 1",
+  "tutorialS6Tip2": "Tip 2",
+  "tutorialS6Note1": "Note 1",
+  "tutorialS6Note2": "Note 2",
+  "tutorialS7Title": "Guide 7",
+  "tutorialS7Cat": "Category",
+  "tutorialS7Does": "What it does",
+  "tutorialS7Open": "How to open",
+  "tutorialS7Useful": "When useful",
+  "tutorialS7Step1": "Step 1",
+  "tutorialS7Step2": "Step 2",
+  "tutorialS7Step3": "Step 3",
+  "tutorialS7Step4": "Step 4",
+  "tutorialS7Step5": "Step 5",
+  "tutorialS7Tip1": "Tip 1",
+  "tutorialS7Tip2": "Tip 2",
+  "tutorialS7Note1": "Note 1",
+  "tutorialS7Note2": "Note 2",
+  "tutorialS8Title": "Guide 8",
+  "tutorialS8Cat": "Category",
+  "tutorialS8Does": "What it does",
+  "tutorialS8Open": "How to open",
+  "tutorialS8Useful": "When useful",
+  "tutorialS8Step1": "Step 1",
+  "tutorialS8Step2": "Step 2",
+  "tutorialS8Step3": "Step 3",
+  "tutorialS8Step4": "Step 4",
+  "tutorialS8Step5": "Step 5",
+  "tutorialS8Tip1": "Tip 1",
+  "tutorialS8Tip2": "Tip 2",
+  "tutorialS8Note1": "Note 1",
+  "tutorialS8Note2": "Note 2",
+  "tutorialS9Title": "Guide 9",
+  "tutorialS9Cat": "Category",
+  "tutorialS9Does": "What it does",
+  "tutorialS9Open": "How to open",
+  "tutorialS9Useful": "When useful",
+  "tutorialS9Step1": "Step 1",
+  "tutorialS9Step2": "Step 2",
+  "tutorialS9Step3": "Step 3",
+  "tutorialS9Step4": "Step 4",
+  "tutorialS9Tip1": "Tip 1",
+  "tutorialS9Tip2": "Tip 2",
+  "tutorialS9Note1": "Note 1",
+  "tutorialS9Note2": "Note 2",
+  "tutorialS10Title": "Guide 10",
+  "tutorialS10Cat": "Category",
+  "tutorialS10Does": "What it does",
+  "tutorialS10Open": "How to open",
+  "tutorialS10Useful": "When useful",
+  "tutorialS10Step1": "Step 1",
+  "tutorialS10Step2": "Step 2",
+  "tutorialS10Step3": "Step 3",
+  "tutorialS10Step4": "Step 4",
+  "tutorialS10Step5": "Step 5",
+  "tutorialS10Tip1": "Tip 1",
+  "tutorialS10Tip2": "Tip 2",
+  "tutorialS10Note1": "Note 1",
+  "tutorialS10Note2": "Note 2",
+  "tutorialS11Title": "Guide 11",
+  "tutorialS11Cat": "Category",
+  "tutorialS11Does": "What it does",
+  "tutorialS11Open": "How to open",
+  "tutorialS11Useful": "When useful",
+  "tutorialS11Step1": "Step 1",
+  "tutorialS11Step2": "Step 2",
+  "tutorialS11Step3": "Step 3",
+  "tutorialS11Step4": "Step 4",
+  "tutorialS11Step5": "Step 5",
+  "tutorialS11Step6": "Step 6",
+  "tutorialS11Tip1": "Tip 1",
+  "tutorialS11Tip2": "Tip 2",
+  "tutorialS11Note1": "Note 1",
+  "tutorialS11Note2": "Note 2",
+  "tutorialS12Title": "Guide 12",
+  "tutorialS12Cat": "Category",
+  "tutorialS12Does": "What it does",
+  "tutorialS12Open": "How to open",
+  "tutorialS12Useful": "When useful",
+  "tutorialS12Step1": "Step 1",
+  "tutorialS12Step2": "Step 2",
+  "tutorialS12Step3": "Step 3",
+  "tutorialS12Tip1": "Tip 1",
+  "tutorialS12Tip2": "Tip 2",
+  "tutorialS12Note1": "Note 1",
+  "tutorialS12Note2": "Note 2",
+  "tutorialCategoryTitle": "Category",
+  "tutorialWhatItDoesTitle": "What it does?",
+  "tutorialHowToOpenTitle": "How to access it?",
+  "tutorialStepsTitle": "Steps to use",
+  "tutorialTipsTitle": "Tips",
+  "tutorialNotesTitle": "Technical notes",
+  "tutorialWhenUsefulTitle": "When is it useful?",
+  "certificateCelebrationMultiple": "You earned {count} new certificates!",
+  "@certificateCelebrationMultiple": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "certificateCelebrationSingle": "You earned {title}",
+  "@certificateCelebrationSingle": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "learningAlertReduceNewTitle": "Reduce New Memorization",
+  "learningAlertReduceNewSubtitle": "Your workload is heavy, focus on review",
+  "learningAlertFocusWeakTitle": "Focus on Weak Ayahs",
+  "learningAlertFocusWeakSubtitle": "You have difficult ayahs to review",
+  "learningAlertGenericTitle": "Learning Alert",
+  "learningAlertGenericSubtitle": "Action required",
+  "reviewBacklogTitle": "Review Backlog",
+  "reviewBacklogSubtitle": "You have {overdue} overdue ayahs",
+  "@reviewBacklogSubtitle": {
+    "placeholders": {
+      "overdue": {
+        "type": "String"
+      }
+    }
+  },
+  "smartPlanCustomTitle": "Custom Plan",
+  "smartPlanReviewTitle": "Review Plan",
+  "smartPlanTodayTitle": "Todays Plan",
+  "smartPlanSubtitle": "Continue your memorization journey",
+  "dailyWirdTitle": "Daily Wird",
+  "dailyWirdSubtitle": "Read your daily portion",
+  "exploreAzkarTitle": "Time for Dhikr",
+  "exploreAzkarSubtitle": "Start your daily Azkar",
+  "exploreMissionTitle": "Current Mission",
+  "exploreMissionSubtitle": "Start your current mission",
+  "exploreQuranTitle": "Quran",
+  "exploreQuranSubtitle": "Read the Quran",
+  "parentDashboardLinkHint": "talia-kids-link:..."
 }

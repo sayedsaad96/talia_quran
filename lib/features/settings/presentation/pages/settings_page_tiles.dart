@@ -1558,8 +1558,8 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
     TimeOfDay initialTime,
     bool isEnabled,
     void Function(TimeOfDay) onTimeSelected,
-    Future<void> Function(int, int) scheduleFunction,
   ) async {
+    final l10n = context.l10n;
     final newTime = await showTimePicker(
       context: context,
       initialTime: initialTime,
@@ -1577,7 +1577,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
       await prefs.setInt('${key}_hour', newTime.hour);
       await prefs.setInt('${key}_minute', newTime.minute);
       if (isEnabled) {
-        await scheduleFunction(newTime.hour, newTime.minute);
+        await getIt<NotificationScheduler>().refreshNotifications(l10n);
       }
     }
   }
@@ -1589,6 +1589,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
   }
 
   Future<void> _toggleReview(bool value) async {
+    final l10n = context.l10n;
     final previous = _reviewEnabled;
     setState(() {
       _reviewEnabled = value;
@@ -1601,25 +1602,11 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
       if (!saved) {
         throw StateError('Failed to save daily review notification setting');
       }
-      if (value) {
-        await getIt<TaliaNotificationService>().scheduleDailyReviewReminder(
-          hour: _reviewTime.hour,
-          minute: _reviewTime.minute,
-        );
-      } else {
-        await getIt<TaliaNotificationService>().cancelDailyReviewReminder();
-        if (_streakEnabled) {
-          await getIt<TaliaNotificationService>().scheduleStreakProtectionAlert(
-            currentStreak: 1,
-            hour: _streakTime.hour,
-            minute: _streakTime.minute,
-          );
-        }
-      }
+      await getIt<NotificationScheduler>().refreshNotifications(l10n);
     } catch (_) {
       if (!mounted) return;
       setState(() => _reviewEnabled = previous);
-      _showSettingsError(context, context.l10n.reviewReminderSaveError);
+      _showSettingsError(context, l10n.reviewReminderSaveError);
     } finally {
       if (mounted) {
         setState(() => _savingReview = false);
@@ -1628,6 +1615,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
   }
 
   Future<void> _toggleStreak(bool value) async {
+    final l10n = context.l10n;
     final previous = _streakEnabled;
     setState(() {
       _streakEnabled = value;
@@ -1640,19 +1628,11 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
       if (!saved) {
         throw StateError('Failed to save streak notification setting');
       }
-      if (value) {
-        await getIt<TaliaNotificationService>().scheduleStreakProtectionAlert(
-          currentStreak: 1,
-          hour: _streakTime.hour,
-          minute: _streakTime.minute,
-        );
-      } else {
-        await getIt<TaliaNotificationService>().cancelStreakAlert();
-      }
+      await getIt<NotificationScheduler>().refreshNotifications(l10n);
     } catch (_) {
       if (!mounted) return;
       setState(() => _streakEnabled = previous);
-      _showSettingsError(context, context.l10n.streakReminderSaveError);
+      _showSettingsError(context, l10n.streakReminderSaveError);
     } finally {
       if (mounted) {
         setState(() => _savingStreak = false);
@@ -1661,6 +1641,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
   }
 
   Future<void> _toggleMorningAzkar(bool value) async {
+    final l10n = context.l10n;
     final previous = _morningAzkarEnabled;
     setState(() {
       _morningAzkarEnabled = value;
@@ -1676,18 +1657,11 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
       if (!saved) {
         throw StateError('Failed to save morning azkar notification setting');
       }
-      if (value) {
-        await getIt<TaliaNotificationService>().scheduleMorningAzkarReminder(
-          hour: _morningAzkarTime.hour,
-          minute: _morningAzkarTime.minute,
-        );
-      } else {
-        await getIt<TaliaNotificationService>().cancelMorningAzkarReminder();
-      }
+      await getIt<NotificationScheduler>().refreshNotifications(l10n);
     } catch (_) {
       if (!mounted) return;
       setState(() => _morningAzkarEnabled = previous);
-      _showSettingsError(context, context.l10n.morningAzkarSaveError);
+      _showSettingsError(context, l10n.morningAzkarSaveError);
     } finally {
       if (mounted) {
         setState(() => _savingMorningAzkar = false);
@@ -1696,6 +1670,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
   }
 
   Future<void> _toggleEveningAzkar(bool value) async {
+    final l10n = context.l10n;
     final previous = _eveningAzkarEnabled;
     setState(() {
       _eveningAzkarEnabled = value;
@@ -1711,18 +1686,11 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
       if (!saved) {
         throw StateError('Failed to save evening azkar notification setting');
       }
-      if (value) {
-        await getIt<TaliaNotificationService>().scheduleEveningAzkarReminder(
-          hour: _eveningAzkarTime.hour,
-          minute: _eveningAzkarTime.minute,
-        );
-      } else {
-        await getIt<TaliaNotificationService>().cancelEveningAzkarReminder();
-      }
+      await getIt<NotificationScheduler>().refreshNotifications(l10n);
     } catch (_) {
       if (!mounted) return;
       setState(() => _eveningAzkarEnabled = previous);
-      _showSettingsError(context, context.l10n.eveningAzkarSaveError);
+      _showSettingsError(context, l10n.eveningAzkarSaveError);
     } finally {
       if (mounted) {
         setState(() => _savingEveningAzkar = false);
@@ -1731,6 +1699,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
   }
 
   Future<void> _toggleDailyDua(bool value) async {
+    final l10n = context.l10n;
     final previous = _dailyDuaEnabled;
     setState(() {
       _dailyDuaEnabled = value;
@@ -1746,18 +1715,11 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
       if (!saved) {
         throw StateError('Failed to save daily dua notification setting');
       }
-      if (value) {
-        await getIt<TaliaNotificationService>().scheduleDailyDuaReminder(
-          hour: _dailyDuaTime.hour,
-          minute: _dailyDuaTime.minute,
-        );
-      } else {
-        await getIt<TaliaNotificationService>().cancelDailyDuaReminder();
-      }
+      await getIt<NotificationScheduler>().refreshNotifications(l10n);
     } catch (_) {
       if (!mounted) return;
       setState(() => _dailyDuaEnabled = previous);
-      _showSettingsError(context, context.l10n.dailyDuaSaveError);
+      _showSettingsError(context, l10n.dailyDuaSaveError);
     } finally {
       if (mounted) {
         setState(() => _savingDailyDua = false);
@@ -1875,9 +1837,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
             _reviewKey,
             _reviewTime,
             _reviewEnabled,
-            (t) => _reviewTime = t,
-            (h, m) => getIt<TaliaNotificationService>()
-                .scheduleDailyReviewReminder(hour: h, minute: m),
+            (t) => setState(() => _reviewTime = t),
           ),
         ),
         _SettingsDivider(isDark: widget.isDark),
@@ -1895,13 +1855,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
             _streakKey,
             _streakTime,
             _streakEnabled,
-            (t) => _streakTime = t,
-            (h, m) =>
-                getIt<TaliaNotificationService>().scheduleStreakProtectionAlert(
-                  currentStreak: 1,
-                  hour: h,
-                  minute: m,
-                ),
+            (t) => setState(() => _streakTime = t),
           ),
         ),
         _SettingsDivider(isDark: widget.isDark),
@@ -1919,9 +1873,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
             _morningAzkarKey,
             _morningAzkarTime,
             _morningAzkarEnabled,
-            (t) => _morningAzkarTime = t,
-            (h, m) => getIt<TaliaNotificationService>()
-                .scheduleMorningAzkarReminder(hour: h, minute: m),
+            (t) => setState(() => _morningAzkarTime = t),
           ),
         ),
         _SettingsDivider(isDark: widget.isDark),
@@ -1939,9 +1891,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
             _eveningAzkarKey,
             _eveningAzkarTime,
             _eveningAzkarEnabled,
-            (t) => _eveningAzkarTime = t,
-            (h, m) => getIt<TaliaNotificationService>()
-                .scheduleEveningAzkarReminder(hour: h, minute: m),
+            (t) => setState(() => _eveningAzkarTime = t),
           ),
         ),
         _SettingsDivider(isDark: widget.isDark),
@@ -1959,9 +1909,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
             _dailyDuaKey,
             _dailyDuaTime,
             _dailyDuaEnabled,
-            (t) => _dailyDuaTime = t,
-            (h, m) => getIt<TaliaNotificationService>()
-                .scheduleDailyDuaReminder(hour: h, minute: m),
+            (t) => setState(() => _dailyDuaTime = t),
           ),
         ),
       ],

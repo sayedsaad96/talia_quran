@@ -2,7 +2,9 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/services/notification_scheduler.dart';
 import 'package:talia_quran/core/services/notification_service.dart';
+import 'package:talia_quran/core/l10n/locale_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/parent_dashboard_cubit.dart';
@@ -101,6 +103,12 @@ void main() {
       getIt.registerSingleton<SharedPreferences>(prefs);
       getIt.registerLazySingleton<TaliaNotificationService>(
         TaliaNotificationService.new,
+      );
+      getIt.registerLazySingleton<NotificationScheduler>(
+        () => NotificationScheduler(getIt<TaliaNotificationService>()),
+      );
+      getIt.registerLazySingleton<LocaleCubit>(
+        () => LocaleCubit(getIt<SharedPreferences>()),
       );
     });
 

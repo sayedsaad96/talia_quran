@@ -13,8 +13,6 @@ class AdaptiveRecommendationsUsecase {
         const MemorizationRecommendation(
           type: RecommendationType.reviewBacklog,
           priority: RecommendationPriority.critical,
-          title: 'Clear Review Backlog',
-          description: 'You have many due ayahs. Focus on clearing them before memorizing new content.',
         ),
       );
     }
@@ -26,8 +24,6 @@ class AdaptiveRecommendationsUsecase {
         const MemorizationRecommendation(
           type: RecommendationType.overloadRisk,
           priority: RecommendationPriority.high,
-          title: 'Reduce New Memorization',
-          description: 'Your workload is heavy. Focus on retaining what you have instead of adding new ayahs.',
         ),
       );
     }
@@ -40,8 +36,6 @@ class AdaptiveRecommendationsUsecase {
           const MemorizationRecommendation(
             type: RecommendationType.leechRecovery,
             priority: RecommendationPriority.high,
-            title: 'Focus on Weak Ayahs',
-            description: 'Many of your ayahs are difficult to retain. Focus on reviewing them thoroughly.',
           ),
         );
       }
@@ -53,8 +47,6 @@ class AdaptiveRecommendationsUsecase {
         const MemorizationRecommendation(
           type: RecommendationType.retentionDrop,
           priority: RecommendationPriority.high,
-          title: 'Increase Review Frequency',
-          description: 'Your retention rate is dropping. Consider reviewing more frequently.',
         ),
       );
     }
@@ -65,8 +57,6 @@ class AdaptiveRecommendationsUsecase {
         const MemorizationRecommendation(
           type: RecommendationType.retentionExcellent,
           priority: RecommendationPriority.medium,
-          title: 'Excellent Retention',
-          description: 'Your current review strategy is working perfectly. Keep it up!',
         ),
       );
     }
@@ -77,8 +67,6 @@ class AdaptiveRecommendationsUsecase {
         const MemorizationRecommendation(
           type: RecommendationType.fsrsReady,
           priority: RecommendationPriority.low,
-          title: 'FSRS Migration Ready',
-          description: 'Sufficient data has been collected to evaluate an advanced scheduling algorithm in the future.',
         ),
       );
     } else if (report.readinessLevel == MigrationReadinessLevel.insufficientData) {
@@ -86,8 +74,6 @@ class AdaptiveRecommendationsUsecase {
         const MemorizationRecommendation(
           type: RecommendationType.fsrsNotReady,
           priority: RecommendationPriority.low,
-          title: 'Keep Reviewing',
-          description: 'Continue using the app normally while we collect more learning data.',
         ),
       );
     }

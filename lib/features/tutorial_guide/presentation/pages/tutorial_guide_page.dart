@@ -4,7 +4,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-import '../tutorial_guide_content.dart';
+import '../tutorial_guide_mapper.dart';
 import '../widgets/tutorial_guide_quick_start_card.dart';
 import '../widgets/tutorial_guide_section_card.dart';
 
@@ -18,22 +18,25 @@ class TutorialGuidePage extends StatefulWidget {
 class _TutorialGuidePageState extends State<TutorialGuidePage> {
   final _searchController = TextEditingController();
   String _query = '';
-  String _selectedCategory = 'الكل';
+  String? _selectedCategory;
+  late final List<TutorialGuideSection> _allSections;
+  late final List<String> _categories;
 
-  static const _categories = [
-    'الكل',
-    'البدء',
-    'القرآن',
-    'الحفظ',
-    'الأذكار',
-    'التقدم',
-    'الإعدادات',
-  ];
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _allSections = TutorialGuideMapper(context.l10n).mapAll();
+    _categories = [
+      context.l10n.all,
+      ..._allSections.map((s) => s.category).toSet(),
+    ];
+  }
 
   List<TutorialGuideSection> get _filteredSections {
-    return tutorialGuideSections.where((section) {
+    final selected = _selectedCategory ?? context.l10n.all;
+    return _allSections.where((section) {
       final categoryMatches =
-          _selectedCategory == 'الكل' || section.category == _selectedCategory;
+          selected == context.l10n.all || section.category == selected;
       return categoryMatches && section.matches(_query);
     }).toList();
   }
@@ -80,7 +83,7 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
                   const SizedBox(height: AppSpacing.md),
                   _CategoryChips(
                     categories: _categories,
-                    selected: _selectedCategory,
+                    selected: _selectedCategory ?? context.l10n.all,
                     onSelected: (category) {
                       setState(() => _selectedCategory = category);
                     },

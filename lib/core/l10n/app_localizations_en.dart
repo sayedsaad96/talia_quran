@@ -530,6 +530,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authGenericError => 'Something went wrong. Try again.';
 
   @override
+  String get authPasswordSameAsOld => 'Password must be different.';
+
+  @override
+  String get authSessionExpired =>
+      'Session expired. Please request a new link.';
+
+  @override
   String get profileSavedToCloud => 'Signed in to your account';
 
   @override
@@ -2870,5 +2877,779 @@ class AppLocalizationsEn extends AppLocalizations {
       'Choose the kids path or continue the current mission.';
 
   @override
+  String homeDailyWirdPage(Object page) {
+    return 'Read page $page of the Holy Quran';
+  }
+
+  @override
+  String homeDailyWirdSurah(Object surah) {
+    return 'Read Surah $surah of the Holy Quran';
+  }
+
+  @override
+  String get homeDailyWird => 'Daily Wird';
+
+  @override
+  String homeDailyWirdSurahPage(Object page, Object surah) {
+    return 'Surah $surah — Page $page';
+  }
+
+  @override
   String get homeTodaysPlan => 'Today\'s Plan';
+
+  @override
+  String get homeKidsProgress => 'Kids Progress';
+
+  @override
+  String get homeYourProgress => 'Your Progress';
+
+  @override
+  String get homeActionQuran => 'القرآن';
+
+  @override
+  String get homeActionReadToday => 'Read today';
+
+  @override
+  String get homeActionTodaysPlan => 'Today\'s Plan';
+
+  @override
+  String get homeActionContinuePlan => 'Continue today\'s plan';
+
+  @override
+  String get homeActionProgress => 'Progress';
+
+  @override
+  String get homeActionReviewGains => 'Review gains';
+
+  @override
+  String get homeActionSettings => 'Settings';
+
+  @override
+  String get homeActionTuneApp => 'Tune app';
+
+  @override
+  String get homeGoToSettings => 'Go to Settings';
+
+  @override
+  String get notificationDailyReviewTitle => 'Daily Review Time 📖';
+
+  @override
+  String notificationDailyReviewBodyCount(Object count) {
+    return 'You have $count ayahs to review today';
+  }
+
+  @override
+  String get notificationDailyReviewBody =>
+      'It\'s time for your daily memorization review';
+
+  @override
+  String notificationStreakAlertTitle(Object count) {
+    return '⚠️ Don\'t lose your $count day streak!';
+  }
+
+  @override
+  String get notificationStreakAlertBody =>
+      'You haven\'t reviewed today yet — you still can';
+
+  @override
+  String get notificationDailyAyahTitle => 'Ayah of the Day ✨';
+
+  @override
+  String get notificationDailyAyahBody =>
+      'Read your daily Wird from the Holy Quran';
+
+  @override
+  String get notificationSmartReminderTitle => 'Wird Time! ⏳';
+
+  @override
+  String get notificationSmartReminderBody =>
+      'You haven\'t read your Wird today! Take a few minutes for the Quran now.';
+
+  @override
+  String get notificationMorningAzkarTitle => 'Morning Azkar ☀️';
+
+  @override
+  String get notificationMorningAzkarBody =>
+      'Start your day with the remembrance of Allah and peace of mind';
+
+  @override
+  String get notificationEveningAzkarTitle => 'Evening Azkar 🌙';
+
+  @override
+  String get notificationEveningAzkarBody =>
+      'End your day with the remembrance and protection of Allah';
+
+  @override
+  String get notificationKidsReviewTitle => 'Review Time Hero! 🌟';
+
+  @override
+  String get notificationKidsReviewBody =>
+      'Your new stage is ready, let\'s continue memorizing!';
+
+  @override
+  String get notificationDailyDuaTitle => 'Dua of the Day 🤲';
+
+  @override
+  String get homeTourTitle => 'Need a quick tour?';
+
+  @override
+  String get homeTourDesc => 'Open the guide here or later from Help.';
+
+  @override
+  String get homeTourGuideAction => 'Guide';
+
+  @override
+  String get journeyReviewBeforeNewTitle => 'Review before new content';
+
+  @override
+  String journeyReviewBeforeNewDesc(Object surahAyahLabel) {
+    return 'Near revision due in $surahAyahLabel.';
+  }
+
+  @override
+  String get journeyLongTermReviewTitle => 'Long-term review due';
+
+  @override
+  String journeyLongTermReviewDesc(Object surahAyahLabel) {
+    return 'Time to review $surahAyahLabel.';
+  }
+
+  @override
+  String get journeyReviewDifficultAyahTitle => 'Review a difficult ayah';
+
+  @override
+  String journeyReviewDifficultAyahDesc(Object surahAyahLabel) {
+    return 'Your last review was difficult for $surahAyahLabel.';
+  }
+
+  @override
+  String get journeyContinueDailyPlanTitle => 'Continue today\'s plan';
+
+  @override
+  String journeyContinueDailyPlanDesc(Object completed, Object total) {
+    return '$completed of $total items done today.';
+  }
+
+  @override
+  String get journeyMemorizeNewAyahsTitle => 'Memorize new ayahs';
+
+  @override
+  String journeyMemorizeNewAyahsDesc(Object surahAyahLabel) {
+    return 'Start new ayahs in $surahAyahLabel.';
+  }
+
+  @override
+  String get journeyCurrentMissionTitle => 'Current Mission';
+
+  @override
+  String get journeyCurrentMissionDesc =>
+      'Continue the child\'s current mission.';
+
+  @override
+  String get journeyContinueSessionTitle => 'Continue Session';
+
+  @override
+  String journeyContinueSessionDesc(Object surahLabel) {
+    return 'You have an incomplete memorization session in $surahLabel.';
+  }
+
+  @override
+  String get journeyHifzReviewDueTitle => 'Hifz review due';
+
+  @override
+  String get journeyHifzReviewDueDesc => 'Review due items in your Hifz path.';
+
+  @override
+  String get journeyFallbackSurah => 'your surah';
+
+  @override
+  String journeyAyahLabel(Object start) {
+    return ', ayah $start';
+  }
+
+  @override
+  String journeyAyahsLabel(Object end, Object start) {
+    return ', ayahs $start–$end';
+  }
+
+  @override
+  String get tutorialS1Title => 'Guide 1';
+
+  @override
+  String get tutorialS1Cat => 'Category';
+
+  @override
+  String get tutorialS1Does => 'What it does';
+
+  @override
+  String get tutorialS1Open => 'How to open';
+
+  @override
+  String get tutorialS1Useful => 'When useful';
+
+  @override
+  String get tutorialS1Step1 => 'Step 1';
+
+  @override
+  String get tutorialS1Step2 => 'Step 2';
+
+  @override
+  String get tutorialS1Step3 => 'Step 3';
+
+  @override
+  String get tutorialS1Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS1Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS1Note1 => 'Note 1';
+
+  @override
+  String get tutorialS1Note2 => 'Note 2';
+
+  @override
+  String get tutorialS2Title => 'Guide 2';
+
+  @override
+  String get tutorialS2Cat => 'Category';
+
+  @override
+  String get tutorialS2Does => 'What it does';
+
+  @override
+  String get tutorialS2Open => 'How to open';
+
+  @override
+  String get tutorialS2Useful => 'When useful';
+
+  @override
+  String get tutorialS2Step1 => 'Step 1';
+
+  @override
+  String get tutorialS2Step2 => 'Step 2';
+
+  @override
+  String get tutorialS2Step3 => 'Step 3';
+
+  @override
+  String get tutorialS2Step4 => 'Step 4';
+
+  @override
+  String get tutorialS2Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS2Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS2Note1 => 'Note 1';
+
+  @override
+  String get tutorialS2Note2 => 'Note 2';
+
+  @override
+  String get tutorialS3Title => 'Guide 3';
+
+  @override
+  String get tutorialS3Cat => 'Category';
+
+  @override
+  String get tutorialS3Does => 'What it does';
+
+  @override
+  String get tutorialS3Open => 'How to open';
+
+  @override
+  String get tutorialS3Useful => 'When useful';
+
+  @override
+  String get tutorialS3Step1 => 'Step 1';
+
+  @override
+  String get tutorialS3Step2 => 'Step 2';
+
+  @override
+  String get tutorialS3Step3 => 'Step 3';
+
+  @override
+  String get tutorialS3Step4 => 'Step 4';
+
+  @override
+  String get tutorialS3Step5 => 'Step 5';
+
+  @override
+  String get tutorialS3Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS3Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS3Note1 => 'Note 1';
+
+  @override
+  String get tutorialS3Note2 => 'Note 2';
+
+  @override
+  String get tutorialS4Title => 'Guide 4';
+
+  @override
+  String get tutorialS4Cat => 'Category';
+
+  @override
+  String get tutorialS4Does => 'What it does';
+
+  @override
+  String get tutorialS4Open => 'How to open';
+
+  @override
+  String get tutorialS4Useful => 'When useful';
+
+  @override
+  String get tutorialS4Step1 => 'Step 1';
+
+  @override
+  String get tutorialS4Step2 => 'Step 2';
+
+  @override
+  String get tutorialS4Step3 => 'Step 3';
+
+  @override
+  String get tutorialS4Step4 => 'Step 4';
+
+  @override
+  String get tutorialS4Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS4Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS4Note1 => 'Note 1';
+
+  @override
+  String get tutorialS4Note2 => 'Note 2';
+
+  @override
+  String get tutorialS5Title => 'Guide 5';
+
+  @override
+  String get tutorialS5Cat => 'Category';
+
+  @override
+  String get tutorialS5Does => 'What it does';
+
+  @override
+  String get tutorialS5Open => 'How to open';
+
+  @override
+  String get tutorialS5Useful => 'When useful';
+
+  @override
+  String get tutorialS5Step1 => 'Step 1';
+
+  @override
+  String get tutorialS5Step2 => 'Step 2';
+
+  @override
+  String get tutorialS5Step3 => 'Step 3';
+
+  @override
+  String get tutorialS5Step4 => 'Step 4';
+
+  @override
+  String get tutorialS5Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS5Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS5Note1 => 'Note 1';
+
+  @override
+  String get tutorialS5Note2 => 'Note 2';
+
+  @override
+  String get tutorialS6Title => 'Guide 6';
+
+  @override
+  String get tutorialS6Cat => 'Category';
+
+  @override
+  String get tutorialS6Does => 'What it does';
+
+  @override
+  String get tutorialS6Open => 'How to open';
+
+  @override
+  String get tutorialS6Useful => 'When useful';
+
+  @override
+  String get tutorialS6Step1 => 'Step 1';
+
+  @override
+  String get tutorialS6Step2 => 'Step 2';
+
+  @override
+  String get tutorialS6Step3 => 'Step 3';
+
+  @override
+  String get tutorialS6Step4 => 'Step 4';
+
+  @override
+  String get tutorialS6Step5 => 'Step 5';
+
+  @override
+  String get tutorialS6Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS6Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS6Note1 => 'Note 1';
+
+  @override
+  String get tutorialS6Note2 => 'Note 2';
+
+  @override
+  String get tutorialS7Title => 'Guide 7';
+
+  @override
+  String get tutorialS7Cat => 'Category';
+
+  @override
+  String get tutorialS7Does => 'What it does';
+
+  @override
+  String get tutorialS7Open => 'How to open';
+
+  @override
+  String get tutorialS7Useful => 'When useful';
+
+  @override
+  String get tutorialS7Step1 => 'Step 1';
+
+  @override
+  String get tutorialS7Step2 => 'Step 2';
+
+  @override
+  String get tutorialS7Step3 => 'Step 3';
+
+  @override
+  String get tutorialS7Step4 => 'Step 4';
+
+  @override
+  String get tutorialS7Step5 => 'Step 5';
+
+  @override
+  String get tutorialS7Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS7Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS7Note1 => 'Note 1';
+
+  @override
+  String get tutorialS7Note2 => 'Note 2';
+
+  @override
+  String get tutorialS8Title => 'Guide 8';
+
+  @override
+  String get tutorialS8Cat => 'Category';
+
+  @override
+  String get tutorialS8Does => 'What it does';
+
+  @override
+  String get tutorialS8Open => 'How to open';
+
+  @override
+  String get tutorialS8Useful => 'When useful';
+
+  @override
+  String get tutorialS8Step1 => 'Step 1';
+
+  @override
+  String get tutorialS8Step2 => 'Step 2';
+
+  @override
+  String get tutorialS8Step3 => 'Step 3';
+
+  @override
+  String get tutorialS8Step4 => 'Step 4';
+
+  @override
+  String get tutorialS8Step5 => 'Step 5';
+
+  @override
+  String get tutorialS8Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS8Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS8Note1 => 'Note 1';
+
+  @override
+  String get tutorialS8Note2 => 'Note 2';
+
+  @override
+  String get tutorialS9Title => 'Guide 9';
+
+  @override
+  String get tutorialS9Cat => 'Category';
+
+  @override
+  String get tutorialS9Does => 'What it does';
+
+  @override
+  String get tutorialS9Open => 'How to open';
+
+  @override
+  String get tutorialS9Useful => 'When useful';
+
+  @override
+  String get tutorialS9Step1 => 'Step 1';
+
+  @override
+  String get tutorialS9Step2 => 'Step 2';
+
+  @override
+  String get tutorialS9Step3 => 'Step 3';
+
+  @override
+  String get tutorialS9Step4 => 'Step 4';
+
+  @override
+  String get tutorialS9Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS9Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS9Note1 => 'Note 1';
+
+  @override
+  String get tutorialS9Note2 => 'Note 2';
+
+  @override
+  String get tutorialS10Title => 'Guide 10';
+
+  @override
+  String get tutorialS10Cat => 'Category';
+
+  @override
+  String get tutorialS10Does => 'What it does';
+
+  @override
+  String get tutorialS10Open => 'How to open';
+
+  @override
+  String get tutorialS10Useful => 'When useful';
+
+  @override
+  String get tutorialS10Step1 => 'Step 1';
+
+  @override
+  String get tutorialS10Step2 => 'Step 2';
+
+  @override
+  String get tutorialS10Step3 => 'Step 3';
+
+  @override
+  String get tutorialS10Step4 => 'Step 4';
+
+  @override
+  String get tutorialS10Step5 => 'Step 5';
+
+  @override
+  String get tutorialS10Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS10Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS10Note1 => 'Note 1';
+
+  @override
+  String get tutorialS10Note2 => 'Note 2';
+
+  @override
+  String get tutorialS11Title => 'Guide 11';
+
+  @override
+  String get tutorialS11Cat => 'Category';
+
+  @override
+  String get tutorialS11Does => 'What it does';
+
+  @override
+  String get tutorialS11Open => 'How to open';
+
+  @override
+  String get tutorialS11Useful => 'When useful';
+
+  @override
+  String get tutorialS11Step1 => 'Step 1';
+
+  @override
+  String get tutorialS11Step2 => 'Step 2';
+
+  @override
+  String get tutorialS11Step3 => 'Step 3';
+
+  @override
+  String get tutorialS11Step4 => 'Step 4';
+
+  @override
+  String get tutorialS11Step5 => 'Step 5';
+
+  @override
+  String get tutorialS11Step6 => 'Step 6';
+
+  @override
+  String get tutorialS11Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS11Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS11Note1 => 'Note 1';
+
+  @override
+  String get tutorialS11Note2 => 'Note 2';
+
+  @override
+  String get tutorialS12Title => 'Guide 12';
+
+  @override
+  String get tutorialS12Cat => 'Category';
+
+  @override
+  String get tutorialS12Does => 'What it does';
+
+  @override
+  String get tutorialS12Open => 'How to open';
+
+  @override
+  String get tutorialS12Useful => 'When useful';
+
+  @override
+  String get tutorialS12Step1 => 'Step 1';
+
+  @override
+  String get tutorialS12Step2 => 'Step 2';
+
+  @override
+  String get tutorialS12Step3 => 'Step 3';
+
+  @override
+  String get tutorialS12Tip1 => 'Tip 1';
+
+  @override
+  String get tutorialS12Tip2 => 'Tip 2';
+
+  @override
+  String get tutorialS12Note1 => 'Note 1';
+
+  @override
+  String get tutorialS12Note2 => 'Note 2';
+
+  @override
+  String get tutorialCategoryTitle => 'Category';
+
+  @override
+  String get tutorialWhatItDoesTitle => 'What it does?';
+
+  @override
+  String get tutorialHowToOpenTitle => 'How to access it?';
+
+  @override
+  String get tutorialStepsTitle => 'Steps to use';
+
+  @override
+  String get tutorialTipsTitle => 'Tips';
+
+  @override
+  String get tutorialNotesTitle => 'Technical notes';
+
+  @override
+  String get tutorialWhenUsefulTitle => 'When is it useful?';
+
+  @override
+  String certificateCelebrationMultiple(int count) {
+    return 'You earned $count new certificates!';
+  }
+
+  @override
+  String certificateCelebrationSingle(String title) {
+    return 'You earned $title';
+  }
+
+  @override
+  String get learningAlertReduceNewTitle => 'Reduce New Memorization';
+
+  @override
+  String get learningAlertReduceNewSubtitle =>
+      'Your workload is heavy, focus on review';
+
+  @override
+  String get learningAlertFocusWeakTitle => 'Focus on Weak Ayahs';
+
+  @override
+  String get learningAlertFocusWeakSubtitle =>
+      'You have difficult ayahs to review';
+
+  @override
+  String get learningAlertGenericTitle => 'Learning Alert';
+
+  @override
+  String get learningAlertGenericSubtitle => 'Action required';
+
+  @override
+  String get reviewBacklogTitle => 'Review Backlog';
+
+  @override
+  String reviewBacklogSubtitle(String overdue) {
+    return 'You have $overdue overdue ayahs';
+  }
+
+  @override
+  String get smartPlanCustomTitle => 'Custom Plan';
+
+  @override
+  String get smartPlanReviewTitle => 'Review Plan';
+
+  @override
+  String get smartPlanTodayTitle => 'Todays Plan';
+
+  @override
+  String get smartPlanSubtitle => 'Continue your memorization journey';
+
+  @override
+  String get dailyWirdTitle => 'Daily Wird';
+
+  @override
+  String get dailyWirdSubtitle => 'Read your daily portion';
+
+  @override
+  String get exploreAzkarTitle => 'Time for Dhikr';
+
+  @override
+  String get exploreAzkarSubtitle => 'Start your daily Azkar';
+
+  @override
+  String get exploreMissionTitle => 'Current Mission';
+
+  @override
+  String get exploreMissionSubtitle => 'Start your current mission';
+
+  @override
+  String get exploreQuranTitle => 'Quran';
+
+  @override
+  String get exploreQuranSubtitle => 'Read the Quran';
+
+  @override
+  String get parentDashboardLinkHint => 'talia-kids-link:...';
 }

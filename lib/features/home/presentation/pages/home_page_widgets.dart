@@ -305,17 +305,13 @@ class _DailyWirdCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pageNumber = state.dailyWirdPageDetail?.pageNumber ?? 1;
-    String wird = context.isArabic
-        ? 'قراءة الصفحة $pageNumber من القرآن الكريم'
-        : 'Read page $pageNumber of the Holy Quran';
+    String wird = context.l10n.homeDailyWirdPage(pageNumber.toString());
 
     if (state.dailyWirdPageDetail != null &&
         state.dailyWirdPageDetail!.surahs.isNotEmpty) {
       final surah = state.dailyWirdPageDetail!.surahs.first;
       final surahName = context.isArabic ? surah.nameAr : surah.nameEn;
-      wird = context.isArabic
-          ? 'سورة $surahName — صفحة $pageNumber'
-          : 'Surah $surahName — Page $pageNumber';
+      wird = context.l10n.homeDailyWirdSurahPage(surahName, pageNumber.toString());
     }
 
     final primaryText = isDark
@@ -438,9 +434,7 @@ class _ProgressSection extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      isKids
-                          ? (context.isArabic ? 'تقدم الطفل' : 'Kids Progress')
-                          : (context.isArabic ? 'تقدمك' : 'Your Progress'),
+                      isKids ? context.l10n.homeKidsProgress : context.l10n.homeYourProgress,
                       style: AppTypography.titleMedium.copyWith(
                         color: textColor,
                         fontFamily: 'Amiri',
@@ -472,9 +466,7 @@ class _ProgressSection extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _ProgressMetricPill(
-                      label: isKids
-                          ? (context.isArabic ? 'النقاط' : 'Points')
-                          : context.l10n.reading,
+                      label: isKids ? context.l10n.points : context.l10n.reading,
                       value: isKids
                           ? '$kidsPoints'
                           : '${progress.readPagesCount}/${progress.totalQuranPages}',
@@ -488,9 +480,7 @@ class _ProgressSection extends StatelessWidget {
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: _ProgressMetricPill(
-                      label: isKids
-                          ? (context.isArabic ? 'النجوم' : 'Stars')
-                          : context.l10n.hifz,
+                      label: isKids ? context.l10n.stars : context.l10n.hifz,
                       value: isKids
                           ? '${progress.kidsStars}/5'
                           : '${progress.memorizedAyahs}/${progress.totalAyahs}',
@@ -595,32 +585,32 @@ class _QuickActionsGrid extends StatelessWidget {
       children: [
         _QuickActionButton(
           icon: Icons.menu_book_rounded,
-          title: context.isArabic ? 'القرآن' : 'Quran',
-          subtitle: context.isArabic ? 'اقرأ وردك' : 'Read today',
+          title: context.l10n.homeActionQuran,
+          subtitle: context.l10n.homeActionReadToday,
           color: AppColors.primary,
           route: AppRoutes.quran,
           isDark: isDark,
         ),
         _QuickActionButton(
           icon: Icons.psychology_alt_rounded,
-          title: context.isArabic ? 'خطة اليوم' : "Today's Plan",
-          subtitle: context.isArabic ? 'تابع حفظك' : "Continue today's plan",
+          title: context.l10n.homeActionTodaysPlan,
+          subtitle: context.l10n.homeActionContinuePlan,
           color: const Color(0xFF2D5A8E),
           route: AppRoutes.memorizationHub,
           isDark: isDark,
         ),
         _QuickActionButton(
           icon: Icons.insights_rounded,
-          title: context.isArabic ? 'التقدم' : 'Progress',
-          subtitle: context.isArabic ? 'راجع إنجازك' : 'Review gains',
+          title: context.l10n.homeActionProgress,
+          subtitle: context.l10n.homeActionReviewGains,
           color: const Color(0xFFFF8C42),
           route: AppRoutes.progress,
           isDark: isDark,
         ),
         _QuickActionButton(
           icon: Icons.settings_rounded,
-          title: context.isArabic ? 'الإعدادات' : 'Settings',
-          subtitle: context.isArabic ? 'خصص تجربتك' : 'Tune app',
+          title: context.l10n.homeActionSettings,
+          subtitle: context.l10n.homeActionTuneApp,
           color: const Color(0xFF6C3483),
           route: AppRoutes.settings,
           isDark: isDark,
@@ -984,18 +974,14 @@ class _TutorialPromptBannerState extends State<_TutorialPromptBanner> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    context.isArabic
-                        ? 'تحتاج جولة سريعة؟'
-                        : 'Need a quick tour?',
+                    context.l10n.homeTourTitle,
                     style: AppTypography.titleSmall.copyWith(
                       color: textColor,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   Text(
-                    context.isArabic
-                        ? 'افتح الدليل متى أردت من هنا أو من المساعدة.'
-                        : 'Open the guide here or later from Help.',
+                    context.l10n.homeTourDesc,
                     style: AppTypography.labelSmall.copyWith(
                       color: subTextColor,
                     ),
@@ -1005,7 +991,7 @@ class _TutorialPromptBannerState extends State<_TutorialPromptBanner> {
             ),
             TextButton(
               onPressed: _openGuide,
-              child: Text(context.isArabic ? 'الدليل' : 'Guide'),
+              child: Text(context.l10n.homeTourGuideAction),
             ),
             IconButton(
               onPressed: _dismiss,
@@ -1053,115 +1039,20 @@ class _ResumeSessionCard extends StatelessWidget {
     return location;
   }
 
-  _ResumeInfo _info(BuildContext context) {
-    final uri = Uri.tryParse(location);
-    if (uri == null) {
-      return _ResumeInfo(
-        title: context.l10n.resumeWhereYouLeft,
-        description: context.l10n.savedPreviousActivity,
-        icon: Icons.play_circle_fill_rounded,
-      );
-    }
 
-    final surahId = int.tryParse(uri.queryParameters['surahId'] ?? '');
-    final startAyah =
-        int.tryParse(uri.queryParameters['startAyah'] ?? '') ??
-        int.tryParse(uri.queryParameters['ayahNumber'] ?? '');
-
-    if (uri.path.startsWith('/quran/page/')) {
-      final page = uri.pathSegments.length >= 3 ? uri.pathSegments[2] : null;
-      return _ResumeInfo(
-        title: context.isArabic
-            ? 'تابع قراءة القرآن'
-            : 'Continue Quran Reading',
-        description: page == null
-            ? context.l10n.lastSavedReading
-            : context.isArabic
-            ? 'الصفحة $page'
-            : 'Page $page',
-        icon: Icons.menu_book_rounded,
-      );
-    }
-    if (uri.path.startsWith('/quran/surah/')) {
-      final id = uri.pathSegments.length >= 3
-          ? int.tryParse(uri.pathSegments[2])
-          : null;
-      final surah = _surahLabel(context, id);
-      return _ResumeInfo(
-        title: context.isArabic ? 'تابع $surah' : 'Continue $surah',
-        description: context.l10n.lastSavedReading,
-        icon: Icons.menu_book_rounded,
-      );
-    }
-    if (uri.path == AppRoutes.memorizationPlusKids) {
-      return _kidsStageInfo(context, surahId, startAyah);
-    }
-    if (uri.path == AppRoutes.memorizationPlusKidsJourney) {
-      final surah = _surahLabel(context, surahId);
-      return _ResumeInfo(
-        title: context.isArabic ? 'تابع رحلة الطفل' : 'Continue Kids Journey',
-        description: surahId == null
-            ? context.l10n.savedPreviousActivity
-            : context.isArabic
-            ? 'خريطة $surah'
-            : '$surah map',
-        icon: Icons.map_rounded,
-      );
-    }
-    if (uri.pathSegments.length == 3 &&
-        uri.pathSegments[0] == 'memorization-plus' &&
-        uri.pathSegments[1] == 'journey') {
-      final id = int.tryParse(uri.pathSegments[2]);
-      final surah = _surahLabel(context, id);
-      return _ResumeInfo(
-        title: context.isArabic ? 'تابع رحلة الطفل' : 'Continue Kids Journey',
-        description: context.isArabic ? 'خريطة $surah' : '$surah map',
-        icon: Icons.map_rounded,
-      );
-    }
-    return _ResumeInfo(
-      title: context.l10n.resumeWhereYouLeft,
-      description: context.l10n.savedPreviousActivity,
-      icon: Icons.play_circle_fill_rounded,
-    );
-  }
-
-  _ResumeInfo _kidsStageInfo(
-    BuildContext context,
-    int? surahId,
-    int? ayahNumber,
-  ) {
-    final stage = ayahNumber == null ? null : ((ayahNumber - 1) ~/ 5) + 1;
-    final surah = _surahLabel(context, surahId);
-    return _ResumeInfo(
-      title: stage == null
-          ? (context.isArabic ? 'تابع مهمة الطفل' : 'Continue Kids Mission')
-          : context.isArabic
-          ? 'تابع المرحلة $stage'
-          : 'Continue Stage $stage',
-      description: ayahNumber == null
-          ? context.l10n.incompleteKidsSession
-          : context.isArabic
-          ? '$surah، الآية $ayahNumber'
-          : '$surah, ayah $ayahNumber',
-      icon: Icons.flag_rounded,
-    );
-  }
-
-  String _surahLabel(BuildContext context, int? surahId) {
-    if (surahId == null) return context.l10n.surah;
-    if (context.isArabic) {
-      return '${context.l10n.surah} ${SurahNames.nameAr(surahId)}';
-    }
-    return 'Surah ${SurahNames.nameEn(surahId)}';
-  }
 
   @override
   Widget build(BuildContext context) {
     final resumeLocation = _normalizedLocation();
     if (resumeLocation == null) return const SizedBox.shrink();
 
-    final info = _info(context);
+    final presentationData = const ResumeSessionPresentationMapper().map(
+      ResumeSessionPresentationInput(
+        route: resumeLocation,
+        isArabic: context.isArabic,
+        l10n: context.l10n,
+      ),
+    );
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final textColor = isDark
         ? AppColors.darkTextPrimary
@@ -1179,14 +1070,14 @@ class _ResumeSessionCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(info.icon, color: primary, size: 34),
+          Icon(presentationData.icon, color: primary, size: 34),
           const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  info.title,
+                  presentationData.title,
                   style: AppTypography.titleMedium.copyWith(
                     color: textColor,
                     fontFamily: 'Amiri',
@@ -1194,7 +1085,7 @@ class _ResumeSessionCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  info.description,
+                  presentationData.subtitle,
                   style: AppTypography.bodySmall.copyWith(color: subTextColor),
                 ),
               ],
@@ -1218,17 +1109,7 @@ class _ResumeSessionCard extends StatelessWidget {
   }
 }
 
-class _ResumeInfo {
-  const _ResumeInfo({
-    required this.title,
-    required this.description,
-    required this.icon,
-  });
 
-  final String title;
-  final String description;
-  final IconData icon;
-}
 
 class _NextBestActionCard extends StatefulWidget {
   const _NextBestActionCard({

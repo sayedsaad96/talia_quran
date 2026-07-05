@@ -8,6 +8,7 @@ import '../services/app_session_service.dart';
 import '../services/app_version_service.dart';
 import '../services/hifz_migration_service.dart';
 import '../services/notification_service.dart';
+import '../services/notification_scheduler.dart';
 import '../services/streak_reader.dart';
 import '../services/streak_service.dart';
 import '../services/xp_service.dart';
@@ -52,6 +53,8 @@ import '../../features/progress/domain/usecases/get_progress_usecase.dart';
 import '../../features/progress/domain/usecases/save_read_page_usecase.dart';
 import '../../features/progress/presentation/cubits/progress_cubit.dart';
 import '../../features/home/presentation/cubits/home_cubit.dart';
+import '../../features/home/data/repositories/heatmap_repository_impl.dart';
+import '../../features/home/domain/repositories/heatmap_repository.dart';
 import '../../features/home/domain/usecases/get_activity_heatmap_usecase.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
@@ -140,6 +143,9 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<TaliaNotificationService>(
     TaliaNotificationService.new,
+  );
+  getIt.registerLazySingleton<NotificationScheduler>(
+    () => NotificationScheduler(getIt<TaliaNotificationService>()),
   );
 
   // ─── New Core Services ──────────────────────────────────────────────────────
@@ -281,6 +287,12 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<SaveAyahProgressUsecase>(
     () => SaveAyahProgressUsecase(getIt<HifzRepository>()),
+  );
+  getIt.registerLazySingleton<HeatmapRepository>(
+    () => HeatmapRepositoryImpl(getIt<Isar>()),
+  );
+  getIt.registerLazySingleton<GetActivityHeatmapUsecase>(
+    () => GetActivityHeatmapUsecase(getIt<HeatmapRepository>()),
   );
   getIt.registerLazySingleton<GetHifzPathUsecase>(
     () => GetHifzPathUsecase(getIt<HifzRepository>()),
@@ -451,7 +463,7 @@ Future<void> configureDependencies() async {
       getIt<GetCustomPlanUsecase>(),
       getIt<MemorizationPlusRepository>(),
       getIt<AppSessionService>(),
-      GetActivityHeatmapUsecase(getIt<Isar>()),
+      getIt<GetActivityHeatmapUsecase>(),
       getIt<MemorizationPathResolver>(),
       getIt<GetSmartCoachRecommendationUsecase>(),
       getIt<UnifiedJourneyEngine>(),

@@ -13,9 +13,11 @@ import '../../../hifz/domain/entities/hifz_entities.dart';
 import '../../../streak/data/models/streak_isar.dart';
 import '../../../streak/data/models/daily_activity_isar.dart';
 import '../../../xp/data/models/xp_isar.dart';
+import '../../domain/entities/auth_error_code.dart';
 
 class AuthFailure extends Failure {
-  const AuthFailure([super.message = 'Auth error']);
+  final AuthErrorCode code;
+  AuthFailure(this.code) : super(code.name);
 }
 
 class AuthConfigurationFailure extends Failure {
@@ -127,25 +129,23 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       if (response.user == null) {
-        return const Left(AuthFailure('فشل إنشاء الحساب'));
+        return Left(AuthFailure(AuthErrorCode.unknown));
       }
 
       // Supabase returns a user with an identities list.
       // If identities is empty it means the email is already registered.
       if (response.user!.identities != null &&
           response.user!.identities!.isEmpty) {
-        return const Left(
-          AuthFailure('البريد الإلكتروني مسجل بالفعل. حاول تسجيل الدخول.'),
+        return Left(
+          AuthFailure(AuthErrorCode.emailAlreadyRegistered),
         );
       }
 
       // If email confirmation is required, the session will be null.
       // Inform the user they need to confirm their email.
       if (response.session == null) {
-        return const Left(
-          AuthFailure(
-            'تم إنشاء الحساب! يرجى تفقّد بريدك الإلكتروني لتأكيد الحساب قبل تسجيل الدخول.',
-          ),
+        return Left(
+          AuthFailure(AuthErrorCode.emailNotConfirmed),
         );
       }
 
@@ -161,7 +161,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(AuthFailure(_mapAuthError(e.message)));
     } catch (e) {
       TaliaLogger.w('Unexpected sign-up error', e);
-      return const Left(AuthFailure('حدث خطأ أثناء إنشاء الحساب'));
+      return Left(AuthFailure(AuthErrorCode.unknown));
     }
   }
 
@@ -189,7 +189,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       if (response.user == null) {
-        return const Left(AuthFailure('فشل تسجيل الدخول'));
+        return Left(AuthFailure(AuthErrorCode.invalidCredentials));
       }
 
       final user = AppUser(
@@ -205,7 +205,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(AuthFailure(_mapAuthError(e.message)));
     } catch (e) {
       TaliaLogger.w('Unexpected sign-in error', e);
-      return const Left(AuthFailure('حدث خطأ أثناء تسجيل الدخول'));
+      return Left(AuthFailure(AuthErrorCode.unknown));
     }
   }
 
@@ -231,7 +231,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(AuthFailure(_mapAuthError(e.message)));
     } catch (e) {
       TaliaLogger.w('Unexpected resend confirmation error', e);
-      return const Left(AuthFailure('فشل إعادة الإرسال، حاول مرة أخرى'));
+      return Left(AuthFailure(AuthErrorCode.unknown));
     }
   }
 
@@ -260,7 +260,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(AuthFailure(_mapAuthError(e.message)));
     } catch (e) {
       TaliaLogger.w('Unexpected password reset error', e);
-      return const Left(AuthFailure('حدث خطأ أثناء إرسال رابط إعادة التعيين'));
+      return Left(AuthFailure(AuthErrorCode.unknown));
     }
   }
 
@@ -300,7 +300,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return Left(AuthFailure(_mapAuthError(e.message)));
     } catch (e) {
       TaliaLogger.w('Unexpected password update error', e);
-      return const Left(AuthFailure('حدث خطأ أثناء تحديث كلمة المرور'));
+      return Left(AuthFailure(AuthErrorCode.unknown));
     }
   }
 
@@ -315,7 +315,7 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Right(unit);
     } catch (e) {
       TaliaLogger.w('Sign-out error', e);
-      return const Left(AuthFailure('حدث خطأ أثناء تسجيل الخروج'));
+      return Left(AuthFailure(AuthErrorCode.unknown));
     }
   }
 
@@ -333,7 +333,7 @@ class AuthRepositoryImpl implements AuthRepository {
       );
 
       if (client.auth.currentUser == null) {
-        return const Left(AuthFailure('لا يوجد حساب مسجل لحذفه'));
+        return Left(AuthFailure(AuthErrorCode.userNotFound));
       }
 
       await client.rpc('delete_current_user');
@@ -618,49 +618,49 @@ class AuthRepositoryImpl implements AuthRepository {
   String? _toDateOnlyString(DateTime? value) =>
       value?.toIso8601String().substring(0, 10);
 
-  /// Maps Supabase auth error messages to Arabic user-friendly messages
-  String _mapAuthError(String message) {
+  /// Maps Supabase auth error messages to strongly-typed error codes
+  AuthErrorCode _mapAuthError(String message) {
     final lower = message.toLowerCase();
 
     // Email already registered
     if (lower.contains('already registered') ||
         (lower.contains('email') && lower.contains('already'))) {
-      return 'البريد الإلكتروني مسجل بالفعل. حاول تسجيل الدخول.';
+      return AuthErrorCode.emailAlreadyRegistered;
     }
 
     // Email not confirmed — most common cause of "invalid credentials" confusion
     if (lower.contains('email not confirmed') ||
         lower.contains('email_not_confirmed') ||
         lower.contains('not confirmed')) {
-      return 'يرجى تأكيد بريدك الإلكتروني أولاً. تحقق من صندوق الوارد.';
+      return AuthErrorCode.emailNotConfirmed;
     }
 
     // Wrong password or email
     if (lower.contains('invalid login credentials') ||
         (lower.contains('invalid') && lower.contains('credentials'))) {
-      return 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+      return AuthErrorCode.invalidCredentials;
     }
 
     // Password too short
     if (lower.contains('password') && lower.contains('short')) {
-      return 'كلمة المرور قصيرة جداً (6 أحرف على الأقل)';
+      return AuthErrorCode.passwordTooShort;
     }
 
     // Invalid email format
     if (lower.contains('email') && lower.contains('invalid')) {
-      return 'صيغة البريد الإلكتروني غير صحيحة';
+      return AuthErrorCode.invalidEmailFormat;
     }
 
     // Too many requests
     if (lower.contains('too many') || lower.contains('rate limit')) {
-      return 'محاولات كثيرة. انتظر قليلاً ثم حاول مرة أخرى.';
+      return AuthErrorCode.tooManyRequests;
     }
 
     // Network error
     if (lower.contains('network') ||
         lower.contains('connection') ||
         lower.contains('socket')) {
-      return 'لا يوجد اتصال بالإنترنت';
+      return AuthErrorCode.networkError;
     }
 
     // Same password as the current one
@@ -669,7 +669,7 @@ class AuthRepositoryImpl implements AuthRepository {
         lower.contains('different from') ||
         lower.contains('password_same_as_old') ||
         lower.contains('new password should be different')) {
-      return 'كلمة المرور الجديدة مطابقة للقديمة. يرجى اختيار كلمة مرور مختلفة.';
+      return AuthErrorCode.samePasswordAsOld;
     }
 
     // Missing/expired password recovery session
@@ -677,15 +677,15 @@ class AuthRepositoryImpl implements AuthRepository {
         lower.contains('session_missing') ||
         lower.contains('no current session') ||
         lower.contains('missing session')) {
-      return 'رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.';
+      return AuthErrorCode.sessionExpired;
     }
 
     // User not found
     if (lower.contains('user not found') || lower.contains('no user')) {
-      return 'لا يوجد حساب بهذا البريد الإلكتروني';
+      return AuthErrorCode.userNotFound;
     }
 
     TaliaLogger.w('Unmapped Supabase auth error');
-    return 'حدث خطأ، حاول مرة أخرى';
+    return AuthErrorCode.unknown;
   }
 }
