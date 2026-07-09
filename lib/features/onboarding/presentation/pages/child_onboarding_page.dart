@@ -9,7 +9,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
-import '../../../memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
+import '../../../memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 
 class ChildOnboardingPage extends StatefulWidget {
   const ChildOnboardingPage({super.key});

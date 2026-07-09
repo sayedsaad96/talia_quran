@@ -16,7 +16,7 @@ import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/guardian_linking_cubit.dart';
 import '../cubits/guardian_linking_state.dart';
-import '../navigation/memorization_navigation_resolver.dart';
+import '../../domain/navigation/memorization_navigation_resolver.dart';
 
 class GuardianLinkingPage extends StatelessWidget {
   const GuardianLinkingPage({super.key});

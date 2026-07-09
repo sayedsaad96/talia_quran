@@ -2,9 +2,10 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/router/app_router.dart';
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
-import 'package:talia_quran/features/memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
+import 'package:talia_quran/features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 
 void main() {
   group('MemorizationNavigationResolver', () {
@@ -134,7 +135,9 @@ class _FakeRepository implements MemorizationPlusRepository {
       Right(customPlan);
 
   @override
-  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords() async =>
+  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  }) async =>
       const Right([]);
 
   @override

@@ -203,6 +203,24 @@ class ParentDashboardCubit extends Cubit<ParentDashboardState> {
     );
   }
 
+  Future<void> removeChild(String childUserId, {required int surahId}) async {
+    final current = state;
+    if (current is! ParentDashboardLoaded) return;
+    final result = await _remoteLink.removeChild(childUserId);
+    await result.fold(
+      (failure) async => emit(
+        current.copyWith(
+          feedback: ParentDashboardFeedback.failure(failure.message),
+          feedbackEventId: _nextFeedbackEventId(),
+        ),
+      ),
+      (_) async => refresh(
+        surahId: surahId,
+        feedback: const ParentDashboardFeedback.childRemoved(),
+      ),
+    );
+  }
+
   Future<void> acceptRemoteToken(String token, {required int surahId}) async {
     // T054: Emit typed linking state so the UI can show targeted feedback.
     emit(ParentDashboardLinking(surahId: surahId));

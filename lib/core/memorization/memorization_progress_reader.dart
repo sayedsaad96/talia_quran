@@ -1,10 +1,9 @@
 import 'package:dartz/dartz.dart';
 
 import '../error/app_failure.dart';
+import '../memorization/review_record_audience_scope.dart';
 import '../services/app_session_service.dart';
 import '../utils/talia_logger.dart';
-import '../../features/hifz/domain/repositories/hifz_repository.dart';
-import '../../features/hifz/domain/entities/hifz_entities.dart';
 import '../../features/memorization_plus/domain/entities/memorization_entities.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'memorization_snapshot.dart';
@@ -20,12 +19,10 @@ abstract class MemorizationProgressReader {
 class MemorizationProgressReaderImpl implements MemorizationProgressReader {
   MemorizationProgressReaderImpl(
     this._memorizationPlusRepository,
-    this._hifzRepository,
     this._sessionService,
   );
 
   final MemorizationPlusRepository _memorizationPlusRepository;
-  final HifzRepository _hifzRepository;
   final AppSessionService _sessionService;
 
   @override
@@ -38,9 +35,15 @@ class MemorizationProgressReaderImpl implements MemorizationProgressReader {
       () => throw StateError('profile expected'),
     );
 
+    final reviewScope = profile.isChild
+        ? ReviewRecordReadScope.kids
+        : ReviewRecordReadScope.adult;
+
     final reviewRecords = await _readOptional(
       label: 'Smart Coach review records',
-      read: _memorizationPlusRepository.getAllReviewRecords,
+      read: () => _memorizationPlusRepository.getAllReviewRecords(
+        scope: reviewScope,
+      ),
       fallback: const <AyahReviewRecord>[],
     );
     final cachedDailyPlan = await _readOptional<DailyPlan?>(
@@ -63,17 +66,6 @@ class MemorizationProgressReaderImpl implements MemorizationProgressReader {
       read: _memorizationPlusRepository.getKidsSessionLogs,
       fallback: const <KidsSessionLog>[],
     );
-    final hifzDueReviews = await _readOptional(
-      label: 'Smart Coach Hifz due reviews',
-      read: _hifzRepository.getDueReviews,
-      fallback: const <AyahProgress>[],
-    );
-    final hifzSurahProgress = await _readOptional(
-      label: 'Smart Coach Hifz surah progress',
-      read: _hifzRepository.getAllSurahProgress,
-      fallback: const <SurahHifzProgress>[],
-    );
-
     return Right(
       MemorizationSnapshot(
         profile: profile,
@@ -81,8 +73,6 @@ class MemorizationProgressReaderImpl implements MemorizationProgressReader {
         reviewRecords: reviewRecords,
         cachedDailyPlan: cachedDailyPlan,
         customPlan: customPlan,
-        hifzDueReviews: hifzDueReviews,
-        hifzSurahProgress: hifzSurahProgress,
         kidsProgress: kidsProgress,
         kidsSessionLogs: kidsSessionLogs,
       ),

@@ -9,7 +9,6 @@ abstract class AppConstants {
 
   // Storage keys
   static const String kHifzProgress = 'hifz_progress';
-  static const String kHifzCheckpointProgress = 'hifz_checkpoint_progress';
   static const String kHifzPathMode = 'hifz_path_mode';
   static const String kReadPages = 'read_pages';
 

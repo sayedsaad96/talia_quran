@@ -113,30 +113,6 @@ class HifzRepositoryImpl implements HifzRepository {
   }
 
   @override
-  Future<Either<Failure, Set<String>>> getPassedCheckpointKeys(
-    int surahId,
-  ) async {
-    try {
-      final keys = await _datasource.getPassedCheckpointKeys(surahId);
-      return Right(keys);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, void>> markCheckpointPassed(
-    HifzSegment segment,
-  ) async {
-    try {
-      await _datasource.markCheckpointPassed(segment.key);
-      return const Right(null);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
-    }
-  }
-
-  @override
   Either<Failure, String?> getHifzPath() {
     try {
       final path = _datasource.getHifzPath();

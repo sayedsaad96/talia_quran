@@ -75,24 +75,3 @@ class SurahHifzProgress extends Equatable {
     learningCount,
   ];
 }
-
-class HifzSegment extends Equatable {
-  const HifzSegment({
-    required this.surahId,
-    required this.startAyah,
-    required this.endAyah,
-    required this.totalAyahs,
-  });
-
-  final int surahId;
-  final int startAyah;
-  final int endAyah;
-  final int totalAyahs;
-
-  bool get isFullSurah => startAyah == 1 && endAyah == totalAyahs;
-
-  String get key => '${surahId}_${startAyah}_$endAyah';
-
-  @override
-  List<Object?> get props => [surahId, startAyah, endAyah, totalAyahs];
-}

@@ -1755,6 +1755,72 @@ abstract class AppLocalizations {
   /// **'الآيات المحفوظة'**
   String get memorizedAyahs;
 
+  /// No description provided for @startedAyahsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'آيات بدأ حفظها'**
+  String get startedAyahsLabel;
+
+  /// No description provided for @reviewedAyahsTotalLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجمالي المراجعات'**
+  String get reviewedAyahsTotalLabel;
+
+  /// No description provided for @overdueReviewsLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعات متأخرة'**
+  String get overdueReviewsLabel;
+
+  /// No description provided for @retentionRateLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'معدل الاحتفاظ'**
+  String get retentionRateLabel;
+
+  /// No description provided for @lastReviewLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر مراجعة'**
+  String get lastReviewLabel;
+
+  /// No description provided for @lastMemorizedLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر آية محفوظة'**
+  String get lastMemorizedLabel;
+
+  /// No description provided for @homeEngagementTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نشاطك'**
+  String get homeEngagementTitle;
+
+  /// No description provided for @homeWeeklyActivityLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الأسبوع'**
+  String get homeWeeklyActivityLabel;
+
+  /// No description provided for @homeDueTodayLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'مستحق اليوم'**
+  String get homeDueTodayLabel;
+
+  /// No description provided for @homeXpLevelLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'المستوى'**
+  String get homeXpLevelLabel;
+
+  /// No description provided for @homeActivityHeatmapTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خريطة النشاط'**
+  String get homeActivityHeatmapTitle;
+
   /// No description provided for @memorizedSurahsLabel.
   ///
   /// In ar, this message translates to:
@@ -3608,6 +3674,12 @@ abstract class AppLocalizations {
   /// **'جاري التسجيل...'**
   String get kidsGamifiedRecordingInProgress;
 
+  /// No description provided for @kidsGamifiedDoneRecording.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهيت من التسجيل'**
+  String get kidsGamifiedDoneRecording;
+
   /// No description provided for @kidsGamifiedAudioUnavailable.
   ///
   /// In ar, this message translates to:
@@ -3779,7 +3851,7 @@ abstract class AppLocalizations {
   /// No description provided for @dailyPlanQuizAction.
   ///
   /// In ar, this message translates to:
-  /// **'اختبار المراجعة'**
+  /// **'مراجعة بالتسميع'**
   String get dailyPlanQuizAction;
 
   /// No description provided for @dailyPlanNewAyahs.
@@ -3887,14 +3959,32 @@ abstract class AppLocalizations {
   /// No description provided for @reviewQuizTitle.
   ///
   /// In ar, this message translates to:
-  /// **'اختبار المراجعة'**
+  /// **'مراجعة بالتسميع'**
   String get reviewQuizTitle;
 
   /// No description provided for @quizExitTitle.
   ///
   /// In ar, this message translates to:
-  /// **'الخروج من اختبار المراجعة؟'**
+  /// **'الخروج من جلسة المراجعة؟'**
   String get quizExitTitle;
+
+  /// No description provided for @memorizationHubReviewSectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة بالتسميع'**
+  String get memorizationHubReviewSectionTitle;
+
+  /// No description provided for @memorizationHubReviewSectionSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع ما حفظته عبر جلسة تسميع موجهة (تحويل الصوت إلى نص).'**
+  String get memorizationHubReviewSectionSubtitle;
+
+  /// No description provided for @memorizationHubReviewCardDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح جلسة حفظ V2 للآيات التي حفظتها مسبقًا.'**
+  String get memorizationHubReviewCardDescription;
 
   /// No description provided for @quizExitMessage.
   ///
@@ -4200,6 +4290,54 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'{ayahs} آية • {points} نقطة'**
   String parentDashboardRemoteChildSummary(int ayahs, int points);
+
+  /// No description provided for @parentDashboardMemorizedSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'{memorized}/{total} آية محفوظة • {percent}%'**
+  String parentDashboardMemorizedSummary(int memorized, int total, int percent);
+
+  /// No description provided for @parentDashboardReviewsSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'{completed} مراجعة مكتملة • {overdue} متأخرة'**
+  String parentDashboardReviewsSummary(int completed, int overdue);
+
+  /// No description provided for @parentDashboardStreakSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'التتابع: {days} يوم'**
+  String parentDashboardStreakSummary(int days);
+
+  /// No description provided for @parentDashboardCertificatesSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} شهادة تم الحصول عليها'**
+  String parentDashboardCertificatesSummary(int count);
+
+  /// No description provided for @parentDashboardRemoveChild.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة الطفل'**
+  String get parentDashboardRemoveChild;
+
+  /// No description provided for @parentDashboardRemoveChildConfirmTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إزالة الطفل؟'**
+  String get parentDashboardRemoveChildConfirmTitle;
+
+  /// No description provided for @parentDashboardRemoveChildConfirmBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيؤدي هذا إلى فصل {name} عن حسابك. يمكنك الربط مرة أخرى لاحقًا برمز جديد.'**
+  String parentDashboardRemoveChildConfirmBody(String name);
+
+  /// No description provided for @parentDashboardChildRemoved.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت إزالة الطفل'**
+  String get parentDashboardChildRemoved;
 
   /// No description provided for @parentDashboardRewardsTitle.
   ///
@@ -5346,18 +5484,6 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اقرأ وردك اليومي من القرآن الكريم'**
   String get notificationDailyAyahBody;
-
-  /// No description provided for @notificationSmartReminderTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'حان وقت وردك! ⏳'**
-  String get notificationSmartReminderTitle;
-
-  /// No description provided for @notificationSmartReminderBody.
-  ///
-  /// In ar, this message translates to:
-  /// **'لم تقرأ وردك اليوم! خصص دقائق للقرآن الآن.'**
-  String get notificationSmartReminderBody;
 
   /// No description provided for @notificationMorningAzkarTitle.
   ///

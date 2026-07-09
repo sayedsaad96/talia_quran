@@ -8,6 +8,7 @@ import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
 import 'package:talia_quran/features/auth/domain/repositories/auth_repository.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
+import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
 import 'auth_cubit_test.mocks.dart';
 
@@ -33,6 +34,8 @@ void main() {
     ).thenAnswer((_) => passwordRecoveryStreamController.stream);
     when(mockAuthRepository.currentUser).thenReturn(currentUser);
     when(mockAuthRepository.pullProgressFromCloud())
+        .thenAnswer((_) async => const Right(unit));
+    when(mockAuthRepository.syncProgressToCloud())
         .thenAnswer((_) async => const Right(unit));
     return AuthCubit(mockAuthRepository);
   }
@@ -356,4 +359,95 @@ void main() {
       await expectation;
     });
   });
+
+  // ─── Parent Mode production resync (Phase 7) ───────────────────────────────
+
+  group('production data resync', () {
+    test(
+      'pushes streak/heatmap and production data on session restore',
+      () async {
+        when(mockAuthRepository.pullProgressFromCloud())
+            .thenAnswer((_) async => const Right(unit));
+        when(mockAuthRepository.syncProgressToCloud())
+            .thenAnswer((_) async => const Right(unit));
+        when(mockAuthRepository.currentUser).thenReturn(testUser);
+        when(
+          mockAuthRepository.authStateChanges,
+        ).thenAnswer((_) => authStreamController.stream);
+        when(
+          mockAuthRepository.passwordRecoveryChanges,
+        ).thenAnswer((_) => passwordRecoveryStreamController.stream);
+        final memPlusRepository = _FakeMemPlusRepository();
+
+        final cubit = AuthCubit(mockAuthRepository, memPlusRepository);
+        await Future<void>.delayed(Duration.zero);
+
+        verify(mockAuthRepository.pullProgressFromCloud()).called(1);
+        verify(mockAuthRepository.syncProgressToCloud()).called(1);
+        expect(memPlusRepository.pullCallCount, 1);
+        expect(memPlusRepository.resyncCallCount, 1);
+        await cubit.close();
+      },
+    );
+
+    test('resyncOnResume re-syncs while authenticated', () async {
+      when(mockAuthRepository.pullProgressFromCloud())
+          .thenAnswer((_) async => const Right(unit));
+      when(mockAuthRepository.syncProgressToCloud())
+          .thenAnswer((_) async => const Right(unit));
+      when(mockAuthRepository.currentUser).thenReturn(testUser);
+      when(
+        mockAuthRepository.authStateChanges,
+      ).thenAnswer((_) => authStreamController.stream);
+      when(
+        mockAuthRepository.passwordRecoveryChanges,
+      ).thenAnswer((_) => passwordRecoveryStreamController.stream);
+      final memPlusRepository = _FakeMemPlusRepository();
+
+      final cubit = AuthCubit(mockAuthRepository, memPlusRepository);
+      await Future<void>.delayed(Duration.zero);
+
+      cubit.resyncOnResume();
+      await Future<void>.delayed(Duration.zero);
+
+      verify(mockAuthRepository.pullProgressFromCloud()).called(2);
+      verify(mockAuthRepository.syncProgressToCloud()).called(2);
+      expect(memPlusRepository.pullCallCount, 2);
+      expect(memPlusRepository.resyncCallCount, 2);
+      await cubit.close();
+    });
+
+    test('resyncOnResume is a no-op while unauthenticated', () async {
+      final cubit = buildCubit(currentUser: null);
+      final memPlusRepository = _FakeMemPlusRepository();
+      await cubit.close();
+
+      final signedOutCubit = AuthCubit(mockAuthRepository, memPlusRepository);
+      signedOutCubit.resyncOnResume();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(memPlusRepository.resyncCallCount, 0);
+      await signedOutCubit.close();
+    });
+  });
+}
+
+class _FakeMemPlusRepository implements MemorizationPlusRepository {
+  int resyncCallCount = 0;
+  int pullCallCount = 0;
+
+  @override
+  Future<Either<Failure, void>> pullProductionDataFromCloud() async {
+    pullCallCount += 1;
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Failure, void>> resyncProductionDataToCloud() async {
+    resyncCallCount += 1;
+    return const Right(null);
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

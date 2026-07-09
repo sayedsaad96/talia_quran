@@ -20,7 +20,7 @@ class UnifiedJourneyEngine {
     // Priority 2: Critical / High Priority Learning Alerts (e.g. Overload / Leech)
     if (input.hasCriticalLearningAlert || input.hasHighPriorityLearningAlert) {
       return UnifiedJourneyAction(
-        route: input.learningAlertRoute ?? '/memorization_hub',
+        route: input.learningAlertRoute ?? '/memorization',
         priority: UnifiedJourneyPriority.p2CriticalAlert,
         source: 'AdaptiveRecommendations',
         actionType: UnifiedJourneyActionType.criticalAlert,
@@ -35,7 +35,7 @@ class UnifiedJourneyEngine {
     // Priority 3: Review Backlog
     if (input.hasReviewBacklog && input.overdueAyahs > 0) {
       return UnifiedJourneyAction(
-        route: '/memorization_hub',
+        route: '/memorization',
         priority: UnifiedJourneyPriority.p3ReviewBacklog,
         source: 'AdaptiveRecommendations',
         actionType: UnifiedJourneyActionType.reviewBacklog,
@@ -49,7 +49,7 @@ class UnifiedJourneyEngine {
     // Priority 4: Smart Plan (Coach / Custom)
     if (input.hasSmartPlan) {
       return UnifiedJourneyAction(
-        route: input.smartPlanRoute ?? '/memorization_hub',
+        route: input.smartPlanRoute ?? '/memorization',
         priority: UnifiedJourneyPriority.p4SmartPlan,
         source: 'SmartCoach',
         actionType: UnifiedJourneyActionType.smartPlan,
@@ -75,7 +75,7 @@ class UnifiedJourneyEngine {
     // Priority 6: Free Exploration / Contextual Fallbacks
     if (input.isKids) {
       return const UnifiedJourneyAction(
-        route: '/memorization_hub',
+        route: '/memorization',
         priority: UnifiedJourneyPriority.p6FreeExploration,
         source: 'KidsMode',
         actionType: UnifiedJourneyActionType.explore,
@@ -95,7 +95,7 @@ class UnifiedJourneyEngine {
     
     if (input.userGoal == 'child') {
       return const UnifiedJourneyAction(
-        route: '/memorization_hub',
+        route: '/memorization',
         priority: UnifiedJourneyPriority.p6FreeExploration,
         source: 'UserGoal',
         actionType: UnifiedJourneyActionType.explore,

@@ -11,7 +11,7 @@ import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
-import '../navigation/memorization_navigation_resolver.dart';
+import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../widgets/kids_journey_map.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
 import '../widgets/kids_progress_header.dart';

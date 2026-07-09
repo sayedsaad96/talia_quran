@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -7,10 +8,11 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../cubits/kids_mode_cubit.dart';
-import '../navigation/memorization_navigation_resolver.dart';
+import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_ayah_card.dart';
 
@@ -104,12 +106,7 @@ class _KidsGamifiedListenView extends StatelessWidget {
             return;
           }
           if (state.isCompleted) {
-            context.pushReplacement(
-              '${AppRoutes.memorizationPlusKidsCompletion}'
-              '?surahId=${state.surahId}'
-              '&completedAyahNumber=${state.ayahNumber}'
-              '&starsEarned=${state.sessionStarsEarned}',
-            );
+            unawaited(_navigateAfterKidsCompletion(context, state));
           }
         },
         builder: (context, state) {
@@ -149,6 +146,8 @@ class _KidsGamifiedListenView extends StatelessWidget {
             },
             onRecordRecitation: () =>
                 context.read<KidsModeCubit>().startRecording(),
+            onStopRecording: () =>
+                context.read<KidsModeCubit>().stopRecording(),
           );
         },
       ),
@@ -164,12 +163,14 @@ class KidsGamifiedListenContent extends StatelessWidget {
     required this.onBack,
     required this.onPlayPause,
     required this.onRecordRecitation,
+    required this.onStopRecording,
   });
 
   final KidsModeLoaded state;
   final VoidCallback onBack;
   final VoidCallback onPlayPause;
   final VoidCallback onRecordRecitation;
+  final VoidCallback onStopRecording;
 
   @override
   Widget build(BuildContext context) {
@@ -214,6 +215,7 @@ class KidsGamifiedListenContent extends StatelessWidget {
                             state: state,
                             onPlayPause: onPlayPause,
                             onRecordRecitation: onRecordRecitation,
+                            onStopRecording: onStopRecording,
                           ),
                           const SizedBox(height: 96),
                         ],
@@ -333,11 +335,13 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
     required this.state,
     required this.onPlayPause,
     required this.onRecordRecitation,
+    required this.onStopRecording,
   });
 
   final KidsModeLoaded state;
   final VoidCallback onPlayPause;
   final VoidCallback onRecordRecitation;
+  final VoidCallback onStopRecording;
 
   @override
   Widget build(BuildContext context) {
@@ -367,44 +371,210 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.md),
-        // Mic button: shows a pulsing recording indicator while isRecording
         AnimatedSwitcher(
-          duration: const Duration(milliseconds: 250),
-          child: FilledButton.icon(
-            key: ValueKey(
-              isRecording
-                  ? 'kids-gamified-record-recitation-recording'
-                  : 'kids-gamified-record-recitation-idle',
-            ),
-            onPressed: micDisabled ? null : onRecordRecitation,
-            icon: isRecording
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Icon(Icons.mic_rounded),
-            label: Text(
-              isRecording
-                  ? context.l10n.kidsGamifiedRecordingInProgress
-                  : context.l10n.kidsGamifiedRecordYourVoice,
-            ),
-            style: FilledButton.styleFrom(
-              backgroundColor: isRecording
-                  ? KidsTheme.forestGreen.withValues(alpha: 0.6)
-                  : KidsTheme.forestGreen,
-              foregroundColor: Colors.white,
-              minimumSize: const Size.fromHeight(56),
-              shape: const RoundedRectangleBorder(
-                borderRadius: KidsTheme.buttonRadius,
-              ),
+          duration: const Duration(milliseconds: 300),
+          transitionBuilder: (child, animation) => FadeTransition(
+            opacity: animation,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.1),
+                end: Offset.zero,
+              ).animate(animation),
+              child: child,
             ),
           ),
+          child: isRecording
+              ? _RecordingActivePanel(
+                  key: const ValueKey('recording-panel'),
+                  seconds: state.recordingSeconds,
+                  onDone: onStopRecording,
+                )
+              : FilledButton.icon(
+                  key: const ValueKey('kids-gamified-record-recitation-idle'),
+                  onPressed: micDisabled ? null : onRecordRecitation,
+                  icon: const Icon(Icons.mic_rounded),
+                  label: Text(context.l10n.kidsGamifiedRecordYourVoice),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: KidsTheme.forestGreen,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(56),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: KidsTheme.buttonRadius,
+                    ),
+                  ),
+                ),
         ),
       ],
     );
   }
+}
+
+/// Widget shown while recording is active.
+/// Displays an animated waveform, elapsed time, and a "Done" button.
+class _RecordingActivePanel extends StatefulWidget {
+  const _RecordingActivePanel({
+    super.key,
+    required this.seconds,
+    required this.onDone,
+  });
+
+  final int seconds;
+  final VoidCallback onDone;
+
+  @override
+  State<_RecordingActivePanel> createState() => _RecordingActivePanelState();
+}
+
+class _RecordingActivePanelState extends State<_RecordingActivePanel>
+    with TickerProviderStateMixin {
+  late final AnimationController _waveController;
+
+  @override
+  void initState() {
+    super.initState();
+    _waveController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _waveController.dispose();
+    super.dispose();
+  }
+
+  String _formatSeconds(int s) {
+    final m = s ~/ 60;
+    final sec = s % 60;
+    return '${m.toString().padLeft(2, '0')}:${sec.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.lg,
+        vertical: AppSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: KidsTheme.forestGreen.withValues(alpha: 0.15),
+        borderRadius: KidsTheme.buttonRadius,
+        border: Border.all(
+          color: KidsTheme.forestGreen.withValues(alpha: 0.5),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Recording indicator row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Pulsing red dot
+              AnimatedBuilder(
+                animation: _waveController,
+                builder: (_, _) => Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.red.withValues(
+                      alpha: 0.5 + (_waveController.value * 0.5),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                context.l10n.kidsGamifiedRecordingInProgress,
+                style: AppTypography.titleSmall.copyWith(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Text(
+                _formatSeconds(widget.seconds),
+                style: AppTypography.titleSmall.copyWith(
+                  color: KidsTheme.forestGreen,
+                  fontWeight: FontWeight.w800,
+                  fontFamily: 'monospace',
+                  letterSpacing: 0,
+                ),
+              ),
+            ],
+          ),
+          // Animated waveform bars
+          const SizedBox(height: AppSpacing.sm),
+          AnimatedBuilder(
+            animation: _waveController,
+            builder: (_, _) {
+              final v = _waveController.value;
+              final heights = [0.5, 0.9, 0.6, 1.0, 0.7, 0.85, 0.55, 0.75, 0.4];
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  for (var i = 0; i < heights.length; i++) ...[
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 120),
+                      width: 5,
+                      height: 8 + (24 * heights[i] *
+                          (0.4 + 0.6 * ((v + i * 0.15) % 1.0))),
+                      decoration: BoxDecoration(
+                        color: KidsTheme.forestGreen.withValues(
+                          alpha: 0.6 + 0.4 * ((v + i * 0.1) % 1.0),
+                        ),
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                    ),
+                    if (i < heights.length - 1)
+                      const SizedBox(width: 4),
+                  ],
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: AppSpacing.md),
+          // Done button
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              key: const ValueKey('kids-gamified-stop-recording'),
+              onPressed: widget.onDone,
+              icon: const Icon(Icons.check_circle_rounded),
+              label: Text(context.l10n.kidsGamifiedDoneRecording),
+              style: FilledButton.styleFrom(
+                backgroundColor: KidsTheme.forestGreen,
+                foregroundColor: Colors.white,
+                minimumSize: const Size.fromHeight(50),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: KidsTheme.buttonRadius,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<void> _navigateAfterKidsCompletion(
+  BuildContext context,
+  KidsModeLoaded state,
+) async {
+  if (state.newAwards.isNotEmpty) {
+    await showCertificateCelebrationDialog(context, state.newAwards);
+  }
+  if (!context.mounted) return;
+  context.pushReplacement(
+    '${AppRoutes.memorizationPlusKidsCompletion}'
+    '?surahId=${state.surahId}'
+    '&completedAyahNumber=${state.ayahNumber}'
+    '&starsEarned=${state.sessionStarsEarned}',
+  );
 }

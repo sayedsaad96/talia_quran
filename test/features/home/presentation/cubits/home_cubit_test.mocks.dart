@@ -11,31 +11,31 @@ import 'package:shared_preferences/shared_preferences.dart' as _i19;
 import 'package:talia_quran/core/error/app_failure.dart' as _i6;
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart'
     as _i16;
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart'
+    as _i13;
 import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart'
     as _i18;
 import 'package:talia_quran/core/memorization/usecases/get_smart_coach_recommendation_usecase.dart'
     as _i17;
 import 'package:talia_quran/core/services/app_session_service.dart' as _i15;
-import 'package:talia_quran/features/hifz/domain/entities/hifz_entities.dart'
-    as _i9;
-import 'package:talia_quran/features/hifz/domain/usecases/get_hifz_progress_usecase.dart'
-    as _i8;
+import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart'
+    as _i14;
 import 'package:talia_quran/features/home/domain/usecases/get_activity_heatmap_usecase.dart'
     as _i3;
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart'
-    as _i13;
+    as _i11;
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart'
-    as _i14;
-import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart'
     as _i12;
+import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart'
+    as _i10;
 import 'package:talia_quran/features/progress/domain/entities/progress_entities.dart'
     as _i7;
 import 'package:talia_quran/features/progress/domain/usecases/get_progress_usecase.dart'
     as _i4;
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart'
-    as _i11;
+    as _i9;
 import 'package:talia_quran/features/quran/domain/usecases/get_surahs_usecase.dart'
-    as _i10;
+    as _i8;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -99,45 +99,17 @@ class MockGetProgressUsecase extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, _i7.OverallProgress>>);
 }
 
-/// A class which mocks [GetHifzProgressUsecase].
-///
-/// See the documentation for Mockito's code generation for more information.
-class MockGetHifzProgressUsecase extends _i1.Mock
-    implements _i8.GetHifzProgressUsecase {
-  MockGetHifzProgressUsecase() {
-    _i1.throwOnMissingStub(this);
-  }
-
-  @override
-  _i5.Future<_i2.Either<_i6.Failure, List<_i9.SurahHifzProgress>>> call() =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #call,
-          [],
-        ),
-        returnValue: _i5
-            .Future<_i2.Either<_i6.Failure, List<_i9.SurahHifzProgress>>>.value(
-            _FakeEither_0<_i6.Failure, List<_i9.SurahHifzProgress>>(
-          this,
-          Invocation.method(
-            #call,
-            [],
-          ),
-        )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, List<_i9.SurahHifzProgress>>>);
-}
-
 /// A class which mocks [GetQuranPageUsecase].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockGetQuranPageUsecase extends _i1.Mock
-    implements _i10.GetQuranPageUsecase {
+    implements _i8.GetQuranPageUsecase {
   MockGetQuranPageUsecase() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i11.QuranPageDetail>> call(
+  _i5.Future<_i2.Either<_i6.Failure, _i9.QuranPageDetail>> call(
           int? pageNumber) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -145,132 +117,132 @@ class MockGetQuranPageUsecase extends _i1.Mock
           [pageNumber],
         ),
         returnValue:
-            _i5.Future<_i2.Either<_i6.Failure, _i11.QuranPageDetail>>.value(
-                _FakeEither_0<_i6.Failure, _i11.QuranPageDetail>(
+            _i5.Future<_i2.Either<_i6.Failure, _i9.QuranPageDetail>>.value(
+                _FakeEither_0<_i6.Failure, _i9.QuranPageDetail>(
           this,
           Invocation.method(
             #call,
             [pageNumber],
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i11.QuranPageDetail>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i9.QuranPageDetail>>);
 }
 
 /// A class which mocks [GetCustomPlanUsecase].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockGetCustomPlanUsecase extends _i1.Mock
-    implements _i12.GetCustomPlanUsecase {
+    implements _i10.GetCustomPlanUsecase {
   MockGetCustomPlanUsecase() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.CustomMemorizationPlan?>> call() =>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.CustomMemorizationPlan?>> call() =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
         returnValue: _i5.Future<
-                _i2.Either<_i6.Failure, _i13.CustomMemorizationPlan?>>.value(
-            _FakeEither_0<_i6.Failure, _i13.CustomMemorizationPlan?>(
+                _i2.Either<_i6.Failure, _i11.CustomMemorizationPlan?>>.value(
+            _FakeEither_0<_i6.Failure, _i11.CustomMemorizationPlan?>(
           this,
           Invocation.method(
             #call,
             [],
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.CustomMemorizationPlan?>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i11.CustomMemorizationPlan?>>);
 }
 
 /// A class which mocks [MemorizationPlusRepository].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockMemorizationPlusRepository extends _i1.Mock
-    implements _i14.MemorizationPlusRepository {
+    implements _i12.MemorizationPlusRepository {
   MockMemorizationPlusRepository() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>
       getMemorizationProfile() => (super.noSuchMethod(
             Invocation.method(
               #getMemorizationProfile,
               [],
             ),
             returnValue: _i5.Future<
-                    _i2.Either<_i6.Failure, _i13.MemorizationProfile>>.value(
-                _FakeEither_0<_i6.Failure, _i13.MemorizationProfile>(
+                    _i2.Either<_i6.Failure, _i11.MemorizationProfile>>.value(
+                _FakeEither_0<_i6.Failure, _i11.MemorizationProfile>(
               this,
               Invocation.method(
                 #getMemorizationProfile,
                 [],
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>);
 
   @override
   _i5.Future<
-      _i2.Either<_i6.Failure, _i13.MemorizationProfile>> selectMemorizationPath(
-          _i13.MemorizationPath? path) =>
+      _i2.Either<_i6.Failure, _i11.MemorizationProfile>> selectMemorizationPath(
+          _i11.MemorizationPath? path) =>
       (super.noSuchMethod(
         Invocation.method(
           #selectMemorizationPath,
           [path],
         ),
         returnValue:
-            _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>.value(
-                _FakeEither_0<_i6.Failure, _i13.MemorizationProfile>(
+            _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>.value(
+                _FakeEither_0<_i6.Failure, _i11.MemorizationProfile>(
           this,
           Invocation.method(
             #selectMemorizationPath,
             [path],
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>
       continueWithoutGuardian() => (super.noSuchMethod(
             Invocation.method(
               #continueWithoutGuardian,
               [],
             ),
             returnValue: _i5.Future<
-                    _i2.Either<_i6.Failure, _i13.MemorizationProfile>>.value(
-                _FakeEither_0<_i6.Failure, _i13.MemorizationProfile>(
+                    _i2.Either<_i6.Failure, _i11.MemorizationProfile>>.value(
+                _FakeEither_0<_i6.Failure, _i11.MemorizationProfile>(
               this,
               Invocation.method(
                 #continueWithoutGuardian,
                 [],
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.PairingSession>>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.PairingSession>>
       createGuardianPairingSession() => (super.noSuchMethod(
             Invocation.method(
               #createGuardianPairingSession,
               [],
             ),
             returnValue:
-                _i5.Future<_i2.Either<_i6.Failure, _i13.PairingSession>>.value(
-                    _FakeEither_0<_i6.Failure, _i13.PairingSession>(
+                _i5.Future<_i2.Either<_i6.Failure, _i11.PairingSession>>.value(
+                    _FakeEither_0<_i6.Failure, _i11.PairingSession>(
               this,
               Invocation.method(
                 #createGuardianPairingSession,
                 [],
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, _i13.PairingSession>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, _i11.PairingSession>>);
 
   @override
   _i5.Future<
       _i2
-      .Either<_i6.Failure, _i13.MemorizationProfile>> acceptGuardianPairingCode(
+      .Either<_i6.Failure, _i11.MemorizationProfile>> acceptGuardianPairingCode(
           String? codeOrQrData) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -278,55 +250,55 @@ class MockMemorizationPlusRepository extends _i1.Mock
           [codeOrQrData],
         ),
         returnValue:
-            _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>.value(
-                _FakeEither_0<_i6.Failure, _i13.MemorizationProfile>(
+            _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>.value(
+                _FakeEither_0<_i6.Failure, _i11.MemorizationProfile>(
           this,
           Invocation.method(
             #acceptGuardianPairingCode,
             [codeOrQrData],
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.PairingSession?>>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.PairingSession?>>
       refreshPairingSession() => (super.noSuchMethod(
             Invocation.method(
               #refreshPairingSession,
               [],
             ),
             returnValue:
-                _i5.Future<_i2.Either<_i6.Failure, _i13.PairingSession?>>.value(
-                    _FakeEither_0<_i6.Failure, _i13.PairingSession?>(
+                _i5.Future<_i2.Either<_i6.Failure, _i11.PairingSession?>>.value(
+                    _FakeEither_0<_i6.Failure, _i11.PairingSession?>(
               this,
               Invocation.method(
                 #refreshPairingSession,
                 [],
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, _i13.PairingSession?>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, _i11.PairingSession?>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>
       unlinkGuardian() => (super.noSuchMethod(
             Invocation.method(
               #unlinkGuardian,
               [],
             ),
             returnValue: _i5.Future<
-                    _i2.Either<_i6.Failure, _i13.MemorizationProfile>>.value(
-                _FakeEither_0<_i6.Failure, _i13.MemorizationProfile>(
+                    _i2.Either<_i6.Failure, _i11.MemorizationProfile>>.value(
+                _FakeEither_0<_i6.Failure, _i11.MemorizationProfile>(
               this,
               Invocation.method(
                 #unlinkGuardian,
                 [],
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>);
 
   @override
   _i5.Future<
-      _i2.Either<_i6.Failure, _i13.MemorizationProfile>> setParentGuardianMode(
+      _i2.Either<_i6.Failure, _i11.MemorizationProfile>> setParentGuardianMode(
           bool? value) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -334,54 +306,54 @@ class MockMemorizationPlusRepository extends _i1.Mock
           [value],
         ),
         returnValue:
-            _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>.value(
-                _FakeEither_0<_i6.Failure, _i13.MemorizationProfile>(
+            _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>.value(
+                _FakeEither_0<_i6.Failure, _i11.MemorizationProfile>(
           this,
           Invocation.method(
             #setParentGuardianMode,
             [value],
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>
       refreshChildGuardianLink() => (super.noSuchMethod(
             Invocation.method(
               #refreshChildGuardianLink,
               [],
             ),
             returnValue: _i5.Future<
-                    _i2.Either<_i6.Failure, _i13.MemorizationProfile>>.value(
-                _FakeEither_0<_i6.Failure, _i13.MemorizationProfile>(
+                    _i2.Either<_i6.Failure, _i11.MemorizationProfile>>.value(
+                _FakeEither_0<_i6.Failure, _i11.MemorizationProfile>(
               this,
               Invocation.method(
                 #refreshChildGuardianLink,
                 [],
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>
       resetMemorizationIdentity() => (super.noSuchMethod(
             Invocation.method(
               #resetMemorizationIdentity,
               [],
             ),
             returnValue: _i5.Future<
-                    _i2.Either<_i6.Failure, _i13.MemorizationProfile>>.value(
-                _FakeEither_0<_i6.Failure, _i13.MemorizationProfile>(
+                    _i2.Either<_i6.Failure, _i11.MemorizationProfile>>.value(
+                _FakeEither_0<_i6.Failure, _i11.MemorizationProfile>(
               this,
               Invocation.method(
                 #resetMemorizationIdentity,
                 [],
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, _i13.MemorizationProfile>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, _i11.MemorizationProfile>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.SmartMemorizationSettings>>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.SmartMemorizationSettings>>
       getSmartSettings() => (super.noSuchMethod(
             Invocation.method(
               #getSmartSettings,
@@ -389,8 +361,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
             ),
             returnValue: _i5.Future<
                     _i2
-                    .Either<_i6.Failure, _i13.SmartMemorizationSettings>>.value(
-                _FakeEither_0<_i6.Failure, _i13.SmartMemorizationSettings>(
+                    .Either<_i6.Failure, _i11.SmartMemorizationSettings>>.value(
+                _FakeEither_0<_i6.Failure, _i11.SmartMemorizationSettings>(
               this,
               Invocation.method(
                 #getSmartSettings,
@@ -398,11 +370,11 @@ class MockMemorizationPlusRepository extends _i1.Mock
               ),
             )),
           ) as _i5
-              .Future<_i2.Either<_i6.Failure, _i13.SmartMemorizationSettings>>);
+              .Future<_i2.Either<_i6.Failure, _i11.SmartMemorizationSettings>>);
 
   @override
   _i5.Future<_i2.Either<_i6.Failure, void>> saveSmartSettings(
-          _i13.SmartMemorizationSettings? settings) =>
+          _i11.SmartMemorizationSettings? settings) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveSmartSettings,
@@ -419,24 +391,24 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
-  _i2.Either<_i6.Failure, _i13.MemorizationTrack?> getSelectedTrack() =>
+  _i2.Either<_i6.Failure, _i11.MemorizationTrack?> getSelectedTrack() =>
       (super.noSuchMethod(
         Invocation.method(
           #getSelectedTrack,
           [],
         ),
-        returnValue: _FakeEither_0<_i6.Failure, _i13.MemorizationTrack?>(
+        returnValue: _FakeEither_0<_i6.Failure, _i11.MemorizationTrack?>(
           this,
           Invocation.method(
             #getSelectedTrack,
             [],
           ),
         ),
-      ) as _i2.Either<_i6.Failure, _i13.MemorizationTrack?>);
+      ) as _i2.Either<_i6.Failure, _i11.MemorizationTrack?>);
 
   @override
   _i5.Future<_i2.Either<_i6.Failure, void>> saveSelectedTrack(
-          _i13.MemorizationTrack? track) =>
+          _i11.MemorizationTrack? track) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveSelectedTrack,
@@ -453,7 +425,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.DailyPlan>> generateDailyPlan({
+  _i5.Future<_i2.Either<_i6.Failure, _i11.DailyPlan>> generateDailyPlan({
     required int? surahId,
     required int? newAyahsPerDay,
   }) =>
@@ -466,8 +438,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
             #newAyahsPerDay: newAyahsPerDay,
           },
         ),
-        returnValue: _i5.Future<_i2.Either<_i6.Failure, _i13.DailyPlan>>.value(
-            _FakeEither_0<_i6.Failure, _i13.DailyPlan>(
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, _i11.DailyPlan>>.value(
+            _FakeEither_0<_i6.Failure, _i11.DailyPlan>(
           this,
           Invocation.method(
             #generateDailyPlan,
@@ -478,28 +450,28 @@ class MockMemorizationPlusRepository extends _i1.Mock
             },
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.DailyPlan>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i11.DailyPlan>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.DailyPlan?>> getCachedDailyPlan() =>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.DailyPlan?>> getCachedDailyPlan() =>
       (super.noSuchMethod(
         Invocation.method(
           #getCachedDailyPlan,
           [],
         ),
-        returnValue: _i5.Future<_i2.Either<_i6.Failure, _i13.DailyPlan?>>.value(
-            _FakeEither_0<_i6.Failure, _i13.DailyPlan?>(
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, _i11.DailyPlan?>>.value(
+            _FakeEither_0<_i6.Failure, _i11.DailyPlan?>(
           this,
           Invocation.method(
             #getCachedDailyPlan,
             [],
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.DailyPlan?>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i11.DailyPlan?>>);
 
   @override
   _i5.Future<_i2.Either<_i6.Failure, void>> saveDailyPlan(
-          _i13.DailyPlan? plan) =>
+          _i11.DailyPlan? plan) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveDailyPlan,
@@ -516,10 +488,39 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.AyahReviewRecord?>> getReviewRecord(
+  _i5.Future<_i2.Either<_i6.Failure, bool>> markDailyPlanAyahCompleted({
+    required int? surahId,
+    required int? ayahNumber,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #markDailyPlanAyahCompleted,
+          [],
+          {
+            #surahId: surahId,
+            #ayahNumber: ayahNumber,
+          },
+        ),
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, bool>>.value(
+            _FakeEither_0<_i6.Failure, bool>(
+          this,
+          Invocation.method(
+            #markDailyPlanAyahCompleted,
+            [],
+            {
+              #surahId: surahId,
+              #ayahNumber: ayahNumber,
+            },
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, bool>>);
+
+  @override
+  _i5.Future<_i2.Either<_i6.Failure, _i11.AyahReviewRecord?>> getReviewRecord(
     int? surahId,
-    int? ayahNumber,
-  ) =>
+    int? ayahNumber, {
+    _i13.ReviewRecordReadScope? scope = _i13.ReviewRecordReadScope.adult,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #getReviewRecord,
@@ -527,10 +528,11 @@ class MockMemorizationPlusRepository extends _i1.Mock
             surahId,
             ayahNumber,
           ],
+          {#scope: scope},
         ),
         returnValue:
-            _i5.Future<_i2.Either<_i6.Failure, _i13.AyahReviewRecord?>>.value(
-                _FakeEither_0<_i6.Failure, _i13.AyahReviewRecord?>(
+            _i5.Future<_i2.Either<_i6.Failure, _i11.AyahReviewRecord?>>.value(
+                _FakeEither_0<_i6.Failure, _i11.AyahReviewRecord?>(
           this,
           Invocation.method(
             #getReviewRecord,
@@ -538,32 +540,37 @@ class MockMemorizationPlusRepository extends _i1.Mock
               surahId,
               ayahNumber,
             ],
+            {#scope: scope},
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.AyahReviewRecord?>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i11.AyahReviewRecord?>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, List<_i13.AyahReviewRecord>>>
-      getAllReviewRecords() => (super.noSuchMethod(
-            Invocation.method(
-              #getAllReviewRecords,
-              [],
-            ),
-            returnValue: _i5.Future<
-                    _i2.Either<_i6.Failure, List<_i13.AyahReviewRecord>>>.value(
-                _FakeEither_0<_i6.Failure, List<_i13.AyahReviewRecord>>(
-              this,
-              Invocation.method(
-                #getAllReviewRecords,
-                [],
-              ),
-            )),
-          ) as _i5
-              .Future<_i2.Either<_i6.Failure, List<_i13.AyahReviewRecord>>>);
+  _i5.Future<
+      _i2.Either<_i6.Failure, List<_i11.AyahReviewRecord>>> getAllReviewRecords(
+          {_i13.ReviewRecordReadScope? scope =
+              _i13.ReviewRecordReadScope.adult}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getAllReviewRecords,
+          [],
+          {#scope: scope},
+        ),
+        returnValue: _i5
+            .Future<_i2.Either<_i6.Failure, List<_i11.AyahReviewRecord>>>.value(
+            _FakeEither_0<_i6.Failure, List<_i11.AyahReviewRecord>>(
+          this,
+          Invocation.method(
+            #getAllReviewRecords,
+            [],
+            {#scope: scope},
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, List<_i11.AyahReviewRecord>>>);
 
   @override
   _i5.Future<_i2.Either<_i6.Failure, void>> saveReviewRecord(
-          _i13.AyahReviewRecord? record) =>
+          _i11.AyahReviewRecord? record) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveReviewRecord,
@@ -580,95 +587,26 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.AyahReviewRecord>> evaluateAyah({
-    required int? surahId,
-    required int? ayahNumber,
-    required _i13.PerformanceRating? rating,
-    _i13.ReviewRecordCreatedByMode? createdByMode =
-        _i13.ReviewRecordCreatedByMode.adultMemPlus,
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #evaluateAyah,
-          [],
-          {
-            #surahId: surahId,
-            #ayahNumber: ayahNumber,
-            #rating: rating,
-            #createdByMode: createdByMode,
-          },
-        ),
-        returnValue:
-            _i5.Future<_i2.Either<_i6.Failure, _i13.AyahReviewRecord>>.value(
-                _FakeEither_0<_i6.Failure, _i13.AyahReviewRecord>(
-          this,
-          Invocation.method(
-            #evaluateAyah,
-            [],
-            {
-              #surahId: surahId,
-              #ayahNumber: ayahNumber,
-              #rating: rating,
-              #createdByMode: createdByMode,
-            },
-          ),
-        )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.AyahReviewRecord>>);
-
-  @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.AyahReviewRecord>> markAyahMemorized({
-    required int? surahId,
-    required int? ayahNumber,
-    _i13.ReviewRecordCreatedByMode? createdByMode =
-        _i13.ReviewRecordCreatedByMode.kidsMode,
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #markAyahMemorized,
-          [],
-          {
-            #surahId: surahId,
-            #ayahNumber: ayahNumber,
-            #createdByMode: createdByMode,
-          },
-        ),
-        returnValue:
-            _i5.Future<_i2.Either<_i6.Failure, _i13.AyahReviewRecord>>.value(
-                _FakeEither_0<_i6.Failure, _i13.AyahReviewRecord>(
-          this,
-          Invocation.method(
-            #markAyahMemorized,
-            [],
-            {
-              #surahId: surahId,
-              #ayahNumber: ayahNumber,
-              #createdByMode: createdByMode,
-            },
-          ),
-        )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.AyahReviewRecord>>);
-
-  @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.KidsProgress>> getKidsProgress() =>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.KidsProgress>> getKidsProgress() =>
       (super.noSuchMethod(
         Invocation.method(
           #getKidsProgress,
           [],
         ),
         returnValue:
-            _i5.Future<_i2.Either<_i6.Failure, _i13.KidsProgress>>.value(
-                _FakeEither_0<_i6.Failure, _i13.KidsProgress>(
+            _i5.Future<_i2.Either<_i6.Failure, _i11.KidsProgress>>.value(
+                _FakeEither_0<_i6.Failure, _i11.KidsProgress>(
           this,
           Invocation.method(
             #getKidsProgress,
             [],
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.KidsProgress>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i11.KidsProgress>>);
 
   @override
   _i5.Future<_i2.Either<_i6.Failure, void>> saveKidsProgress(
-          _i13.KidsProgress? progress) =>
+          _i11.KidsProgress? progress) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveKidsProgress,
@@ -686,7 +624,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
 
   @override
   _i5.Future<
-      _i2.Either<_i6.Failure, List<_i13.KidsJourneyStage>>> getKidsJourney(
+      _i2.Either<_i6.Failure, List<_i11.KidsJourneyStage>>> getKidsJourney(
           {required int? surahId}) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -695,8 +633,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
           {#surahId: surahId},
         ),
         returnValue: _i5
-            .Future<_i2.Either<_i6.Failure, List<_i13.KidsJourneyStage>>>.value(
-            _FakeEither_0<_i6.Failure, List<_i13.KidsJourneyStage>>(
+            .Future<_i2.Either<_i6.Failure, List<_i11.KidsJourneyStage>>>.value(
+            _FakeEither_0<_i6.Failure, List<_i11.KidsJourneyStage>>(
           this,
           Invocation.method(
             #getKidsJourney,
@@ -704,28 +642,28 @@ class MockMemorizationPlusRepository extends _i1.Mock
             {#surahId: surahId},
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, List<_i13.KidsJourneyStage>>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, List<_i11.KidsJourneyStage>>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, List<_i13.KidsSessionLog>>>
+  _i5.Future<_i2.Either<_i6.Failure, List<_i11.KidsSessionLog>>>
       getKidsSessionLogs() => (super.noSuchMethod(
             Invocation.method(
               #getKidsSessionLogs,
               [],
             ),
             returnValue: _i5.Future<
-                    _i2.Either<_i6.Failure, List<_i13.KidsSessionLog>>>.value(
-                _FakeEither_0<_i6.Failure, List<_i13.KidsSessionLog>>(
+                    _i2.Either<_i6.Failure, List<_i11.KidsSessionLog>>>.value(
+                _FakeEither_0<_i6.Failure, List<_i11.KidsSessionLog>>(
               this,
               Invocation.method(
                 #getKidsSessionLogs,
                 [],
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, List<_i13.KidsSessionLog>>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, List<_i11.KidsSessionLog>>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.KidsSessionLog>> saveKidsSessionLog({
+  _i5.Future<_i2.Either<_i6.Failure, _i11.KidsSessionLog>> saveKidsSessionLog({
     required int? surahId,
     required int? ayahNumber,
     required int? repeatsCompleted,
@@ -743,8 +681,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
           },
         ),
         returnValue:
-            _i5.Future<_i2.Either<_i6.Failure, _i13.KidsSessionLog>>.value(
-                _FakeEither_0<_i6.Failure, _i13.KidsSessionLog>(
+            _i5.Future<_i2.Either<_i6.Failure, _i11.KidsSessionLog>>.value(
+                _FakeEither_0<_i6.Failure, _i11.KidsSessionLog>(
           this,
           Invocation.method(
             #saveKidsSessionLog,
@@ -757,10 +695,10 @@ class MockMemorizationPlusRepository extends _i1.Mock
             },
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.KidsSessionLog>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i11.KidsSessionLog>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.ParentDashboard>> getParentDashboard(
+  _i5.Future<_i2.Either<_i6.Failure, _i11.ParentDashboard>> getParentDashboard(
           {required int? surahId}) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -769,8 +707,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
           {#surahId: surahId},
         ),
         returnValue:
-            _i5.Future<_i2.Either<_i6.Failure, _i13.ParentDashboard>>.value(
-                _FakeEither_0<_i6.Failure, _i13.ParentDashboard>(
+            _i5.Future<_i2.Either<_i6.Failure, _i11.ParentDashboard>>.value(
+                _FakeEither_0<_i6.Failure, _i11.ParentDashboard>(
           this,
           Invocation.method(
             #getParentDashboard,
@@ -778,29 +716,29 @@ class MockMemorizationPlusRepository extends _i1.Mock
             {#surahId: surahId},
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i13.ParentDashboard>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i11.ParentDashboard>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.ParentSettings>>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.ParentSettings>>
       getParentSettings() => (super.noSuchMethod(
             Invocation.method(
               #getParentSettings,
               [],
             ),
             returnValue:
-                _i5.Future<_i2.Either<_i6.Failure, _i13.ParentSettings>>.value(
-                    _FakeEither_0<_i6.Failure, _i13.ParentSettings>(
+                _i5.Future<_i2.Either<_i6.Failure, _i11.ParentSettings>>.value(
+                    _FakeEither_0<_i6.Failure, _i11.ParentSettings>(
               this,
               Invocation.method(
                 #getParentSettings,
                 [],
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, _i13.ParentSettings>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, _i11.ParentSettings>>);
 
   @override
   _i5.Future<_i2.Either<_i6.Failure, void>> saveParentSettings(
-          _i13.ParentSettings? settings) =>
+          _i11.ParentSettings? settings) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveParentSettings,
@@ -868,7 +806,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, List<_i13.ParentReward>>> saveParentReward(
+  _i5.Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>> saveParentReward(
           String? title) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -876,33 +814,33 @@ class MockMemorizationPlusRepository extends _i1.Mock
           [title],
         ),
         returnValue:
-            _i5.Future<_i2.Either<_i6.Failure, List<_i13.ParentReward>>>.value(
-                _FakeEither_0<_i6.Failure, List<_i13.ParentReward>>(
+            _i5.Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>.value(
+                _FakeEither_0<_i6.Failure, List<_i11.ParentReward>>(
           this,
           Invocation.method(
             #saveParentReward,
             [title],
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, List<_i13.ParentReward>>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, List<_i13.ParentReward>>>
+  _i5.Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>
       claimParentReward(String? id) => (super.noSuchMethod(
             Invocation.method(
               #claimParentReward,
               [id],
             ),
             returnValue: _i5
-                .Future<_i2.Either<_i6.Failure, List<_i13.ParentReward>>>.value(
-                _FakeEither_0<_i6.Failure, List<_i13.ParentReward>>(
+                .Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>.value(
+                _FakeEither_0<_i6.Failure, List<_i11.ParentReward>>(
               this,
               Invocation.method(
                 #claimParentReward,
                 [id],
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, List<_i13.ParentReward>>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>);
 
   @override
   _i5.Future<_i2.Either<_i6.Failure, String>> createChildLinkToken() =>
@@ -957,7 +895,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, List<_i13.RemoteChildSummary>>>
+  _i5.Future<_i2.Either<_i6.Failure, List<_i11.RemoteChildSummary>>>
       getRemoteChildren() => (super.noSuchMethod(
             Invocation.method(
               #getRemoteChildren,
@@ -965,8 +903,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
             ),
             returnValue: _i5.Future<
                     _i2
-                    .Either<_i6.Failure, List<_i13.RemoteChildSummary>>>.value(
-                _FakeEither_0<_i6.Failure, List<_i13.RemoteChildSummary>>(
+                    .Either<_i6.Failure, List<_i11.RemoteChildSummary>>>.value(
+                _FakeEither_0<_i6.Failure, List<_i11.RemoteChildSummary>>(
               this,
               Invocation.method(
                 #getRemoteChildren,
@@ -974,10 +912,10 @@ class MockMemorizationPlusRepository extends _i1.Mock
               ),
             )),
           ) as _i5
-              .Future<_i2.Either<_i6.Failure, List<_i13.RemoteChildSummary>>>);
+              .Future<_i2.Either<_i6.Failure, List<_i11.RemoteChildSummary>>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, List<_i13.ParentReward>>>
+  _i5.Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>
       saveRemoteParentReward({
     required String? childUserId,
     required String? title,
@@ -992,8 +930,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
               },
             ),
             returnValue: _i5
-                .Future<_i2.Either<_i6.Failure, List<_i13.ParentReward>>>.value(
-                _FakeEither_0<_i6.Failure, List<_i13.ParentReward>>(
+                .Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>.value(
+                _FakeEither_0<_i6.Failure, List<_i11.ParentReward>>(
               this,
               Invocation.method(
                 #saveRemoteParentReward,
@@ -1004,10 +942,10 @@ class MockMemorizationPlusRepository extends _i1.Mock
                 },
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, List<_i13.ParentReward>>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.KidsCompletionResult>>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.KidsCompletionResult>>
       awardKidsPoints({
     required int? surahId,
     required int? ayahNumber,
@@ -1024,8 +962,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
               },
             ),
             returnValue: _i5.Future<
-                    _i2.Either<_i6.Failure, _i13.KidsCompletionResult>>.value(
-                _FakeEither_0<_i6.Failure, _i13.KidsCompletionResult>(
+                    _i2.Either<_i6.Failure, _i11.KidsCompletionResult>>.value(
+                _FakeEither_0<_i6.Failure, _i11.KidsCompletionResult>(
               this,
               Invocation.method(
                 #awardKidsPoints,
@@ -1037,10 +975,10 @@ class MockMemorizationPlusRepository extends _i1.Mock
                 },
               ),
             )),
-          ) as _i5.Future<_i2.Either<_i6.Failure, _i13.KidsCompletionResult>>);
+          ) as _i5.Future<_i2.Either<_i6.Failure, _i11.KidsCompletionResult>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i13.CustomMemorizationPlan?>>
+  _i5.Future<_i2.Either<_i6.Failure, _i11.CustomMemorizationPlan?>>
       getCustomPlan() => (super.noSuchMethod(
             Invocation.method(
               #getCustomPlan,
@@ -1048,8 +986,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
             ),
             returnValue: _i5.Future<
                     _i2
-                    .Either<_i6.Failure, _i13.CustomMemorizationPlan?>>.value(
-                _FakeEither_0<_i6.Failure, _i13.CustomMemorizationPlan?>(
+                    .Either<_i6.Failure, _i11.CustomMemorizationPlan?>>.value(
+                _FakeEither_0<_i6.Failure, _i11.CustomMemorizationPlan?>(
               this,
               Invocation.method(
                 #getCustomPlan,
@@ -1057,11 +995,11 @@ class MockMemorizationPlusRepository extends _i1.Mock
               ),
             )),
           ) as _i5
-              .Future<_i2.Either<_i6.Failure, _i13.CustomMemorizationPlan?>>);
+              .Future<_i2.Either<_i6.Failure, _i11.CustomMemorizationPlan?>>);
 
   @override
   _i5.Future<_i2.Either<_i6.Failure, void>> saveCustomPlan(
-          _i13.CustomMemorizationPlan? plan) =>
+          _i11.CustomMemorizationPlan? plan) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveCustomPlan,
@@ -1122,6 +1060,93 @@ class MockMemorizationPlusRepository extends _i1.Mock
           Invocation.method(
             #setIsParentMode,
             [value],
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
+  _i5.Future<_i2.Either<_i6.Failure, void>> resyncProductionDataToCloud() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #resyncProductionDataToCloud,
+          [],
+        ),
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #resyncProductionDataToCloud,
+            [],
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
+  _i5.Future<_i2.Either<_i6.Failure, void>> pullProductionDataFromCloud() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #pullProductionDataFromCloud,
+          [],
+        ),
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #pullProductionDataFromCloud,
+            [],
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
+  _i5.Future<_i2.Either<_i6.Failure, void>> pushCertificatesToCloud(
+          List<_i14.CertificateAward>? certificates) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #pushCertificatesToCloud,
+          [certificates],
+        ),
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #pushCertificatesToCloud,
+            [certificates],
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
+  _i5.Future<_i2.Either<_i6.Failure, void>> revokeGuardianLink(
+          String? counterpartUserId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #revokeGuardianLink,
+          [counterpartUserId],
+        ),
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #revokeGuardianLink,
+            [counterpartUserId],
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
+  _i5.Future<_i2.Either<_i6.Failure, void>> removeChild(String? childUserId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #removeChild,
+          [childUserId],
+        ),
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #removeChild,
+            [childUserId],
           ),
         )),
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
@@ -1198,16 +1223,16 @@ class MockMemorizationPathResolver extends _i1.Mock
       ) as _i5.Stream<void>);
 
   @override
-  _i5.Future<_i13.MemorizationProfile?> currentProfile() => (super.noSuchMethod(
+  _i5.Future<_i11.MemorizationProfile?> currentProfile() => (super.noSuchMethod(
         Invocation.method(
           #currentProfile,
           [],
         ),
-        returnValue: _i5.Future<_i13.MemorizationProfile?>.value(),
-      ) as _i5.Future<_i13.MemorizationProfile?>);
+        returnValue: _i5.Future<_i11.MemorizationProfile?>.value(),
+      ) as _i5.Future<_i11.MemorizationProfile?>);
 
   @override
-  bool isKids(_i13.MemorizationProfile? profile) => (super.noSuchMethod(
+  bool isKids(_i11.MemorizationProfile? profile) => (super.noSuchMethod(
         Invocation.method(
           #isKids,
           [profile],
@@ -1216,7 +1241,7 @@ class MockMemorizationPathResolver extends _i1.Mock
       ) as bool);
 
   @override
-  bool isAdult(_i13.MemorizationProfile? profile) => (super.noSuchMethod(
+  bool isAdult(_i11.MemorizationProfile? profile) => (super.noSuchMethod(
         Invocation.method(
           #isAdult,
           [profile],

@@ -12,7 +12,9 @@ import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart';
 import 'package:talia_quran/core/memorization/usecases/get_smart_coach_recommendation_usecase.dart';
 import 'package:talia_quran/core/services/app_session_service.dart';
-import 'package:talia_quran/features/hifz/domain/usecases/get_hifz_progress_usecase.dart';
+import 'package:talia_quran/core/progress/progress_changed_reason.dart';
+import 'package:talia_quran/core/progress/progress_events_bus.dart';
+import 'package:talia_quran/core/services/xp_service.dart';
 import 'package:talia_quran/features/home/domain/usecases/get_activity_heatmap_usecase.dart';
 import 'package:talia_quran/features/home/presentation/cubits/home_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
@@ -27,7 +29,6 @@ import 'home_cubit_test.mocks.dart';
 
 @GenerateMocks([
   GetProgressUsecase,
-  GetHifzProgressUsecase,
   GetQuranPageUsecase,
   GetCustomPlanUsecase,
   MemorizationPlusRepository,
@@ -40,7 +41,6 @@ import 'home_cubit_test.mocks.dart';
 void main() {
   late HomeCubit cubit;
   late MockGetProgressUsecase mockGetProgress;
-  late MockGetHifzProgressUsecase mockGetHifzProgress;
   late MockGetQuranPageUsecase mockGetQuranPage;
   late MockGetCustomPlanUsecase mockGetCustomPlan;
   late MockMemorizationPlusRepository mockMemRepo;
@@ -50,10 +50,11 @@ void main() {
   late MockGetSmartCoachRecommendationUsecase mockGetCoachRecommendation;
   late UnifiedJourneyEngine journeyEngine;
   late MockSharedPreferences mockPrefs;
+  late ProgressEventsBus progressEvents;
+  late _FakeXpService xpService;
 
   setUp(() {
     mockGetProgress = MockGetProgressUsecase();
-    mockGetHifzProgress = MockGetHifzProgressUsecase();
     mockGetQuranPage = MockGetQuranPageUsecase();
     mockGetCustomPlan = MockGetCustomPlanUsecase();
     mockMemRepo = MockMemorizationPlusRepository();
@@ -63,6 +64,8 @@ void main() {
     mockGetCoachRecommendation = MockGetSmartCoachRecommendationUsecase();
     journeyEngine = const UnifiedJourneyEngine();
     mockPrefs = MockSharedPreferences();
+    progressEvents = ProgressEventsBus();
+    xpService = _FakeXpService();
 
     when(mockPathResolver.changes).thenAnswer((_) => const Stream.empty());
     when(mockPrefs.getString(any)).thenReturn(null);
@@ -90,7 +93,6 @@ void main() {
         ),
       ),
     );
-    when(mockGetHifzProgress.call()).thenAnswer((_) async => const Right([]));
     when(
       mockGetQuranPage.call(any),
     ).thenAnswer((_) async => const Left(CacheFailure('no cache')));
@@ -125,7 +127,6 @@ void main() {
 
     cubit = HomeCubit(
       mockGetProgress,
-      mockGetHifzProgress,
       mockGetQuranPage,
       mockGetCustomPlan,
       mockMemRepo,
@@ -135,11 +136,14 @@ void main() {
       mockGetCoachRecommendation,
       journeyEngine,
       mockPrefs,
+      progressEvents,
+      xpService,
     );
   });
 
   tearDown(() {
     cubit.close();
+    progressEvents.dispose();
   });
 
   test('Scenario 1: Resume Session emits P1 Action', () async {
@@ -275,4 +279,52 @@ void main() {
       expect(state.heroAction, isNull);
     },
   );
+
+  test('xp-only progress event refreshes totalXp without full reload', () async {
+    var progressLoads = 0;
+    when(mockGetProgress.call()).thenAnswer((_) async {
+      progressLoads++;
+      return const Right(
+        OverallProgress(
+          memorizedAyahs: 10,
+          totalAyahs: 100,
+          memorizedSurahs: 1,
+          totalSurahs: 114,
+          memorizedJuz: 0,
+          totalJuz: 30,
+          readAyahs: 50,
+          readSurahs: 2,
+          readJuz: 1,
+          streakDays: 5,
+          lastActiveDate: null,
+          achievements: [],
+          readPagesCount: 10,
+          totalQuranPages: 604,
+          learningAyahs: 5,
+          reviewAyahs: 5,
+        ),
+      );
+    });
+
+    await cubit.load();
+    expect((cubit.state as HomeLoaded).totalXp, 120);
+    expect(progressLoads, 1);
+
+    xpService.totalXp = 250;
+    progressEvents.notify(ProgressChangedReason.xp);
+    await Future<void>.delayed(const Duration(milliseconds: 50));
+
+    expect((cubit.state as HomeLoaded).totalXp, 250);
+    expect(progressLoads, 1);
+  });
+}
+
+class _FakeXpService implements XpService {
+  int totalXp = 120;
+
+  @override
+  Future<int> getTotalXp() async => totalXp;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

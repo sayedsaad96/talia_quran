@@ -224,6 +224,23 @@ class MockParentRemoteLinkUsecase extends _i1.Mock
           ),
         )),
       ) as _i4.Future<_i2.Either<_i5.Failure, List<_i6.ParentReward>>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, void>> removeChild(String? childUserId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #removeChild,
+          [childUserId],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i5.Failure, void>>.value(
+            _FakeEither_0<_i5.Failure, void>(
+          this,
+          Invocation.method(
+            #removeChild,
+            [childUserId],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i5.Failure, void>>);
 }
 
 /// A class which mocks [QuranRepository].

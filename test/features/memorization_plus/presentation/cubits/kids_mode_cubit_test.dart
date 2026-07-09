@@ -4,6 +4,8 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
+import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
+import 'package:talia_quran/core/memorization/v2/session_engine.dart';
 import 'package:talia_quran/core/services/achievement_service.dart';
 import 'package:talia_quran/core/services/streak_service.dart';
 import 'package:talia_quran/core/services/xp_service.dart';
@@ -26,6 +28,23 @@ void main() {
     late _FakeXpService xpService;
     late KidsModeCubit cubit;
 
+    KidsModeCubit buildCubit({required KidsRecitationRecorder recorder}) =>
+        KidsModeCubit(
+          GetKidsProgressUsecase(repository),
+          AwardKidsPointsUsecase(repository),
+          SaveKidsSessionLogUsecase(repository),
+          achievementService,
+          quranRepository,
+          V2SessionEngine(),
+          V2SessionReviewAdapter(
+            repository: repository,
+            scheduler: const ScheduleNextReviewUsecase(),
+          ),
+          streakService,
+          xpService,
+          recorder,
+        );
+
     setUp(() {
       repository = _FakeMemorizationPlusRepository();
       achievementService = _FakeAchievementService();
@@ -33,17 +52,7 @@ void main() {
       streakService = _FakeStreakService();
       xpService = _FakeXpService();
 
-      cubit = KidsModeCubit(
-        GetKidsProgressUsecase(repository),
-        AwardKidsPointsUsecase(repository),
-        MarkAyahMemorizedUsecase(repository),
-        SaveKidsSessionLogUsecase(repository),
-        achievementService,
-        quranRepository,
-        streakService,
-        xpService,
-        _FakeKidsRecitationRecorder(),
-      );
+      cubit = buildCubit(recorder: _FakeKidsRecitationRecorder());
     });
 
     tearDown(() async {
@@ -93,16 +102,8 @@ void main() {
       'startRecording does not complete when no recitation is captured',
       () async {
         await cubit.close();
-        cubit = KidsModeCubit(
-          GetKidsProgressUsecase(repository),
-          AwardKidsPointsUsecase(repository),
-          MarkAyahMemorizedUsecase(repository),
-          SaveKidsSessionLogUsecase(repository),
-          achievementService,
-          quranRepository,
-          streakService,
-          xpService,
-          _FakeKidsRecitationRecorder(
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(
             result: const KidsRecitationCaptureResult.notCaptured(),
           ),
         );
@@ -149,21 +150,40 @@ void main() {
       expect(repository.markCalls, 1);
       expect(repository.saveLogCalls, 1);
     });
-  });
-}
 
-AyahReviewRecord _memorizedRecord() {
-  final now = DateTime.now().toUtc();
-  return AyahReviewRecord(
-    surahId: 114,
-    ayahNumber: 1,
-    strengthLevel: 6,
-    intervalDays: 1,
-    lastReviewedAt: now,
-    nextReviewDate: now.add(const Duration(days: 1)),
-    totalReviews: 1,
-    lastRating: PerformanceRating.excellent,
-  );
+    test(
+      'markCompleted records StreakService activity as the single streak source',
+      () async {
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress(
+                  totalPoints: 14,
+                  currentLevel: 1,
+                  currentStreak: 5,
+                  starsEarned: 1,
+                  ayahsCompleted: 1,
+                  lastSessionAt: null,
+                ),
+                pointsEarned: 14,
+                starsEarned: 1,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+
+        await cubit.markCompleted();
+
+        expect(streakService.recordCalls, 1);
+        final state = cubit.state as KidsModeLoaded;
+        expect(state.progress.currentStreak, 5);
+      },
+    );
+  });
 }
 
 KidsSessionLog _sessionLog() => KidsSessionLog(
@@ -199,16 +219,24 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
   }
 
   @override
-  Future<Either<Failure, AyahReviewRecord>> markAyahMemorized({
-    required int surahId,
-    required int ayahNumber,
-    ReviewRecordCreatedByMode createdByMode =
-        ReviewRecordCreatedByMode.kidsMode,
-  }) async {
+  Future<Either<Failure, AyahReviewRecord?>> getReviewRecord(
+    int surahId,
+    int ayahNumber,
+  ) async {
     expect(surahId, 114);
     expect(ayahNumber, 1);
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Failure, void>> saveReviewRecord(
+    AyahReviewRecord record,
+  ) async {
+    expect(record.surahId, 114);
+    expect(record.ayahNumber, 1);
+    expect(record.createdByMode, ReviewRecordCreatedByMode.kidsMode);
     markCalls++;
-    return Right(_memorizedRecord());
+    return const Right(null);
   }
 
   @override
@@ -284,7 +312,12 @@ class _FakeKidsRecitationRecorder implements KidsRecitationRecorder {
   final KidsRecitationCaptureResult result;
 
   @override
-  Future<KidsRecitationCaptureResult> capture() async => result;
+  Future<KidsRecitationCaptureResult> capture({
+    Completer<KidsRecitationCaptureResult>? externalCompleter,
+  }) async => result;
+
+  @override
+  Future<void> stop() async {}
 
   @override
   Future<void> dispose() async {}

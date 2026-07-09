@@ -3,7 +3,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
-import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -282,25 +281,6 @@ void main() {
         ReviewRecordCreatedByMode.migration.index,
       );
       expect(record.createdByMode, ReviewRecordCreatedByMode.migration);
-    });
-  });
-
-  // ─── Domain params tests ───────────────────────────────────────────────────
-
-
-  group('MarkAyahMemorizedParams', () {
-    test('defaults createdByMode to kidsMode', () {
-      final params = MarkAyahMemorizedParams(surahId: 114, ayahNumber: 1);
-      expect(params.createdByMode, ReviewRecordCreatedByMode.kidsMode);
-    });
-
-    test('can be explicitly set to kidsMode', () {
-      final params = MarkAyahMemorizedParams(
-        surahId: 114,
-        ayahNumber: 1,
-        createdByMode: ReviewRecordCreatedByMode.kidsMode,
-      );
-      expect(params.createdByMode, ReviewRecordCreatedByMode.kidsMode);
     });
   });
 }

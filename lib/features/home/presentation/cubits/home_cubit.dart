@@ -6,8 +6,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../progress/domain/usecases/get_progress_usecase.dart';
-import '../../../hifz/domain/usecases/get_hifz_progress_usecase.dart';
-import '../../../hifz/domain/entities/hifz_entities.dart';
 import '../../../quran/domain/usecases/get_surahs_usecase.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
@@ -21,6 +19,9 @@ import '../../domain/usecases/get_activity_heatmap_usecase.dart';
 import '../../../../core/journey/unified_journey_action.dart';
 import '../../../../core/journey/unified_journey_engine.dart';
 import '../../../../core/journey/unified_journey_input.dart';
+import '../../../../core/progress/progress_changed_reason.dart';
+import '../../../../core/progress/progress_events_bus.dart';
+import '../../../../core/services/xp_service.dart';
 import '../../../memorization_plus/domain/services/memorization_insights_aggregator.dart';
 import '../../../../core/utils/talia_logger.dart';
 
@@ -28,7 +29,6 @@ part 'home_state.dart';
 
 class HomeCubit extends Cubit<HomeState> {
   final GetProgressUsecase _getProgress;
-  final GetHifzProgressUsecase _getHifzProgress;
   final GetQuranPageUsecase _getQuranPage;
   final GetCustomPlanUsecase _getCustomPlan;
   final MemorizationPlusRepository _memorizationRepository;
@@ -38,11 +38,14 @@ class HomeCubit extends Cubit<HomeState> {
   final GetSmartCoachRecommendationUsecase _getCoachRecommendation;
   final UnifiedJourneyEngine _journeyEngine;
   final SharedPreferences _prefs;
+  final ProgressEventsBus _progressEvents;
+  final XpService _xpService;
   late final StreamSubscription<void> _pathChangesSub;
+  late final StreamSubscription<ProgressChangedReason> _progressChangesSub;
+  Timer? _reloadDebounce;
 
   HomeCubit(
     this._getProgress,
-    this._getHifzProgress,
     this._getQuranPage,
     this._getCustomPlan,
     this._memorizationRepository,
@@ -52,12 +55,47 @@ class HomeCubit extends Cubit<HomeState> {
     this._getCoachRecommendation,
     this._journeyEngine,
     this._prefs,
+    this._progressEvents,
+    this._xpService,
   ) : super(const HomeInitial()) {
     _pathChangesSub = _pathResolver.changes.listen((_) {
+      if (!isClosed) {
+        _scheduleFullReload();
+      }
+    });
+    _progressChangesSub = _progressEvents.changes.listen(_onProgressChanged);
+  }
+
+  void _onProgressChanged(ProgressChangedReason reason) {
+    if (reason == ProgressChangedReason.xp) {
+      unawaited(_refreshXpOnly());
+      return;
+    }
+    if (ProgressEventsBus.affectsHomeFullReload(reason)) {
+      _scheduleFullReload();
+    }
+  }
+
+  void _scheduleFullReload() {
+    _reloadDebounce?.cancel();
+    _reloadDebounce = Timer(const Duration(milliseconds: 300), () {
       if (!isClosed) {
         unawaited(load());
       }
     });
+  }
+
+  Future<void> _refreshXpOnly() async {
+    final current = state;
+    if (current is! HomeLoaded) return;
+    try {
+      final totalXp = await _xpService.getTotalXp();
+      if (!isClosed && state is HomeLoaded) {
+        emit((state as HomeLoaded).copyWith(totalXp: totalXp));
+      }
+    } catch (_) {
+      // Non-critical — keep showing the last known XP value.
+    }
   }
 
   Future<void> load() async {
@@ -70,14 +108,12 @@ class HomeCubit extends Cubit<HomeState> {
     final pageNumber = random.nextInt(604) + 1;
 
     final progressFuture = _getProgress();
-    final hifzFuture = _getHifzProgress();
     final quranPageFuture = _getQuranPage(pageNumber);
     final planFuture = _getCustomPlan();
     final heatmapFuture = _getHeatmap();
     final coachFuture = _getCoachRecommendation();
 
     final progressResult = await progressFuture;
-    final hifzResult = await hifzFuture;
     final quranPageResult = await quranPageFuture;
     QuranPageDetail? dailyWirdDetail;
     quranPageResult.fold((l) => null, (r) => dailyWirdDetail = r);
@@ -126,12 +162,11 @@ class HomeCubit extends Cubit<HomeState> {
     }
 
     if (isClosed) return;
+    final totalXp = await _xpService.getTotalXp();
     progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
-      final hifzProgress = hifzResult.getOrElse(() => []);
       emit(
         HomeLoaded(
           progress: progress,
-          hifzSurahProgress: hifzProgress,
           greeting: _greeting(),
           dailyWirdPageDetail: dailyWirdDetail,
           customPlan: customPlan,
@@ -143,6 +178,7 @@ class HomeCubit extends Cubit<HomeState> {
           activityStartDate: heatmap.startDate,
           coachRecommendation: coachRecommendation,
           heroAction: heroAction,
+          totalXp: totalXp,
         ),
       );
     });
@@ -199,12 +235,39 @@ class HomeCubit extends Cubit<HomeState> {
       );
 
       final unifiedAction = _journeyEngine.evaluate(input);
-      return unifiedAction;
+      return _resolveHeroAction(
+        unifiedAction: unifiedAction,
+        coachRecommendation: coachRecommendation,
+      );
     } catch (e, s) {
       TaliaLogger.w('Failed to evaluate UnifiedJourneyEngine input', e, s);
       // Swallow errors in shadow mode
       return null;
     }
+  }
+
+  /// When Coach flags due/weak review, suppress low-priority hero cards (wird/explore).
+  UnifiedJourneyAction? _resolveHeroAction({
+    required UnifiedJourneyAction unifiedAction,
+    SmartCoachRecommendation? coachRecommendation,
+  }) {
+    if (coachRecommendation == null) return unifiedAction;
+
+    final coachUrgent = switch (coachRecommendation.kind) {
+      SmartCoachRecommendationKind.reviewWeakAyah ||
+      SmartCoachRecommendationKind.reviewDueNear ||
+      SmartCoachRecommendationKind.reviewDueFar ||
+      SmartCoachRecommendationKind.memorizedReviewDue ||
+      SmartCoachRecommendationKind.hifzReviewDue => true,
+      _ => false,
+    };
+    if (!coachUrgent) return unifiedAction;
+
+    if (unifiedAction.priority == UnifiedJourneyPriority.p5DailyGoal ||
+        unifiedAction.priority == UnifiedJourneyPriority.p6FreeExploration) {
+      return null;
+    }
+    return unifiedAction;
   }
 
   String _greeting() {
@@ -217,7 +280,9 @@ class HomeCubit extends Cubit<HomeState> {
 
   @override
   Future<void> close() async {
+    _reloadDebounce?.cancel();
     await _pathChangesSub.cancel();
+    await _progressChangesSub.cancel();
     return super.close();
   }
 }

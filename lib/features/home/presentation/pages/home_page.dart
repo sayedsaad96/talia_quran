@@ -11,10 +11,11 @@ import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
-import '../../../../core/services/xp_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_cubit.dart';
+import '../../../../core/constants/xp_constants.dart';
+import '../../../../core/widgets/activity_heatmap.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/journey/journey_feature_flags.dart';
@@ -28,7 +29,7 @@ import '../../../../core/journey/resume_session_presentation_mapper.dart';
 import '../../../../core/journey/resume_session_presentation_input.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
-import '../../../memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
+import '../../../memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../../streak/presentation/cubits/streak_cubit.dart';
@@ -264,6 +265,33 @@ class _HomeContent extends StatelessWidget {
           ),
         ),
 
+        // ─── Engagement Stats ─────────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pagePadding,
+              AppSpacing.sectionGap,
+              AppSpacing.pagePadding,
+              0,
+            ),
+            child: _HomeEngagementSection(state: state, isDark: isDark),
+          ),
+        ),
+
+        // ─── Activity Heatmap ───────────────────────────────────────────────
+        if (state.activityCountsByDay.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.lg,
+                AppSpacing.pagePadding,
+                0,
+              ),
+              child: _HomeActivityHeatmapSection(state: state, isDark: isDark),
+            ),
+          ),
+
         // ─── Progress Section ────────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
@@ -275,6 +303,7 @@ class _HomeContent extends StatelessWidget {
             ),
             child: _ProgressSection(
               progress: state.progress,
+              totalXp: state.totalXp,
               isDark: isDark,
               isKids: isKids,
               kidsPoints: state.progress.kidsPoints,

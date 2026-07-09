@@ -8,17 +8,32 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/memorization/cloud_sync_feature_flags.dart';
+import '../../../../core/memorization/progress_metrics_service.dart';
+import '../../../../core/memorization/remote_child_production_summary_builder.dart';
+import '../../../../core/memorization/review_record_audience_scope.dart';
+import '../../../../core/memorization/review_record_cloud_merge.dart';
 import '../../../../core/memorization/review_record_filters.dart';
+import '../../../../core/progress/progress_changed_reason.dart';
+import '../../../../core/progress/progress_events_bus.dart';
+import '../../../../core/services/streak_reader.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 import '../../../../features/quran/domain/entities/quran_entities.dart';
+import '../../../certificate/domain/entities/certificate_award.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
-import '../../domain/usecases/memorization_plus_usecases.dart';
 import '../datasources/memorization_plus_local_datasource.dart';
 import '../models/memorization_models.dart';
 
 class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
-  MemorizationPlusRepositoryImpl(this._datasource, this._quranRepository);
+  MemorizationPlusRepositoryImpl(
+    this._datasource,
+    this._quranRepository,
+    this._streakReader,
+    this._progressEvents,
+    this._prefs, [
+    this._metrics = const ProgressMetricsService(),
+  ]);
 
   static const _pairingSessionLifetime = Duration(minutes: 10);
 
@@ -27,10 +42,18 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   /// For surah ayah counts
   final QuranRepository _quranRepository;
 
-  final _scheduler = const ScheduleNextReviewUsecase();
-  final _fsrsTracker = const FsrsStateTrackerUsecase();
-  final _fsrsPrediction = const FsrsPredictionUsecase();
-  final _fsrsComparison = const FsrsComparisonUsecase();
+  /// Authoritative streak source — [KidsProgress.currentStreak] is hydrated
+  /// from here at read time (not stored in SharedPreferences).
+  final StreakReader _streakReader;
+
+  final ProgressEventsBus _progressEvents;
+  final SharedPreferences _prefs;
+  final ProgressMetricsService _metrics;
+
+  bool get _cloudPullEnabled => CloudSyncFeatureFlags.isProductionPullEnabled(
+    readBool: (key) => _prefs.getBool(key) ?? false,
+  );
+
   final Map<String, Future<void>> _kidsAwardLocks = {};
 
   bool get _isSupabaseReady {
@@ -253,6 +276,17 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   Future<Either<Failure, MemorizationProfile>> unlinkGuardian() async {
     try {
       final profile = await _loadProfile();
+      // Server-side revocation must succeed first: the DB must never disagree
+      // with what the child device believes about the link (Phase 5).
+      final guardianId = profile.guardianId;
+      if (guardianId != null) {
+        final revokeResult = await revokeGuardianLink(guardianId);
+        final revokeFailure = revokeResult.fold(
+          (failure) => failure,
+          (_) => null,
+        );
+        if (revokeFailure != null) return Left(revokeFailure);
+      }
       final saved = await _saveProfile(
         profile.copyWith(
           guardianLinkStatus: GuardianLinkStatus.none,
@@ -471,13 +505,19 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   static const _retentionReviewLimit = 3;
 
   // ─── Daily plan ─────────────────────────────────────────────────────────────
+  /// Builds today's plan and persists it to the local cache.
+  ///
+  /// Called directly for explicit refresh, and automatically from
+  /// [getCachedDailyPlan] on the first access of each UTC day.
   @override
   Future<Either<Failure, DailyPlan>> generateDailyPlan({
     required int surahId,
     required int newAyahsPerDay,
   }) async {
     try {
-      final allRecords = await _datasource.getAllReviewRecords();
+      final allRecords = (await _datasource.getAllReviewRecords())
+          .where(ReviewRecordFilters.isAdultCompatible)
+          .toList();
 
       // BUG-7 FIX: Read custom plan settings and apply them
       final customPlan = await _datasource.getCustomPlan();
@@ -642,32 +682,102 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   }
 
   @override
-
   Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() async {
     try {
       final cached = await _datasource.getCachedDailyPlan();
-      if (cached == null) return const Right(null);
+      final now = DateTime.now().toUtc();
+      if (cached != null && _isSameUtcDay(cached.generatedAt, now)) {
+        return Right(cached);
+      }
 
-      // Compare on UTC date components to avoid DST-ambiguous local midnight.
-      // The cached plan's generatedAt is also stored in UTC (see generateDailyPlan).
-      final today = DateTime.now().toUtc();
-      final cachedDate = cached.generatedAt.toUtc();
-      final sameDay =
-          cachedDate.year == today.year &&
-          cachedDate.month == today.month &&
-          cachedDate.day == today.day;
+      // First access of the day (or missing cache): regenerate for active adult plans.
+      final customPlan = await _datasource.getCustomPlan();
+      final hasActiveAdultPlan =
+          customPlan != null &&
+          customPlan.isActive &&
+          customPlan.targetUser == PlanTargetUser.adult;
+      if (!hasActiveAdultPlan) {
+        return const Right(null);
+      }
 
-      return Right(sameDay ? cached : null);
+      final resumeSurahId = cached?.surahId;
+      final surahId =
+          resumeSurahId != null &&
+              _isSurahInCustomPlanRange(resumeSurahId, customPlan)
+          ? resumeSurahId
+          : customPlan.startSurahId;
+
+      final generated = await generateDailyPlan(
+        surahId: surahId,
+        newAyahsPerDay: customPlan.newAyahsPerDay,
+      );
+      return generated.map((plan) => plan);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
+  }
+
+  bool _isSameUtcDay(DateTime a, DateTime b) {
+    final au = a.toUtc();
+    final bu = b.toUtc();
+    return au.year == bu.year && au.month == bu.month && au.day == bu.day;
+  }
+
+  bool _isSurahInCustomPlanRange(int surahId, CustomMemorizationPlan plan) {
+    final lo = plan.startSurahId <= plan.endSurahId
+        ? plan.startSurahId
+        : plan.endSurahId;
+    final hi = plan.startSurahId <= plan.endSurahId
+        ? plan.endSurahId
+        : plan.startSurahId;
+    return surahId >= lo && surahId <= hi;
   }
 
   @override
   Future<Either<Failure, void>> saveDailyPlan(DailyPlan plan) async {
     try {
       await _datasource.saveDailyPlan(DailyPlanModel.fromEntity(plan));
+      // Best-effort cloud mirror: local cache is already saved above, so a
+      // sync failure here never blocks or loses the child's plan.
+      unawaited(_pushDailyPlanBestEffort(plan));
       return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> markDailyPlanAyahCompleted({
+    required int surahId,
+    required int ayahNumber,
+  }) async {
+    try {
+      final cachedResult = await getCachedDailyPlan();
+      return cachedResult.fold<Future<Either<Failure, bool>>>(
+        (failure) async => Left(failure),
+        (plan) async {
+          if (plan == null || plan.surahId != surahId) {
+            return const Right(false);
+          }
+          if (plan.isCompleted(ayahNumber)) return const Right(false);
+
+          final inRequired = plan.requiredAyahs.any(
+            (ayah) => ayah.ayahNumber == ayahNumber,
+          );
+          final inRetention = plan.retentionReview.any(
+            (ayah) => ayah.ayahNumber == ayahNumber,
+          );
+          if (!inRequired && !inRetention) return const Right(false);
+
+          final saveResult = await saveDailyPlan(
+            plan.withCompleted(ayahNumber),
+          );
+          return saveResult.fold(Left.new, (_) {
+            _progressEvents.notify(ProgressChangedReason.dailyPlan);
+            return const Right(true);
+          });
+        },
+      );
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -677,10 +787,15 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, AyahReviewRecord?>> getReviewRecord(
     int surahId,
-    int ayahNumber,
-  ) async {
+    int ayahNumber, {
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  }) async {
     try {
-      final record = await _datasource.getReviewRecord(surahId, ayahNumber);
+      final record = await _datasource.getReviewRecord(
+        surahId,
+        ayahNumber,
+        scope: scope,
+      );
       return Right(record);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -688,9 +803,11 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   }
 
   @override
-  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords() async {
+  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  }) async {
     try {
-      final records = await _datasource.getAllReviewRecords();
+      final records = await _datasource.getAllReviewRecords(scope: scope);
       return Right(records);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -705,91 +822,36 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       await _datasource.saveReviewRecord(
         AyahReviewRecordModel.fromEntity(record),
       );
+      // Best-effort cloud mirror for production records only (matches the
+      // `created_by_mode` CHECK on ayah_review_records_cloud — no legacy
+      // Hifz data). Local save above already succeeded regardless.
+      if (_isProductionReviewRecord(record)) {
+        unawaited(_pushSingleReviewRecordBestEffort(record));
+      }
+      _progressEvents.notify(ProgressChangedReason.reviewRecord);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
   }
 
-  // ─── Evaluation ─────────────────────────────────────────────────────────────
-  @override
-  Future<Either<Failure, AyahReviewRecord>> evaluateAyah({
-    required int surahId,
-    required int ayahNumber,
-    required PerformanceRating rating,
-    ReviewRecordCreatedByMode createdByMode =
-        ReviewRecordCreatedByMode.adultMemPlus,
-  }) async {
-    try {
-      final existing = await _datasource.getReviewRecord(surahId, ayahNumber);
-
-      // Stamp the source on the current record so the scheduler propagates it
-      // via copyWith.  This also upgrades pre-tagging `unknown` records to the
-      // correct source on their next write.
-      final current =
-          (existing ?? AyahReviewRecordModel.initial(surahId, ayahNumber))
-              .copyWith(createdByMode: createdByMode);
-
-      final now = DateTime.now().toUtc();
-      final actualElapsedDays = max(0, now.difference(current.lastReviewedAt).inDays);
-
-      final updated = _scheduler.schedule(current, rating, now);
-      final fsrsUpdated = _fsrsTracker.update(updated, rating, now);
-      final fsrsPredicted = _fsrsPrediction.predict(fsrsUpdated, actualElapsedDays, now);
-      final fsrsCompared = _fsrsComparison.compare(fsrsPredicted);
-      
-      await _datasource.saveReviewRecord(
-        AyahReviewRecordModel.fromEntity(fsrsCompared),
-      );
-
-      return Right(fsrsCompared);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
-    }
-  }
-
-  @override
-  Future<Either<Failure, AyahReviewRecord>> markAyahMemorized({
-    required int surahId,
-    required int ayahNumber,
-    ReviewRecordCreatedByMode createdByMode =
-        ReviewRecordCreatedByMode.kidsMode,
-  }) async {
-    try {
-      final existing = await _datasource.getReviewRecord(surahId, ayahNumber);
-      final current =
-          existing ?? AyahReviewRecordModel.initial(surahId, ayahNumber);
-      // UTC: consistent with AyahReviewRecord scheduling in ScheduleNextReviewUsecase.
-      final now = DateTime.now().toUtc();
-      final intervalDays = current.intervalDays < 30
-          ? 30
-          : current.intervalDays;
-
-      final updated = current.copyWith(
-        strengthLevel: current.strengthLevel < 6 ? 6 : current.strengthLevel,
-        intervalDays: intervalDays,
-        lastReviewedAt: now,
-        nextReviewDate: now.add(Duration(days: intervalDays)),
-        totalReviews: current.totalReviews + 1,
-        lastRating: PerformanceRating.excellent,
-        createdByMode: createdByMode,
-      );
-
-      await _datasource.saveReviewRecord(
-        AyahReviewRecordModel.fromEntity(updated),
-      );
-      return Right(updated);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
-    }
-  }
-
   // ─── Kids progress ───────────────────────────────────────────────────────────
+
+  /// Overlays [KidsProgress.currentStreak] from [StreakService] (single SSOT).
+  Future<KidsProgress> _hydrateKidsStreak(KidsProgress progress) async {
+    final streak = await _streakReader.getStreak();
+    return progress.copyWith(currentStreak: streak.currentStreak);
+  }
+
+  /// Persists kids prefs without a local streak counter (streak lives in Isar).
+  KidsProgress _kidsProgressForStorage(KidsProgress progress) =>
+      progress.copyWith(currentStreak: 0);
+
   @override
   Future<Either<Failure, KidsProgress>> getKidsProgress() async {
     try {
       final progress = await _datasource.getKidsProgress();
-      return Right(progress);
+      return Right(await _hydrateKidsStreak(progress));
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -799,12 +861,28 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   Future<Either<Failure, void>> saveKidsProgress(KidsProgress progress) async {
     try {
       await _datasource.saveKidsProgress(
-        KidsProgressModel.fromEntity(progress),
+        KidsProgressModel.fromEntity(_kidsProgressForStorage(progress)),
       );
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
+  }
+
+  /// Kids journey "needs review" when a completed stage has weak or overdue SRS.
+  static bool _ayahNeedsKidsReview(AyahReviewRecord record) =>
+      record.isDue || record.lastRating == PerformanceRating.weak;
+
+  static bool _stageNeedsKidsReview({
+    required int surahId,
+    required List<int> ayahRange,
+    required Map<String, AyahReviewRecord> kidsRecordsByKey,
+  }) {
+    for (final ayah in ayahRange) {
+      final record = kidsRecordsByKey['${surahId}_$ayah'];
+      if (record != null && _ayahNeedsKidsReview(record)) return true;
+    }
+    return false;
   }
 
   @override
@@ -817,6 +895,16 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
           .where((log) => log.surahId == surahId)
           .map((log) => log.ayahNumber)
           .toSet();
+
+      final kidsRecords = await _datasource.getAllReviewRecords(
+        scope: ReviewRecordReadScope.kids,
+      );
+      final kidsRecordsByKey = {
+        for (final record in kidsRecords.where(
+          (r) => r.surahId == surahId && ReviewRecordFilters.isKidsSource(r),
+        ))
+          record.key: record,
+      };
 
       var totalAyahs = 7;
       final detailResult = await _quranRepository.getSurahDetail(surahId);
@@ -837,7 +925,14 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
 
         KidsJourneyStageStatus status;
         if (stageCompleted.length == ayahRange.length) {
-          status = KidsJourneyStageStatus.completed;
+          status =
+              _stageNeedsKidsReview(
+                surahId: surahId,
+                ayahRange: ayahRange,
+                kidsRecordsByKey: kidsRecordsByKey,
+              )
+              ? KidsJourneyStageStatus.needsReview
+              : KidsJourneyStageStatus.completed;
         } else if (!foundCurrent) {
           status = KidsJourneyStageStatus.current;
           foundCurrent = true;
@@ -902,6 +997,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       await _datasource.saveKidsSessionLog(log);
       await _unlockWeeklyRewardIfNeeded();
       await syncKidsProgressToCloud();
+      _progressEvents.notify(ProgressChangedReason.kidsProgress);
       return Right(log);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -913,7 +1009,10 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     required int surahId,
   }) async {
     try {
-      final progress = await _datasource.getKidsProgress();
+      final progressResult = await getKidsProgress();
+      final progress = progressResult.getOrElse(
+        () => throw StateError('Expected kids progress'),
+      );
       final logs = await _datasource.getKidsSessionLogs();
       final settings = await _datasource.getParentSettings();
       final rewards = await _datasource.getParentRewards();
@@ -1155,12 +1254,13 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       if (user == null) return const Right(null);
 
       final progress = await _datasource.getKidsProgress();
+      final streak = await _streakReader.getStreak();
       await client.rpc(
         'upsert_kids_progress_cloud',
         params: {
           'p_total_points': progress.totalPoints,
           'p_current_level': progress.currentLevel,
-          'p_current_streak': progress.currentStreak,
+          'p_current_streak': streak.currentStreak,
           'p_stars_earned': progress.starsEarned,
           'p_ayahs_completed': progress.ayahsCompleted,
           'p_last_session_at': progress.lastSessionAt
@@ -1249,6 +1349,47 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
             .eq('child_user_id', childId)
             .order('created_at', ascending: false);
 
+        // Phase 7: production sync tables (best-effort — a read failure here
+        // must not hide the existing kids-gamification summary above).
+        RemoteChildProductionSummary? production;
+        try {
+          final reviewRows = await client
+              .from('ayah_review_records_cloud')
+              .select()
+              .eq('user_id', childId);
+          final dailyPlanRows = await client
+              .from('daily_plans_cloud')
+              .select()
+              .eq('user_id', childId)
+              .limit(1);
+          final certRows = await client
+              .from('certificate_awards_cloud')
+              .select()
+              .eq('user_id', childId)
+              .order('earned_at', ascending: false);
+          final streakRows = await client
+              .from('streaks')
+              .select()
+              .eq('user_id', childId)
+              .limit(1);
+          final activityRows = await client
+              .from('daily_activities')
+              .select('day_key, activity_count')
+              .eq('user_id', childId)
+              .order('day_key', ascending: false)
+              .limit(31);
+
+          production = _buildProductionSummary(
+            reviewRows: List<Map<String, dynamic>>.from(reviewRows),
+            dailyPlanRow: dailyPlanRows.isEmpty ? null : dailyPlanRows.first,
+            certRows: List<Map<String, dynamic>>.from(certRows),
+            streakRow: streakRows.isEmpty ? null : streakRows.first,
+            activityRows: List<Map<String, dynamic>>.from(activityRows),
+          );
+        } catch (_) {
+          production = null;
+        }
+
         children.add(
           RemoteChildSummary(
             childUserId: childId,
@@ -1260,6 +1401,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
             ),
             logs: logRows.map(_logFromCloud).toList(),
             rewards: rewardRows.map(_rewardFromCloud).toList(),
+            production: production,
           ),
         );
       }
@@ -1324,7 +1466,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       if (alreadyCompleted) {
         return Right(
           KidsCompletionResult(
-            progress: current,
+            progress: await _hydrateKidsStreak(current),
             pointsEarned: 0,
             starsEarned: 0,
             alreadyCompleted: true,
@@ -1335,7 +1477,9 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       // Points: 10 base + 2 per extra repeat
       final points = 10 + ((repeatsCompleted - 1) * 2).clamp(0, 20);
       final updated = current.addPoints(points);
-      await _datasource.saveKidsProgress(KidsProgressModel.fromEntity(updated));
+      await _datasource.saveKidsProgress(
+        KidsProgressModel.fromEntity(_kidsProgressForStorage(updated)),
+      );
       final logResult = await saveKidsSessionLog(
         surahId: surahId,
         ayahNumber: ayahNumber,
@@ -1347,7 +1491,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
 
       return Right(
         KidsCompletionResult(
-          progress: updated,
+          progress: await _hydrateKidsStreak(updated),
           pointsEarned: points,
           starsEarned: updated.starsEarned - current.starsEarned,
           alreadyCompleted: false,
@@ -1581,5 +1725,280 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
+  }
+
+  // ─── Phase 7: Production sync (Parent Mode completion) ─────────────────────
+
+  bool _isProductionReviewRecord(AyahReviewRecord record) =>
+      record.createdByMode == ReviewRecordCreatedByMode.v2Session ||
+      record.createdByMode == ReviewRecordCreatedByMode.kidsMode ||
+      record.createdByMode == ReviewRecordCreatedByMode.hifz;
+
+  @override
+  Future<Either<Failure, void>> pullProductionDataFromCloud() async {
+    try {
+      if (!_isSupabaseReady || !_cloudPullEnabled) return const Right(null);
+      final client = _supabase;
+      final user = client.auth.currentUser;
+      if (user == null) return const Right(null);
+
+      final rows = await client.rpc('pull_ayah_review_records');
+      final cloudRows = (rows as List<dynamic>? ?? const [])
+          .cast<Map<String, dynamic>>();
+
+      for (final row in cloudRows) {
+        final cloudRecord = _reviewRecordFromCloud(row);
+        if (!_isProductionReviewRecord(cloudRecord)) continue;
+
+        final readScope = ReviewRecordAudienceScope.scopeForWriteMode(
+          cloudRecord.createdByMode,
+        );
+        final localModel = await _datasource.getReviewRecord(
+          cloudRecord.surahId,
+          cloudRecord.ayahNumber,
+          scope: readScope,
+        );
+        final merged = ReviewRecordCloudMerge.merge(
+          local: localModel,
+          remote: cloudRecord,
+        );
+        final mergedModel = AyahReviewRecordModel.fromEntity(merged);
+        if (localModel == null || localModel != mergedModel) {
+          await _datasource.saveReviewRecord(mergedModel);
+        }
+      }
+
+      await _mergeDailyPlanFromCloud(client, user.id);
+      return const Right(null);
+    } catch (e) {
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  Future<bool> _mergeDailyPlanFromCloud(
+    SupabaseClient client,
+    String userId,
+  ) async {
+    final rows = await client
+        .from('daily_plans_cloud')
+        .select()
+        .eq('user_id', userId);
+    if (rows.isEmpty) return false;
+
+    final row = rows.first;
+    final cloudGeneratedAt = DateTime.parse(row['generated_at'] as String);
+    final local = await _datasource.getCachedDailyPlan();
+    if (local != null && !cloudGeneratedAt.isAfter(local.generatedAt.toUtc())) {
+      return false;
+    }
+
+    final payload = row['payload'];
+    if (payload is! Map<String, dynamic>) return false;
+
+    try {
+      await _datasource.saveDailyPlan(DailyPlanModel.fromJson(payload));
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> resyncProductionDataToCloud() async {
+    try {
+      if (!_isSupabaseReady) return const Right(null);
+      final client = _supabase;
+      final user = client.auth.currentUser;
+      if (user == null) return const Right(null);
+
+      final allRecords = await _datasource.getAllReviewRecords(
+        includeAllAudiences: true,
+      );
+      final productionRecords = allRecords
+          .where(_isProductionReviewRecord)
+          .toList();
+      if (productionRecords.isNotEmpty) {
+        await _pushReviewRecordsBatch(client, productionRecords);
+      }
+
+      final cachedPlan = await _datasource.getCachedDailyPlan();
+      if (cachedPlan != null) {
+        await _upsertDailyPlanRow(client, user.id, cachedPlan);
+      }
+
+      return const Right(null);
+    } catch (e) {
+      // Best-effort resync: local state remains authoritative. The next
+      // resume/login retry will pick up anything that failed here.
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> pushCertificatesToCloud(
+    List<CertificateAward> certificates,
+  ) async {
+    if (certificates.isEmpty) return const Right(null);
+    try {
+      if (!_isSupabaseReady) return const Right(null);
+      final client = _supabase;
+      final user = client.auth.currentUser;
+      if (user == null) return const Right(null);
+
+      final rows = certificates
+          .map(
+            (c) => {
+              'user_id': user.id,
+              'cert_id': c.id,
+              'title_ar': c.titleAr,
+              'cert_type': c.type.name,
+              'earned_at': c.earnedAt.toUtc().toIso8601String(),
+            },
+          )
+          .toList();
+
+      // ignoreDuplicates → ON CONFLICT DO NOTHING: certificates are
+      // immutable once earned, and the RLS policy only grants INSERT+SELECT.
+      await client
+          .from('certificate_awards_cloud')
+          .upsert(rows, onConflict: 'user_id,cert_id', ignoreDuplicates: true);
+      return const Right(null);
+    } catch (e) {
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> revokeGuardianLink(
+    String counterpartUserId,
+  ) async {
+    try {
+      final clientResult = _supabaseOrFailure();
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      if (client.auth.currentUser == null) {
+        return const Left(NetworkFailure('سجّل الدخول أولاً'));
+      }
+
+      await client.rpc(
+        'revoke_guardian_link',
+        params: {'p_counterpart_user_id': counterpartUserId},
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> removeChild(String childUserId) =>
+      revokeGuardianLink(childUserId);
+
+  Future<void> _pushSingleReviewRecordBestEffort(
+    AyahReviewRecord record,
+  ) async {
+    try {
+      if (!_isSupabaseReady) return;
+      final client = _supabase;
+      if (client.auth.currentUser == null) return;
+      await _pushReviewRecordsBatch(client, [record]);
+    } catch (_) {
+      // Best-effort: local save already succeeded; the next resync
+      // (login/app-resume) will retry this push.
+    }
+  }
+
+  Future<void> _pushDailyPlanBestEffort(DailyPlan plan) async {
+    try {
+      if (!_isSupabaseReady) return;
+      final client = _supabase;
+      final userId = client.auth.currentUser?.id;
+      if (userId == null) return;
+      await _upsertDailyPlanRow(client, userId, plan);
+    } catch (_) {
+      // Best-effort: local cache already succeeded; resync will retry.
+    }
+  }
+
+  Future<void> _pushReviewRecordsBatch(
+    SupabaseClient client,
+    List<AyahReviewRecord> records,
+  ) async {
+    if (records.isEmpty) return;
+    const chunkSize = 500;
+    for (var i = 0; i < records.length; i += chunkSize) {
+      final end = min(i + chunkSize, records.length);
+      final payload = records
+          .sublist(i, end)
+          .map(
+            (r) => {
+              'surah_id': r.surahId,
+              'ayah_number': r.ayahNumber,
+              'strength_level': r.strengthLevel,
+              'interval_days': r.intervalDays,
+              'last_reviewed_at': r.lastReviewedAt.toUtc().toIso8601String(),
+              'next_review_date': r.nextReviewDate.toUtc().toIso8601String(),
+              'total_reviews': r.totalReviews,
+              'last_rating': r.lastRating?.name,
+              'ease_factor': r.easeFactor,
+              'lapses': r.lapses,
+              'review_state': r.reviewState.name,
+              'created_by_mode': r.createdByMode.name,
+            },
+          )
+          .toList();
+      await client.rpc(
+        'upsert_ayah_review_records',
+        params: {'p_data': payload},
+      );
+    }
+  }
+
+  Future<void> _upsertDailyPlanRow(
+    SupabaseClient client,
+    String userId,
+    DailyPlan plan,
+  ) async {
+    await client.from('daily_plans_cloud').upsert({
+      'user_id': userId,
+      'surah_id': plan.surahId,
+      'generated_at': plan.generatedAt.toUtc().toIso8601String(),
+      'total_items': plan.totalItems,
+      'completed_count': plan.requiredCompletedCount,
+      'payload': DailyPlanModel.fromEntity(plan).toJson(),
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    }, onConflict: 'user_id');
+  }
+
+  AyahReviewRecord _reviewRecordFromCloud(Map<String, dynamic> row) {
+    return RemoteChildProductionSummaryBuilder.reviewRecordFromCloud(row);
+  }
+
+  /// Reconstructs the parent-facing production summary from cloud rows.
+  ///
+  /// Reuses existing pure logic only: [AyahReviewRecord.reviewClassification]
+  /// (SRS due/near/far/memorized classification) and [SmartCoachEngine] (next
+  /// recommendation) — no second engine is introduced for the parent side.
+  RemoteChildProductionSummary _buildProductionSummary({
+    required List<Map<String, dynamic>> reviewRows,
+    required Map<String, dynamic>? dailyPlanRow,
+    required List<Map<String, dynamic>> certRows,
+    required Map<String, dynamic>? streakRow,
+    required List<Map<String, dynamic>> activityRows,
+  }) {
+    return RemoteChildProductionSummaryBuilder(metrics: _metrics).build(
+      reviewRows: reviewRows,
+      dailyPlanRow: dailyPlanRow,
+      certRows: certRows,
+      streakRow: streakRow,
+      activityRows: activityRows,
+    );
   }
 }

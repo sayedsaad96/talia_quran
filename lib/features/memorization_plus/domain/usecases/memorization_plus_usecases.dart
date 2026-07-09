@@ -5,6 +5,7 @@ import '../../../../core/utils/usecase.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/memorization_plus_repository.dart';
 
+export 'get_last_reviewed_surah_id_usecase.dart';
 export 'adaptive_recommendations_usecase.dart';
 export 'fsrs_agreement_usecase.dart';
 export 'leech_analysis_usecase.dart';
@@ -130,38 +131,6 @@ class SaveSmartMemorizationSettingsUsecase
   @override
   Future<Either<Failure, void>> call(SmartMemorizationSettings params) =>
       _repository.saveSmartSettings(params);
-}
-
-
-
-
-
-// ─── MarkAyahMemorizedUsecase ────────────────────────────────────────────────
-
-class MarkAyahMemorizedParams {
-  const MarkAyahMemorizedParams({
-    required this.surahId,
-    required this.ayahNumber,
-    this.createdByMode = ReviewRecordCreatedByMode.kidsMode,
-  });
-  final int surahId;
-  final int ayahNumber;
-  final ReviewRecordCreatedByMode createdByMode;
-}
-
-class MarkAyahMemorizedUsecase
-    implements UseCase<AyahReviewRecord, MarkAyahMemorizedParams> {
-  const MarkAyahMemorizedUsecase(this._repository);
-  final MemorizationPlusRepository _repository;
-
-  @override
-  Future<Either<Failure, AyahReviewRecord>> call(
-    MarkAyahMemorizedParams params,
-  ) => _repository.markAyahMemorized(
-    surahId: params.surahId,
-    ayahNumber: params.ayahNumber,
-    createdByMode: params.createdByMode,
-  );
 }
 
 // ─── ScheduleNextReviewUsecase ────────────────────────────────────────────────
@@ -509,6 +478,12 @@ class ParentRemoteLinkUsecase {
     childUserId: childUserId,
     title: title,
   );
+
+  /// Parent-initiated unlink: revokes the guardian link server-side so the
+  /// child no longer appears in the parent's dashboard nor the parent in the
+  /// child's guardian status.
+  Future<Either<Failure, void>> removeChild(String childUserId) =>
+      _repository.removeChild(childUserId);
 }
 
 
@@ -521,5 +496,30 @@ class GetCustomPlanUsecase implements UseCaseNoParams<CustomMemorizationPlan?> {
   @override
   Future<Either<Failure, CustomMemorizationPlan?>> call() =>
       _repository.getCustomPlan();
+}
+
+class MarkDailyPlanAyahCompletedParams {
+  const MarkDailyPlanAyahCompletedParams({
+    required this.surahId,
+    required this.ayahNumber,
+  });
+
+  final int surahId;
+  final int ayahNumber;
+}
+
+/// Persists completion for an ayah in today's cached daily plan (B1).
+class MarkDailyPlanAyahCompletedUsecase
+    implements UseCase<bool, MarkDailyPlanAyahCompletedParams> {
+  const MarkDailyPlanAyahCompletedUsecase(this._repository);
+
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, bool>> call(MarkDailyPlanAyahCompletedParams params) =>
+      _repository.markDailyPlanAyahCompleted(
+        surahId: params.surahId,
+        ayahNumber: params.ayahNumber,
+      );
 }
 

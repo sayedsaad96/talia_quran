@@ -3,44 +3,36 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/constants/app_constants.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/memorization/progress_metrics.dart';
+import 'package:talia_quran/core/memorization/progress_metrics_service.dart';
+import 'package:talia_quran/core/services/streak_reader.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
+import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
+import 'package:talia_quran/features/streak/domain/entities/streak_entity.dart';
 
 void main() {
   group('MemorizationPlusRepositoryImpl', () {
     late MemorizationPlusLocalDatasourceImpl datasource;
     late MemorizationPlusRepositoryImpl repository;
     late SharedPreferences prefs;
+    late _FakeStreakReader streakReader;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       prefs = await SharedPreferences.getInstance();
       datasource = MemorizationPlusLocalDatasourceImpl(prefs);
+      streakReader = _FakeStreakReader(currentStreak: 5);
       repository = MemorizationPlusRepositoryImpl(
         datasource,
         _UnusedQuranRepository(),
+        streakReader,
+        ProgressEventsBus(),
       );
-    });
-
-    test('markAyahMemorized stores a smart memorized review record', () async {
-      final result = await repository.markAyahMemorized(
-        surahId: 114,
-        ayahNumber: 1,
-      );
-
-      final record = result.getOrElse(
-        () => throw StateError('Expected markAyahMemorized to succeed'),
-      );
-      final persisted = await datasource.getReviewRecord(114, 1);
-
-      expect(record.isMemorized, isTrue);
-      expect(record.strengthLevel, greaterThanOrEqualTo(6));
-      expect(persisted, isNotNull);
-      expect(persisted!.isMemorized, isTrue);
     });
 
     test(
@@ -134,6 +126,96 @@ void main() {
       expect(progress.ayahsCompleted, 1);
       expect(logs, hasLength(1));
     });
+
+    test(
+      'getKidsProgress hydrates streak from StreakService not SharedPrefs',
+      () async {
+        await datasource.saveKidsProgress(
+          const KidsProgressModel(
+            totalPoints: 20,
+            currentLevel: 1,
+            currentStreak: 99,
+            starsEarned: 2,
+            ayahsCompleted: 2,
+            lastSessionAt: null,
+          ),
+        );
+        streakReader.currentStreak = 5;
+
+        final progress = (await repository.getKidsProgress()).getOrElse(
+          () => throw StateError('Expected kids progress'),
+        );
+
+        expect(progress.currentStreak, 5);
+      },
+    );
+
+    test(
+      'awardKidsPoints does not persist a local streak counter in prefs',
+      () async {
+        streakReader.currentStreak = 4;
+
+        await repository.awardKidsPoints(
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 3,
+        );
+
+        final stored = await datasource.getKidsProgress();
+        expect(stored.currentStreak, 0);
+
+        final hydrated = (await repository.getKidsProgress()).getOrElse(
+          () => throw StateError('Expected kids progress'),
+        );
+        expect(hydrated.currentStreak, 4);
+      },
+    );
+
+    test(
+      'kids session log drives journey while kidsMode records feed kids metrics only',
+      () async {
+        await repository.saveKidsSessionLog(
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 3,
+          pointsEarned: 14,
+        );
+        await repository.saveReviewRecord(
+          AyahReviewRecord(
+            surahId: 114,
+            ayahNumber: 1,
+            strengthLevel: 6,
+            intervalDays: 30,
+            lastReviewedAt: DateTime.utc(2026, 1, 1),
+            nextReviewDate: DateTime.utc(2026, 2, 1),
+            totalReviews: 1,
+            lastRating: PerformanceRating.excellent,
+            createdByMode: ReviewRecordCreatedByMode.kidsMode,
+          ),
+        );
+
+        final stages = (await repository.getKidsJourney(
+          surahId: 114,
+        )).getOrElse(() => throw StateError('Expected journey'));
+        expect(stages.first.status, KidsJourneyStageStatus.current);
+
+        const metrics = ProgressMetricsService();
+        final records = await datasource.getAllReviewRecords();
+        final adult = metrics.calculate(
+          records: records,
+          now: DateTime.utc(2026, 6, 1),
+          audience: ProgressAudience.adult,
+        );
+        final kids = metrics.calculate(
+          records: records,
+          now: DateTime.utc(2026, 6, 1),
+          audience: ProgressAudience.kids,
+        );
+
+        expect(adult.memorizedAyahs, 0);
+        expect(kids.memorizedAyahs, 1);
+      },
+    );
 
     test('rapid duplicate kids completion awards only once', () async {
       await datasource.saveParentSettings(
@@ -387,6 +469,133 @@ void main() {
       },
     );
 
+    // ─── Phase 7: Production sync (Parent Mode completion) ────────────────────
+    //
+    // Supabase.instance is never initialized in the unit-test environment,
+    // so `_isSupabaseReady` is always false here. This exercises the
+    // "best-effort" contract: cloud-touching calls must never throw and
+    // must degrade gracefully instead of blocking/failing local operations.
+
+    test(
+      'saveReviewRecord succeeds locally even when cloud is unavailable',
+      () async {
+        final record = AyahReviewRecordModel.initial(
+          114,
+          1,
+        ).copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session);
+
+        final result = await repository.saveReviewRecord(record);
+
+        expect(result.isRight(), isTrue);
+        expect(await datasource.getReviewRecord(114, 1), isNotNull);
+      },
+    );
+
+    test(
+      'resyncProductionDataToCloud is a no-op success when cloud is unavailable',
+      () async {
+        await datasource.saveReviewRecord(
+          AyahReviewRecordModel.fromEntity(
+            AyahReviewRecordModel.initial(
+              114,
+              1,
+            ).copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session),
+          ),
+        );
+
+        final result = await repository.resyncProductionDataToCloud();
+
+        expect(result.isRight(), isTrue);
+      },
+    );
+
+    test(
+      'pushCertificatesToCloud is a no-op success for an empty list',
+      () async {
+        final result = await repository.pushCertificatesToCloud(const []);
+
+        expect(result.isRight(), isTrue);
+      },
+    );
+
+    test(
+      'revokeGuardianLink fails with NetworkFailure when cloud is unavailable',
+      () async {
+        final result = await repository.revokeGuardianLink('parent-1');
+
+        expect(result.isLeft(), isTrue);
+        expect(result.fold((f) => f, (_) => null), isA<NetworkFailure>());
+      },
+    );
+
+    test('removeChild delegates to revokeGuardianLink', () async {
+      final result = await repository.removeChild('child-1');
+
+      expect(result.isLeft(), isTrue);
+      expect(result.fold((f) => f, (_) => null), isA<NetworkFailure>());
+    });
+
+    test(
+      'unlinkGuardian preserves the local link when server revocation fails',
+      () async {
+        final now = DateTime.now();
+        await datasource.saveMemorizationProfile(
+          MemorizationProfileModel(
+            schemaVersion: 1,
+            selectedPath: MemorizationPath.child,
+            guardianLinkStatus: GuardianLinkStatus.linked,
+            guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+            guardianId: 'parent-1',
+            isParentGuardian: false,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+        final result = await repository.unlinkGuardian();
+        final profile = await datasource.getMemorizationProfile();
+
+        expect(
+          result.isLeft(),
+          isTrue,
+          reason:
+              'The server must never disagree with what the child device '
+              'believes about the link (Phase 5) — a failed revocation must '
+              'not silently clear the local link.',
+        );
+        expect(profile.guardianLinkStatus, GuardianLinkStatus.linked);
+        expect(profile.guardianId, 'parent-1');
+      },
+    );
+
+    test(
+      'unlinkGuardian clears the local profile when there is no guardian to revoke',
+      () async {
+        final now = DateTime.now();
+        await datasource.saveMemorizationProfile(
+          MemorizationProfileModel(
+            schemaVersion: 1,
+            selectedPath: MemorizationPath.child,
+            guardianLinkStatus: GuardianLinkStatus.none,
+            guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+            isParentGuardian: false,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+        final result = await repository.unlinkGuardian();
+
+        expect(result.isRight(), isTrue);
+        expect(
+          result
+              .getOrElse(() => throw StateError('expected profile'))
+              .guardianLinkStatus,
+          GuardianLinkStatus.none,
+        );
+      },
+    );
+
     test(
       'reset identity preserves smart settings and review records',
       () async {
@@ -398,7 +607,14 @@ void main() {
             ayahIsolationEnabled: true,
           ),
         );
-        await repository.markAyahMemorized(surahId: 114, ayahNumber: 1);
+        await datasource.saveReviewRecord(
+          AyahReviewRecordModel.fromEntity(
+            AyahReviewRecordModel.initial(
+              114,
+              1,
+            ).copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session),
+          ),
+        );
         await prefs.setString(AppConstants.kHifzPathMode, 'backward');
 
         final result = await repository.resetMemorizationIdentity();
@@ -416,6 +632,16 @@ void main() {
       },
     );
   });
+}
+
+class _FakeStreakReader implements StreakReader {
+  _FakeStreakReader({this.currentStreak = 0});
+
+  int currentStreak;
+
+  @override
+  Future<StreakEntity> getStreak() async =>
+      StreakEntity(currentStreak: currentStreak, longestStreak: currentStreak);
 }
 
 class _UnusedQuranRepository implements QuranRepository {

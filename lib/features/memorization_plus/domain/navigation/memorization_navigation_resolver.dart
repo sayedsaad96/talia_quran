@@ -1,6 +1,8 @@
+import '../../../../core/memorization/pending_ayah_resolver.dart';
 import '../../../../core/router/app_router.dart';
-import '../../domain/entities/memorization_entities.dart';
-import '../../domain/repositories/memorization_plus_repository.dart';
+import '../entities/memorization_entities.dart';
+import '../repositories/memorization_plus_repository.dart';
+import '../usecases/get_last_reviewed_surah_id_usecase.dart';
 
 class MemorizationNavigationTargets {
   const MemorizationNavigationTargets({
@@ -18,15 +20,22 @@ class MemorizationNavigationTargets {
   final String kidsJourneyLocation;
 }
 
+/// Resolves memorization entry routes (domain layer — may read repository).
 class MemorizationNavigationResolver {
-  const MemorizationNavigationResolver(this._repository);
+  const MemorizationNavigationResolver(
+    this._repository, [
+    PendingAyahResolver? pendingAyahResolver,
+  ]) : _pendingAyahResolver = pendingAyahResolver ?? const PendingAyahResolver();
 
   final MemorizationPlusRepository _repository;
+  final PendingAyahResolver _pendingAyahResolver;
 
   Future<MemorizationNavigationTargets> resolve() async {
     final profile = await _profile();
     final customPlan = await _customPlan();
-    final cachedPlanSurahId = await _cachedPlanSurahId(customPlan);
+    final cachedPlan = await _cachedPlan();
+    final reviewRecords = await _reviewRecords();
+    final cachedPlanSurahId = await _cachedPlanSurahId(customPlan, cachedPlan);
     final adultPlanSurahId =
         cachedPlanSurahId ?? await _activeAdultPlanSurahId(customPlan);
     final quizSurahId = await _reviewQuizSurahId(cachedPlanSurahId);
@@ -34,8 +43,18 @@ class MemorizationNavigationResolver {
 
     return MemorizationNavigationTargets(
       profile: profile,
-      todayPlanLocation: _v2SessionLocation(adultPlanSurahId),
-      reviewQuizLocation: _v2SessionLocation(quizSurahId),
+      todayPlanLocation: _v2SessionLocation(
+        surahId: adultPlanSurahId,
+        intent: PendingAyahIntent.continueDailyPlan,
+        cachedPlan: cachedPlan,
+        reviewRecords: reviewRecords,
+      ),
+      reviewQuizLocation: _v2SessionLocation(
+        surahId: quizSurahId,
+        intent: PendingAyahIntent.reviewSession,
+        cachedPlan: cachedPlan,
+        reviewRecords: reviewRecords,
+      ),
       kidsHomeLocation: _kidsHomeLocation(kidsSurahId),
       kidsJourneyLocation: _kidsJourneyLocation(kidsSurahId),
     );
@@ -43,10 +62,33 @@ class MemorizationNavigationResolver {
 
   Future<String> adultEntryLocation() async {
     final customPlan = await _customPlan();
+    final cachedPlan = await _cachedPlan();
+    final reviewRecords = await _reviewRecords();
     final surahId =
-        await _cachedPlanSurahId(customPlan) ??
+        await _cachedPlanSurahId(customPlan, cachedPlan) ??
         await _activeAdultPlanSurahId(customPlan);
-    return _v2SessionLocation(surahId);
+    return _v2SessionLocation(
+      surahId: surahId,
+      intent: PendingAyahIntent.continueDailyPlan,
+      cachedPlan: cachedPlan,
+      reviewRecords: reviewRecords,
+    );
+  }
+
+  /// Resolves a V2 session URL for Hifz / practice-by-surah (B5).
+  Future<String> practiceSurahSessionLocation(
+    int surahId, {
+    int? surahAyahCount,
+  }) async {
+    final cachedPlan = await _cachedPlan();
+    final reviewRecords = await _reviewRecords();
+    return _v2SessionLocation(
+      surahId: surahId,
+      intent: PendingAyahIntent.practiceSurah,
+      cachedPlan: cachedPlan,
+      reviewRecords: reviewRecords,
+      surahAyahCount: surahAyahCount,
+    );
   }
 
   Future<String> childOnboardingLocation() async {
@@ -65,9 +107,6 @@ class MemorizationNavigationResolver {
 
   Future<String> parentDashboardLocation() async {
     final surahId = await _activeKidsSurahId();
-    // Always return the parent dashboard route with a valid surahId.
-    // Falling back to memorizationHub would push a shell branch route via
-    // context.push, causing a Navigator-key conflict (keyReservation assert).
     final resolvedSurahId = _isValidSurahId(surahId) ? surahId! : 1;
     return Uri(
       path: AppRoutes.parentDashboard,
@@ -85,8 +124,6 @@ class MemorizationNavigationResolver {
     if (plan != null &&
         plan.isActive &&
         plan.targetUser == PlanTargetUser.adult) {
-      // startSurahId is always the memorization entry point ("من" surah).
-      // Direction is determined by startSurahId vs endSurahId comparison.
       final entrySurah = plan.startSurahId;
       if (_isValidSurahId(entrySurah)) return entrySurah;
     }
@@ -94,25 +131,24 @@ class MemorizationNavigationResolver {
     return null;
   }
 
-  Future<int?> _cachedPlanSurahId([CustomMemorizationPlan? customPlan]) async {
-    final cachedPlan = await _cachedPlan();
-    final cachedSurahId = cachedPlan?.surahId;
+  Future<int?> _cachedPlanSurahId([
+    CustomMemorizationPlan? customPlan,
+    DailyPlan? cachedPlan,
+  ]) async {
+    final plan = cachedPlan ?? await _cachedPlan();
+    final cachedSurahId = plan?.surahId;
     if (!_isValidSurahId(cachedSurahId)) return null;
 
-    // If there is an active adult custom plan, the cached surahId must be
-    // within the plan's range [min(start,end), max(start,end)].
-    // If not (e.g. stale cache from before a plan change), discard the cache
-    // so the correct entry point (startSurahId) is used instead.
-    final plan = customPlan ?? await _customPlan();
-    if (plan != null &&
-        plan.isActive &&
-        plan.targetUser == PlanTargetUser.adult) {
-      final lo = plan.startSurahId <= plan.endSurahId
-          ? plan.startSurahId
-          : plan.endSurahId;
-      final hi = plan.startSurahId <= plan.endSurahId
-          ? plan.endSurahId
-          : plan.startSurahId;
+    final activePlan = customPlan ?? await _customPlan();
+    if (activePlan != null &&
+        activePlan.isActive &&
+        activePlan.targetUser == PlanTargetUser.adult) {
+      final lo = activePlan.startSurahId <= activePlan.endSurahId
+          ? activePlan.startSurahId
+          : activePlan.endSurahId;
+      final hi = activePlan.startSurahId <= activePlan.endSurahId
+          ? activePlan.endSurahId
+          : activePlan.startSurahId;
       final inRange = cachedSurahId! >= lo && cachedSurahId <= hi;
       if (!inRange) return null;
     }
@@ -123,19 +159,8 @@ class MemorizationNavigationResolver {
   Future<int?> _reviewQuizSurahId(int? adultPlanSurahId) async {
     if (_isValidSurahId(adultPlanSurahId)) return adultPlanSurahId;
 
-    final recordsResult = await _repository.getAllReviewRecords();
-    final records = recordsResult.fold((_) => <AyahReviewRecord>[], (records) {
-      return records
-          .where((record) => record.totalReviews > 0)
-          .where((record) => _isValidSurahId(record.surahId))
-          .toList()
-        ..sort(
-          (a, b) =>
-              b.lastReviewedAt.toUtc().compareTo(a.lastReviewedAt.toUtc()),
-        );
-    });
-
-    return records.isEmpty ? null : records.first.surahId;
+    final result = await GetLastReviewedSurahIdUseCase(_repository)();
+    return result.fold((_) => null, (surahId) => surahId);
   }
 
   Future<int?> _activeKidsSurahId() async {
@@ -163,16 +188,41 @@ class MemorizationNavigationResolver {
     return result.fold((_) => null, (plan) => plan);
   }
 
+  Future<List<AyahReviewRecord>> _reviewRecords() async {
+    final result = await _repository.getAllReviewRecords();
+    return result.fold((_) => <AyahReviewRecord>[], (records) => records);
+  }
+
   Future<CustomMemorizationPlan?> _customPlan() async {
     final result = await _repository.getCustomPlan();
     return result.fold((_) => null, (plan) => plan);
   }
 
-  static String _v2SessionLocation(int? surahId, {int startAyah = 1}) {
+  String _v2SessionLocation({
+    required int? surahId,
+    required PendingAyahIntent intent,
+    required DailyPlan? cachedPlan,
+    required List<AyahReviewRecord> reviewRecords,
+    int? surahAyahCount,
+  }) {
     if (!_isValidSurahId(surahId)) return AppRoutes.memorizationPlusCustomPlan;
+
+    final target = _pendingAyahResolver.resolve(
+      PendingAyahResolverInput(
+        surahId: surahId!,
+        intent: intent,
+        cachedDailyPlan: cachedPlan,
+        reviewRecords: reviewRecords,
+        surahAyahCount: surahAyahCount,
+      ),
+    );
+
     return Uri(
       path: AppRoutes.memorizationV2Session,
-      queryParameters: {'surahId': '$surahId', 'startAyah': '$startAyah'},
+      queryParameters: {
+        'surahId': '${target.surahId}',
+        'startAyah': '${target.startAyah}',
+      },
     ).toString();
   }
 
@@ -195,8 +245,6 @@ class MemorizationNavigationResolver {
   static bool _isValidSurahId(int? surahId) =>
       surahId != null && surahId >= 1 && surahId <= 114;
 
-  /// Safe fallback when a kids screen cannot pop and must return home.
   static String kidsHomeFallbackLocation(int surahId) =>
       _kidsHomeLocation(_isValidSurahId(surahId) ? surahId : 1);
 }
-

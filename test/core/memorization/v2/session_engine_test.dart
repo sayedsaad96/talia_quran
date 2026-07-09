@@ -72,6 +72,29 @@ void main() {
       expect(state.hintTracker.levelFor(1, 1), V2HintLevel.firstWord);
     });
 
+    test('ignores invalid phase transitions without changing state', () {
+      final created = _initialState();
+
+      expect(engine.startMemorizing(created).phase, V2SessionPhase.created);
+      expect(engine.startReciting(created).phase, V2SessionPhase.created);
+      expect(
+        engine.evaluateRecitation(created, 'text').phase,
+        V2SessionPhase.created,
+      );
+      expect(
+        engine.startBlockReview(created).phase,
+        V2SessionPhase.created,
+      );
+      expect(
+        engine.evaluateBlockReview(created, 'text').phase,
+        V2SessionPhase.created,
+      );
+      expect(
+        engine.completeRemediation(created).phase,
+        V2SessionPhase.created,
+      );
+    });
+
     test('escalates an ayah to weak after three failed recitations', () {
       var state = engine.startLearning(_initialState());
       state = engine.startMemorizing(state);

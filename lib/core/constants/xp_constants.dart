@@ -15,18 +15,7 @@ class XpLevel {
 class XpConstants {
   const XpConstants._();
 
-  static const Map<String, int> rewards = {
-    'ayah_memorized': 10,
-    'page_completed': 50,
-    'juz_completed': 500,
-    'daily_review': 5,
-    'perfect_quiz': 25,
-    'streak_7': 100,
-    'streak_30': 500,
-    'first_ayah': 20,
-    'recitation_perfect': 15,
-    'recitation_good': 8,
-  };
+  static const Map<String, int> rewards = {'ayah_memorized': 10};
 
   static const List<XpLevel> levels = [
     XpLevel(name: 'مبتدئ', minXp: 0, icon: '🌱', colorHex: 0xFF6B7280),

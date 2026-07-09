@@ -10,9 +10,6 @@ import 'package:talia_quran/core/l10n/app_localizations_en.dart';
 const _removedLiterals = <String, List<String>>{
   'lib/features/memorization_plus/presentation/cubits/parent_dashboard_cubit.dart':
       ['أدخل رمزًا من 4 أرقام', 'رمز غير صحيح'],
-  'lib/features/quran/presentation/pages/surah_detail_page.dart': [
-    'حدث خطأ أثناء حفظ العلامة المرجعية',
-  ],
   'lib/features/azkar/presentation/pages/azkar_category_page.dart': [
     'اضغط مطولاً للتراجع',
   ],

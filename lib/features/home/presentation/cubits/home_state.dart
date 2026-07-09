@@ -20,7 +20,6 @@ class HomeLoaded extends HomeState {
 
   const HomeLoaded({
     required this.progress,
-    required this.hifzSurahProgress,
     required this.greeting,
     this.dailyWirdPageDetail,
     this.customPlan,
@@ -32,11 +31,11 @@ class HomeLoaded extends HomeState {
     required this.activityStartDate,
     this.coachRecommendation,
     this.heroAction,
+    this.totalXp = 0,
   });
 
   HomeLoaded copyWith({
     OverallProgress? progress,
-    List<SurahHifzProgress>? hifzSurahProgress,
     String? greeting,
     QuranPageDetail? dailyWirdPageDetail,
     CustomMemorizationPlan? customPlan,
@@ -48,10 +47,10 @@ class HomeLoaded extends HomeState {
     DateTime? activityStartDate,
     SmartCoachRecommendation? coachRecommendation,
     UnifiedJourneyAction? heroAction,
+    int? totalXp,
   }) {
     return HomeLoaded(
       progress: progress ?? this.progress,
-      hifzSurahProgress: hifzSurahProgress ?? this.hifzSurahProgress,
       greeting: greeting ?? this.greeting,
       dailyWirdPageDetail: dailyWirdPageDetail ?? this.dailyWirdPageDetail,
       customPlan: customPlan ?? this.customPlan,
@@ -63,11 +62,11 @@ class HomeLoaded extends HomeState {
       activityStartDate: activityStartDate ?? this.activityStartDate,
       coachRecommendation: coachRecommendation ?? this.coachRecommendation,
       heroAction: heroAction ?? this.heroAction,
+      totalXp: totalXp ?? this.totalXp,
     );
   }
 
   final OverallProgress progress;
-  final List<SurahHifzProgress> hifzSurahProgress;
   final String greeting; // 'morning' | 'afternoon' | 'evening' | 'night'
   final QuranPageDetail? dailyWirdPageDetail;
   final CustomMemorizationPlan? customPlan;
@@ -83,11 +82,11 @@ class HomeLoaded extends HomeState {
   final Map<String, int> activityCountsByDay;
   final DateTime activityStartDate;
   final SmartCoachRecommendation? coachRecommendation;
+  final int totalXp;
 
   @override
   List<Object?> get props => [
     progress,
-    hifzSurahProgress,
     greeting,
     dailyWirdPageDetail,
     customPlan,
@@ -99,6 +98,7 @@ class HomeLoaded extends HomeState {
     activityStartDate,
     coachRecommendation,
     heroAction,
+    totalXp,
   ];
 }
 

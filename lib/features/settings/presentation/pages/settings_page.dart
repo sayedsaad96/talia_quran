@@ -19,7 +19,7 @@ import '../../../auth/domain/entities/app_user.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
-import '../../../memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
+import '../../../memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';

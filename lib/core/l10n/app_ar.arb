@@ -296,6 +296,17 @@
   "less": "أقل",
   "more": "أكثر",
   "memorizedAyahs": "الآيات المحفوظة",
+  "startedAyahsLabel": "آيات بدأ حفظها",
+  "reviewedAyahsTotalLabel": "إجمالي المراجعات",
+  "overdueReviewsLabel": "مراجعات متأخرة",
+  "retentionRateLabel": "معدل الاحتفاظ",
+  "lastReviewLabel": "آخر مراجعة",
+  "lastMemorizedLabel": "آخر آية محفوظة",
+  "homeEngagementTitle": "نشاطك",
+  "homeWeeklyActivityLabel": "هذا الأسبوع",
+  "homeDueTodayLabel": "مستحق اليوم",
+  "homeXpLevelLabel": "المستوى",
+  "homeActivityHeatmapTitle": "خريطة النشاط",
   "memorizedSurahsLabel": "السور المحفوظة",
   "memorizedJuzLabel": "الأجزاء المحفوظة",
   "earnCertificatesHint": "احفظ السور والأجزاء كاملة لتحصل على شهادات التميز!",
@@ -772,6 +783,7 @@
   "kidsGamifiedListenAndRepeat": "استمع وكرر",
   "kidsGamifiedRecordYourVoice": "سجل تلاوتك",
   "kidsGamifiedRecordingInProgress": "جاري التسجيل...",
+  "kidsGamifiedDoneRecording": "انتهيت من التسجيل",
   "kidsGamifiedAudioUnavailable": "الصوت غير متاح الآن، حاول مرة أخرى بعد قليل.",
   "kidsGamifiedListenFirst": "استمع للآية {count} مرات قبل تسجيل تلاوتك.",
   "@kidsGamifiedListenFirst": {
@@ -821,7 +833,7 @@
   "onboardingGoalMemorization": "الحفظ لنفسي",
   "onboardingGoalChild": "متابعة طفل",
   "onboardingGoalAzkar": "الأذكار",
-  "dailyPlanQuizAction": "اختبار المراجعة",
+  "dailyPlanQuizAction": "مراجعة بالتسميع",
   "dailyPlanNewAyahs": "آيات جديدة للحفظ",
   "dailyPlanNearRevision": "مراجعة قريبة (آخر ٥ أيام)",
   "dailyPlanFarRevision": "مراجعة بعيدة",
@@ -860,8 +872,11 @@
   "performanceAverage": "متوسط",
   "performanceExcellent": "ممتاز",
   "dailyPlanListenBeforeRating": "استمع للآية قبل التقييم",
-  "reviewQuizTitle": "اختبار المراجعة",
-  "quizExitTitle": "الخروج من اختبار المراجعة؟",
+  "reviewQuizTitle": "مراجعة بالتسميع",
+  "quizExitTitle": "الخروج من جلسة المراجعة؟",
+  "memorizationHubReviewSectionTitle": "مراجعة بالتسميع",
+  "memorizationHubReviewSectionSubtitle": "راجع ما حفظته عبر جلسة تسميع موجهة (تحويل الصوت إلى نص).",
+  "memorizationHubReviewCardDescription": "افتح جلسة حفظ V2 للآيات التي حفظتها مسبقًا.",
   "quizExitMessage": "سيتم حفظ الآيات التي قيّمتها حتى الآن.\nهل تريد الخروج؟",
   "quizStayAction": "البقاء",
   "quizExitAction": "خروج",
@@ -945,6 +960,58 @@
       }
     }
   },
+  "parentDashboardMemorizedSummary": "{memorized}/{total} آية محفوظة • {percent}%",
+  "@parentDashboardMemorizedSummary": {
+    "placeholders": {
+      "memorized": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardReviewsSummary": "{completed} مراجعة مكتملة • {overdue} متأخرة",
+  "@parentDashboardReviewsSummary": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "overdue": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardStreakSummary": "التتابع: {days} يوم",
+  "@parentDashboardStreakSummary": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardCertificatesSummary": "{count} شهادة تم الحصول عليها",
+  "@parentDashboardCertificatesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardRemoveChild": "إزالة الطفل",
+  "parentDashboardRemoveChildConfirmTitle": "إزالة الطفل؟",
+  "parentDashboardRemoveChildConfirmBody": "سيؤدي هذا إلى فصل {name} عن حسابك. يمكنك الربط مرة أخرى لاحقًا برمز جديد.",
+  "@parentDashboardRemoveChildConfirmBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "parentDashboardChildRemoved": "تمت إزالة الطفل",
   "parentDashboardRewardsTitle": "مكافآت ولي الأمر",
   "parentDashboardRewardHint": "مثال: وقت لعب إضافي",
   "parentDashboardRewardEmpty": "أضف مكافآت تظهر للطفل عند تحقيق هدفه الأسبوعي.",
@@ -1326,8 +1393,6 @@
   "notificationStreakAlertBody": "لم تراجع حفظك اليوم بعد — لا تزال قادرًا",
   "notificationDailyAyahTitle": "آية اليوم ✨",
   "notificationDailyAyahBody": "اقرأ وردك اليومي من القرآن الكريم",
-  "notificationSmartReminderTitle": "حان وقت وردك! ⏳",
-  "notificationSmartReminderBody": "لم تقرأ وردك اليوم! خصص دقائق للقرآن الآن.",
   "notificationMorningAzkarTitle": "أذكار الصباح ☀️",
   "notificationMorningAzkarBody": "ابدأ يومك بذكر الله وطمأنينة القلب",
   "notificationEveningAzkarTitle": "أذكار المساء 🌙",

@@ -10,7 +10,8 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
-import '../navigation/memorization_navigation_resolver.dart';
+import '../../domain/entities/memorization_entities.dart';
+import '../../domain/navigation/memorization_navigation_resolver.dart';
 
 class MemorizationHubPage extends StatefulWidget {
   const MemorizationHubPage({super.key});
@@ -20,22 +21,25 @@ class MemorizationHubPage extends StatefulWidget {
 }
 
 class _MemorizationHubPageState extends State<MemorizationHubPage> {
-  late Future<MemorizationNavigationTargets> _targetsFuture;
+  late Future<_HubLoadResult> _hubFuture;
 
   @override
   void initState() {
     super.initState();
-    _targetsFuture = _loadTargets();
+    _hubFuture = _loadHub();
   }
 
-  Future<MemorizationNavigationTargets> _loadTargets() =>
-      MemorizationNavigationResolver(
-        getIt<MemorizationPlusRepository>(),
-      ).resolve();
+  Future<_HubLoadResult> _loadHub() async {
+    final repository = getIt<MemorizationPlusRepository>();
+    final targets = await MemorizationNavigationResolver(repository).resolve();
+    final planResult = await repository.getCachedDailyPlan();
+    final plan = planResult.fold((_) => null, (value) => value);
+    return _HubLoadResult(targets: targets, dailyPlan: plan);
+  }
 
   void _retryTargets() {
     setState(() {
-      _targetsFuture = _loadTargets();
+      _hubFuture = _loadHub();
     });
   }
 
@@ -46,8 +50,8 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
       backgroundColor: isDark
           ? AppColors.darkBackground
           : AppColors.lightBackground,
-      body: FutureBuilder<MemorizationNavigationTargets>(
-        future: _targetsFuture,
+      body: FutureBuilder<_HubLoadResult>(
+        future: _hubFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: LoadingWidget());
@@ -70,7 +74,12 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
                 ),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate(
-                    _sectionsFor(context, snapshot.data, isDark),
+                    _sectionsFor(
+                      context,
+                      snapshot.data?.targets,
+                      snapshot.data?.dailyPlan,
+                      isDark,
+                    ),
                   ),
                 ),
               ),
@@ -84,6 +93,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
   List<Widget> _sectionsFor(
     BuildContext context,
     MemorizationNavigationTargets? targets,
+    DailyPlan? dailyPlan,
     bool isDark,
   ) {
     final profile = targets?.profile;
@@ -91,13 +101,17 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
       final adultTargets = targets!;
       return [
         _HubSectionHeader(
-          title: context.isArabic ? 'خطة اليوم' : "Today's Plan",
+          title: context.l10n.dailyPlanHeaderTitle,
           subtitle: context.isArabic
               ? 'وجهتك الأساسية للحفظ والمراجعة اليومية.'
               : 'Your default place for daily memorization and review.',
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
+        if (dailyPlan != null && dailyPlan.totalItems > 0)
+          _HubDailyPlanSummaryCard(plan: dailyPlan, isDark: isDark),
+        if (dailyPlan != null && dailyPlan.totalItems > 0)
+          const SizedBox(height: AppSpacing.sm),
         _HubActionCard.primary(
           icon: Icons.today_rounded,
           title: context.isArabic ? 'أكمل خطة اليوم' : "Continue Today's Plan",
@@ -105,6 +119,17 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
               ? 'افتح ورد الحفظ والمراجعة الحالي.'
               : 'Open your current memorization and review plan.',
           route: adultTargets.todayPlanLocation,
+          isDark: isDark,
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        _HubActionCard(
+          icon: Icons.checklist_rounded,
+          title: context.isArabic ? 'تفاصيل خطة اليوم' : "View Today's Plan",
+          description: context.l10n.dailyPlanProgressCount(
+            dailyPlan?.requiredCompletedCount ?? 0,
+            dailyPlan?.totalItems ?? 0,
+          ),
+          route: AppRoutes.memorizationPlusDailyPlan,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -127,19 +152,15 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         ),
         const SizedBox(height: AppSpacing.lg),
         _HubSectionHeader(
-          title: context.isArabic ? 'اختبار المراجعة' : 'Review Quiz',
-          subtitle: context.isArabic
-              ? 'راجع ما حفظته باختبار سريع.'
-              : 'Review memorized ayahs with a focused quiz.',
+          title: context.l10n.memorizationHubReviewSectionTitle,
+          subtitle: context.l10n.memorizationHubReviewSectionSubtitle,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
         _HubActionCard(
-          icon: Icons.quiz_rounded,
-          title: context.isArabic ? 'اختبار المراجعة' : 'Review Quiz',
-          description: context.isArabic
-              ? 'راجع الآيات المحفوظة باختبار سريع.'
-              : 'Review memorized ayahs with a focused quiz.',
+          icon: Icons.mic_rounded,
+          title: context.l10n.reviewQuizTitle,
+          description: context.l10n.memorizationHubReviewCardDescription,
           route: adultTargets.reviewQuizLocation,
           isDark: isDark,
         ),
@@ -306,6 +327,53 @@ class _HubAppBar extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HubLoadResult {
+  const _HubLoadResult({required this.targets, this.dailyPlan});
+
+  final MemorizationNavigationTargets targets;
+  final DailyPlan? dailyPlan;
+}
+
+class _HubDailyPlanSummaryCard extends StatelessWidget {
+  const _HubDailyPlanSummaryCard({
+    required this.plan,
+    required this.isDark,
+  });
+
+  final DailyPlan plan;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              context.l10n.dailyPlanProgressCount(
+                plan.requiredCompletedCount,
+                plan.totalItems,
+              ),
+              style: AppTypography.titleSmall,
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              child: LinearProgressIndicator(
+                minHeight: 6,
+                value: plan.requiredProgress.clamp(0.0, 1.0),
+              ),
+            ),
+          ],
         ),
       ),
     );

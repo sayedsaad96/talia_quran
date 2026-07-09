@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
@@ -10,6 +11,7 @@ import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_g
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
+import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
 void main() {
   group('Kids gamified Arabic narrow layout', () {
@@ -66,6 +68,7 @@ void main() {
           onBack: () {},
           onPlayPause: () {},
           onRecordRecitation: () {},
+          onStopRecording: () {},
         ),
       );
     });
@@ -154,16 +157,32 @@ const _journeyState = KidsJourneyLoaded(
   progress: _progress,
 );
 
-const _listenState = KidsModeLoaded(
+final _listenState = KidsModeLoaded(
   surahId: 114,
   ayahNumber: 3,
   ayahText: 'مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ',
+  sessionState: _testSessionState(),
   progress: _progress,
   isPlaying: false,
   currentLoop: 1,
   maxLoops: 3,
   isCompleted: false,
 );
+
+V2SessionState _testSessionState() {
+  return V2SessionState.initial(
+    surahId: 114,
+    blockAyahs: const [
+      Ayah(
+        number: 6234,
+        surahId: 114,
+        text: 'مِن شَرِّ الْوَسْوَاسِ الْخَنَّاسِ',
+        numberInSurah: 3,
+      ),
+    ],
+    blockReviewRequired: false,
+  );
+}
 
 class _ArabicTestApp extends StatelessWidget {
   const _ArabicTestApp({required this.child});

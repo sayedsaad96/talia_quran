@@ -1,5 +1,6 @@
 import '../../features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'memorization_snapshot.dart';
+import 'pending_ayah_resolver.dart';
 import 'review_record_filters.dart';
 import 'smart_coach_recommendation.dart';
 
@@ -18,13 +19,6 @@ class SmartCoachEngine {
       final memPlusRec = _adultMemPlusRecommendation(snapshot) ??
           _continueV2SessionRecommendation(snapshot);
       if (memPlusRec != null) return memPlusRec;
-
-      if (snapshot.hifzDueReviews.isNotEmpty) {
-        return SmartCoachRecommendation(
-          kind: SmartCoachRecommendationKind.hifzReviewDue,
-          route: _v2SessionRoute(snapshot.hifzDueReviews.first.surahId, 1),
-        );
-      }
     }
     return null;
   }
@@ -32,7 +26,9 @@ class SmartCoachEngine {
   SmartCoachRecommendation? _adultMemPlusRecommendation(
     MemorizationSnapshot snapshot,
   ) {
-    final records = snapshot.reviewRecords;
+    final records = snapshot.reviewRecords
+        .where(ReviewRecordFilters.isAdultCompatible)
+        .toList();
 
     // ── Priority 1: Weak due ───────────────────────────────────────────────
     // Tie-breakers (in order):
@@ -129,11 +125,14 @@ class SmartCoachEngine {
       // P0 hotfix: use requiredCompletedCount so retention-only completions
       // do not falsely trigger the "continue" card.
       if (plan.requiredCompletedCount > 0 && pendingCount > 0) {
+        final firstPendingAyah = PendingAyahResolver.firstPendingPlanAyah(plan);
+        if (firstPendingAyah == null) return null;
         return SmartCoachRecommendation(
           kind: SmartCoachRecommendationKind.continueDailyPlan,
           explanationCode: SmartCoachExplanationCode.continueDailyPlan,
-          route: _v2SessionRoute(plan.surahId, 1),
+          route: _v2SessionRoute(plan.surahId, firstPendingAyah),
           surahId: plan.surahId,
+          startAyah: firstPendingAyah,
           completedCount: plan.requiredCompletedCount,
           totalCount: plan.requiredCompletedCount + pendingCount,
         );

@@ -8,6 +8,10 @@ import 'dart:async' as _i4;
 import 'package:dartz/dartz.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:talia_quran/core/error/app_failure.dart' as _i5;
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart'
+    as _i7;
+import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart'
+    as _i8;
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart'
     as _i6;
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart'
@@ -361,10 +365,39 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i4.Future<_i2.Either<_i5.Failure, void>>);
 
   @override
+  _i4.Future<_i2.Either<_i5.Failure, bool>> markDailyPlanAyahCompleted({
+    required int? surahId,
+    required int? ayahNumber,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #markDailyPlanAyahCompleted,
+          [],
+          {
+            #surahId: surahId,
+            #ayahNumber: ayahNumber,
+          },
+        ),
+        returnValue: _i4.Future<_i2.Either<_i5.Failure, bool>>.value(
+            _FakeEither_0<_i5.Failure, bool>(
+          this,
+          Invocation.method(
+            #markDailyPlanAyahCompleted,
+            [],
+            {
+              #surahId: surahId,
+              #ayahNumber: ayahNumber,
+            },
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i5.Failure, bool>>);
+
+  @override
   _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord?>> getReviewRecord(
     int? surahId,
-    int? ayahNumber,
-  ) =>
+    int? ayahNumber, {
+    _i7.ReviewRecordReadScope? scope = _i7.ReviewRecordReadScope.adult,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #getReviewRecord,
@@ -372,6 +405,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
             surahId,
             ayahNumber,
           ],
+          {#scope: scope},
         ),
         returnValue:
             _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord?>>.value(
@@ -383,16 +417,21 @@ class MockMemorizationPlusRepository extends _i1.Mock
               surahId,
               ayahNumber,
             ],
+            {#scope: scope},
           ),
         )),
       ) as _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord?>>);
 
   @override
   _i4.Future<_i2.Either<_i5.Failure, List<_i6.AyahReviewRecord>>>
-      getAllReviewRecords() => (super.noSuchMethod(
+      getAllReviewRecords(
+              {_i7.ReviewRecordReadScope? scope =
+                  _i7.ReviewRecordReadScope.adult}) =>
+          (super.noSuchMethod(
             Invocation.method(
               #getAllReviewRecords,
               [],
+              {#scope: scope},
             ),
             returnValue: _i4.Future<
                     _i2.Either<_i5.Failure, List<_i6.AyahReviewRecord>>>.value(
@@ -401,6 +440,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
               Invocation.method(
                 #getAllReviewRecords,
                 [],
+                {#scope: scope},
               ),
             )),
           ) as _i4.Future<_i2.Either<_i5.Failure, List<_i6.AyahReviewRecord>>>);
@@ -422,75 +462,6 @@ class MockMemorizationPlusRepository extends _i1.Mock
           ),
         )),
       ) as _i4.Future<_i2.Either<_i5.Failure, void>>);
-
-  @override
-  _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord>> evaluateAyah({
-    required int? surahId,
-    required int? ayahNumber,
-    required _i6.PerformanceRating? rating,
-    _i6.ReviewRecordCreatedByMode? createdByMode =
-        _i6.ReviewRecordCreatedByMode.adultMemPlus,
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #evaluateAyah,
-          [],
-          {
-            #surahId: surahId,
-            #ayahNumber: ayahNumber,
-            #rating: rating,
-            #createdByMode: createdByMode,
-          },
-        ),
-        returnValue:
-            _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord>>.value(
-                _FakeEither_0<_i5.Failure, _i6.AyahReviewRecord>(
-          this,
-          Invocation.method(
-            #evaluateAyah,
-            [],
-            {
-              #surahId: surahId,
-              #ayahNumber: ayahNumber,
-              #rating: rating,
-              #createdByMode: createdByMode,
-            },
-          ),
-        )),
-      ) as _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord>>);
-
-  @override
-  _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord>> markAyahMemorized({
-    required int? surahId,
-    required int? ayahNumber,
-    _i6.ReviewRecordCreatedByMode? createdByMode =
-        _i6.ReviewRecordCreatedByMode.kidsMode,
-  }) =>
-      (super.noSuchMethod(
-        Invocation.method(
-          #markAyahMemorized,
-          [],
-          {
-            #surahId: surahId,
-            #ayahNumber: ayahNumber,
-            #createdByMode: createdByMode,
-          },
-        ),
-        returnValue:
-            _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord>>.value(
-                _FakeEither_0<_i5.Failure, _i6.AyahReviewRecord>(
-          this,
-          Invocation.method(
-            #markAyahMemorized,
-            [],
-            {
-              #surahId: surahId,
-              #ayahNumber: ayahNumber,
-              #createdByMode: createdByMode,
-            },
-          ),
-        )),
-      ) as _i4.Future<_i2.Either<_i5.Failure, _i6.AyahReviewRecord>>);
 
   @override
   _i4.Future<_i2.Either<_i5.Failure, _i6.KidsProgress>> getKidsProgress() =>
@@ -964,6 +935,93 @@ class MockMemorizationPlusRepository extends _i1.Mock
           Invocation.method(
             #setIsParentMode,
             [value],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i5.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, void>> resyncProductionDataToCloud() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #resyncProductionDataToCloud,
+          [],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i5.Failure, void>>.value(
+            _FakeEither_0<_i5.Failure, void>(
+          this,
+          Invocation.method(
+            #resyncProductionDataToCloud,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i5.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, void>> pullProductionDataFromCloud() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #pullProductionDataFromCloud,
+          [],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i5.Failure, void>>.value(
+            _FakeEither_0<_i5.Failure, void>(
+          this,
+          Invocation.method(
+            #pullProductionDataFromCloud,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i5.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, void>> pushCertificatesToCloud(
+          List<_i8.CertificateAward>? certificates) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #pushCertificatesToCloud,
+          [certificates],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i5.Failure, void>>.value(
+            _FakeEither_0<_i5.Failure, void>(
+          this,
+          Invocation.method(
+            #pushCertificatesToCloud,
+            [certificates],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i5.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, void>> revokeGuardianLink(
+          String? counterpartUserId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #revokeGuardianLink,
+          [counterpartUserId],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i5.Failure, void>>.value(
+            _FakeEither_0<_i5.Failure, void>(
+          this,
+          Invocation.method(
+            #revokeGuardianLink,
+            [counterpartUserId],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i5.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, void>> removeChild(String? childUserId) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #removeChild,
+          [childUserId],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i5.Failure, void>>.value(
+            _FakeEither_0<_i5.Failure, void>(
+          this,
+          Invocation.method(
+            #removeChild,
+            [childUserId],
           ),
         )),
       ) as _i4.Future<_i2.Either<_i5.Failure, void>>);

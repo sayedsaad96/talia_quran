@@ -11,8 +11,6 @@ abstract class HifzRepository {
   Future<Either<Failure, void>> saveAyahProgress(AyahProgress progress);
   Future<Either<Failure, List<AyahProgress>>> getDueReviews();
   Future<Either<Failure, List<SurahHifzProgress>>> getAllSurahProgress();
-  Future<Either<Failure, Set<String>>> getPassedCheckpointKeys(int surahId);
-  Future<Either<Failure, void>> markCheckpointPassed(HifzSegment segment);
   Either<Failure, String?> getHifzPath();
   Future<Either<Failure, void>> saveHifzPath(String path);
 }

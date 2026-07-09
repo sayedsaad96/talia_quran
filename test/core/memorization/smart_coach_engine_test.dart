@@ -2,7 +2,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/memorization/memorization_snapshot.dart';
 import 'package:talia_quran/core/memorization/smart_coach_engine.dart';
 import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart';
-import 'package:talia_quran/features/hifz/domain/entities/hifz_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 
 void main() {
@@ -23,6 +22,7 @@ void main() {
             nextReviewDate: now.subtract(const Duration(days: 1)),
             totalReviews: 2,
             lastRating: PerformanceRating.average,
+            createdByMode: ReviewRecordCreatedByMode.v2Session,
           ),
         ],
         cachedDailyPlan: DailyPlan(
@@ -57,6 +57,7 @@ void main() {
             nextReviewDate: now.subtract(const Duration(hours: 1)),
             totalReviews: 3,
             lastRating: PerformanceRating.weak,
+            createdByMode: ReviewRecordCreatedByMode.v2Session,
           ),
           AyahReviewRecord(
             surahId: 67,
@@ -67,6 +68,7 @@ void main() {
             nextReviewDate: now.subtract(const Duration(days: 1)),
             totalReviews: 2,
             lastRating: PerformanceRating.average,
+            createdByMode: ReviewRecordCreatedByMode.v2Session,
           ),
         ],
       );
@@ -128,7 +130,63 @@ void main() {
       );
       expect(recommendation?.completedCount, 1);
       expect(recommendation?.totalCount, 2);
+      expect(recommendation?.startAyah, 2);
+      expect(
+        recommendation?.route,
+        '/memorization-v2/session?surahId=67&startAyah=2',
+      );
     });
+
+    test(
+      'continueDailyPlan routes to first pending ayah when ayah 7 is next',
+      () {
+        final now = DateTime.now().toUtc();
+        final snapshot = MemorizationSnapshot(
+          profile: _adultProfile(),
+          reviewRecords: [],
+          cachedDailyPlan: DailyPlan(
+            generatedAt: now,
+            surahId: 67,
+            newAyahs: const [
+              DailyPlanAyah(
+                surahId: 67,
+                ayahNumber: 7,
+                ayahText: 'text',
+                record: null,
+              ),
+              DailyPlanAyah(
+                surahId: 67,
+                ayahNumber: 8,
+                ayahText: 'text',
+                record: null,
+              ),
+            ],
+            nearRevision: const [
+              DailyPlanAyah(
+                surahId: 67,
+                ayahNumber: 1,
+                ayahText: 'text',
+                record: null,
+              ),
+            ],
+            farRevision: const [],
+            completedAyahNums: const [1, 2, 3, 4, 5, 6],
+          ),
+        );
+
+        final recommendation = engine.recommend(snapshot);
+
+        expect(
+          recommendation?.kind,
+          SmartCoachRecommendationKind.continueDailyPlan,
+        );
+        expect(recommendation?.startAyah, 7);
+        expect(
+          recommendation?.route,
+          contains('startAyah=7'),
+        );
+      },
+    );
 
     // ── Objective 1: Exact-ayah quiz routing ──────────────────────────────
 
@@ -146,6 +204,7 @@ void main() {
             nextReviewDate: now.subtract(const Duration(hours: 1)),
             totalReviews: 3,
             lastRating: PerformanceRating.weak,
+            createdByMode: ReviewRecordCreatedByMode.v2Session,
           ),
         ],
       );
@@ -227,25 +286,6 @@ void main() {
       );
     });
 
-    test('hifz due route is exactly /hifz', () {
-      final now = DateTime.now().toUtc();
-      final snapshot = MemorizationSnapshot(
-        profile: _adultProfile(),
-        hifzDueReviews: [
-          AyahProgress(
-            surahId: 1,
-            ayahNumber: 3,
-            status: AyahStatus.review,
-            repetitions: 2,
-            nextReviewDate: now.subtract(const Duration(days: 1)),
-            lastReviewDate: now.subtract(const Duration(days: 3)),
-          ),
-        ],
-      );
-
-      expect(engine.recommend(snapshot)?.route, '/memorization-v2/session?surahId=1&startAyah=1');
-    });
-
     test('kids route is exactly kids-home', () {
       final snapshot = MemorizationSnapshot(
         profile: _childProfile(),
@@ -280,6 +320,7 @@ void main() {
             nextReviewDate: now.subtract(const Duration(hours: 1)),
             totalReviews: 3,
             lastRating: PerformanceRating.weak,
+            createdByMode: ReviewRecordCreatedByMode.v2Session,
           ),
         ],
       );
@@ -678,16 +719,6 @@ void main() {
       final hifzSnapshot = MemorizationSnapshot(
         profile: _adultProfile(),
         reviewRecords: [_memorizedDueRecord(now: now)],
-        hifzDueReviews: [
-          AyahProgress(
-            surahId: 1,
-            ayahNumber: 3,
-            status: AyahStatus.review,
-            repetitions: 2,
-            nextReviewDate: now.subtract(const Duration(days: 1)),
-            lastReviewDate: now.subtract(const Duration(days: 3)),
-          ),
-        ],
       );
       expect(
         engine.recommend(hifzSnapshot)?.kind,
@@ -698,54 +729,6 @@ void main() {
   });
 
   group('SmartCoachEngine — fallbacks', () {
-    test('uses hifz due reviews when MemPlus has no actionable items', () {
-      final now = DateTime.now().toUtc();
-      final snapshot = MemorizationSnapshot(
-        profile: _adultProfile(),
-        hifzDueReviews: [
-          AyahProgress(
-            surahId: 1,
-            ayahNumber: 3,
-            status: AyahStatus.review,
-            repetitions: 2,
-            nextReviewDate: now.subtract(const Duration(days: 1)),
-            lastReviewDate: now.subtract(const Duration(days: 3)),
-          ),
-        ],
-      );
-
-      final recommendation = engine.recommend(snapshot);
-
-      expect(recommendation?.kind, SmartCoachRecommendationKind.hifzReviewDue);
-      expect(recommendation?.route, '/memorization-v2/session?surahId=1&startAyah=1');
-    });
-
-    test('prioritizes memorized-due over Hifz fallback', () {
-      final now = DateTime.now().toUtc();
-      final snapshot = MemorizationSnapshot(
-        profile: _adultProfile(),
-        reviewRecords: [_memorizedDueRecord(now: now)],
-        hifzDueReviews: [
-          AyahProgress(
-            surahId: 1,
-            ayahNumber: 3,
-            status: AyahStatus.review,
-            repetitions: 2,
-            nextReviewDate: now.subtract(const Duration(days: 1)),
-            lastReviewDate: now.subtract(const Duration(days: 3)),
-          ),
-        ],
-      );
-
-      final recommendation = engine.recommend(snapshot);
-
-      expect(
-        recommendation?.kind,
-        SmartCoachRecommendationKind.memorizedReviewDue,
-      );
-      expect(recommendation?.route, contains('session'));
-    });
-
     test('returns kids mission for child profile', () {
       final snapshot = MemorizationSnapshot(
         profile: _childProfile(),
@@ -813,7 +796,7 @@ void main() {
       expect(recommendation, isNull);
     });
 
-    test('adult Smart Coach ignores hifz memorized-due record', () {
+    test('adult Smart Coach accepts hifz memorized-due record', () {
       final now = DateTime.now().toUtc();
       final snapshot = MemorizationSnapshot(
         profile: _adultProfile(),
@@ -827,12 +810,12 @@ void main() {
       final recommendation = engine.recommend(snapshot);
       expect(
         recommendation?.kind,
-        isNot(SmartCoachRecommendationKind.memorizedReviewDue),
+        SmartCoachRecommendationKind.memorizedReviewDue,
       );
-      expect(recommendation, isNull);
+      expect(recommendation?.startAyah, 1);
     });
 
-    test('adult Smart Coach accepts adultMemPlus memorized-due record', () {
+    test('adult Smart Coach accepts v2Session memorized-due record', () {
       final now = DateTime.now().toUtc();
       final snapshot = MemorizationSnapshot(
         profile: _adultProfile(),
@@ -840,7 +823,7 @@ void main() {
           _memorizedDueRecord(
             now: now,
             ayahNumber: 3,
-          ).copyWith(createdByMode: ReviewRecordCreatedByMode.adultMemPlus),
+          ).copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session),
         ],
       );
       final recommendation = engine.recommend(snapshot);
@@ -852,7 +835,7 @@ void main() {
     });
 
     test(
-      'adult Smart Coach accepts unknown memorized-due record (backward compat)',
+      'adult Smart Coach excludes unknown memorized-due record',
       () {
         final now = DateTime.now().toUtc();
         final snapshot = MemorizationSnapshot(
@@ -865,16 +848,12 @@ void main() {
           ],
         );
         final recommendation = engine.recommend(snapshot);
-        expect(
-          recommendation?.kind,
-          SmartCoachRecommendationKind.memorizedReviewDue,
-        );
-        expect(recommendation?.startAyah, 5);
+        expect(recommendation, isNull);
       },
     );
 
     test(
-      'adult Smart Coach accepts migration memorized-due record (backward compat)',
+      'adult Smart Coach excludes migration memorized-due record',
       () {
         final now = DateTime.now().toUtc();
         final snapshot = MemorizationSnapshot(
@@ -887,15 +866,11 @@ void main() {
           ],
         );
         final recommendation = engine.recommend(snapshot);
-        expect(
-          recommendation?.kind,
-          SmartCoachRecommendationKind.memorizedReviewDue,
-        );
-        expect(recommendation?.startAyah, 7);
+        expect(recommendation, isNull);
       },
     );
 
-    test('kidsMode does not shadow adultMemPlus memorized-due record', () {
+    test('kidsMode does not shadow adult v2Session memorized-due record', () {
       final now = DateTime.now().toUtc();
       final snapshot = MemorizationSnapshot(
         profile: _adultProfile(),
@@ -907,7 +882,7 @@ void main() {
           _memorizedDueRecord(
             now: now,
             ayahNumber: 9,
-          ).copyWith(createdByMode: ReviewRecordCreatedByMode.adultMemPlus),
+          ).copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session),
         ],
       );
       final recommendation = engine.recommend(snapshot);
@@ -926,7 +901,7 @@ void main() {
           _memorizedDueRecord(
             now: now,
             ayahNumber: 11,
-          ).copyWith(createdByMode: ReviewRecordCreatedByMode.adultMemPlus),
+          ).copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session),
         ],
       );
       final recommendation = engine.recommend(snapshot);
@@ -944,7 +919,7 @@ void main() {
             _memorizedDueRecord(
               now: now,
               ayahNumber: 5,
-            ).copyWith(createdByMode: ReviewRecordCreatedByMode.adultMemPlus),
+            ).copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session),
           ],
           cachedDailyPlan: _dailyPlan(
             now: now,
@@ -978,7 +953,7 @@ void main() {
             _memorizedDueRecord(
               now: now,
               ayahNumber: 5,
-            ).copyWith(createdByMode: ReviewRecordCreatedByMode.adultMemPlus),
+            ).copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session),
           ],
           cachedDailyPlan: _dailyPlan(now: now),
         );
@@ -989,7 +964,7 @@ void main() {
     );
 
     test(
-      'unknown memorized-due still routes to Quiz when not in Daily Plan retention',
+      'unknown memorized-due is ignored by adult Smart Coach',
       () {
         final now = DateTime.now().toUtc();
         final snapshot = MemorizationSnapshot(
@@ -1002,11 +977,7 @@ void main() {
           ],
         );
         final recommendation = engine.recommend(snapshot);
-        expect(
-          recommendation?.kind,
-          SmartCoachRecommendationKind.memorizedReviewDue,
-        );
-        expect(recommendation?.route, contains('session'));
+        expect(recommendation, isNull);
       },
     );
 
@@ -1064,6 +1035,7 @@ AyahReviewRecord _dueRecord({
     nextReviewDate: nextReviewDate ?? now.subtract(const Duration(hours: 1)),
     totalReviews: 2,
     lastRating: lastRating,
+    createdByMode: ReviewRecordCreatedByMode.v2Session,
   );
 }
 
@@ -1083,6 +1055,7 @@ AyahReviewRecord _weakRecord({
     nextReviewDate: nextReviewDate ?? now.subtract(const Duration(hours: 1)),
     totalReviews: 3,
     lastRating: PerformanceRating.weak,
+    createdByMode: ReviewRecordCreatedByMode.v2Session,
   );
 }
 
@@ -1103,6 +1076,7 @@ AyahReviewRecord _memorizedDueRecord({
     nextReviewDate: nextReviewDate ?? now.subtract(const Duration(days: 1)),
     totalReviews: 6,
     lastRating: PerformanceRating.excellent,
+    createdByMode: ReviewRecordCreatedByMode.v2Session,
   );
 }
 

@@ -1,85 +1,59 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/error/app_failure.dart';
-import '../../../../core/memorization/review_record_filters.dart';
+import '../../../../core/memorization/progress_metrics.dart';
+import '../../../../core/memorization/progress_metrics_service.dart';
+import '../../../../core/memorization/quran_structure_maps.dart';
+import '../../../../core/memorization/review_record_audience_scope.dart';
+import '../../../../core/progress/progress_changed_reason.dart';
+import '../../../../core/progress/progress_events_bus.dart';
 import '../../../../core/services/streak_reader.dart';
-import '../../../hifz/data/datasources/hifz_local_datasource.dart';
-import '../../../hifz/domain/entities/hifz_entities.dart';
 import '../../domain/entities/progress_entities.dart';
 import '../../domain/repositories/progress_repository.dart';
 import '../datasources/progress_local_datasource.dart';
 
 import '../../../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
+import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../quran/data/datasources/quran_local_datasource.dart';
 
 class ProgressRepositoryImpl implements ProgressRepository {
   ProgressRepositoryImpl(
     this._progressDs,
-    this._hifzDs,
     this._memPlusDs,
     this._quranDs,
     this._streakReader,
-  );
+    this._progressEvents, [
+    this._metrics = const ProgressMetricsService(),
+  ]);
   final ProgressLocalDatasource _progressDs;
-  final HifzLocalDatasource _hifzDs;
   final MemorizationPlusLocalDatasource _memPlusDs;
   final QuranLocalDatasource _quranDs;
   final StreakReader _streakReader;
+  final ProgressEventsBus _progressEvents;
+  final ProgressMetricsService _metrics;
 
   @override
   Future<Either<Failure, OverallProgress>> getOverallProgress() async {
     try {
-      final allProgress = await _hifzDs.getAllProgress();
+      final profile = await _memPlusDs.getMemorizationProfile();
+      final isChild = profile.selectedPath == MemorizationPath.child;
+      final reviewScope = isChild
+          ? ReviewRecordReadScope.kids
+          : ReviewRecordReadScope.adult;
+      final progressAudience = isChild
+          ? ProgressAudience.kids
+          : ProgressAudience.adult;
 
-      // Memorized ayahs count
-      final memorizedAyahs = allProgress
-          .where((p) => p.status == AyahStatus.memorized)
-          .length;
-
-      // Learning ayahs
-      final learningAyahs = allProgress
-          .where((p) => p.status == AyahStatus.learning)
-          .length;
-
-      // Review ayahs
-      final reviewAyahs = allProgress
-          .where((p) => p.status == AyahStatus.review)
-          .length;
-
-      final surahs = await _quranDs.getSurahs();
-      final surahAyahCounts = {
-        for (final surah in surahs) surah.id: surah.ayahCount,
-      };
-
-      // Count memorized surahs only when every ayah in the surah is recorded as memorized.
-      final bySurah = <int, List<dynamic>>{};
-      for (final p in allProgress) {
-        bySurah.putIfAbsent(p.surahId, () => []).add(p);
-      }
-
-      final memorizedSurahs = bySurah.entries.where((entry) {
-        final totalAyahs = surahAyahCounts[entry.key];
-        if (totalAyahs == null || entry.value.length < totalAyahs) {
-          return false;
-        }
-        return entry.value.every((a) => a.status == AyahStatus.memorized);
-      }).length;
-
-      // Read pages & reading stats
-      final readPages = _progressDs.getReadPages();
-      final readPagesCount = readPages.length;
-
-      // Calculate read-only stats: pages read means those ayahs were read
-      // Reading juz = pages read / 20 (each juz ~20 pages)
-      final readJuz = (readPagesCount / 20).floor().clamp(
-        0,
-        AppConstants.totalJuz,
+      final memPlusRecords = await _memPlusDs.getAllReviewRecords(
+        scope: reviewScope,
       );
 
-      // Reading stats are derived from pages explicitly confirmed as read.
+      final structure = await QuranStructureMaps.load(_quranDs);
+      final surahAyahCounts = structure.surahAyahCounts;
+      final ayahKeysByJuz = structure.ayahKeysByJuz;
+      final readPages = _progressDs.getReadPages();
       final readAyahKeys = <String>{};
       final readSurahIds = <int>{};
-
       for (final page in readPages) {
         try {
           final ayahs = await _quranDs.getAyahsByPage(page);
@@ -88,93 +62,66 @@ class ProgressRepositoryImpl implements ProgressRepository {
             readSurahIds.add(ayah.surahId);
           }
         } catch (_) {
-          // Ignore a stale page entry rather than failing the whole progress page.
+          // Ignore a stale page entry rather than failing the whole page.
         }
-      }
-
-      final readSurahs = readSurahIds.length;
-      final readAyahs = readAyahKeys.length;
-
-      // BUG-6 FIX: Accurate memorizedJuz — check each juz individually
-      // instead of dividing total memorized ayahs by average juz size.
-      final memorizedKeys = allProgress
-          .where((p) => p.status == AyahStatus.memorized)
-          .map((p) => '${p.surahId}_${p.ayahNumber}')
-          .toSet();
-
-      int memorizedJuz = 0;
-      try {
-        final ayahsByJuz = await _quranDs.getAyahsGroupedByJuz();
-        for (int juz = 1; juz <= AppConstants.totalJuz; juz++) {
-          final juzAyahs = ayahsByJuz[juz];
-          if (juzAyahs != null &&
-              juzAyahs.isNotEmpty &&
-              juzAyahs.every(
-                (a) =>
-                    memorizedKeys.contains('${a.surahId}_${a.numberInSurah}'),
-              )) {
-            memorizedJuz++;
-          }
-        }
-      } catch (_) {
-        // Fallback to approximate calculation if juz data unavailable
-        memorizedJuz =
-            (memorizedAyahs / (AppConstants.totalAyahs / AppConstants.totalJuz))
-                .floor()
-                .clamp(0, AppConstants.totalJuz);
       }
 
       final streakEntity = await _streakReader.getStreak();
-      final streak = streakEntity.currentStreak;
-      final lastActive = streakEntity.lastActivityDate;
 
-      final achievements = _buildAchievements(
-        memorizedAyahs: memorizedAyahs,
-        memorizedSurahs: memorizedSurahs,
-        memorizedJuz: memorizedJuz,
-        streak: streak,
-        readPages: readPagesCount,
-        readAyahs: readAyahs,
-        learningAyahs: learningAyahs,
-        reviewAyahs: reviewAyahs,
+      // Single source of truth for every progress number.
+      final metrics = _metrics.calculate(
+        records: memPlusRecords,
+        now: DateTime.now().toUtc(),
+        audience: progressAudience,
+        surahAyahCounts: surahAyahCounts,
+        ayahKeysByJuz: ayahKeysByJuz,
+        totalAyahs: AppConstants.totalAyahs,
+        totalSurahs: AppConstants.totalSurahs,
+        totalJuz: AppConstants.totalJuz,
+        readPagesCount: readPages.length,
+        totalQuranPages: 604,
+        readAyahKeys: readAyahKeys,
+        readSurahIds: readSurahIds,
+        streakDays: streakEntity.currentStreak,
       );
 
-      // Smart memorization system data.
-      // Sprint 8B: kidsMode and hifz records are excluded from smart stats so
-      // that kids-path completions do not inflate the adult user's memorized
-      // count on the Progress page.
-      final memPlusRecords = await _memPlusDs.getAllReviewRecords();
-      final smartMemorizedAyahs = memPlusRecords
-          .where(ReviewRecordFilters.isAdultCompatible)
-          .where((r) => r.strengthLevel >= 6)
-          .length;
-      final smartReviewAyahs = memPlusRecords
-          .where(ReviewRecordFilters.isAdultCompatible)
-          .where((r) => r.strengthLevel < 6 && r.strengthLevel > 0)
-          .length;
+      final achievements = _buildAchievements(
+        memorizedAyahs: metrics.memorizedAyahs,
+        memorizedSurahs: metrics.memorizedSurahs,
+        memorizedJuz: metrics.memorizedJuz,
+        streak: metrics.streakDays,
+        readPages: metrics.readPagesCount,
+        readAyahs: metrics.readAyahs,
+        learningAyahs: metrics.learningAyahs,
+        reviewAyahs: metrics.dueReviews,
+      );
 
       final kidsProgress = await _memPlusDs.getKidsProgress();
 
       return Right(
         OverallProgress(
-          memorizedAyahs: memorizedAyahs,
+          memorizedAyahs: metrics.memorizedAyahs,
+          startedAyahs: metrics.startedAyahs,
+          reviewedAyahsTotal: metrics.totalReviewEvents,
+          overdueReviews: metrics.overdueReviews,
+          lastReviewedAt: metrics.lastReviewedAt,
+          lastMemorizedSurahId: metrics.lastMemorizedSurahId,
+          lastMemorizedAyahNumber: metrics.lastMemorizedAyahNumber,
           totalAyahs: AppConstants.totalAyahs,
-          memorizedSurahs: memorizedSurahs,
+          memorizedSurahs: metrics.memorizedSurahs,
           totalSurahs: AppConstants.totalSurahs,
-          memorizedJuz: memorizedJuz,
+          memorizedJuz: metrics.memorizedJuz,
           totalJuz: AppConstants.totalJuz,
-          readAyahs: readAyahs,
-          readSurahs: readSurahs,
-          readJuz: readJuz,
-          learningAyahs: learningAyahs,
-          reviewAyahs: reviewAyahs,
-          streakDays: streak,
-          lastActiveDate: lastActive,
+          readAyahs: metrics.readAyahs,
+          readSurahs: metrics.readSurahs,
+          readJuz: metrics.readJuz,
+          learningAyahs: metrics.learningAyahs,
+          reviewAyahs: metrics.dueReviews,
+          streakDays: metrics.streakDays,
+          lastActiveDate: streakEntity.lastActivityDate,
           achievements: achievements,
-          readPagesCount: readPagesCount,
-          totalQuranPages: 604,
-          smartMemorizedAyahs: smartMemorizedAyahs,
-          smartReviewAyahs: smartReviewAyahs,
+          readPagesCount: metrics.readPagesCount,
+          totalQuranPages: metrics.totalQuranPages,
           kidsPoints: kidsProgress.totalPoints,
           kidsStars: kidsProgress.starsEarned,
         ),
@@ -188,6 +135,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
   Future<Either<Failure, void>> saveReadPage(int pageNumber) async {
     try {
       await _progressDs.saveReadPage(pageNumber);
+      _progressEvents.notify(ProgressChangedReason.readPage);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

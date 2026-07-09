@@ -4,6 +4,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
@@ -34,10 +35,11 @@ void main() {
 
       expect(find.text("Today's Plan"), findsOneWidget);
       expect(find.text("Continue Today's Plan"), findsOneWidget);
+      expect(find.text("View Today's Plan"), findsOneWidget);
       expect(find.text('Practice'), findsOneWidget);
       expect(find.text('Practice by Surah'), findsOneWidget);
       expect(find.textContaining('Recite Practice'), findsOneWidget);
-      expect(find.text('Review Quiz'), findsWidgets);
+      expect(find.text('Review Session'), findsWidgets);
       expect(find.text('Settings'), findsOneWidget);
       expect(find.text('Plan Settings'), findsOneWidget);
       expect(find.text('Parent Dashboard'), findsNothing);
@@ -140,7 +142,9 @@ class _ProfileRepository implements MemorizationPlusRepository {
       const Right(null);
 
   @override
-  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords() async =>
+  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  }) async =>
       const Right([]);
 
   @override

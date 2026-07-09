@@ -18,22 +18,15 @@ class HifzLoading extends HifzState {
 class HifzLoaded extends HifzState {
   const HifzLoaded({
     required this.surahs,
-    required this.progressMap,
-    required this.unlockedSurahIds,
     this.selectedPath,
   });
   final List<Surah> surahs;
-  final Map<int, SurahHifzProgress> progressMap;
-  final Set<int> unlockedSurahIds;
   final String? selectedPath;
 
-  bool isSurahUnlocked(int surahId) => unlockedSurahIds.contains(surahId);
+  bool isSurahUnlocked(int surahId) => true;
 
   @override
-  List<Object?> get props {
-    final unlockedIds = unlockedSurahIds.toList()..sort();
-    return [surahs, progressMap, selectedPath, ...unlockedIds];
-  }
+  List<Object?> get props => [surahs, selectedPath];
 }
 
 class HifzError extends HifzState {

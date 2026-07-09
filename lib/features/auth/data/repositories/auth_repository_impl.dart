@@ -8,8 +8,6 @@ import '../../../../core/error/app_failure.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
-import '../../../hifz/data/models/isar_ayah_progress.dart';
-import '../../../hifz/domain/entities/hifz_entities.dart';
 import '../../../streak/data/models/streak_isar.dart';
 import '../../../streak/data/models/daily_activity_isar.dart';
 import '../../../xp/data/models/xp_isar.dart';
@@ -375,7 +373,6 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = _supabase.auth.currentUser;
       if (user == null) return const Right(unit);
 
-      await _syncAyahProgressToCloud(user.id);
       await _syncStreakToCloud();
       await _syncXpToCloud();
       await _syncDailyActivitiesToCloud();
@@ -395,7 +392,6 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = _supabase.auth.currentUser;
       if (user == null) return const Right(unit);
 
-      await _pullAyahProgressFromCloud(user.id);
       await _pullStreakFromCloud(user.id);
       await _pullXpFromCloud(user.id);
       await _pullDailyActivitiesFromCloud(user.id);
@@ -406,69 +402,6 @@ class AuthRepositoryImpl implements AuthRepository {
       TaliaLogger.w('Pull from cloud failed', e);
       return const Left(ServerFailure('فشل استرجاع البيانات من السحابة'));
     }
-  }
-
-  // ─── Ayah Progress Sync ─────────────────────────────────────────────────────
-
-  Future<void> _syncAyahProgressToCloud(String userId) async {
-    final allProgress = await _isar.isarAyahProgress.where().findAll();
-
-    if (allProgress.isEmpty) return;
-
-    final data = allProgress
-        .map(
-          (p) => {
-            'surah_id': p.surahId,
-            'ayah_number': p.ayahNumber,
-            'status': p.status.name,
-            'repetitions': p.repetitions,
-            'next_review_date': p.nextReviewDate.toUtc().toIso8601String(),
-            'last_review_date': p.lastReviewDate.toUtc().toIso8601String(),
-          },
-        )
-        .toList();
-
-    await _supabase.rpc(
-      'upsert_ayah_progress',
-      params: {'p_data': jsonEncode(data)},
-    );
-  }
-
-  Future<void> _pullAyahProgressFromCloud(String userId) async {
-    final rows = await _supabase
-        .from('ayah_progress')
-        .select()
-        .eq('user_id', userId);
-
-    if (rows.isEmpty) return;
-
-    await _isar.writeTxn(() async {
-      for (final row in rows) {
-        final existing = await _isar.isarAyahProgress
-            .where()
-            .compositeKeyEqualTo('${row['surah_id']}_${row['ayah_number']}')
-            .findFirst();
-
-        final cloudDate = DateTime.parse(row['last_review_date'] as String);
-        final localDate = existing?.lastReviewDate;
-
-        if (existing == null ||
-            localDate == null ||
-            cloudDate.isAfter(localDate)) {
-          final isar = IsarAyahProgress()
-            ..compositeKey = '${row['surah_id']}_${row['ayah_number']}'
-            ..surahId = row['surah_id'] as int
-            ..ayahNumber = row['ayah_number'] as int
-            ..status = _parseAyahStatus(row['status'] as String)
-            ..repetitions = row['repetitions'] as int
-            ..nextReviewDate = DateTime.parse(row['next_review_date'] as String)
-            ..lastReviewDate = cloudDate;
-
-          if (existing != null) isar.id = existing.id;
-          await _isar.isarAyahProgress.put(isar);
-        }
-      }
-    });
   }
 
   // ─── Streak Sync ────────────────────────────────────────────────────────────
@@ -599,19 +532,6 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> _clearLocalUserData() async {
     for (final key in _authScopedPreferenceKeys) {
       await _prefs.remove(key);
-    }
-  }
-
-  AyahStatus _parseAyahStatus(String status) {
-    switch (status) {
-      case 'learning':
-        return AyahStatus.learning;
-      case 'review':
-        return AyahStatus.review;
-      case 'memorized':
-        return AyahStatus.memorized;
-      default:
-        return AyahStatus.notStarted;
     }
   }
 

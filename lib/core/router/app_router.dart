@@ -14,6 +14,7 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/quran/presentation/pages/kids_quran_reader_page.dart';
 import '../../features/quran/presentation/pages/quran_page.dart';
 import '../../features/quran/presentation/pages/quran_reader_page.dart';
+import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../../features/hifz/presentation/pages/hifz_page.dart';
 import '../../features/azkar/presentation/pages/azkar_page.dart';
 import '../../features/azkar/presentation/pages/azkar_category_page.dart';
@@ -28,13 +29,13 @@ import '../../features/memorization_plus/presentation/pages/kids_gamified_home_p
 import '../../features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import '../../features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
+import '../../features/memorization_plus/presentation/pages/daily_plan_page.dart';
 import '../../features/memorization_plus/presentation/pages/memorization_hub_page.dart';
 import '../../features/memorization_plus/presentation/pages/parent_dashboard_page.dart';
 import '../../features/memorization_plus/presentation/pages/custom_plan_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/qcf_rendering_poc_page.dart';
 import '../../features/memorization_plus/presentation/pages/v2_session_page.dart';
-import '../../features/memorization_plus/presentation/pages/v2/kids_v2_session_page.dart';
-import '../../features/memorization_plus/presentation/navigation/memorization_navigation_resolver.dart';
+import '../../features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/child_onboarding_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
@@ -43,7 +44,6 @@ import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/update_password_page.dart';
 import '../../features/tutorial_guide/presentation/pages/tutorial_guide_page.dart';
 import '../../features/settings/presentation/pages/privacy_policy_page.dart';
-import '../memorization/v2/v2_feature_flag.dart';
 import '../services/achievement_service.dart';
 import '../widgets/app_shell.dart';
 
@@ -74,9 +74,9 @@ abstract class AppRoutes {
   static const String parentDashboard = '/memorization-plus/parent-dashboard';
   static const String memorizationPlusCustomPlan =
       '/memorization-plus/custom-plan';
+  static const String memorizationPlusDailyPlan =
+      '/memorization-plus/daily-plan';
   static const String memorizationV2Session = '/memorization-v2/session';
-  static const String memorizationV2KidsSession =
-      '/memorization-v2/kids-session';
   static const String qcfRenderingPoc = '/debug/qcf-rendering-poc';
   static const String login = '/login';
   static const String updatePassword = '/auth/update-password';
@@ -195,23 +195,41 @@ class MemorizationRouteGuard {
     return profile?.isChild == true ? AppRoutes.memorizationPlusKidsHome : null;
   }
 
-  static Future<String?> hifzRedirect() async {
+  static Future<String?> hifzRedirect(GoRouterState state) async {
     try {
       final profile = await _readProfile();
       if (profile?.isChild == true) {
         return AppRoutes.memorizationPlusKidsHome;
       }
-      if (profile?.hasSelectedPath == true) return null;
 
-      final prefs = getIt<SharedPreferences>();
-      final legacyPath = prefs.getString(AppConstants.kHifzPathMode);
-      if (legacyPath != null && legacyPath.isNotEmpty) return null;
-      return AppRoutes.memorizationPlus;
+      final hasPath = profile?.hasSelectedPath == true;
+      if (!hasPath) {
+        final prefs = getIt<SharedPreferences>();
+        final legacyPath = prefs.getString(AppConstants.kHifzPathMode);
+        if (legacyPath == null || legacyPath.isEmpty) {
+          return AppRoutes.memorizationPlus;
+        }
+      }
+
+      final surahId = int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+      if (AppRouter._isValidSurahId(surahId)) {
+        final repository = getIt<MemorizationPlusRepository>();
+        final ayahCount = await _surahAyahCount(surahId!);
+        return MemorizationNavigationResolver(
+          repository,
+        ).practiceSurahSessionLocation(surahId, surahAyahCount: ayahCount);
+      }
+
+      return null;
     } catch (_) {
       return null;
     }
   }
 
+  static Future<int?> _surahAyahCount(int surahId) async {
+    final result = await getIt<QuranRepository>().getSurahDetail(surahId);
+    return result.fold((_) => null, (detail) => detail.ayahs.length);
+  }
 }
 
 abstract class AppRouter {
@@ -524,32 +542,6 @@ abstract class AppRouter {
           );
         },
       ),
-      // ── Kids V2 session (Listen → Try to Remember → Complete) ─────────────
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: AppRoutes.memorizationV2KidsSession,
-        redirect: (context, state) async {
-          final kidsBlock = await MemorizationRouteGuard.kidsOnlyRedirect();
-          if (kidsBlock != null) return kidsBlock;
-          final enabled = await V2FeatureFlag.isKidsEnabled();
-          if (!enabled) return AppRoutes.memorizationPlusKidsHome;
-          return null;
-        },
-        builder: (context, state) {
-          final surahId = int.tryParse(
-            state.uri.queryParameters['surahId'] ?? '',
-          );
-          final ayahNumber = int.tryParse(
-            state.uri.queryParameters['ayahNumber'] ?? '',
-          );
-          if (!_isValidSurahId(surahId) ||
-              ayahNumber == null ||
-              ayahNumber < 1) {
-            return const PathSelectionPage();
-          }
-          return KidsV2SessionPage(surahId: surahId!, ayahNumber: ayahNumber);
-        },
-      ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.parentDashboard,
@@ -569,6 +561,13 @@ abstract class AppRouter {
         redirect: (context, state) =>
             MemorizationRouteGuard.adultOnlyRedirect(),
         builder: (context, state) => const CustomPlanSetupPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.memorizationPlusDailyPlan,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.adultOnlyRedirect(),
+        builder: (context, state) => const DailyPlanPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -635,7 +634,7 @@ abstract class AppRouter {
               GoRoute(
                 path: AppRoutes.hifz,
                 redirect: (context, state) =>
-                    MemorizationRouteGuard.hifzRedirect(),
+                    MemorizationRouteGuard.hifzRedirect(state),
                 pageBuilder: (_, _) =>
                     const NoTransitionPage(child: HifzPage()),
               ),
@@ -679,8 +678,6 @@ abstract class AppRouter {
 
   static bool _isValidSurahId(int? surahId) =>
       surahId != null && surahId >= 1 && surahId <= 114;
-
-
 
   static KidsJourneyStage? _parseKidsJourneyStage(GoRouterState state) {
     final extra = state.extra;

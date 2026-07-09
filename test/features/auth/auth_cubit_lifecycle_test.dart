@@ -37,6 +37,7 @@ void main() {
     ).thenAnswer((_) => passwordRecoveryStreamCtrl.stream);
     when(mockRepo.currentUser).thenReturn(currentUser);
     when(mockRepo.pullProgressFromCloud()).thenAnswer((_) async => const Right(unit));
+    when(mockRepo.syncProgressToCloud()).thenAnswer((_) async => const Right(unit));
     return AuthCubit(mockRepo);
   }
 

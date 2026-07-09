@@ -343,6 +343,10 @@ CREATE TRIGGER on_auth_user_created
 
 
 -- ─── 2. Ayah Progress (Memorization Tracking) ───────────────────────────────
+-- DEPRECATED (2026-07): Legacy Hifz cloud mirror. Production memorization now
+-- uses Isar review records locally and `ayah_review_records_cloud` for sync.
+-- Kept for backward compatibility with older app builds; do not write here
+-- from new client code.
 -- Mirrors IsarAyahProgress — stores per-ayah memorization state
 CREATE TABLE IF NOT EXISTS public.ayah_progress (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -1012,3 +1016,289 @@ GRANT EXECUTE ON FUNCTION public.accept_child_link_token(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.accept_child_link_token_with_hash(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.upsert_kids_progress_cloud(INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.insert_kids_session_log(TEXT, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) TO authenticated;
+
+
+-- ═══════════════════════════════════════════════════════════════════════════════
+--  Phase 7 — Production Memorization Sync (Parent Mode completion)
+--  Cloud mirrors for the V2 production SRS engine (AyahReviewRecord), daily
+--  plan and certificates, plus parent read-access for streak/heatmap data
+--  that already existed but was never exposed to a linked parent. Only
+--  adult V2 / kids-gamified production records are accepted — legacy Hifz
+--  data is intentionally excluded (created_by_mode CHECK below).
+-- ═══════════════════════════════════════════════════════════════════════════════
+
+-- ── Ayah review records (V2 SRS mirror; adult + kids production only) ──
+CREATE TABLE IF NOT EXISTS public.ayah_review_records_cloud (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  surah_id INTEGER NOT NULL CHECK (surah_id >= 1 AND surah_id <= 114),
+  ayah_number INTEGER NOT NULL CHECK (ayah_number >= 1 AND ayah_number <= 286),
+  strength_level INTEGER NOT NULL DEFAULT 0 CHECK (strength_level >= 0),
+  interval_days INTEGER NOT NULL DEFAULT 0 CHECK (interval_days >= 0),
+  last_reviewed_at TIMESTAMPTZ NOT NULL,
+  next_review_date TIMESTAMPTZ NOT NULL,
+  total_reviews INTEGER NOT NULL DEFAULT 0 CHECK (total_reviews >= 0),
+  last_rating TEXT CHECK (last_rating IN ('excellent', 'average', 'weak')),
+  ease_factor DOUBLE PRECISION NOT NULL DEFAULT 2.5,
+  lapses INTEGER NOT NULL DEFAULT 0 CHECK (lapses >= 0),
+  review_state TEXT NOT NULL DEFAULT 'newCard'
+    CHECK (review_state IN ('newCard', 'learning', 'review', 'relearning')),
+  created_by_mode TEXT NOT NULL
+    CHECK (created_by_mode IN ('v2Session', 'kidsMode', 'hifz')),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT unique_user_ayah_review UNIQUE (user_id, surah_id, ayah_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_ayah_review_records_cloud_user
+  ON public.ayah_review_records_cloud(user_id);
+
+-- ── Daily plan (single row per user — latest generated plan) ──
+CREATE TABLE IF NOT EXISTS public.daily_plans_cloud (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  surah_id INTEGER NOT NULL CHECK (surah_id >= 1 AND surah_id <= 114),
+  generated_at TIMESTAMPTZ NOT NULL,
+  total_items INTEGER NOT NULL DEFAULT 0 CHECK (total_items >= 0),
+  completed_count INTEGER NOT NULL DEFAULT 0 CHECK (completed_count >= 0),
+  payload JSONB NOT NULL DEFAULT '{}'::JSONB CHECK (pg_column_size(payload) <= 20000),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ── Certificates (append-only; production certificates from AchievementService) ──
+CREATE TABLE IF NOT EXISTS public.certificate_awards_cloud (
+  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  cert_id TEXT NOT NULL CHECK (char_length(cert_id) <= 60),
+  title_ar TEXT NOT NULL CHECK (char_length(title_ar) <= 200),
+  cert_type TEXT NOT NULL CHECK (cert_type IN ('juz', 'surah', 'halfQuran', 'fullQuran')),
+  earned_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT unique_user_cert UNIQUE (user_id, cert_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_certificate_awards_cloud_user
+  ON public.certificate_awards_cloud(user_id, earned_at DESC);
+
+ALTER TABLE public.ayah_review_records_cloud ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.daily_plans_cloud ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.certificate_awards_cloud ENABLE ROW LEVEL SECURITY;
+
+REVOKE ALL ON TABLE
+  public.ayah_review_records_cloud,
+  public.daily_plans_cloud,
+  public.certificate_awards_cloud
+FROM anon, authenticated;
+
+GRANT USAGE ON SCHEMA public TO authenticated;
+GRANT SELECT ON public.ayah_review_records_cloud TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.daily_plans_cloud TO authenticated;
+GRANT SELECT, INSERT ON public.certificate_awards_cloud TO authenticated;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
+
+CREATE POLICY "ayah_review_records_cloud_owner_select"
+  ON public.ayah_review_records_cloud FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "ayah_review_records_cloud_parent_read"
+  ON public.ayah_review_records_cloud FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.parent_child_links pcl
+      WHERE pcl.child_user_id = ayah_review_records_cloud.user_id
+        AND pcl.parent_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  );
+
+CREATE POLICY "daily_plans_cloud_owner_all"
+  ON public.daily_plans_cloud FOR ALL TO authenticated
+  USING ((SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "daily_plans_cloud_parent_read"
+  ON public.daily_plans_cloud FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.parent_child_links pcl
+      WHERE pcl.child_user_id = daily_plans_cloud.user_id
+        AND pcl.parent_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  );
+
+CREATE POLICY "certificate_awards_cloud_owner_select"
+  ON public.certificate_awards_cloud FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "certificate_awards_cloud_owner_insert"
+  ON public.certificate_awards_cloud FOR INSERT TO authenticated
+  WITH CHECK ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "certificate_awards_cloud_parent_read"
+  ON public.certificate_awards_cloud FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.parent_child_links pcl
+      WHERE pcl.child_user_id = certificate_awards_cloud.user_id
+        AND pcl.parent_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  );
+
+-- ── Fix: parent could never see streak / heatmap (owner-only RLS gap) ──
+CREATE POLICY "streaks_parent_read"
+  ON public.streaks FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.parent_child_links pcl
+      WHERE pcl.child_user_id = streaks.user_id
+        AND pcl.parent_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  );
+
+CREATE POLICY "daily_activities_parent_read"
+  ON public.daily_activities FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.parent_child_links pcl
+      WHERE pcl.child_user_id = daily_activities.user_id
+        AND pcl.parent_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  );
+
+-- ── Batch upsert for ayah review records (mirrors upsert_ayah_progress) ──
+CREATE OR REPLACE FUNCTION public.upsert_ayah_review_records(
+  p_data JSONB
+  -- Array of { surah_id, ayah_number, strength_level, interval_days,
+  --   last_reviewed_at, next_review_date, total_reviews, last_rating,
+  --   ease_factor, lapses, review_state, created_by_mode }
+)
+RETURNS VOID AS $$
+DECLARE
+  v_uid UUID := auth.uid();
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  IF jsonb_array_length(p_data) > 6236 THEN
+    RAISE EXCEPTION 'Batch too large (max 6236 ayahs)';
+  END IF;
+
+  INSERT INTO public.ayah_review_records_cloud (
+    user_id, surah_id, ayah_number, strength_level, interval_days,
+    last_reviewed_at, next_review_date, total_reviews, last_rating,
+    ease_factor, lapses, review_state, created_by_mode
+  )
+  SELECT
+    v_uid,
+    (item->>'surah_id')::INTEGER,
+    (item->>'ayah_number')::INTEGER,
+    (item->>'strength_level')::INTEGER,
+    (item->>'interval_days')::INTEGER,
+    (item->>'last_reviewed_at')::TIMESTAMPTZ,
+    (item->>'next_review_date')::TIMESTAMPTZ,
+    (item->>'total_reviews')::INTEGER,
+    item->>'last_rating',
+    (item->>'ease_factor')::DOUBLE PRECISION,
+    (item->>'lapses')::INTEGER,
+    item->>'review_state',
+    item->>'created_by_mode'
+  FROM jsonb_array_elements(p_data) AS item
+  ON CONFLICT (user_id, surah_id, ayah_number)
+  DO UPDATE SET
+    strength_level = GREATEST(
+      ayah_review_records_cloud.strength_level,
+      EXCLUDED.strength_level
+    ),
+    interval_days = GREATEST(
+      ayah_review_records_cloud.interval_days,
+      EXCLUDED.interval_days
+    ),
+    total_reviews = GREATEST(
+      ayah_review_records_cloud.total_reviews,
+      EXCLUDED.total_reviews
+    ),
+    lapses = GREATEST(ayah_review_records_cloud.lapses, EXCLUDED.lapses),
+    ease_factor = GREATEST(
+      ayah_review_records_cloud.ease_factor,
+      EXCLUDED.ease_factor
+    ),
+    last_reviewed_at = GREATEST(
+      ayah_review_records_cloud.last_reviewed_at,
+      EXCLUDED.last_reviewed_at
+    ),
+    next_review_date = CASE
+      WHEN EXCLUDED.last_reviewed_at >= ayah_review_records_cloud.last_reviewed_at
+      THEN EXCLUDED.next_review_date
+      ELSE ayah_review_records_cloud.next_review_date
+    END,
+    last_rating = CASE
+      WHEN EXCLUDED.last_reviewed_at >= ayah_review_records_cloud.last_reviewed_at
+      THEN EXCLUDED.last_rating
+      ELSE ayah_review_records_cloud.last_rating
+    END,
+    review_state = CASE
+      WHEN EXCLUDED.last_reviewed_at >= ayah_review_records_cloud.last_reviewed_at
+      THEN EXCLUDED.review_state
+      ELSE ayah_review_records_cloud.review_state
+    END,
+    created_by_mode = CASE
+      WHEN EXCLUDED.last_reviewed_at >= ayah_review_records_cloud.last_reviewed_at
+      THEN EXCLUDED.created_by_mode
+      ELSE ayah_review_records_cloud.created_by_mode
+    END,
+    updated_at = NOW();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE ALL ON FUNCTION public.upsert_ayah_review_records(JSONB) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.upsert_ayah_review_records(JSONB) TO authenticated;
+
+-- ── Pull production review records for the authenticated user (B6) ──
+CREATE OR REPLACE FUNCTION public.pull_ayah_review_records()
+RETURNS SETOF public.ayah_review_records_cloud AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  RETURN QUERY
+  SELECT *
+  FROM public.ayah_review_records_cloud
+  WHERE user_id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE ALL ON FUNCTION public.pull_ayah_review_records() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.pull_ayah_review_records() TO authenticated;
+
+-- ── Guardian link revocation (fixes unlinkGuardian()/removeChild() integrity) ──
+CREATE OR REPLACE FUNCTION public.revoke_guardian_link(p_counterpart_user_id UUID)
+RETURNS VOID AS $$
+DECLARE
+  v_uid UUID := auth.uid();
+  v_rows INTEGER;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  UPDATE public.parent_child_links
+  SET status = 'revoked', revoked_at = NOW()
+  WHERE status = 'active'
+    AND (
+      (parent_user_id = v_uid AND child_user_id = p_counterpart_user_id)
+      OR (child_user_id = v_uid AND parent_user_id = p_counterpart_user_id)
+    );
+
+  GET DIAGNOSTICS v_rows = ROW_COUNT;
+  IF v_rows = 0 THEN
+    RAISE EXCEPTION 'No active guardian link found';
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE ALL ON FUNCTION public.revoke_guardian_link(UUID) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.revoke_guardian_link(UUID) TO authenticated;

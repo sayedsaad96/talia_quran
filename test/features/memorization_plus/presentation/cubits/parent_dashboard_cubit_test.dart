@@ -54,7 +54,11 @@ class _FakeGetDashboard implements GetParentDashboardUsecase {
 }
 
 class _FakeRemoteLink implements ParentRemoteLinkUsecase {
-  const _FakeRemoteLink();
+  const _FakeRemoteLink({
+    this.removeChildResult = const Right(null),
+  });
+
+  final Either<Failure, void> removeChildResult;
 
   @override
   Future<Either<Failure, List<RemoteChildSummary>>> getRemoteChildren() async =>
@@ -70,6 +74,10 @@ class _FakeRemoteLink implements ParentRemoteLinkUsecase {
     required String childUserId,
     required String title,
   }) async => const Right([]);
+
+  @override
+  Future<Either<Failure, void>> removeChild(String childUserId) async =>
+      removeChildResult;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -277,6 +285,65 @@ void main() {
       );
 
       await cubit.acceptRemoteToken('talia-kids-link:test', surahId: 1);
+      await assertion;
+    });
+
+    test('remove child success emits childRemoved feedback', () async {
+      final cubit = ParentDashboardCubit(
+        _FakeGetDashboard(),
+        _FakeParentAccess(),
+        const _FakeRemoteLink(),
+      );
+      addTearDown(cubit.close);
+
+      await cubit.refresh(surahId: 1);
+      final assertion = expectLater(
+        cubit.stream,
+        emits(
+          isA<ParentDashboardLoaded>()
+              .having(
+                (s) => s.feedback?.type,
+                'feedback type',
+                ParentDashboardFeedbackType.childRemoved,
+              )
+              .having((s) => s.feedbackEventId, 'feedbackEventId', 1),
+        ),
+      );
+
+      await cubit.removeChild('child-1', surahId: 1);
+      await assertion;
+    });
+
+    test('remove child failure emits failure feedback', () async {
+      final cubit = ParentDashboardCubit(
+        _FakeGetDashboard(),
+        _FakeParentAccess(),
+        const _FakeRemoteLink(
+          removeChildResult: Left(CacheFailure('Unlink failed')),
+        ),
+      );
+      addTearDown(cubit.close);
+
+      await cubit.refresh(surahId: 1);
+      final assertion = expectLater(
+        cubit.stream,
+        emits(
+          isA<ParentDashboardLoaded>()
+              .having(
+                (s) => s.feedback?.type,
+                'feedback type',
+                ParentDashboardFeedbackType.failure,
+              )
+              .having(
+                (s) => s.feedback?.message,
+                'feedback message',
+                'Unlink failed',
+              )
+              .having((s) => s.feedbackEventId, 'feedbackEventId', 1),
+        ),
+      );
+
+      await cubit.removeChild('child-1', surahId: 1);
       await assertion;
     });
 

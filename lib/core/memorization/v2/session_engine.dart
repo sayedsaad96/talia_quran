@@ -24,22 +24,22 @@ final class V2SessionEngine {
 
   /// Transitions from [created] → [learning].
   V2SessionState startLearning(V2SessionState state) {
-    assert(state.phase == V2SessionPhase.created);
+    if (state.phase != V2SessionPhase.created) return state;
     return state.copyWith(phase: V2SessionPhase.learning);
   }
 
   /// Transitions from [learning] → [memorizing].
   V2SessionState startMemorizing(V2SessionState state) {
-    assert(state.phase == V2SessionPhase.learning);
+    if (state.phase != V2SessionPhase.learning) return state;
     return state.copyWith(phase: V2SessionPhase.memorizing);
   }
 
   /// Transitions from [memorizing] or [remediation] → [reciting].
   V2SessionState startReciting(V2SessionState state) {
-    assert(
-      state.phase == V2SessionPhase.memorizing ||
-          state.phase == V2SessionPhase.remediation,
-    );
+    if (state.phase != V2SessionPhase.memorizing &&
+        state.phase != V2SessionPhase.remediation) {
+      return state;
+    }
     return state.copyWith(
       phase: V2SessionPhase.reciting,
       clearLastResult: true,
@@ -48,7 +48,7 @@ final class V2SessionEngine {
 
   /// Transitions from [blockReviewPending] → [blockReview].
   V2SessionState startBlockReview(V2SessionState state) {
-    assert(state.phase == V2SessionPhase.blockReviewPending);
+    if (state.phase != V2SessionPhase.blockReviewPending) return state;
     return state.copyWith(
       phase: V2SessionPhase.blockReview,
       clearLastResult: true,
@@ -74,7 +74,7 @@ final class V2SessionEngine {
   /// On fail  → increments failure counter, transitions to remediation.
   /// No-attempt → returns state unchanged (STT returned empty).
   V2SessionState evaluateRecitation(V2SessionState state, String spokenText) {
-    assert(state.phase == V2SessionPhase.reciting);
+    if (state.phase != V2SessionPhase.reciting) return state;
 
     final result = _evaluator.evaluate(
       targetText: state.currentAyah.text,
@@ -100,7 +100,7 @@ final class V2SessionEngine {
   /// On pass  → transitions to [completed].
   /// On fail  → identifies weak ayahs, loops back for targeted remediation.
   V2SessionState evaluateBlockReview(V2SessionState state, String spokenText) {
-    assert(state.phase == V2SessionPhase.blockReview);
+    if (state.phase != V2SessionPhase.blockReview) return state;
 
     // Build expected text: all ayahs in block joined.
     final fullText = state.blockAyahs.map((a) => a.text).join(' ');
@@ -146,7 +146,7 @@ final class V2SessionEngine {
 
   /// Completes remediation and returns to memorizing for retry.
   V2SessionState completeRemediation(V2SessionState state) {
-    assert(state.phase == V2SessionPhase.remediation);
+    if (state.phase != V2SessionPhase.remediation) return state;
     return state.copyWith(
       phase: V2SessionPhase.memorizing,
       clearLastResult: true,

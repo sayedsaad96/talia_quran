@@ -75,26 +75,6 @@ void main() {
       expect(XpConstants.rewards['ayah_memorized'], equals(10));
     });
 
-    test('daily_review reward is 5 XP', () {
-      expect(XpConstants.rewards['daily_review'], equals(5));
-    });
-
-    test('unknown event key yields 0 (no reward)', () {
-      expect(XpConstants.rewards['unknown_key'], isNull);
-    });
-
-    test('juz_completed reward is 500 XP', () {
-      expect(XpConstants.rewards['juz_completed'], equals(500));
-    });
-
-    test('streak_7 reward is 100 XP', () {
-      expect(XpConstants.rewards['streak_7'], equals(100));
-    });
-
-    test('streak_30 reward is 500 XP', () {
-      expect(XpConstants.rewards['streak_30'], equals(500));
-    });
-
     // ─── Progress to next level ──────────────────────────────────────────────
 
     test('0/100 XP → 0% progress to طالب', () {

@@ -1,5 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/memorization/review_record_audience_scope.dart';
+import '../../../certificate/domain/entities/certificate_award.dart';
 import '../entities/memorization_entities.dart';
 
 abstract class MemorizationPlusRepository {
@@ -30,6 +32,8 @@ abstract class MemorizationPlusRepository {
   Future<Either<Failure, void>> saveSelectedTrack(MemorizationTrack track);
 
   // ─── Daily plan ─────────────────────────────────────────────────────────────
+  /// Builds today's plan. [getCachedDailyPlan] calls this automatically when
+  /// the cache is missing or from a previous UTC day.
   Future<Either<Failure, DailyPlan>> generateDailyPlan({
     required int surahId,
     required int newAyahsPerDay,
@@ -38,28 +42,24 @@ abstract class MemorizationPlusRepository {
   Future<Either<Failure, DailyPlan?>> getCachedDailyPlan();
   Future<Either<Failure, void>> saveDailyPlan(DailyPlan plan);
 
+  /// Marks [ayahNumber] complete in today's cached plan when it belongs to the
+  /// plan workload. No-op (returns [Right] false) when plan missing or ayah
+  /// not in plan.
+  Future<Either<Failure, bool>> markDailyPlanAyahCompleted({
+    required int surahId,
+    required int ayahNumber,
+  });
+
   // ─── Review records ─────────────────────────────────────────────────────────
   Future<Either<Failure, AyahReviewRecord?>> getReviewRecord(
     int surahId,
-    int ayahNumber,
-  );
-  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords();
+    int ayahNumber, {
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  });
+  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  });
   Future<Either<Failure, void>> saveReviewRecord(AyahReviewRecord record);
-
-  // ─── Evaluation ─────────────────────────────────────────────────────────────
-  Future<Either<Failure, AyahReviewRecord>> evaluateAyah({
-    required int surahId,
-    required int ayahNumber,
-    required PerformanceRating rating,
-    ReviewRecordCreatedByMode createdByMode =
-        ReviewRecordCreatedByMode.adultMemPlus,
-  });
-  Future<Either<Failure, AyahReviewRecord>> markAyahMemorized({
-    required int surahId,
-    required int ayahNumber,
-    ReviewRecordCreatedByMode createdByMode =
-        ReviewRecordCreatedByMode.kidsMode,
-  });
 
   // ─── Kids progress ──────────────────────────────────────────────────────────
   Future<Either<Failure, KidsProgress>> getKidsProgress();
@@ -106,4 +106,29 @@ abstract class MemorizationPlusRepository {
   // ─── Parent mode toggle ───────────────────────────────────────────────────
   Either<Failure, bool> getIsParentMode();
   Future<Either<Failure, void>> setIsParentMode(bool value);
+
+  // ─── Phase 7: Production sync (Parent Mode completion) ────────────────────
+  /// Full reconciliation push of all local production data (V2 SRS review
+  /// records + cached daily plan) to the cloud. Idempotent — safe to call
+  /// repeatedly (e.g. on login and app resume) as the self-healing mechanism
+  /// for anything a best-effort push missed while offline.
+  Future<Either<Failure, void>> resyncProductionDataToCloud();
+
+  /// Pulls production review rows (+ daily plan when newer) from cloud and
+  /// merges into local Isar using GREATEST / latest-timestamp rules.
+  /// No-op when [CloudSyncFeatureFlags.productionPullKey] is false.
+  Future<Either<Failure, void>> pullProductionDataFromCloud();
+
+  /// Best-effort push of newly-earned certificates to the cloud mirror.
+  Future<Either<Failure, void>> pushCertificatesToCloud(
+    List<CertificateAward> certificates,
+  );
+
+  /// Revokes the guardian ↔ child link with [counterpartUserId] server-side.
+  /// Callable by either side of the link (child unlinking a guardian, or a
+  /// guardian removing a child).
+  Future<Either<Failure, void>> revokeGuardianLink(String counterpartUserId);
+
+  /// Parent-initiated removal of a linked child.
+  Future<Either<Failure, void>> removeChild(String childUserId);
 }

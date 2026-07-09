@@ -3,6 +3,8 @@
 // V2 session orchestrator — owns the BlocProvider and the phase router.
 // All phase UI widgets live in the v2/ subdirectory.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -13,6 +15,7 @@ import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../cubits/memorization_session_cubit.dart';
 import 'v2/v2_block_review_page.dart';
 import 'v2/v2_completion_page.dart';
@@ -74,9 +77,19 @@ class _V2SessionView extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: BlocConsumer<MemorizationSessionCubit, MemorizationSessionState>(
+        listenWhen: (previous, current) {
+          if (current is MSError) return true;
+          return current is MSCompleted && previous is! MSCompleted;
+        },
         listener: (context, state) {
           if (state is MSError) {
             context.showSnackBar(state.message, isError: true);
+            return;
+          }
+          if (state is MSCompleted && state.awards.isNotEmpty) {
+            unawaited(
+              showCertificateCelebrationDialog(context, state.awards),
+            );
           }
         },
         builder: (context, state) {
@@ -105,9 +118,7 @@ class _V2SessionView extends StatelessWidget {
               state: state,
             ),
             V2SessionPhase.blockReview => V2BlockReviewPage(state: state),
-            V2SessionPhase.completed => V2CompletionPage(
-              finalState: state.sessionState,
-            ),
+            V2SessionPhase.completed => const Center(child: LoadingWidget()),
           };
         },
       ),

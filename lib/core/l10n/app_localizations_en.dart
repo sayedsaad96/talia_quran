@@ -897,6 +897,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get memorizedAyahs => 'Ayahs Memorized';
 
   @override
+  String get startedAyahsLabel => 'Ayahs Started';
+
+  @override
+  String get reviewedAyahsTotalLabel => 'Total Reviews';
+
+  @override
+  String get overdueReviewsLabel => 'Overdue Reviews';
+
+  @override
+  String get retentionRateLabel => 'Retention Rate';
+
+  @override
+  String get lastReviewLabel => 'Last review';
+
+  @override
+  String get lastMemorizedLabel => 'Last memorized';
+
+  @override
+  String get homeEngagementTitle => 'Your activity';
+
+  @override
+  String get homeWeeklyActivityLabel => 'This week';
+
+  @override
+  String get homeDueTodayLabel => 'Due today';
+
+  @override
+  String get homeXpLevelLabel => 'Level';
+
+  @override
+  String get homeActivityHeatmapTitle => 'Activity heatmap';
+
+  @override
   String get memorizedSurahsLabel => 'Surahs Memorized';
 
   @override
@@ -1959,6 +1992,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get kidsGamifiedRecordingInProgress => 'Recording...';
 
   @override
+  String get kidsGamifiedDoneRecording => 'Done Recording';
+
+  @override
   String get kidsGamifiedAudioUnavailable =>
       'Audio is unavailable right now. Please try again soon.';
 
@@ -2058,7 +2094,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingGoalAzkar => 'Azkar';
 
   @override
-  String get dailyPlanQuizAction => 'Review Quiz';
+  String get dailyPlanQuizAction => 'Review Session';
 
   @override
   String get dailyPlanNewAyahs => 'New ayahs to memorize';
@@ -2121,10 +2157,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyPlanListenBeforeRating => 'Listen to the ayah before rating';
 
   @override
-  String get reviewQuizTitle => 'Review Quiz';
+  String get reviewQuizTitle => 'Review Session';
 
   @override
-  String get quizExitTitle => 'Leave Review Quiz?';
+  String get quizExitTitle => 'Leave review session?';
+
+  @override
+  String get memorizationHubReviewSectionTitle => 'Review Session';
+
+  @override
+  String get memorizationHubReviewSectionSubtitle =>
+      'Review memorized ayahs through guided recitation (speech-to-text).';
+
+  @override
+  String get memorizationHubReviewCardDescription =>
+      'Open a V2 recitation session for ayahs you have already memorized.';
 
   @override
   String get quizExitMessage =>
@@ -2293,6 +2340,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String parentDashboardRemoteChildSummary(int ayahs, int points) {
     return '$ayahs ayahs • $points points';
   }
+
+  @override
+  String parentDashboardMemorizedSummary(
+    int memorized,
+    int total,
+    int percent,
+  ) {
+    return '$memorized/$total ayahs memorized • $percent%';
+  }
+
+  @override
+  String parentDashboardReviewsSummary(int completed, int overdue) {
+    return '$completed reviews completed • $overdue overdue';
+  }
+
+  @override
+  String parentDashboardStreakSummary(int days) {
+    return 'Streak: $days days';
+  }
+
+  @override
+  String parentDashboardCertificatesSummary(int count) {
+    return '$count certificates earned';
+  }
+
+  @override
+  String get parentDashboardRemoveChild => 'Remove child';
+
+  @override
+  String get parentDashboardRemoveChildConfirmTitle => 'Remove child?';
+
+  @override
+  String parentDashboardRemoveChildConfirmBody(String name) {
+    return 'This will unlink $name from your account. You can link again later with a new code.';
+  }
+
+  @override
+  String get parentDashboardChildRemoved => 'Child removed';
 
   @override
   String get parentDashboardRewardsTitle => 'Parent rewards';
@@ -2957,13 +3042,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationDailyAyahBody =>
       'Read your daily Wird from the Holy Quran';
-
-  @override
-  String get notificationSmartReminderTitle => 'Wird Time! ⏳';
-
-  @override
-  String get notificationSmartReminderBody =>
-      'You haven\'t read your Wird today! Take a few minutes for the Quran now.';
 
   @override
   String get notificationMorningAzkarTitle => 'Morning Azkar ☀️';

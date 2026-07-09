@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:dartz/dartz.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
@@ -185,7 +186,9 @@ class _ChildOnboardingRepository implements MemorizationPlusRepository {
       const Right(null);
 
   @override
-  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords() async =>
+  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  }) async =>
       const Right([]);
 
   @override

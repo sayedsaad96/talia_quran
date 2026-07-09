@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_ayah_card.dart';
+import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
 void main() {
   group('KidsGamifiedListenPage', () {
@@ -26,6 +28,7 @@ void main() {
             onBack: () {},
             onPlayPause: () => played = true,
             onRecordRecitation: () => recorded = true,
+            onStopRecording: () {},
           ),
         ),
       );
@@ -63,6 +66,7 @@ void main() {
             onBack: () {},
             onPlayPause: () {},
             onRecordRecitation: () => recorded = true,
+            onStopRecording: () {},
           ),
         ),
       );
@@ -91,6 +95,7 @@ void main() {
             onBack: () {},
             onPlayPause: () {},
             onRecordRecitation: () {},
+            onStopRecording: () {},
           ),
         ),
       );
@@ -118,6 +123,7 @@ void main() {
               onBack: () {},
               onPlayPause: () {},
               onRecordRecitation: () {},
+            onStopRecording: () {},
             ),
           ),
         );
@@ -139,6 +145,7 @@ void main() {
             onBack: () {},
             onPlayPause: () {},
             onRecordRecitation: () {},
+            onStopRecording: () {},
           ),
         ),
       );
@@ -158,6 +165,7 @@ void main() {
 
       var played = false;
       var recorded = false;
+      var stopped = false;
 
       await tester.pumpWidget(
         _TestApp(
@@ -166,12 +174,14 @@ void main() {
             onBack: () {},
             onPlayPause: () => played = true,
             onRecordRecitation: () => recorded = true,
+            onStopRecording: () => stopped = true,
           ),
         ),
       );
 
-      // While recording, the mic button label changes
+      // While recording, the panel appears with 'Recording...'
       expect(find.text('Recording...'), findsOneWidget);
+      expect(find.byKey(const ValueKey('recording-panel')), findsOneWidget);
 
       // Tapping the disabled play button should NOT fire callback
       await tester.tap(
@@ -181,13 +191,13 @@ void main() {
       await tester.pump();
       expect(played, isFalse);
 
-      // Tapping the mic button (now in recording state — disabled) should NOT fire
+      // Tapping the stop button should fire onStopRecording
       await tester.tap(
-        find.byKey(const ValueKey('kids-gamified-record-recitation-recording')),
-        warnIfMissed: false,
+        find.byKey(const ValueKey('kids-gamified-stop-recording')),
       );
       await tester.pump();
-      expect(recorded, isFalse);
+      expect(recorded, isFalse); // start recording was not called
+      expect(stopped, isTrue); // stop recording was called
     });
 
     testWidgets('isCompleted=true disables mic button', (tester) async {
@@ -204,6 +214,7 @@ void main() {
             onBack: () {},
             onPlayPause: () {},
             onRecordRecitation: () => recorded = true,
+            onStopRecording: () {},
           ),
         ),
       );
@@ -231,6 +242,7 @@ void main() {
             onBack: () => backCalled = true,
             onPlayPause: () {},
             onRecordRecitation: () {},
+            onStopRecording: () {},
           ),
         ),
       );
@@ -252,6 +264,7 @@ void main() {
             onBack: () {},
             onPlayPause: () {},
             onRecordRecitation: () {},
+            onStopRecording: () {},
           ),
         ),
       );
@@ -280,11 +293,12 @@ void main() {
   });
 }
 
-const _baseState = KidsModeLoaded(
+final _baseState = KidsModeLoaded(
   surahId: 114,
   ayahNumber: 3,
   ayahText: 'Test ayah text',
-  progress: KidsProgress(
+  sessionState: _testSessionState(),
+  progress: const KidsProgress(
     totalPoints: 150,
     currentLevel: 2,
     currentStreak: 3,
@@ -297,6 +311,21 @@ const _baseState = KidsModeLoaded(
   maxLoops: 3,
   isCompleted: false,
 );
+
+V2SessionState _testSessionState() {
+  return V2SessionState.initial(
+    surahId: 114,
+    blockAyahs: const [
+      Ayah(
+        number: 6234,
+        surahId: 114,
+        text: 'Test ayah text',
+        numberInSurah: 3,
+      ),
+    ],
+    blockReviewRequired: false,
+  );
+}
 
 class _TestApp extends StatelessWidget {
   const _TestApp({required this.child});

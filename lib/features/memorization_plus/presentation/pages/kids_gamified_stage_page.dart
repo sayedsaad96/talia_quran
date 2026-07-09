@@ -6,7 +6,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
-import '../navigation/memorization_navigation_resolver.dart';
+import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_stage_details.dart';
 

@@ -17,7 +17,7 @@
 //   AyahProgress.lastReviewDate     → AyahReviewRecord.lastReviewedAt    ✅
 //   AyahProgress.status             → AyahReviewRecord.strengthLevel     (mapped)
 //   —                               → AyahReviewRecord.intervalDays      (derived)
-//   —                               → AyahReviewRecord.createdByMode     = migration
+//   —                               → AyahReviewRecord.createdByMode     = hifz
 //   —                               → AyahReviewRecord.lastRating        = null
 
 import 'dart:convert';
@@ -47,34 +47,62 @@ final class HifzMigrationService {
   final SharedPreferences _prefs;
 
   static const String _migrationKey = 'hifz_v2_migration_done_v1';
+  static const String _repairKey = 'hifz_migration_repair_v1';
+  static const String _migratedKeysKey = 'hifz_migration_migrated_keys_v1';
   static const String _backupFileName = 'hifz_migration_backup.json';
 
   /// Returns true if the migration has already been completed.
   bool get isMigrationDone => _prefs.getBool(_migrationKey) ?? false;
 
-  /// Runs the migration if it has not already been done.
-  ///
-  /// Safe to call at every app start — it is a no-op if already done.
-  Future<void> runIfNeeded() async {
-    if (isMigrationDone) return;
+  /// Returns true if the one-time repair pass has already completed.
+  bool get isRepairDone => _prefs.getBool(_repairKey) ?? false;
 
-    TaliaLogger.i('HifzMigration: Starting one-time migration...');
+  /// Runs the migration if it has not already been done, then the repair pass.
+  ///
+  /// Safe to call at every app start — both steps are no-ops when already done.
+  Future<void> runIfNeeded() async {
+    if (!isMigrationDone) {
+      TaliaLogger.i('HifzMigration: Starting one-time migration...');
+      try {
+        await _run();
+        await _prefs.setBool(_migrationKey, true);
+        TaliaLogger.i('HifzMigration: Completed successfully.');
+      } catch (e, stack) {
+        TaliaLogger.e(
+          'HifzMigration: Failed — will retry on next launch.',
+          e,
+          stack,
+        );
+        return;
+      }
+    }
+
+    await runRepairIfNeeded();
+  }
+
+  /// Repairs legacy imports that were incorrectly tagged as [v2Session].
+  ///
+  /// Uses the explicit migrated-key list when available; otherwise falls back
+  /// to a conservative heuristic (`v2Session`, `lastRating == null`,
+  /// `totalReviews > 0`) for installs migrated before key tracking existed.
+  Future<void> runRepairIfNeeded() async {
+    if (isRepairDone) return;
+
+    TaliaLogger.i('HifzMigration: Starting one-time repair pass...');
     try {
-      await _run();
-      await _prefs.setBool(_migrationKey, true);
-      TaliaLogger.i('HifzMigration: Completed successfully.');
+      await _runRepair();
+      await _prefs.setBool(_repairKey, true);
+      TaliaLogger.i('HifzMigration: Repair pass completed.');
     } catch (e, stack) {
-      // Never crash the app due to migration failure.
-      // The flag is NOT set so it will be retried on next launch.
-      TaliaLogger.e('HifzMigration: Failed — will retry on next launch.', e,
-          stack);
+      TaliaLogger.e(
+        'HifzMigration: Repair failed — will retry on next launch.',
+        e,
+        stack,
+      );
     }
   }
 
   Future<void> _run() async {
-    // 1. Load all legacy Hifz progress records via per-surah queries.
-    // HifzRepository has no getAllProgress — we use getDueReviews() + getAllSurahProgress()
-    // to discover which surahs have data, then load per-surah.
     final allProgress = <AyahProgress>[];
 
     final surahProgressResult = await _hifzRepo.getAllSurahProgress();
@@ -99,18 +127,17 @@ final class HifzMigrationService {
     }
 
     TaliaLogger.i(
-        'HifzMigration: Found ${allProgress.length} records to migrate.');
+      'HifzMigration: Found ${allProgress.length} records to migrate.',
+    );
 
-    // 2. Write backup JSON before touching anything.
     await _writeBackup(allProgress);
 
-    // 3. For each AyahProgress, create a matching AyahReviewRecord if none exists.
-    int migrated = 0;
-    int skipped = 0;
+    final migratedKeys = <String>[];
+    var migrated = 0;
+    var skipped = 0;
 
     for (final progress in allProgress) {
       try {
-        // Check if a record already exists to avoid duplication.
         final existingResult = await _memPlusRepo.getReviewRecord(
           progress.surahId,
           progress.ayahNumber,
@@ -126,9 +153,9 @@ final class HifzMigrationService {
           continue;
         }
 
-        // Map AyahProgress → AyahReviewRecord.
         final record = _toReviewRecord(progress);
         await _memPlusRepo.saveReviewRecord(record);
+        migratedKeys.add(record.key);
         migrated++;
       } catch (e, stack) {
         TaliaLogger.w(
@@ -140,12 +167,44 @@ final class HifzMigrationService {
       }
     }
 
+    if (migratedKeys.isNotEmpty) {
+      await _prefs.setStringList(_migratedKeysKey, migratedKeys);
+    }
+
     TaliaLogger.i(
       'HifzMigration: $migrated migrated, $skipped already existed.',
     );
   }
 
-  /// Maps an [AyahProgress] (legacy Hifz) to an [AyahReviewRecord] (V2/MemPlus).
+  Future<void> _runRepair() async {
+    final recordsResult = await _memPlusRepo.getAllReviewRecords();
+    final records = recordsResult.fold((_) => <AyahReviewRecord>[], (r) => r);
+    if (records.isEmpty) return;
+
+    final explicitKeys = _prefs.getStringList(_migratedKeysKey)?.toSet() ?? {};
+    final useExplicitKeys = explicitKeys.isNotEmpty;
+
+    var repaired = 0;
+    for (final record in records) {
+      if (!_shouldRepairRecord(
+        record,
+        explicitKeys,
+        useExplicitKeys: useExplicitKeys,
+      )) {
+        continue;
+      }
+
+      final fixed = _repairRecord(record);
+      if (fixed == record) continue;
+
+      await _memPlusRepo.saveReviewRecord(fixed);
+      repaired++;
+    }
+
+    TaliaLogger.i('HifzMigration: Repaired $repaired review records.');
+  }
+
+  /// Maps an [AyahProgress] (legacy Hifz) to an [AyahReviewRecord].
   AyahReviewRecord _toReviewRecord(AyahProgress progress) {
     return AyahReviewRecord(
       surahId: progress.surahId,
@@ -155,30 +214,62 @@ final class HifzMigrationService {
       nextReviewDate: progress.nextReviewDate,
       lastReviewedAt: progress.lastReviewDate,
       totalReviews: progress.repetitions,
-      lastRating: null, // No rating data in legacy Hifz
-      createdByMode: ReviewRecordCreatedByMode.migration,
+      lastRating: null,
+      createdByMode: ReviewRecordCreatedByMode.hifz,
     );
   }
 
-  /// Maps legacy [AyahStatus] to V2 strength level (0-6).
+  /// Maps legacy [AyahStatus] to SRS strength level (0-6).
   ///
   /// Mapping rationale:
   ///   notStarted → 0 (never reviewed)
   ///   learning   → 1 (early stage)
   ///   review     → 3 (mid stage — confirmed known but needs review)
-  ///   memorized  → 5 (strong — close to fully memorized)
+  ///   memorized  → 6 (fully memorized — matches [ReviewRecordFilters.isMemorized])
   int _statusToStrengthLevel(AyahStatus status) {
     return switch (status) {
       AyahStatus.notStarted => 0,
       AyahStatus.learning => 1,
       AyahStatus.review => 3,
-      AyahStatus.memorized => 5,
+      AyahStatus.memorized => 6,
     };
   }
 
-  /// Derives a reasonable SM-2 interval from the repetition count.
-  ///
-  /// Uses the classic SM-2 approximate intervals: 1, 3, 7, 14, 30, 60...
+  bool _shouldRepairRecord(
+    AyahReviewRecord record,
+    Set<String> explicitKeys, {
+    required bool useExplicitKeys,
+  }) {
+    if (record.createdByMode == ReviewRecordCreatedByMode.hifz) {
+      return record.strengthLevel == 5 && record.lastRating == null;
+    }
+
+    if (record.createdByMode != ReviewRecordCreatedByMode.v2Session) {
+      return false;
+    }
+
+    if (useExplicitKeys) {
+      return explicitKeys.contains(record.key);
+    }
+
+    return record.lastRating == null && record.totalReviews > 0;
+  }
+
+  AyahReviewRecord _repairRecord(AyahReviewRecord record) {
+    final needsTag = record.createdByMode == ReviewRecordCreatedByMode.v2Session;
+    final needsStrengthLift =
+        record.strengthLevel == 5 && record.lastRating == null;
+
+    if (!needsTag && !needsStrengthLift) return record;
+
+    return record.copyWith(
+      createdByMode: needsTag
+          ? ReviewRecordCreatedByMode.hifz
+          : record.createdByMode,
+      strengthLevel: needsStrengthLift ? 6 : record.strengthLevel,
+    );
+  }
+
   int _repetitionsToIntervalDays(int repetitions) {
     const intervals = [1, 3, 7, 14, 30, 60, 120];
     if (repetitions <= 0) return 1;
@@ -186,9 +277,6 @@ final class HifzMigrationService {
     return intervals[index];
   }
 
-  /// Writes a JSON backup of all source records to app storage.
-  ///
-  /// The backup is kept indefinitely and can be used for rollback by support.
   Future<void> _writeBackup(List<AyahProgress> records) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
@@ -207,11 +295,10 @@ final class HifzMigrationService {
           .toList();
       await file.writeAsString(jsonEncode(json));
       TaliaLogger.i(
-          'HifzMigration: Backup written to ${file.path} (${records.length} records).');
+        'HifzMigration: Backup written to ${file.path} (${records.length} records).',
+      );
     } catch (e, stack) {
-      // Backup failure is non-fatal — log and continue.
-      TaliaLogger.w('HifzMigration: Backup write failed (non-fatal).', e,
-          stack);
+      TaliaLogger.w('HifzMigration: Backup write failed (non-fatal).', e, stack);
     }
   }
 }

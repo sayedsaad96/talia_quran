@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:percent_indicator/percent_indicator.dart';
 import 'package:share_plus/share_plus.dart';
@@ -12,6 +13,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/services/achievement_service.dart';
+import '../../../../core/progress/progress_changed_reason.dart';
+import '../../../../core/progress/progress_events_bus.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../domain/entities/progress_entities.dart';
 import '../cubits/progress_cubit.dart';
@@ -314,6 +317,12 @@ class _ProgressContentState extends State<_ProgressContent>
                       color: AppColors.primary,
                     ),
                     _DetailRow(
+                      label: context.l10n.startedAyahsLabel,
+                      current: p.startedAyahs,
+                      total: p.totalAyahs,
+                      color: AppColors.warning,
+                    ),
+                    _DetailRow(
                       label: context.l10n.memorizedSurahsLabel,
                       current: p.memorizedSurahs,
                       total: p.totalSurahs,
@@ -339,16 +348,54 @@ class _ProgressContentState extends State<_ProgressContent>
                       color: AppColors.info,
                       isDark: isDark,
                     ),
+                    if (p.overdueReviews > 0)
+                      _InfoChip(
+                        label: context.l10n.overdueReviewsLabel,
+                        value: '${p.overdueReviews}',
+                        color: AppColors.error,
+                        isDark: isDark,
+                      ),
+                    if (p.reviewedAyahsTotal > 0)
+                      _InfoChip(
+                        label: context.l10n.reviewedAyahsTotalLabel,
+                        value: '${p.reviewedAyahsTotal}',
+                        color: AppColors.primary,
+                        isDark: isDark,
+                      ),
+                    if (p.startedAyahs > 0)
+                      _InfoChip(
+                        label: context.l10n.retentionRateLabel,
+                        value:
+                            '${(p.retentionRate * 100).toStringAsFixed(0)}%',
+                        color: const Color(0xFF2D8E4C),
+                        isDark: isDark,
+                      ),
+                    if (p.lastReviewedAt case final reviewedAt?)
+                      _InfoChip(
+                        label: context.l10n.lastReviewLabel,
+                        value: MaterialLocalizations.of(context)
+                            .formatShortDate(reviewedAt.toLocal()),
+                        color: AppColors.gold,
+                        isDark: isDark,
+                      ),
+                    if (p.lastMemorizedSurahId != null &&
+                        p.lastMemorizedAyahNumber != null)
+                      _InfoChip(
+                        label: context.l10n.lastMemorizedLabel,
+                        value: context.l10n.surahAyahFormat(
+                          context.localizedSurahName(p.lastMemorizedSurahId!),
+                          p.lastMemorizedAyahNumber!,
+                        ),
+                        color: AppColors.primary,
+                        isDark: isDark,
+                      ),
                   ],
                 ),
 
               const SizedBox(height: AppSpacing.sectionGap),
 
-              // ─── Smart Memorization Progress Section ─────────
-              if (!isKids &&
-                  (p.smartMemorizedAyahs > 0 ||
-                      p.smartReviewAyahs > 0 ||
-                      p.kidsPoints > 0)) ...[
+              // ─── Kids track stats (when points exist on adult profile) ─────
+              if (!isKids && p.kidsPoints > 0) ...[
                 SectionHeader(
                   title: context.l10n.smartMemorization,
                   padding: EdgeInsets.zero,

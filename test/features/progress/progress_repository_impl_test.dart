@@ -1,10 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/core/services/streak_reader.dart';
-import 'package:talia_quran/features/hifz/data/datasources/hifz_local_datasource.dart';
-import 'package:talia_quran/features/hifz/data/models/ayah_progress_model.dart';
-import 'package:talia_quran/features/hifz/domain/entities/hifz_entities.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/progress/data/datasources/progress_local_datasource.dart';
 import 'package:talia_quran/features/progress/data/repositories/progress_repository_impl.dart';
 import 'package:talia_quran/features/quran/data/datasources/quran_local_datasource.dart';
@@ -15,39 +15,18 @@ import 'package:talia_quran/features/streak/domain/entities/streak_entity.dart';
 void main() {
   group('ProgressRepositoryImpl', () {
     test(
-      'counts a surah as memorized only when all ayahs are memorized',
+      'counts a surah as memorized only when all ayahs reach strength >= 6',
       () async {
         final repository = ProgressRepositoryImpl(
           _FakeProgressDatasource(),
-          _FakeHifzDatasource([
-            AyahProgressModel(
-              surahId: 1,
-              ayahNumber: 1,
-              status: AyahStatus.memorized,
-              repetitions: 5,
-              nextReviewDate: DateTime(2026, 5, 5),
-              lastReviewDate: DateTime(2026, 5, 5),
-            ),
-            AyahProgressModel(
-              surahId: 2,
-              ayahNumber: 1,
-              status: AyahStatus.memorized,
-              repetitions: 5,
-              nextReviewDate: DateTime(2026, 5, 5),
-              lastReviewDate: DateTime(2026, 5, 5),
-            ),
-            AyahProgressModel(
-              surahId: 2,
-              ayahNumber: 2,
-              status: AyahStatus.memorized,
-              repetitions: 5,
-              nextReviewDate: DateTime(2026, 5, 5),
-              lastReviewDate: DateTime(2026, 5, 5),
-            ),
+          _FakeMemPlusDatasource([
+            _reviewRecord(1, 1),
+            _reviewRecord(2, 1),
+            _reviewRecord(2, 2),
           ]),
-          _FakeMemPlusDatasource(),
           _FakeQuranDatasource(),
           const _FakeStreakReader(),
+          ProgressEventsBus(),
         );
 
         final result = await repository.getOverallProgress();
@@ -62,10 +41,10 @@ void main() {
       () async {
         final repository = ProgressRepositoryImpl(
           _FakeProgressDatasource(readPages: const [1, 2]),
-          _FakeHifzDatasource(const []),
           _FakeMemPlusDatasource(),
           _FakeQuranDatasource(),
           const _FakeStreakReader(),
+          ProgressEventsBus(),
         );
 
         final result = await repository.getOverallProgress();
@@ -81,13 +60,13 @@ void main() {
       final progressDatasource = _FakeProgressDatasource();
       final repository = ProgressRepositoryImpl(
         progressDatasource,
-        _FakeHifzDatasource(const []),
         _FakeMemPlusDatasource(),
         _FakeQuranDatasource(),
         _FakeStreakReader(
           currentStreak: 7,
           lastActivityDate: DateTime.utc(2026, 5, 6),
         ),
+        ProgressEventsBus(),
       );
 
       final result = await repository.getOverallProgress();
@@ -96,6 +75,36 @@ void main() {
       expect(progress.streakDays, 7);
       expect(progress.lastActiveDate, DateTime.utc(2026, 5, 6));
       expect(progressDatasource.saveReadPageCalls, 0);
+    });
+
+    test('two-tier metrics: started vs memorized are disjoint', () async {
+      final repository = ProgressRepositoryImpl(
+        _FakeProgressDatasource(),
+        _FakeMemPlusDatasource([
+          _reviewRecord(1, 1), // strength 6 — memorized
+          AyahReviewRecordModel(
+            surahId: 1,
+            ayahNumber: 2,
+            strengthLevel: 3,
+            intervalDays: 7,
+            lastReviewedAt: DateTime(2026, 5, 5),
+            nextReviewDate: DateTime(2026, 5, 12),
+            totalReviews: 2,
+            lastRating: PerformanceRating.average,
+            createdByMode: ReviewRecordCreatedByMode.v2Session,
+          ),
+        ]),
+        _FakeQuranDatasource(),
+        const _FakeStreakReader(),
+        ProgressEventsBus(),
+      );
+
+      final result = await repository.getOverallProgress();
+      final progress = result.getOrElse(() => throw StateError('failed'));
+
+      expect(progress.startedAyahs, 2);
+      expect(progress.memorizedAyahs, 1);
+      expect(progress.learningAyahs, 1);
     });
   });
 }
@@ -128,47 +137,26 @@ class _FakeProgressDatasource implements ProgressLocalDatasource {
   }
 }
 
-class _FakeHifzDatasource implements HifzLocalDatasource {
-  _FakeHifzDatasource(this.progress);
-  final List<AyahProgressModel> progress;
-
-  @override
-  Future<List<AyahProgressModel>> getAllProgress() async => progress;
-
-  @override
-  Future<AyahProgressModel?> getAyahProgress(
-    int surahId,
-    int ayahNumber,
-  ) async {
-    for (final item in progress) {
-      if (item.surahId == surahId && item.ayahNumber == ayahNumber) {
-        return item;
-      }
-    }
-    return null;
-  }
-
-  @override
-  String? getHifzPath() => null;
-
-  @override
-  Future<Set<String>> getPassedCheckpointKeys(int surahId) async => {};
-
-  @override
-  Future<void> markCheckpointPassed(String checkpointKey) async {}
-
-  @override
-  Future<List<AyahProgressModel>> getProgressForSurah(int surahId) async =>
-      progress.where((p) => p.surahId == surahId).toList();
-
-  @override
-  Future<void> saveAyahProgress(AyahProgressModel progress) async {}
-
-  @override
-  Future<void> saveHifzPath(String path) async {}
+AyahReviewRecordModel _reviewRecord(int surahId, int ayahNumber) {
+  final now = DateTime(2026, 5, 5);
+  return AyahReviewRecordModel(
+    surahId: surahId,
+    ayahNumber: ayahNumber,
+    strengthLevel: 6,
+    intervalDays: 30,
+    lastReviewedAt: now,
+    nextReviewDate: now.add(const Duration(days: 30)),
+    totalReviews: 1,
+    lastRating: PerformanceRating.excellent,
+    createdByMode: ReviewRecordCreatedByMode.v2Session,
+  );
 }
 
 class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
+  _FakeMemPlusDatasource([this.records = const []]);
+
+  final List<AyahReviewRecordModel> records;
+
   @override
   Future<MemorizationProfileModel> getMemorizationProfile() async =>
       MemorizationProfileModel.empty();
@@ -194,10 +182,16 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   Future<void> migrateReviewRecordsToIsarIfNeeded() async {}
 
   @override
+  Future<void> migrateAudienceScopedReviewKeysIfNeeded() async {}
+
+  @override
   Future<void> deleteCustomPlan() async {}
 
   @override
-  Future<List<AyahReviewRecordModel>> getAllReviewRecords() async => const [];
+  Future<List<AyahReviewRecordModel>> getAllReviewRecords({
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+    bool includeAllAudiences = false,
+  }) async => records;
 
   @override
   Future<DailyPlanModel?> getCachedDailyPlan() async => null;
@@ -212,8 +206,9 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   @override
   Future<AyahReviewRecordModel?> getReviewRecord(
     int surahId,
-    int ayahNumber,
-  ) async => null;
+    int ayahNumber, {
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  }) async => null;
 
   @override
   String? getSelectedTrack() => null;

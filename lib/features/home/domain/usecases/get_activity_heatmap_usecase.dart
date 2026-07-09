@@ -14,8 +14,7 @@ class ActivityHeatmapData {
   final DateTime startDate;
 }
 
-/// Aggregates Hifz review dates and daily activity records into a single
-/// heatmap data object.
+/// Reads daily activity records into a heatmap data object.
 ///
 /// Keeping this logic out of the cubit removes the direct Isar dependency
 /// from the presentation layer and makes the aggregation unit-testable.

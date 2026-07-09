@@ -35,6 +35,14 @@ void main() {
     expect(service.getLastRestorableLocation(), isNull);
   });
 
+  test('does not restore kids listen route until persistence exists', () async {
+    await service.saveLocation(
+      '/memorization-plus/kids?surahId=114&ayahNumber=1',
+    );
+
+    expect(service.getLastRestorableLocation(), isNull);
+  });
+
   test(
     'restores memorization routes when required query data exists',
     () async {

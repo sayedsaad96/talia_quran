@@ -1,6 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-import '../../features/hifz/domain/entities/hifz_entities.dart';
 import '../../features/memorization_plus/domain/entities/memorization_entities.dart';
 
 /// Read-only aggregate of memorization state across existing stores.
@@ -20,8 +19,6 @@ class MemorizationSnapshot extends Equatable {
     this.reviewRecords = const [],
     this.cachedDailyPlan,
     this.customPlan,
-    this.hifzDueReviews = const [],
-    this.hifzSurahProgress = const [],
     this.kidsProgress,
     this.kidsSessionLogs = const [],
   });
@@ -41,12 +38,6 @@ class MemorizationSnapshot extends Equatable {
   /// Active custom plan configuration, if any.
   final CustomMemorizationPlan? customPlan;
 
-  /// Legacy Hifz ayahs currently due for review (Isar `AyahProgress`).
-  final List<AyahProgress> hifzDueReviews;
-
-  /// Legacy Hifz surah-level aggregates.
-  final List<SurahHifzProgress> hifzSurahProgress;
-
   /// Kids gamification progress (SharedPrefs). Null when read fails.
   final KidsProgress? kidsProgress;
 
@@ -60,8 +51,6 @@ class MemorizationSnapshot extends Equatable {
     reviewRecords,
     cachedDailyPlan,
     customPlan,
-    hifzDueReviews,
-    hifzSurahProgress,
     kidsProgress,
     kidsSessionLogs,
   ];

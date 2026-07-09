@@ -13,7 +13,7 @@ import '../../features/memorization_plus/domain/entities/memorization_entities.d
 /// |---------------|--------------------------------------------------------------|
 /// | adultMemPlus  | Written by adult Daily Plan or adult Quiz.  Fully trusted.  |
 /// | kidsMode      | Written by Kids Mode completion.  Excluded from adult SRS.  |
-/// | hifz          | Reserved for future Hifz SRS. Not yet used in adult MemPlus.|
+/// | hifz          | Repaired legacy Hifz imports. Adult-compatible.              |
 /// | migration     | Migrated from SharedPreferences. Origin unknown. Kept for   |
 /// |               | backward compatibility but not treated as trusted adult.    |
 /// | unknown       | Pre-Sprint 7B records. Kept for backward compatibility.     |
@@ -43,15 +43,8 @@ import '../../features/memorization_plus/domain/entities/memorization_entities.d
 ///
 /// ## Policy decisions NOT made here
 ///
-/// * **AchievementService** — Sprint 9B policy decision:
-///   `AchievementService` intentionally does not use adult-compatible source
-///   filtering. Certificates are shared/device-wide achievements. All
-///   memorized sources may contribute: `adultMemPlus`, `kidsMode`,
-///   `hifz`/Hifz progress, `migration`, and `unknown` legacy records.
-///   Do not apply `ReviewRecordFilters` to `AchievementService` unless the
-///   product policy changes.
-/// * **Daily Plan near/far** — already safe because kidsMode records are
-///   `isMemorized`, which near/far classification excludes. No filter needed.
+/// * **AchievementService / certificates** — use [isCertificateEligibleSource]
+///   (`v2Session`, `hifz`, and `kidsMode`).
 /// * **NavigationResolver** — low-consequence fallback. Not filtered yet.
 class ReviewRecordFilters {
   // Non-instantiable — pure static helpers.
@@ -74,8 +67,8 @@ class ReviewRecordFilters {
   /// - [ReviewRecordCreatedByMode.migration] — migrated from SharedPreferences;
   ///   original write path is permanently lost.
   ///
-  /// Ambiguous records are included in adult consumers for backward
-  /// compatibility.  See [isAdultCompatible].
+  /// Ambiguous records are excluded from adult production consumers via
+  /// [isAdultProductionCount].
   static bool isAmbiguousSource(AyahReviewRecord record) =>
       record.createdByMode == ReviewRecordCreatedByMode.unknown ||
       record.createdByMode == ReviewRecordCreatedByMode.migration;
@@ -96,61 +89,67 @@ class ReviewRecordFilters {
 
   // ── Adult consumer policies ───────────────────────────────────────────────
 
+  /// Source policy for adult production records (`v2Session` and repaired `hifz`).
+  ///
+  /// Used by Progress counting, Smart Coach, Daily Plan, Quiz, and retention
+  /// diagnostics. Excludes `kidsMode` so adult surfaces never mix child data.
+  static bool isAdultProductionCount(AyahReviewRecord record) =>
+      record.createdByMode == ReviewRecordCreatedByMode.v2Session ||
+      record.createdByMode == ReviewRecordCreatedByMode.hifz;
+
   /// Returns `true` when the record is appropriate for adult MemPlus SRS
-  /// consumers (Smart Coach, Quiz, Progress smart stats).
+  /// consumers (Smart Coach, Quiz, Daily Plan near/far, Progress smart stats).
   ///
-  /// Included:
-  /// - [ReviewRecordCreatedByMode.adultMemPlus] — trusted adult source.
-  /// - [ReviewRecordCreatedByMode.unknown] — backward compatibility.
-  /// - [ReviewRecordCreatedByMode.migration] — backward compatibility.
-  ///
-  /// Excluded:
-  /// - [ReviewRecordCreatedByMode.kidsMode] — kids source; must not influence
-  ///   adult recommendations or statistics.
-  /// - [ReviewRecordCreatedByMode.hifz] — reserved for a separate Hifz SRS
-  ///   surface; not part of adult MemPlus until explicitly designed.
+  /// Alias of [isAdultProductionCount] — adult V2 and repaired legacy Hifz only.
   static bool isAdultCompatible(AyahReviewRecord record) =>
-      record.createdByMode != ReviewRecordCreatedByMode.kidsMode &&
-      record.createdByMode != ReviewRecordCreatedByMode.hifz;
+      isAdultProductionCount(record);
 
   /// Returns `true` when the record is appropriate for adult retention review
   /// consumers.
   ///
-  /// For Sprint 8B this is identical to [isAdultCompatible].  The separate
-  /// predicate exists so that a future sprint can tighten the retention policy
-  /// independently (e.g., excluding `migration` once enough data has
-  /// self-healed) without touching the broader compatibility predicate.
+  /// Identical to [isAdultCompatible]. The separate predicate exists so a
+  /// future sprint can tighten retention independently if needed.
   static bool isAdultRetentionCompatible(AyahReviewRecord record) =>
-      record.createdByMode != ReviewRecordCreatedByMode.kidsMode &&
-      record.createdByMode != ReviewRecordCreatedByMode.hifz;
+      isAdultProductionCount(record);
 
   /// Returns `true` when the record is eligible for the Daily Plan retention
   /// bucket (Sprint 10B).
   ///
-  /// Stricter than [isAdultCompatible]: only fully trusted adult MemPlus
-  /// memorized-due records. Excludes `unknown`, `migration`, `kidsMode`, and
-  /// `hifz`.
-  ///
-  /// Sprint 4.5: [ReviewRecordCreatedByMode.v2Session] is now included so
-  /// that V2 adult memorization records appear in retention review — keeping
-  /// Daily Plan consistent with Smart Coach, Progress, and AchievementService,
-  /// which already treat `v2Session` as adult-compatible. The record must
-  /// still be `isMemorizedDue`.
+  /// Requires an adult production source ([isAdultProductionCount]) and
+  /// [ReviewClassification.isMemorizedDue].
   static bool isDailyPlanRetentionEligible(AyahReviewRecord record) {
-    // Source allowlist — explicit positive list, not a negative filter, so
-    // any future mode defaults to excluded (fail-closed).
-    switch (record.createdByMode) {
-      case ReviewRecordCreatedByMode.adultMemPlus:
-      case ReviewRecordCreatedByMode.v2Session:
-        break;
-      case ReviewRecordCreatedByMode.kidsMode:
-      case ReviewRecordCreatedByMode.hifz:
-      case ReviewRecordCreatedByMode.migration:
-      case ReviewRecordCreatedByMode.unknown:
-        return false;
-    }
-    return record.reviewClassification.isMemorizedDue;
+    return isAdultProductionCount(record) &&
+        record.reviewClassification.isMemorizedDue;
   }
+
+  // ── Metric predicates (Phase 0 — shared counting vocabulary) ───────────────
+  //
+  // These are time-independent classification helpers used by the unified
+  // [ProgressMetricsService] and every counting consumer (Progress, Home,
+  // AchievementService, Parent Dashboard). Centralising them here guarantees
+  // that "memorized", "started", and "learning" mean the same thing everywhere.
+
+  /// Returns `true` when the ayah is fully memorized by SRS semantics
+  /// (`strengthLevel >= 6`). This is the single authoritative definition of
+  /// "memorized" — it must match [ReviewClassification.isMemorized].
+  static bool isMemorized(AyahReviewRecord record) => record.strengthLevel >= 6;
+
+  /// Returns `true` when the ayah has been reviewed at least once
+  /// (`totalReviews > 0`). Represents an ayah the user has *started*, which is
+  /// a superset of [isMemorized]. Never present this as "memorized".
+  static bool isStarted(AyahReviewRecord record) => record.totalReviews > 0;
+
+  /// Returns `true` when the ayah is in progress: started but not yet memorized.
+  /// Disjoint from [isMemorized] by construction.
+  static bool isLearning(AyahReviewRecord record) =>
+      isStarted(record) && !isMemorized(record);
+
+  /// Source policy for device-wide certificate eligibility.
+  ///
+  /// Includes adult production sources plus [kidsMode] so children can earn
+  /// certificates without polluting adult progress totals.
+  static bool isCertificateEligibleSource(AyahReviewRecord record) =>
+      isAdultProductionCount(record) || isKidsSource(record);
 
   /// Tie-breaker for memorized-due ordering (Smart Coach + Daily Plan).
   ///

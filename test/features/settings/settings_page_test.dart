@@ -536,6 +536,9 @@ class _FakeAuthRepository implements AuthRepository {
   @override
   Future<Either<Failure, Unit>> pullProgressFromCloud() async => const Right(unit);
 
+  @override
+  Future<Either<Failure, Unit>> syncProgressToCloud() async => const Right(unit);
+
   Future<void> dispose() async {
     await _authController.close();
     await _passwordRecoveryController.close();

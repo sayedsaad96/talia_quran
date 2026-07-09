@@ -1,6 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 import '../../../../core/memorization/review_classification.dart';
+import '../../../../core/memorization/smart_coach_recommendation.dart';
 
 export 'memorization_profile.dart';
 export 'pairing_session.dart';
@@ -27,10 +28,10 @@ enum PlanTargetUser { adult, child }
 /// records that existed before this field was introduced are treated as
 /// [unknown] (their `createdByModeIndex` is `null` in Isar).
 enum ReviewRecordCreatedByMode {
-  /// Written by the Adult MemPlus path (DailyPlanCubit or QuizCubit).
+  /// Written by the Adult MemPlus path (V2 session or quiz flows).
   adultMemPlus,
 
-  /// Written by KidsModeCubit via MarkAyahMemorizedUsecase.
+  /// Written by Kids Gamified via the V2 session engine/review adapter.
   kidsMode,
 
   /// Reserved for future Hifz SRS integration.
@@ -359,6 +360,18 @@ class DailyPlan extends Equatable {
 }
 
 // ─── KidsProgress ─────────────────────────────────────────────────────────────
+//
+// Gamification aggregate for the Kids path (points, level, stars, session timing).
+//
+// **Streak** — [currentStreak] is *not* owned here. It is hydrated at read time
+// from [StreakService] (Isar `streakIsars`). Kids sessions call
+// [StreakService.recordActivity] in [KidsModeCubit]; never increment streak in
+// [addPoints].
+//
+// **Memorization** — cumulative ayah counts for certificates and parent
+// metrics come from Isar review records tagged `kidsMode`
+// ([ReviewRecordFilters.isKidsSource]). Journey stage visuals come from
+// [KidsSessionLog] entries in SharedPreferences.
 
 class KidsProgress extends Equatable {
   const KidsProgress({
@@ -405,6 +418,24 @@ class KidsProgress extends Equatable {
     _ => 3,
   };
 
+  KidsProgress copyWith({
+    int? totalPoints,
+    int? currentLevel,
+    int? currentStreak,
+    int? starsEarned,
+    int? ayahsCompleted,
+    DateTime? lastSessionAt,
+  }) {
+    return KidsProgress(
+      totalPoints: totalPoints ?? this.totalPoints,
+      currentLevel: currentLevel ?? this.currentLevel,
+      currentStreak: currentStreak ?? this.currentStreak,
+      starsEarned: starsEarned ?? this.starsEarned,
+      ayahsCompleted: ayahsCompleted ?? this.ayahsCompleted,
+      lastSessionAt: lastSessionAt ?? this.lastSessionAt,
+    );
+  }
+
   KidsProgress addPoints(int points) {
     final newTotal = totalPoints + points;
     int level = currentLevel;
@@ -419,24 +450,12 @@ class KidsProgress extends Equatable {
       needed = level * 100;
     }
 
-    // Only increment streak when the session is on a new UTC calendar day.
-    // Without this check, calling addPoints() multiple times in the same day
-    // would inflate the streak counter incorrectly.
     final now = DateTime.now().toUtc();
-    final todayKey = DateTime.utc(now.year, now.month, now.day);
-    final lastKey = lastSessionAt == null
-        ? null
-        : DateTime.utc(
-            lastSessionAt!.toUtc().year,
-            lastSessionAt!.toUtc().month,
-            lastSessionAt!.toUtc().day,
-          );
-    final isNewDay = lastKey == null || todayKey.isAfter(lastKey);
 
     return KidsProgress(
       totalPoints: newTotal,
       currentLevel: level,
-      currentStreak: isNewDay ? currentStreak + 1 : currentStreak,
+      currentStreak: currentStreak,
       starsEarned: starsEarned + _starsForRating(),
       ayahsCompleted: ayahsCompleted + 1,
       lastSessionAt: now,
@@ -695,6 +714,7 @@ class RemoteChildSummary extends Equatable {
     required this.progress,
     required this.logs,
     required this.rewards,
+    this.production,
   });
 
   final String childUserId;
@@ -703,6 +723,11 @@ class RemoteChildSummary extends Equatable {
   final List<KidsSessionLog> logs;
   final List<ParentReward> rewards;
 
+  /// Additive Phase 7 production-sync summary (V2 SRS, daily plan,
+  /// certificates, streak, heatmap, Smart Coach). Null when the cloud rows
+  /// could not be read (e.g. RLS not yet applied, or child never synced).
+  final RemoteChildProductionSummary? production;
+
   @override
   List<Object?> get props => [
     childUserId,
@@ -710,6 +735,106 @@ class RemoteChildSummary extends Equatable {
     progress,
     logs,
     rewards,
+    production,
+  ];
+}
+
+/// A single certificate earned by a linked child, as mirrored to
+/// `certificate_awards_cloud`.
+class RemoteCertificateAward extends Equatable {
+  const RemoteCertificateAward({
+    required this.certId,
+    required this.titleAr,
+    required this.certType,
+    required this.earnedAt,
+  });
+
+  final String certId;
+  final String titleAr;
+  final String certType;
+  final DateTime earnedAt;
+
+  @override
+  List<Object?> get props => [certId, titleAr, certType, earnedAt];
+}
+
+/// Aggregated production-state summary for a linked child, reconstructed on
+/// the parent device from the Phase 7 cloud sync tables
+/// (`ayah_review_records_cloud`, `daily_plans_cloud`,
+/// `certificate_awards_cloud`, `streaks`, `daily_activities`).
+///
+/// This is purely a read-side reconstruction: the underlying classification
+/// (`ReviewClassification`) and recommendation (`SmartCoachEngine`) logic is
+/// reused as-is, fed by these synced rows — no second engine is introduced.
+class RemoteChildProductionSummary extends Equatable {
+  const RemoteChildProductionSummary({
+    required this.totalMemorizedAyahs,
+    required this.totalAyahsTracked,
+    required this.completionPercent,
+    this.currentSurahId,
+    this.lastMemorizedSurahId,
+    this.lastMemorizedAyahNumber,
+    this.lastMemorizedAt,
+    required this.reviewsCompleted,
+    required this.reviewsOverdue,
+    this.nextReviewAt,
+    this.dailyPlanSurahId,
+    required this.dailyPlanTotal,
+    required this.dailyPlanCompleted,
+    this.currentStreak,
+    this.longestStreak,
+    required this.activeDaysLast30,
+    this.certificates = const [],
+    this.smartCoachKind,
+  });
+
+  final int totalMemorizedAyahs;
+  final int totalAyahsTracked;
+  final double completionPercent;
+  final int? currentSurahId;
+  final int? lastMemorizedSurahId;
+  final int? lastMemorizedAyahNumber;
+  final DateTime? lastMemorizedAt;
+  final int reviewsCompleted;
+  final int reviewsOverdue;
+  final DateTime? nextReviewAt;
+  final int? dailyPlanSurahId;
+  final int dailyPlanTotal;
+  final int dailyPlanCompleted;
+  final int? currentStreak;
+  final int? longestStreak;
+
+  /// Number of distinct UTC calendar days with recorded activity in the
+  /// trailing 30-day window (lightweight heatmap summary).
+  final int activeDaysLast30;
+  final List<RemoteCertificateAward> certificates;
+
+  /// Learning-status label source; `null` when no recommendation applies.
+  final SmartCoachRecommendationKind? smartCoachKind;
+
+  int get dailyPlanRemaining =>
+      (dailyPlanTotal - dailyPlanCompleted).clamp(0, dailyPlanTotal);
+
+  @override
+  List<Object?> get props => [
+    totalMemorizedAyahs,
+    totalAyahsTracked,
+    completionPercent,
+    currentSurahId,
+    lastMemorizedSurahId,
+    lastMemorizedAyahNumber,
+    lastMemorizedAt,
+    reviewsCompleted,
+    reviewsOverdue,
+    nextReviewAt,
+    dailyPlanSurahId,
+    dailyPlanTotal,
+    dailyPlanCompleted,
+    currentStreak,
+    longestStreak,
+    activeDaysLast30,
+    certificates,
+    smartCoachKind,
   ];
 }
 

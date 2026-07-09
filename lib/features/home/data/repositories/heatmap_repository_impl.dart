@@ -1,6 +1,5 @@
 import 'package:isar/isar.dart';
 
-import '../../../hifz/data/models/isar_ayah_progress.dart';
 import '../../../streak/data/models/daily_activity_isar.dart';
 import '../../domain/repositories/heatmap_repository.dart';
 import '../../domain/usecases/get_activity_heatmap_usecase.dart';
@@ -23,7 +22,6 @@ class HeatmapRepositoryImpl implements HeatmapRepository {
         now.day,
       ).subtract(const Duration(days: GetActivityHeatmapUsecase.historyDays));
       final oldestVisibleDayKey = _dayKey(oldestVisibleDay);
-      final allProgress = await _isar.isarAyahProgress.where().findAll();
       final dailyRecords = await _isar.dailyActivityIsars
           .where()
           .dayKeyGreaterThan(oldestVisibleDayKey - 1)
@@ -31,16 +29,6 @@ class HeatmapRepositoryImpl implements HeatmapRepository {
 
       final map = <String, int>{};
       DateTime? earliestDate;
-
-      for (final progress in allProgress) {
-        final date = progress.lastReviewDate;
-        if (date.isBefore(oldestVisibleDay)) continue;
-        if (earliestDate == null || date.isBefore(earliestDate)) {
-          earliestDate = date;
-        }
-        final key = _dateKey(date);
-        map[key] = (map[key] ?? 0) + 1;
-      }
 
       for (final record in dailyRecords) {
         final recordDate = _dateFromDayKey(record.dayKey);

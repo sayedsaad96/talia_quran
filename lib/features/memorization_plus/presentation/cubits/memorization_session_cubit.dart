@@ -22,6 +22,7 @@ import '../../../../core/memorization/v2/session_adapters.dart';
 import '../../../../core/memorization/v2/session_engine.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/memorization/v2/session_state.dart';
+import '../../../../core/services/app_session_service.dart';
 import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
@@ -139,6 +140,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     AudioPlayer? audioPlayer,
     SpeechToText? speechToText,
     AudioCacheService? audioCacheService,
+    AppSessionService? appSessionService,
   }) : _quranRepo = quranRepository,
        _memRepo = memorizationRepository,
        _engine = sessionEngine,
@@ -148,6 +150,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
        _player = audioPlayer ?? AudioPlayer(),
        _speechToText = speechToText ?? SpeechToText(),
        _audioCache = audioCacheService ?? AudioCacheService.instance,
+       _appSessionService = appSessionService,
        super(const MSInitial()) {
     _initSpeech();
     _playerStateSub = _player.playerStateStream.listen((playerState) {
@@ -165,6 +168,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   final V2SessionReviewAdapter _reviewAdapter;
   final V2SessionProgressAdapter _progressAdapter;
   final V2SessionGamificationAdapter _gamificationAdapter;
+  final AppSessionService? _appSessionService;
 
   // ── STT ──────────────────────────────────────────────────────────────────
 
@@ -553,8 +557,16 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // Clear persisted session.
     await _progressAdapter.clear(finalState.surahId);
 
+    // B8: prevent ghost resume banner after successful completion.
+    await _appSessionService?.clearLastRestorableLocation();
+
     emit(MSCompleted(finalState: finalState, awards: awards));
   }
+
+  /// Exposed for B8 regression tests only.
+  @visibleForTesting
+  Future<void> onBlockCompletedForTesting(V2SessionState finalState) =>
+      _onBlockCompleted(finalState);
 
   /// Prefetches audio for all ayahs in the block.
   Future<void> _prefetchBlockAudio(int surahId, List<Ayah> blockAyahs) async {

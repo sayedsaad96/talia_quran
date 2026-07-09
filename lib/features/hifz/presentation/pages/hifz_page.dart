@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:percent_indicator/percent_indicator.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
@@ -11,10 +10,11 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/widgets/section_header.dart';
-import '../../domain/entities/hifz_entities.dart';
 import '../cubits/hifz_cubit.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../../../memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../../../memorization_plus/presentation/widgets/memorization_path_settings_sheet.dart';
 
 class HifzPage extends StatelessWidget {
@@ -76,28 +76,6 @@ class _HifzView extends StatelessWidget {
                     ),
                   ),
                 ] else ...[
-                  if (state.progressMap.isNotEmpty) ...[
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.only(
-                          top: AppSpacing.lg,
-                          bottom: AppSpacing.sm,
-                        ),
-                        child: SectionHeader(
-                          title: context.l10n.hifzProgress,
-                          subtitle:
-                              '${state.progressMap.length} ${context.l10n.surahs}',
-                        ),
-                      ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: _ProgressOverviewCard(
-                        progressMap: state.progressMap,
-                        isDark: isDark,
-                        primary: primary,
-                      ),
-                    ),
-                  ],
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.only(
@@ -118,7 +96,6 @@ class _HifzView extends StatelessWidget {
                       delegate: SliverChildBuilderDelegate(
                         (ctx, i) => _HifzSurahTile(
                           surah: state.surahs[i],
-                          progress: state.progressMap[state.surahs[i].id],
                           isUnlocked: state.isSurahUnlocked(state.surahs[i].id),
                           requiredPreviousSurah: i > 0
                               ? state.surahs[i - 1]
@@ -230,80 +207,9 @@ class _HifzView extends StatelessWidget {
   }
 }
 
-class _ProgressOverviewCard extends StatelessWidget {
-  const _ProgressOverviewCard({
-    required this.progressMap,
-    required this.isDark,
-    required this.primary,
-  });
-
-  final Map<int, SurahHifzProgress> progressMap;
-  final bool isDark;
-  final Color primary;
-
-  @override
-  Widget build(BuildContext context) {
-    final totalMemorized = progressMap.values.fold(
-      0,
-      (s, p) => s + p.memorizedCount,
-    );
-
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        gradient: isDark
-            ? AppColors.heroGradientDark
-            : AppColors.heroGradientLight,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '$totalMemorized',
-                  style: AppTypography.displayMedium.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  context.l10n.memorized,
-                  style: AppTypography.bodySmall.copyWith(
-                    color: Colors.white70,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          CircularPercentIndicator(
-            radius: 36,
-            lineWidth: 5,
-            percent: (totalMemorized / 6236).clamp(0.0, 1.0),
-            center: Text(
-              '${((totalMemorized / 6236) * 100).toStringAsFixed(1)}%',
-              style: AppTypography.labelSmall.copyWith(
-                color: Colors.white,
-                fontSize: 9,
-              ),
-            ),
-            progressColor: AppColors.gold,
-            backgroundColor: Colors.white.withValues(alpha: 0.2),
-            circularStrokeCap: CircularStrokeCap.round,
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 250.ms);
-  }
-}
-
 class _HifzSurahTile extends StatelessWidget {
   const _HifzSurahTile({
     required this.surah,
-    required this.progress,
     required this.isUnlocked,
     required this.requiredPreviousSurah,
     required this.index,
@@ -312,7 +218,6 @@ class _HifzSurahTile extends StatelessWidget {
   });
 
   final Surah surah;
-  final SurahHifzProgress? progress;
   final bool isUnlocked;
   final Surah? requiredPreviousSurah;
   final int index;
@@ -321,10 +226,6 @@ class _HifzSurahTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasProgress = progress != null;
-    final percent = hasProgress
-        ? progress!.memorizedCount / surah.ayahCount
-        : 0.0;
     final isLocked = !isUnlocked;
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
@@ -336,14 +237,22 @@ class _HifzSurahTile extends StatelessWidget {
     );
 
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         if (isLocked) {
           ScaffoldMessenger.of(
             context,
           ).showSnackBar(SnackBar(content: Text(lockedText)));
           return;
         }
-        context.push('/memorization-v2/session?surahId=${surah.id}&startAyah=1');
+        final route =
+            await MemorizationNavigationResolver(
+              getIt<MemorizationPlusRepository>(),
+            ).practiceSurahSessionLocation(
+              surah.id,
+              surahAyahCount: surah.ayahCount,
+            );
+        if (!context.mounted) return;
+        await context.push(route);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -365,8 +274,6 @@ class _HifzSurahTile extends StatelessWidget {
               decoration: BoxDecoration(
                 color: isLocked
                     ? (isDark ? Colors.white10 : Colors.black12)
-                    : hasProgress
-                    ? primary.withValues(alpha: 0.12)
                     : primary.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
@@ -435,33 +342,14 @@ class _HifzSurahTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                   ],
-                  if (hasProgress) ...[
-                    LinearPercentIndicator(
-                      lineHeight: 4,
-                      percent: percent.clamp(0.0, 1.0),
-                      progressColor: AppColors.gold,
-                      backgroundColor: primary.withValues(alpha: 0.1),
-                      barRadius: const Radius.circular(4),
-                      padding: EdgeInsets.zero,
+                  Text(
+                    '${surah.ayahCount} ${context.l10n.ayahs}',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextHint
+                          : AppColors.lightTextHint,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${progress!.memorizedCount} / ${surah.ayahCount} ${context.l10n.ayahs}',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextHint
-                            : AppColors.lightTextHint,
-                      ),
-                    ),
-                  ] else
-                    Text(
-                      '${surah.ayahCount} ${context.l10n.ayahs}',
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextHint
-                            : AppColors.lightTextHint,
-                      ),
-                    ),
+                  ),
                 ],
               ),
             ),

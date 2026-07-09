@@ -897,6 +897,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get memorizedAyahs => 'الآيات المحفوظة';
 
   @override
+  String get startedAyahsLabel => 'آيات بدأ حفظها';
+
+  @override
+  String get reviewedAyahsTotalLabel => 'إجمالي المراجعات';
+
+  @override
+  String get overdueReviewsLabel => 'مراجعات متأخرة';
+
+  @override
+  String get retentionRateLabel => 'معدل الاحتفاظ';
+
+  @override
+  String get lastReviewLabel => 'آخر مراجعة';
+
+  @override
+  String get lastMemorizedLabel => 'آخر آية محفوظة';
+
+  @override
+  String get homeEngagementTitle => 'نشاطك';
+
+  @override
+  String get homeWeeklyActivityLabel => 'هذا الأسبوع';
+
+  @override
+  String get homeDueTodayLabel => 'مستحق اليوم';
+
+  @override
+  String get homeXpLevelLabel => 'المستوى';
+
+  @override
+  String get homeActivityHeatmapTitle => 'خريطة النشاط';
+
+  @override
   String get memorizedSurahsLabel => 'السور المحفوظة';
 
   @override
@@ -1945,6 +1978,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get kidsGamifiedRecordingInProgress => 'جاري التسجيل...';
 
   @override
+  String get kidsGamifiedDoneRecording => 'انتهيت من التسجيل';
+
+  @override
   String get kidsGamifiedAudioUnavailable =>
       'الصوت غير متاح الآن، حاول مرة أخرى بعد قليل.';
 
@@ -2043,7 +2079,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingGoalAzkar => 'الأذكار';
 
   @override
-  String get dailyPlanQuizAction => 'اختبار المراجعة';
+  String get dailyPlanQuizAction => 'مراجعة بالتسميع';
 
   @override
   String get dailyPlanNewAyahs => 'آيات جديدة للحفظ';
@@ -2105,10 +2141,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyPlanListenBeforeRating => 'استمع للآية قبل التقييم';
 
   @override
-  String get reviewQuizTitle => 'اختبار المراجعة';
+  String get reviewQuizTitle => 'مراجعة بالتسميع';
 
   @override
-  String get quizExitTitle => 'الخروج من اختبار المراجعة؟';
+  String get quizExitTitle => 'الخروج من جلسة المراجعة؟';
+
+  @override
+  String get memorizationHubReviewSectionTitle => 'مراجعة بالتسميع';
+
+  @override
+  String get memorizationHubReviewSectionSubtitle =>
+      'راجع ما حفظته عبر جلسة تسميع موجهة (تحويل الصوت إلى نص).';
+
+  @override
+  String get memorizationHubReviewCardDescription =>
+      'افتح جلسة حفظ V2 للآيات التي حفظتها مسبقًا.';
 
   @override
   String get quizExitMessage =>
@@ -2278,6 +2325,44 @@ class AppLocalizationsAr extends AppLocalizations {
   String parentDashboardRemoteChildSummary(int ayahs, int points) {
     return '$ayahs آية • $points نقطة';
   }
+
+  @override
+  String parentDashboardMemorizedSummary(
+    int memorized,
+    int total,
+    int percent,
+  ) {
+    return '$memorized/$total آية محفوظة • $percent%';
+  }
+
+  @override
+  String parentDashboardReviewsSummary(int completed, int overdue) {
+    return '$completed مراجعة مكتملة • $overdue متأخرة';
+  }
+
+  @override
+  String parentDashboardStreakSummary(int days) {
+    return 'التتابع: $days يوم';
+  }
+
+  @override
+  String parentDashboardCertificatesSummary(int count) {
+    return '$count شهادة تم الحصول عليها';
+  }
+
+  @override
+  String get parentDashboardRemoveChild => 'إزالة الطفل';
+
+  @override
+  String get parentDashboardRemoveChildConfirmTitle => 'إزالة الطفل؟';
+
+  @override
+  String parentDashboardRemoveChildConfirmBody(String name) {
+    return 'سيؤدي هذا إلى فصل $name عن حسابك. يمكنك الربط مرة أخرى لاحقًا برمز جديد.';
+  }
+
+  @override
+  String get parentDashboardChildRemoved => 'تمت إزالة الطفل';
 
   @override
   String get parentDashboardRewardsTitle => 'مكافآت ولي الأمر';
@@ -2922,13 +3007,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationDailyAyahBody => 'اقرأ وردك اليومي من القرآن الكريم';
-
-  @override
-  String get notificationSmartReminderTitle => 'حان وقت وردك! ⏳';
-
-  @override
-  String get notificationSmartReminderBody =>
-      'لم تقرأ وردك اليوم! خصص دقائق للقرآن الآن.';
 
   @override
   String get notificationMorningAzkarTitle => 'أذكار الصباح ☀️';

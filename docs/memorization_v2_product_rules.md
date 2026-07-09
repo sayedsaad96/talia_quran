@@ -201,6 +201,9 @@ Kids follow the same engine.
 
 Only presentation changes.
 
+> **Known limitation (Phase 1 — documented in [memorization-remediation-plan.md](./memorization-remediation-plan.md)):**  
+> As of the current release tier, Kids Mode uses a simplified gamified listen/remember flow that does **not** yet run the full V2 session FSM (Learning → Memorizing → Individual Recitation → Block Review). Presentation differs today; engine parity is **Phase 2 product work**, not a Sprint 1 blocker. Do not assume §4 and §14.8 below are fully implemented in Kids UI until that phase ships.
+
 ---
 
 ## Kids Learning
@@ -730,6 +733,8 @@ The only allowed differences are:
 * Optional Block Review for configured young ages
 
 The memorization rules themselves remain identical.
+
+> **Implementation status:** The policy above is the **target** behavior. Current Kids Mode is presentation-only gamification on a separate flow; full V2 engine parity (including Block Review wiring) is deferred to **Phase 2** — see PB7 in [memorization-remediation-plan.md](./memorization-remediation-plan.md). Until then, treat adult V2 sessions as the reference implementation of §14.8.
 
 ## 14.9 Block Size Policy (Approved)
 

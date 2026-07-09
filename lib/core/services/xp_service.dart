@@ -2,11 +2,14 @@ import 'package:isar/isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
 import '../../features/xp/domain/entities/xp_gain_result.dart';
 import '../constants/xp_constants.dart';
+import '../progress/progress_changed_reason.dart';
+import '../progress/progress_events_bus.dart';
 
 class XpService {
-  XpService(this._isar);
+  XpService(this._isar, this._progressEvents);
 
   final Isar _isar;
+  final ProgressEventsBus _progressEvents;
 
   Future<XpGainResult> addXp(String eventKey) async {
     final points = XpConstants.rewards[eventKey] ?? 0;
@@ -18,6 +21,8 @@ class XpService {
       data.totalXp += points;
       final newLevel = _getLevel(data.totalXp);
       await _isar.xpIsars.put(data);
+
+      _progressEvents.notify(ProgressChangedReason.xp);
 
       return XpGainResult(
         xpAdded: points,

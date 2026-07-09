@@ -27,6 +27,7 @@ class KidsModeLoaded extends KidsModeState {
     required this.surahId,
     required this.ayahNumber,
     required this.ayahText,
+    required this.sessionState,
     required this.progress,
     required this.isPlaying,
     required this.currentLoop,
@@ -37,6 +38,7 @@ class KidsModeLoaded extends KidsModeState {
     this.audioError,
     this.isBuffering = false, // true while audio URL is loading/buffering
     this.isRecording = false, // true while microphone capture is active
+    this.recordingSeconds = 0, // seconds elapsed since recording started
     this.recordingError,
     this.sessionStarsEarned = 0,
   });
@@ -44,6 +46,7 @@ class KidsModeLoaded extends KidsModeState {
   final int surahId;
   final int ayahNumber;
   final String ayahText;
+  final V2SessionState sessionState;
   final KidsProgress progress;
   final bool isPlaying;
   final int currentLoop;
@@ -58,10 +61,14 @@ class KidsModeLoaded extends KidsModeState {
 
   /// True while microphone capture is active.
   final bool isRecording;
+
+  /// Seconds elapsed since recording started (for the timer display).
+  final int recordingSeconds;
   final String? recordingError;
   final int sessionStarsEarned;
 
   KidsModeLoaded copyWith({
+    V2SessionState? sessionState,
     KidsProgress? progress,
     bool? isPlaying,
     int? currentLoop,
@@ -72,6 +79,7 @@ class KidsModeLoaded extends KidsModeState {
     bool clearAudioError = false,
     bool? isBuffering,
     bool? isRecording,
+    int? recordingSeconds,
     String? recordingError,
     bool clearRecordingError = false,
     int? sessionStarsEarned,
@@ -79,6 +87,7 @@ class KidsModeLoaded extends KidsModeState {
     surahId: surahId,
     ayahNumber: ayahNumber,
     ayahText: ayahText,
+    sessionState: sessionState ?? this.sessionState,
     progress: progress ?? this.progress,
     isPlaying: isPlaying ?? this.isPlaying,
     currentLoop: currentLoop ?? this.currentLoop,
@@ -89,6 +98,7 @@ class KidsModeLoaded extends KidsModeState {
     audioError: clearAudioError ? null : audioError ?? this.audioError,
     isBuffering: isBuffering ?? this.isBuffering,
     isRecording: isRecording ?? this.isRecording,
+    recordingSeconds: recordingSeconds ?? this.recordingSeconds,
     recordingError: clearRecordingError
         ? null
         : recordingError ?? this.recordingError,
@@ -99,6 +109,7 @@ class KidsModeLoaded extends KidsModeState {
   List<Object?> get props => [
     surahId,
     ayahNumber,
+    sessionState,
     progress,
     isPlaying,
     currentLoop,
@@ -108,6 +119,7 @@ class KidsModeLoaded extends KidsModeState {
     audioError,
     isBuffering,
     isRecording,
+    recordingSeconds,
     recordingError,
     sessionStarsEarned,
   ];

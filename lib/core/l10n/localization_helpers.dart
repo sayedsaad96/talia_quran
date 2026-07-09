@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../features/progress/domain/entities/progress_entities.dart';
+import '../constants/surah_names.dart';
 import '../services/achievement_service.dart';
 import 'app_localizations.dart';
 import 'cubit_message_codes.dart';
@@ -8,6 +9,13 @@ import 'cubit_message_codes.dart';
 extension TaliaLocalizationHelpers on BuildContext {
   AppLocalizations get _l10n => AppLocalizations.of(this);
   bool get _isArabic => Localizations.localeOf(this).languageCode == 'ar';
+
+  String localizedSurahName(int surahId) {
+    if (_isArabic) {
+      return SurahNames.arabic[surahId] ?? '$surahId';
+    }
+    return SurahNames.english[surahId] ?? '$surahId';
+  }
 
   String localizedJuzName(int juzNumber) {
     const arabicNames = [

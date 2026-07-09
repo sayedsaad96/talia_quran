@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
@@ -361,11 +362,8 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 ),
               ),
             );
-            // Navigate to daily plan starting from startSurahId
-            // ("من سورة" = the user-selected memorization entry point).
-            context.pushReplacement(
-              '/memorization-plus/daily-plan?surahId=${state.plan.startSurahId}',
-            );
+            // Navigate to memorization hub after plan is saved.
+            context.go(AppRoutes.memorizationHub);
           } else if (state is CustomPlanLoaded) {
             _populateFromExisting(state.plan);
           }

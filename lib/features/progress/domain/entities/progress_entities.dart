@@ -18,14 +18,28 @@ class OverallProgress extends Equatable {
     required this.totalQuranPages,
     required this.learningAyahs,
     required this.reviewAyahs,
-    // Smart Memorization (MemorizationPlus) stats
-    this.smartMemorizedAyahs = 0,
-    this.smartReviewAyahs = 0,
+    // Two-tier memorization vocabulary (Phase 1):
+    // - memorizedAyahs = strengthLevel >= 6 (truly memorized)
+    // - startedAyahs   = totalReviews > 0 (started; superset of memorized)
+    this.startedAyahs = 0,
+    // Cumulative review repetitions performed across all counted ayahs.
+    this.reviewedAyahsTotal = 0,
+    // Number of ayahs currently overdue for review.
+    this.overdueReviews = 0,
+    this.lastReviewedAt,
+    this.lastMemorizedSurahId,
+    this.lastMemorizedAyahNumber,
     this.kidsPoints = 0,
     this.kidsStars = 0,
   });
 
   final int memorizedAyahs;
+  final int startedAyahs;
+  final int reviewedAyahsTotal;
+  final int overdueReviews;
+  final DateTime? lastReviewedAt;
+  final int? lastMemorizedSurahId;
+  final int? lastMemorizedAyahNumber;
   final int totalAyahs;
   final int memorizedSurahs;
   final int totalSurahs;
@@ -41,9 +55,6 @@ class OverallProgress extends Equatable {
   final int learningAyahs;
   final int reviewAyahs;
 
-  // Smart Memorization stats
-  final int smartMemorizedAyahs;
-  final int smartReviewAyahs;
   final int kidsPoints;
   final int kidsStars;
 
@@ -63,6 +74,13 @@ class OverallProgress extends Equatable {
   double get memorizedAyahsPercentage =>
       totalAyahs == 0 ? 0 : (memorizedAyahs / totalAyahs).clamp(0.0, 1.0);
 
+  double get startedAyahsPercentage =>
+      totalAyahs == 0 ? 0 : (startedAyahs / totalAyahs).clamp(0.0, 1.0);
+
+  /// Share of started ayahs that reached full memorization.
+  double get retentionRate =>
+      startedAyahs == 0 ? 0 : (memorizedAyahs / startedAyahs).clamp(0.0, 1.0);
+
   double get memorizedJuzPercentage =>
       totalJuz == 0 ? 0 : (memorizedJuz / totalJuz).clamp(0.0, 1.0);
 
@@ -72,6 +90,13 @@ class OverallProgress extends Equatable {
   @override
   List<Object?> get props => [
     memorizedAyahs,
+    startedAyahs,
+    reviewedAyahsTotal,
+    overdueReviews,
+    overdueReviews,
+    lastReviewedAt,
+    lastMemorizedSurahId,
+    lastMemorizedAyahNumber,
     memorizedSurahs,
     memorizedJuz,
     readAyahs,
@@ -82,8 +107,6 @@ class OverallProgress extends Equatable {
     readPagesCount,
     learningAyahs,
     reviewAyahs,
-    smartMemorizedAyahs,
-    smartReviewAyahs,
     kidsPoints,
     kidsStars,
   ];

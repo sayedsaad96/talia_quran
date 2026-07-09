@@ -293,6 +293,17 @@
   "less": "Less",
   "more": "More",
   "memorizedAyahs": "Ayahs Memorized",
+  "startedAyahsLabel": "Ayahs Started",
+  "reviewedAyahsTotalLabel": "Total Reviews",
+  "overdueReviewsLabel": "Overdue Reviews",
+  "retentionRateLabel": "Retention Rate",
+  "lastReviewLabel": "Last review",
+  "lastMemorizedLabel": "Last memorized",
+  "homeEngagementTitle": "Your activity",
+  "homeWeeklyActivityLabel": "This week",
+  "homeDueTodayLabel": "Due today",
+  "homeXpLevelLabel": "Level",
+  "homeActivityHeatmapTitle": "Activity heatmap",
   "memorizedSurahsLabel": "Surahs Memorized",
   "memorizedJuzLabel": "Juz Memorized",
   "earnCertificatesHint": "Memorize complete Surahs and Juz to earn certificates!",
@@ -769,6 +780,7 @@
   "kidsGamifiedListenAndRepeat": "Listen and repeat",
   "kidsGamifiedRecordYourVoice": "Record your recitation",
   "kidsGamifiedRecordingInProgress": "Recording...",
+  "kidsGamifiedDoneRecording": "Done Recording",
   "kidsGamifiedAudioUnavailable": "Audio is unavailable right now. Please try again soon.",
   "kidsGamifiedListenFirst": "Listen to the ayah {count} times before recording your voice.",
   "@kidsGamifiedListenFirst": {
@@ -818,7 +830,7 @@
   "onboardingGoalMemorization": "Memorization for me",
   "onboardingGoalChild": "Follow a child",
   "onboardingGoalAzkar": "Azkar",
-  "dailyPlanQuizAction": "Review Quiz",
+  "dailyPlanQuizAction": "Review Session",
   "dailyPlanNewAyahs": "New ayahs to memorize",
   "dailyPlanNearRevision": "Near review (last 5 days)",
   "dailyPlanFarRevision": "Far review",
@@ -857,8 +869,11 @@
   "performanceAverage": "Good",
   "performanceExcellent": "Excellent",
   "dailyPlanListenBeforeRating": "Listen to the ayah before rating",
-  "reviewQuizTitle": "Review Quiz",
-  "quizExitTitle": "Leave Review Quiz?",
+  "reviewQuizTitle": "Review Session",
+  "quizExitTitle": "Leave review session?",
+  "memorizationHubReviewSectionTitle": "Review Session",
+  "memorizationHubReviewSectionSubtitle": "Review memorized ayahs through guided recitation (speech-to-text).",
+  "memorizationHubReviewCardDescription": "Open a V2 recitation session for ayahs you have already memorized.",
   "quizExitMessage": "Your rated ayahs so far will be saved.\nDo you want to leave?",
   "quizStayAction": "Stay",
   "quizExitAction": "Leave",
@@ -942,6 +957,58 @@
       }
     }
   },
+  "parentDashboardMemorizedSummary": "{memorized}/{total} ayahs memorized • {percent}%",
+  "@parentDashboardMemorizedSummary": {
+    "placeholders": {
+      "memorized": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      },
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardReviewsSummary": "{completed} reviews completed • {overdue} overdue",
+  "@parentDashboardReviewsSummary": {
+    "placeholders": {
+      "completed": {
+        "type": "int"
+      },
+      "overdue": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardStreakSummary": "Streak: {days} days",
+  "@parentDashboardStreakSummary": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardCertificatesSummary": "{count} certificates earned",
+  "@parentDashboardCertificatesSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "parentDashboardRemoveChild": "Remove child",
+  "parentDashboardRemoveChildConfirmTitle": "Remove child?",
+  "parentDashboardRemoveChildConfirmBody": "This will unlink {name} from your account. You can link again later with a new code.",
+  "@parentDashboardRemoveChildConfirmBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "parentDashboardChildRemoved": "Child removed",
   "parentDashboardRewardsTitle": "Parent rewards",
   "parentDashboardRewardHint": "Example: extra play time",
   "parentDashboardRewardEmpty": "Add rewards that appear for the child after reaching the weekly goal.",
@@ -1341,8 +1408,6 @@
   "notificationStreakAlertBody": "You haven't reviewed today yet — you still can",
   "notificationDailyAyahTitle": "Ayah of the Day ✨",
   "notificationDailyAyahBody": "Read your daily Wird from the Holy Quran",
-  "notificationSmartReminderTitle": "Wird Time! ⏳",
-  "notificationSmartReminderBody": "You haven't read your Wird today! Take a few minutes for the Quran now.",
   "notificationMorningAzkarTitle": "Morning Azkar ☀️",
   "notificationMorningAzkarBody": "Start your day with the remembrance of Allah and peace of mind",
   "notificationEveningAzkarTitle": "Evening Azkar 🌙",

@@ -3,12 +3,15 @@ import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/domain/entities/streak_entity.dart';
 import '../../features/streak/domain/entities/streak_result.dart';
+import '../progress/progress_changed_reason.dart';
+import '../progress/progress_events_bus.dart';
 import 'streak_reader.dart';
 
 class StreakService implements StreakReader {
-  StreakService(this._isar);
+  StreakService(this._isar, this._progressEvents);
 
   final Isar _isar;
+  final ProgressEventsBus _progressEvents;
 
   static const List<int> _milestones = [3, 7, 14, 30, 60, 100, 365];
 
@@ -51,6 +54,7 @@ class StreakService implements StreakReader {
         if (lastNormalized == todayDate) {
           // Still update the daily counter below
           await _upsertDailyActivity(dayKey, activityDelta);
+          _progressEvents.notify(ProgressChangedReason.streak);
           return const StreakResult.sameDay();
         }
 
@@ -76,6 +80,8 @@ class StreakService implements StreakReader {
 
       // ── 2. Record into DailyActivityIsar for the heatmap ──────────────────
       await _upsertDailyActivity(dayKey, activityDelta);
+
+      _progressEvents.notify(ProgressChangedReason.streak);
 
       return StreakResult(
         currentStreak: data.currentStreak,

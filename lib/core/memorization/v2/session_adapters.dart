@@ -19,6 +19,7 @@ import '../../../features/memorization_plus/domain/entities/memorization_entitie
 import '../../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../../features/quran/domain/entities/quran_entities.dart';
+import '../../../core/memorization/review_record_audience_scope.dart';
 import 'hint_usage.dart';
 import 'ayah_failure_tracker.dart';
 import 'session_phase.dart';
@@ -35,11 +36,14 @@ final class V2SessionReviewAdapter {
   const V2SessionReviewAdapter({
     required MemorizationPlusRepository repository,
     required ScheduleNextReviewUsecase scheduler,
+    MarkDailyPlanAyahCompletedUsecase? markDailyPlanCompleted,
   }) : _repository = repository,
-       _scheduler = scheduler;
+       _scheduler = scheduler,
+       _markDailyPlanCompleted = markDailyPlanCompleted;
 
   final MemorizationPlusRepository _repository;
   final ScheduleNextReviewUsecase _scheduler;
+  final MarkDailyPlanAyahCompletedUsecase? _markDailyPlanCompleted;
 
   /// Records a passed ayah recitation using SM-2 scheduling.
   ///
@@ -51,6 +55,8 @@ final class V2SessionReviewAdapter {
     required int surahId,
     required int ayahNumber,
     required V2HintLevel hintLevel,
+    ReviewRecordCreatedByMode createdByMode =
+        ReviewRecordCreatedByMode.v2Session,
   }) async {
     // Map hint level to SM-2 performance rating.
     final rating = switch (hintLevel) {
@@ -60,9 +66,11 @@ final class V2SessionReviewAdapter {
     };
 
     // Fetch existing record or build a fresh baseline.
+    final readScope = ReviewRecordAudienceScope.scopeForWriteMode(createdByMode);
     final existingResult = await _repository.getReviewRecord(
       surahId,
       ayahNumber,
+      scope: readScope,
     );
 
     final now = DateTime.now().toUtc();
@@ -79,15 +87,26 @@ final class V2SessionReviewAdapter {
           nextReviewDate: now,
           totalReviews: 0,
           lastRating: null,
-          createdByMode: ReviewRecordCreatedByMode.v2Session,
+          createdByMode: createdByMode,
         );
 
-    // Apply SM-2 and tag as v2Session.
+    // Apply SM-2 and preserve the production source tag.
     final scheduled = _scheduler
         .schedule(baseRecord, rating)
-        .copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session);
+        .copyWith(createdByMode: createdByMode);
 
     await _repository.saveReviewRecord(scheduled);
+
+    // B1: mark today's plan item when this ayah is in the cached plan.
+    final markPlan = _markDailyPlanCompleted;
+    if (markPlan != null) {
+      await markPlan(
+        MarkDailyPlanAyahCompletedParams(
+          surahId: surahId,
+          ayahNumber: ayahNumber,
+        ),
+      );
+    }
   }
 
   /// Records weak ayah signals after a block review failure.

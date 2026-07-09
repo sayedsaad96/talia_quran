@@ -533,7 +533,6 @@ HomeLoaded _homeLoaded({
 }) {
   return HomeLoaded(
     progress: _progress(kidsPoints: isKids ? 42 : 0, kidsStars: isKids ? 3 : 0),
-    hifzSurahProgress: const [],
     greeting: 'morning',
     selectedTrack: selectedTrack,
     isKids: isKids,

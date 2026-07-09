@@ -165,6 +165,8 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
                     onManual: () => _showManualTokenDialog(context),
                     onAddReward: (childId) =>
                         _showRemoteRewardDialog(context, childId),
+                    onRemoveChild: (childId, displayName) =>
+                        _confirmRemoveChild(context, childId, displayName),
                   ),
                   const SizedBox(height: AppSpacing.lg),
                   _RewardsCard(
@@ -204,6 +206,8 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
         l10n.parentDashboardRemoteRewardAdded,
       ParentDashboardFeedbackType.childLinked =>
         l10n.parentDashboardChildLinked,
+      ParentDashboardFeedbackType.childRemoved =>
+        l10n.parentDashboardChildRemoved,
       ParentDashboardFeedbackType.reminderSaved =>
         l10n.parentDashboardReminderSaved,
       ParentDashboardFeedbackType.failure => feedback.message ?? '',
@@ -287,6 +291,40 @@ class _ParentDashboardViewState extends State<_ParentDashboardView> {
       await context.read<ParentDashboardCubit>().addRemoteReward(
         childId,
         title,
+      );
+    }
+  }
+
+  Future<void> _confirmRemoveChild(
+    BuildContext context,
+    String childId,
+    String displayName,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.l10n.parentDashboardRemoveChildConfirmTitle),
+        content: Text(
+          dialogContext.l10n.parentDashboardRemoveChildConfirmBody(
+            displayName,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(dialogContext.l10n.cancel),
+          ),
+          FilledButton.tonal(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(dialogContext.l10n.parentDashboardRemoveChild),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      await context.read<ParentDashboardCubit>().removeChild(
+        childId,
+        surahId: widget.surahId,
       );
     }
   }
@@ -655,12 +693,14 @@ class _RemoteToolsCard extends StatelessWidget {
     required this.onScan,
     required this.onManual,
     required this.onAddReward,
+    required this.onRemoveChild,
   });
 
   final List<RemoteChildSummary> children;
   final VoidCallback onScan;
   final VoidCallback onManual;
   final ValueChanged<String> onAddReward;
+  final void Function(String childUserId, String displayName) onRemoveChild;
 
   @override
   Widget build(BuildContext context) {
@@ -700,15 +740,69 @@ class _RemoteToolsCard extends StatelessWidget {
                   child: Icon(Icons.child_care_rounded),
                 ),
                 title: Text(child.displayName),
-                subtitle: Text(
-                  context.l10n.parentDashboardRemoteChildSummary(
-                    child.progress.ayahsCompleted,
-                    child.progress.totalPoints,
-                  ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      context.l10n.parentDashboardRemoteChildSummary(
+                        child.progress.ayahsCompleted,
+                        child.progress.totalPoints,
+                      ),
+                    ),
+                    if (child.production case final production?) ...[
+                      Text(
+                        context.l10n.parentDashboardMemorizedSummary(
+                          production.totalMemorizedAyahs,
+                          production.totalAyahsTracked,
+                          production.completionPercent.round(),
+                        ),
+                      ),
+                      if (production.reviewsOverdue > 0 ||
+                          production.reviewsCompleted > 0)
+                        Text(
+                          context.l10n.parentDashboardReviewsSummary(
+                            production.reviewsCompleted,
+                            production.reviewsOverdue,
+                          ),
+                        ),
+                      if (production.dailyPlanTotal > 0)
+                        Text(
+                          context.l10n.dailyPlanProgressCount(
+                            production.dailyPlanCompleted,
+                            production.dailyPlanTotal,
+                          ),
+                        ),
+                      if (production.currentStreak != null)
+                        Text(
+                          context.l10n.parentDashboardStreakSummary(
+                            production.currentStreak!,
+                          ),
+                        ),
+                      if (production.certificates.isNotEmpty)
+                        Text(
+                          context.l10n.parentDashboardCertificatesSummary(
+                            production.certificates.length,
+                          ),
+                        ),
+                    ],
+                  ],
                 ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.card_giftcard_rounded),
-                  onPressed: () => onAddReward(child.childUserId),
+                isThreeLine: child.production != null,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.card_giftcard_rounded),
+                      onPressed: () => onAddReward(child.childUserId),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.link_off_rounded),
+                      tooltip: context.l10n.parentDashboardRemoveChild,
+                      onPressed: () =>
+                          onRemoveChild(child.childUserId, child.displayName),
+                    ),
+                  ],
                 ),
               ),
             ),

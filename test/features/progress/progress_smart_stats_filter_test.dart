@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/core/services/streak_reader.dart';
-import 'package:talia_quran/features/hifz/data/datasources/hifz_local_datasource.dart';
-import 'package:talia_quran/features/hifz/data/models/ayah_progress_model.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/progress/data/datasources/progress_local_datasource.dart';
@@ -28,29 +28,6 @@ class _FakeProgressDatasource implements ProgressLocalDatasource {
   Future<void> saveReadPage(int pageNumber) async {}
 }
 
-class _FakeHifzDatasource implements HifzLocalDatasource {
-  @override
-  Future<List<AyahProgressModel>> getAllProgress() async => const [];
-  @override
-  Future<AyahProgressModel?> getAyahProgress(
-    int surahId,
-    int ayahNumber,
-  ) async => null;
-  @override
-  String? getHifzPath() => null;
-  @override
-  Future<Set<String>> getPassedCheckpointKeys(int surahId) async => const {};
-  @override
-  Future<void> markCheckpointPassed(String checkpointKey) async {}
-  @override
-  Future<List<AyahProgressModel>> getProgressForSurah(int surahId) async =>
-      const [];
-  @override
-  Future<void> saveAyahProgress(AyahProgressModel progress) async {}
-  @override
-  Future<void> saveHifzPath(String path) async {}
-}
-
 class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   _FakeMemPlusDatasource(this.records);
   final List<AyahReviewRecordModel> records;
@@ -73,9 +50,14 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   @override
   Future<void> migrateReviewRecordsToIsarIfNeeded() async {}
   @override
+  Future<void> migrateAudienceScopedReviewKeysIfNeeded() async {}
+  @override
   Future<void> deleteCustomPlan() async {}
   @override
-  Future<List<AyahReviewRecordModel>> getAllReviewRecords() async => records;
+  Future<List<AyahReviewRecordModel>> getAllReviewRecords({
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+    bool includeAllAudiences = false,
+  }) async => records;
   @override
   Future<DailyPlanModel?> getCachedDailyPlan() async => null;
   @override
@@ -86,8 +68,9 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   @override
   Future<AyahReviewRecordModel?> getReviewRecord(
     int surahId,
-    int ayahNumber,
-  ) async => null;
+    int ayahNumber, {
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  }) async => null;
   @override
   String? getSelectedTrack() => null;
   @override
@@ -153,7 +136,7 @@ class _FakeQuranDatasource implements QuranLocalDatasource {
 AyahReviewRecordModel _reviewRecord(
   int ayahNumber,
   ReviewRecordCreatedByMode mode, {
-  int strengthLevel = 6, // default: memorized
+  int strengthLevel = 6,
 }) {
   final now = DateTime.utc(2026, 1, 1);
   return AyahReviewRecordModel(
@@ -172,139 +155,118 @@ AyahReviewRecordModel _reviewRecord(
 ProgressRepositoryImpl _repo(List<AyahReviewRecordModel> records) =>
     ProgressRepositoryImpl(
       _FakeProgressDatasource(),
-      _FakeHifzDatasource(),
       _FakeMemPlusDatasource(records),
       _FakeQuranDatasource(),
       const _FakeStreakReader(),
+      ProgressEventsBus(),
     );
 
 // ── Tests ──────────────────────────────────────────────────────────────────────
 
 void main() {
-  group('ProgressRepositoryImpl — Sprint 8B smartMemorizedAyahs filtering', () {
-    // ── Sources that must count ───────────────────────────────────────────
+  group('ProgressRepositoryImpl — adult production source filtering', () {
+    test('v2Session record counts in memorizedAyahs when strength >= 6', () async {
+      final result = await _repo([
+        _reviewRecord(1, ReviewRecordCreatedByMode.v2Session),
+      ]).getOverallProgress();
+      final progress = result.getOrElse(() => throw StateError('failed'));
+      expect(progress.memorizedAyahs, 1);
+      expect(progress.memorizedAyahs, 1);
+    });
 
-    test(
-      'adultMemPlus memorized record counts in smartMemorizedAyahs',
-      () async {
-        final result = await _repo([
-          _reviewRecord(1, ReviewRecordCreatedByMode.adultMemPlus),
-        ]).getOverallProgress();
-        final progress = result.getOrElse(() => throw StateError('failed'));
-        expect(progress.smartMemorizedAyahs, 1);
-      },
-    );
+    test('kidsMode record is excluded from adult production counts', () async {
+      final result = await _repo([
+        _reviewRecord(1, ReviewRecordCreatedByMode.kidsMode),
+      ]).getOverallProgress();
+      final progress = result.getOrElse(() => throw StateError('failed'));
+      expect(progress.memorizedAyahs, 0);
+      expect(progress.memorizedAyahs, 0);
+    });
 
-    test(
-      'unknown memorized record counts in smartMemorizedAyahs (backward compat)',
-      () async {
-        final result = await _repo([
-          _reviewRecord(1, ReviewRecordCreatedByMode.unknown),
-        ]).getOverallProgress();
-        final progress = result.getOrElse(() => throw StateError('failed'));
-        expect(progress.smartMemorizedAyahs, 1);
-      },
-    );
+    test('hifz (repaired legacy) record counts in adult production', () async {
+      final result = await _repo([
+        _reviewRecord(1, ReviewRecordCreatedByMode.hifz),
+      ]).getOverallProgress();
+      final progress = result.getOrElse(() => throw StateError('failed'));
+      expect(progress.memorizedAyahs, 1);
+    });
 
-    test(
-      'migration memorized record counts in smartMemorizedAyahs (backward compat)',
-      () async {
-        final result = await _repo([
-          _reviewRecord(1, ReviewRecordCreatedByMode.migration),
-        ]).getOverallProgress();
-        final progress = result.getOrElse(() => throw StateError('failed'));
-        expect(progress.smartMemorizedAyahs, 1);
-      },
-    );
+    test('legacy ambiguous source tags do not count in adult progress', () async {
+      final result = await _repo([
+        _reviewRecord(1, ReviewRecordCreatedByMode.adultMemPlus),
+        _reviewRecord(2, ReviewRecordCreatedByMode.unknown),
+        _reviewRecord(3, ReviewRecordCreatedByMode.migration),
+      ]).getOverallProgress();
+      final progress = result.getOrElse(() => throw StateError('failed'));
+      expect(progress.memorizedAyahs, 0);
+    });
 
-    // ── Sources that must NOT count ───────────────────────────────────────
+    test('mixed source list counts v2Session + hifz only', () async {
+      final result = await _repo([
+        _reviewRecord(1, ReviewRecordCreatedByMode.v2Session),
+        _reviewRecord(2, ReviewRecordCreatedByMode.kidsMode),
+        _reviewRecord(3, ReviewRecordCreatedByMode.adultMemPlus),
+        _reviewRecord(4, ReviewRecordCreatedByMode.unknown),
+        _reviewRecord(5, ReviewRecordCreatedByMode.migration),
+        _reviewRecord(6, ReviewRecordCreatedByMode.hifz),
+      ]).getOverallProgress();
+      final progress = result.getOrElse(() => throw StateError('failed'));
+      expect(progress.memorizedAyahs, 2);
+    });
 
-    test(
-      'kidsMode memorized record does NOT count in smartMemorizedAyahs',
-      () async {
-        final result = await _repo([
-          _reviewRecord(1, ReviewRecordCreatedByMode.kidsMode),
-        ]).getOverallProgress();
-        final progress = result.getOrElse(() => throw StateError('failed'));
-        expect(progress.smartMemorizedAyahs, 0);
-      },
-    );
+    test('due reviews count only adult production records', () async {
+      final result = await _repo([
+        _reviewRecord(
+          1,
+          ReviewRecordCreatedByMode.v2Session,
+          strengthLevel: 3,
+        ),
+        _reviewRecord(
+          2,
+          ReviewRecordCreatedByMode.kidsMode,
+          strengthLevel: 3,
+        ),
+      ]).getOverallProgress();
+      final progress = result.getOrElse(() => throw StateError('failed'));
+      expect(progress.reviewAyahs, 1);
+      expect(progress.reviewAyahs, 1);
+    });
+  });
 
-    test(
-      'hifz memorized record does NOT count in smartMemorizedAyahs',
-      () async {
-        final result = await _repo([
-          _reviewRecord(1, ReviewRecordCreatedByMode.hifz),
-        ]).getOverallProgress();
-        final progress = result.getOrElse(() => throw StateError('failed'));
-        expect(progress.smartMemorizedAyahs, 0);
-      },
-    );
+  group('ProgressRepositoryImpl — two-tier memorization metrics', () {
+    test('started includes reviewed-once; memorized requires strength >= 6', () async {
+      final result = await _repo([
+        _reviewRecord(
+          1,
+          ReviewRecordCreatedByMode.v2Session,
+          strengthLevel: 6,
+        ),
+        _reviewRecord(
+          2,
+          ReviewRecordCreatedByMode.v2Session,
+          strengthLevel: 3,
+        ),
+        _reviewRecord(
+          3,
+          ReviewRecordCreatedByMode.v2Session,
+          strengthLevel: 5,
+        ),
+      ]).getOverallProgress();
+      final progress = result.getOrElse(() => throw StateError('failed'));
 
-    // ── Mixed sources ─────────────────────────────────────────────────────
+      expect(progress.startedAyahs, 3);
+      expect(progress.memorizedAyahs, 1);
+      expect(progress.learningAyahs, 2);
+      expect(progress.memorizedAyahs + progress.learningAyahs, progress.startedAyahs);
+    });
 
-    test(
-      'only adult-compatible records are counted in mixed source list',
-      () async {
-        final result = await _repo([
-          _reviewRecord(1, ReviewRecordCreatedByMode.adultMemPlus), // +1
-          _reviewRecord(2, ReviewRecordCreatedByMode.unknown), // +1
-          _reviewRecord(3, ReviewRecordCreatedByMode.migration), // +1
-          _reviewRecord(4, ReviewRecordCreatedByMode.kidsMode), // excluded
-          _reviewRecord(5, ReviewRecordCreatedByMode.hifz), // excluded
-        ]).getOverallProgress();
-        final progress = result.getOrElse(() => throw StateError('failed'));
-        expect(progress.smartMemorizedAyahs, 3);
-      },
-    );
-
-    // ── smartReviewAyahs — naturally safe but now defensively filtered ────
-
-    test(
-      'smartReviewAyahs is 0 when only kidsMode records exist (defensive filter)',
-      () async {
-        // kidsMode records have strengthLevel >= 6, already outside 0-5 range.
-        // The explicit filter makes this robust to any future kidsMode records
-        // with strengthLevel in 1-5.
-        final result = await _repo([
-          _reviewRecord(
-            1,
-            ReviewRecordCreatedByMode.kidsMode,
-            strengthLevel: 3,
-          ),
-        ]).getOverallProgress();
-        final progress = result.getOrElse(() => throw StateError('failed'));
-        expect(progress.smartReviewAyahs, 0);
-      },
-    );
-
-    test(
-      'smartReviewAyahs counts adultMemPlus non-memorized records',
-      () async {
-        final result = await _repo([
-          _reviewRecord(
-            1,
-            ReviewRecordCreatedByMode.adultMemPlus,
-            strengthLevel: 3,
-          ),
-        ]).getOverallProgress();
-        final progress = result.getOrElse(() => throw StateError('failed'));
-        expect(progress.smartReviewAyahs, 1);
-      },
-    );
-
-    // ── Hifz progress unaffected ──────────────────────────────────────────
-
-    test(
-      'memorizedAyahs (Hifz) is unaffected by MemPlus source filtering',
-      () async {
-        // No MemPlus records; Hifz path is separate and unchanged.
-        final result = await _repo([]).getOverallProgress();
-        final progress = result.getOrElse(() => throw StateError('failed'));
-        // Hifz is driven by HifzLocalDatasource (fake returns empty).
-        expect(progress.memorizedAyahs, 0);
-        expect(progress.smartMemorizedAyahs, 0);
-      },
-    );
+    test('reviewedAyahsTotal sums review repetitions across counted records', () async {
+      final result = await _repo([
+        _reviewRecord(1, ReviewRecordCreatedByMode.v2Session),
+        _reviewRecord(2, ReviewRecordCreatedByMode.v2Session),
+      ]).getOverallProgress();
+      final progress = result.getOrElse(() => throw StateError('failed'));
+      expect(progress.reviewedAyahsTotal, 10);
+    });
   });
 }

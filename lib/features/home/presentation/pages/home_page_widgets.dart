@@ -388,12 +388,14 @@ class _DailyWirdCard extends StatelessWidget {
 class _ProgressSection extends StatelessWidget {
   const _ProgressSection({
     required this.progress,
+    required this.totalXp,
     required this.isDark,
     this.isKids = false,
     this.kidsPoints = 0,
   });
 
   final OverallProgress progress;
+  final int totalXp;
   final bool isDark;
   final bool isKids;
   final int kidsPoints;
@@ -417,95 +419,89 @@ class _ProgressSection extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(color: border, width: 0.5),
       ),
-      child: FutureBuilder<int>(
-        future: getIt<XpService>().getTotalXp(),
-        builder: (context, snapshot) {
-          final totalXp = snapshot.data ?? 0;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Icon(
-                    isKids ? Icons.stars_rounded : Icons.insights_rounded,
-                    color: primary,
-                    size: 22,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      isKids ? context.l10n.homeKidsProgress : context.l10n.homeYourProgress,
-                      style: AppTypography.titleMedium.copyWith(
-                        color: textColor,
-                        fontFamily: 'Amiri',
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    '${(progressPercent * 100).toStringAsFixed(0)}%',
-                    style: AppTypography.titleSmall.copyWith(
-                      color: primary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
+              Icon(
+                isKids ? Icons.stars_rounded : Icons.insights_rounded,
+                color: primary,
+                size: 22,
               ),
-              const SizedBox(height: AppSpacing.sm),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                child: LinearProgressIndicator(
-                  value: progressPercent,
-                  minHeight: 8,
-                  backgroundColor: primary.withValues(alpha: 0.12),
-                  valueColor: AlwaysStoppedAnimation<Color>(primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  isKids ? context.l10n.homeKidsProgress : context.l10n.homeYourProgress,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: textColor,
+                    fontFamily: 'Amiri',
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  Expanded(
-                    child: _ProgressMetricPill(
-                      label: isKids ? context.l10n.points : context.l10n.reading,
-                      value: isKids
-                          ? '$kidsPoints'
-                          : '${progress.readPagesCount}/${progress.totalQuranPages}',
-                      icon: isKids
-                          ? Icons.emoji_events_rounded
-                          : Icons.menu_book_rounded,
-                      color: primary,
-                      isDark: isDark,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: _ProgressMetricPill(
-                      label: isKids ? context.l10n.stars : context.l10n.hifz,
-                      value: isKids
-                          ? '${progress.kidsStars}/5'
-                          : '${progress.memorizedAyahs}/${progress.totalAyahs}',
-                      icon: isKids
-                          ? Icons.star_rounded
-                          : Icons.auto_stories_rounded,
-                      color: const Color(0xFF2D5A8E),
-                      isDark: isDark,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Expanded(
-                    child: _ProgressMetricPill(
-                      label: 'XP',
-                      value: '$totalXp',
-                      icon: Icons.bolt_rounded,
-                      color: const Color(0xFFFF8C42),
-                      isDark: isDark,
-                    ),
-                  ),
-                ],
+              Text(
+                '${(progressPercent * 100).toStringAsFixed(0)}%',
+                style: AppTypography.titleSmall.copyWith(
+                  color: primary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
-          );
-        },
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            child: LinearProgressIndicator(
+              value: progressPercent,
+              minHeight: 8,
+              backgroundColor: primary.withValues(alpha: 0.12),
+              valueColor: AlwaysStoppedAnimation<Color>(primary),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          Row(
+            children: [
+              Expanded(
+                child: _ProgressMetricPill(
+                  label: isKids ? context.l10n.points : context.l10n.reading,
+                  value: isKids
+                      ? '$kidsPoints'
+                      : '${progress.readPagesCount}/${progress.totalQuranPages}',
+                  icon: isKids
+                      ? Icons.emoji_events_rounded
+                      : Icons.menu_book_rounded,
+                  color: primary,
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _ProgressMetricPill(
+                  label: isKids ? context.l10n.stars : context.l10n.hifz,
+                  value: isKids
+                      ? '${progress.kidsStars}/5'
+                      : '${progress.memorizedAyahs}/${progress.totalAyahs}',
+                  icon: isKids
+                      ? Icons.star_rounded
+                      : Icons.auto_stories_rounded,
+                  color: const Color(0xFF2D5A8E),
+                  isDark: isDark,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: _ProgressMetricPill(
+                  label: 'XP',
+                  value: '$totalXp',
+                  icon: Icons.bolt_rounded,
+                  color: const Color(0xFFFF8C42),
+                  isDark: isDark,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
   }
@@ -1362,6 +1358,239 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
             ),
           ],
         ),
+      ),
+    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+  }
+}
+
+class _HomeEngagementSection extends StatelessWidget {
+  const _HomeEngagementSection({
+    required this.state,
+    required this.isDark,
+  });
+
+  final HomeLoaded state;
+  final bool isDark;
+
+  int _weeklyActivityCount() {
+    final today = DateTime.now();
+    var total = 0;
+    for (var i = 0; i < 7; i++) {
+      final day = today.subtract(Duration(days: i));
+      final key =
+          '${day.year}-${day.month.toString().padLeft(2, '0')}-${day.day.toString().padLeft(2, '0')}';
+      total += state.activityCountsByDay[key] ?? 0;
+    }
+    return total;
+  }
+
+  XpLevel _currentLevel() {
+    for (var i = XpConstants.levels.length - 1; i >= 0; i--) {
+      if (state.totalXp >= XpConstants.levels[i].minXp) {
+        return XpConstants.levels[i];
+      }
+    }
+    return XpConstants.levels.first;
+  }
+
+  String _levelLabel(BuildContext context, XpLevel level) {
+    final index = XpConstants.levels.indexOf(level);
+    return switch (index) {
+      0 => context.l10n.levelBeginner,
+      1 => context.l10n.levelStudent,
+      2 => context.l10n.levelHafez,
+      3 => context.l10n.levelSheikh,
+      4 => context.l10n.levelImam,
+      _ => level.name,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final level = _currentLevel();
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: border, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.homeEngagementTitle,
+            style: AppTypography.titleMedium.copyWith(
+              color: textColor,
+              fontFamily: 'Amiri',
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          BlocBuilder<StreakCubit, StreakState>(
+            builder: (context, streakState) {
+              final streak = streakState is StreakLoaded
+                  ? streakState.streak.currentStreak
+                  : state.progress.streakDays;
+              return Column(
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _HomeEngagementTile(
+                          icon: Icons.local_fire_department_rounded,
+                          label: context.l10n.streakTerm,
+                          value: '$streak',
+                          color: const Color(0xFFFF8C42),
+                          isDark: isDark,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: _HomeEngagementTile(
+                          icon: Icons.military_tech_rounded,
+                          label: context.l10n.homeXpLevelLabel,
+                          value: '${level.icon} ${_levelLabel(context, level)}',
+                          color: const Color(0xFF8B5CF6),
+                          isDark: isDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _HomeEngagementTile(
+                          icon: Icons.today_rounded,
+                          label: context.l10n.homeDueTodayLabel,
+                          value: '${state.progress.reviewAyahs}',
+                          color: AppColors.info,
+                          isDark: isDark,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(
+                        child: _HomeEngagementTile(
+                          icon: Icons.calendar_view_week_rounded,
+                          label: context.l10n.homeWeeklyActivityLabel,
+                          value: '${_weeklyActivityCount()}',
+                          color: AppColors.primary,
+                          isDark: isDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
+    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+  }
+}
+
+class _HomeEngagementTile extends StatelessWidget {
+  const _HomeEngagementTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+    required this.isDark,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final subTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.sm + 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.12 : 0.08),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: AppTypography.labelSmall.copyWith(color: subTextColor),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: AppTypography.titleSmall.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeActivityHeatmapSection extends StatelessWidget {
+  const _HomeActivityHeatmapSection({
+    required this.state,
+    required this.isDark,
+  });
+
+  final HomeLoaded state;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: border, width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.homeActivityHeatmapTitle,
+            style: AppTypography.titleMedium.copyWith(
+              color: isDark
+                  ? AppColors.darkTextPrimary
+                  : AppColors.lightTextPrimary,
+              fontFamily: 'Amiri',
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+          ActivityHeatmap(
+            activityCountsByDay: state.activityCountsByDay,
+            startDate: state.activityStartDate,
+          ),
+        ],
       ),
     ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
   }

@@ -14,7 +14,7 @@ import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/memorization_identity_cubit.dart';
-import '../navigation/memorization_navigation_resolver.dart';
+import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../../../core/extensions/context_extensions.dart';
 
 class PathSelectionPage extends StatelessWidget {

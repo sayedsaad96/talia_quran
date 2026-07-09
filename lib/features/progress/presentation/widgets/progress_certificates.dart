@@ -11,11 +11,23 @@ class _CertificatesSection extends StatefulWidget {
 class _CertificatesSectionState extends State<_CertificatesSection> {
   List<CertificateAward> _certificates = [];
   bool _isLoading = true;
+  StreamSubscription<ProgressChangedReason>? _progressChangesSub;
 
   @override
   void initState() {
     super.initState();
     _loadCertificates();
+    _progressChangesSub = getIt<ProgressEventsBus>().changes.listen((reason) {
+      if (reason == ProgressChangedReason.certificate && mounted) {
+        unawaited(_loadCertificates());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    unawaited(_progressChangesSub?.cancel());
+    super.dispose();
   }
 
   Future<void> _loadCertificates() async {

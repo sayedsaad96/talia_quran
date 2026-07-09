@@ -57,6 +57,10 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       final currentLocale = getIt<LocaleCubit>().state;
       final l10n = lookupAppLocalizations(currentLocale);
       getIt<NotificationScheduler>().refreshNotifications(l10n);
+      // Parent Mode: self-healing resync of production data (review
+      // records/daily plan/certificates/streak) on every resume, covering
+      // any best-effort push that was missed while backgrounded/offline.
+      getIt<AuthCubit>().resyncOnResume();
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden ||
         state == AppLifecycleState.paused ||

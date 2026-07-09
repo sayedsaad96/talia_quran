@@ -8,6 +8,7 @@ enum ParentDashboardFeedbackType {
   rewardAdded,
   remoteRewardAdded,
   childLinked,
+  childRemoved,
   reminderSaved,
   failure,
 }
@@ -29,6 +30,9 @@ class ParentDashboardFeedback extends Equatable {
       message = null;
   const ParentDashboardFeedback.childLinked()
     : type = ParentDashboardFeedbackType.childLinked,
+      message = null;
+  const ParentDashboardFeedback.childRemoved()
+    : type = ParentDashboardFeedbackType.childRemoved,
       message = null;
   const ParentDashboardFeedback.reminderSaved()
     : type = ParentDashboardFeedbackType.reminderSaved,

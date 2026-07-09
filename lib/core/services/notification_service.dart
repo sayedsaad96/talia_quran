@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
@@ -14,7 +13,6 @@ import 'package:timezone/data/latest.dart' as tz_data;
 /// - Streak protection alerts (10:00 PM if no activity)
 /// - Daily ayah notification (7:00 AM)
 /// - Morning and evening azkar reminders
-/// - Smart reminders based on user's average app-open time
 class TaliaNotificationService {
   TaliaNotificationService();
 
@@ -36,8 +34,6 @@ class TaliaNotificationService {
   static const int _dailyReviewId = 1001;
   static const int _streakAlertId = 1002;
   static const int _dailyAyahId = 1003;
-  static const int _smartReminderId =
-      1004; // M04 FIX: Separate ID for smart reminder
   static const int _morningAzkarId = 1005;
   static const int _eveningAzkarId = 1006;
   static const int _kidsReviewId = 1007;
@@ -132,7 +128,6 @@ class TaliaNotificationService {
     }
   }
 
-
   /// Request permissions for local notifications (iOS and Android 13+)
   Future<void> requestPermissions() async {
     if (Platform.isIOS) {
@@ -172,7 +167,7 @@ class TaliaNotificationService {
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
-      payload: '/hifz',
+      payload: '/memorization',
     );
   }
 
@@ -206,7 +201,7 @@ class TaliaNotificationService {
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
-      payload: '/hifz',
+      payload: '/memorization',
     );
   }
 
@@ -308,7 +303,7 @@ class TaliaNotificationService {
   /// the next several days individually and refreshes them when the app resumes.
   Future<void> scheduleDailyDuaReminder({
     required String title,
-    int hour = 9, 
+    int hour = 9,
     int minute = 0,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
@@ -366,70 +361,6 @@ class TaliaNotificationService {
     await _plugin.cancel(id: _kidsReviewId);
   }
 
-  // ─── Smart Reminder ────────────────────────────────────────────────────────
-
-  /// Schedules a smart reminder based on the user's average app-open time.
-  /// Tracks the last 14 open times and calculates the best reminder time.
-  Future<void> scheduleSmartReminder({
-    required String title,
-    required String body,
-  }) async {
-    if (!Platform.isAndroid && !Platform.isIOS) return;
-
-    final prefs = await SharedPreferences.getInstance();
-
-    // Record current app-open hour
-    final currentHour = DateTime.now().hour;
-    final storedHours = prefs.getStringList('open_hours') ?? [];
-    storedHours.add(currentHour.toString());
-    if (storedHours.length > 14) storedHours.removeAt(0);
-    await prefs.setStringList('open_hours', storedHours);
-
-    // Calculate average open hour
-    int avgHour = 20; // default 8 PM
-    if (storedHours.length >= 3) {
-      final sum = storedHours.map(int.parse).reduce((a, b) => a + b);
-      avgHour = (sum / storedHours.length).round();
-    }
-
-    // Cancel old and schedule new
-    // M04 FIX: Use separate ID so smart reminder doesn't cancel daily ayah
-    await _plugin.cancel(id: _smartReminderId);
-
-    final tzNow = tz.TZDateTime.now(tz.local);
-    var scheduledTime = tz.TZDateTime(
-      tz.local,
-      tzNow.year,
-      tzNow.month,
-      tzNow.day,
-      avgHour,
-    );
-    if (scheduledTime.isBefore(tzNow)) {
-      scheduledTime = scheduledTime.add(const Duration(days: 1));
-    }
-
-    await _plugin.zonedSchedule(
-      id: _smartReminderId, // M04 FIX
-      title: title,
-      body: body,
-      scheduledDate: scheduledTime,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'daily_reminder',
-          'التذكير اليومي',
-          channelDescription: 'تذكير يومي لحفظ القرآن',
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: _notificationIcon,
-        ),
-        iOS: DarwinNotificationDetails(categoryIdentifier: 'daily_reminder'),
-      ),
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-      payload: '/hifz',
-    );
-  }
-
   // ─── Streak Alert (Smart) ──────────────────────────────────────────────────
 
   /// Schedules a streak-specific alert at 9 PM for users with streak > 3 days.
@@ -473,7 +404,7 @@ class TaliaNotificationService {
         iOS: DarwinNotificationDetails(),
       ),
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      payload: '/hifz',
+      payload: '/memorization',
     );
   }
 

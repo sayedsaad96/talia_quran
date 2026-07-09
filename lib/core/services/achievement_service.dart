@@ -1,10 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../memorization/progress_metrics.dart';
+import '../memorization/progress_metrics_service.dart';
+import '../memorization/quran_structure_maps.dart';
+import '../progress/progress_changed_reason.dart';
+import '../progress/progress_events_bus.dart';
 import '../utils/talia_logger.dart';
 import '../../features/certificate/domain/entities/certificate_award.dart';
-import '../../features/hifz/data/datasources/hifz_local_datasource.dart';
-import '../../features/hifz/domain/entities/hifz_entities.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
+import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 
 // Re-export so existing callers importing achievement_service.dart continue
@@ -14,29 +19,29 @@ export '../../features/certificate/domain/entities/certificate_award.dart';
 /// Product policy (Sprint 9B — Shared Family / Device-Wide Achievements):
 ///
 /// Certificates are shared across the Talia device/profile experience.
-/// [AchievementService] intentionally combines memorized ayahs from Hifz
-/// progress and **all** memorized Memorization Plus review records, regardless
-/// of [ReviewRecordCreatedByMode]. This means every path that can mark an ayah
-/// as memorized — adult MemPlus, Kids Mode, legacy Hifz, migrated records, and
-/// pre-tagging `unknown` records — may contribute to Surah, Juz, Half-Quran,
-/// and Full-Quran certificates.
-///
-/// This is intentional. Certificates reflect total memorization progress in
-/// Talia, not only adult Smart Memorization progress. They represent a shared
-/// family / device-wide achievement, preserving legacy certificates and treating
-/// the Quran completion journey as a unified milestone.
-///
-/// **Do not add source filtering here** unless the certificate product policy
-/// changes. Adult SRS source filters ([ReviewRecordFilters.isAdultCompatible]
-/// and [ReviewRecordFilters.isAdultRetentionCompatible]) apply to Smart Coach,
-/// Quiz, and Progress smart stats only — not to [AchievementService].
+/// Eligibility is computed exclusively via [ProgressMetricsService] with
+/// [ProgressAudience.certificates]: an ayah must reach `strengthLevel >= 6`
+/// (true SRS memorized) from a production source (`v2Session`, `hifz`, or
+/// `kidsMode`). Legacy ambiguous tags never unlock certificates.
 class AchievementService {
-  AchievementService(this._prefs, this._hifzDs, this._memPlusDs, this._quranDs);
+  AchievementService(
+    this._prefs,
+    this._memPlusDs,
+    this._quranDs,
+    this._progressEvents, [
+    this._memPlusRepository,
+    this._metrics = const ProgressMetricsService(),
+  ]);
 
   final SharedPreferences _prefs;
-  final HifzLocalDatasource _hifzDs;
   final MemorizationPlusLocalDatasource _memPlusDs;
   final QuranLocalDatasource _quranDs;
+  final ProgressEventsBus _progressEvents;
+  // Optional: injected lazily to avoid a DI cycle with the repository, which
+  // does not depend on this service. Used only for best-effort cloud sync of
+  // newly-earned certificates so the parent dashboard can display them.
+  final MemorizationPlusRepository? _memPlusRepository;
+  final ProgressMetricsService _metrics;
 
   static const _earnedKey = 'earned_certificates_v2';
   static const _newBadgeKey = 'has_new_certificate';
@@ -72,32 +77,34 @@ class AchievementService {
   /// path.
   Future<List<CertificateAward>> checkAndUnlockCertificates() async {
     try {
-      // Cache earned IDs once — avoids repeated JSON parsing across 144+ checks
       final alreadyEarnedIds = getEarnedCertificates().map((c) => c.id).toSet();
 
-      final allProgress = await _hifzDs.getAllProgress();
       final memPlusRecords = await _memPlusDs.getAllReviewRecords();
+      final structure = await QuranStructureMaps.load(_quranDs);
       final surahs = await _quranDs.getSurahs();
-
-      final earned = <CertificateAward>[];
-
-      // ── Unified memorized ayah keys from legacy Hifz and MemorizationPlus ──
-      final memorizedKeys = <String>{
-        ...allProgress
-            .where((p) => p.status == AyahStatus.memorized)
-            .map((p) => p.key),
-        ...memPlusRecords.where((r) => r.isMemorized).map((r) => r.key),
-      };
-
-      // ── 1. Juz certificates (Juz 1-30, accurate ayah-to-juz mapping) ───────
-      final ayahsByJuz = await _quranDs.getAyahsGroupedByJuz();
+      final surahAyahCounts = structure.surahAyahCounts;
+      final ayahKeysByJuz = structure.ayahKeysByJuz;
+      final ayahsByJuz = structure.ayahsByJuz;
       final ayahsBySurah = <int, List<dynamic>>{};
-      for (final ayahs in ayahsByJuz.values) {
-        for (final ayah in ayahs) {
+      for (final entry in ayahsByJuz.entries) {
+        for (final ayah in entry.value) {
           ayahsBySurah.putIfAbsent(ayah.surahId, () => []).add(ayah);
         }
       }
 
+      final metrics = _metrics.calculate(
+        records: memPlusRecords,
+        now: DateTime.now().toUtc(),
+        audience: ProgressAudience.certificates,
+        surahAyahCounts: surahAyahCounts,
+        ayahKeysByJuz: ayahKeysByJuz,
+        totalJuz: 30,
+      );
+      final memorizedKeys = metrics.memorizedKeys;
+
+      final earned = <CertificateAward>[];
+
+      // ── 1. Juz certificates (Juz 1-30, accurate ayah-to-juz mapping) ───────
       for (int juz = 1; juz <= 30; juz++) {
         final ayahs = ayahsByJuz[juz] ?? const [];
         final isComplete =
@@ -160,21 +167,8 @@ class AchievementService {
       }
 
       // ── 3. Half and Full Quran certificates (100% threshold) ──────────────
-      int fullyMemorizedJuzCount = 0;
+      final fullyMemorizedJuzCount = metrics.memorizedJuz;
 
-      for (int juz = 1; juz <= 30; juz++) {
-        final ayahs = ayahsByJuz[juz] ?? const [];
-        if (ayahs.isNotEmpty &&
-            ayahs.every(
-              (ayah) => memorizedKeys.contains(
-                '${ayah.surahId}_${ayah.numberInSurah}',
-              ),
-            )) {
-          fullyMemorizedJuzCount++;
-        }
-      }
-
-      // Half Quran (15+ complete Juz)
       if (fullyMemorizedJuzCount >= 15) {
         const id = 'cert_half_quran';
         if (!alreadyEarnedIds.contains(id)) {
@@ -190,7 +184,6 @@ class AchievementService {
         }
       }
 
-      // Full Quran (30 complete Juz)
       if (fullyMemorizedJuzCount == 30) {
         const id = 'cert_full_quran';
         if (!alreadyEarnedIds.contains(id)) {
@@ -226,6 +219,11 @@ class AchievementService {
       _earnedKey,
       jsonEncode(existing.map((c) => c.toJson()).toList()),
     );
+    _progressEvents.notify(ProgressChangedReason.certificate);
+    final repository = _memPlusRepository;
+    if (repository != null) {
+      unawaited(repository.pushCertificatesToCloud([award]));
+    }
   }
 
   static const List<String> _juzNames = [

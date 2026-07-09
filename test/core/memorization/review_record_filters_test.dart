@@ -170,30 +170,30 @@ void main() {
   // ─── isAdultCompatible ───────────────────────────────────────────────────
 
   group('ReviewRecordFilters.isAdultCompatible', () {
-    test('includes adultMemPlus', () {
+    test('excludes adultMemPlus', () {
       expect(
         ReviewRecordFilters.isAdultCompatible(
           makeRecord(ReviewRecordCreatedByMode.adultMemPlus),
         ),
-        isTrue,
+        isFalse,
       );
     });
 
-    test('includes unknown', () {
+    test('excludes unknown', () {
       expect(
         ReviewRecordFilters.isAdultCompatible(
           makeRecord(ReviewRecordCreatedByMode.unknown),
         ),
-        isTrue,
+        isFalse,
       );
     });
 
-    test('includes migration', () {
+    test('excludes migration', () {
       expect(
         ReviewRecordFilters.isAdultCompatible(
           makeRecord(ReviewRecordCreatedByMode.migration),
         ),
-        isTrue,
+        isFalse,
       );
     });
 
@@ -206,12 +206,21 @@ void main() {
       );
     });
 
-    test('excludes hifz', () {
+    test('includes hifz', () {
       expect(
         ReviewRecordFilters.isAdultCompatible(
           makeRecord(ReviewRecordCreatedByMode.hifz),
         ),
-        isFalse,
+        isTrue,
+      );
+    });
+
+    test('includes v2Session', () {
+      expect(
+        ReviewRecordFilters.isAdultCompatible(
+          makeRecord(ReviewRecordCreatedByMode.v2Session),
+        ),
+        isTrue,
       );
     });
   });
@@ -219,30 +228,30 @@ void main() {
   // ─── isAdultRetentionCompatible ──────────────────────────────────────────
 
   group('ReviewRecordFilters.isAdultRetentionCompatible', () {
-    test('includes adultMemPlus', () {
+    test('excludes adultMemPlus', () {
       expect(
         ReviewRecordFilters.isAdultRetentionCompatible(
           makeRecord(ReviewRecordCreatedByMode.adultMemPlus),
         ),
-        isTrue,
+        isFalse,
       );
     });
 
-    test('includes unknown', () {
+    test('excludes unknown', () {
       expect(
         ReviewRecordFilters.isAdultRetentionCompatible(
           makeRecord(ReviewRecordCreatedByMode.unknown),
         ),
-        isTrue,
+        isFalse,
       );
     });
 
-    test('includes migration', () {
+    test('excludes migration', () {
       expect(
         ReviewRecordFilters.isAdultRetentionCompatible(
           makeRecord(ReviewRecordCreatedByMode.migration),
         ),
-        isTrue,
+        isFalse,
       );
     });
 
@@ -255,12 +264,21 @@ void main() {
       );
     });
 
-    test('excludes hifz', () {
+    test('includes hifz', () {
       expect(
         ReviewRecordFilters.isAdultRetentionCompatible(
           makeRecord(ReviewRecordCreatedByMode.hifz),
         ),
-        isFalse,
+        isTrue,
+      );
+    });
+
+    test('includes v2Session', () {
+      expect(
+        ReviewRecordFilters.isAdultRetentionCompatible(
+          makeRecord(ReviewRecordCreatedByMode.v2Session),
+        ),
+        isTrue,
       );
     });
   });
@@ -268,7 +286,7 @@ void main() {
   // ─── isDailyPlanRetentionEligible ─────────────────────────────────────────
 
   AyahReviewRecord memorizedDueRecord({
-    ReviewRecordCreatedByMode mode = ReviewRecordCreatedByMode.adultMemPlus,
+    ReviewRecordCreatedByMode mode = ReviewRecordCreatedByMode.v2Session,
     DateTime? nextReviewDate,
     int strengthLevel = 6,
     int totalReviews = 4,
@@ -288,14 +306,14 @@ void main() {
   }
 
   group('ReviewRecordFilters.isDailyPlanRetentionEligible', () {
-    test('includes adultMemPlus memorized-due', () {
+    test('includes v2Session memorized-due', () {
       expect(
         ReviewRecordFilters.isDailyPlanRetentionEligible(memorizedDueRecord()),
         isTrue,
       );
     });
 
-    test('excludes adultMemPlus non-due memorized', () {
+    test('excludes v2Session non-due memorized', () {
       expect(
         ReviewRecordFilters.isDailyPlanRetentionEligible(
           memorizedDueRecord(nextReviewDate: DateTime.utc(2099, 12, 31)),
@@ -304,7 +322,7 @@ void main() {
       );
     });
 
-    test('excludes adultMemPlus due non-memorized', () {
+    test('excludes v2Session due non-memorized', () {
       expect(
         ReviewRecordFilters.isDailyPlanRetentionEligible(
           memorizedDueRecord(strengthLevel: 4),
@@ -313,14 +331,12 @@ void main() {
       );
     });
 
-    // Sprint 4.5: V2 adult records are now eligible for retention review,
-    // consistent with Smart Coach, Progress, and AchievementService.
-    test('includes v2Session memorized-due', () {
+    test('excludes adultMemPlus memorized-due', () {
       expect(
         ReviewRecordFilters.isDailyPlanRetentionEligible(
-          memorizedDueRecord(mode: ReviewRecordCreatedByMode.v2Session),
+          memorizedDueRecord(mode: ReviewRecordCreatedByMode.adultMemPlus),
         ),
-        isTrue,
+        isFalse,
       );
     });
 
@@ -345,12 +361,12 @@ void main() {
       );
     });
 
-    test('excludes hifz memorized-due', () {
+    test('includes hifz memorized-due', () {
       expect(
         ReviewRecordFilters.isDailyPlanRetentionEligible(
           memorizedDueRecord(mode: ReviewRecordCreatedByMode.hifz),
         ),
-        isFalse,
+        isTrue,
       );
     });
 
@@ -422,33 +438,204 @@ void main() {
       },
     );
 
-    test(
-      'isKidsSource is the complement of isAdultCompatible for pure sources',
-      () {
-        // adultMemPlus, unknown, migration — compatible, not kids
-        for (final mode in [
-          ReviewRecordCreatedByMode.adultMemPlus,
-          ReviewRecordCreatedByMode.unknown,
-          ReviewRecordCreatedByMode.migration,
-        ]) {
-          final record = makeRecord(mode);
-          expect(
-            ReviewRecordFilters.isKidsSource(record),
-            isFalse,
-            reason: '$mode should not be kids source',
-          );
-          expect(
-            ReviewRecordFilters.isAdultCompatible(record),
-            isTrue,
-            reason: '$mode should be adult compatible',
-          );
-        }
+    test('adult and kids source predicates are explicit allowlists', () {
+      final adultRecord = makeRecord(ReviewRecordCreatedByMode.v2Session);
+      final hifzRecord = makeRecord(ReviewRecordCreatedByMode.hifz);
+      final kidsRecord = makeRecord(ReviewRecordCreatedByMode.kidsMode);
 
-        // kidsMode — not compatible, is kids
-        final kidsRecord = makeRecord(ReviewRecordCreatedByMode.kidsMode);
-        expect(ReviewRecordFilters.isKidsSource(kidsRecord), isTrue);
-        expect(ReviewRecordFilters.isAdultCompatible(kidsRecord), isFalse);
-      },
+      expect(ReviewRecordFilters.isAdultCompatible(adultRecord), isTrue);
+      expect(ReviewRecordFilters.isAdultCompatible(hifzRecord), isTrue);
+      expect(ReviewRecordFilters.isKidsSource(adultRecord), isFalse);
+      expect(ReviewRecordFilters.isKidsSource(kidsRecord), isTrue);
+      expect(ReviewRecordFilters.isAdultCompatible(kidsRecord), isFalse);
+
+      for (final mode in [
+        ReviewRecordCreatedByMode.adultMemPlus,
+        ReviewRecordCreatedByMode.unknown,
+        ReviewRecordCreatedByMode.migration,
+      ]) {
+        final record = makeRecord(mode);
+        expect(ReviewRecordFilters.isAdultCompatible(record), isFalse);
+        expect(ReviewRecordFilters.isKidsSource(record), isFalse);
+      }
+    });
+  });
+
+  // ─── Metric predicates (Phase 0) ──────────────────────────────────────────
+
+  AyahReviewRecord metricRecord({
+    required int strengthLevel,
+    required int totalReviews,
+    ReviewRecordCreatedByMode mode = ReviewRecordCreatedByMode.v2Session,
+  }) {
+    final now = DateTime.utc(2026, 1, 1);
+    return AyahReviewRecord(
+      surahId: 2,
+      ayahNumber: 5,
+      strengthLevel: strengthLevel,
+      intervalDays: 7,
+      lastReviewedAt: now,
+      nextReviewDate: now.add(const Duration(days: 7)),
+      totalReviews: totalReviews,
+      lastRating: PerformanceRating.average,
+      createdByMode: mode,
     );
+  }
+
+  group('ReviewRecordFilters.isMemorized', () {
+    test('false at strengthLevel 5 (boundary)', () {
+      expect(
+        ReviewRecordFilters.isMemorized(
+          metricRecord(strengthLevel: 5, totalReviews: 3),
+        ),
+        isFalse,
+      );
+    });
+
+    test('true at strengthLevel 6 (boundary)', () {
+      expect(
+        ReviewRecordFilters.isMemorized(
+          metricRecord(strengthLevel: 6, totalReviews: 3),
+        ),
+        isTrue,
+      );
+    });
+  });
+
+  group('ReviewRecordFilters.isStarted', () {
+    test('false when totalReviews == 0', () {
+      expect(
+        ReviewRecordFilters.isStarted(
+          metricRecord(strengthLevel: 0, totalReviews: 0),
+        ),
+        isFalse,
+      );
+    });
+
+    test('true when totalReviews > 0', () {
+      expect(
+        ReviewRecordFilters.isStarted(
+          metricRecord(strengthLevel: 1, totalReviews: 1),
+        ),
+        isTrue,
+      );
+    });
+  });
+
+  group('ReviewRecordFilters.isLearning', () {
+    test('true when started but not memorized', () {
+      expect(
+        ReviewRecordFilters.isLearning(
+          metricRecord(strengthLevel: 3, totalReviews: 2),
+        ),
+        isTrue,
+      );
+    });
+
+    test('false when memorized (disjoint from isMemorized)', () {
+      final record = metricRecord(strengthLevel: 6, totalReviews: 4);
+      expect(ReviewRecordFilters.isLearning(record), isFalse);
+      expect(ReviewRecordFilters.isMemorized(record), isTrue);
+    });
+
+    test('false when not started', () {
+      expect(
+        ReviewRecordFilters.isLearning(
+          metricRecord(strengthLevel: 0, totalReviews: 0),
+        ),
+        isFalse,
+      );
+    });
+  });
+
+  group('ReviewRecordFilters.isAdultProductionCount', () {
+    test('includes v2Session', () {
+      expect(
+        ReviewRecordFilters.isAdultProductionCount(
+          metricRecord(
+            strengthLevel: 6,
+            totalReviews: 4,
+            mode: ReviewRecordCreatedByMode.v2Session,
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('includes hifz (repaired legacy)', () {
+      expect(
+        ReviewRecordFilters.isAdultProductionCount(
+          metricRecord(
+            strengthLevel: 6,
+            totalReviews: 4,
+            mode: ReviewRecordCreatedByMode.hifz,
+          ),
+        ),
+        isTrue,
+      );
+    });
+
+    test('excludes kidsMode from adult counts', () {
+      expect(
+        ReviewRecordFilters.isAdultProductionCount(
+          metricRecord(
+            strengthLevel: 6,
+            totalReviews: 4,
+            mode: ReviewRecordCreatedByMode.kidsMode,
+          ),
+        ),
+        isFalse,
+      );
+    });
+
+    test('excludes adultMemPlus, unknown, migration', () {
+      for (final mode in [
+        ReviewRecordCreatedByMode.adultMemPlus,
+        ReviewRecordCreatedByMode.unknown,
+        ReviewRecordCreatedByMode.migration,
+      ]) {
+        expect(
+          ReviewRecordFilters.isAdultProductionCount(
+            metricRecord(strengthLevel: 6, totalReviews: 4, mode: mode),
+          ),
+          isFalse,
+          reason: '$mode must be excluded from adult production counts',
+        );
+      }
+    });
+  });
+
+  group('ReviewRecordFilters.isCertificateEligibleSource', () {
+    test('includes v2Session, hifz, and kidsMode', () {
+      for (final mode in [
+        ReviewRecordCreatedByMode.v2Session,
+        ReviewRecordCreatedByMode.hifz,
+        ReviewRecordCreatedByMode.kidsMode,
+      ]) {
+        expect(
+          ReviewRecordFilters.isCertificateEligibleSource(
+            metricRecord(strengthLevel: 6, totalReviews: 4, mode: mode),
+          ),
+          isTrue,
+          reason: '$mode must be eligible for certificates',
+        );
+      }
+    });
+
+    test('excludes ambiguous legacy sources', () {
+      for (final mode in [
+        ReviewRecordCreatedByMode.adultMemPlus,
+        ReviewRecordCreatedByMode.unknown,
+        ReviewRecordCreatedByMode.migration,
+      ]) {
+        expect(
+          ReviewRecordFilters.isCertificateEligibleSource(
+            metricRecord(strengthLevel: 6, totalReviews: 4, mode: mode),
+          ),
+          isFalse,
+          reason: '$mode must not unlock certificates',
+        );
+      }
+    });
   });
 }
