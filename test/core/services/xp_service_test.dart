@@ -75,6 +75,10 @@ void main() {
       expect(XpConstants.rewards['ayah_memorized'], equals(10));
     });
 
+    test('v2_block_completed reward is 50 XP', () {
+      expect(XpConstants.rewards['v2_block_completed'], equals(50));
+    });
+
     // ─── Progress to next level ──────────────────────────────────────────────
 
     test('0/100 XP → 0% progress to طالب', () {

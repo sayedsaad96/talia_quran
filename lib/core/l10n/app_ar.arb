@@ -873,26 +873,10 @@
   "performanceExcellent": "ممتاز",
   "dailyPlanListenBeforeRating": "استمع للآية قبل التقييم",
   "reviewQuizTitle": "مراجعة بالتسميع",
-  "quizExitTitle": "الخروج من جلسة المراجعة؟",
+  "memorizationSessionTitle": "جلسة الحفظ",
   "memorizationHubReviewSectionTitle": "مراجعة بالتسميع",
   "memorizationHubReviewSectionSubtitle": "راجع ما حفظته عبر جلسة تسميع موجهة (تحويل الصوت إلى نص).",
-  "memorizationHubReviewCardDescription": "افتح جلسة حفظ V2 للآيات التي حفظتها مسبقًا.",
-  "quizExitMessage": "سيتم حفظ الآيات التي قيّمتها حتى الآن.\nهل تريد الخروج؟",
-  "quizStayAction": "البقاء",
-  "quizExitAction": "خروج",
-  "quizYourAnswer": "إجابتك",
-  "quizListenRetryTitle": "استمع ثم أعد المحاولة",
-  "quizListenRetrySubtitle": "تحتاج تدريباً أكثر، وهذا طبيعي في أول المراجعة.",
-  "quizNextAyah": "الآية التالية",
-  "quizShowResults": "عرض النتائج",
-  "quizExcellentResult": "ممتاز!",
-  "quizGoodEffortResult": "جهد جيد!",
-  "quizPassedMessage": "لقد اجتزت اختبار المراجعة بنجاح",
-  "quizRetryMessage": "حاول مراجعة الآيات وأعد الاختبار",
-  "quizScoreLabel": "النتيجة",
-  "quizTotalLabel": "إجمالي",
-  "quizPassedLabel": "ناجحة",
-  "quizNeedsPracticeLabel": "تحتاج تدريباً",
+  "memorizationHubReviewCardDescription": "افتح جلسة حفظ للآيات التي حفظتها مسبقًا.",
   "backAction": "العودة",
   "hifzKidsRedirectedFromAdult": "هذا المسار مخصص للبالغين. سيتم توجيهك لمسار الأطفال.",
   "parentDashboardLastSession": "آخر جلسة",
@@ -1226,43 +1210,6 @@
       "difficulty": {}
     }
   },
-  "quizAyahNumberTitle": "الآية رقم {ayahNumber}",
-  "@quizAyahNumberTitle": {
-    "placeholders": {
-      "ayahNumber": {
-        "type": "int"
-      }
-    }
-  },
-  "quizRecitePrompt": "اضغط على المايكروفون وقم بتسميع الآية",
-  "quizHintLabel": "تلميح: {hint}",
-  "@quizHintLabel": {
-    "placeholders": {
-      "hint": {}
-    }
-  },
-  "quizListenAyahTitle": "استمع للآية",
-  "quizListenAyahSubtitle": "استمع قبل التسميع لتتذكر النطق الصحيح",
-  "quizListeningStatus": "جاري الاستماع...",
-  "quizTapToSpeak": "انقر للتحدث",
-  "quizTapToRecordAgain": "انقر لإعادة التسجيل",
-  "quizRecordBeforeChecking": "يرجى تسجيل الصوت أولاً قبل التحقق",
-  "quizCheckAnswer": "تحقق من الإجابة",
-  "quizManualEvaluation": "التقييم اليدوي",
-  "quizManualEvaluationHelp": "إذا لم يعمل الميكروفون، قيّم التسميع بنفس المقياس المستخدم في التطبيق.",
-  "quizRetryMicrophone": "إعادة محاولة الميكروفون",
-  "quizSkipAyah": "تخطي الآية",
-  "quizAnswerPassedTitle": "أحسنت! ✨",
-  "quizAnswerNeedsPracticeTitle": "نراجعها معاً 💪",
-  "quizMatchPercent": "نسبة التطابق: {percent}%",
-  "@quizMatchPercent": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
-  "quizCorrectText": "النص الصحيح",
   "memorizationPathSelectionFailedTitle": "تعذر حفظ اختيارك",
   "memorizationPathConfirmTitle": "ماذا سيحدث بعد ذلك؟",
   "memorizationPathCanChangeLater": "يمكن تغييره من الإعدادات لاحقاً بدون فقدان تقدمك.",
@@ -1346,22 +1293,11 @@
     }
   },
   "kidsAudioPlaybackFailed": "لم يعمل الصوت الآن. جرّب مرة أخرى أو اطلب من ولي الأمر الاتصال بالإنترنت.",
-  "quizSurahNotFound": "لم يتم العثور على بيانات السورة",
-  "quizAyahsOutsidePlan": "لا يمكن اختبار آيات خارج خطتك أو سجلاتك",
-  "quizNoMemorizedAyahs": "لا توجد آيات محفوظة لاختبارها في هذه السورة",
   "smartCoachMemorizedReviewDueTitle": "مراجعة تثبيت مستحقة",
   "smartCoachMemorizedReviewDueSubtitle": "راجع الآيات المحفوظة من سورة {surahName} لتثبيت حفظك.",
   "@smartCoachMemorizedReviewDueSubtitle": {
     "placeholders": {
       "surahName": {
-        "type": "String"
-      }
-    }
-  },
-  "quizUnexpectedError": "حدث خطأ: {error}",
-  "@quizUnexpectedError": {
-    "placeholders": {
-      "error": {
         "type": "String"
       }
     }
@@ -1433,7 +1369,7 @@
   "tutorialS1Tip1": "ابدأ من الصفحة الرئيسية لأنها تجمع ورد اليوم والتقدم والاختصارات.",
   "tutorialS1Tip2": "آخر موضع محفوظ يعمل مع صفحات القرآن وبعض مسارات الحفظ الذكي.",
   "tutorialS1Note1": "شاشة البداية والتعريف لا تتغير عند إضافة هذا الدليل.",
-  "tutorialS1Note2": "تسجيل الدخول اختياري، لكن يفيد في النسخ الاحتياطي السحابي.",
+  "tutorialS1Note2": "تسجيل الدخول اختياري، ويفيد في إدارة الحساب وميزات العائلة.",
   "tutorialS2Title": "الصفحة الرئيسية",
   "tutorialS2Cat": "البدء",
   "tutorialS2Does": "تعرض تحية باسمك إن وجد، وردًا يوميًا، استكمال القراءة، ملخص التقدم، اختصار الأذكار، الخطة المخصصة، الحفظ الذكي، وخريطة نشاطك.",

@@ -713,13 +713,16 @@ class _FakeXpService implements XpService {
 
 class _FakeAchievementService implements AchievementService {
   @override
-  bool get hasNewCertificate => false;
+  bool hasNewCertificate({required bool isKids}) => false;
 
   @override
-  List<CertificateAward> getEarnedCertificates() => const [];
+  List<CertificateAward> getEarnedCertificates({required bool isKids}) => const [];
 
   @override
-  void markCertificatesSeen() {}
+  List<CertificateAward> getAllEarnedCertificates() => const [];
+
+  @override
+  void markCertificatesSeen({required bool isKids}) {}
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

@@ -49,7 +49,7 @@ void main() {
         .thenAnswer((_) async => const Right(null));
     when(mockMemPlusRepository.resyncProductionDataToCloud())
         .thenAnswer((_) async => const Right(null));
-    when(mockAchievementService.getEarnedCertificates()).thenReturn(const []);
+    when(mockAchievementService.getAllEarnedCertificates()).thenReturn(const []);
   });
 
   tearDown(() {

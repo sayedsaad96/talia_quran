@@ -214,7 +214,11 @@ class ScheduleNextReviewUsecase {
 
 // ─── FsrsStateTrackerUsecase (V3.3 Preparation) ──────────────────────────────
 
-/// Passive state tracking for future FSRS adoption.
+/// Passive FSRS state tracking — **not on the production write path** (D4).
+///
+/// Production scheduling is SM-2 via [ScheduleNextReviewUsecase] in
+/// `V2SessionReviewAdapter`. Kept for unit tests / future shadow analytics;
+/// do not register in DI or call from `saveReviewRecord` until product signs off.
 class FsrsStateTrackerUsecase {
   const FsrsStateTrackerUsecase();
 
@@ -270,7 +274,8 @@ class FsrsStateTrackerUsecase {
 
 // ─── FsrsPredictionUsecase (V3.4 Shadow Mode) ────────────────────────────────
 
-/// Generates FSRS shadow predictions without affecting current scheduling.
+/// FSRS shadow predictions — **analytics only** (D4). Never chained before
+/// `saveReviewRecord`; production intervals come from SM-2 only.
 class FsrsPredictionUsecase {
   const FsrsPredictionUsecase();
 

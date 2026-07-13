@@ -3,9 +3,8 @@ import 'package:equatable/equatable.dart';
 /// Which population of records a [ProgressMetrics] snapshot describes.
 ///
 /// Adult surfaces count [v2Session]/[hifz] records; kids surfaces count
-/// [kidsMode] records; certificate eligibility counts all production sources
-/// ([v2Session], [hifz], [kidsMode]). Adult and kids never mix in UI totals.
-enum ProgressAudience { adult, kids, certificates }
+/// [kidsMode] records. Adult and kids never mix in UI totals.
+enum ProgressAudience { adult, kids }
 
 /// Immutable, fully-computed progress snapshot.
 ///

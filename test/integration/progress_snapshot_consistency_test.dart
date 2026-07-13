@@ -154,13 +154,13 @@ void main() {
         ProgressEventsBus(),
       );
 
-      final awards = await achievementService.checkAndUnlockCertificates();
+      final awards = await achievementService.checkAndUnlockCertificates(isKids: false);
 
       expect(progress.memorizedAyahs, metrics.memorizedAyahs);
       expect(metrics.memorizedSurahs, 1);
       expect(awards.map((award) => award.id), contains('cert_surah_1'));
       expect(
-        achievementService.getEarnedCertificates().map((award) => award.id),
+        achievementService.getEarnedCertificates(isKids: false).map((award) => award.id),
         contains('cert_surah_1'),
       );
     });

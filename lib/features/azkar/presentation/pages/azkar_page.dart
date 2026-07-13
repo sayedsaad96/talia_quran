@@ -113,7 +113,7 @@ class AzkarPage extends StatelessWidget {
                 AppSpacing.md,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     context.l10n.azkar,

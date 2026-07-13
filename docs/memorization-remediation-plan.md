@@ -185,7 +185,7 @@ Record in `docs/memorization-remediation-decisions.md` (create on first decision
 | 1 | `clearLastRestorableLocation()` in `_onBlockCompleted` | `memorization_session_cubit.dart` | Additive |
 | 2 | Clear URL on kids complete | `kids_gamified_listen_page.dart` / completion flow | Additive |
 | 3 | Gate completion UI on `MSCompleted` only | `v2_session_page.dart` | UI-only |
-| 4 | Optional: confirm-on-pop for mid-session | `v2_session_page.dart` | UX-only |
+| 4 | Optional: confirm-on-pop for mid-session | `v2_session_page.dart` | UX-only — **Done 2026-07-12** |
 
 **Test:** `session_resume_after_complete_test` (new).
 
@@ -409,6 +409,8 @@ Replace `assert` with validation — low user impact, dev/staging benefit.
 
 **Recommended:** Option A — defer, document SM-2 only, remove unwired DI registrations in cleanup PR.
 
+**Status (2026-07-12):** Done — D4 recorded in `memorization-remediation-decisions.md`. Production scheduler remains SM-2. FSRS shadow classes kept (tests/analytics); **no DI registrations** were present to remove. Write path unchanged.
+
 ### 5.2 Dead code (safe deletion order)
 
 1. Quiz l10n keys (after PB8 copy fix verified).  
@@ -417,28 +419,34 @@ Replace `assert` with validation — low user impact, dev/staging benefit.
 4. Wire or delete `scheduleSmartReminder`.  
 5. Unused XP keys (grep each before delete).
 
+**Status (2026-07-12):** Quiz UI l10n keys removed (kept `reviewQuizTitle`). `GetRetentionReviewSummaryUseCase`, `scheduleSmartReminder`, and `generateHifzSegments` were already gone. XP map has no unused keys (`ayah_memorized` still used).
+
 ### 5.3 Legacy `/hifz`
 
 Redirect to Hub with surah param — **after** PendingAyahResolver wired (avoid new `startAyah=1` regressions).
+
+**Status (2026-07-12):** `/hifz` → Hub; `/hifz?surahId=` → V2 via `practiceSurahSessionLocation` (PendingAyahResolver). Surah picker moved to `/memorization/practice-surah`.
 
 ---
 
 ## Sprint 6 — Hardening & re-certification (Week 8–9)
 
+**Status (2026-07-12):** Required test inventory present (see 6.1). Small leftover gaps closed in code: `v2_block_completed` XP wired (50), V2 confirm-on-pop, D2 tutorial copy softened (no cloud-backup claim while pull flag is off). Feature flags remain default **false**. Ops/staging enablement still required for Tier C.
+
 ### 6.1 Required tests (must exist before Tier C)
 
-| Test | Blocker |
-|------|---------|
-| `daily_plan_completion_test` | B1 |
-| `navigation_pending_ayah_test` | B5 |
-| `session_resume_after_complete_test` | B8 |
-| `audience_isolation_test` | B4 |
-| `cloud_pull_merge_integration_test` | B6, B9 |
-| `auth_pull_bus_test` | B7 |
-| `parent_remote_summary_test` | B3 |
-| `certificate_resync_test` | P14-7 |
-| `smart_coach_continue_plan_test` | B5 partial |
-| `stt_normalization_compliance_test` | §14.7 (Product Rules) |
+| Test | Blocker | Status |
+|------|---------|--------|
+| `daily_plan_completion_test` | B1 | Done |
+| `navigation_pending_ayah_test` | B5 | Done |
+| `session_resume_after_complete_test` | B8 | Done |
+| `audience_isolation_test` | B4 | Done |
+| `cloud_pull_merge_integration_test` | B6, B9 | Done (code; staging RPC still ops) |
+| `auth_pull_bus_test` | B7 | Done |
+| `parent_remote_summary_test` | B3 | Done |
+| `certificate_resync_test` | P14-7 | Done |
+| `smart_coach_continue_plan_test` | B5 partial | Done |
+| `stt_normalization_compliance_test` | §14.7 (Product Rules) | Done |
 
 **`stt_normalization_compliance_test`** — Assert `V2RecitationEvaluator` applies the §14.7 normalization pipeline (tashkeel removal, hamza/alif normalization, stop symbols, punctuation) via `ArabicNormalizer` on **both** target and STT input before pass/fail — not merely that the evaluator class exists. Extend or complement `test/core/utils/arabic_normalizer_test.dart` and `test/core/memorization/v2/recitation_evaluator_test.dart`.
 
@@ -446,6 +454,8 @@ Redirect to Hub with surah param — **after** PendingAyahResolver wired (avoid 
 
 - If B6 not shipped: **remove “sync memorization across devices”** from user-facing copy.  
 - Privacy policy ↔ actual pull/push behavior.
+
+**Status (2026-07-12):** Hub/settings backup copy already honest (account/family, not cross-device hifz). Tutorial `tutorialS1Note2` updated to drop cloud-backup promise until pull is enabled.
 
 ### 6.3 Re-certification checklist
 
@@ -505,22 +515,22 @@ Product validation questions to re-run:
 
 ### Tier A (Sprint 1A–1B)
 
-- [ ] B8, PB8, B5 partial, B1 closed  
-- [ ] Smoke script passes  
-- [ ] No regression in progress consistency test  
-- [ ] **GO WITH CONDITIONS:** adult single-device offline  
+- [x] B8, PB8, B5 partial, B1 closed  
+- [ ] Smoke script passes *(manual — re-run before release)*  
+- [x] No regression in progress consistency test  
+- [x] **GO WITH CONDITIONS:** adult single-device offline  
 
 ### Tier B (+ Sprint 1C + 3)
 
-- [ ] B4 closed  
-- [ ] Plan UI + cert celebration  
-- [ ] Shared-family device safe  
+- [x] B4 closed *(flag `use_audience_scoped_reads` still default false — enable on staging)*  
+- [x] Plan UI + cert celebration  
+- [ ] Shared-family device safe *(needs flag on + QA)*  
 
 ### Tier C (+ Sprint 2)
 
-- [ ] B6, B9, B7, B3, P14-7 closed  
+- [x] B6, B9, B7, B3, P14-7 closed *(code; flags off; SQL/RPC deploy pending)*  
 - [ ] Staging reinstall restore verified  
-- [ ] UX copy matches D2  
+- [x] UX copy matches D2 *(until pull enabled)*  
 
 ### Full GO
 

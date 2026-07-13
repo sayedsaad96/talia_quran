@@ -1242,35 +1242,53 @@ class MockAchievementService extends _i1.Mock
   }
 
   @override
-  bool get hasNewCertificate => (super.noSuchMethod(
-        Invocation.getter(#hasNewCertificate),
-        returnValue: false,
-      ) as bool);
-
-  @override
-  List<_i10.CertificateAward> getEarnedCertificates() => (super.noSuchMethod(
+  List<_i10.CertificateAward> getEarnedCertificates({required bool? isKids}) =>
+      (super.noSuchMethod(
         Invocation.method(
           #getEarnedCertificates,
+          [],
+          {#isKids: isKids},
+        ),
+        returnValue: <_i10.CertificateAward>[],
+      ) as List<_i10.CertificateAward>);
+
+  @override
+  List<_i10.CertificateAward> getAllEarnedCertificates() => (super.noSuchMethod(
+        Invocation.method(
+          #getAllEarnedCertificates,
           [],
         ),
         returnValue: <_i10.CertificateAward>[],
       ) as List<_i10.CertificateAward>);
 
   @override
-  void markCertificatesSeen() => super.noSuchMethod(
+  bool hasNewCertificate({required bool? isKids}) => (super.noSuchMethod(
+        Invocation.method(
+          #hasNewCertificate,
+          [],
+          {#isKids: isKids},
+        ),
+        returnValue: false,
+      ) as bool);
+
+  @override
+  void markCertificatesSeen({required bool? isKids}) => super.noSuchMethod(
         Invocation.method(
           #markCertificatesSeen,
           [],
+          {#isKids: isKids},
         ),
         returnValueForMissingStub: null,
       );
 
   @override
-  _i4.Future<List<_i10.CertificateAward>> checkAndUnlockCertificates() =>
+  _i4.Future<List<_i10.CertificateAward>> checkAndUnlockCertificates(
+          {required bool? isKids}) =>
       (super.noSuchMethod(
         Invocation.method(
           #checkAndUnlockCertificates,
           [],
+          {#isKids: isKids},
         ),
         returnValue: _i4.Future<List<_i10.CertificateAward>>.value(
             <_i10.CertificateAward>[]),

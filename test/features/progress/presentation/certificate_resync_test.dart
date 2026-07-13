@@ -62,7 +62,7 @@ void main() {
     when(
       memPlusRepository.pushCertificatesToCloud([certificate]),
     ).thenAnswer((_) async => const Right(null));
-    when(achievementService.getEarnedCertificates()).thenReturn([certificate]);
+    when(achievementService.getAllEarnedCertificates()).thenReturn([certificate]);
   });
 
   tearDown(() async {
@@ -85,7 +85,7 @@ void main() {
       memPlusRepository.pullProductionDataFromCloud(),
       authRepository.syncProgressToCloud(),
       memPlusRepository.resyncProductionDataToCloud(),
-      achievementService.getEarnedCertificates(),
+      achievementService.getAllEarnedCertificates(),
       memPlusRepository.pushCertificatesToCloud([certificate]),
     ]);
 

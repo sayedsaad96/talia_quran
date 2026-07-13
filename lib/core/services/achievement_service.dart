@@ -43,14 +43,19 @@ class AchievementService {
   final MemorizationPlusRepository? _memPlusRepository;
   final ProgressMetricsService _metrics;
 
-  static const _earnedKey = 'earned_certificates_v2';
-  static const _newBadgeKey = 'has_new_certificate';
+  static const _earnedKeyAdult = 'earned_certificates_v2';
+  static const _earnedKeyKids = 'earned_certificates_v2_kids';
+  static const _newBadgeKeyAdult = 'has_new_certificate';
+  static const _newBadgeKeyKids = 'has_new_certificate_kids';
+
+  String _getEarnedKey(bool isKids) => isKids ? _earnedKeyKids : _earnedKeyAdult;
+  String _getNewBadgeKey(bool isKids) => isKids ? _newBadgeKeyKids : _newBadgeKeyAdult;
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
-  /// Returns all certificates that have been earned so far.
-  List<CertificateAward> getEarnedCertificates() {
-    final raw = _prefs.getString(_earnedKey);
+  /// Returns all certificates that have been earned so far for a specific path.
+  List<CertificateAward> getEarnedCertificates({required bool isKids}) {
+    final raw = _prefs.getString(_getEarnedKey(isKids));
     if (raw == null) return [];
     try {
       final list = jsonDecode(raw) as List<dynamic>;
@@ -63,21 +68,37 @@ class AchievementService {
     }
   }
 
-  /// True when there are new (unseen) certificates.
-  bool get hasNewCertificate => _prefs.getBool(_newBadgeKey) ?? false;
+  /// Returns all certificates across both paths (for cloud sync).
+  List<CertificateAward> getAllEarnedCertificates() {
+    final adultCerts = getEarnedCertificates(isKids: false);
+    final kidsCerts = getEarnedCertificates(isKids: true);
+    final all = [...adultCerts, ...kidsCerts];
+    // Deduplicate by ID in case any legacy certificates were earned in both
+    final uniqueCerts = <String, CertificateAward>{};
+    for (final cert in all) {
+      uniqueCerts[cert.id] = cert;
+    }
+    return uniqueCerts.values.toList()
+      ..sort((a, b) => b.earnedAt.compareTo(a.earnedAt));
+  }
 
-  /// Call this after the user opens the certificates section.
-  void markCertificatesSeen() {
-    _prefs.setBool(_newBadgeKey, false);
+  /// True when there are new (unseen) certificates for the specified path.
+  bool hasNewCertificate({required bool isKids}) {
+    return _prefs.getBool(_getNewBadgeKey(isKids)) ?? false;
+  }
+
+  /// Call this after the user opens the certificates section for the path.
+  void markCertificatesSeen({required bool isKids}) {
+    _prefs.setBool(_getNewBadgeKey(isKids), false);
   }
 
   /// Checks all memorization progress and returns any **newly** earned
-  /// certificates.
+  /// certificates for the specified path.
   /// Call this after every successful ayah memorization in any memorization
   /// path.
-  Future<List<CertificateAward>> checkAndUnlockCertificates() async {
+  Future<List<CertificateAward>> checkAndUnlockCertificates({required bool isKids}) async {
     try {
-      final alreadyEarnedIds = getEarnedCertificates().map((c) => c.id).toSet();
+      final alreadyEarnedIds = getEarnedCertificates(isKids: isKids).map((c) => c.id).toSet();
 
       final memPlusRecords = await _memPlusDs.getAllReviewRecords();
       final structure = await QuranStructureMaps.load(_quranDs);
@@ -92,10 +113,12 @@ class AchievementService {
         }
       }
 
+      final audience = isKids ? ProgressAudience.kids : ProgressAudience.adult;
+
       final metrics = _metrics.calculate(
         records: memPlusRecords,
         now: DateTime.now().toUtc(),
-        audience: ProgressAudience.certificates,
+        audience: audience,
         surahAyahCounts: surahAyahCounts,
         ayahKeysByJuz: ayahKeysByJuz,
         totalJuz: 30,
@@ -127,7 +150,7 @@ class AchievementService {
             );
             earned.add(award);
             alreadyEarnedIds.add(id);
-            await _saveEarned(award);
+            await _saveEarned(award, isKids);
           }
         }
       }
@@ -161,7 +184,7 @@ class AchievementService {
             );
             earned.add(award);
             alreadyEarnedIds.add(id);
-            await _saveEarned(award);
+            await _saveEarned(award, isKids);
           }
         }
       }
@@ -180,7 +203,7 @@ class AchievementService {
           );
           earned.add(award);
           alreadyEarnedIds.add(id);
-          await _saveEarned(award);
+          await _saveEarned(award, isKids);
         }
       }
 
@@ -195,12 +218,12 @@ class AchievementService {
           );
           earned.add(award);
           alreadyEarnedIds.add(id);
-          await _saveEarned(award);
+          await _saveEarned(award, isKids);
         }
       }
 
       if (earned.isNotEmpty) {
-        await _prefs.setBool(_newBadgeKey, true);
+        await _prefs.setBool(_getNewBadgeKey(isKids), true);
       }
 
       return earned;
@@ -212,11 +235,11 @@ class AchievementService {
 
   // ── Private helpers ────────────────────────────────────────────────────────
 
-  Future<void> _saveEarned(CertificateAward award) async {
-    final existing = getEarnedCertificates();
+  Future<void> _saveEarned(CertificateAward award, bool isKids) async {
+    final existing = getEarnedCertificates(isKids: isKids);
     existing.insert(0, award);
     await _prefs.setString(
-      _earnedKey,
+      _getEarnedKey(isKids),
       jsonEncode(existing.map((c) => c.toJson()).toList()),
     );
     _progressEvents.notify(ProgressChangedReason.certificate);

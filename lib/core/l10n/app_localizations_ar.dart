@@ -2144,7 +2144,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reviewQuizTitle => 'مراجعة بالتسميع';
 
   @override
-  String get quizExitTitle => 'الخروج من جلسة المراجعة؟';
+  String get memorizationSessionTitle => 'جلسة الحفظ';
 
   @override
   String get memorizationHubReviewSectionTitle => 'مراجعة بالتسميع';
@@ -2155,57 +2155,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get memorizationHubReviewCardDescription =>
-      'افتح جلسة حفظ V2 للآيات التي حفظتها مسبقًا.';
-
-  @override
-  String get quizExitMessage =>
-      'سيتم حفظ الآيات التي قيّمتها حتى الآن.\nهل تريد الخروج؟';
-
-  @override
-  String get quizStayAction => 'البقاء';
-
-  @override
-  String get quizExitAction => 'خروج';
-
-  @override
-  String get quizYourAnswer => 'إجابتك';
-
-  @override
-  String get quizListenRetryTitle => 'استمع ثم أعد المحاولة';
-
-  @override
-  String get quizListenRetrySubtitle =>
-      'تحتاج تدريباً أكثر، وهذا طبيعي في أول المراجعة.';
-
-  @override
-  String get quizNextAyah => 'الآية التالية';
-
-  @override
-  String get quizShowResults => 'عرض النتائج';
-
-  @override
-  String get quizExcellentResult => 'ممتاز!';
-
-  @override
-  String get quizGoodEffortResult => 'جهد جيد!';
-
-  @override
-  String get quizPassedMessage => 'لقد اجتزت اختبار المراجعة بنجاح';
-
-  @override
-  String get quizRetryMessage => 'حاول مراجعة الآيات وأعد الاختبار';
-
-  @override
-  String get quizScoreLabel => 'النتيجة';
-
-  @override
-  String get quizTotalLabel => 'إجمالي';
-
-  @override
-  String get quizPassedLabel => 'ناجحة';
-
-  @override
-  String get quizNeedsPracticeLabel => 'تحتاج تدريباً';
+      'افتح جلسة حفظ للآيات التي حفظتها مسبقًا.';
 
   @override
   String get backAction => 'العودة';
@@ -2663,67 +2613,6 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String quizAyahNumberTitle(int ayahNumber) {
-    return 'الآية رقم $ayahNumber';
-  }
-
-  @override
-  String get quizRecitePrompt => 'اضغط على المايكروفون وقم بتسميع الآية';
-
-  @override
-  String quizHintLabel(Object hint) {
-    return 'تلميح: $hint';
-  }
-
-  @override
-  String get quizListenAyahTitle => 'استمع للآية';
-
-  @override
-  String get quizListenAyahSubtitle => 'استمع قبل التسميع لتتذكر النطق الصحيح';
-
-  @override
-  String get quizListeningStatus => 'جاري الاستماع...';
-
-  @override
-  String get quizTapToSpeak => 'انقر للتحدث';
-
-  @override
-  String get quizTapToRecordAgain => 'انقر لإعادة التسجيل';
-
-  @override
-  String get quizRecordBeforeChecking => 'يرجى تسجيل الصوت أولاً قبل التحقق';
-
-  @override
-  String get quizCheckAnswer => 'تحقق من الإجابة';
-
-  @override
-  String get quizManualEvaluation => 'التقييم اليدوي';
-
-  @override
-  String get quizManualEvaluationHelp =>
-      'إذا لم يعمل الميكروفون، قيّم التسميع بنفس المقياس المستخدم في التطبيق.';
-
-  @override
-  String get quizRetryMicrophone => 'إعادة محاولة الميكروفون';
-
-  @override
-  String get quizSkipAyah => 'تخطي الآية';
-
-  @override
-  String get quizAnswerPassedTitle => 'أحسنت! ✨';
-
-  @override
-  String get quizAnswerNeedsPracticeTitle => 'نراجعها معاً 💪';
-
-  @override
-  String quizMatchPercent(int percent) {
-    return 'نسبة التطابق: $percent%';
-  }
-
-  @override
-  String get quizCorrectText => 'النص الصحيح';
-
-  @override
   String get memorizationPathSelectionFailedTitle => 'تعذر حفظ اختيارك';
 
   @override
@@ -2894,26 +2783,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم يعمل الصوت الآن. جرّب مرة أخرى أو اطلب من ولي الأمر الاتصال بالإنترنت.';
 
   @override
-  String get quizSurahNotFound => 'لم يتم العثور على بيانات السورة';
-
-  @override
-  String get quizAyahsOutsidePlan => 'لا يمكن اختبار آيات خارج خطتك أو سجلاتك';
-
-  @override
-  String get quizNoMemorizedAyahs =>
-      'لا توجد آيات محفوظة لاختبارها في هذه السورة';
-
-  @override
   String get smartCoachMemorizedReviewDueTitle => 'مراجعة تثبيت مستحقة';
 
   @override
   String smartCoachMemorizedReviewDueSubtitle(String surahName) {
     return 'راجع الآيات المحفوظة من سورة $surahName لتثبيت حفظك.';
-  }
-
-  @override
-  String quizUnexpectedError(String error) {
-    return 'حدث خطأ: $error';
   }
 
   @override
@@ -3157,7 +3031,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tutorialS1Note2 =>
-      'تسجيل الدخول اختياري، لكن يفيد في النسخ الاحتياطي السحابي.';
+      'تسجيل الدخول اختياري، ويفيد في إدارة الحساب وميزات العائلة.';
 
   @override
   String get tutorialS2Title => 'الصفحة الرئيسية';

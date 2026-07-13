@@ -604,38 +604,4 @@ void main() {
       }
     });
   });
-
-  group('ReviewRecordFilters.isCertificateEligibleSource', () {
-    test('includes v2Session, hifz, and kidsMode', () {
-      for (final mode in [
-        ReviewRecordCreatedByMode.v2Session,
-        ReviewRecordCreatedByMode.hifz,
-        ReviewRecordCreatedByMode.kidsMode,
-      ]) {
-        expect(
-          ReviewRecordFilters.isCertificateEligibleSource(
-            metricRecord(strengthLevel: 6, totalReviews: 4, mode: mode),
-          ),
-          isTrue,
-          reason: '$mode must be eligible for certificates',
-        );
-      }
-    });
-
-    test('excludes ambiguous legacy sources', () {
-      for (final mode in [
-        ReviewRecordCreatedByMode.adultMemPlus,
-        ReviewRecordCreatedByMode.unknown,
-        ReviewRecordCreatedByMode.migration,
-      ]) {
-        expect(
-          ReviewRecordFilters.isCertificateEligibleSource(
-            metricRecord(strengthLevel: 6, totalReviews: 4, mode: mode),
-          ),
-          isFalse,
-          reason: '$mode must not unlock certificates',
-        );
-      }
-    });
-  });
 }

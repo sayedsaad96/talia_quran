@@ -62,66 +62,126 @@ class V2SessionPage extends StatelessWidget {
   }
 }
 
-class _V2SessionView extends StatelessWidget {
+class _V2SessionView extends StatefulWidget {
   const _V2SessionView();
+
+  @override
+  State<_V2SessionView> createState() => _V2SessionViewState();
+}
+
+class _V2SessionViewState extends State<_V2SessionView> {
+  /// Set after the user confirms leave so [PopScope] allows the route pop.
+  var _forceAllowPop = false;
+
+  Future<void> _onPopInvoked({
+    required bool didPop,
+    required bool sessionAllowsPop,
+  }) async {
+    if (didPop || sessionAllowsPop || _forceAllowPop) return;
+    final l10n = context.l10n;
+    final shouldLeave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(l10n.hifzLeaveSessionMessage),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.confirm),
+          ),
+        ],
+      ),
+    );
+    if (shouldLeave != true || !mounted) return;
+    setState(() => _forceAllowPop = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(AppRoutes.memorizationPlus);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      appBar: AppBar(
-        title: Text(context.isArabic ? 'جلسة الحفظ' : 'Memorization Session'),
-        backgroundColor: isDark ? AppColors.darkSurface : AppColors.primary,
-        foregroundColor: Colors.white,
-      ),
-      body: BlocConsumer<MemorizationSessionCubit, MemorizationSessionState>(
-        listenWhen: (previous, current) {
-          if (current is MSError) return true;
-          return current is MSCompleted && previous is! MSCompleted;
-        },
-        listener: (context, state) {
-          if (state is MSError) {
-            context.showSnackBar(state.message, isError: true);
-            return;
-          }
-          if (state is MSCompleted && state.awards.isNotEmpty) {
+    return BlocConsumer<MemorizationSessionCubit, MemorizationSessionState>(
+      listenWhen: (previous, current) {
+        if (current is MSError) return true;
+        return current is MSCompleted && previous is! MSCompleted;
+      },
+      listener: (context, state) {
+        if (state is MSError) {
+          context.showSnackBar(state.message, isError: true);
+          return;
+        }
+        if (state is MSCompleted && state.awards.isNotEmpty) {
+          unawaited(
+            showCertificateCelebrationDialog(context, state.awards),
+          );
+        }
+      },
+      builder: (context, state) {
+        final sessionAllowsPop = state is! MSActive;
+        final allowPop = sessionAllowsPop || _forceAllowPop;
+        return PopScope(
+          canPop: allowPop,
+          onPopInvokedWithResult: (didPop, _) {
             unawaited(
-              showCertificateCelebrationDialog(context, state.awards),
+              _onPopInvoked(
+                didPop: didPop,
+                sessionAllowsPop: sessionAllowsPop,
+              ),
             );
-          }
-        },
-        builder: (context, state) {
-          if (state is MSLoading || state is MSInitial) {
-            return const Center(child: LoadingWidget());
-          }
-          if (state is MSError) {
-            return ErrorStateWidget(
-              message: state.message,
-              onRetry: () => context.go(AppRoutes.memorizationPlus),
-            );
-          }
-          if (state is MSCompleted) {
-            return V2CompletionPage(finalState: state.finalState);
-          }
-          if (state is! MSActive) return const SizedBox.shrink();
-
-          return switch (state.sessionState.phase) {
-            V2SessionPhase.created ||
-            V2SessionPhase.learning =>
-              V2LearningPage(state: state),
-            V2SessionPhase.memorizing => V2MemorizingPage(state: state),
-            V2SessionPhase.reciting => V2RecitationPage(state: state),
-            V2SessionPhase.remediation => V2RemediationPage(state: state),
-            V2SessionPhase.blockReviewPending => V2BlockReviewPendingPage(
-              state: state,
+          },
+          child: Scaffold(
+            backgroundColor:
+                isDark ? AppColors.darkBackground : AppColors.lightBackground,
+            appBar: AppBar(
+              title: Text(context.l10n.memorizationSessionTitle),
+              backgroundColor:
+                  isDark ? AppColors.darkSurface : AppColors.primary,
+              foregroundColor: Colors.white,
             ),
-            V2SessionPhase.blockReview => V2BlockReviewPage(state: state),
-            V2SessionPhase.completed => const Center(child: LoadingWidget()),
-          };
-        },
-      ),
+            body: _buildBody(context, state),
+          ),
+        );
+      },
     );
+  }
+
+  Widget _buildBody(BuildContext context, MemorizationSessionState state) {
+    if (state is MSLoading || state is MSInitial) {
+      return const Center(child: LoadingWidget());
+    }
+    if (state is MSError) {
+      return ErrorStateWidget(
+        message: state.message,
+        onRetry: () => context.go(AppRoutes.memorizationPlus),
+      );
+    }
+    if (state is MSCompleted) {
+      return V2CompletionPage(finalState: state.finalState);
+    }
+    if (state is! MSActive) return const SizedBox.shrink();
+
+    return switch (state.sessionState.phase) {
+      V2SessionPhase.created ||
+      V2SessionPhase.learning =>
+        V2LearningPage(state: state),
+      V2SessionPhase.memorizing => V2MemorizingPage(state: state),
+      V2SessionPhase.reciting => V2RecitationPage(state: state),
+      V2SessionPhase.remediation => V2RemediationPage(state: state),
+      V2SessionPhase.blockReviewPending => V2BlockReviewPendingPage(
+        state: state,
+      ),
+      V2SessionPhase.blockReview => V2BlockReviewPage(state: state),
+      V2SessionPhase.completed => const Center(child: LoadingWidget()),
+    };
   }
 }

@@ -298,7 +298,7 @@ final class V2SessionGamificationAdapter {
       // 3. Certificates — reads AyahReviewRecord across all sources
       //    (adultMemPlus + v2Session + legacy). v2Session records are
       //    adult-compatible per ReviewRecordFilters, so they qualify.
-      return await _achievements.checkAndUnlockCertificates();
+      return await _achievements.checkAndUnlockCertificates(isKids: false);
     } catch (e, stack) {
       TaliaLogger.e(
         'V2: Non-critical — gamification error on block complete',

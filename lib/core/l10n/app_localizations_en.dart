@@ -2160,7 +2160,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reviewQuizTitle => 'Review Session';
 
   @override
-  String get quizExitTitle => 'Leave review session?';
+  String get memorizationSessionTitle => 'Memorization Session';
 
   @override
   String get memorizationHubReviewSectionTitle => 'Review Session';
@@ -2172,56 +2172,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get memorizationHubReviewCardDescription =>
       'Open a V2 recitation session for ayahs you have already memorized.';
-
-  @override
-  String get quizExitMessage =>
-      'Your rated ayahs so far will be saved.\nDo you want to leave?';
-
-  @override
-  String get quizStayAction => 'Stay';
-
-  @override
-  String get quizExitAction => 'Leave';
-
-  @override
-  String get quizYourAnswer => 'Your answer';
-
-  @override
-  String get quizListenRetryTitle => 'Listen, then try again';
-
-  @override
-  String get quizListenRetrySubtitle =>
-      'This needs more practice, and that is normal at the start of review.';
-
-  @override
-  String get quizNextAyah => 'Next ayah';
-
-  @override
-  String get quizShowResults => 'Show results';
-
-  @override
-  String get quizExcellentResult => 'Excellent!';
-
-  @override
-  String get quizGoodEffortResult => 'Good effort!';
-
-  @override
-  String get quizPassedMessage => 'You passed the review quiz successfully';
-
-  @override
-  String get quizRetryMessage => 'Review the ayahs and try the quiz again';
-
-  @override
-  String get quizScoreLabel => 'Score';
-
-  @override
-  String get quizTotalLabel => 'Total';
-
-  @override
-  String get quizPassedLabel => 'Passed';
-
-  @override
-  String get quizNeedsPracticeLabel => 'Needs practice';
 
   @override
   String get backAction => 'Back';
@@ -2684,69 +2634,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String quizAyahNumberTitle(int ayahNumber) {
-    return 'Ayah $ayahNumber';
-  }
-
-  @override
-  String get quizRecitePrompt => 'Tap the microphone and recite the ayah';
-
-  @override
-  String quizHintLabel(Object hint) {
-    return 'Hint: $hint';
-  }
-
-  @override
-  String get quizListenAyahTitle => 'Listen to the ayah';
-
-  @override
-  String get quizListenAyahSubtitle =>
-      'Listen before reciting to remember the correct pronunciation';
-
-  @override
-  String get quizListeningStatus => 'Listening...';
-
-  @override
-  String get quizTapToSpeak => 'Tap to speak';
-
-  @override
-  String get quizTapToRecordAgain => 'Tap to record again';
-
-  @override
-  String get quizRecordBeforeChecking =>
-      'Please record your voice before checking';
-
-  @override
-  String get quizCheckAnswer => 'Check answer';
-
-  @override
-  String get quizManualEvaluation => 'Manual evaluation';
-
-  @override
-  String get quizManualEvaluationHelp =>
-      'If the microphone does not work, rate the recitation using the same scale as the app.';
-
-  @override
-  String get quizRetryMicrophone => 'Retry microphone';
-
-  @override
-  String get quizSkipAyah => 'Skip ayah';
-
-  @override
-  String get quizAnswerPassedTitle => 'Well done! ✨';
-
-  @override
-  String get quizAnswerNeedsPracticeTitle => 'Let\'s review it together 💪';
-
-  @override
-  String quizMatchPercent(int percent) {
-    return 'Match: $percent%';
-  }
-
-  @override
-  String get quizCorrectText => 'Correct text';
-
-  @override
   String get memorizationPathSelectionFailedTitle =>
       'Could not save your choice';
 
@@ -2926,26 +2813,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Audio didn\'t work. Try again or ask a parent to check the internet connection.';
 
   @override
-  String get quizSurahNotFound => 'Surah data not found';
-
-  @override
-  String get quizAyahsOutsidePlan =>
-      'Cannot quiz ayahs outside your plan or records';
-
-  @override
-  String get quizNoMemorizedAyahs => 'No memorized ayahs to quiz in this surah';
-
-  @override
   String get smartCoachMemorizedReviewDueTitle => 'Retention review due';
 
   @override
   String smartCoachMemorizedReviewDueSubtitle(String surahName) {
     return 'Review memorized ayahs in Surah $surahName to keep them strong.';
-  }
-
-  @override
-  String quizUnexpectedError(String error) {
-    return 'Something went wrong: $error';
   }
 
   @override
@@ -3184,7 +3056,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tutorialS1Note1 => 'Note 1';
 
   @override
-  String get tutorialS1Note2 => 'Note 2';
+  String get tutorialS1Note2 =>
+      'Sign-in is optional; it helps with account management and family features.';
 
   @override
   String get tutorialS2Title => 'Guide 2';

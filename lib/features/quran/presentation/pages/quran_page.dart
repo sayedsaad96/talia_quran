@@ -129,7 +129,7 @@ class _QuranViewState extends State<_QuranView>
                 AppSpacing.md,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     context.l10n.quran,

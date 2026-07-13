@@ -40,7 +40,7 @@ void main() {
 
     test('markDailyPlanAyahCompleted persists ayah in cached plan', () async {
       final plan = DailyPlan(
-        generatedAt: DateTime.utc(2026, 7, 8),
+        generatedAt: DateTime.now().toUtc(),
         surahId: 67,
         newAyahs: const [
           DailyPlanAyah(
@@ -68,7 +68,7 @@ void main() {
 
     test('markDailyPlanAyahCompleted is no-op when ayah not in plan', () async {
       final plan = DailyPlan(
-        generatedAt: DateTime.utc(2026, 7, 8),
+        generatedAt: DateTime.now().toUtc(),
         surahId: 67,
         newAyahs: const [
           DailyPlanAyah(
@@ -96,7 +96,7 @@ void main() {
 
     test('V2SessionReviewAdapter marks plan after recordPass', () async {
       final plan = DailyPlan(
-        generatedAt: DateTime.utc(2026, 7, 8),
+        generatedAt: DateTime.now().toUtc(),
         surahId: 1,
         newAyahs: const [
           DailyPlanAyah(

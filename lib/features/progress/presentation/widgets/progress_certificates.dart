@@ -1,8 +1,9 @@
-﻿part of '../pages/progress_page.dart';
+part of '../pages/progress_page.dart';
 
 class _CertificatesSection extends StatefulWidget {
-  const _CertificatesSection({required this.isDark});
+  const _CertificatesSection({required this.isDark, required this.isKids});
   final bool isDark;
+  final bool isKids;
 
   @override
   State<_CertificatesSection> createState() => _CertificatesSectionState();
@@ -32,9 +33,9 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
 
   Future<void> _loadCertificates() async {
     final service = getIt<AchievementService>();
-    final certs = service.getEarnedCertificates();
-    if (service.hasNewCertificate) {
-      service.markCertificatesSeen();
+    final certs = service.getEarnedCertificates(isKids: widget.isKids);
+    if (service.hasNewCertificate(isKids: widget.isKids)) {
+      service.markCertificatesSeen(isKids: widget.isKids);
     }
     if (mounted) {
       setState(() {

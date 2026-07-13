@@ -115,7 +115,7 @@ class _HeroHeader extends StatelessWidget {
                       ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
                       const SizedBox(width: 8),
                       Image.asset(
-                        'assets/images/logo_new.png',
+                        'assets/images/logo.png',
                         width: 32,
                         height: 32,
                       ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
@@ -132,7 +132,7 @@ class _HeroHeader extends StatelessWidget {
                     textDirection: TextDirection.rtl,
                   ).animate().fadeIn(duration: 460.ms),
                   const SizedBox(height: AppSpacing.lg),
-                  _AchievementRow(progress: state.progress),
+                  _AchievementRow(progress: state.progress, isKids: state.isKids),
                 ],
               ),
             ),
@@ -176,9 +176,10 @@ class _HeroIconButton extends StatelessWidget {
 }
 
 class _AchievementRow extends StatelessWidget {
-  const _AchievementRow({required this.progress});
+  const _AchievementRow({required this.progress, required this.isKids});
 
   final OverallProgress progress;
+  final bool isKids;
 
   @override
   Widget build(BuildContext context) {
@@ -198,21 +199,22 @@ class _AchievementRow extends StatelessWidget {
       runSpacing: AppSpacing.sm,
       children: [
         if (highestReading != null)
-          _AchievementBadge(achievement: highestReading, isDark: true),
+          _AchievementBadge(achievement: highestReading, isDark: true, isKids: isKids),
         if (highestMem != null)
-          _AchievementBadge(achievement: highestMem, isDark: true),
+          _AchievementBadge(achievement: highestMem, isDark: true, isKids: isKids),
         if (highestReading == null && highestMem == null)
-          const _AchievementBadge(achievement: null, isDark: true),
+          _AchievementBadge(achievement: null, isDark: true, isKids: isKids),
       ],
     );
   }
 }
 
 class _AchievementBadge extends StatelessWidget {
-  const _AchievementBadge({required this.achievement, required this.isDark});
+  const _AchievementBadge({required this.achievement, required this.isDark, required this.isKids});
 
   final Achievement? achievement;
   final bool isDark;
+  final bool isKids;
 
   @override
   Widget build(BuildContext context) {
@@ -237,7 +239,7 @@ class _AchievementBadge extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        final certs = getIt<AchievementService>().getEarnedCertificates();
+        final certs = getIt<AchievementService>().getEarnedCertificates(isKids: isKids);
         if (certs.isEmpty) {
           context.go(AppRoutes.progress);
           return;
@@ -311,7 +313,10 @@ class _DailyWirdCard extends StatelessWidget {
         state.dailyWirdPageDetail!.surahs.isNotEmpty) {
       final surah = state.dailyWirdPageDetail!.surahs.first;
       final surahName = context.isArabic ? surah.nameAr : surah.nameEn;
-      wird = context.l10n.homeDailyWirdSurahPage(surahName, pageNumber.toString());
+      wird = context.l10n.homeDailyWirdSurahPage(
+        surahName,
+        pageNumber.toString(),
+      );
     }
 
     final primaryText = isDark
@@ -408,9 +413,8 @@ class _ProgressSection extends StatelessWidget {
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final progressPercent = isKids && kidsPoints > 0
-        ? (progress.kidsStars / 5).clamp(0.0, 1.0)
-        : progress.quranPercentage;
+    // Always show memorization completion for the active path.
+    final progressPercent = progress.memorizedAyahsPercentage;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -432,7 +436,9 @@ class _ProgressSection extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  isKids ? context.l10n.homeKidsProgress : context.l10n.homeYourProgress,
+                  isKids
+                      ? context.l10n.homeKidsProgress
+                      : context.l10n.homeYourProgress,
                   style: AppTypography.titleMedium.copyWith(
                     color: textColor,
                     fontFamily: 'Amiri',
@@ -460,47 +466,94 @@ class _ProgressSection extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.md),
-          Row(
-            children: [
-              Expanded(
-                child: _ProgressMetricPill(
-                  label: isKids ? context.l10n.points : context.l10n.reading,
-                  value: isKids
-                      ? '$kidsPoints'
-                      : '${progress.readPagesCount}/${progress.totalQuranPages}',
-                  icon: isKids
-                      ? Icons.emoji_events_rounded
-                      : Icons.menu_book_rounded,
-                  color: primary,
-                  isDark: isDark,
+          if (isKids)
+            // ── Kids: 2×2 grid showing reading, memorization, points, XP
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ProgressMetricPill(
+                        label: context.l10n.reading,
+                        value: '${progress.readPagesCount}',
+                        icon: Icons.menu_book_rounded,
+                        color: primary,
+                        isDark: isDark,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _ProgressMetricPill(
+                        label: context.l10n.hifz,
+                        value: '${progress.memorizedAyahs}',
+                        icon: Icons.auto_stories_rounded,
+                        color: const Color(0xFF2D5A8E),
+                        isDark: isDark,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _ProgressMetricPill(
-                  label: isKids ? context.l10n.stars : context.l10n.hifz,
-                  value: isKids
-                      ? '${progress.kidsStars}/5'
-                      : '${progress.memorizedAyahs}/${progress.totalAyahs}',
-                  icon: isKids
-                      ? Icons.star_rounded
-                      : Icons.auto_stories_rounded,
-                  color: const Color(0xFF2D5A8E),
-                  isDark: isDark,
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ProgressMetricPill(
+                        label: context.l10n.points,
+                        value: '$kidsPoints',
+                        icon: Icons.emoji_events_rounded,
+                        color: AppColors.gold,
+                        isDark: isDark,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: _ProgressMetricPill(
+                        label: 'XP',
+                        value: '$totalXp',
+                        icon: Icons.bolt_rounded,
+                        color: const Color(0xFFFF8C42),
+                        isDark: isDark,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(
-                child: _ProgressMetricPill(
-                  label: 'XP',
-                  value: '$totalXp',
-                  icon: Icons.bolt_rounded,
-                  color: const Color(0xFFFF8C42),
-                  isDark: isDark,
+              ],
+            )
+          else
+            // ── Adults: 3-pill row (reading, memorization, XP)
+            Row(
+              children: [
+                Expanded(
+                  child: _ProgressMetricPill(
+                    label: context.l10n.reading,
+                    value: '${progress.readPagesCount}/${progress.totalQuranPages}',
+                    icon: Icons.menu_book_rounded,
+                    color: primary,
+                    isDark: isDark,
+                  ),
                 ),
-              ),
-            ],
-          ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _ProgressMetricPill(
+                    label: context.l10n.hifz,
+                    value: '${progress.memorizedAyahs}/${progress.totalAyahs}',
+                    icon: Icons.auto_stories_rounded,
+                    color: const Color(0xFF2D5A8E),
+                    isDark: isDark,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: _ProgressMetricPill(
+                    label: 'XP',
+                    value: '$totalXp',
+                    icon: Icons.bolt_rounded,
+                    color: const Color(0xFFFF8C42),
+                    isDark: isDark,
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
@@ -1020,8 +1073,9 @@ class _ResumeSessionCard extends StatelessWidget {
       if (uri.path == AppRoutes.hifz) {
         final surahId = int.tryParse(uri.queryParameters['surahId'] ?? '');
         if (surahId != null && surahId >= 1 && surahId <= 114) {
-          final startAyah = int.tryParse(uri.queryParameters['startAyah'] ?? '') ??
-                            int.tryParse(uri.queryParameters['ayahNumber'] ?? '');
+          final startAyah =
+              int.tryParse(uri.queryParameters['startAyah'] ?? '') ??
+              int.tryParse(uri.queryParameters['ayahNumber'] ?? '');
           final ayah = startAyah != null && startAyah > 0 ? startAyah : 1;
           final query = Uri(
             queryParameters: {'surahId': '$surahId', 'startAyah': '$ayah'},
@@ -1034,8 +1088,6 @@ class _ResumeSessionCard extends StatelessWidget {
 
     return location;
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -1104,8 +1156,6 @@ class _ResumeSessionCard extends StatelessWidget {
     ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
   }
 }
-
-
 
 class _NextBestActionCard extends StatefulWidget {
   const _NextBestActionCard({
@@ -1364,10 +1414,7 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
 }
 
 class _HomeEngagementSection extends StatelessWidget {
-  const _HomeEngagementSection({
-    required this.state,
-    required this.isDark,
-  });
+  const _HomeEngagementSection({required this.state, required this.isDark});
 
   final HomeLoaded state;
   final bool isDark;

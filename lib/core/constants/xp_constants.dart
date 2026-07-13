@@ -15,7 +15,12 @@ class XpLevel {
 class XpConstants {
   const XpConstants._();
 
-  static const Map<String, int> rewards = {'ayah_memorized': 10};
+  /// Production XP event keys. Only keys that are awarded at runtime belong here.
+  /// Block completion = default V2 block (5 ayahs) × [ayah_memorized] rate.
+  static const Map<String, int> rewards = {
+    'ayah_memorized': 10,
+    'v2_block_completed': 50,
+  };
 
   static const List<XpLevel> levels = [
     XpLevel(name: 'مبتدئ', minXp: 0, icon: '🌱', colorHex: 0xFF6B7280),

@@ -393,6 +393,17 @@ Memorization V2 provides session outcomes.
 
 Smart Coach consumes those outcomes.
 
+### Coach / Unified Journey priority (Sprint 3)
+
+When Home Hero and Smart Coach compete, resolve in this order:
+
+1. Incomplete Isar / restorable session  
+2. Due / weak review  
+3. Daily plan  
+4. Explore / free navigation  
+
+Hero metrics must come from `ProgressMetricsService` only and must not override Coach when Coach has a due weak ayah.
+
 ---
 
 ## Smart Coach may recommend:

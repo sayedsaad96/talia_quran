@@ -607,7 +607,7 @@ class _ZikrReaderPage extends StatelessWidget {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(60),
                 boxShadow: [
                   BoxShadow(
                     color: session.isDone

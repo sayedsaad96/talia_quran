@@ -2,11 +2,16 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:get_it/get_it.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
+import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 
 /// Minimal repository fake that only answers [getMemorizationProfile]; every
 /// other member is unused by the guards under test.
@@ -23,6 +28,53 @@ class _FakeMemoRepo implements MemorizationPlusRepository {
   }
 
   @override
+  Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  }) async =>
+      const Right([]);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeQuranRepo implements QuranRepository {
+  _FakeQuranRepo({this.ayahCount = 7});
+
+  final int ayahCount;
+
+  @override
+  Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) async {
+    return Right(
+      SurahDetail(
+        surah: Surah(
+          id: surahId,
+          nameAr: 'سورة',
+          nameEn: 'Surah',
+          ayahCount: ayahCount,
+          juz: 1,
+          type: 'meccan',
+          page: 1,
+        ),
+        ayahs: List.generate(
+          ayahCount,
+          (i) => Ayah(
+            number: i + 1,
+            surahId: surahId,
+            text: 'ayah',
+            numberInSurah: i + 1,
+            juz: 1,
+            page: 1,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
@@ -32,6 +84,15 @@ class _FakeAuthCubit extends Cubit<AuthState> implements AuthCubit {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeGoRouterState extends Fake implements GoRouterState {
+  _FakeGoRouterState(this._uri);
+
+  final Uri _uri;
+
+  @override
+  Uri get uri => _uri;
 }
 
 MemorizationProfile _profile(MemorizationPath path) => MemorizationProfile(
@@ -59,6 +120,15 @@ void main() {
       getIt.unregister<AuthCubit>();
     }
     getIt.registerSingleton<AuthCubit>(_FakeAuthCubit(state));
+  }
+
+  void registerQuran({int ayahCount = 7}) {
+    if (getIt.isRegistered<QuranRepository>()) {
+      getIt.unregister<QuranRepository>();
+    }
+    getIt.registerSingleton<QuranRepository>(
+      _FakeQuranRepo(ayahCount: ayahCount),
+    );
   }
 
   tearDown(() async {
@@ -129,5 +199,57 @@ void main() {
       registerAuth(const AuthInitial());
       expect(await MemorizationRouteGuard.parentDashboardRedirect(), isNull);
     });
+  });
+
+  group('hifzRedirect', () {
+    test('redirects child profiles to the kids home', () async {
+      registerProfile(_profile(MemorizationPath.child));
+      final state = _FakeGoRouterState(Uri.parse(AppRoutes.hifz));
+      expect(
+        await MemorizationRouteGuard.hifzRedirect(state),
+        AppRoutes.memorizationPlusKidsHome,
+      );
+    });
+
+    test('redirects bare /hifz to memorization hub for adults', () async {
+      registerProfile(_profile(MemorizationPath.adult));
+      final state = _FakeGoRouterState(Uri.parse(AppRoutes.hifz));
+      expect(
+        await MemorizationRouteGuard.hifzRedirect(state),
+        AppRoutes.memorizationHub,
+      );
+    });
+
+    test('redirects /hifz?surahId to V2 via PendingAyahResolver', () async {
+      registerProfile(_profile(MemorizationPath.adult));
+      registerQuran(ayahCount: 7);
+      final state = _FakeGoRouterState(
+        Uri.parse('${AppRoutes.hifz}?surahId=1'),
+      );
+      final redirected = await MemorizationRouteGuard.hifzRedirect(state);
+      expect(redirected, isNotNull);
+      expect(redirected!, startsWith(AppRoutes.memorizationV2Session));
+      expect(redirected, contains('surahId=1'));
+      expect(redirected, contains('startAyah='));
+    });
+
+    test(
+      'redirects guests without legacy path to memorization-plus',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        if (getIt.isRegistered<SharedPreferences>()) {
+          getIt.unregister<SharedPreferences>();
+        }
+        getIt.registerSingleton<SharedPreferences>(
+          await SharedPreferences.getInstance(),
+        );
+        registerProfile(null);
+        final state = _FakeGoRouterState(Uri.parse(AppRoutes.hifz));
+        expect(
+          await MemorizationRouteGuard.hifzRedirect(state),
+          AppRoutes.memorizationPlus,
+        );
+      },
+    );
   });
 }

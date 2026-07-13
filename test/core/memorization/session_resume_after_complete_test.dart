@@ -80,7 +80,7 @@ void main() {
           ),
         ).thenAnswer((_) async => const StreakResult.sameDay());
         when(
-          mockAchievementService.checkAndUnlockCertificates(),
+          mockAchievementService.checkAndUnlockCertificates(isKids: false),
         ).thenAnswer((_) async => []);
 
         final mockAudioPlayer = MockAudioPlayer();

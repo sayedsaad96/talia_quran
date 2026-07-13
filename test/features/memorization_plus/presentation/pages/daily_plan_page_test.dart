@@ -21,7 +21,7 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     final datasource = MemorizationPlusLocalDatasourceImpl(prefs);
     final plan = DailyPlan(
-      generatedAt: DateTime.utc(2026, 7, 8),
+      generatedAt: DateTime.now().toUtc(),
       surahId: 67,
       newAyahs: const [
         DailyPlanAyah(

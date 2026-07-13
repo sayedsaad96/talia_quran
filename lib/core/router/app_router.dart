@@ -54,6 +54,8 @@ abstract class AppRoutes {
   static const String home = '/';
   static const String quran = '/quran';
   static const String hifz = '/hifz';
+  /// Surah picker for adult "Practice by Surah" (replaces bare `/hifz` browse).
+  static const String hifzPracticeSurah = '/memorization/practice-surah';
   static const String memorizationHub = '/memorization';
   static const String azkar = '/azkar';
   static const String progress = '/progress';
@@ -113,6 +115,7 @@ final _publicRoutes = <String>[
   AppRoutes.home,
   AppRoutes.quran,
   AppRoutes.hifz,
+  AppRoutes.hifzPracticeSurah,
   AppRoutes.memorizationHub,
   AppRoutes.azkar,
   AppRoutes.progress,
@@ -195,6 +198,8 @@ class MemorizationRouteGuard {
     return profile?.isChild == true ? AppRoutes.memorizationPlusKidsHome : null;
   }
 
+  /// Legacy `/hifz` deep links: Hub (or V2 via [PendingAyahResolver] when
+  /// `surahId` is present). Surah browsing lives at [AppRoutes.hifzPracticeSurah].
   static Future<String?> hifzRedirect(GoRouterState state) async {
     try {
       final profile = await _readProfile();
@@ -220,9 +225,18 @@ class MemorizationRouteGuard {
         ).practiceSurahSessionLocation(surahId, surahAyahCount: ayahCount);
       }
 
-      return null;
+      // Bare `/hifz` → Memorization Hub (preserve non-surah query if any).
+      final params = Map<String, String>.from(state.uri.queryParameters)
+        ..remove('surahId')
+        ..remove('startAyah')
+        ..remove('ayahNumber');
+      if (params.isEmpty) return AppRoutes.memorizationHub;
+      return Uri(
+        path: AppRoutes.memorizationHub,
+        queryParameters: params,
+      ).toString();
     } catch (_) {
-      return null;
+      return AppRoutes.memorizationHub;
     }
   }
 
@@ -635,6 +649,14 @@ abstract class AppRouter {
                 path: AppRoutes.hifz,
                 redirect: (context, state) =>
                     MemorizationRouteGuard.hifzRedirect(state),
+                // Page never builds — redirect always returns a location.
+                pageBuilder: (_, _) =>
+                    const NoTransitionPage(child: SizedBox.shrink()),
+              ),
+              GoRoute(
+                path: AppRoutes.hifzPracticeSurah,
+                redirect: (context, state) =>
+                    MemorizationRouteGuard.adultOnlyRedirect(),
                 pageBuilder: (_, _) =>
                     const NoTransitionPage(child: HifzPage()),
               ),

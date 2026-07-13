@@ -870,26 +870,10 @@
   "performanceExcellent": "Excellent",
   "dailyPlanListenBeforeRating": "Listen to the ayah before rating",
   "reviewQuizTitle": "Review Session",
-  "quizExitTitle": "Leave review session?",
+  "memorizationSessionTitle": "Memorization Session",
   "memorizationHubReviewSectionTitle": "Review Session",
   "memorizationHubReviewSectionSubtitle": "Review memorized ayahs through guided recitation (speech-to-text).",
   "memorizationHubReviewCardDescription": "Open a V2 recitation session for ayahs you have already memorized.",
-  "quizExitMessage": "Your rated ayahs so far will be saved.\nDo you want to leave?",
-  "quizStayAction": "Stay",
-  "quizExitAction": "Leave",
-  "quizYourAnswer": "Your answer",
-  "quizListenRetryTitle": "Listen, then try again",
-  "quizListenRetrySubtitle": "This needs more practice, and that is normal at the start of review.",
-  "quizNextAyah": "Next ayah",
-  "quizShowResults": "Show results",
-  "quizExcellentResult": "Excellent!",
-  "quizGoodEffortResult": "Good effort!",
-  "quizPassedMessage": "You passed the review quiz successfully",
-  "quizRetryMessage": "Review the ayahs and try the quiz again",
-  "quizScoreLabel": "Score",
-  "quizTotalLabel": "Total",
-  "quizPassedLabel": "Passed",
-  "quizNeedsPracticeLabel": "Needs practice",
   "backAction": "Back",
   "hifzKidsRedirectedFromAdult": "This path is for adults. You will be taken to the Kids path.",
   "parentDashboardLastSession": "Last session",
@@ -1223,43 +1207,6 @@
       "difficulty": {}
     }
   },
-  "quizAyahNumberTitle": "Ayah {ayahNumber}",
-  "@quizAyahNumberTitle": {
-    "placeholders": {
-      "ayahNumber": {
-        "type": "int"
-      }
-    }
-  },
-  "quizRecitePrompt": "Tap the microphone and recite the ayah",
-  "quizHintLabel": "Hint: {hint}",
-  "@quizHintLabel": {
-    "placeholders": {
-      "hint": {}
-    }
-  },
-  "quizListenAyahTitle": "Listen to the ayah",
-  "quizListenAyahSubtitle": "Listen before reciting to remember the correct pronunciation",
-  "quizListeningStatus": "Listening...",
-  "quizTapToSpeak": "Tap to speak",
-  "quizTapToRecordAgain": "Tap to record again",
-  "quizRecordBeforeChecking": "Please record your voice before checking",
-  "quizCheckAnswer": "Check answer",
-  "quizManualEvaluation": "Manual evaluation",
-  "quizManualEvaluationHelp": "If the microphone does not work, rate the recitation using the same scale as the app.",
-  "quizRetryMicrophone": "Retry microphone",
-  "quizSkipAyah": "Skip ayah",
-  "quizAnswerPassedTitle": "Well done! ✨",
-  "quizAnswerNeedsPracticeTitle": "Let's review it together 💪",
-  "quizMatchPercent": "Match: {percent}%",
-  "@quizMatchPercent": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
-  "quizCorrectText": "Correct text",
   "memorizationPathSelectionFailedTitle": "Could not save your choice",
   "memorizationPathConfirmTitle": "What happens next?",
   "memorizationPathCanChangeLater": "You can change this later from Settings without losing progress.",
@@ -1343,22 +1290,11 @@
     }
   },
   "kidsAudioPlaybackFailed": "Audio didn't work. Try again or ask a parent to check the internet connection.",
-  "quizSurahNotFound": "Surah data not found",
-  "quizAyahsOutsidePlan": "Cannot quiz ayahs outside your plan or records",
-  "quizNoMemorizedAyahs": "No memorized ayahs to quiz in this surah",
   "smartCoachMemorizedReviewDueTitle": "Retention review due",
   "smartCoachMemorizedReviewDueSubtitle": "Review memorized ayahs in Surah {surahName} to keep them strong.",
   "@smartCoachMemorizedReviewDueSubtitle": {
     "placeholders": {
       "surahName": {
-        "type": "String"
-      }
-    }
-  },
-  "quizUnexpectedError": "Something went wrong: {error}",
-  "@quizUnexpectedError": {
-    "placeholders": {
-      "error": {
         "type": "String"
       }
     }
@@ -1497,7 +1433,7 @@
   "tutorialS1Tip1": "Tip 1",
   "tutorialS1Tip2": "Tip 2",
   "tutorialS1Note1": "Note 1",
-  "tutorialS1Note2": "Note 2",
+  "tutorialS1Note2": "Sign-in is optional; it helps with account management and family features.",
   "tutorialS2Title": "Guide 2",
   "tutorialS2Cat": "Category",
   "tutorialS2Does": "What it does",

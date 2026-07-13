@@ -8,6 +8,7 @@ import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
@@ -405,6 +406,13 @@ class _FakeMemorizationRepository implements MemorizationPlusRepository {
 
   @override
   Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs() async {
+    return const Right([]);
+  }
+
+  @override
+  Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  }) async {
     return const Right([]);
   }
 

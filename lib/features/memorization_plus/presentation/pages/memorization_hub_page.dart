@@ -147,7 +147,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           description: context.isArabic
               ? 'تسميع صوتي واضح: اختر سورة وابدأ جلسة الحفظ.'
               : 'Recite Practice: choose a surah and start a speech-to-text session.',
-          route: AppRoutes.hifz,
+          route: AppRoutes.hifzPracticeSurah,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -305,7 +305,7 @@ class _HubAppBar extends StatelessWidget {
                 AppSpacing.md,
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     context.l10n.memorization,
@@ -341,10 +341,7 @@ class _HubLoadResult {
 }
 
 class _HubDailyPlanSummaryCard extends StatelessWidget {
-  const _HubDailyPlanSummaryCard({
-    required this.plan,
-    required this.isDark,
-  });
+  const _HubDailyPlanSummaryCard({required this.plan, required this.isDark});
 
   final DailyPlan plan;
   final bool isDark;

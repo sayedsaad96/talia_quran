@@ -158,18 +158,13 @@ class _LoginPageState extends State<LoginPage> {
                   child: Column(
                     children: [
                       const SizedBox(height: 60),
-                      Icon(
-                        Icons.menu_book_rounded,
-                        size: 80,
-                        color: cs.primary,
+                      Image.asset(
+                        'assets/images/logo.png',
+                        width: 120,
+                        height: 120,
                       ),
                       const SizedBox(height: 16),
-                      Text(
-                        context.l10n.appName,
-                        style: Theme.of(context).textTheme.headlineLarge
-                            ?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
+
                       Text(
                         context.l10n.syncProgressDesc,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -419,12 +414,22 @@ class _LoginPageState extends State<LoginPage> {
     if (message == AuthErrorCode.emailNotConfirmed.name) {
       return l10n.authConfirmEmailFirst;
     }
-    if (message == AuthErrorCode.invalidCredentials.name) return l10n.authInvalidCredentials;
-    if (message == AuthErrorCode.passwordTooShort.name) return l10n.passwordTooShort;
-    if (message == AuthErrorCode.invalidEmailFormat.name) return l10n.invalidEmail;
-    if (message == AuthErrorCode.tooManyRequests.name) return l10n.authTooManyRequests;
+    if (message == AuthErrorCode.invalidCredentials.name) {
+      return l10n.authInvalidCredentials;
+    }
+    if (message == AuthErrorCode.passwordTooShort.name) {
+      return l10n.passwordTooShort;
+    }
+    if (message == AuthErrorCode.invalidEmailFormat.name) {
+      return l10n.invalidEmail;
+    }
+    if (message == AuthErrorCode.tooManyRequests.name) {
+      return l10n.authTooManyRequests;
+    }
     if (message == AuthErrorCode.networkError.name) return l10n.authNoInternet;
-    if (message == AuthErrorCode.userNotFound.name) return l10n.authAccountNotFound;
+    if (message == AuthErrorCode.userNotFound.name) {
+      return l10n.authAccountNotFound;
+    }
     if (message == AuthErrorCode.samePasswordAsOld.name) {
       return l10n.authPasswordSameAsOld;
     }

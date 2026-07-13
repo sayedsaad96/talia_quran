@@ -43,8 +43,6 @@ import '../../features/memorization_plus/domain/entities/memorization_entities.d
 ///
 /// ## Policy decisions NOT made here
 ///
-/// * **AchievementService / certificates** — use [isCertificateEligibleSource]
-///   (`v2Session`, `hifz`, and `kidsMode`).
 /// * **NavigationResolver** — low-consequence fallback. Not filtered yet.
 class ReviewRecordFilters {
   // Non-instantiable — pure static helpers.
@@ -144,12 +142,6 @@ class ReviewRecordFilters {
   static bool isLearning(AyahReviewRecord record) =>
       isStarted(record) && !isMemorized(record);
 
-  /// Source policy for device-wide certificate eligibility.
-  ///
-  /// Includes adult production sources plus [kidsMode] so children can earn
-  /// certificates without polluting adult progress totals.
-  static bool isCertificateEligibleSource(AyahReviewRecord record) =>
-      isAdultProductionCount(record) || isKidsSource(record);
 
   /// Tie-breaker for memorized-due ordering (Smart Coach + Daily Plan).
   ///

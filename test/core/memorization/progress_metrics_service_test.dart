@@ -126,16 +126,6 @@ void main() {
       );
       expect(metrics.memorizedAyahs, 1);
     });
-
-    test('certificates audience counts v2Session + hifz + kidsMode', () {
-      final metrics = service.calculate(
-        now: now,
-        records: mixed,
-        audience: ProgressAudience.certificates,
-      );
-      expect(metrics.memorizedAyahs, 3);
-      expect(metrics.memorizedKeys, {'1_1', '1_2', '1_3'});
-    });
   });
 
   group('memorized surahs and juz require full completion', () {

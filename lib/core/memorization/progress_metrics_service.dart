@@ -143,8 +143,6 @@ class ProgressMetricsService {
     return switch (audience) {
       ProgressAudience.adult => ReviewRecordFilters.isAdultProductionCount,
       ProgressAudience.kids => ReviewRecordFilters.isKidsSource,
-      ProgressAudience.certificates =>
-        ReviewRecordFilters.isCertificateEligibleSource,
     };
   }
 

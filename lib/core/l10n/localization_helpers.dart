@@ -154,13 +154,6 @@ extension TaliaLocalizationHelpers on BuildContext {
       }
     }
 
-    if (message.startsWith(CubitMessageCodes.quizUnexpectedErrorPrefix)) {
-      final error = message.substring(
-        CubitMessageCodes.quizUnexpectedErrorPrefix.length,
-      );
-      return l10n.quizUnexpectedError(error);
-    }
-
     return switch (message) {
       CubitMessageCodes.hifzAudioPlaybackFailed => l10n.hifzAudioPlaybackFailed,
       CubitMessageCodes.hifzReviewSaveFailed => l10n.hifzReviewSaveFailed,
@@ -176,9 +169,10 @@ extension TaliaLocalizationHelpers on BuildContext {
         _isArabic
             ? 'لم نسمع تلاوتك بوضوح. اضغط وسجّل الآية مرة أخرى.'
             : 'We could not hear your recitation clearly. Please record the ayah again.',
-      CubitMessageCodes.quizSurahNotFound => l10n.quizSurahNotFound,
-      CubitMessageCodes.quizAyahsOutsidePlan => l10n.quizAyahsOutsidePlan,
-      CubitMessageCodes.quizNoMemorizedAyahs => l10n.quizNoMemorizedAyahs,
+      CubitMessageCodes.kidsRecitationMismatch =>
+        _isArabic
+            ? 'الآية لم تتطابق. استمع للآية مرة أخرى ثم سجّل تلاوتك.'
+            : 'The ayah did not match. Listen again and then record your recitation.',
       _ => message,
     };
   }

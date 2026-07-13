@@ -32,6 +32,7 @@ void main() {
         _UnusedQuranRepository(),
         streakReader,
         ProgressEventsBus(),
+        prefs,
       );
     });
 

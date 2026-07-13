@@ -9,9 +9,5 @@ abstract final class CubitMessageCodes {
   static const kidsMicPermissionDenied = '@kids/mic_permission_denied';
   static const kidsRecordingUnavailable = '@kids/recording_unavailable';
   static const kidsRecordingNotCaptured = '@kids/recording_not_captured';
-
-  static const quizSurahNotFound = '@quiz/surah_not_found';
-  static const quizAyahsOutsidePlan = '@quiz/ayahs_outside_plan';
-  static const quizNoMemorizedAyahs = '@quiz/no_memorized_ayahs';
-  static const quizUnexpectedErrorPrefix = '@quiz/unexpected|';
+  static const kidsRecitationMismatch = '@kids/recitation_mismatch';
 }

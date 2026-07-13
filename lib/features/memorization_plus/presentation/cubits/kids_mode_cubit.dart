@@ -9,6 +9,7 @@ import 'package:speech_to_text/speech_recognition_result.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import '../../../../core/constants/speech_constants.dart';
 import '../../../../core/memorization/v2/hint_usage.dart';
+import '../../../../core/memorization/v2/recitation_evaluator.dart';
 import '../../../../core/memorization/v2/session_adapters.dart';
 import '../../../../core/memorization/v2/session_engine.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
@@ -72,6 +73,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final AudioPlayer _player = AudioPlayer();
   late final StreamSubscription<PlayerState> _playerSub;
   late final StreamSubscription<ProcessingState> _bufferingSub;
+
+  // Evaluates recognized speech against the ayah text — same logic as adult path.
+  final V2RecitationEvaluator _evaluator = const V2RecitationEvaluator();
 
   int _loopCount = 0;
   final Set<String> _completionsInFlight = <String>{};
@@ -212,8 +216,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
   }
 
-  /// Records the child's recitation, then finalises completion only after
-  /// speech recognition captures actual recited words.
+  /// Records the child's recitation and evaluates it against the ayah text,
+  /// mirroring the adult V2 path (V2RecitationEvaluator, ≥ 92% similarity).
   Future<void> startRecording() async {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
@@ -233,7 +237,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       await stopAudio();
     }
 
-    // Prepare the completer so stopRecording() can resolve it early
+    // Prepare the completer so stopRecording() can signal early stop.
     _recordingCompleter = Completer<KidsRecitationCaptureResult>();
 
     emit(
@@ -244,7 +248,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       ),
     );
 
-    // Start a per-second timer for the recording indicator
+    // Per-second timer drives the recording duration indicator in the UI.
     var elapsedSeconds = 0;
     _recordingTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       elapsedSeconds++;
@@ -264,9 +268,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     _recordingCompleter = null;
 
     if (isClosed || state is! KidsModeLoaded) return;
-
     final current = state as KidsModeLoaded;
-    if (!capture.hasSpeech) {
+
+    // ── Error cases (permission denied, mic unavailable) ──────────────────
+    if (capture.isError) {
       emit(
         current.copyWith(
           isRecording: false,
@@ -277,6 +282,37 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       return;
     }
 
+    // ── Evaluate spoken words against the ayah text ───────────────────────
+    final evalResult = _evaluator.evaluate(
+      targetText: current.ayahText,
+      spokenText: capture.recognizedWords,
+    );
+
+    if (evalResult.isNoAttempt) {
+      // STT returned empty — mic was open but no words detected.
+      emit(
+        current.copyWith(
+          isRecording: false,
+          recordingSeconds: 0,
+          recordingError: CubitMessageCodes.kidsRecordingNotCaptured,
+        ),
+      );
+      return;
+    }
+
+    if (!evalResult.passed) {
+      // Words were detected but didn't match the ayah.
+      emit(
+        current.copyWith(
+          isRecording: false,
+          recordingSeconds: 0,
+          recordingError: CubitMessageCodes.kidsRecitationMismatch,
+        ),
+      );
+      return;
+    }
+
+    // ── Match confirmed — mark as complete ────────────────────────────────
     emit(
       current.copyWith(
         isRecording: false,
@@ -288,18 +324,22 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     await markCompleted();
   }
 
-  /// Stops an in-progress recording manually and accepts whatever was captured.
+  /// Stops an in-progress recording manually (user pressed "Done").
+  ///
+  /// Signals the recorder to stop and flush whatever words were captured so
+  /// far. Actual pass/fail is decided by [V2RecitationEvaluator] in
+  /// [startRecording] — this method only triggers the early stop.
   Future<void> stopRecording() async {
     if (state is! KidsModeLoaded) return;
-    final st = state as KidsModeLoaded;
-    if (!st.isRecording) return;
+    if (!(state as KidsModeLoaded).isRecording) return;
 
-    // Signal the recorder to stop and treat as captured (user decided they
-    // finished reciting, so we accept it regardless of speech recognition).
-    _recordingCompleter?.complete(
-      const KidsRecitationCaptureResult.capturedByUser(),
-    );
+    // Tell the recorder to stop listening and return whatever it has.
     await _recitationRecorder.stop();
+    // Signal the completer with whatever words were recognized so far;
+    // the evaluator in startRecording() will decide pass/fail.
+    _recordingCompleter?.complete(
+      const KidsRecitationCaptureResult.stoppedByUser(),
+    );
   }
 
   Future<void> markCompleted() async {
@@ -376,7 +416,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         ),
       );
 
-      final newAwards = await _achievementService.checkAndUnlockCertificates();
+      final newAwards = await _achievementService.checkAndUnlockCertificates(isKids: true);
       await _appSessionService?.clearLastRestorableLocation();
       emit(
         st.copyWith(
@@ -436,36 +476,41 @@ abstract class KidsRecitationRecorder {
 @visibleForTesting
 class KidsRecitationCaptureResult {
   const KidsRecitationCaptureResult._({
-    required this.hasSpeech,
-    required this.messageCode,
+    required this.recognizedWords,
+    required this.isError,
+    this.messageCode,
   });
 
-  const KidsRecitationCaptureResult.captured()
-    : this._(hasSpeech: true, messageCode: null);
+  /// STT auto-finalized with recognized words.
+  const KidsRecitationCaptureResult.captured({required String words})
+    : this._(recognizedWords: words, isError: false);
 
-  /// User pressed "done" manually — treat as a successful capture.
-  const KidsRecitationCaptureResult.capturedByUser()
-    : this._(hasSpeech: true, messageCode: null);
+  /// User pressed "Done" — carry whatever words were recognized so far
+  /// and let [V2RecitationEvaluator] decide pass/fail.
+  const KidsRecitationCaptureResult.stoppedByUser()
+    : this._(recognizedWords: '', isError: false);
 
   const KidsRecitationCaptureResult.permissionDenied()
     : this._(
-        hasSpeech: false,
+        recognizedWords: '',
+        isError: true,
         messageCode: CubitMessageCodes.kidsMicPermissionDenied,
       );
 
   const KidsRecitationCaptureResult.unavailable()
     : this._(
-        hasSpeech: false,
+        recognizedWords: '',
+        isError: true,
         messageCode: CubitMessageCodes.kidsRecordingUnavailable,
       );
 
-  const KidsRecitationCaptureResult.notCaptured()
-    : this._(
-        hasSpeech: false,
-        messageCode: CubitMessageCodes.kidsRecordingNotCaptured,
-      );
+  /// The words recognized by STT (may be empty if nothing was spoken).
+  final String recognizedWords;
 
-  final bool hasSpeech;
+  /// True only for hard errors (permission denied, mic unavailable).
+  /// False for normal captures — even if [recognizedWords] is empty.
+  final bool isError;
+
   final String? messageCode;
 }
 
@@ -476,13 +521,19 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
   final SpeechToText _speechToText;
   bool _speechEnabled = false;
 
+  // Tracks the latest words during an active session so stop() can flush them.
+  String _latestRecognizedWords = '';
+
   @override
   Future<KidsRecitationCaptureResult> capture({
     Completer<KidsRecitationCaptureResult>? externalCompleter,
   }) async {
+    _latestRecognizedWords = '';
+
     final permission = await _ensureMicrophonePermission();
     if (!permission) {
-      externalCompleter?.complete(
+      _completeIfOpen(
+        externalCompleter,
         const KidsRecitationCaptureResult.permissionDenied(),
       );
       return const KidsRecitationCaptureResult.permissionDenied();
@@ -492,65 +543,85 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
       _speechEnabled = await _initializeSpeech();
     }
     if (!_speechEnabled) {
-      externalCompleter?.complete(
+      _completeIfOpen(
+        externalCompleter,
         const KidsRecitationCaptureResult.unavailable(),
       );
       return const KidsRecitationCaptureResult.unavailable();
     }
 
     final internalCompleter = Completer<KidsRecitationCaptureResult>();
-    var recognizedWords = '';
 
-    void completeIfNeeded(KidsRecitationCaptureResult result) {
-      if (!internalCompleter.isCompleted) {
-        internalCompleter.complete(result);
-      }
-      if (externalCompleter != null && !externalCompleter.isCompleted) {
-        externalCompleter.complete(result);
-      }
+    void completeInternal(KidsRecitationCaptureResult result) {
+      if (!internalCompleter.isCompleted) internalCompleter.complete(result);
     }
 
     try {
       await _speechToText.listen(
         onResult: (SpeechRecognitionResult result) {
-          recognizedWords = result.recognizedWords.trim();
-          if (result.finalResult && recognizedWords.isNotEmpty) {
-            completeIfNeeded(const KidsRecitationCaptureResult.captured());
+          _latestRecognizedWords = result.recognizedWords.trim();
+          // Only auto-complete on a *final* result so interim updates don't
+          // close the session prematurely.
+          if (result.finalResult) {
+            completeInternal(
+              KidsRecitationCaptureResult.captured(
+                words: _latestRecognizedWords,
+              ),
+            );
           }
         },
         listenOptions: SpeechListenOptions(
-          listenFor: const Duration(seconds: 10),
-          pauseFor: const Duration(seconds: 3),
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 4),
           localeId: kArabicSpeechLocaleId,
         ),
       );
     } catch (_) {
-      externalCompleter?.complete(
+      _completeIfOpen(
+        externalCompleter,
         const KidsRecitationCaptureResult.unavailable(),
       );
       return const KidsRecitationCaptureResult.unavailable();
     }
 
-    // Race: internal speech result OR external stop signal (user pressed done)
-    final result =
-        await Future.any([
-          internalCompleter.future,
-          if (externalCompleter != null) externalCompleter.future,
-        ]).timeout(
-          const Duration(seconds: 12),
-          onTimeout: () async {
-            await _speechToText.stop();
-            return recognizedWords.isEmpty
-                ? const KidsRecitationCaptureResult.notCaptured()
-                : const KidsRecitationCaptureResult.captured();
-          },
+    // Race: STT auto-finalizes OR user presses "Done" (externalCompleter).
+    // On timeout, return whatever words were collected so far.
+    final result = await Future.any([
+      internalCompleter.future,
+      if (externalCompleter != null) externalCompleter.future,
+    ]).timeout(
+      const Duration(seconds: 35),
+      onTimeout: () async {
+        await _speechToText.stop();
+        return KidsRecitationCaptureResult.captured(
+          words: _latestRecognizedWords,
         );
+      },
+    );
+
+    // Always patch in the latest recognized words so the evaluator in
+    // startRecording() has the most up-to-date text, regardless of which
+    // completer fired (STT auto-final, user Done, or timeout).
+    if (!result.isError) {
+      return KidsRecitationCaptureResult.captured(
+        words: _latestRecognizedWords,
+      );
+    }
 
     return result;
   }
 
   @override
   Future<void> stop() => _speechToText.stop();
+
+  void _completeIfOpen(
+    Completer<KidsRecitationCaptureResult>? completer,
+    KidsRecitationCaptureResult result,
+  ) {
+    if (completer != null && !completer.isCompleted) {
+      completer.complete(result);
+    }
+  }
 
   Future<bool> _ensureMicrophonePermission() async {
     var status = await Permission.microphone.status;

@@ -196,7 +196,7 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (achievementService != null) {
 
-        final certificates = achievementService.getEarnedCertificates();
+        final certificates = achievementService.getAllEarnedCertificates();
 
         if (certificates.isNotEmpty) {
 

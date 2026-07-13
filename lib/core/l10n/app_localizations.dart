@@ -3962,11 +3962,11 @@ abstract class AppLocalizations {
   /// **'مراجعة بالتسميع'**
   String get reviewQuizTitle;
 
-  /// No description provided for @quizExitTitle.
+  /// No description provided for @memorizationSessionTitle.
   ///
   /// In ar, this message translates to:
-  /// **'الخروج من جلسة المراجعة؟'**
-  String get quizExitTitle;
+  /// **'جلسة الحفظ'**
+  String get memorizationSessionTitle;
 
   /// No description provided for @memorizationHubReviewSectionTitle.
   ///
@@ -3983,104 +3983,8 @@ abstract class AppLocalizations {
   /// No description provided for @memorizationHubReviewCardDescription.
   ///
   /// In ar, this message translates to:
-  /// **'افتح جلسة حفظ V2 للآيات التي حفظتها مسبقًا.'**
+  /// **'افتح جلسة حفظ للآيات التي حفظتها مسبقًا.'**
   String get memorizationHubReviewCardDescription;
-
-  /// No description provided for @quizExitMessage.
-  ///
-  /// In ar, this message translates to:
-  /// **'سيتم حفظ الآيات التي قيّمتها حتى الآن.\nهل تريد الخروج؟'**
-  String get quizExitMessage;
-
-  /// No description provided for @quizStayAction.
-  ///
-  /// In ar, this message translates to:
-  /// **'البقاء'**
-  String get quizStayAction;
-
-  /// No description provided for @quizExitAction.
-  ///
-  /// In ar, this message translates to:
-  /// **'خروج'**
-  String get quizExitAction;
-
-  /// No description provided for @quizYourAnswer.
-  ///
-  /// In ar, this message translates to:
-  /// **'إجابتك'**
-  String get quizYourAnswer;
-
-  /// No description provided for @quizListenRetryTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'استمع ثم أعد المحاولة'**
-  String get quizListenRetryTitle;
-
-  /// No description provided for @quizListenRetrySubtitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'تحتاج تدريباً أكثر، وهذا طبيعي في أول المراجعة.'**
-  String get quizListenRetrySubtitle;
-
-  /// No description provided for @quizNextAyah.
-  ///
-  /// In ar, this message translates to:
-  /// **'الآية التالية'**
-  String get quizNextAyah;
-
-  /// No description provided for @quizShowResults.
-  ///
-  /// In ar, this message translates to:
-  /// **'عرض النتائج'**
-  String get quizShowResults;
-
-  /// No description provided for @quizExcellentResult.
-  ///
-  /// In ar, this message translates to:
-  /// **'ممتاز!'**
-  String get quizExcellentResult;
-
-  /// No description provided for @quizGoodEffortResult.
-  ///
-  /// In ar, this message translates to:
-  /// **'جهد جيد!'**
-  String get quizGoodEffortResult;
-
-  /// No description provided for @quizPassedMessage.
-  ///
-  /// In ar, this message translates to:
-  /// **'لقد اجتزت اختبار المراجعة بنجاح'**
-  String get quizPassedMessage;
-
-  /// No description provided for @quizRetryMessage.
-  ///
-  /// In ar, this message translates to:
-  /// **'حاول مراجعة الآيات وأعد الاختبار'**
-  String get quizRetryMessage;
-
-  /// No description provided for @quizScoreLabel.
-  ///
-  /// In ar, this message translates to:
-  /// **'النتيجة'**
-  String get quizScoreLabel;
-
-  /// No description provided for @quizTotalLabel.
-  ///
-  /// In ar, this message translates to:
-  /// **'إجمالي'**
-  String get quizTotalLabel;
-
-  /// No description provided for @quizPassedLabel.
-  ///
-  /// In ar, this message translates to:
-  /// **'ناجحة'**
-  String get quizPassedLabel;
-
-  /// No description provided for @quizNeedsPracticeLabel.
-  ///
-  /// In ar, this message translates to:
-  /// **'تحتاج تدريباً'**
-  String get quizNeedsPracticeLabel;
 
   /// No description provided for @backAction.
   ///
@@ -4867,114 +4771,6 @@ abstract class AppLocalizations {
   /// **'{minutes} دقيقة للجلسة • مستوى {difficulty}'**
   String customPlanSummarySession(int minutes, Object difficulty);
 
-  /// No description provided for @quizAyahNumberTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'الآية رقم {ayahNumber}'**
-  String quizAyahNumberTitle(int ayahNumber);
-
-  /// No description provided for @quizRecitePrompt.
-  ///
-  /// In ar, this message translates to:
-  /// **'اضغط على المايكروفون وقم بتسميع الآية'**
-  String get quizRecitePrompt;
-
-  /// No description provided for @quizHintLabel.
-  ///
-  /// In ar, this message translates to:
-  /// **'تلميح: {hint}'**
-  String quizHintLabel(Object hint);
-
-  /// No description provided for @quizListenAyahTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'استمع للآية'**
-  String get quizListenAyahTitle;
-
-  /// No description provided for @quizListenAyahSubtitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'استمع قبل التسميع لتتذكر النطق الصحيح'**
-  String get quizListenAyahSubtitle;
-
-  /// No description provided for @quizListeningStatus.
-  ///
-  /// In ar, this message translates to:
-  /// **'جاري الاستماع...'**
-  String get quizListeningStatus;
-
-  /// No description provided for @quizTapToSpeak.
-  ///
-  /// In ar, this message translates to:
-  /// **'انقر للتحدث'**
-  String get quizTapToSpeak;
-
-  /// No description provided for @quizTapToRecordAgain.
-  ///
-  /// In ar, this message translates to:
-  /// **'انقر لإعادة التسجيل'**
-  String get quizTapToRecordAgain;
-
-  /// No description provided for @quizRecordBeforeChecking.
-  ///
-  /// In ar, this message translates to:
-  /// **'يرجى تسجيل الصوت أولاً قبل التحقق'**
-  String get quizRecordBeforeChecking;
-
-  /// No description provided for @quizCheckAnswer.
-  ///
-  /// In ar, this message translates to:
-  /// **'تحقق من الإجابة'**
-  String get quizCheckAnswer;
-
-  /// No description provided for @quizManualEvaluation.
-  ///
-  /// In ar, this message translates to:
-  /// **'التقييم اليدوي'**
-  String get quizManualEvaluation;
-
-  /// No description provided for @quizManualEvaluationHelp.
-  ///
-  /// In ar, this message translates to:
-  /// **'إذا لم يعمل الميكروفون، قيّم التسميع بنفس المقياس المستخدم في التطبيق.'**
-  String get quizManualEvaluationHelp;
-
-  /// No description provided for @quizRetryMicrophone.
-  ///
-  /// In ar, this message translates to:
-  /// **'إعادة محاولة الميكروفون'**
-  String get quizRetryMicrophone;
-
-  /// No description provided for @quizSkipAyah.
-  ///
-  /// In ar, this message translates to:
-  /// **'تخطي الآية'**
-  String get quizSkipAyah;
-
-  /// No description provided for @quizAnswerPassedTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'أحسنت! ✨'**
-  String get quizAnswerPassedTitle;
-
-  /// No description provided for @quizAnswerNeedsPracticeTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'نراجعها معاً 💪'**
-  String get quizAnswerNeedsPracticeTitle;
-
-  /// No description provided for @quizMatchPercent.
-  ///
-  /// In ar, this message translates to:
-  /// **'نسبة التطابق: {percent}%'**
-  String quizMatchPercent(int percent);
-
-  /// No description provided for @quizCorrectText.
-  ///
-  /// In ar, this message translates to:
-  /// **'النص الصحيح'**
-  String get quizCorrectText;
-
   /// No description provided for @memorizationPathSelectionFailedTitle.
   ///
   /// In ar, this message translates to:
@@ -5287,24 +5083,6 @@ abstract class AppLocalizations {
   /// **'لم يعمل الصوت الآن. جرّب مرة أخرى أو اطلب من ولي الأمر الاتصال بالإنترنت.'**
   String get kidsAudioPlaybackFailed;
 
-  /// No description provided for @quizSurahNotFound.
-  ///
-  /// In ar, this message translates to:
-  /// **'لم يتم العثور على بيانات السورة'**
-  String get quizSurahNotFound;
-
-  /// No description provided for @quizAyahsOutsidePlan.
-  ///
-  /// In ar, this message translates to:
-  /// **'لا يمكن اختبار آيات خارج خطتك أو سجلاتك'**
-  String get quizAyahsOutsidePlan;
-
-  /// No description provided for @quizNoMemorizedAyahs.
-  ///
-  /// In ar, this message translates to:
-  /// **'لا توجد آيات محفوظة لاختبارها في هذه السورة'**
-  String get quizNoMemorizedAyahs;
-
   /// No description provided for @smartCoachMemorizedReviewDueTitle.
   ///
   /// In ar, this message translates to:
@@ -5316,12 +5094,6 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'راجع الآيات المحفوظة من سورة {surahName} لتثبيت حفظك.'**
   String smartCoachMemorizedReviewDueSubtitle(String surahName);
-
-  /// No description provided for @quizUnexpectedError.
-  ///
-  /// In ar, this message translates to:
-  /// **'حدث خطأ: {error}'**
-  String quizUnexpectedError(String error);
 
   /// No description provided for @homeContinueTodaysPlan.
   ///
@@ -5728,7 +5500,7 @@ abstract class AppLocalizations {
   /// No description provided for @tutorialS1Note2.
   ///
   /// In ar, this message translates to:
-  /// **'تسجيل الدخول اختياري، لكن يفيد في النسخ الاحتياطي السحابي.'**
+  /// **'تسجيل الدخول اختياري، ويفيد في إدارة الحساب وميزات العائلة.'**
   String get tutorialS1Note2;
 
   /// No description provided for @tutorialS2Title.

@@ -24,7 +24,7 @@ void main() {
         smartRecords: [_smartMemorized(1, 1), _smartMemorized(1, 2)],
       );
 
-      final awards = await service.checkAndUnlockCertificates();
+      final awards = await service.checkAndUnlockCertificates(isKids: false);
 
       expect(awards, isEmpty);
     });
@@ -38,7 +38,7 @@ void main() {
         smartRecords: [_smartMemorized(1, 1), _smartMemorized(1, 2)],
       );
 
-      final awards = await service.checkAndUnlockCertificates();
+      final awards = await service.checkAndUnlockCertificates(isKids: false);
       final ids = awards.map((award) => award.id).toSet();
 
       expect(ids, contains('cert_surah_1'));
@@ -60,7 +60,7 @@ void main() {
           ],
         );
 
-        final awards = await service.checkAndUnlockCertificates();
+        final awards = await service.checkAndUnlockCertificates(isKids: false);
 
         expect(awards.map((award) => award.id), contains('cert_juz_1'));
       },
@@ -75,7 +75,7 @@ void main() {
         smartRecords: [_smartMemorized(1, 1), _smartMemorized(1, 2)],
       );
 
-      final awards = await service.checkAndUnlockCertificates();
+      final awards = await service.checkAndUnlockCertificates(isKids: false);
 
       expect(awards.map((award) => award.id), contains('cert_surah_1'));
     });
@@ -91,8 +91,8 @@ void main() {
           smartRecords: [_smartMemorized(1, 1)],
         );
 
-        final firstAwards = await service.checkAndUnlockCertificates();
-        final secondAwards = await service.checkAndUnlockCertificates();
+        final firstAwards = await service.checkAndUnlockCertificates(isKids: false);
+        final secondAwards = await service.checkAndUnlockCertificates(isKids: false);
         final firstIds = firstAwards.map((award) => award.id).toSet();
 
         expect(firstIds, containsAll(['cert_surah_1', 'cert_juz_1']));
@@ -113,7 +113,7 @@ void main() {
           repository: repository,
         );
 
-        final awards = await service.checkAndUnlockCertificates();
+        final awards = await service.checkAndUnlockCertificates(isKids: false);
         // Best-effort push runs via unawaited(); flush the microtask queue.
         await Future<void>.delayed(Duration.zero);
 
@@ -137,7 +137,7 @@ void main() {
         );
 
         // No repository injected — must not throw.
-        await expectLater(service.checkAndUnlockCertificates(), completes);
+        await expectLater(service.checkAndUnlockCertificates(isKids: false), completes);
       },
     );
   });

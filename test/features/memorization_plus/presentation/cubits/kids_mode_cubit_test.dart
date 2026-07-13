@@ -4,6 +4,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
 import 'package:talia_quran/core/memorization/v2/session_engine.dart';
 import 'package:talia_quran/core/services/achievement_service.dart';
@@ -104,7 +105,7 @@ void main() {
         await cubit.close();
         cubit = buildCubit(
           recorder: _FakeKidsRecitationRecorder(
-            result: const KidsRecitationCaptureResult.notCaptured(),
+            result: const KidsRecitationCaptureResult.stoppedByUser(),
           ),
         );
 
@@ -138,6 +139,12 @@ void main() {
             ),
           ),
         );
+
+      cubit = buildCubit(
+        recorder: _FakeKidsRecitationRecorder(
+          result: const KidsRecitationCaptureResult.captured(words: 'ayah text'),
+        ),
+      );
 
       await cubit.load(114, 1, 'ayah text');
       cubit.debugSetLoopCount(3);
@@ -221,8 +228,9 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, AyahReviewRecord?>> getReviewRecord(
     int surahId,
-    int ayahNumber,
-  ) async {
+    int ayahNumber, {
+    ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
+  }) async {
     expect(surahId, 114);
     expect(ayahNumber, 1);
     return const Right(null);
@@ -262,7 +270,7 @@ class _FakeAchievementService implements AchievementService {
   int checkCalls = 0;
 
   @override
-  Future<List<CertificateAward>> checkAndUnlockCertificates() async {
+  Future<List<CertificateAward>> checkAndUnlockCertificates({required bool isKids}) async {
     checkCalls++;
     return const [];
   }
@@ -306,7 +314,7 @@ class _FakeXpService implements XpService {
 
 class _FakeKidsRecitationRecorder implements KidsRecitationRecorder {
   _FakeKidsRecitationRecorder({
-    this.result = const KidsRecitationCaptureResult.captured(),
+    this.result = const KidsRecitationCaptureResult.stoppedByUser(),
   });
 
   final KidsRecitationCaptureResult result;

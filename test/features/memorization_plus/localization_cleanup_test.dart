@@ -13,7 +13,7 @@ void main() {
 
     expect(find.text("Today's Plan"), findsOneWidget);
     expect(find.text('Your custom plan'), findsOneWidget);
-    expect(find.text('Check answer'), findsOneWidget);
+    expect(find.text('Memorization Session'), findsOneWidget);
     expect(find.text('What happens next?'), findsOneWidget);
     expect(find.text('Reward for the child'), findsOneWidget);
     expect(find.text('Parent / Guardian Tools'), findsOneWidget);
@@ -26,7 +26,7 @@ void main() {
 
     expect(find.text('خطتك اليومية'), findsOneWidget);
     expect(find.text('خطتك المخصصة'), findsOneWidget);
-    expect(find.text('تحقق من الإجابة'), findsOneWidget);
+    expect(find.text('جلسة الحفظ'), findsOneWidget);
     expect(find.text('ماذا سيحدث بعد ذلك؟'), findsOneWidget);
     expect(find.text('مكافأة للطفل'), findsOneWidget);
     expect(find.text('أدوات ولي الأمر'), findsOneWidget);
@@ -36,9 +36,9 @@ void main() {
     final targetFiles = [
       'lib/features/memorization_plus/presentation/pages/daily_plan_page.dart',
       'lib/features/memorization_plus/presentation/pages/custom_plan_setup_page.dart',
-      'lib/features/memorization_plus/presentation/pages/quiz_page.dart',
       'lib/features/memorization_plus/presentation/pages/path_selection_page.dart',
       'lib/features/memorization_plus/presentation/pages/parent_dashboard_page.dart',
+      'lib/features/memorization_plus/presentation/pages/v2_session_page.dart',
     ];
     final arabicScript = RegExp(r'[\u0600-\u06FF]');
 
@@ -84,7 +84,7 @@ class _L10nTestApp extends StatelessWidget {
                 children: [
                   Text(l10n.dailyPlanHeaderTitle),
                   Text(l10n.customPlanTitle),
-                  Text(l10n.quizCheckAnswer),
+                  Text(l10n.memorizationSessionTitle),
                   Text(l10n.memorizationPathConfirmTitle),
                   Text(l10n.parentDashboardRemoteRewardTitle),
                   Text(l10n.homeParentToolsTitle),
