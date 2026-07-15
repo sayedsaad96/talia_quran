@@ -81,7 +81,7 @@ class AzkarPage extends StatelessWidget {
 
   SliverAppBar _buildAppBar(BuildContext context, bool isDark) {
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: 160,
       pinned: true,
       backgroundColor: isDark
           ? AppColors.darkBackground
@@ -96,41 +96,66 @@ class AzkarPage extends StatelessWidget {
                 ? const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF1A0A00), Color(0xFF0D1117)],
+                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
                   )
                 : const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFFFF8C42), Color(0xFFD4A843)],
+                    colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
                   ),
           ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.lg,
-                AppSpacing.pagePadding,
-                AppSpacing.md,
+          child: Stack(
+            children: [
+              Positioned(
+                right: -40,
+                top: -20,
+                child: Icon(
+                  Icons.mosque_rounded,
+                  size: 200,
+                  color: Colors.white.withValues(alpha: 0.1),
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    context.l10n.azkar,
-                    style: AppTypography.headlineLarge.copyWith(
-                      color: Colors.white,
-                      fontFamily: 'Amiri',
-                    ),
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.lg,
+                    AppSpacing.pagePadding,
+                    AppSpacing.md,
                   ),
-                  Text(
-                    context.l10n.azkarSubtitle,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: Colors.white70,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        context.l10n.azkar,
+                        style: AppTypography.headlineLarge.copyWith(
+                          color: Colors.white,
+                          fontFamily: 'Amiri',
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                        ),
+                        child: Text(
+                          context.l10n.azkarSubtitle,
+                          style: AppTypography.bodySmall.copyWith(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -138,7 +163,7 @@ class AzkarPage extends StatelessWidget {
   }
 }
 
-class _AzkarCategoryCard extends StatelessWidget {
+class _AzkarCategoryCard extends StatefulWidget {
   const _AzkarCategoryCard({
     required this.title,
     required this.subtitle,
@@ -158,104 +183,137 @@ class _AzkarCategoryCard extends StatelessWidget {
   final bool isDark;
 
   @override
+  State<_AzkarCategoryCard> createState() => _AzkarCategoryCardState();
+}
+
+class _AzkarCategoryCardState extends State<_AzkarCategoryCard> {
+  bool _isPressed = false;
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-          onTap: () => context.push('/azkar/$route'),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: gradientColors,
-              ),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              boxShadow: [
-                BoxShadow(
-                  color: gradientColors[0].withValues(alpha: 0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      onTap: () {
+        context.push('/azkar/${widget.route}');
+      },
+      child: AnimatedScale(
+        scale: _isPressed ? 0.96 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeInOutCubic,
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: widget.gradientColors,
             ),
-            child: Stack(
-              children: [
-                // Background icon decoration
-                Positioned(
-                  right: -16,
-                  bottom: -16,
-                  child: Icon(
-                    icon,
-                    size: 100,
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: widget.gradientColors[0].withValues(alpha: 0.4),
+                blurRadius: _isPressed ? 10 : 20,
+                offset: Offset(0, _isPressed ? 4 : 8),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              // Background pattern/icon
+              Positioned(
+                right: -20,
+                bottom: -20,
+                child: Icon(
+                  widget.icon,
+                  size: 120,
+                  color: Colors.white.withValues(alpha: 0.08),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 52,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusMd,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                child: Row(
+                  children: [
+                    // Icon Container with Glassmorphism feel
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Icon(widget.icon, color: Colors.white, size: 28),
+                    ),
+                    const SizedBox(width: AppSpacing.lg),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            widget.title,
+                            style: AppTypography.titleLarge.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontFamily: context.isArabic ? 'Amiri' : null,
+                            ),
                           ),
-                        ),
-                        child: Icon(icon, color: Colors.white, size: 26),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              title,
-                              style: AppTypography.titleLarge.copyWith(
-                                color: Colors.white,
-                                fontFamily: context.isArabic ? 'Amiri' : null,
+                          const SizedBox(height: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                            ),
+                            child: Text(
+                              widget.subtitle,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusFull,
-                                ),
-                              ),
-                              child: Text(
-                                subtitle,
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      Icon(
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
                         Directionality.of(context) == TextDirection.rtl
-                            ? Icons.arrow_back_ios_rounded
+                            ? Icons.arrow_back_ios_new_rounded
                             : Icons.arrow_forward_ios_rounded,
-                        color: Colors.white54,
+                        color: Colors.white,
                         size: 16,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        )
-        .animate()
-        .fadeIn(duration: 200.ms)
-        .slideY(begin: 0.03, end: 0, curve: Curves.easeOut);
+        ),
+      ).animate().fadeIn(duration: 300.ms, delay: widget.delay.ms).slideY(
+            begin: 0.05,
+            end: 0,
+            curve: Curves.easeOutCubic,
+            duration: 400.ms,
+          ),
+    );
   }
 }
 

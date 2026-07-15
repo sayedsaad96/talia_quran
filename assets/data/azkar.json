@@ -427,6 +427,105 @@
       "translation": "Glory is to Allah (33 times), praise is to Allah (33 times), Allah is the Most Great (33 times). None has the right to be worshipped but Allah alone...",
       "count": 1,
       "reference": "صحيح مسلم"
+    },
+    {
+      "id": "gen_wake_1",
+      "text": "الْحَمْدُ للهِ الَّذِي أَحْيَانَا بَعْدَ مَا أَمَاتَنَا وَإِلَيْهِ النُّشُورُ.",
+      "transliteration": "Alhamdu lillahil-ladhi ahyana ba'da ma amatana wa ilaihin-nushur.",
+      "translation": "All praise is for Allah who gave us life after having taken it from us and unto Him is the resurrection.",
+      "count": 1,
+      "reference": "صحيح البخاري",
+      "subcategory": "أذكار الاستيقاظ"
+    },
+    {
+      "id": "gen_wake_2",
+      "text": "لا إلهَ إلاّ اللّهُ وَحْـدَهُ لا شَـريكَ لَه، لَهُ المُلـكُ ولَهُ الحَمـد، وهوَ على كلّ شيءٍ قدير، سُـبْحانَ اللهِ، والحَمْـدُ لله ، ولا إلهَ إلاّ اللهُ واللهُ أكبَر، وَلا حَولَ وَلا قوّة إلاّ باللّهِ العليّ العظيم. رَبِّ اغْفرْ لي.",
+      "transliteration": "La ilaha illal-lahu wahdahu la shareeka lah...",
+      "translation": "None has the right to be worshipped but Allah alone, Who has no partner...",
+      "count": 1,
+      "reference": "صحيح البخاري",
+      "subcategory": "أذكار الاستيقاظ"
+    },
+    {
+      "id": "gen_masjid_1",
+      "text": "اللّهُـمَّ افْتَـحْ لي أَبْوابَ رَحْمَتـِك.",
+      "transliteration": "Allahummaf-tah lee abwaba rahmatik.",
+      "translation": "O Allah, open the doors of Your mercy for me.",
+      "count": 1,
+      "reference": "صحيح مسلم",
+      "subcategory": "أذكار المسجد"
+    },
+    {
+      "id": "gen_masjid_2",
+      "text": "بِسْمِ اللّهِ وَالصَّلاةُ وَالسَّلامُ عَلَى رَسُولِ اللّهِ، اللّهُـمَّ إِنِّـي أَسْأَلُكَ مِـنْ فَضْـلِك، اللّهُـمَّ اعْصِمْنـي مِنَ الشَّيْـطَانِ الرَّجِـيمِ.",
+      "transliteration": "Bismillahi wassalatu wassalamu 'ala rasoolillah...",
+      "translation": "In the name of Allah, and prayers and peace be upon the Messenger of Allah...",
+      "count": 1,
+      "reference": "صحيح ابن ماجه",
+      "subcategory": "أذكار المسجد"
+    },
+    {
+      "id": "gen_prayer_1",
+      "text": "أَسْـتَغْفِرُ الله. (ثَلاثاً)\nاللّهُـمَّ أَنْـتَ السَّلامُ ، وَمِـنْكَ السَّلام ، تَبارَكْتَ يا ذا الجَـلالِ وَالإِكْـرام.",
+      "transliteration": "Astaghfirullah (3 times). Allahumma antas-salam wa minkas-salam...",
+      "translation": "I ask Allah for forgiveness (3 times). O Allah, You are Peace and from You comes peace...",
+      "count": 1,
+      "reference": "صحيح مسلم",
+      "subcategory": "أذكار بعد الصلاة"
+    },
+    {
+      "id": "gen_prayer_2",
+      "text": "سُـبْحانَ اللهِ، (ثلاثاً وثلاثين)\n والحَمْـدُ لله ، (ثلاثاً وثلاثين)\n واللهُ أكْـبَر ، (ثلاثاً وثلاثين)\n لا إلهَ إلاّ اللّهُ وَحْـدَهُ لا شريكَ لهُ، لهُ الملكُ ولهُ الحَمْد، وهُوَ على كُلّ شَيءٍ قَـدير.",
+      "transliteration": "Subhanallah (33), Alhamdulillah (33), Allahu Akbar (33)...",
+      "translation": "Glory is to Allah (33 times), praise is to Allah (33 times), Allah is the Greatest (33 times)...",
+      "count": 1,
+      "reference": "صحيح مسلم",
+      "subcategory": "أذكار بعد الصلاة"
+    },
+    {
+      "id": "gen_sleep_1",
+      "text": "بِاسْمِكَ رَبِّـي وَضَعْـتُ جَنْـبي ، وَبِكَ أَرْفَعُـه، فَإِن أَمْسَـكْتَ نَفْسـي فارْحَـمْها ، وَإِنْ أَرْسَلْتَـها فاحْفَظْـها بِمـا تَحْفَـظُ بِه عِبـادَكَ الصّـالِحـين.",
+      "transliteration": "Bismika Rabbi wada'tu janbi wa bika arfa'uh...",
+      "translation": "In Your name my Lord, I lie down and in Your name I rise...",
+      "count": 1,
+      "reference": "صحيح البخاري",
+      "subcategory": "أذكار النوم"
+    },
+    {
+      "id": "gen_sleep_2",
+      "text": "اللّهُـمَّ قِنـي عَذابَـكَ يَـوْمَ تَبْـعَثُ عِبـادَك.",
+      "transliteration": "Allahumma qinee 'athabaka yawma tab'athu 'ibadak.",
+      "translation": "O Allah, save me from Your punishment on the Day that You resurrect Your slaves.",
+      "count": 3,
+      "reference": "سنن أبي داود",
+      "subcategory": "أذكار النوم"
+    },
+    {
+      "id": "gen_sleep_3",
+      "text": "بِاسْـمِكَ اللّهُـمَّ أَمـوتُ وَأَحْـيا.",
+      "transliteration": "Bismikal-lahumma amootu wa-ahya.",
+      "translation": "In Your Name, O Allah, I die and I live.",
+      "count": 1,
+      "reference": "صحيح البخاري",
+      "subcategory": "أذكار النوم"
+    },
+    {
+      "id": "gen_ruqyah_1",
+      "text": "بِسْمِ اللَّهِ أَرْقِيكَ، مِنْ كُلِّ شَيْءٍ يُؤْذِيكَ، مِنْ شَرِّ كُلِّ نَفْسٍ أَوْ عَيْنِ حَاسِدٍ، اللَّهُ يَشْفِيكَ، بِسْمِ اللَّهِ أَرْقِيكَ.",
+      "transliteration": "Bismillahi arqeek, min kulli shay'in yu'theek...",
+      "translation": "In the Name of Allah I perform Ruqyah for you, from everything that is harming you...",
+      "count": 3,
+      "reference": "صحيح مسلم",
+      "subcategory": "الرقية الشرعية"
+    },
+    {
+      "id": "gen_ruqyah_2",
+      "text": "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ.",
+      "transliteration": "A'oodhu bikalimatil-lahit-tammati min sharri ma khalaq.",
+      "translation": "I seek refuge in the Perfect Words of Allah from the evil of what He has created.",
+      "count": 3,
+      "reference": "صحيح مسلم",
+      "subcategory": "الرقية الشرعية"
     }
   ],
   "duas": [
@@ -573,6 +672,60 @@
       "translation": "O Allah, have mercy on me through the Quran, make it a leader, light, guidance, and mercy for me, and grant me its recitation by night and day.",
       "count": 1,
       "reference": "دعاء مشهور عند ختم القرآن"
+    },
+    {
+      "id": "dua_quran_1",
+      "text": "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+      "transliteration": "Rabbana atina fid-dunya hasanatan wa fil-akhirati hasanatan wa qina 'adhaban-nar.",
+      "translation": "Our Lord, give us in this world [that which is] good and in the Hereafter [that which is] good and protect us from the punishment of the Fire.",
+      "count": 1,
+      "reference": "سورة البقرة - 201",
+      "subcategory": "أدعية قرآنية"
+    },
+    {
+      "id": "dua_quran_2",
+      "text": "رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً ۚ إِنَّكَ أَنتَ الْوَهَّابُ",
+      "transliteration": "Rabbana la tuzigh quloobana ba'da idh hadaytana...",
+      "translation": "Our Lord, let not our hearts deviate after You have guided us...",
+      "count": 1,
+      "reference": "سورة آل عمران - 8",
+      "subcategory": "أدعية قرآنية"
+    },
+    {
+      "id": "dua_quran_3",
+      "text": "رَبِّ اشْرَحْ لِي صَدْرِي ۝ وَيَسِّرْ لِي أَمْرِي",
+      "transliteration": "Rabbish-rah lee sadree. Wa yassir lee amree.",
+      "translation": "My Lord, expand for me my breast [with assurance]. And ease for me my task.",
+      "count": 1,
+      "reference": "سورة طه - 25-26",
+      "subcategory": "أدعية قرآنية"
+    },
+    {
+      "id": "dua_prophet_1",
+      "text": "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى",
+      "transliteration": "Allahumma inni as'alukal-huda wat-tuqa wal-'afafa wal-ghina.",
+      "translation": "O Allah, I ask You for guidance, piety, chastity and wealth.",
+      "count": 1,
+      "reference": "صحيح مسلم",
+      "subcategory": "أدعية نبوية"
+    },
+    {
+      "id": "dua_prophet_2",
+      "text": "يَا مُقَلِّبَ الْقُلُوبِ ثَبِّتْ قَلْبِي عَلَى دِينِكَ",
+      "transliteration": "Ya Muqallibal-quloob, thabbit qalbee 'alaa deenik.",
+      "translation": "O Changer of the hearts, make my heart firm upon Your religion.",
+      "count": 1,
+      "reference": "سنن الترمذي",
+      "subcategory": "أدعية نبوية"
+    },
+    {
+      "id": "dua_prophet_3",
+      "text": "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ، وَالْعَجْزِ وَالْكَسَلِ، وَالْبُخْلِ وَالْجُبْنِ، وَضَلَعِ الدَّيْنِ، وَغَلَبَةِ الرِّجَالِ",
+      "transliteration": "Allahumma inni a'oodhu bika minal-hammi wal-hazan...",
+      "translation": "O Allah, I seek refuge in You from grief and sadness, from weakness and from laziness...",
+      "count": 1,
+      "reference": "صحيح البخاري",
+      "subcategory": "أدعية نبوية"
     }
   ]
 }

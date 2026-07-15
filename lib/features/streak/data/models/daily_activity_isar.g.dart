@@ -22,10 +22,20 @@ const DailyActivityIsarSchema = CollectionSchema(
       name: r'activityCount',
       type: IsarType.long,
     ),
-    r'dayKey': PropertySchema(
+    r'cloudDirty': PropertySchema(
       id: 1,
+      name: r'cloudDirty',
+      type: IsarType.bool,
+    ),
+    r'dayKey': PropertySchema(
+      id: 2,
       name: r'dayKey',
       type: IsarType.long,
+    ),
+    r'lastSyncedAt': PropertySchema(
+      id: 3,
+      name: r'lastSyncedAt',
+      type: IsarType.dateTime,
     )
   },
   estimateSize: _dailyActivityIsarEstimateSize,
@@ -72,7 +82,9 @@ void _dailyActivityIsarSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeLong(offsets[0], object.activityCount);
-  writer.writeLong(offsets[1], object.dayKey);
+  writer.writeBool(offsets[1], object.cloudDirty);
+  writer.writeLong(offsets[2], object.dayKey);
+  writer.writeDateTime(offsets[3], object.lastSyncedAt);
 }
 
 DailyActivityIsar _dailyActivityIsarDeserialize(
@@ -83,8 +95,10 @@ DailyActivityIsar _dailyActivityIsarDeserialize(
 ) {
   final object = DailyActivityIsar();
   object.activityCount = reader.readLong(offsets[0]);
-  object.dayKey = reader.readLong(offsets[1]);
+  object.cloudDirty = reader.readBoolOrNull(offsets[1]);
+  object.dayKey = reader.readLong(offsets[2]);
   object.id = id;
+  object.lastSyncedAt = reader.readDateTimeOrNull(offsets[3]);
   return object;
 }
 
@@ -98,7 +112,11 @@ P _dailyActivityIsarDeserializeProp<P>(
     case 0:
       return (reader.readLong(offset)) as P;
     case 1:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 2:
       return (reader.readLong(offset)) as P;
+    case 3:
+      return (reader.readDateTimeOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -413,6 +431,34 @@ extension DailyActivityIsarQueryFilter
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
+      cloudDirtyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'cloudDirty',
+      ));
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
+      cloudDirtyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'cloudDirty',
+      ));
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
+      cloudDirtyEqualTo(bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cloudDirty',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
       dayKeyEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -523,6 +569,80 @@ extension DailyActivityIsarQueryFilter
       ));
     });
   }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
+      lastSyncedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastSyncedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
+      lastSyncedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastSyncedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
+      lastSyncedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastSyncedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
+      lastSyncedAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastSyncedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
+      lastSyncedAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastSyncedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterFilterCondition>
+      lastSyncedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastSyncedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension DailyActivityIsarQueryObject
@@ -548,6 +668,20 @@ extension DailyActivityIsarQuerySortBy
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
+      sortByCloudDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
+      sortByCloudDirtyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
       sortByDayKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dayKey', Sort.asc);
@@ -558,6 +692,20 @@ extension DailyActivityIsarQuerySortBy
       sortByDayKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'dayKey', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
+      sortByLastSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
+      sortByLastSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.desc);
     });
   }
 }
@@ -575,6 +723,20 @@ extension DailyActivityIsarQuerySortThenBy
       thenByActivityCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'activityCount', Sort.desc);
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
+      thenByCloudDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
+      thenByCloudDirtyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.desc);
     });
   }
 
@@ -604,6 +766,20 @@ extension DailyActivityIsarQuerySortThenBy
       return query.addSortBy(r'id', Sort.desc);
     });
   }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
+      thenByLastSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QAfterSortBy>
+      thenByLastSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.desc);
+    });
+  }
 }
 
 extension DailyActivityIsarQueryWhereDistinct
@@ -616,9 +792,23 @@ extension DailyActivityIsarQueryWhereDistinct
   }
 
   QueryBuilder<DailyActivityIsar, DailyActivityIsar, QDistinct>
+      distinctByCloudDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cloudDirty');
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QDistinct>
       distinctByDayKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'dayKey');
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DailyActivityIsar, QDistinct>
+      distinctByLastSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastSyncedAt');
     });
   }
 }
@@ -638,9 +828,23 @@ extension DailyActivityIsarQueryProperty
     });
   }
 
+  QueryBuilder<DailyActivityIsar, bool?, QQueryOperations>
+      cloudDirtyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cloudDirty');
+    });
+  }
+
   QueryBuilder<DailyActivityIsar, int, QQueryOperations> dayKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'dayKey');
+    });
+  }
+
+  QueryBuilder<DailyActivityIsar, DateTime?, QQueryOperations>
+      lastSyncedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastSyncedAt');
     });
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -16,18 +17,12 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
+class _SplashPageState extends State<SplashPage> {
   bool _hasNavigated = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..forward();
     _navigateAfterDelay();
   }
 
@@ -45,7 +40,6 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   void dispose() {
-    _controller.dispose();
     super.dispose();
   }
 
@@ -81,124 +75,85 @@ class _SplashPageState extends State<SplashPage>
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(AppSpacing.pagePadding),
-              child: AnimatedBuilder(
-                animation: _controller,
-                builder: (context, _) {
-                  final logoValue = Curves.easeOutBack.transform(
-                    _interval(0.0, 0.48),
-                  );
-                  final copyValue = Curves.easeOutCubic.transform(
-                    _interval(0.22, 0.7),
-                  );
-                  final sloganValue = Curves.easeOutCubic.transform(
-                    _interval(0.35, 0.8),
-                  );
-
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _LogoMark(primary: primary, isDark: isDark)
+                      .animate()
+                      .fadeIn(duration: 800.ms, curve: Curves.easeOutBack)
+                      .scaleXY(begin: 0.82, end: 1.0, curve: Curves.easeOutBack),
+                  const SizedBox(height: AppSpacing.lg),
+                  Column(
                     children: [
-                      Opacity(
-                        opacity: logoValue.clamp(0.0, 1.0),
-                        child: Transform.scale(
-                          scale: 0.82 + (logoValue * 0.18),
-                          child: _LogoMark(primary: primary, isDark: isDark),
+                      Text(
+                        context.l10n.appName,
+                        textAlign: TextAlign.center,
+                        style: AppTypography.displayMedium.copyWith(
+                          color: textColor,
+                          fontFamily: 'Amiri',
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.lg),
-                      Opacity(
-                        opacity: copyValue.clamp(0.0, 1.0),
-                        child: Transform.translate(
-                          offset: Offset(0, 18 * (1 - copyValue)),
-                          child: Column(
-                            children: [
-                              Text(
-                                context.l10n.appName,
-                                textAlign: TextAlign.center,
-                                style: AppTypography.displayMedium.copyWith(
-                                  color: textColor,
-                                  fontFamily: 'Amiri',
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.xs),
-                              Text(
-                                context.l10n.splashSubtitle,
-                                textAlign: TextAlign.center,
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: subTextColor,
-                                  height: 1.4,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      Opacity(
-                        opacity: sloganValue.clamp(0.0, 1.0),
-                        child: Transform.translate(
-                          offset: Offset(0, 15 * (1 - sloganValue)),
-                          child: Text(
-                            'رفيقك في رحاب القرآن',
-                            textAlign: TextAlign.center,
-                            style: AppTypography.titleMedium.copyWith(
-                              color: primary,
-                              fontFamily: 'Amiri',
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            _SplashFeatureHint(
-                              progress: _interval(0.42, 0.72),
-                              icon: Icons.menu_book_rounded,
-                              label: context.l10n.splashFeatureRead,
-                              color: primary,
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            _SplashFeatureHint(
-                              progress: _interval(0.52, 0.82),
-                              icon: Icons.psychology_alt_rounded,
-                              label: context.l10n.splashFeatureMemorize,
-                              color: AppColors.gold,
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            _SplashFeatureHint(
-                              progress: _interval(0.62, 0.92),
-                              icon: Icons.rate_review_rounded,
-                              label: context.l10n.splashFeatureReview,
-                              color: AppColors.info,
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            _SplashFeatureHint(
-                              progress: _interval(0.72, 1.0),
-                              icon: Icons.workspace_premium_rounded,
-                              label: context.l10n.splashFeatureGrow,
-                              color: AppColors.warning,
-                            ),
-                          ],
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        context.l10n.splashSubtitle,
+                        textAlign: TextAlign.center,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: subTextColor,
+                          height: 1.4,
                         ),
                       ),
                     ],
-                  );
-                },
+                  ).animate(delay: 400.ms).fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    'رفيقك في رحاب القرآن',
+                    textAlign: TextAlign.center,
+                    style: AppTypography.titleMedium.copyWith(
+                      color: primary,
+                      fontFamily: 'Amiri',
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ).animate(delay: 600.ms).fadeIn(duration: 600.ms).slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
+                  const SizedBox(height: AppSpacing.xl),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _SplashFeatureHint(
+                          icon: Icons.menu_book_rounded,
+                          label: context.l10n.splashFeatureRead,
+                          color: primary,
+                        ).animate(delay: 800.ms).fadeIn(duration: 400.ms).slideY(begin: 0.2, end: 0),
+                        const SizedBox(width: AppSpacing.sm),
+                        _SplashFeatureHint(
+                          icon: Icons.psychology_alt_rounded,
+                          label: context.l10n.splashFeatureMemorize,
+                          color: AppColors.gold,
+                        ).animate(delay: 900.ms).fadeIn(duration: 400.ms).slideY(begin: 0.2, end: 0),
+                        const SizedBox(width: AppSpacing.sm),
+                        _SplashFeatureHint(
+                          icon: Icons.rate_review_rounded,
+                          label: context.l10n.splashFeatureReview,
+                          color: AppColors.info,
+                        ).animate(delay: 1000.ms).fadeIn(duration: 400.ms).slideY(begin: 0.2, end: 0),
+                        const SizedBox(width: AppSpacing.sm),
+                        _SplashFeatureHint(
+                          icon: Icons.workspace_premium_rounded,
+                          label: context.l10n.splashFeatureGrow,
+                          color: AppColors.warning,
+                        ).animate(delay: 1100.ms).fadeIn(duration: 400.ms).slideY(begin: 0.2, end: 0),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
         ),
       ),
     );
-  }
-
-  double _interval(double begin, double end) {
-    final value = ((_controller.value - begin) / (end - begin)).clamp(0.0, 1.0);
-    return value;
   }
 }
 
@@ -249,6 +204,7 @@ class _LogoMark extends StatelessWidget {
               'assets/images/onboarding/splash_new.png',
               width: 72,
               height: 72,
+              cacheWidth: 144, // 72 * 2 (for high density screens)
               fit: BoxFit.cover,
             ),
           ),
@@ -260,50 +216,40 @@ class _LogoMark extends StatelessWidget {
 
 class _SplashFeatureHint extends StatelessWidget {
   const _SplashFeatureHint({
-    required this.progress,
     required this.icon,
     required this.label,
     required this.color,
   });
 
-  final double progress;
   final IconData icon;
   final String label;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final eased = Curves.easeOutCubic.transform(progress);
-
-    return Opacity(
-      opacity: eased.clamp(0.0, 1.0),
-      child: Transform.translate(
-        offset: Offset(0, 12 * (1 - eased)),
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: context.isDark ? 0.16 : 0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: AppSpacing.xs),
+          Text(
+            label,
+            style: AppTypography.labelMedium.copyWith(
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
           ),
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: context.isDark ? 0.16 : 0.1),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-            border: Border.all(color: color.withValues(alpha: 0.22)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, color: color, size: 18),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                label,
-                style: AppTypography.labelMedium.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }

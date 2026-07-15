@@ -115,24 +115,20 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
           padding: EdgeInsets.zero,
         ),
         const SizedBox(height: AppSpacing.md),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          physics: const BouncingScrollPhysics(),
-          child: IntrinsicHeight(
-            child: Row(
-              children: List.generate(_certificates.length, (index) {
-                final cert = _certificates[index];
-                return Padding(
-                  padding: EdgeInsetsDirectional.only(
-                    end: index < _certificates.length - 1 ? AppSpacing.md : 0,
-                  ),
-                  child: SizedBox(
-                    width: 240,
-                    child: _CertificateCard(cert: cert, isDark: widget.isDark),
-                  ),
-                );
-              }),
-            ),
+        SizedBox(
+          height: 180,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: _certificates.length,
+            separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.md),
+            itemBuilder: (context, index) {
+              final cert = _certificates[index];
+              return SizedBox(
+                width: 240,
+                child: _CertificateCard(cert: cert, isDark: widget.isDark),
+              );
+            },
           ),
         ),
       ],

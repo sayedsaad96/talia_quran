@@ -992,6 +992,13 @@
       }
     }
   },
+  "parentDashboardReminders": "Reminders",
+  "parentDashboardNotSet": "Not Set",
+  "parentDashboardEditChild": "Edit Child Details",
+  "parentDashboardChildLinked": "Child Linked Successfully",
+  "parentDashboardRewardAdded": "Reward Added Successfully",
+  "parentDashboardRemoteRewardAdded": "Remote Reward Added Successfully",
+  "parentDashboardReminderSaved": "Reminder Saved Successfully",
   "parentDashboardChildRemoved": "Child removed",
   "parentDashboardRewardsTitle": "Parent rewards",
   "parentDashboardRewardHint": "Example: extra play time",
@@ -1634,5 +1641,89 @@
   "exploreQuranTitle": "Quran",
   "exploreQuranSubtitle": "Read the Quran",
   "parentDashboardLinkHint": "talia-kids-link:...",
-  "homeActionQuran": "Quran"
+  "homeActionQuran": "Quran",
+
+  "familyDashboardTitle": "Family Dashboard",
+  "@familyDashboardTitle": { "description": "Family dashboard page title" },
+
+  "familyDashboardMyChildren": "My Children",
+  "@familyDashboardMyChildren": { "description": "Section label for children grid" },
+
+  "familyDashboardAddChild": "Link New Child",
+  "@familyDashboardAddChild": { "description": "Add / link a new child button" },
+
+  "familyDashboardNoChildren": "No children linked yet",
+  "@familyDashboardNoChildren": { "description": "Empty state title" },
+
+  "familyDashboardNoChildrenHint": "Ask your child to open the linking page in the app to scan a QR code",
+  "@familyDashboardNoChildrenHint": { "description": "Empty state hint" },
+
+  "familyDashboardTodaySummaryTitle": "Today in Our Family",
+  "@familyDashboardTodaySummaryTitle": { "description": "Banner title" },
+
+  "familyDashboardTodaySummary": "{count} active today · {points} pts",
+  "@familyDashboardTodaySummary": {
+    "description": "Banner body showing active children and total points",
+    "placeholders": {
+      "count": { "type": "int" },
+      "points": { "type": "int" }
+    }
+  },
+
+  "familyDashboardLocalBadge": "On this device",
+  "@familyDashboardLocalBadge": { "description": "Badge for local (same-device) child" },
+
+  "familyDashboardChildActiveToday": "{points} pts today",
+  "@familyDashboardChildActiveToday": {
+    "description": "Points earned today label on child card",
+    "placeholders": {
+      "points": { "type": "int" }
+    }
+  },
+
+  "familyDashboardChildNoActivity": "No activity today",
+  "@familyDashboardChildNoActivity": { "description": "No activity today label on child card" },
+
+  "familyDashboardNicknameSaved": "Name saved",
+  "@familyDashboardNicknameSaved": { "description": "Snackbar when nickname is saved" },
+
+  "childDetailTitle": "{name}'s Progress",
+  "@childDetailTitle": {
+    "description": "Child detail page title",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "childDetailTodayActivity": "{sessions} sessions · {points} pts today",
+  "@childDetailTodayActivity": {
+    "description": "Today summary in child detail page",
+    "placeholders": {
+      "sessions": { "type": "int" },
+      "points": { "type": "int" }
+    }
+  },
+
+  "childDetailNoActivity": "No activity today",
+  "@childDetailNoActivity": { "description": "No activity label in child detail" },
+
+  "childDetailMemorizationProgress": "Memorization Progress",
+  "@childDetailMemorizationProgress": { "description": "Section title for memorization progress" },
+
+  "childDetailRecentSessions": "Recent Sessions",
+  "@childDetailRecentSessions": { "description": "Section title for recent sessions" },
+
+  "childDetailRewards": "Rewards ({count})",
+  "@childDetailRewards": {
+    "description": "Section title for rewards with count",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "childDetailAddReward": "Add Reward",
+  "@childDetailAddReward": { "description": "Add reward tooltip/button" },
+
+  "childDetailOpenFullDashboard": "Open Full Dashboard",
+  "@childDetailOpenFullDashboard": { "description": "Button to open full parent dashboard for local child" }
 }

@@ -25,6 +25,8 @@ import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/session_engine.dart';
 import '../progress/progress_events_bus.dart';
+import '../sync/cloud_sync_queue.dart';
+import '../sync/cloud_sync_queue_item.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
 import '../../features/quran/data/repositories/quran_repository_impl.dart';
@@ -67,7 +69,7 @@ import '../../features/memorization_plus/domain/usecases/memorization_plus_useca
 import '../../features/memorization_plus/presentation/cubits/guardian_linking_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
-import '../../features/memorization_plus/presentation/cubits/parent_dashboard_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/custom_plan_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/memorization_identity_cubit.dart';
 import '../../features/memorization_plus/presentation/cubits/memorization_session_cubit.dart';
@@ -99,8 +101,10 @@ Future<void> configureDependencies() async {
     StreakIsarSchema,
     XpIsarSchema,
     DailyActivityIsarSchema, // For yearly activity heatmap
+    CloudSyncQueueItemSchema,
   ], directory: dir.path);
   getIt.registerSingleton<Isar>(isar);
+  getIt.registerLazySingleton<CloudSyncQueue>(() => CloudSyncQueue(isar));
   getIt.registerLazySingleton<V2SessionLocalDatasource>(
     () => V2SessionLocalDatasource(getIt<Isar>()),
   );
@@ -329,14 +333,14 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<SaveKidsSessionLogUsecase>(
     () => SaveKidsSessionLogUsecase(getIt<MemorizationPlusRepository>()),
   );
-  getIt.registerLazySingleton<GetParentDashboardUsecase>(
-    () => GetParentDashboardUsecase(getIt<MemorizationPlusRepository>()),
-  );
   getIt.registerLazySingleton<ParentAccessUsecase>(
     () => ParentAccessUsecase(getIt<MemorizationPlusRepository>()),
   );
   getIt.registerLazySingleton<ParentRemoteLinkUsecase>(
     () => ParentRemoteLinkUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<GetFamilyDashboardUsecase>(
+    () => GetFamilyDashboardUsecase(getIt<MemorizationPlusRepository>()),
   );
 
   // ─── Cubits ─────────────────────────────────────────────────────────────────
@@ -412,11 +416,12 @@ Future<void> configureDependencies() async {
       getIt<QuranRepository>(),
     ),
   );
-  getIt.registerFactory<ParentDashboardCubit>(
-    () => ParentDashboardCubit(
-      getIt<GetParentDashboardUsecase>(),
+
+  getIt.registerFactory<FamilyDashboardCubit>(
+    () => FamilyDashboardCubit(
       getIt<ParentAccessUsecase>(),
       getIt<ParentRemoteLinkUsecase>(),
+      getIt<GetFamilyDashboardUsecase>(),
     ),
   );
   getIt.registerFactory<MemorizationSessionCubit>(
@@ -459,6 +464,7 @@ Future<void> configureDependencies() async {
       getIt<MemorizationPlusRepository>(),
       getIt<ProgressEventsBus>(),
       getIt<AchievementService>(),
+      getIt<CloudSyncQueue>(),
     ),
   );
 }

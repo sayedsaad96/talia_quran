@@ -229,7 +229,7 @@ class TaliaNotificationService {
       notificationDetails: _notificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
-      payload: '/quran',
+      payload: '/quran/daily',
     );
   }
 

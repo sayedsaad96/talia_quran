@@ -38,6 +38,10 @@ CREATE TABLE IF NOT EXISTS public.parent_child_links (
 CREATE INDEX IF NOT EXISTS idx_parent_child_links_child
   ON public.parent_child_links(child_user_id);
 
+CREATE INDEX IF NOT EXISTS idx_parent_child_links_parent
+  ON public.parent_child_links(parent_user_id, status)
+  WHERE status = 'active';
+
 CREATE TABLE IF NOT EXISTS public.kids_progress_cloud (
   child_user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   total_points INTEGER NOT NULL DEFAULT 0 CHECK (total_points >= 0),
@@ -285,6 +289,45 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
+REVOKE EXECUTE ON FUNCTION public.insert_kids_session_log(TEXT, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) FROM anon;
+GRANT EXECUTE ON FUNCTION public.insert_kids_session_log(TEXT, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) TO authenticated;
+
+-- Batch insert for kids session logs (reduces RPC count on sync)
+CREATE OR REPLACE FUNCTION public.insert_kids_session_logs_batch(
+  p_data JSONB
+)
+RETURNS VOID AS $$
+DECLARE
+  v_uid UUID := auth.uid();
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  IF jsonb_array_length(p_data) > 500 THEN
+    RAISE EXCEPTION 'Batch too large (max 500 logs)';
+  END IF;
+
+  INSERT INTO public.kids_session_logs (
+    child_user_id, local_id, surah_id, ayah_number,
+    repeats_completed, points_earned, completed_at
+  )
+  SELECT
+    v_uid,
+    item->>'local_id',
+    (item->>'surah_id')::INTEGER,
+    (item->>'ayah_number')::INTEGER,
+    (item->>'repeats_completed')::INTEGER,
+    (item->>'points_earned')::INTEGER,
+    (item->>'completed_at')::TIMESTAMPTZ
+  FROM jsonb_array_elements(p_data) AS item
+  ON CONFLICT (child_user_id, local_id) DO NOTHING;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE ALL ON FUNCTION public.insert_kids_session_logs_batch(JSONB) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.insert_kids_session_logs_batch(JSONB) TO authenticated;
+
 REVOKE EXECUTE ON FUNCTION public.create_child_link_request_with_hash(TEXT) FROM anon;
 REVOKE EXECUTE ON FUNCTION public.accept_child_link_token_with_hash(TEXT) FROM anon;
 REVOKE EXECUTE ON FUNCTION public.upsert_kids_progress_cloud(INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) FROM anon;
@@ -348,6 +391,7 @@ CREATE TRIGGER on_auth_user_created
 -- Kept for backward compatibility with older app builds; do not write here
 -- from new client code.
 -- Mirrors IsarAyahProgress — stores per-ayah memorization state
+-- Legacy Hifz mirror (deprecated — app uses Isar + ayah_review_records_cloud).
 CREATE TABLE IF NOT EXISTS public.ayah_progress (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -419,7 +463,7 @@ CREATE INDEX IF NOT EXISTS idx_xp_history_user
 
 
 -- ─── 6. Bookmarks ───────────────────────────────────────────────────────────
--- Cloud-synced bookmarks
+-- Legacy cloud bookmarks (deprecated — app uses local SharedPreferences).
 CREATE TABLE IF NOT EXISTS public.bookmarks (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -441,7 +485,7 @@ CREATE INDEX IF NOT EXISTS idx_bookmarks_user
 
 
 -- ─── 7. Certificates ────────────────────────────────────────────────────────
--- Records of completed Juz certificates
+-- Legacy Juz certificates (deprecated — app uses certificate_awards_cloud).
 CREATE TABLE IF NOT EXISTS public.certificates (
   id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -818,12 +862,12 @@ REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon, authenticated;
 GRANT USAGE ON SCHEMA public TO authenticated;
 
 GRANT SELECT, UPDATE ON public.profiles TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.ayah_progress TO authenticated;
+GRANT SELECT ON public.ayah_progress TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.streaks TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.xp TO authenticated;
 GRANT SELECT, INSERT ON public.xp_history TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.bookmarks TO authenticated;
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.certificates TO authenticated;
+GRANT SELECT ON public.bookmarks TO authenticated;
+GRANT SELECT ON public.certificates TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.daily_activities TO authenticated;
 GRANT SELECT ON public.child_link_requests TO authenticated;
 GRANT SELECT ON public.parent_child_links TO authenticated;
@@ -836,12 +880,15 @@ DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_parent_read_linked_child" ON public.profiles;
 DROP POLICY IF EXISTS "ayah_progress_all_own" ON public.ayah_progress;
+DROP POLICY IF EXISTS "ayah_progress_select_own" ON public.ayah_progress;
 DROP POLICY IF EXISTS "streaks_all_own" ON public.streaks;
 DROP POLICY IF EXISTS "xp_all_own" ON public.xp;
 DROP POLICY IF EXISTS "xp_history_select_own" ON public.xp_history;
 DROP POLICY IF EXISTS "xp_history_insert_own" ON public.xp_history;
 DROP POLICY IF EXISTS "bookmarks_all_own" ON public.bookmarks;
+DROP POLICY IF EXISTS "bookmarks_select_own" ON public.bookmarks;
 DROP POLICY IF EXISTS "certificates_all_own" ON public.certificates;
+DROP POLICY IF EXISTS "certificates_select_own" ON public.certificates;
 DROP POLICY IF EXISTS "daily_activities_all_own" ON public.daily_activities;
 DROP POLICY IF EXISTS "Users can manage their own daily activities" ON public.daily_activities;
 DROP POLICY IF EXISTS "child_link_requests_child_own" ON public.child_link_requests;
@@ -876,10 +923,9 @@ CREATE POLICY "profiles_parent_read_linked_child"
     )
   );
 
-CREATE POLICY "ayah_progress_all_own"
-  ON public.ayah_progress FOR ALL TO authenticated
-  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id)
-  WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
+CREATE POLICY "ayah_progress_select_own"
+  ON public.ayah_progress FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
 
 CREATE POLICY "streaks_all_own"
   ON public.streaks FOR ALL TO authenticated
@@ -899,15 +945,13 @@ CREATE POLICY "xp_history_insert_own"
   ON public.xp_history FOR INSERT TO authenticated
   WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
 
-CREATE POLICY "bookmarks_all_own"
-  ON public.bookmarks FOR ALL TO authenticated
-  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id)
-  WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
+CREATE POLICY "bookmarks_select_own"
+  ON public.bookmarks FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
 
-CREATE POLICY "certificates_all_own"
-  ON public.certificates FOR ALL TO authenticated
-  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id)
-  WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
+CREATE POLICY "certificates_select_own"
+  ON public.certificates FOR SELECT TO authenticated
+  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
 
 CREATE POLICY "daily_activities_all_own"
   ON public.daily_activities FOR ALL TO authenticated
@@ -989,18 +1033,14 @@ ALTER FUNCTION public.update_updated_at() SET search_path = public;
 ALTER FUNCTION public.upsert_ayah_progress(JSONB) SET search_path = public;
 ALTER FUNCTION public.upsert_streak(INTEGER, INTEGER, DATE, INTEGER) SET search_path = public;
 ALTER FUNCTION public.upsert_xp(INTEGER) SET search_path = public;
-ALTER FUNCTION public.upsert_daily_activity(INTEGER, INTEGER) SET search_path = public;
 
 REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.update_updated_at() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.upsert_ayah_progress(JSONB) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.upsert_streak(INTEGER, INTEGER, DATE, INTEGER) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.upsert_xp(INTEGER) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.upsert_daily_activity(INTEGER, INTEGER) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.upsert_daily_activities_batch(JSONB) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.create_child_link_request() FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.create_child_link_request_with_hash(TEXT) FROM PUBLIC, anon;
-REVOKE ALL ON FUNCTION public.accept_child_link_token(TEXT) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.accept_child_link_token_with_hash(TEXT) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.upsert_kids_progress_cloud(INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.insert_kids_session_log(TEXT, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) FROM PUBLIC, anon;
@@ -1008,11 +1048,8 @@ REVOKE ALL ON FUNCTION public.insert_kids_session_log(TEXT, INTEGER, INTEGER, IN
 GRANT EXECUTE ON FUNCTION public.upsert_ayah_progress(JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.upsert_streak(INTEGER, INTEGER, DATE, INTEGER) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.upsert_xp(INTEGER) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.upsert_daily_activity(INTEGER, INTEGER) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.upsert_daily_activities_batch(JSONB) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.create_child_link_request() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.create_child_link_request_with_hash(TEXT) TO authenticated;
-GRANT EXECUTE ON FUNCTION public.accept_child_link_token(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.accept_child_link_token_with_hash(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.upsert_kids_progress_cloud(INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.insert_kids_session_log(TEXT, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) TO authenticated;
@@ -1302,3 +1339,102 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 REVOKE ALL ON FUNCTION public.revoke_guardian_link(UUID) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.revoke_guardian_link(UUID) TO authenticated;
+
+-- ── Parent dashboard: single RPC replaces N+1 per-child queries ──
+CREATE OR REPLACE FUNCTION public.get_remote_children_dashboard()
+RETURNS JSONB AS $$
+DECLARE
+  v_uid UUID := auth.uid();
+  v_result JSONB := '[]'::JSONB;
+  v_child RECORD;
+  v_child_json JSONB;
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  FOR v_child IN
+    SELECT pcl.child_user_id, p.display_name
+    FROM public.parent_child_links pcl
+    JOIN public.profiles p ON p.id = pcl.child_user_id
+    WHERE pcl.parent_user_id = v_uid
+      AND pcl.status = 'active'
+  LOOP
+    v_child_json := jsonb_build_object(
+      'child_user_id', v_child.child_user_id,
+      'display_name', COALESCE(v_child.display_name, 'طفل تالية'),
+      'progress', (
+        SELECT to_jsonb(kpc)
+        FROM public.kids_progress_cloud kpc
+        WHERE kpc.child_user_id = v_child.child_user_id
+      ),
+      'logs', COALESCE((
+        SELECT jsonb_agg(to_jsonb(l))
+        FROM (
+          SELECT local_id, surah_id, ayah_number, repeats_completed,
+                 points_earned, completed_at
+          FROM public.kids_session_logs
+          WHERE child_user_id = v_child.child_user_id
+          ORDER BY completed_at DESC
+          LIMIT 30
+        ) l
+      ), '[]'::JSONB),
+      'rewards', COALESCE((
+        SELECT jsonb_agg(to_jsonb(r))
+        FROM (
+          SELECT id, title, status, created_at, unlocked_at, claimed_at
+          FROM public.parent_rewards
+          WHERE child_user_id = v_child.child_user_id
+          ORDER BY created_at DESC
+        ) r
+      ), '[]'::JSONB),
+      'review_rows', COALESCE((
+        SELECT jsonb_agg(to_jsonb(rr))
+        FROM public.ayah_review_records_cloud rr
+        WHERE rr.user_id = v_child.child_user_id
+      ), '[]'::JSONB),
+      'daily_plan', (
+        SELECT to_jsonb(dp)
+        FROM public.daily_plans_cloud dp
+        WHERE dp.user_id = v_child.child_user_id
+      ),
+      'certificates', COALESCE((
+        SELECT jsonb_agg(to_jsonb(c))
+        FROM (
+          SELECT cert_id, title_ar, cert_type, earned_at
+          FROM public.certificate_awards_cloud
+          WHERE user_id = v_child.child_user_id
+          ORDER BY earned_at DESC
+        ) c
+      ), '[]'::JSONB),
+      'streak', (
+        SELECT to_jsonb(s)
+        FROM public.streaks s
+        WHERE s.user_id = v_child.child_user_id
+      ),
+      'activities', COALESCE((
+        SELECT jsonb_agg(
+          jsonb_build_object(
+            'day_key', da.day_key,
+            'activity_count', da.activity_count
+          )
+        )
+        FROM (
+          SELECT day_key, activity_count
+          FROM public.daily_activities
+          WHERE user_id = v_child.child_user_id
+          ORDER BY day_key DESC
+          LIMIT 31
+        ) da
+      ), '[]'::JSONB)
+    );
+
+    v_result := v_result || jsonb_build_array(v_child_json);
+  END LOOP;
+
+  RETURN v_result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE ALL ON FUNCTION public.get_remote_children_dashboard() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.get_remote_children_dashboard() TO authenticated;

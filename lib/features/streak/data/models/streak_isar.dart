@@ -9,4 +9,9 @@ class StreakIsar {
   int longestStreak = 0;
   DateTime? lastActivityDate;
   int freezesAvailable = 0;
+
+  /// Null on legacy rows is treated as dirty until first successful cloud push.
+  bool? cloudDirty;
+
+  DateTime? lastSyncedAt;
 }

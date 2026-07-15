@@ -62,7 +62,7 @@ dependencies:
   crypto: ^3.0.6
   qcf_quran_plus: ^0.0.8
   qr_flutter: ^4.1.0
-  mobile_scanner: ^7.2.0
+  mobile_scanner: ^7.2.1
   gal: ^2.3.2
   pdf: ^3.12.0
   printing: ^5.14.3
@@ -89,18 +89,18 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/logo_new.png"
+  image_path: "assets/images/logo_icon_padded.png"
   adaptive_icon_background: "#061811" # لون أخضر داكن جداً يطابق خلفية الشعار
-  adaptive_icon_foreground: "assets/images/logo_new.png"
+  adaptive_icon_foreground: "assets/images/logo_icon_padded.png"
 
 flutter_native_splash:
   color: "#ffffff"
-  image: "assets/images/logo_new.png"
+  image: "assets/images/logo_new_padded.png"
   fullscreen: true
   ios_content_mode: scaleAspectFit
   android_gravity: center
   android_12:
-    image: "assets/images/logo_new.png"
+    image: "assets/images/logo_new_padded.png"
     icon_background_color: "#ffffff"
 
 # For information on the generic Dart part of this file, see the

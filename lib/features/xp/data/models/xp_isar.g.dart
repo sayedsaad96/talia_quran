@@ -17,8 +17,18 @@ const XpIsarSchema = CollectionSchema(
   name: r'XpIsar',
   id: 1185858158439432322,
   properties: {
-    r'totalXp': PropertySchema(
+    r'cloudDirty': PropertySchema(
       id: 0,
+      name: r'cloudDirty',
+      type: IsarType.bool,
+    ),
+    r'lastSyncedAt': PropertySchema(
+      id: 1,
+      name: r'lastSyncedAt',
+      type: IsarType.dateTime,
+    ),
+    r'totalXp': PropertySchema(
+      id: 2,
       name: r'totalXp',
       type: IsarType.long,
     )
@@ -52,7 +62,9 @@ void _xpIsarSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.totalXp);
+  writer.writeBool(offsets[0], object.cloudDirty);
+  writer.writeDateTime(offsets[1], object.lastSyncedAt);
+  writer.writeLong(offsets[2], object.totalXp);
 }
 
 XpIsar _xpIsarDeserialize(
@@ -62,8 +74,10 @@ XpIsar _xpIsarDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = XpIsar();
+  object.cloudDirty = reader.readBoolOrNull(offsets[0]);
   object.id = id;
-  object.totalXp = reader.readLong(offsets[0]);
+  object.lastSyncedAt = reader.readDateTimeOrNull(offsets[1]);
+  object.totalXp = reader.readLong(offsets[2]);
   return object;
 }
 
@@ -75,6 +89,10 @@ P _xpIsarDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
+      return (reader.readBoolOrNull(offset)) as P;
+    case 1:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 2:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -169,6 +187,32 @@ extension XpIsarQueryWhere on QueryBuilder<XpIsar, XpIsar, QWhereClause> {
 }
 
 extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
+  QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> cloudDirtyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'cloudDirty',
+      ));
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> cloudDirtyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'cloudDirty',
+      ));
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> cloudDirtyEqualTo(
+      bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cloudDirty',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -213,6 +257,75 @@ extension XpIsarQueryFilter on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> lastSyncedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastSyncedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> lastSyncedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastSyncedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> lastSyncedAtEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastSyncedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> lastSyncedAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastSyncedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> lastSyncedAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastSyncedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterFilterCondition> lastSyncedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastSyncedAt',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -280,6 +393,30 @@ extension XpIsarQueryObject on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {}
 extension XpIsarQueryLinks on QueryBuilder<XpIsar, XpIsar, QFilterCondition> {}
 
 extension XpIsarQuerySortBy on QueryBuilder<XpIsar, XpIsar, QSortBy> {
+  QueryBuilder<XpIsar, XpIsar, QAfterSortBy> sortByCloudDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterSortBy> sortByCloudDirtyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.desc);
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterSortBy> sortByLastSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterSortBy> sortByLastSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<XpIsar, XpIsar, QAfterSortBy> sortByTotalXp() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'totalXp', Sort.asc);
@@ -294,6 +431,18 @@ extension XpIsarQuerySortBy on QueryBuilder<XpIsar, XpIsar, QSortBy> {
 }
 
 extension XpIsarQuerySortThenBy on QueryBuilder<XpIsar, XpIsar, QSortThenBy> {
+  QueryBuilder<XpIsar, XpIsar, QAfterSortBy> thenByCloudDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterSortBy> thenByCloudDirtyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.desc);
+    });
+  }
+
   QueryBuilder<XpIsar, XpIsar, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -303,6 +452,18 @@ extension XpIsarQuerySortThenBy on QueryBuilder<XpIsar, XpIsar, QSortThenBy> {
   QueryBuilder<XpIsar, XpIsar, QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterSortBy> thenByLastSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QAfterSortBy> thenByLastSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.desc);
     });
   }
 
@@ -320,6 +481,18 @@ extension XpIsarQuerySortThenBy on QueryBuilder<XpIsar, XpIsar, QSortThenBy> {
 }
 
 extension XpIsarQueryWhereDistinct on QueryBuilder<XpIsar, XpIsar, QDistinct> {
+  QueryBuilder<XpIsar, XpIsar, QDistinct> distinctByCloudDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cloudDirty');
+    });
+  }
+
+  QueryBuilder<XpIsar, XpIsar, QDistinct> distinctByLastSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastSyncedAt');
+    });
+  }
+
   QueryBuilder<XpIsar, XpIsar, QDistinct> distinctByTotalXp() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'totalXp');
@@ -331,6 +504,18 @@ extension XpIsarQueryProperty on QueryBuilder<XpIsar, XpIsar, QQueryProperty> {
   QueryBuilder<XpIsar, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<XpIsar, bool?, QQueryOperations> cloudDirtyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cloudDirty');
+    });
+  }
+
+  QueryBuilder<XpIsar, DateTime?, QQueryOperations> lastSyncedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastSyncedAt');
     });
   }
 

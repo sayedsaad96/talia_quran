@@ -4237,6 +4237,48 @@ abstract class AppLocalizations {
   /// **'سيؤدي هذا إلى فصل {name} عن حسابك. يمكنك الربط مرة أخرى لاحقًا برمز جديد.'**
   String parentDashboardRemoveChildConfirmBody(String name);
 
+  /// No description provided for @parentDashboardReminders.
+  ///
+  /// In ar, this message translates to:
+  /// **'التذكيرات'**
+  String get parentDashboardReminders;
+
+  /// No description provided for @parentDashboardNotSet.
+  ///
+  /// In ar, this message translates to:
+  /// **'غير محدد'**
+  String get parentDashboardNotSet;
+
+  /// No description provided for @parentDashboardEditChild.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل بيانات الطفل'**
+  String get parentDashboardEditChild;
+
+  /// No description provided for @parentDashboardChildLinked.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم ربط الطفل بنجاح'**
+  String get parentDashboardChildLinked;
+
+  /// No description provided for @parentDashboardRewardAdded.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت إضافة المكافأة'**
+  String get parentDashboardRewardAdded;
+
+  /// No description provided for @parentDashboardRemoteRewardAdded.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم إرسال المكافأة للطفل'**
+  String get parentDashboardRemoteRewardAdded;
+
+  /// No description provided for @parentDashboardReminderSaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تحديث التذكير'**
+  String get parentDashboardReminderSaved;
+
   /// No description provided for @parentDashboardChildRemoved.
   ///
   /// In ar, this message translates to:
@@ -4902,30 +4944,6 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'جارٍ إزالة ربط ولي الأمر…'**
   String get parentDashboardUnlinking;
-
-  /// No description provided for @parentDashboardRewardAdded.
-  ///
-  /// In ar, this message translates to:
-  /// **'تمت إضافة المكافأة'**
-  String get parentDashboardRewardAdded;
-
-  /// No description provided for @parentDashboardRemoteRewardAdded.
-  ///
-  /// In ar, this message translates to:
-  /// **'تم إرسال المكافأة للطفل'**
-  String get parentDashboardRemoteRewardAdded;
-
-  /// No description provided for @parentDashboardChildLinked.
-  ///
-  /// In ar, this message translates to:
-  /// **'تم ربط الطفل بنجاح'**
-  String get parentDashboardChildLinked;
-
-  /// No description provided for @parentDashboardReminderSaved.
-  ///
-  /// In ar, this message translates to:
-  /// **'تم تحديث التذكير'**
-  String get parentDashboardReminderSaved;
 
   /// No description provided for @guardianLinkingSlowHint.
   ///
@@ -6576,6 +6594,120 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'talia-kids-link:...'**
   String get parentDashboardLinkHint;
+
+  /// Family dashboard page title
+  ///
+  /// In ar, this message translates to:
+  /// **'لوحة العائلة'**
+  String get familyDashboardTitle;
+
+  /// Section label for children grid
+  ///
+  /// In ar, this message translates to:
+  /// **'أطفالي'**
+  String get familyDashboardMyChildren;
+
+  /// Add / link a new child button
+  ///
+  /// In ar, this message translates to:
+  /// **'ربط طفل جديد'**
+  String get familyDashboardAddChild;
+
+  /// Empty state title
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم ربط أي طفل بعد'**
+  String get familyDashboardNoChildren;
+
+  /// Empty state hint
+  ///
+  /// In ar, this message translates to:
+  /// **'اطلب من طفلك فتح صفحة الربط في التطبيق لمسح رمز QR'**
+  String get familyDashboardNoChildrenHint;
+
+  /// Banner title
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم في عائلتنا'**
+  String get familyDashboardTodaySummaryTitle;
+
+  /// Banner body showing active children and total points
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} نشط اليوم · {points} نقطة'**
+  String familyDashboardTodaySummary(int count, int points);
+
+  /// Badge for local (same-device) child
+  ///
+  /// In ar, this message translates to:
+  /// **'على هذا الجهاز'**
+  String get familyDashboardLocalBadge;
+
+  /// Points earned today label on child card
+  ///
+  /// In ar, this message translates to:
+  /// **'{points} نقطة اليوم'**
+  String familyDashboardChildActiveToday(int points);
+
+  /// No activity today label on child card
+  ///
+  /// In ar, this message translates to:
+  /// **'لا نشاط اليوم'**
+  String get familyDashboardChildNoActivity;
+
+  /// Snackbar when nickname is saved
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حفظ الاسم'**
+  String get familyDashboardNicknameSaved;
+
+  /// Child detail page title
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدم {name}'**
+  String childDetailTitle(String name);
+
+  /// Today summary in child detail page
+  ///
+  /// In ar, this message translates to:
+  /// **'{sessions} جلسة · {points} نقطة اليوم'**
+  String childDetailTodayActivity(int sessions, int points);
+
+  /// No activity label in child detail
+  ///
+  /// In ar, this message translates to:
+  /// **'لا نشاط اليوم'**
+  String get childDetailNoActivity;
+
+  /// Section title for memorization progress
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدم الحفظ'**
+  String get childDetailMemorizationProgress;
+
+  /// Section title for recent sessions
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر الجلسات'**
+  String get childDetailRecentSessions;
+
+  /// Section title for rewards with count
+  ///
+  /// In ar, this message translates to:
+  /// **'المكافآت ({count})'**
+  String childDetailRewards(int count);
+
+  /// Add reward tooltip/button
+  ///
+  /// In ar, this message translates to:
+  /// **'إضافة مكافأة'**
+  String get childDetailAddReward;
+
+  /// Button to open full parent dashboard for local child
+  ///
+  /// In ar, this message translates to:
+  /// **'فتح لوحة التحكم الكاملة'**
+  String get childDetailOpenFullDashboard;
 }
 
 class _AppLocalizationsDelegate

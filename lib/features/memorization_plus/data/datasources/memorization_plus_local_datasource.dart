@@ -34,7 +34,18 @@ abstract class MemorizationPlusLocalDatasource {
     ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
     bool includeAllAudiences = false,
   });
-  Future<void> saveReviewRecord(AyahReviewRecordModel record);
+  Future<void> saveReviewRecord(
+    AyahReviewRecordModel record, {
+    bool markCloudDirty = true,
+  });
+
+  /// Review records that still need uploading (cloudDirty true or legacy null).
+  Future<List<AyahReviewRecordModel>> getCloudDirtyReviewRecords({
+    bool includeAllAudiences = false,
+  });
+
+  /// Clears cloud dirty flags after a successful cloud upsert.
+  Future<void> markReviewRecordsCloudSynced(Iterable<String> compositeKeys);
 
   // Daily plan cache
   Future<DailyPlanModel?> getCachedDailyPlan();
@@ -256,7 +267,10 @@ class MemorizationPlusLocalDatasourceImpl
   }
 
   @override
-  Future<void> saveReviewRecord(AyahReviewRecordModel record) async {
+  Future<void> saveReviewRecord(
+    AyahReviewRecordModel record, {
+    bool markCloudDirty = true,
+  }) async {
     final isar = _isar;
     if (isar != null) {
       await migrateReviewRecordsToIsarIfNeeded();
@@ -269,6 +283,12 @@ class MemorizationPlusLocalDatasourceImpl
       );
       final isarRecord = IsarAyahReviewRecord.fromModel(record)
         ..compositeKey = compositeKey;
+      if (markCloudDirty) {
+        isarRecord.cloudDirty = true;
+      } else {
+        isarRecord.cloudDirty = false;
+        isarRecord.lastSyncedAt = DateTime.now().toUtc();
+      }
       await isar.writeTxn(() async {
         await isar.isarAyahReviewRecords.put(isarRecord);
       });
@@ -279,6 +299,57 @@ class MemorizationPlusLocalDatasourceImpl
       _reviewKey(record.surahId, record.ayahNumber),
       jsonEncode(record.toJson()),
     );
+  }
+
+  @override
+  Future<List<AyahReviewRecordModel>> getCloudDirtyReviewRecords({
+    bool includeAllAudiences = false,
+  }) async {
+    final isar = _isar;
+    if (isar == null) {
+      return getAllReviewRecords(includeAllAudiences: includeAllAudiences);
+    }
+
+    await migrateReviewRecordsToIsarIfNeeded();
+    await migrateAudienceScopedReviewKeysIfNeeded();
+    final records = await isar.isarAyahReviewRecords
+        .filter()
+        .group(
+          (q) => q.cloudDirtyEqualTo(true).or().cloudDirtyIsNull(),
+        )
+        .findAll();
+    final models = records.map((record) => record.toModel()).toList();
+    if (!_audienceScopedReads || includeAllAudiences) return models;
+    return models
+        .where(
+          (m) => ReviewRecordAudienceScope.matchesReadScope(
+            m,
+            ReviewRecordReadScope.adult,
+          ),
+        )
+        .toList();
+  }
+
+  @override
+  Future<void> markReviewRecordsCloudSynced(
+    Iterable<String> compositeKeys,
+  ) async {
+    final isar = _isar;
+    if (isar == null) return;
+
+    final syncedAt = DateTime.now().toUtc();
+    await isar.writeTxn(() async {
+      for (final compositeKey in compositeKeys) {
+        final record = await isar.isarAyahReviewRecords
+            .filter()
+            .compositeKeyEqualTo(compositeKey)
+            .findFirst();
+        if (record == null) continue;
+        record.cloudDirty = false;
+        record.lastSyncedAt = syncedAt;
+        await isar.isarAyahReviewRecords.put(record);
+      }
+    });
   }
 
   Map<String, dynamic>? _tryDecodeMap(String raw) {

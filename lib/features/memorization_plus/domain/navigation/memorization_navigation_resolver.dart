@@ -106,12 +106,7 @@ class MemorizationNavigationResolver {
   }
 
   Future<String> parentDashboardLocation() async {
-    final surahId = await _activeKidsSurahId();
-    final resolvedSurahId = _isValidSurahId(surahId) ? surahId! : 1;
-    return Uri(
-      path: AppRoutes.parentDashboard,
-      queryParameters: {'surahId': '$resolvedSurahId'},
-    ).toString();
+    return AppRoutes.familyDashboard;
   }
 
   Future<MemorizationProfile?> _profile() async {

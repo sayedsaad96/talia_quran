@@ -187,6 +187,7 @@ class CertificateWidget extends StatelessWidget {
                   child: Image.asset(
                     'assets/images/certificate.png',
                     fit: BoxFit.cover,
+                    cacheWidth: 1024,
                     errorBuilder: (context, error, stackTrace) {
                       return Container(
                         margin: const EdgeInsets.all(4),
@@ -223,6 +224,7 @@ class CertificateWidget extends StatelessWidget {
                                   'assets/images/logo_new.png',
                                   width: 50,
                                   height: 70,
+                                  cacheWidth: 100,
                                   fit: BoxFit.contain,
                                   errorBuilder: (_, _, _) => const Icon(
                                     Icons.menu_book_rounded,

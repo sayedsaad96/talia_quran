@@ -134,9 +134,9 @@ class _KidsJourneyPathPainter extends CustomPainter {
     canvas.drawPath(path, pathPaint);
 
     final dashPaint = Paint()
-      ..color = KidsTheme.creamParchment.withValues(alpha: 0.88)
+      ..color = KidsTheme.goldStar.withValues(alpha: 0.95)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
+      ..strokeWidth = 4
       ..strokeCap = StrokeCap.round;
     _drawDashedPath(canvas, path, dashPaint);
   }
@@ -145,9 +145,9 @@ class _KidsJourneyPathPainter extends CustomPainter {
     for (final metric in path.computeMetrics()) {
       var distance = 0.0;
       while (distance < metric.length) {
-        final end = (distance + 14).clamp(0, metric.length).toDouble();
+        final end = (distance + 12).clamp(0, metric.length).toDouble();
         canvas.drawPath(metric.extractPath(distance, end), paint);
-        distance += 26;
+        distance += 22;
       }
     }
   }

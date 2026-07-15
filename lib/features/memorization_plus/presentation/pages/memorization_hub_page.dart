@@ -12,6 +12,7 @@ import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
+import '../theme/kids_theme.dart';
 
 class MemorizationHubPage extends StatefulWidget {
   const MemorizationHubPage({super.key});
@@ -195,14 +196,14 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
-        _HubActionCard.primary(
+        _KidsHubActionCard(
           icon: Icons.flag_rounded,
           title: context.isArabic ? 'المهمة الحالية' : 'Current Mission',
           description: context.isArabic
               ? 'ابدأ مهمة الحفظ التالية في رحلة الأطفال.'
               : 'Start the next memorization mission in the kids journey.',
           route: AppRoutes.memorizationPlusKidsHome,
-          isDark: isDark,
+          variant: _KidsCardVariant.mission,
         ),
         const SizedBox(height: AppSpacing.lg),
         _HubSectionHeader(
@@ -213,14 +214,14 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
-        _HubActionCard(
+        _KidsHubActionCard(
           icon: Icons.map_rounded,
           title: context.isArabic ? 'الرحلة' : 'Journey',
           description: context.isArabic
               ? 'شاهد المراحل الحالية والقادمة.'
               : 'See current and upcoming journey stages.',
           route: targets!.kidsJourneyLocation,
-          isDark: isDark,
+          variant: _KidsCardVariant.journey,
         ),
         const SizedBox(height: AppSpacing.lg),
         _HubSectionHeader(
@@ -231,14 +232,14 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
-        _HubActionCard(
+        _KidsHubActionCard(
           icon: Icons.stars_rounded,
           title: context.isArabic ? 'المكافآت / التقدم' : 'Rewards / Progress',
           description: context.isArabic
               ? 'راجع النقاط والنجوم من شاشة التقدم.'
               : 'Review points and stars from the Progress screen.',
           route: AppRoutes.progress,
-          isDark: isDark,
+          variant: _KidsCardVariant.rewards,
         ),
       ];
     }
@@ -540,5 +541,129 @@ class _PathChoiceCard extends StatelessWidget {
       route: AppRoutes.memorizationPlus,
       isDark: isDark,
     );
+  }
+}
+
+enum _KidsCardVariant { mission, journey, rewards }
+
+class _KidsHubActionCard extends StatelessWidget {
+  const _KidsHubActionCard({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.route,
+    required this.variant,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final String route;
+  final _KidsCardVariant variant;
+
+  @override
+  Widget build(BuildContext context) {
+    Gradient? background;
+    Color? backgroundColor;
+    Color border;
+    Color textPrimary;
+    Color textSecondary;
+    Color iconColor;
+    Color iconBg;
+    List<BoxShadow>? shadows;
+
+    switch (variant) {
+      case _KidsCardVariant.mission:
+        background = KidsTheme.currentHouseGradient;
+        border = KidsTheme.mintGlow;
+        textPrimary = Colors.white;
+        textSecondary = Colors.white.withValues(alpha: 0.82);
+        iconColor = KidsTheme.nightSkyDark;
+        iconBg = KidsTheme.goldStar;
+        shadows = KidsTheme.softGlow;
+        break;
+      case _KidsCardVariant.journey:
+        backgroundColor = KidsTheme.creamParchment;
+        border = KidsTheme.parchmentEdge;
+        textPrimary = KidsTheme.nightSkyDark;
+        textSecondary = KidsTheme.nightSkyMid.withValues(alpha: 0.72);
+        iconColor = KidsTheme.forestGreen;
+        iconBg = KidsTheme.forestGreen.withValues(alpha: 0.12);
+        shadows = [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
+          ),
+        ];
+        break;
+      case _KidsCardVariant.rewards:
+        background = KidsTheme.completedHouseGradient;
+        border = KidsTheme.goldStar;
+        textPrimary = KidsTheme.nightSkyDark;
+        textSecondary = KidsTheme.nightSkyMid.withValues(alpha: 0.72);
+        iconColor = Colors.white;
+        iconBg = KidsTheme.forestGreen;
+        shadows = KidsTheme.goldGlow;
+        break;
+    }
+
+    return InkWell(
+      onTap: () => context.push(route),
+      borderRadius: KidsTheme.cardRadius,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          gradient: background,
+          borderRadius: KidsTheme.cardRadius,
+          border: Border.all(color: border, width: 1.5),
+          boxShadow: shadows,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: iconBg,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 26),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTypography.titleMedium.copyWith(
+                      color: textPrimary,
+                      fontFamily: 'Amiri',
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              context.isArabic
+                  ? Icons.arrow_back_ios_new_rounded
+                  : Icons.arrow_forward_ios_rounded,
+              color: textPrimary.withValues(alpha: 0.4),
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    ).animate().fadeIn(duration: 220.ms).slideY(begin: 0.03);
   }
 }

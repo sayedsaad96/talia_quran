@@ -247,7 +247,20 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   Future<void> saveParentRewards(List<ParentRewardModel> rewards) async {}
 
   @override
-  Future<void> saveReviewRecord(AyahReviewRecordModel record) async {}
+  Future<void> saveReviewRecord(
+    AyahReviewRecordModel record, {
+    bool markCloudDirty = true,
+  }) async {}
+
+  @override
+  Future<List<AyahReviewRecordModel>> getCloudDirtyReviewRecords({
+    bool includeAllAudiences = false,
+  }) async => records;
+
+  @override
+  Future<void> markReviewRecordsCloudSynced(
+    Iterable<String> compositeKeys,
+  ) async {}
 
   @override
   Future<void> saveSelectedTrack(String track) async {}

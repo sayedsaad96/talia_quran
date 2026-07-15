@@ -116,7 +116,8 @@ abstract class MemorizationPlusRepository {
 
   /// Pulls production review rows (+ daily plan when newer) from cloud and
   /// merges into local Isar using GREATEST / latest-timestamp rules.
-  /// No-op when [CloudSyncFeatureFlags.productionPullKey] is false.
+  /// Pulls production SRS/plan from cloud when logged in.
+  /// Opt out via [CloudSyncFeatureFlags.productionPullKey] = false in prefs.
   Future<Either<Failure, void>> pullProductionDataFromCloud();
 
   /// Best-effort push of newly-earned certificates to the cloud mirror.
@@ -131,4 +132,8 @@ abstract class MemorizationPlusRepository {
 
   /// Parent-initiated removal of a linked child.
   Future<Either<Failure, void>> removeChild(String childUserId);
+
+  /// Builds a unified FamilyDashboard with all linked children
+  /// (local + remote) and parent settings.
+  Future<Either<Failure, FamilyDashboard>> getFamilyDashboard();
 }

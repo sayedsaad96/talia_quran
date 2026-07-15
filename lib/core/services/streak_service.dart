@@ -76,6 +76,7 @@ class StreakService implements StreakReader {
       if (isNewRecord) data.longestStreak = data.currentStreak;
 
       data.lastActivityDate = todayDate;
+      data.cloudDirty = true;
       await _isar.streakIsars.put(data);
 
       // ── 2. Record into DailyActivityIsar for the heatmap ──────────────────
@@ -104,11 +105,13 @@ class StreakService implements StreakReader {
 
     if (existing != null) {
       existing.activityCount += delta;
+      existing.cloudDirty = true;
       await _isar.dailyActivityIsars.put(existing);
     } else {
       final entry = DailyActivityIsar()
         ..dayKey = dayKey
-        ..activityCount = delta;
+        ..activityCount = delta
+        ..cloudDirty = true;
       await _isar.dailyActivityIsars.put(entry);
     }
   }
@@ -149,6 +152,7 @@ class StreakService implements StreakReader {
           const Duration(days: 1),
         );
       }
+      data.cloudDirty = true;
       await _isar.streakIsars.put(data);
     });
   }
@@ -157,6 +161,7 @@ class StreakService implements StreakReader {
     await _isar.writeTxn(() async {
       final data = await _isar.streakIsars.get(1) ?? StreakIsar();
       data.freezesAvailable += count;
+      data.cloudDirty = true;
       await _isar.streakIsars.put(data);
     });
   }

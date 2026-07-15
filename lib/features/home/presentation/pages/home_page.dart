@@ -67,8 +67,12 @@ class _HomePageState extends State<HomePage>
   }
 
   void _onRouteChanged() {
-    // Reload when coming back to the Home tab
-    _reloadProgress();
+    if (!mounted) return;
+    final location =
+        AppRouter.router.routerDelegate.currentConfiguration.uri.path;
+    if (location == AppRoutes.home) {
+      _reloadProgress();
+    }
   }
 
   @override

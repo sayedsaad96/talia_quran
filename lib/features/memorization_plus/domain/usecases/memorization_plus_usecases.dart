@@ -528,3 +528,13 @@ class MarkDailyPlanAyahCompletedUsecase
       );
 }
 
+// ─── GetFamilyDashboardUsecase ────────────────────────────────────────────────
+
+class GetFamilyDashboardUsecase implements UseCaseNoParams<FamilyDashboard> {
+  const GetFamilyDashboardUsecase(this._repository);
+  final MemorizationPlusRepository _repository;
+
+  @override
+  Future<Either<Failure, FamilyDashboard>> call() =>
+      _repository.getFamilyDashboard();
+}

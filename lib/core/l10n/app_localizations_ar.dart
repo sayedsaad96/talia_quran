@@ -2312,6 +2312,27 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get parentDashboardReminders => 'التذكيرات';
+
+  @override
+  String get parentDashboardNotSet => 'غير محدد';
+
+  @override
+  String get parentDashboardEditChild => 'تعديل بيانات الطفل';
+
+  @override
+  String get parentDashboardChildLinked => 'تم ربط الطفل بنجاح';
+
+  @override
+  String get parentDashboardRewardAdded => 'تمت إضافة المكافأة';
+
+  @override
+  String get parentDashboardRemoteRewardAdded => 'تم إرسال المكافأة للطفل';
+
+  @override
+  String get parentDashboardReminderSaved => 'تم تحديث التذكير';
+
+  @override
   String get parentDashboardChildRemoved => 'تمت إزالة الطفل';
 
   @override
@@ -2681,18 +2702,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get parentDashboardUnlinking => 'جارٍ إزالة ربط ولي الأمر…';
-
-  @override
-  String get parentDashboardRewardAdded => 'تمت إضافة المكافأة';
-
-  @override
-  String get parentDashboardRemoteRewardAdded => 'تم إرسال المكافأة للطفل';
-
-  @override
-  String get parentDashboardChildLinked => 'تم ربط الطفل بنجاح';
-
-  @override
-  String get parentDashboardReminderSaved => 'تم تحديث التذكير';
 
   @override
   String get guardianLinkingSlowHint =>
@@ -3667,4 +3676,72 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get parentDashboardLinkHint => 'talia-kids-link:...';
+
+  @override
+  String get familyDashboardTitle => 'لوحة العائلة';
+
+  @override
+  String get familyDashboardMyChildren => 'أطفالي';
+
+  @override
+  String get familyDashboardAddChild => 'ربط طفل جديد';
+
+  @override
+  String get familyDashboardNoChildren => 'لم يتم ربط أي طفل بعد';
+
+  @override
+  String get familyDashboardNoChildrenHint =>
+      'اطلب من طفلك فتح صفحة الربط في التطبيق لمسح رمز QR';
+
+  @override
+  String get familyDashboardTodaySummaryTitle => 'اليوم في عائلتنا';
+
+  @override
+  String familyDashboardTodaySummary(int count, int points) {
+    return '$count نشط اليوم · $points نقطة';
+  }
+
+  @override
+  String get familyDashboardLocalBadge => 'على هذا الجهاز';
+
+  @override
+  String familyDashboardChildActiveToday(int points) {
+    return '$points نقطة اليوم';
+  }
+
+  @override
+  String get familyDashboardChildNoActivity => 'لا نشاط اليوم';
+
+  @override
+  String get familyDashboardNicknameSaved => 'تم حفظ الاسم';
+
+  @override
+  String childDetailTitle(String name) {
+    return 'تقدم $name';
+  }
+
+  @override
+  String childDetailTodayActivity(int sessions, int points) {
+    return '$sessions جلسة · $points نقطة اليوم';
+  }
+
+  @override
+  String get childDetailNoActivity => 'لا نشاط اليوم';
+
+  @override
+  String get childDetailMemorizationProgress => 'تقدم الحفظ';
+
+  @override
+  String get childDetailRecentSessions => 'آخر الجلسات';
+
+  @override
+  String childDetailRewards(int count) {
+    return 'المكافآت ($count)';
+  }
+
+  @override
+  String get childDetailAddReward => 'إضافة مكافأة';
+
+  @override
+  String get childDetailOpenFullDashboard => 'فتح لوحة التحكم الكاملة';
 }

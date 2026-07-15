@@ -2327,6 +2327,27 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get parentDashboardReminders => 'Reminders';
+
+  @override
+  String get parentDashboardNotSet => 'Not Set';
+
+  @override
+  String get parentDashboardEditChild => 'Edit Child Details';
+
+  @override
+  String get parentDashboardChildLinked => 'Child linked successfully';
+
+  @override
+  String get parentDashboardRewardAdded => 'Reward added';
+
+  @override
+  String get parentDashboardRemoteRewardAdded => 'Reward sent to child';
+
+  @override
+  String get parentDashboardReminderSaved => 'Reminder updated';
+
+  @override
   String get parentDashboardChildRemoved => 'Child removed';
 
   @override
@@ -2707,18 +2728,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentDashboardUnlinking => 'Removing guardian link…';
-
-  @override
-  String get parentDashboardRewardAdded => 'Reward added';
-
-  @override
-  String get parentDashboardRemoteRewardAdded => 'Reward sent to child';
-
-  @override
-  String get parentDashboardChildLinked => 'Child linked successfully';
-
-  @override
-  String get parentDashboardReminderSaved => 'Reminder updated';
 
   @override
   String get guardianLinkingSlowHint =>
@@ -3603,4 +3612,72 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get parentDashboardLinkHint => 'talia-kids-link:...';
+
+  @override
+  String get familyDashboardTitle => 'Family Dashboard';
+
+  @override
+  String get familyDashboardMyChildren => 'My Children';
+
+  @override
+  String get familyDashboardAddChild => 'Link New Child';
+
+  @override
+  String get familyDashboardNoChildren => 'No children linked yet';
+
+  @override
+  String get familyDashboardNoChildrenHint =>
+      'Ask your child to open the linking page in the app to scan a QR code';
+
+  @override
+  String get familyDashboardTodaySummaryTitle => 'Today in Our Family';
+
+  @override
+  String familyDashboardTodaySummary(int count, int points) {
+    return '$count active today · $points pts';
+  }
+
+  @override
+  String get familyDashboardLocalBadge => 'On this device';
+
+  @override
+  String familyDashboardChildActiveToday(int points) {
+    return '$points pts today';
+  }
+
+  @override
+  String get familyDashboardChildNoActivity => 'No activity today';
+
+  @override
+  String get familyDashboardNicknameSaved => 'Name saved';
+
+  @override
+  String childDetailTitle(String name) {
+    return '$name\'s Progress';
+  }
+
+  @override
+  String childDetailTodayActivity(int sessions, int points) {
+    return '$sessions sessions · $points pts today';
+  }
+
+  @override
+  String get childDetailNoActivity => 'No activity today';
+
+  @override
+  String get childDetailMemorizationProgress => 'Memorization Progress';
+
+  @override
+  String get childDetailRecentSessions => 'Recent Sessions';
+
+  @override
+  String childDetailRewards(int count) {
+    return 'Rewards ($count)';
+  }
+
+  @override
+  String get childDetailAddReward => 'Add Reward';
+
+  @override
+  String get childDetailOpenFullDashboard => 'Open Full Dashboard';
 }

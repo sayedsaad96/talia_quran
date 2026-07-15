@@ -83,4 +83,46 @@ void main() {
     await sub.cancel();
     await cubit.close();
   });
+
+  test('cold start runs cloud sync once when auth stream replays session', () async {
+    when(mockAuthRepository.currentUser).thenReturn(testUser);
+
+    final cubit = AuthCubit(
+      mockAuthRepository,
+      mockMemPlusRepository,
+      progressEvents,
+      mockAchievementService,
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    authStreamController.add(testUser);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(mockAuthRepository.pullProgressFromCloud()).called(1);
+
+    await cubit.close();
+  });
+
+  test('concurrent sync calls share one in-flight operation', () async {
+    when(mockAuthRepository.currentUser).thenReturn(testUser);
+    final pullGate = Completer<void>();
+    when(mockAuthRepository.pullProgressFromCloud()).thenAnswer((_) async {
+      await pullGate.future;
+      return const Right(unit);
+    });
+
+    final cubit = AuthCubit(
+      mockAuthRepository,
+      mockMemPlusRepository,
+      progressEvents,
+      mockAchievementService,
+    );
+    cubit.resyncOnResume();
+    cubit.resyncOnResume();
+    pullGate.complete();
+    await Future<void>.delayed(Duration.zero);
+
+    verify(mockAuthRepository.pullProgressFromCloud()).called(1);
+    await cubit.close();
+  });
 }

@@ -138,31 +138,43 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
                 vertical: AppSpacing.xs,
               ),
               decoration: BoxDecoration(
-                color: selected
-                    ? primary
-                    : (isDark ? AppColors.darkCard : Colors.white),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                border: Border.all(
                   color: selected
                       ? primary
                       : (isDark
-                            ? AppColors.darkDivider
-                            : AppColors.lightDivider),
+                            ? AppColors.darkCard
+                            : Colors.white),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                  border: Border.all(
+                    color: selected
+                        ? primary
+                        : (isDark
+                              ? AppColors.darkDivider
+                              : AppColors.lightDivider),
+                    width: selected ? 0 : 1,
+                  ),
+                  boxShadow: selected
+                      ? [
+                          BoxShadow(
+                            color: primary.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : null,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  tab.isEmpty ? context.l10n.all : tab,
+                  style: AppTypography.labelMedium.copyWith(
+                    color: selected
+                        ? Colors.white
+                        : (isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary),
+                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                  ),
                 ),
               ),
-              alignment: Alignment.center,
-              child: Text(
-                tab.isEmpty ? context.l10n.all : tab,
-                style: AppTypography.labelMedium.copyWith(
-                  color: selected
-                      ? Colors.white
-                      : (isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary),
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                ),
-              ),
-            ),
           );
         },
       ),
@@ -268,6 +280,7 @@ class _ZikrCard extends StatelessWidget {
     final textSecondary = isDark
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
 
     return Container(
       decoration: BoxDecoration(
@@ -276,59 +289,90 @@ class _ZikrCard extends StatelessWidget {
         border: Border.all(color: border, width: 0.5),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Stack(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Text(
-              zikr.text,
-              style: AppTypography.azkarText.copyWith(
-                color: textPrimary,
-                fontSize: 20,
-              ),
-              textDirection: TextDirection.rtl,
-              textAlign: TextAlign.center,
+          Positioned(
+            left: -10,
+            top: -10,
+            child: Icon(
+              Icons.format_quote_rounded,
+              size: 80,
+              color: primary.withValues(alpha: 0.05),
             ),
           ),
-          Divider(color: border, height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            child: Row(
-              children: [
-                if (zikr.reference.isNotEmpty)
-                  Expanded(
-                    child: Text(
-                      zikr.reference,
-                      style: AppTypography.labelSmall.copyWith(
-                        color: textSecondary,
-                      ),
-                    ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+                child: Text(
+                  zikr.text,
+                  style: AppTypography.azkarText.copyWith(
+                    color: textPrimary,
+                    fontSize: 22,
+                    height: 1.8,
                   ),
-                IconButton(
-                  icon: Icon(
-                    Icons.share_rounded,
-                    color: isDark ? AppColors.primaryLight : AppColors.primary,
-                    size: 20,
-                  ),
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    final shareText =
-                        '${zikr.text}\n\n${zikr.reference}\n\n${context.l10n.sharedFromTalia}';
-                    SharePlus.instance.share(ShareParams(text: shareText));
-                  },
+                  textDirection: TextDirection.rtl,
+                  textAlign: TextAlign.center,
                 ),
-              ],
-            ),
+              ),
+              Divider(color: border, height: 1),
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                child: Row(
+                  children: [
+                    if (zikr.reference.isNotEmpty)
+                      Expanded(
+                        child: Text(
+                          zikr.reference,
+                          style: AppTypography.labelMedium.copyWith(
+                            color: textSecondary,
+                            fontFamily: 'Amiri',
+                          ),
+                        ),
+                      )
+                    else
+                      const Spacer(),
+                    IconButton(
+                      icon: Icon(
+                        Icons.copy_rounded,
+                        color: textSecondary.withValues(alpha: 0.7),
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        Clipboard.setData(ClipboardData(text: zikr.text));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(context.l10n.zikrCopied)),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.share_rounded,
+                        color: primary,
+                        size: 20,
+                      ),
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        final shareText =
+                            '${zikr.text}\n\n${zikr.reference}\n\n${context.l10n.sharedFromTalia}';
+                        SharePlus.instance.share(ShareParams(text: shareText));
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

@@ -14,6 +14,8 @@ import '../../../../core/progress/progress_changed_reason.dart';
 
 import '../../../../core/progress/progress_events_bus.dart';
 
+import '../../../../core/sync/cloud_sync_queue.dart';
+
 import '../../../../core/services/achievement_service.dart';
 
 import '../../../../core/utils/talia_logger.dart';
@@ -38,6 +40,8 @@ class AuthCubit extends Cubit<AuthState> {
 
     this._achievementService,
 
+    this._cloudSyncQueue,
+
   ]) : super(const AuthInitial()) {
 
     // Listen to Supabase auth state changes.
@@ -61,6 +65,16 @@ class AuthCubit extends Cubit<AuthState> {
       if (user != null) {
 
         emit(AuthAuthenticated(user: user));
+
+        // Cold start already synced from [currentUser]; skip duplicate auth event.
+
+        if (_skipNextAuthSync) {
+
+          _skipNextAuthSync = false;
+
+          return;
+
+        }
 
         unawaited(_runCloudSync());
 
@@ -94,6 +108,8 @@ class AuthCubit extends Cubit<AuthState> {
 
       emit(AuthAuthenticated(user: currentUser));
 
+      _skipNextAuthSync = true;
+
       unawaited(_runCloudSync());
 
     } else {
@@ -110,21 +126,59 @@ class AuthCubit extends Cubit<AuthState> {
 
   /// state. Order matters: pull before push avoids stale-device clobber (B6/B9).
 
-  Future<void> _runCloudSync() async {
+  Future<void> _runCloudSync() {
+
+    _syncInFlight ??= _performCloudSync().whenComplete(
+
+      () => _syncInFlight = null,
+
+    );
+
+    return _syncInFlight!;
+
+  }
+
+
+
+  Future<void> _performCloudSync() async {
+
+    await _processSyncQueue();
+
+
 
     final pullResult = await _authRepository.pullProgressFromCloud();
 
     pullResult.fold(
 
-      (failure) => TaliaLogger.w(
+      (failure) {
 
-        'Cloud pull failed after login',
+        TaliaLogger.w(
 
-        failure.message,
+          'Cloud pull failed after login',
 
-      ),
+          failure.message,
 
-      (_) => TaliaLogger.i('Streak/heatmap pull completed'),
+        );
+
+        unawaited(
+
+          _cloudSyncQueue?.enqueue(CloudSyncQueueKind.authPull),
+
+        );
+
+      },
+
+      (_) {
+
+        TaliaLogger.i('Streak/heatmap pull completed');
+
+        unawaited(
+
+          _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.authPull),
+
+        );
+
+      },
 
     );
 
@@ -140,15 +194,35 @@ class AuthCubit extends Cubit<AuthState> {
 
       productionPull.fold(
 
-        (failure) => TaliaLogger.w(
+        (failure) {
 
-          'Production SRS pull failed',
+          TaliaLogger.w(
 
-          failure.message,
+            'Production SRS pull failed',
 
-        ),
+            failure.message,
 
-        (_) => TaliaLogger.i('Production SRS pull completed'),
+          );
+
+          unawaited(
+
+            _cloudSyncQueue?.enqueue(CloudSyncQueueKind.productionPull),
+
+          );
+
+        },
+
+        (_) {
+
+          TaliaLogger.i('Production SRS pull completed');
+
+          unawaited(
+
+            _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.productionPull),
+
+          );
+
+        },
 
       );
 
@@ -160,11 +234,29 @@ class AuthCubit extends Cubit<AuthState> {
 
     pushResult.fold(
 
-      (failure) =>
+      (failure) {
 
-          TaliaLogger.w('Streak/heatmap cloud sync failed', failure.message),
+        TaliaLogger.w('Streak/heatmap cloud sync failed', failure.message);
 
-      (_) => TaliaLogger.i('Streak/heatmap cloud sync completed'),
+        unawaited(
+
+          _cloudSyncQueue?.enqueue(CloudSyncQueueKind.authPush),
+
+        );
+
+      },
+
+      (_) {
+
+        TaliaLogger.i('Streak/heatmap cloud sync completed');
+
+        unawaited(
+
+          _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.authPush),
+
+        );
+
+      },
 
     );
 
@@ -178,15 +270,35 @@ class AuthCubit extends Cubit<AuthState> {
 
       resyncResult.fold(
 
-        (failure) => TaliaLogger.w(
+        (failure) {
 
-          'Production data cloud resync failed',
+          TaliaLogger.w(
 
-          failure.message,
+            'Production data cloud resync failed',
 
-        ),
+            failure.message,
 
-        (_) => TaliaLogger.i('Production data cloud resync completed'),
+          );
+
+          unawaited(
+
+            _cloudSyncQueue?.enqueue(CloudSyncQueueKind.productionPush),
+
+          );
+
+        },
+
+        (_) {
+
+          TaliaLogger.i('Production data cloud resync completed');
+
+          unawaited(
+
+            _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.productionPush),
+
+          );
+
+        },
 
       );
 
@@ -208,15 +320,35 @@ class AuthCubit extends Cubit<AuthState> {
 
           certResult.fold(
 
-            (failure) => TaliaLogger.w(
+            (failure) {
 
-              'Certificate cloud push failed',
+              TaliaLogger.w(
 
-              failure.message,
+                'Certificate cloud push failed',
 
-            ),
+                failure.message,
 
-            (_) => TaliaLogger.i('Certificate cloud push completed'),
+              );
+
+              unawaited(
+
+                _cloudSyncQueue?.enqueue(CloudSyncQueueKind.certificatePush),
+
+              );
+
+            },
+
+            (_) {
+
+              TaliaLogger.i('Certificate cloud push completed');
+
+              unawaited(
+
+                _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.certificatePush),
+
+              );
+
+            },
 
           );
 
@@ -229,6 +361,96 @@ class AuthCubit extends Cubit<AuthState> {
 
 
     _progressEvents?.notify(ProgressChangedReason.cloudPull);
+
+  }
+
+
+
+  Future<void> _processSyncQueue() async {
+
+    final queue = _cloudSyncQueue;
+
+    if (queue == null) return;
+
+
+
+    final dueItems = await queue.dueItems();
+
+    for (final item in dueItems) {
+
+      final success = await _retryQueueKind(item.kind);
+
+      if (success) {
+
+        await queue.markSuccess(item.kind);
+
+      } else {
+
+        await queue.markFailure(item.kind);
+
+      }
+
+    }
+
+  }
+
+
+
+  Future<bool> _retryQueueKind(String kind) async {
+
+    final memPlusRepository = _memPlusRepository;
+
+    switch (kind) {
+
+      case CloudSyncQueueKind.authPull:
+
+        return (await _authRepository.pullProgressFromCloud()).isRight();
+
+      case CloudSyncQueueKind.authPush:
+
+        return (await _authRepository.syncProgressToCloud()).isRight();
+
+      case CloudSyncQueueKind.productionPull:
+
+        if (memPlusRepository == null) return true;
+
+        return (await memPlusRepository.pullProductionDataFromCloud()).isRight();
+
+      case CloudSyncQueueKind.productionPush:
+
+        if (memPlusRepository == null) return true;
+
+        return (await memPlusRepository.resyncProductionDataToCloud()).isRight();
+
+      case CloudSyncQueueKind.certificatePush:
+
+        final achievementService = _achievementService;
+
+        if (memPlusRepository == null || achievementService == null) {
+
+          return true;
+
+        }
+
+        final certificates = achievementService.getAllEarnedCertificates();
+
+        if (certificates.isEmpty) return true;
+
+        return (await memPlusRepository.pushCertificatesToCloud(certificates))
+
+            .isRight();
+
+      case CloudSyncQueueKind.kidsProgress:
+
+        if (memPlusRepository == null) return true;
+
+        return (await memPlusRepository.syncKidsProgressToCloud()).isRight();
+
+      default:
+
+        return true;
+
+    }
 
   }
 
@@ -256,6 +478,8 @@ class AuthCubit extends Cubit<AuthState> {
 
   final AchievementService? _achievementService;
 
+  final CloudSyncQueue? _cloudSyncQueue;
+
   StreamSubscription<AppUser?>? _authSub;
 
   StreamSubscription<void>? _passwordRecoverySub;
@@ -269,6 +493,14 @@ class AuthCubit extends Cubit<AuthState> {
   // UI can respond to it.
 
   bool _isUpdatingPassword = false;
+
+  /// Prevents duplicate sync when [currentUser] and the initial auth stream
+
+  /// event both fire on cold start.
+
+  bool _skipNextAuthSync = false;
+
+  Future<void>? _syncInFlight;
 
 
 

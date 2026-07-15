@@ -169,13 +169,16 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         progress: state.progress,
                         childName: childName,
                         onSettingsTap: onPathSettingsTap,
+                        onAvatarTap: () {
+                          // Allow tapping avatar to do something if needed
+                        },
                       ),
-                      const SizedBox(height: AppSpacing.lg),
+                      const SizedBox(height: AppSpacing.xl),
                       _KidsStartHerePanel(
                         hasCurrentStage: state.currentStage != null,
                         onStartTap: onMissionTap,
                       ),
-                      const SizedBox(height: AppSpacing.md),
+                      const SizedBox(height: AppSpacing.lg),
                       KidsMissionCard(
                         stage: state.currentStage,
                         surahName:

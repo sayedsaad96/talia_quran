@@ -36,6 +36,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   ]);
 
   static const _pairingSessionLifetime = Duration(minutes: 10);
+  static const _dailyPlanCloudDirtyKey = 'daily_plan_cloud_dirty';
 
   final MemorizationPlusLocalDatasource _datasource;
 
@@ -50,9 +51,8 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   final SharedPreferences _prefs;
   final ProgressMetricsService _metrics;
 
-  bool get _cloudPullEnabled => CloudSyncFeatureFlags.isProductionPullEnabled(
-    readBool: (key) => _prefs.getBool(key) ?? false,
-  );
+  bool get _cloudPullEnabled =>
+      CloudSyncFeatureFlags.isProductionPullEnabled(_prefs);
 
   final Map<String, Future<void>> _kidsAwardLocks = {};
 
@@ -737,9 +737,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   Future<Either<Failure, void>> saveDailyPlan(DailyPlan plan) async {
     try {
       await _datasource.saveDailyPlan(DailyPlanModel.fromEntity(plan));
-      // Best-effort cloud mirror: local cache is already saved above, so a
-      // sync failure here never blocks or loses the child's plan.
-      unawaited(_pushDailyPlanBestEffort(plan));
+      await _prefs.setBool(_dailyPlanCloudDirtyKey, true);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -822,12 +820,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       await _datasource.saveReviewRecord(
         AyahReviewRecordModel.fromEntity(record),
       );
-      // Best-effort cloud mirror for production records only (matches the
-      // `created_by_mode` CHECK on ayah_review_records_cloud — no legacy
-      // Hifz data). Local save above already succeeded regardless.
-      if (_isProductionReviewRecord(record)) {
-        unawaited(_pushSingleReviewRecordBestEffort(record));
-      }
+      // Delta sync: mark dirty locally; [resyncProductionDataToCloud] uploads.
       _progressEvents.notify(ProgressChangedReason.reviewRecord);
       return const Right(null);
     } catch (e) {
@@ -996,7 +989,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       );
       await _datasource.saveKidsSessionLog(log);
       await _unlockWeeklyRewardIfNeeded();
-      await syncKidsProgressToCloud();
+      unawaited(syncKidsProgressToCloud());
       _progressEvents.notify(ProgressChangedReason.kidsProgress);
       return Right(log);
     } catch (e) {
@@ -1270,30 +1263,21 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       );
 
       final logs = await _datasource.getKidsSessionLogs();
-      final synced = <KidsSessionLogModel>[];
-      for (final log in logs) {
-        if (log.isSynced) {
-          synced.add(log);
-          continue;
-        }
-        await client.rpc(
-          'insert_kids_session_log',
-          params: {
-            'p_local_id': log.id,
-            'p_surah_id': log.surahId,
-            'p_ayah_number': log.ayahNumber,
-            'p_repeats_completed': log.repeatsCompleted,
-            'p_points_earned': log.pointsEarned,
-            'p_completed_at': log.completedAt.toUtc().toIso8601String(),
-          },
-        );
-        synced.add(
-          KidsSessionLogModel.fromEntity(
-            log.copyWith(syncedAt: DateTime.now()),
-          ),
-        );
+      final pendingLogs = logs.where((log) => !log.isSynced).toList();
+      if (pendingLogs.isNotEmpty) {
+        await _pushKidsSessionLogs(client, pendingLogs);
       }
-      await _datasource.saveKidsSessionLogs(synced);
+
+      final updatedLogs = logs
+          .map(
+            (log) => log.isSynced
+                ? log
+                : KidsSessionLogModel.fromEntity(
+                    log.copyWith(syncedAt: DateTime.now().toUtc()),
+                  ),
+          )
+          .toList();
+      await _datasource.saveKidsSessionLogs(updatedLogs);
       return const Right(null);
     } catch (e) {
       return Left(NetworkFailure(e.toString()));
@@ -1318,97 +1302,183 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         return const Left(NetworkFailure('سجّل الدخول أولاً'));
       }
 
-      final links = await client
-          .from('parent_child_links')
-          .select('child_user_id')
-          .eq('parent_user_id', user.id)
-          .eq('status', 'active');
-
-      final children = <RemoteChildSummary>[];
-      for (final link in links) {
-        final childId = link['child_user_id'] as String;
-        final profileRows = await client
-            .from('profiles')
-            .select('display_name')
-            .eq('id', childId)
-            .limit(1);
-        final progressRows = await client
-            .from('kids_progress_cloud')
-            .select()
-            .eq('child_user_id', childId)
-            .limit(1);
-        final logRows = await client
-            .from('kids_session_logs')
-            .select()
-            .eq('child_user_id', childId)
-            .order('completed_at', ascending: false)
-            .limit(30);
-        final rewardRows = await client
-            .from('parent_rewards')
-            .select()
-            .eq('child_user_id', childId)
-            .order('created_at', ascending: false);
-
-        // Phase 7: production sync tables (best-effort — a read failure here
-        // must not hide the existing kids-gamification summary above).
-        RemoteChildProductionSummary? production;
-        try {
-          final reviewRows = await client
-              .from('ayah_review_records_cloud')
-              .select()
-              .eq('user_id', childId);
-          final dailyPlanRows = await client
-              .from('daily_plans_cloud')
-              .select()
-              .eq('user_id', childId)
-              .limit(1);
-          final certRows = await client
-              .from('certificate_awards_cloud')
-              .select()
-              .eq('user_id', childId)
-              .order('earned_at', ascending: false);
-          final streakRows = await client
-              .from('streaks')
-              .select()
-              .eq('user_id', childId)
-              .limit(1);
-          final activityRows = await client
-              .from('daily_activities')
-              .select('day_key, activity_count')
-              .eq('user_id', childId)
-              .order('day_key', ascending: false)
-              .limit(31);
-
-          production = _buildProductionSummary(
-            reviewRows: List<Map<String, dynamic>>.from(reviewRows),
-            dailyPlanRow: dailyPlanRows.isEmpty ? null : dailyPlanRows.first,
-            certRows: List<Map<String, dynamic>>.from(certRows),
-            streakRow: streakRows.isEmpty ? null : streakRows.first,
-            activityRows: List<Map<String, dynamic>>.from(activityRows),
-          );
-        } catch (_) {
-          production = null;
-        }
-
-        children.add(
-          RemoteChildSummary(
-            childUserId: childId,
-            displayName: profileRows.isEmpty
-                ? 'طفل تالية'
-                : profileRows.first['display_name'] as String? ?? 'طفل تالية',
-            progress: _progressFromCloud(
-              progressRows.isEmpty ? null : progressRows.first,
-            ),
-            logs: logRows.map(_logFromCloud).toList(),
-            rewards: rewardRows.map(_rewardFromCloud).toList(),
-            production: production,
-          ),
-        );
+      try {
+        final payload = await client.rpc('get_remote_children_dashboard');
+        return Right(_parseRemoteChildrenDashboard(payload));
+      } on PostgrestException catch (e) {
+        if (!_isMissingRpc(e, 'get_remote_children_dashboard')) rethrow;
       }
-      return Right(children);
+
+      return Right(await _fetchRemoteChildrenLegacy(client, user.id));
     } catch (e) {
       return Left(NetworkFailure(e.toString()));
     }
+  }
+
+  List<RemoteChildSummary> _parseRemoteChildrenDashboard(dynamic raw) {
+    final items = raw as List<dynamic>? ?? const [];
+    return items
+        .map(
+          (item) => _remoteChildSummaryFromDashboardJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        )
+        .toList();
+  }
+
+  RemoteChildSummary _remoteChildSummaryFromDashboardJson(
+    Map<String, dynamic> row,
+  ) {
+    final childId = row['child_user_id'] as String;
+    final progressRaw = row['progress'];
+    final logsRaw = row['logs'] as List<dynamic>? ?? const [];
+    final rewardsRaw = row['rewards'] as List<dynamic>? ?? const [];
+
+    RemoteChildProductionSummary? production;
+    try {
+      final reviewRows = (row['review_rows'] as List<dynamic>? ?? const [])
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList();
+      final dailyPlanRaw = row['daily_plan'];
+      final dailyPlanRow = dailyPlanRaw == null
+          ? null
+          : Map<String, dynamic>.from(dailyPlanRaw as Map);
+      final certRows = (row['certificates'] as List<dynamic>? ?? const [])
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList();
+      final streakRaw = row['streak'];
+      final streakRow = streakRaw == null
+          ? null
+          : Map<String, dynamic>.from(streakRaw as Map);
+      final activityRows = (row['activities'] as List<dynamic>? ?? const [])
+          .map((item) => Map<String, dynamic>.from(item as Map))
+          .toList();
+
+      production = _buildProductionSummary(
+        reviewRows: reviewRows,
+        dailyPlanRow: dailyPlanRow,
+        certRows: certRows,
+        streakRow: streakRow,
+        activityRows: activityRows,
+      );
+    } catch (_) {
+      production = null;
+    }
+
+    return RemoteChildSummary(
+      childUserId: childId,
+      displayName: row['display_name'] as String? ?? 'طفل تالية',
+      progress: _progressFromCloud(
+        progressRaw == null ? null : Map<String, dynamic>.from(progressRaw as Map),
+      ),
+      logs: logsRaw
+          .map((item) => _logFromCloud(Map<String, dynamic>.from(item as Map)))
+          .toList(),
+      rewards: rewardsRaw
+          .map(
+            (item) => _rewardFromCloud(Map<String, dynamic>.from(item as Map)),
+          )
+          .toList(),
+      production: production,
+    );
+  }
+
+  Future<List<RemoteChildSummary>> _fetchRemoteChildrenLegacy(
+    SupabaseClient client,
+    String parentUserId,
+  ) async {
+    final links = await client
+        .from('parent_child_links')
+        .select('child_user_id')
+        .eq('parent_user_id', parentUserId)
+        .eq('status', 'active');
+
+    final children = <RemoteChildSummary>[];
+    for (final link in links) {
+      final childId = link['child_user_id'] as String;
+      final profileRows = await client
+          .from('profiles')
+          .select('display_name')
+          .eq('id', childId)
+          .limit(1);
+      final progressRows = await client
+          .from('kids_progress_cloud')
+          .select()
+          .eq('child_user_id', childId)
+          .limit(1);
+      final logRows = await client
+          .from('kids_session_logs')
+          .select()
+          .eq('child_user_id', childId)
+          .order('completed_at', ascending: false)
+          .limit(30);
+      final rewardRows = await client
+          .from('parent_rewards')
+          .select()
+          .eq('child_user_id', childId)
+          .order('created_at', ascending: false);
+
+      RemoteChildProductionSummary? production;
+      try {
+        final reviewRows = await client
+            .from('ayah_review_records_cloud')
+            .select()
+            .eq('user_id', childId);
+        final dailyPlanRows = await client
+            .from('daily_plans_cloud')
+            .select()
+            .eq('user_id', childId)
+            .limit(1);
+        final certRows = await client
+            .from('certificate_awards_cloud')
+            .select()
+            .eq('user_id', childId)
+            .order('earned_at', ascending: false);
+        final streakRows = await client
+            .from('streaks')
+            .select()
+            .eq('user_id', childId)
+            .limit(1);
+        final activityRows = await client
+            .from('daily_activities')
+            .select('day_key, activity_count')
+            .eq('user_id', childId)
+            .order('day_key', ascending: false)
+            .limit(31);
+
+        production = _buildProductionSummary(
+          reviewRows: List<Map<String, dynamic>>.from(reviewRows),
+          dailyPlanRow: dailyPlanRows.isEmpty ? null : dailyPlanRows.first,
+          certRows: List<Map<String, dynamic>>.from(certRows),
+          streakRow: streakRows.isEmpty ? null : streakRows.first,
+          activityRows: List<Map<String, dynamic>>.from(activityRows),
+        );
+      } catch (_) {
+        production = null;
+      }
+
+      children.add(
+        RemoteChildSummary(
+          childUserId: childId,
+          displayName: profileRows.isEmpty
+              ? 'طفل تالية'
+              : profileRows.first['display_name'] as String? ?? 'طفل تالية',
+          progress: _progressFromCloud(
+            progressRows.isEmpty ? null : progressRows.first,
+          ),
+          logs: logRows.map(_logFromCloud).toList(),
+          rewards: rewardRows.map(_rewardFromCloud).toList(),
+          production: production,
+        ),
+      );
+    }
+    return children;
+  }
+
+  bool _isMissingRpc(PostgrestException error, String rpcName) {
+    final message = error.message.toLowerCase();
+    return message.contains(rpcName.toLowerCase()) ||
+        message.contains('could not find the function');
   }
 
   @override
@@ -1764,7 +1834,10 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         );
         final mergedModel = AyahReviewRecordModel.fromEntity(merged);
         if (localModel == null || localModel != mergedModel) {
-          await _datasource.saveReviewRecord(mergedModel);
+          await _datasource.saveReviewRecord(
+            mergedModel,
+            markCloudDirty: false,
+          );
         }
       }
 
@@ -1797,6 +1870,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
 
     try {
       await _datasource.saveDailyPlan(DailyPlanModel.fromJson(payload));
+      await _prefs.setBool(_dailyPlanCloudDirtyKey, false);
       return true;
     } catch (_) {
       return false;
@@ -1811,19 +1885,25 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       final user = client.auth.currentUser;
       if (user == null) return const Right(null);
 
-      final allRecords = await _datasource.getAllReviewRecords(
+      final dirtyRecords = await _datasource.getCloudDirtyReviewRecords(
         includeAllAudiences: true,
       );
-      final productionRecords = allRecords
+      final productionRecords = dirtyRecords
           .where(_isProductionReviewRecord)
           .toList();
       if (productionRecords.isNotEmpty) {
         await _pushReviewRecordsBatch(client, productionRecords);
+        await _datasource.markReviewRecordsCloudSynced(
+          productionRecords.map(_reviewRecordStorageKey),
+        );
       }
 
-      final cachedPlan = await _datasource.getCachedDailyPlan();
-      if (cachedPlan != null) {
-        await _upsertDailyPlanRow(client, user.id, cachedPlan);
+      if (_prefs.getBool(_dailyPlanCloudDirtyKey) ?? false) {
+        final cachedPlan = await _datasource.getCachedDailyPlan();
+        if (cachedPlan != null) {
+          await _upsertDailyPlanRow(client, user.id, cachedPlan);
+          await _prefs.setBool(_dailyPlanCloudDirtyKey, false);
+        }
       }
 
       return const Right(null);
@@ -1901,29 +1981,126 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   Future<Either<Failure, void>> removeChild(String childUserId) =>
       revokeGuardianLink(childUserId);
 
-  Future<void> _pushSingleReviewRecordBestEffort(
-    AyahReviewRecord record,
-  ) async {
+  @override
+  Future<Either<Failure, FamilyDashboard>> getFamilyDashboard() async {
     try {
-      if (!_isSupabaseReady) return;
-      final client = _supabase;
-      if (client.auth.currentUser == null) return;
-      await _pushReviewRecordsBatch(client, [record]);
-    } catch (_) {
-      // Best-effort: local save already succeeded; the next resync
-      // (login/app-resume) will retry this push.
+      final settings = await _datasource.getParentSettings();
+      final children = <FamilyChildEntry>[];
+
+      // ─── 1. Local child (same device) ────────────────────────────────────
+      // Only shown when this device is configured as a parent-guardian device.
+      final profile = await _loadProfile();
+      if (profile.isParentGuardian) {
+        final progressResult = await getKidsProgress();
+        final progress = progressResult.getOrElse(
+          () => const KidsProgress.initial(),
+        );
+        final logs = await _datasource.getKidsSessionLogs();
+        final rewards = await _datasource.getParentRewards();
+        final localChildId = profile.linkedChildId ?? 'local-child';
+        final localDashboard = ParentDashboard(
+          progress: progress,
+          stages: const [],
+          logs: logs,
+          rewards: rewards,
+          settings: settings,
+        );
+        children.add(
+          FamilyChildEntry(
+            childUserId: localChildId,
+            displayName: settings.localChildNickname ?? 'طفلي',
+            isLocal: true,
+            localData: localDashboard,
+          ),
+        );
+      }
+
+      // ─── 2. Remote children (Supabase) ────────────────────────────────────
+      final remoteResult = await getRemoteChildren();
+      remoteResult.fold(
+        (_) {}, // silently ignore remote errors; show local child if any
+        (remoteChildren) {
+          for (final r in remoteChildren) {
+            // Avoid duplicate if remote child === local child
+            final alreadyAdded =
+                children.any((c) => c.childUserId == r.childUserId);
+            if (!alreadyAdded) {
+              children.add(
+                FamilyChildEntry(
+                  childUserId: r.childUserId,
+                  displayName: r.displayName,
+                  isLocal: false,
+                  remoteSummary: r,
+                ),
+              );
+            }
+          }
+        },
+      );
+
+      return Right(
+        FamilyDashboard(children: children, settings: settings),
+      );
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
     }
   }
 
-  Future<void> _pushDailyPlanBestEffort(DailyPlan plan) async {
+  String _reviewRecordStorageKey(AyahReviewRecord record) =>
+      ReviewRecordAudienceScope.storageKey(
+        surahId: record.surahId,
+        ayahNumber: record.ayahNumber,
+        mode: record.createdByMode,
+        scoped: ReviewRecordAudienceScope.isEnabled(
+          readBool: (key) => _prefs.getBool(key) ?? false,
+        ),
+      );
+
+  Future<void> _pushKidsSessionLogs(
+    SupabaseClient client,
+    List<KidsSessionLog> logs,
+  ) async {
+    if (logs.isEmpty) return;
+
+    final payload = logs
+        .map(
+          (log) => {
+            'local_id': log.id,
+            'surah_id': log.surahId,
+            'ayah_number': log.ayahNumber,
+            'repeats_completed': log.repeatsCompleted,
+            'points_earned': log.pointsEarned,
+            'completed_at': log.completedAt.toUtc().toIso8601String(),
+          },
+        )
+        .toList();
+
     try {
-      if (!_isSupabaseReady) return;
-      final client = _supabase;
-      final userId = client.auth.currentUser?.id;
-      if (userId == null) return;
-      await _upsertDailyPlanRow(client, userId, plan);
-    } catch (_) {
-      // Best-effort: local cache already succeeded; resync will retry.
+      await client.rpc(
+        'insert_kids_session_logs_batch',
+        params: {'p_data': payload},
+      );
+      return;
+    } on PostgrestException catch (e) {
+      final message = e.message.toLowerCase();
+      if (!message.contains('insert_kids_session_logs_batch') &&
+          !message.contains('could not find the function')) {
+        rethrow;
+      }
+    }
+
+    for (final log in logs) {
+      await client.rpc(
+        'insert_kids_session_log',
+        params: {
+          'p_local_id': log.id,
+          'p_surah_id': log.surahId,
+          'p_ayah_number': log.ayahNumber,
+          'p_repeats_completed': log.repeatsCompleted,
+          'p_points_earned': log.pointsEarned,
+          'p_completed_at': log.completedAt.toUtc().toIso8601String(),
+        },
+      );
     }
   }
 

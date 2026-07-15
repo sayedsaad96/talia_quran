@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -79,68 +81,61 @@ class KidsMissionCard extends StatelessWidget {
       ],
     );
 
-    final continueButton = FilledButton(
+    final continueButton = FilledButton.icon(
       onPressed: onContinue,
+      icon: const Icon(Icons.play_arrow_rounded, size: 28),
+      label: Text(
+        context.l10n.kidsGamifiedContinueNow,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+      ),
       style: FilledButton.styleFrom(
         backgroundColor: KidsTheme.forestGreen,
         foregroundColor: Colors.white,
-        minimumSize: const Size(48, 48),
+        minimumSize: const Size(double.infinity, 56),
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
         shape: const RoundedRectangleBorder(
           borderRadius: KidsTheme.buttonRadius,
         ),
+        elevation: 8,
+        shadowColor: KidsTheme.forestGreen.withValues(alpha: 0.4),
       ),
-      child: Text(
-        context.l10n.kidsGamifiedContinueNow,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      ),
+    ).animate(onPlay: (controller) => controller.repeat(reverse: true)).scaleXY(
+      begin: 1.0,
+      end: 1.05,
+      duration: 1.5.seconds,
+      curve: Curves.easeInOut,
     );
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final useCompactLayout = constraints.maxWidth < 340;
-
-        return Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: KidsTheme.creamParchment,
-            borderRadius: KidsTheme.cardRadius,
-            border: Border.all(color: KidsTheme.parchmentEdge),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: KidsTheme.creamParchment,
+        borderRadius: KidsTheme.cardRadius,
+        border: Border.all(color: KidsTheme.parchmentEdge, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: KidsTheme.goldWarm.withValues(alpha: 0.15),
+            blurRadius: 24,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              banner.animate().shakeX(amount: 3, duration: 1.seconds),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(child: missionText),
             ],
           ),
-          child: useCompactLayout
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Row(
-                      children: [
-                        banner,
-                        const SizedBox(width: AppSpacing.md),
-                        Expanded(child: missionText),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    continueButton,
-                  ],
-                )
-              : Row(
-                  children: [
-                    banner,
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(child: missionText),
-                    const SizedBox(width: AppSpacing.sm),
-                    continueButton,
-                  ],
-                ),
-        );
-      },
-    );
+          const SizedBox(height: AppSpacing.lg),
+          continueButton,
+        ],
+      ),
+    ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack);
   }
 }

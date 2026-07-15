@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -48,20 +50,23 @@ class KidsStageDetails extends StatelessWidget {
         const SizedBox(height: AppSpacing.lg),
         FilledButton.icon(
           onPressed: onStartMission,
-          icon: const Icon(Icons.play_arrow_rounded),
-          label: Text(context.l10n.kidsGamifiedStartMission),
+          icon: const Icon(Icons.play_arrow_rounded, size: 28),
+          label: Text(context.l10n.kidsGamifiedStartMission, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           style: FilledButton.styleFrom(
             backgroundColor: KidsTheme.forestGreen,
             foregroundColor: Colors.white,
-            minimumSize: const Size.fromHeight(AppSpacing.buttonHeight),
+            minimumSize: const Size.fromHeight(60),
             shape: const RoundedRectangleBorder(
               borderRadius: KidsTheme.buttonRadius,
             ),
-            textStyle: AppTypography.titleMedium.copyWith(
-              fontFamily: 'Amiri',
-              letterSpacing: 0,
-            ),
+            elevation: 8,
+            shadowColor: KidsTheme.forestGreen.withValues(alpha: 0.4),
           ),
+        ).animate(onPlay: (controller) => controller.repeat(reverse: true)).scaleXY(
+          begin: 1.0,
+          end: 1.05,
+          duration: 1.5.seconds,
+          curve: Curves.easeInOut,
         ),
       ],
     );
@@ -110,7 +115,7 @@ class _RibbonHeader extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 500.ms).slideY(begin: -0.1, end: 0, curve: Curves.easeOut);
   }
 }
 

@@ -417,11 +417,11 @@ class _JuzGridView extends StatelessWidget {
         AppSpacing.pagePadding,
         120,
       ),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2, // Changed to 2 columns for better text fitting
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: 220,
         crossAxisSpacing: AppSpacing.md,
         mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 2.2, // Rectangular card
+        childAspectRatio: 2.2,
       ),
       itemCount: 30,
       itemBuilder: (context, i) {

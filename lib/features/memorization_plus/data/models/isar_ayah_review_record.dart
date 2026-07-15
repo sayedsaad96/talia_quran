@@ -61,6 +61,13 @@ class IsarAyahReviewRecord {
   double? schedulerVsFsrsRatio;
   bool? schedulerEarlierThanFsrs;
 
+  /// True when local changes need uploading to Supabase.
+  /// Null on legacy rows is treated as dirty until first successful push.
+  bool? cloudDirty;
+
+  /// UTC timestamp of the last successful cloud upsert for this row.
+  DateTime? lastSyncedAt;
+
   AyahReviewRecordModel toModel() {
     return AyahReviewRecordModel(
       surahId: surahId,

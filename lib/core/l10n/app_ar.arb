@@ -995,6 +995,13 @@
       }
     }
   },
+  "parentDashboardReminders": "التذكيرات",
+  "parentDashboardNotSet": "غير محدد",
+  "parentDashboardEditChild": "تعديل بيانات الطفل",
+  "parentDashboardChildLinked": "تم ربط الطفل بنجاح",
+  "parentDashboardRewardAdded": "تم إضافة المكافأة بنجاح",
+  "parentDashboardRemoteRewardAdded": "تم إضافة المكافأة عن بعد بنجاح",
+  "parentDashboardReminderSaved": "تم حفظ وقت التذكير",
   "parentDashboardChildRemoved": "تمت إزالة الطفل",
   "parentDashboardRewardsTitle": "مكافآت ولي الأمر",
   "parentDashboardRewardHint": "مثال: وقت لعب إضافي",
@@ -1569,5 +1576,89 @@
   "exploreMissionSubtitle": "ابدأ مهمتك الحالية",
   "exploreQuranTitle": "القرآن الكريم",
   "exploreQuranSubtitle": "اقرأ القرآن",
-  "parentDashboardLinkHint": "talia-kids-link:..."
+  "parentDashboardLinkHint": "talia-kids-link:...",
+
+  "familyDashboardTitle": "لوحة العائلة",
+  "@familyDashboardTitle": { "description": "Family dashboard page title" },
+
+  "familyDashboardMyChildren": "أطفالي",
+  "@familyDashboardMyChildren": { "description": "Section label for children grid" },
+
+  "familyDashboardAddChild": "ربط طفل جديد",
+  "@familyDashboardAddChild": { "description": "Add / link a new child button" },
+
+  "familyDashboardNoChildren": "لم يتم ربط أي طفل بعد",
+  "@familyDashboardNoChildren": { "description": "Empty state title" },
+
+  "familyDashboardNoChildrenHint": "اطلب من طفلك فتح صفحة الربط في التطبيق لمسح رمز QR",
+  "@familyDashboardNoChildrenHint": { "description": "Empty state hint" },
+
+  "familyDashboardTodaySummaryTitle": "اليوم في عائلتنا",
+  "@familyDashboardTodaySummaryTitle": { "description": "Banner title" },
+
+  "familyDashboardTodaySummary": "{count} نشط اليوم · {points} نقطة",
+  "@familyDashboardTodaySummary": {
+    "description": "Banner body showing active children and total points",
+    "placeholders": {
+      "count": { "type": "int" },
+      "points": { "type": "int" }
+    }
+  },
+
+  "familyDashboardLocalBadge": "على هذا الجهاز",
+  "@familyDashboardLocalBadge": { "description": "Badge for local (same-device) child" },
+
+  "familyDashboardChildActiveToday": "{points} نقطة اليوم",
+  "@familyDashboardChildActiveToday": {
+    "description": "Points earned today label on child card",
+    "placeholders": {
+      "points": { "type": "int" }
+    }
+  },
+
+  "familyDashboardChildNoActivity": "لا نشاط اليوم",
+  "@familyDashboardChildNoActivity": { "description": "No activity today label on child card" },
+
+  "familyDashboardNicknameSaved": "تم حفظ الاسم",
+  "@familyDashboardNicknameSaved": { "description": "Snackbar when nickname is saved" },
+
+  "childDetailTitle": "تقدم {name}",
+  "@childDetailTitle": {
+    "description": "Child detail page title",
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+
+  "childDetailTodayActivity": "{sessions} جلسة · {points} نقطة اليوم",
+  "@childDetailTodayActivity": {
+    "description": "Today summary in child detail page",
+    "placeholders": {
+      "sessions": { "type": "int" },
+      "points": { "type": "int" }
+    }
+  },
+
+  "childDetailNoActivity": "لا نشاط اليوم",
+  "@childDetailNoActivity": { "description": "No activity label in child detail" },
+
+  "childDetailMemorizationProgress": "تقدم الحفظ",
+  "@childDetailMemorizationProgress": { "description": "Section title for memorization progress" },
+
+  "childDetailRecentSessions": "آخر الجلسات",
+  "@childDetailRecentSessions": { "description": "Section title for recent sessions" },
+
+  "childDetailRewards": "المكافآت ({count})",
+  "@childDetailRewards": {
+    "description": "Section title for rewards with count",
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+
+  "childDetailAddReward": "إضافة مكافأة",
+  "@childDetailAddReward": { "description": "Add reward tooltip/button" },
+
+  "childDetailOpenFullDashboard": "فتح لوحة التحكم الكاملة",
+  "@childDetailOpenFullDashboard": { "description": "Button to open full parent dashboard for local child" }
 }

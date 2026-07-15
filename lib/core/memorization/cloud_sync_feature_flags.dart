@@ -1,14 +1,13 @@
+import 'package:shared_preferences/shared_preferences.dart';
+
 /// Feature flags for cloud production sync (Sprint 2 — B6).
-///
-/// [productionPullKey] defaults to false so existing installs keep push-only
-/// behavior until staging validates pull + merge.
 class CloudSyncFeatureFlags {
   CloudSyncFeatureFlags._();
 
   static const productionPullKey = 'use_cloud_production_pull';
 
-  static bool isProductionPullEnabled({
-    required bool Function(String key) readBool,
-  }) =>
-      readBool(productionPullKey);
+  /// Production SRS pull is enabled by default. Set
+  /// [productionPullKey] to `false` in SharedPreferences to opt out.
+  static bool isProductionPullEnabled(SharedPreferences prefs) =>
+      prefs.getBool(productionPullKey) ?? true;
 }

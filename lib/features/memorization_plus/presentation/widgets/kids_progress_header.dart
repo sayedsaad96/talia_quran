@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -30,18 +32,37 @@ class KidsProgressHeader extends StatelessWidget {
     final avatar = InkWell(
       onTap: onAvatarTap,
       customBorder: const CircleBorder(),
-      child: CircleAvatar(
-        radius: 34,
-        backgroundColor: KidsTheme.goldStar.withValues(alpha: 0.18),
-        child: ClipOval(
-          child: Image.asset(
-            KidsTheme.kidAvatarAsset,
-            width: 62,
-            height: 62,
-            fit: BoxFit.cover,
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: KidsTheme.goldStar.withValues(alpha: 0.6), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: KidsTheme.goldStar.withValues(alpha: 0.3),
+              blurRadius: 12,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: CircleAvatar(
+          radius: 34,
+          backgroundColor: KidsTheme.nightSkyDark,
+          child: ClipOval(
+            child: Image.asset(
+              KidsTheme.kidAvatarAsset,
+              width: 62,
+              height: 62,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
       ),
+    ).animate(onPlay: (controller) => controller.repeat(reverse: true)).scaleXY(
+      begin: 0.97,
+      end: 1.03,
+      duration: 2.seconds,
+      curve: Curves.easeInOut,
     );
 
     final progressDetails = Column(
@@ -99,9 +120,17 @@ class KidsProgressHeader extends StatelessWidget {
 
         return Container(
           padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: const BoxDecoration(
-            gradient: KidsTheme.backgroundGradient,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.08),
             borderRadius: KidsTheme.cardRadius,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: useCompactLayout
               ? Column(
@@ -139,7 +168,7 @@ class KidsProgressHeader extends StatelessWidget {
                     ],
                   ],
                 ),
-        );
+        ).animate().fadeIn(duration: 400.ms).slideY(begin: -0.05, end: 0, curve: Curves.easeOut);
       },
     );
   }
@@ -166,12 +195,16 @@ class _StarCounter extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.star_rounded, color: KidsTheme.goldStar, size: 24),
+          const Icon(Icons.star_rounded, color: KidsTheme.goldStar, size: 28)
+              .animate(onPlay: (controller) => controller.repeat())
+              .shimmer(duration: 2.seconds, color: Colors.white),
+          const SizedBox(height: 2),
           Text(
             context.l10n.kidsGamifiedStarsCount(count),
             textAlign: TextAlign.center,
-            style: AppTypography.labelSmall.copyWith(
+            style: AppTypography.labelMedium.copyWith(
               color: Colors.white,
+              fontWeight: FontWeight.bold,
               letterSpacing: 0,
             ),
           ),

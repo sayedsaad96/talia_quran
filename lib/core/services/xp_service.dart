@@ -19,6 +19,7 @@ class XpService {
       final data = await _isar.xpIsars.get(1) ?? XpIsar();
       final oldLevel = _getLevel(data.totalXp);
       data.totalXp += points;
+      data.cloudDirty = true;
       final newLevel = _getLevel(data.totalXp);
       await _isar.xpIsars.put(data);
 

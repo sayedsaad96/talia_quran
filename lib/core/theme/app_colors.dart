@@ -4,36 +4,36 @@ import 'package:flutter/material.dart';
 /// Inspired by deep night sky, moonlight on parchment, and Quranic ink
 abstract class AppColors {
   // ─── Brand Palette ───────────────────────────────────────────────────────────
-  /// Deep indigo-teal — primary brand color
-  static const Color primary = Color(0xFF1A6B5A);
-  static const Color primaryLight = Color(0xFF2D8E76);
-  static const Color primaryDark = Color(0xFF0F4A3E);
+  /// Deep Royal Teal — primary brand color (Luxury & Serene)
+  static const Color primary = Color(0xFF0D5C53);
+  static const Color primaryLight = Color(0xFF148275);
+  static const Color primaryDark = Color(0xFF042F2E);
 
-  /// Warm gold — accent for highlights and progress
-  static const Color gold = Color(0xFFD4A843);
-  static const Color goldLight = Color(0xFFE8C46A);
-  static const Color goldDark = Color(0xFFAA8430);
+  /// Pure Gold — accent for highlights and progress
+  static const Color gold = Color(0xFFF59E0B);
+  static const Color goldLight = Color(0xFFFBBF24);
+  static const Color goldDark = Color(0xFFD97706);
 
   /// Warm amber — secondary accent
-  static const Color amber = Color(0xFFF0A500);
+  static const Color amber = Color(0xFFF59E0B);
 
   // ─── Light Theme ─────────────────────────────────────────────────────────────
-  static const Color lightBackground = Color(0xFFF7F4EF);
+  static const Color lightBackground = Color(0xFFFDFCF8); // Snow warm white
   static const Color lightSurface = Color(0xFFFFFFFF);
-  static const Color lightSurfaceVariant = Color(0xFFF0EDE6);
+  static const Color lightSurfaceVariant = Color(0xFFF4F2EC);
   static const Color lightCard = Color(0xFFFFFFFF);
-  static const Color lightDivider = Color(0xFFE8E0D5);
+  static const Color lightDivider = Color(0xFFEBE8DF);
 
   static const Color lightTextPrimary = Color(0xFF1A1209);
   static const Color lightTextSecondary = Color(0xFF6B5E4E);
   static const Color lightTextHint = Color(0xFFAA9E92);
 
   // ─── Dark Theme ──────────────────────────────────────────────────────────────
-  static const Color darkBackground = Color(0xFF0D1117);
-  static const Color darkSurface = Color(0xFF161B22);
-  static const Color darkSurfaceVariant = Color(0xFF1C2330);
-  static const Color darkCard = Color(0xFF1C2330);
-  static const Color darkDivider = Color(0xFF2A3140);
+  static const Color darkBackground = Color(0xFF021210); // Deep green-black
+  static const Color darkSurface = Color(0xFF041D1A);
+  static const Color darkSurfaceVariant = Color(0xFF0A2925);
+  static const Color darkCard = Color(0xFF041D1A);
+  static const Color darkDivider = Color(0xFF103B35);
 
   static const Color darkTextPrimary = Color(0xFFF0EDE6);
   static const Color darkTextSecondary = Color(0xFFA8B0BC);
@@ -51,40 +51,40 @@ abstract class AppColors {
 
   // ─── Quran Reading Colors ────────────────────────────────────────────────────
   /// Warm parchment for reading surface (light)
-  static const Color parchmentLight = Color(0xFFFAF6EE);
+  static const Color parchmentLight = Color(0xFFFCFBF4);
 
   /// Soft dark for reading surface (dark)
-  static const Color parchmentDark = Color(0xFF141A20);
+  static const Color parchmentDark = Color(0xFF0A201D);
 
   // ─── Gradient Definitions ────────────────────────────────────────────────────
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1A6B5A), Color(0xFF0F4A3E)],
+    colors: [primary, primaryDark],
   );
 
   static const LinearGradient goldGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFE8C46A), Color(0xFFAA8430)],
+    colors: [goldLight, goldDark],
   );
 
   static const LinearGradient heroGradientLight = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFF1A6B5A), Color(0xFF0D3D32)],
+    colors: [primary, Color(0xFF0A4740)],
   );
 
   static const LinearGradient heroGradientDark = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFF0F2D26), Color(0xFF0A1F1B)],
+    colors: [Color(0xFF093B35), Color(0xFF041D1A)],
   );
 
   static const LinearGradient skyGradientLight = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF1A6B5A), Color(0xFF2D5A8E)],
+    colors: [primary, Color(0xFF148275)],
     stops: [0.0, 1.0],
   );
 
@@ -106,8 +106,8 @@ abstract class AppColors {
   static const Color overlayDark = Color(0x33000000);
 
   // ─── Shadow Colors ───────────────────────────────────────────────────────────
-  static const Color shadowLight = Color(0x0A1A6B5A);
-  static const Color shadowMedium = Color(0x1A1A6B5A);
+  static const Color shadowLight = Color(0x0A0D5C53);
+  static const Color shadowMedium = Color(0x1A0D5C53);
   static const Color shadowDark = Color(0xFF000000);
 
   // Prevent instantiation

@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:dartz/dartz.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -406,9 +405,11 @@ class AuthRepositoryImpl implements AuthRepository {
 
   // ─── Streak Sync ────────────────────────────────────────────────────────────
 
+  static bool _needsCloudPush(bool? cloudDirty) => cloudDirty != false;
+
   Future<void> _syncStreakToCloud() async {
     final streak = await _isar.streakIsars.get(1);
-    if (streak == null) return;
+    if (streak == null || !_needsCloudPush(streak.cloudDirty)) return;
 
     await _supabase.rpc(
       'upsert_streak',
@@ -419,6 +420,14 @@ class AuthRepositoryImpl implements AuthRepository {
         'p_freezes_available': streak.freezesAvailable,
       },
     );
+
+    await _isar.writeTxn(() async {
+      final latest = await _isar.streakIsars.get(1);
+      if (latest == null) return;
+      latest.cloudDirty = false;
+      latest.lastSyncedAt = DateTime.now().toUtc();
+      await _isar.streakIsars.put(latest);
+    });
   }
 
   Future<void> _pullStreakFromCloud(String userId) async {
@@ -448,6 +457,8 @@ class AuthRepositoryImpl implements AuthRepository {
         }
       }
 
+      local.cloudDirty = false;
+      local.lastSyncedAt = DateTime.now().toUtc();
       await _isar.streakIsars.put(local);
     });
   }
@@ -456,9 +467,17 @@ class AuthRepositoryImpl implements AuthRepository {
 
   Future<void> _syncXpToCloud() async {
     final xp = await _isar.xpIsars.get(1);
-    if (xp == null) return;
+    if (xp == null || !_needsCloudPush(xp.cloudDirty)) return;
 
     await _supabase.rpc('upsert_xp', params: {'p_total_xp': xp.totalXp});
+
+    await _isar.writeTxn(() async {
+      final latest = await _isar.xpIsars.get(1);
+      if (latest == null) return;
+      latest.cloudDirty = false;
+      latest.lastSyncedAt = DateTime.now().toUtc();
+      await _isar.xpIsars.put(latest);
+    });
   }
 
   Future<void> _pullXpFromCloud(String userId) async {
@@ -473,6 +492,8 @@ class AuthRepositoryImpl implements AuthRepository {
       if (cloudXp > local.totalXp) {
         local.totalXp = cloudXp;
       }
+      local.cloudDirty = false;
+      local.lastSyncedAt = DateTime.now().toUtc();
       await _isar.xpIsars.put(local);
     });
   }
@@ -480,18 +501,31 @@ class AuthRepositoryImpl implements AuthRepository {
   // ─── Daily Activities Sync ──────────────────────────────────────────────────
 
   Future<void> _syncDailyActivitiesToCloud() async {
-    final activities = await _isar.dailyActivityIsars.where().findAll();
+    final activities = await _isar.dailyActivityIsars
+        .filter()
+        .group(
+          (q) => q.cloudDirtyEqualTo(true).or().cloudDirtyIsNull(),
+        )
+        .findAll();
     if (activities.isEmpty) return;
 
-    // C04 FIX: Batch all daily activities into a single RPC call
     final data = activities
         .map((a) => {'day_key': a.dayKey, 'activity_count': a.activityCount})
         .toList();
 
     await _supabase.rpc(
       'upsert_daily_activities_batch',
-      params: {'p_data': jsonEncode(data)},
+      params: {'p_data': data},
     );
+
+    final syncedAt = DateTime.now().toUtc();
+    await _isar.writeTxn(() async {
+      for (final activity in activities) {
+        activity.cloudDirty = false;
+        activity.lastSyncedAt = syncedAt;
+        await _isar.dailyActivityIsars.put(activity);
+      }
+    });
   }
 
   Future<void> _pullDailyActivitiesFromCloud(String userId) async {
@@ -515,12 +549,16 @@ class AuthRepositoryImpl implements AuthRepository {
         if (local != null) {
           if (cloudCount > local.activityCount) {
             local.activityCount = cloudCount;
+            local.cloudDirty = false;
+            local.lastSyncedAt = DateTime.now().toUtc();
             await _isar.dailyActivityIsars.put(local);
           }
         } else {
           final newRecord = DailyActivityIsar()
             ..dayKey = dayKey
-            ..activityCount = cloudCount;
+            ..activityCount = cloudCount
+            ..cloudDirty = false
+            ..lastSyncedAt = DateTime.now().toUtc();
           await _isar.dailyActivityIsars.put(newRecord);
         }
       }

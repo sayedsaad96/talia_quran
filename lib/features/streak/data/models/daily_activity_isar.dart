@@ -13,4 +13,9 @@ class DailyActivityIsar {
 
   /// Total ayahs reviewed/read that day
   int activityCount = 0;
+
+  /// Null on legacy rows is treated as dirty until first successful cloud push.
+  bool? cloudDirty;
+
+  DateTime? lastSyncedAt;
 }

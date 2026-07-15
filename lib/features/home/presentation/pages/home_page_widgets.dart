@@ -34,7 +34,7 @@ class _HeroHeader extends StatelessWidget {
             child: Image.asset(
               'assets/images/mosque_bg.png',
               fit: BoxFit.contain,
-              //alignment: Alignment.centerLeft,
+              cacheWidth: 1024,
             ),
           ),
           Positioned.fill(
@@ -153,19 +153,21 @@ class _HeroIconButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Material(
-          color: Colors.white.withValues(alpha: 0.1),
-          child: InkWell(
-            onTap: onTap,
-            child: SizedBox(
-              width: 42,
-              height: 42,
-              child: Icon(
-                icon,
-                color: Colors.white.withValues(alpha: 0.82),
-                size: 20,
+      child: RepaintBoundary(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Material(
+            color: Colors.white.withValues(alpha: 0.1),
+            child: InkWell(
+              onTap: onTap,
+              child: SizedBox(
+                width: 42,
+                height: 42,
+                child: Icon(
+                  icon,
+                  color: Colors.white.withValues(alpha: 0.82),
+                  size: 20,
+                ),
               ),
             ),
           ),
@@ -624,8 +626,8 @@ class _QuickActionsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.count(
-      crossAxisCount: 2,
+    return GridView.extent(
+      maxCrossAxisExtent: 220,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: AppSpacing.sm,

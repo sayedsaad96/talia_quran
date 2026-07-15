@@ -91,10 +91,7 @@ Future<void> _bootstrapAndRun() async {
   // Debug-only: log config status without printing secret values.
   assert(() {
     TaliaLogger.d(
-      'BEFORE SUPABASE INIT | '
-      'configured=${supabaseConfig.isConfigured} | '
-      'url=${supabaseConfig.url} | '
-      'keyLength=${supabaseConfig.anonKey.length}',
+      'BEFORE SUPABASE INIT | configured=${supabaseConfig.isConfigured}',
     );
     return true;
   }());

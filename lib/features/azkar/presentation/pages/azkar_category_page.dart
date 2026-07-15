@@ -48,7 +48,11 @@ class _AzkarCategoryView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
+    final isDark = switch (category) {
+      AzkarCategory.evening => true,
+      AzkarCategory.morning => false,
+      _ => context.isDark,
+    };
 
     return Scaffold(
       backgroundColor: isDark
@@ -585,106 +589,138 @@ class _ZikrReaderPage extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // ─── Tap Target (Counter) ────────────────────────────────
+          // ─── Tap Target (Circular Counter) ──────────────────────
           GestureDetector(
             onTap: onTap,
             onLongPress: onLongPress,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              decoration: BoxDecoration(
-                gradient: session.isDone
-                    ? const LinearGradient(
-                        colors: [AppColors.success, Color(0xFF1E5D46)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      )
-                    : LinearGradient(
-                        colors: isDark
-                            ? [AppColors.primary, AppColors.primaryDark]
-                            : [AppColors.primaryLight, AppColors.primary],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                borderRadius: BorderRadius.circular(60),
-                boxShadow: [
-                  BoxShadow(
-                    color: session.isDone
-                        ? AppColors.success.withValues(alpha: 0.3)
-                        : AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (session.isDone)
-                    const Icon(
-                      Icons.check_circle_rounded,
-                      color: Colors.white,
-                      size: 36,
-                    ).animate().scale(
-                      duration: 300.ms,
-                      curve: Curves.easeOutBack,
-                    )
-                  else
-                    Text(
-                      '${session.currentCount}',
-                      style: AppTypography.displayMedium.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        height: 1,
-                      ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Circular Progress
+                SizedBox(
+                  width: 160,
+                  height: 160,
+                  child: TweenAnimationBuilder<double>(
+                    tween: Tween<double>(
+                      begin: 0,
+                      end: session.zikr.totalCount == 0 ? 1.0 : session.currentCount / session.zikr.totalCount,
                     ),
-                  const SizedBox(height: 8),
-                  Text(
-                    session.isDone
-                        ? context.l10n.zikrCompleted
-                        : context.l10n.tapToTasbeeh(session.zikr.totalCount),
-                    style: AppTypography.titleMedium.copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      fontFamily: 'Amiri',
-                      fontWeight: FontWeight.w600,
-                    ),
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOutCubic,
+                    builder: (context, value, _) {
+                      return CircularProgressIndicator(
+                        value: value,
+                        strokeWidth: 8,
+                        backgroundColor: isDark
+                            ? AppColors.darkDivider
+                            : AppColors.lightDivider,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          session.isDone ? AppColors.success : AppColors.gold,
+                        ),
+                      );
+                    },
                   ),
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 180),
-                    child: showUndo
-                        ? Padding(
-                            key: const ValueKey('undo'),
-                            padding: const EdgeInsets.only(top: 10),
-                            child: TextButton.icon(
-                              onPressed: onUndo,
-                              style: TextButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                backgroundColor: Colors.white.withValues(
-                                  alpha: 0.16,
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 6,
-                                ),
-                              ),
-                              icon: const Icon(Icons.undo_rounded, size: 18),
-                              label: Text(context.l10n.undo),
-                            ),
+                ),
+                
+                // The Button itself
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 130,
+                  height: 130,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: session.isDone
+                        ? const LinearGradient(
+                            colors: [AppColors.success, Color(0xFF1E5D46)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           )
-                        : Padding(
-                            key: const ValueKey('hint'),
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              context.l10n.longPressToUndo,
-                              style: AppTypography.labelSmall.copyWith(
-                                color: Colors.white.withValues(alpha: 0.72),
-                              ),
-                            ),
+                        : LinearGradient(
+                            colors: isDark
+                                ? [AppColors.primary, AppColors.primaryDark]
+                                : [AppColors.primaryLight, AppColors.primary],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
                           ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: session.isDone
+                            ? AppColors.success.withValues(alpha: 0.3)
+                            : AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                  alignment: Alignment.center,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (session.isDone)
+                        const Icon(
+                          Icons.check_circle_rounded,
+                          color: Colors.white,
+                          size: 40,
+                        ).animate().scale(
+                          duration: 300.ms,
+                          curve: Curves.easeOutBack,
+                        )
+                      else
+                        Text(
+                          '${session.currentCount}',
+                          style: AppTypography.displayMedium.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            height: 1.1,
+                          ),
+                        ),
+                      
+                      Text(
+                        'من ${session.zikr.totalCount}',
+                        style: AppTypography.titleMedium.copyWith(
+                          color: Colors.white.withValues(alpha: 0.8),
+                          fontFamily: 'Amiri',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Undo Hint
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 48,
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 180),
+              child: showUndo
+                  ? TextButton.icon(
+                      key: const ValueKey('undo'),
+                      onPressed: onUndo,
+                      style: TextButton.styleFrom(
+                        foregroundColor: isDark ? Colors.white : AppColors.primary,
+                        backgroundColor: (isDark ? Colors.white : AppColors.primary).withValues(alpha: 0.1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      icon: const Icon(Icons.undo_rounded, size: 20),
+                      label: Text(context.l10n.undo),
+                    )
+                  : Text(
+                      key: const ValueKey('hint'),
+                      context.l10n.longPressToUndo,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: secondaryColor,
+                      ),
+                    ),
             ),
           ),
         ],

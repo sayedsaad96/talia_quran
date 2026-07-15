@@ -17,23 +17,33 @@ const StreakIsarSchema = CollectionSchema(
   name: r'StreakIsar',
   id: 1950774003816431419,
   properties: {
-    r'currentStreak': PropertySchema(
+    r'cloudDirty': PropertySchema(
       id: 0,
+      name: r'cloudDirty',
+      type: IsarType.bool,
+    ),
+    r'currentStreak': PropertySchema(
+      id: 1,
       name: r'currentStreak',
       type: IsarType.long,
     ),
     r'freezesAvailable': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'freezesAvailable',
       type: IsarType.long,
     ),
     r'lastActivityDate': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'lastActivityDate',
       type: IsarType.dateTime,
     ),
+    r'lastSyncedAt': PropertySchema(
+      id: 4,
+      name: r'lastSyncedAt',
+      type: IsarType.dateTime,
+    ),
     r'longestStreak': PropertySchema(
-      id: 3,
+      id: 5,
       name: r'longestStreak',
       type: IsarType.long,
     )
@@ -67,10 +77,12 @@ void _streakIsarSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.currentStreak);
-  writer.writeLong(offsets[1], object.freezesAvailable);
-  writer.writeDateTime(offsets[2], object.lastActivityDate);
-  writer.writeLong(offsets[3], object.longestStreak);
+  writer.writeBool(offsets[0], object.cloudDirty);
+  writer.writeLong(offsets[1], object.currentStreak);
+  writer.writeLong(offsets[2], object.freezesAvailable);
+  writer.writeDateTime(offsets[3], object.lastActivityDate);
+  writer.writeDateTime(offsets[4], object.lastSyncedAt);
+  writer.writeLong(offsets[5], object.longestStreak);
 }
 
 StreakIsar _streakIsarDeserialize(
@@ -80,11 +92,13 @@ StreakIsar _streakIsarDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = StreakIsar();
-  object.currentStreak = reader.readLong(offsets[0]);
-  object.freezesAvailable = reader.readLong(offsets[1]);
+  object.cloudDirty = reader.readBoolOrNull(offsets[0]);
+  object.currentStreak = reader.readLong(offsets[1]);
+  object.freezesAvailable = reader.readLong(offsets[2]);
   object.id = id;
-  object.lastActivityDate = reader.readDateTimeOrNull(offsets[2]);
-  object.longestStreak = reader.readLong(offsets[3]);
+  object.lastActivityDate = reader.readDateTimeOrNull(offsets[3]);
+  object.lastSyncedAt = reader.readDateTimeOrNull(offsets[4]);
+  object.longestStreak = reader.readLong(offsets[5]);
   return object;
 }
 
@@ -96,12 +110,16 @@ P _streakIsarDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLong(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readDateTimeOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 3:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 4:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 5:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -199,6 +217,34 @@ extension StreakIsarQueryWhere
 
 extension StreakIsarQueryFilter
     on QueryBuilder<StreakIsar, StreakIsar, QFilterCondition> {
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      cloudDirtyIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'cloudDirty',
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      cloudDirtyIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'cloudDirty',
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition> cloudDirtyEqualTo(
+      bool? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'cloudDirty',
+        value: value,
+      ));
+    });
+  }
+
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
       currentStreakEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
@@ -439,6 +485,80 @@ extension StreakIsarQueryFilter
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastSyncedAtIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastSyncedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastSyncedAtIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastSyncedAt',
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastSyncedAtEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastSyncedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastSyncedAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastSyncedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastSyncedAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastSyncedAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastSyncedAtBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastSyncedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
       longestStreakEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -503,6 +623,18 @@ extension StreakIsarQueryLinks
 
 extension StreakIsarQuerySortBy
     on QueryBuilder<StreakIsar, StreakIsar, QSortBy> {
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> sortByCloudDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> sortByCloudDirtyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.desc);
+    });
+  }
+
   QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> sortByCurrentStreak() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentStreak', Sort.asc);
@@ -541,6 +673,18 @@ extension StreakIsarQuerySortBy
     });
   }
 
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> sortByLastSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> sortByLastSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> sortByLongestStreak() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'longestStreak', Sort.asc);
@@ -556,6 +700,18 @@ extension StreakIsarQuerySortBy
 
 extension StreakIsarQuerySortThenBy
     on QueryBuilder<StreakIsar, StreakIsar, QSortThenBy> {
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> thenByCloudDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> thenByCloudDirtyDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'cloudDirty', Sort.desc);
+    });
+  }
+
   QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> thenByCurrentStreak() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'currentStreak', Sort.asc);
@@ -606,6 +762,18 @@ extension StreakIsarQuerySortThenBy
     });
   }
 
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> thenByLastSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> thenByLastSyncedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSyncedAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> thenByLongestStreak() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'longestStreak', Sort.asc);
@@ -621,6 +789,12 @@ extension StreakIsarQuerySortThenBy
 
 extension StreakIsarQueryWhereDistinct
     on QueryBuilder<StreakIsar, StreakIsar, QDistinct> {
+  QueryBuilder<StreakIsar, StreakIsar, QDistinct> distinctByCloudDirty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'cloudDirty');
+    });
+  }
+
   QueryBuilder<StreakIsar, StreakIsar, QDistinct> distinctByCurrentStreak() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'currentStreak');
@@ -639,6 +813,12 @@ extension StreakIsarQueryWhereDistinct
     });
   }
 
+  QueryBuilder<StreakIsar, StreakIsar, QDistinct> distinctByLastSyncedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastSyncedAt');
+    });
+  }
+
   QueryBuilder<StreakIsar, StreakIsar, QDistinct> distinctByLongestStreak() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'longestStreak');
@@ -651,6 +831,12 @@ extension StreakIsarQueryProperty
   QueryBuilder<StreakIsar, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<StreakIsar, bool?, QQueryOperations> cloudDirtyProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'cloudDirty');
     });
   }
 
@@ -670,6 +856,12 @@ extension StreakIsarQueryProperty
       lastActivityDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastActivityDate');
+    });
+  }
+
+  QueryBuilder<StreakIsar, DateTime?, QQueryOperations> lastSyncedAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastSyncedAt');
     });
   }
 

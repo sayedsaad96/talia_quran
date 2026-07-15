@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -31,10 +32,11 @@ import '../../features/memorization_plus/presentation/pages/kids_gamified_listen
 import '../../features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
 import '../../features/memorization_plus/presentation/pages/daily_plan_page.dart';
 import '../../features/memorization_plus/presentation/pages/memorization_hub_page.dart';
-import '../../features/memorization_plus/presentation/pages/parent_dashboard_page.dart';
 import '../../features/memorization_plus/presentation/pages/custom_plan_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/qcf_rendering_poc_page.dart';
 import '../../features/memorization_plus/presentation/pages/v2_session_page.dart';
+import '../../features/memorization_plus/presentation/pages/family_dashboard_page.dart';
+import '../../features/memorization_plus/presentation/pages/child_detail_page.dart';
 import '../../features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/onboarding/presentation/pages/child_onboarding_page.dart';
@@ -53,6 +55,7 @@ abstract class AppRoutes {
   static const String childOnboarding = '/onboarding/child';
   static const String home = '/';
   static const String quran = '/quran';
+  static const String quranDaily = '/quran/daily';
   static const String hifz = '/hifz';
   /// Surah picker for adult "Practice by Surah" (replaces bare `/hifz` browse).
   static const String hifzPracticeSurah = '/memorization/practice-surah';
@@ -73,7 +76,9 @@ abstract class AppRoutes {
       '/memorization-plus/kids-stage';
   static const String memorizationPlusKidsCompletion =
       '/memorization-plus/kids-completion';
-  static const String parentDashboard = '/memorization-plus/parent-dashboard';
+
+  static const String familyDashboard = '/family-dashboard';
+  static const String childDetail = '/family-dashboard/child';
   static const String memorizationPlusCustomPlan =
       '/memorization-plus/custom-plan';
   static const String memorizationPlusDailyPlan =
@@ -128,7 +133,10 @@ final _publicRoutes = <String>[
   if (kDebugMode) AppRoutes.qcfRenderingPoc,
 ];
 
-final _remoteProtectedRoutes = <String>[AppRoutes.parentDashboard];
+final _remoteProtectedRoutes = <String>[
+
+  AppRoutes.familyDashboard,
+];
 
 class MemorizationRouteGuard {
   const MemorizationRouteGuard._();
@@ -357,6 +365,17 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.quranDaily,
+        redirect: (context, state) {
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          final random = Random(today.millisecondsSinceEpoch);
+          final pageNumber = random.nextInt(604) + 1;
+          return '/quran/page/$pageNumber';
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
         path: '/quran/page/:pageNumber',
         builder: (context, state) {
           final pageNumber =
@@ -558,15 +577,20 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
-        path: AppRoutes.parentDashboard,
+        path: AppRoutes.familyDashboard,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.parentDashboardRedirect(),
+        builder: (context, state) => const FamilyDashboardPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.childDetail,
         redirect: (context, state) =>
             MemorizationRouteGuard.parentDashboardRedirect(),
         builder: (context, state) {
-          final surahId =
-              int.tryParse(state.uri.queryParameters['surahId'] ?? '') ?? 1;
-          return ParentDashboardPage(
-            surahId: _isValidSurahId(surahId) ? surahId : 1,
-          );
+          final child = state.extra as FamilyChildEntry?;
+          if (child == null) return const FamilyDashboardPage();
+          return ChildDetailPage(child: child);
         },
       ),
       GoRoute(

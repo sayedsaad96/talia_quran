@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 abstract final class KidsTheme {
-  static const Color nightSkyDark = Color(0xFF0D1B2A);
-  static const Color nightSkyMid = Color(0xFF1B2838);
-  static const Color nightSkyLight = Color(0xFF26384F);
-  static const Color forestGreen = Color(0xFF2D8E4C);
-  static const Color ribbonGreen = Color(0xFF3C9F5F);
-  static const Color mintGlow = Color(0xFF8FE3B0);
-  static const Color goldStar = Color(0xFFFFB300);
+  static const Color nightSkyDark = Color(0xFF021210); // Matches darkBackground
+  static const Color nightSkyMid = Color(0xFF041D1A);  // Matches darkSurface
+  static const Color nightSkyLight = Color(0xFF0A2925);
+  static const Color forestGreen = Color(0xFF0D5C53);  // Matches primary Royal Teal
+  static const Color ribbonGreen = Color(0xFF148275);  // Matches primaryLight
+  static const Color mintGlow = Color(0xFF1ABC9C);
+  static const Color goldStar = Color(0xFFF59E0B);
   static const Color goldWarm = AppColors.gold;
   static const Color goldLight = AppColors.goldLight;
   static const Color creamParchment = Color(0xFFFFF8E7);
@@ -48,7 +48,7 @@ abstract final class KidsTheme {
 
   static const List<BoxShadow> softGlow = [
     BoxShadow(
-      color: Color(0x553C9F5F),
+      color: Color(0x550D5C53),
       blurRadius: 22,
       spreadRadius: 2,
       offset: Offset(0, 8),
@@ -57,7 +57,7 @@ abstract final class KidsTheme {
 
   static const List<BoxShadow> goldGlow = [
     BoxShadow(
-      color: Color(0x66FFB300),
+      color: Color(0x66F59E0B),
       blurRadius: 24,
       spreadRadius: 2,
       offset: Offset(0, 8),

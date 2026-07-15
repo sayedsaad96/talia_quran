@@ -30,7 +30,7 @@ void main() {
     });
 
     test('remote parent dashboard remains protected', () {
-      const protectedRoutes = [AppRoutes.parentDashboard];
+      const protectedRoutes = [AppRoutes.familyDashboard];
 
       for (final route in protectedRoutes) {
         expect(

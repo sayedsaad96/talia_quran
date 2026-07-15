@@ -343,7 +343,7 @@ class _PairingCardState extends State<_PairingCard> {
   void initState() {
     super.initState();
     _remaining = _calculateRemaining();
-    _timer = Timer.periodic(const Duration(seconds: 10), (_) {
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
       if (!mounted) return;
       setState(() => _remaining = _calculateRemaining());
       context.read<GuardianLinkingCubit>().checkLinkStatus();

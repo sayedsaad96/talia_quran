@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -38,6 +40,120 @@ class KidsHouseCard extends StatelessWidget {
       KidsJourneyStageStatus.needsReview => l10n.kidsGamifiedNeedsReview,
     };
 
+    Widget cardContent = AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        gradient: colors.background,
+        borderRadius: KidsTheme.cardRadius,
+        border: Border.all(color: colors.border, width: 2.0),
+        boxShadow: colors.shadows,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Image.asset(
+                _assetForStatus(stage.status),
+                width: 96,
+                height: 96,
+                fit: BoxFit.contain,
+              ),
+              if (_isLocked)
+                const Positioned(
+                  right: 10,
+                  top: 10,
+                  child: Icon(
+                    Icons.lock_rounded,
+                    color: Colors.white70,
+                    size: 26,
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTypography.titleMedium.copyWith(
+              color: colors.text,
+              fontFamily: 'Amiri',
+              letterSpacing: 0,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          if (surahName != null) ...[
+            const SizedBox(height: AppSpacing.xs),
+            Text(
+              surahName!,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.labelMedium.copyWith(
+                color: colors.secondaryText,
+                letterSpacing: 0,
+              ),
+            ),
+          ],
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            l10n.kidsGamifiedAyahRange(stage.startAyah, stage.endAyah),
+            textAlign: TextAlign.center,
+            style: AppTypography.labelSmall.copyWith(
+              color: colors.secondaryText,
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            child: LinearProgressIndicator(
+              minHeight: 8,
+              value: stage.progress.clamp(0, 1).toDouble(),
+              backgroundColor: colors.progressTrack,
+              valueColor: AlwaysStoppedAnimation<Color>(colors.progress),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(colors.statusIcon, size: 14, color: colors.progress),
+              const SizedBox(width: AppSpacing.xs),
+              Flexible(
+                child: Text(
+                  '${l10n.kidsGamifiedProgressCount(stage.completedCount, stage.totalAyahs)} • $statusLabel',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: colors.secondaryText,
+                    letterSpacing: 0,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    // Add animations based on status
+    if (stage.status == KidsJourneyStageStatus.current) {
+      cardContent = cardContent
+          .animate(onPlay: (controller) => controller.repeat(reverse: true))
+          .scaleXY(begin: 1.0, end: 1.04, duration: 2.seconds, curve: Curves.easeInOut)
+          .shimmer(duration: 3.seconds, color: Colors.white.withValues(alpha: 0.15));
+    } else if (stage.status == KidsJourneyStageStatus.completed) {
+      cardContent = cardContent
+          .animate(onPlay: (controller) => controller.repeat())
+          .shimmer(duration: 4.seconds, color: Colors.white.withValues(alpha: 0.3), delay: 2.seconds);
+    }
+
     return SizedBox(
       width: width,
       child: Material(
@@ -45,105 +161,7 @@ class KidsHouseCard extends StatelessWidget {
         child: InkWell(
           onTap: _isLocked ? onLockedTap : onTap,
           borderRadius: KidsTheme.cardRadius,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            padding: const EdgeInsets.all(AppSpacing.md),
-            decoration: BoxDecoration(
-              gradient: colors.background,
-              borderRadius: KidsTheme.cardRadius,
-              border: Border.all(color: colors.border, width: 1.5),
-              boxShadow: colors.shadows,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Image.asset(
-                      _assetForStatus(stage.status),
-                      width: 96,
-                      height: 96,
-                      fit: BoxFit.contain,
-                    ),
-                    if (_isLocked)
-                      const Positioned(
-                        right: 10,
-                        top: 10,
-                        child: Icon(
-                          Icons.lock_rounded,
-                          color: Colors.white,
-                          size: 22,
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.titleMedium.copyWith(
-                    color: colors.text,
-                    fontFamily: 'Amiri',
-                    letterSpacing: 0,
-                  ),
-                ),
-                if (surahName != null) ...[
-                  const SizedBox(height: AppSpacing.xs),
-                  Text(
-                    surahName!,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.labelMedium.copyWith(
-                      color: colors.secondaryText,
-                      letterSpacing: 0,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  l10n.kidsGamifiedAyahRange(stage.startAyah, stage.endAyah),
-                  textAlign: TextAlign.center,
-                  style: AppTypography.labelSmall.copyWith(
-                    color: colors.secondaryText,
-                    letterSpacing: 0,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  child: LinearProgressIndicator(
-                    minHeight: 8,
-                    value: stage.progress.clamp(0, 1).toDouble(),
-                    backgroundColor: colors.progressTrack,
-                    valueColor: AlwaysStoppedAnimation<Color>(colors.progress),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(colors.statusIcon, size: 14, color: colors.progress),
-                    const SizedBox(width: AppSpacing.xs),
-                    Flexible(
-                      child: Text(
-                        '${l10n.kidsGamifiedProgressCount(stage.completedCount, stage.totalAyahs)} • $statusLabel',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.labelSmall.copyWith(
-                          color: colors.secondaryText,
-                          letterSpacing: 0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+          child: cardContent,
         ),
       ),
     );
