@@ -457,18 +457,38 @@ class AuthCubit extends Cubit<AuthState> {
 
 
   /// Public entry point for app-lifecycle-triggered resync (e.g. on app
-
-  /// resume), reusing the same pull-then-push sequence as login.
-
-  void resyncOnResume() {
-
+  /// resume). Runs only when the outbox has pending work or a pull cursor
+  /// is stale; debounced to avoid resume storms.
+  void resyncOnResume({bool force = false}) {
     if (state is! AuthAuthenticated) return;
 
-    unawaited(_runCloudSync());
+    final now = DateTime.now();
+    if (!force &&
+        _lastResumeSyncAt != null &&
+        now.difference(_lastResumeSyncAt!) < _resumeDebounce) {
+      return;
+    }
 
+    unawaited(_runCloudSyncIfNeeded(force: force));
   }
 
+  Future<void> _runCloudSyncIfNeeded({bool force = false}) async {
+    if (!force && !await _hasPendingSyncWork()) {
+      TaliaLogger.i('Skipping resume sync — no pending outbox/cursor work');
+      return;
+    }
+    _lastResumeSyncAt = DateTime.now();
+    await _runCloudSync();
+  }
 
+  Future<bool> _hasPendingSyncWork() async {
+    final queue = _cloudSyncQueue;
+    if (queue != null && await queue.hasPending()) return true;
+    if (await _authRepository.hasPendingCloudPush()) return true;
+    final memPlus = _memPlusRepository;
+    if (memPlus != null && await memPlus.hasPendingCloudWork()) return true;
+    return false;
+  }
 
   final AuthRepository _authRepository;
 
@@ -501,6 +521,10 @@ class AuthCubit extends Cubit<AuthState> {
   bool _skipNextAuthSync = false;
 
   Future<void>? _syncInFlight;
+
+  DateTime? _lastResumeSyncAt;
+
+  static const _resumeDebounce = Duration(minutes: 5);
 
 
 

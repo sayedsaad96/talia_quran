@@ -190,6 +190,10 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- ─── Token acceptance: Flutter hashes the scanned token, DB verifies hash ────
+CREATE UNIQUE INDEX IF NOT EXISTS one_active_guardian_per_child
+  ON public.parent_child_links (child_user_id)
+  WHERE status = 'active';
+
 CREATE OR REPLACE FUNCTION public.accept_child_link_token_with_hash(p_token_hash TEXT)
 RETURNS VOID AS $$
 DECLARE
@@ -200,12 +204,13 @@ BEGIN
     RAISE EXCEPTION 'Not authenticated';
   END IF;
 
-  SELECT child_user_id INTO v_child
-  FROM public.child_link_requests
+  -- Atomically consume the token (race-safe).
+  UPDATE public.child_link_requests
+  SET used_at = NOW()
   WHERE token_hash = p_token_hash
     AND used_at IS NULL
     AND expires_at > NOW()
-  LIMIT 1;
+  RETURNING child_user_id INTO v_child;
 
   IF v_child IS NULL THEN
     RAISE EXCEPTION 'Invalid or expired link token';
@@ -214,14 +219,19 @@ BEGIN
     RAISE EXCEPTION 'Parent and child accounts must be different';
   END IF;
 
+  IF EXISTS (
+    SELECT 1 FROM public.parent_child_links
+    WHERE child_user_id = v_child
+      AND status = 'active'
+      AND parent_user_id <> v_parent
+  ) THEN
+    RAISE EXCEPTION 'Child already has an active guardian';
+  END IF;
+
   INSERT INTO public.parent_child_links (parent_user_id, child_user_id, status, linked_at)
   VALUES (v_parent, v_child, 'active', NOW())
   ON CONFLICT (parent_user_id, child_user_id)
   DO UPDATE SET status = 'active', revoked_at = NULL, linked_at = NOW();
-
-  UPDATE public.child_link_requests
-  SET used_at = NOW()
-  WHERE token_hash = p_token_hash;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
@@ -649,7 +659,7 @@ BEGIN
     last_review_date = EXCLUDED.last_review_date,
     updated_at = NOW();
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Upsert streak data (called during sync)
 CREATE OR REPLACE FUNCTION public.upsert_streak(
@@ -688,7 +698,7 @@ BEGIN
     freezes_available = p_freezes_available,
     updated_at = NOW();
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Upsert XP (takes the max — prevents cheating)
 CREATE OR REPLACE FUNCTION public.upsert_xp(p_total_xp INTEGER)
@@ -713,7 +723,7 @@ BEGIN
     total_xp = GREATEST(xp.total_xp, p_total_xp),
     updated_at = NOW();
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 
 -- ═══════════════════════════════════════════════════════════════════════════════
@@ -1082,12 +1092,16 @@ CREATE TABLE IF NOT EXISTS public.ayah_review_records_cloud (
     CHECK (review_state IN ('newCard', 'learning', 'review', 'relearning')),
   created_by_mode TEXT NOT NULL
     CHECK (created_by_mode IN ('v2Session', 'kidsMode', 'hifz')),
+  sync_version BIGINT NOT NULL DEFAULT 1,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT unique_user_ayah_review UNIQUE (user_id, surah_id, ayah_number)
 );
 
 CREATE INDEX IF NOT EXISTS idx_ayah_review_records_cloud_user
   ON public.ayah_review_records_cloud(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_ayah_review_records_cloud_user_updated
+  ON public.ayah_review_records_cloud (user_id, updated_at, id);
 
 -- ── Daily plan (single row per user — latest generated plan) ──
 CREATE TABLE IF NOT EXISTS public.daily_plans_cloud (
@@ -1204,12 +1218,12 @@ CREATE POLICY "daily_activities_parent_read"
     )
   );
 
--- ── Batch upsert for ayah review records (mirrors upsert_ayah_progress) ──
+-- ── Batch upsert for ayah review records (version-based conflict) ──
 CREATE OR REPLACE FUNCTION public.upsert_ayah_review_records(
   p_data JSONB
   -- Array of { surah_id, ayah_number, strength_level, interval_days,
   --   last_reviewed_at, next_review_date, total_reviews, last_rating,
-  --   ease_factor, lapses, review_state, created_by_mode }
+  --   ease_factor, lapses, review_state, created_by_mode, sync_version }
 )
 RETURNS VOID AS $$
 DECLARE
@@ -1226,7 +1240,7 @@ BEGIN
   INSERT INTO public.ayah_review_records_cloud (
     user_id, surah_id, ayah_number, strength_level, interval_days,
     last_reviewed_at, next_review_date, total_reviews, last_rating,
-    ease_factor, lapses, review_state, created_by_mode
+    ease_factor, lapses, review_state, created_by_mode, sync_version
   )
   SELECT
     v_uid,
@@ -1241,59 +1255,66 @@ BEGIN
     (item->>'ease_factor')::DOUBLE PRECISION,
     (item->>'lapses')::INTEGER,
     item->>'review_state',
-    item->>'created_by_mode'
+    item->>'created_by_mode',
+    COALESCE(
+      (item->>'sync_version')::BIGINT,
+      (EXTRACT(EPOCH FROM (item->>'last_reviewed_at')::TIMESTAMPTZ) * 1000)::BIGINT
+    )
   FROM jsonb_array_elements(p_data) AS item
   ON CONFLICT (user_id, surah_id, ayah_number)
   DO UPDATE SET
-    strength_level = GREATEST(
-      ayah_review_records_cloud.strength_level,
-      EXCLUDED.strength_level
-    ),
-    interval_days = GREATEST(
-      ayah_review_records_cloud.interval_days,
-      EXCLUDED.interval_days
-    ),
-    total_reviews = GREATEST(
-      ayah_review_records_cloud.total_reviews,
-      EXCLUDED.total_reviews
-    ),
-    lapses = GREATEST(ayah_review_records_cloud.lapses, EXCLUDED.lapses),
-    ease_factor = GREATEST(
-      ayah_review_records_cloud.ease_factor,
-      EXCLUDED.ease_factor
-    ),
-    last_reviewed_at = GREATEST(
-      ayah_review_records_cloud.last_reviewed_at,
-      EXCLUDED.last_reviewed_at
-    ),
-    next_review_date = CASE
-      WHEN EXCLUDED.last_reviewed_at >= ayah_review_records_cloud.last_reviewed_at
-      THEN EXCLUDED.next_review_date
-      ELSE ayah_review_records_cloud.next_review_date
-    END,
-    last_rating = CASE
-      WHEN EXCLUDED.last_reviewed_at >= ayah_review_records_cloud.last_reviewed_at
-      THEN EXCLUDED.last_rating
-      ELSE ayah_review_records_cloud.last_rating
-    END,
-    review_state = CASE
-      WHEN EXCLUDED.last_reviewed_at >= ayah_review_records_cloud.last_reviewed_at
-      THEN EXCLUDED.review_state
-      ELSE ayah_review_records_cloud.review_state
-    END,
-    created_by_mode = CASE
-      WHEN EXCLUDED.last_reviewed_at >= ayah_review_records_cloud.last_reviewed_at
-      THEN EXCLUDED.created_by_mode
-      ELSE ayah_review_records_cloud.created_by_mode
-    END,
-    updated_at = NOW();
+    strength_level = EXCLUDED.strength_level,
+    interval_days = EXCLUDED.interval_days,
+    total_reviews = EXCLUDED.total_reviews,
+    lapses = EXCLUDED.lapses,
+    ease_factor = EXCLUDED.ease_factor,
+    last_reviewed_at = EXCLUDED.last_reviewed_at,
+    next_review_date = EXCLUDED.next_review_date,
+    last_rating = EXCLUDED.last_rating,
+    review_state = EXCLUDED.review_state,
+    created_by_mode = EXCLUDED.created_by_mode,
+    sync_version = EXCLUDED.sync_version,
+    updated_at = NOW()
+  WHERE EXCLUDED.sync_version > ayah_review_records_cloud.sync_version
+     OR (
+       EXCLUDED.sync_version = ayah_review_records_cloud.sync_version
+       AND EXCLUDED.last_reviewed_at > ayah_review_records_cloud.last_reviewed_at
+     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 REVOKE ALL ON FUNCTION public.upsert_ayah_review_records(JSONB) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.upsert_ayah_review_records(JSONB) TO authenticated;
 
--- ── Pull production review records for the authenticated user (B6) ──
+-- ── Delta pull (preferred) ──
+CREATE OR REPLACE FUNCTION public.pull_ayah_review_records_since(
+  p_cursor TIMESTAMPTZ DEFAULT 'epoch'::TIMESTAMPTZ,
+  p_limit INTEGER DEFAULT 500
+)
+RETURNS SETOF public.ayah_review_records_cloud AS $$
+DECLARE
+  v_limit INTEGER := LEAST(GREATEST(COALESCE(p_limit, 500), 1), 500);
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  RETURN QUERY
+  SELECT *
+  FROM public.ayah_review_records_cloud
+  WHERE user_id = auth.uid()
+    AND updated_at > COALESCE(p_cursor, 'epoch'::TIMESTAMPTZ)
+  ORDER BY updated_at ASC, id ASC
+  LIMIT v_limit;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE ALL ON FUNCTION public.pull_ayah_review_records_since(TIMESTAMPTZ, INTEGER)
+  FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.pull_ayah_review_records_since(TIMESTAMPTZ, INTEGER)
+  TO authenticated;
+
+-- ── Full pull (legacy clients) ──
 CREATE OR REPLACE FUNCTION public.pull_ayah_review_records()
 RETURNS SETOF public.ayah_review_records_cloud AS $$
 BEGIN
@@ -1304,7 +1325,8 @@ BEGIN
   RETURN QUERY
   SELECT *
   FROM public.ayah_review_records_cloud
-  WHERE user_id = auth.uid();
+  WHERE user_id = auth.uid()
+  ORDER BY updated_at ASC, id ASC;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
@@ -1386,13 +1408,39 @@ BEGIN
           FROM public.parent_rewards
           WHERE child_user_id = v_child.child_user_id
           ORDER BY created_at DESC
+          LIMIT 50
         ) r
       ), '[]'::JSONB),
-      'review_rows', COALESCE((
-        SELECT jsonb_agg(to_jsonb(rr))
+      'review_summary', (
+        SELECT jsonb_build_object(
+          'review_count', COUNT(*)::INTEGER,
+          'memorized_count', COUNT(*) FILTER (
+            WHERE rr.strength_level >= 6
+          )::INTEGER,
+          'overdue_count', COUNT(*) FILTER (
+            WHERE rr.next_review_date <= NOW()
+              AND rr.strength_level > 0
+          )::INTEGER,
+          'latest_review_at', MAX(rr.updated_at),
+          'next_review_at', MIN(rr.next_review_date) FILTER (
+            WHERE rr.next_review_date > NOW()
+          ),
+          'last_surah_id', (
+            SELECT surah_id FROM public.ayah_review_records_cloud
+            WHERE user_id = v_child.child_user_id
+            ORDER BY last_reviewed_at DESC NULLS LAST
+            LIMIT 1
+          ),
+          'last_ayah_number', (
+            SELECT ayah_number FROM public.ayah_review_records_cloud
+            WHERE user_id = v_child.child_user_id
+            ORDER BY last_reviewed_at DESC NULLS LAST
+            LIMIT 1
+          )
+        )
         FROM public.ayah_review_records_cloud rr
         WHERE rr.user_id = v_child.child_user_id
-      ), '[]'::JSONB),
+      ),
       'daily_plan', (
         SELECT to_jsonb(dp)
         FROM public.daily_plans_cloud dp
@@ -1405,6 +1453,7 @@ BEGIN
           FROM public.certificate_awards_cloud
           WHERE user_id = v_child.child_user_id
           ORDER BY earned_at DESC
+          LIMIT 20
         ) c
       ), '[]'::JSONB),
       'streak', (

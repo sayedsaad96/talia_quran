@@ -172,6 +172,9 @@ class _RecordingMemPlusRepository implements MemorizationPlusRepository {
   }
 
   @override
+  Future<bool> hasPendingCloudWork() async => false;
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 

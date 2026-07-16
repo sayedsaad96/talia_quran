@@ -11,6 +11,7 @@ void main() {
       required DateTime reviewedAt,
       required int totalReviews,
       ReviewRecordCreatedByMode mode = ReviewRecordCreatedByMode.v2Session,
+      PerformanceRating rating = PerformanceRating.excellent,
     }) {
       return AyahReviewRecord(
         surahId: 67,
@@ -20,7 +21,7 @@ void main() {
         lastReviewedAt: reviewedAt,
         nextReviewDate: reviewedAt.add(Duration(days: strength * 2)),
         totalReviews: totalReviews,
-        lastRating: PerformanceRating.excellent,
+        lastRating: rating,
         createdByMode: mode,
       );
     }
@@ -38,7 +39,7 @@ void main() {
       );
     });
 
-    test('keeps adult strength when kids pass is merged later', () {
+    test('later weak review replaces earlier strong (no field-wise max)', () {
       final adult = record(
         strength: 5,
         reviewedAt: baseTime,
@@ -48,18 +49,43 @@ void main() {
       final kids = record(
         strength: 1,
         reviewedAt: baseTime.add(const Duration(hours: 1)),
-        totalReviews: 1,
+        totalReviews: 9,
         mode: ReviewRecordCreatedByMode.kidsMode,
+        rating: PerformanceRating.weak,
       );
 
       final merged = ReviewRecordCloudMerge.merge(local: adult, remote: kids);
 
-      expect(merged.strengthLevel, 5);
-      expect(merged.totalReviews, 8);
+      expect(merged.strengthLevel, 1);
+      expect(merged.totalReviews, 9);
+      expect(merged.lastRating, PerformanceRating.weak);
       expect(merged.createdByMode, ReviewRecordCreatedByMode.kidsMode);
     });
 
-    test('takes latest scheduling fields from most recent review', () {
+    test('keeps local when it is the newer review event', () {
+      final newerLocal = record(
+        strength: 2,
+        reviewedAt: baseTime.add(const Duration(days: 1)),
+        totalReviews: 5,
+        rating: PerformanceRating.weak,
+      );
+      final olderRemote = record(
+        strength: 6,
+        reviewedAt: baseTime,
+        totalReviews: 4,
+      );
+
+      final merged = ReviewRecordCloudMerge.merge(
+        local: newerLocal,
+        remote: olderRemote,
+      );
+
+      expect(merged.strengthLevel, 2);
+      expect(merged.totalReviews, 5);
+      expect(merged.lastReviewedAt, newerLocal.lastReviewedAt);
+    });
+
+    test('takes complete newer remote review event', () {
       final older = record(
         strength: 3,
         reviewedAt: baseTime,

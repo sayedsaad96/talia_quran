@@ -1002,6 +1002,17 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
+  _i10.Future<bool> hasPendingCloudWork() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #hasPendingCloudWork,
+          [],
+        ),
+        returnValue: _i10.Future<bool>.value(false),
+      ) as _i10.Future<bool>);
+
+
+  @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i3.RemoteChildSummary>>>
       getRemoteChildren() => (super.noSuchMethod(
             Invocation.method(

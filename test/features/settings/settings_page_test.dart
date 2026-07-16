@@ -537,6 +537,9 @@ class _FakeAuthRepository implements AuthRepository {
   Future<Either<Failure, Unit>> pullProgressFromCloud() async => const Right(unit);
 
   @override
+  Future<bool> hasPendingCloudPush() async => false;
+
+  @override
   Future<Either<Failure, Unit>> syncProgressToCloud() async => const Right(unit);
 
   Future<void> dispose() async {
@@ -597,4 +600,7 @@ class _FakeMemorizationRepository implements MemorizationPlusRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
+  Future<bool> hasPendingCloudWork() async => false;
 }

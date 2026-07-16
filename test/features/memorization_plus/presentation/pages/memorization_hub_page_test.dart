@@ -153,4 +153,7 @@ class _ProfileRepository implements MemorizationPlusRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
+  Future<bool> hasPendingCloudWork() async => false;
 }

@@ -45,10 +45,14 @@ void main() {
         .thenAnswer((_) async => const Right(unit));
     when(mockAuthRepository.syncProgressToCloud())
         .thenAnswer((_) async => const Right(unit));
+    when(mockAuthRepository.hasPendingCloudPush())
+        .thenAnswer((_) async => true);
     when(mockMemPlusRepository.pullProductionDataFromCloud())
         .thenAnswer((_) async => const Right(null));
     when(mockMemPlusRepository.resyncProductionDataToCloud())
         .thenAnswer((_) async => const Right(null));
+    when(mockMemPlusRepository.hasPendingCloudWork())
+        .thenAnswer((_) async => true);
     when(mockAchievementService.getAllEarnedCertificates()).thenReturn(const []);
   });
 

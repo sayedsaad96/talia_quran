@@ -6,6 +6,7 @@ import '../memorization/progress_metrics_service.dart';
 import '../memorization/quran_structure_maps.dart';
 import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
+import '../sync/cloud_sync_queue.dart';
 import '../utils/talia_logger.dart';
 import '../../features/certificate/domain/entities/certificate_award.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
@@ -31,6 +32,7 @@ class AchievementService {
     this._progressEvents, [
     this._memPlusRepository,
     this._metrics = const ProgressMetricsService(),
+    this._cloudSyncQueue,
   ]);
 
   final SharedPreferences _prefs;
@@ -42,6 +44,7 @@ class AchievementService {
   // newly-earned certificates so the parent dashboard can display them.
   final MemorizationPlusRepository? _memPlusRepository;
   final ProgressMetricsService _metrics;
+  final CloudSyncQueue? _cloudSyncQueue;
 
   static const _earnedKeyAdult = 'earned_certificates_v2';
   static const _earnedKeyKids = 'earned_certificates_v2_kids';
@@ -243,9 +246,14 @@ class AchievementService {
       jsonEncode(existing.map((c) => c.toJson()).toList()),
     );
     _progressEvents.notify(ProgressChangedReason.certificate);
-    final repository = _memPlusRepository;
-    if (repository != null) {
-      unawaited(repository.pushCertificatesToCloud([award]));
+    final queue = _cloudSyncQueue;
+    if (queue != null) {
+      unawaited(queue.enqueue(CloudSyncQueueKind.certificatePush));
+    } else {
+      final repository = _memPlusRepository;
+      if (repository != null) {
+        unawaited(repository.pushCertificatesToCloud([award]));
+      }
     }
   }
 

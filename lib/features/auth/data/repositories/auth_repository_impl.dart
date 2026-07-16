@@ -403,6 +403,21 @@ class AuthRepositoryImpl implements AuthRepository {
     }
   }
 
+  @override
+  Future<bool> hasPendingCloudPush() async {
+    final streak = await _isar.streakIsars.get(1);
+    if (streak != null && _needsCloudPush(streak.cloudDirty)) return true;
+
+    final xp = await _isar.xpIsars.get(1);
+    if (xp != null && _needsCloudPush(xp.cloudDirty)) return true;
+
+    final dirtyActivities = await _isar.dailyActivityIsars
+        .filter()
+        .group((q) => q.cloudDirtyEqualTo(true).or().cloudDirtyIsNull())
+        .findAll();
+    return dirtyActivities.isNotEmpty;
+  }
+
   // ─── Streak Sync ────────────────────────────────────────────────────────────
 
   static bool _needsCloudPush(bool? cloudDirty) => cloudDirty != false;

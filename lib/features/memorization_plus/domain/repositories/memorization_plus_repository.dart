@@ -87,6 +87,10 @@ abstract class MemorizationPlusRepository {
   Future<Either<Failure, String>> createChildLinkToken();
   Future<Either<Failure, void>> acceptChildLinkToken(String token);
   Future<Either<Failure, void>> syncKidsProgressToCloud();
+
+  /// True when kids progress/logs, review rows, daily plan, or certificates
+  /// still need uploading (or a delta pull cursor is stale).
+  Future<bool> hasPendingCloudWork();
   Future<Either<Failure, List<RemoteChildSummary>>> getRemoteChildren();
   Future<Either<Failure, List<ParentReward>>> saveRemoteParentReward({
     required String childUserId,

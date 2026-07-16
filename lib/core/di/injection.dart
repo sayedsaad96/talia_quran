@@ -197,6 +197,7 @@ Future<void> configureDependencies() async {
       getIt<ProgressEventsBus>(),
       getIt<MemorizationPlusRepository>(),
       getIt<ProgressMetricsService>(),
+      getIt<CloudSyncQueue>(),
     ),
   );
 
@@ -238,6 +239,8 @@ Future<void> configureDependencies() async {
       getIt<StreakReader>(),
       getIt<ProgressEventsBus>(),
       getIt<SharedPreferences>(),
+      const ProgressMetricsService(),
+      getIt<CloudSyncQueue>(),
     ),
   );
   getIt.registerLazySingleton<MemorizationPathResolver>(

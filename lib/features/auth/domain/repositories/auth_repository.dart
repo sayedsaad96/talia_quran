@@ -30,6 +30,9 @@ abstract class AuthRepository {
   /// Pull progress from cloud
   Future<Either<Failure, Unit>> pullProgressFromCloud();
 
+  /// True when local streak/XP/activity rows still need uploading.
+  Future<bool> hasPendingCloudPush();
+
   /// Resend confirmation email
   Future<Either<Failure, Unit>> resendConfirmation(String email);
 

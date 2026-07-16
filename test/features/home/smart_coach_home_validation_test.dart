@@ -653,6 +653,9 @@ class _StaticHomeCubit extends Cubit<HomeState> implements HomeCubit {
 class _NoopMemorizationPlusRepository implements MemorizationPlusRepository {
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
+  Future<bool> hasPendingCloudWork() async => false;
 }
 
 class _FakeStreakCubit extends Cubit<StreakState> implements StreakCubit {

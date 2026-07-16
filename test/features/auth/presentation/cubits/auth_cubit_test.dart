@@ -395,6 +395,8 @@ void main() {
           .thenAnswer((_) async => const Right(unit));
       when(mockAuthRepository.syncProgressToCloud())
           .thenAnswer((_) async => const Right(unit));
+      when(mockAuthRepository.hasPendingCloudPush())
+          .thenAnswer((_) async => true);
       when(mockAuthRepository.currentUser).thenReturn(testUser);
       when(
         mockAuthRepository.authStateChanges,
@@ -441,6 +443,9 @@ class _FakeMemPlusRepository implements MemorizationPlusRepository {
     pullCallCount += 1;
     return const Right(null);
   }
+
+  @override
+  Future<bool> hasPendingCloudWork() async => true;
 
   @override
   Future<Either<Failure, void>> resyncProductionDataToCloud() async {

@@ -17,6 +17,7 @@ import '../../../../core/memorization/review_record_filters.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
 import '../../../../core/progress/progress_events_bus.dart';
 import '../../../../core/services/streak_reader.dart';
+import '../../../../core/sync/cloud_sync_queue.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 import '../../../../features/quran/domain/entities/quran_entities.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
@@ -33,10 +34,14 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     this._progressEvents,
     this._prefs, [
     this._metrics = const ProgressMetricsService(),
+    this._cloudSyncQueue,
   ]);
 
   static const _pairingSessionLifetime = Duration(minutes: 10);
   static const _dailyPlanCloudDirtyKey = 'daily_plan_cloud_dirty';
+  static const _reviewPullCursorKey = 'ayah_review_pull_cursor';
+  static const _syncedCertificateIdsKey = 'synced_certificate_ids';
+  static const _pullCursorStaleAfter = Duration(hours: 24);
 
   final MemorizationPlusLocalDatasource _datasource;
 
@@ -50,6 +55,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   final ProgressEventsBus _progressEvents;
   final SharedPreferences _prefs;
   final ProgressMetricsService _metrics;
+  final CloudSyncQueue? _cloudSyncQueue;
 
   bool get _cloudPullEnabled =>
       CloudSyncFeatureFlags.isProductionPullEnabled(_prefs);
@@ -989,7 +995,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       );
       await _datasource.saveKidsSessionLog(log);
       await _unlockWeeklyRewardIfNeeded();
-      unawaited(syncKidsProgressToCloud());
+      await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgress);
       _progressEvents.notify(ProgressChangedReason.kidsProgress);
       return Right(log);
     } catch (e) {
@@ -1336,6 +1342,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
 
     RemoteChildProductionSummary? production;
     try {
+      final reviewSummaryRaw = row['review_summary'];
       final reviewRows = (row['review_rows'] as List<dynamic>? ?? const [])
           .map((item) => Map<String, dynamic>.from(item as Map))
           .toList();
@@ -1354,13 +1361,23 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
           .map((item) => Map<String, dynamic>.from(item as Map))
           .toList();
 
-      production = _buildProductionSummary(
-        reviewRows: reviewRows,
-        dailyPlanRow: dailyPlanRow,
-        certRows: certRows,
-        streakRow: streakRow,
-        activityRows: activityRows,
-      );
+      if (reviewSummaryRaw is Map) {
+        production = _buildProductionSummaryFromAggregates(
+          reviewSummary: Map<String, dynamic>.from(reviewSummaryRaw),
+          dailyPlanRow: dailyPlanRow,
+          certRows: certRows,
+          streakRow: streakRow,
+          activityRows: activityRows,
+        );
+      } else {
+        production = _buildProductionSummary(
+          reviewRows: reviewRows,
+          dailyPlanRow: dailyPlanRow,
+          certRows: certRows,
+          streakRow: streakRow,
+          activityRows: activityRows,
+        );
+      }
     } catch (_) {
       production = null;
     }
@@ -1812,39 +1829,117 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       final user = client.auth.currentUser;
       if (user == null) return const Right(null);
 
-      final rows = await client.rpc('pull_ayah_review_records');
-      final cloudRows = (rows as List<dynamic>? ?? const [])
-          .cast<Map<String, dynamic>>();
+      var cursor = _readReviewPullCursor();
+      var pages = 0;
+      const maxPages = 20;
 
-      for (final row in cloudRows) {
-        final cloudRecord = _reviewRecordFromCloud(row);
-        if (!_isProductionReviewRecord(cloudRecord)) continue;
+      while (pages < maxPages) {
+        pages += 1;
+        List<dynamic> rows;
+        try {
+          rows = await client.rpc(
+            'pull_ayah_review_records_since',
+            params: {
+              'p_cursor': cursor.toUtc().toIso8601String(),
+              'p_limit': 500,
+            },
+          ) as List<dynamic>? ??
+              const [];
+        } on PostgrestException catch (e) {
+          if (!_isMissingRpc(e, 'pull_ayah_review_records_since')) rethrow;
+          // Legacy fallback: one full pull, then stop.
+          rows = await client.rpc('pull_ayah_review_records') as List<dynamic>? ??
+              const [];
+          await _applyCloudReviewRows(rows.cast<Map<String, dynamic>>());
+          await _mergeDailyPlanFromCloud(client, user.id);
+          await _markReviewPullCompleted();
+          return const Right(null);
+        }
 
-        final readScope = ReviewRecordAudienceScope.scopeForWriteMode(
-          cloudRecord.createdByMode,
-        );
-        final localModel = await _datasource.getReviewRecord(
-          cloudRecord.surahId,
-          cloudRecord.ayahNumber,
-          scope: readScope,
-        );
-        final merged = ReviewRecordCloudMerge.merge(
-          local: localModel,
-          remote: cloudRecord,
-        );
-        final mergedModel = AyahReviewRecordModel.fromEntity(merged);
-        if (localModel == null || localModel != mergedModel) {
-          await _datasource.saveReviewRecord(
-            mergedModel,
-            markCloudDirty: false,
+        final cloudRows = rows.cast<Map<String, dynamic>>();
+        if (cloudRows.isEmpty) break;
+
+        await _applyCloudReviewRows(cloudRows);
+
+        DateTime? newest;
+        for (final row in cloudRows) {
+          final updatedRaw = row['updated_at'] as String?;
+          if (updatedRaw == null) continue;
+          final updated = DateTime.parse(updatedRaw).toUtc();
+          if (newest == null || updated.isAfter(newest)) newest = updated;
+        }
+        if (newest != null) {
+          cursor = newest;
+          await _prefs.setString(
+            _reviewPullCursorKey,
+            cursor.toIso8601String(),
           );
         }
+        if (cloudRows.length < 500) break;
       }
 
       await _mergeDailyPlanFromCloud(client, user.id);
+      await _markReviewPullCompleted();
       return const Right(null);
     } catch (e) {
       return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  DateTime _readReviewPullCursor() {
+    final raw = _prefs.getString(_reviewPullCursorKey);
+    if (raw == null || raw.isEmpty) {
+      return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+    }
+    try {
+      return DateTime.parse(raw).toUtc();
+    } catch (_) {
+      return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
+    }
+  }
+
+  bool isReviewPullCursorStale() {
+    final lastPullRaw = _prefs.getString('${_reviewPullCursorKey}_pulled_at');
+    if (lastPullRaw == null) return true;
+    try {
+      final lastPull = DateTime.parse(lastPullRaw).toUtc();
+      return DateTime.now().toUtc().difference(lastPull) > _pullCursorStaleAfter;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> _markReviewPullCompleted() async {
+    await _prefs.setString(
+      '${_reviewPullCursorKey}_pulled_at',
+      DateTime.now().toUtc().toIso8601String(),
+    );
+  }
+
+  Future<void> _applyCloudReviewRows(List<Map<String, dynamic>> cloudRows) async {
+    for (final row in cloudRows) {
+      final cloudRecord = _reviewRecordFromCloud(row);
+      if (!_isProductionReviewRecord(cloudRecord)) continue;
+
+      final readScope = ReviewRecordAudienceScope.scopeForWriteMode(
+        cloudRecord.createdByMode,
+      );
+      final localModel = await _datasource.getReviewRecord(
+        cloudRecord.surahId,
+        cloudRecord.ayahNumber,
+        scope: readScope,
+      );
+      final merged = ReviewRecordCloudMerge.merge(
+        local: localModel,
+        remote: cloudRecord,
+      );
+      final mergedModel = AyahReviewRecordModel.fromEntity(merged);
+      if (localModel == null || localModel != mergedModel) {
+        await _datasource.saveReviewRecord(
+          mergedModel,
+          markCloudDirty: false,
+        );
+      }
     }
   }
 
@@ -1918,14 +2013,17 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   Future<Either<Failure, void>> pushCertificatesToCloud(
     List<CertificateAward> certificates,
   ) async {
-    if (certificates.isEmpty) return const Right(null);
+    final unsynced = certificates
+        .where((c) => !_syncedCertificateIds().contains(c.id))
+        .toList();
+    if (unsynced.isEmpty) return const Right(null);
     try {
       if (!_isSupabaseReady) return const Right(null);
       final client = _supabase;
       final user = client.auth.currentUser;
       if (user == null) return const Right(null);
 
-      final rows = certificates
+      final rows = unsynced
           .map(
             (c) => {
               'user_id': user.id,
@@ -1942,10 +2040,35 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       await client
           .from('certificate_awards_cloud')
           .upsert(rows, onConflict: 'user_id,cert_id', ignoreDuplicates: true);
+      await _markCertificatesSynced(unsynced.map((c) => c.id));
       return const Right(null);
     } catch (e) {
       return Left(NetworkFailure(e.toString()));
     }
+  }
+
+  Set<String> _syncedCertificateIds() {
+    final raw = _prefs.getStringList(_syncedCertificateIdsKey);
+    return raw == null ? <String>{} : raw.toSet();
+  }
+
+  Future<void> _markCertificatesSynced(Iterable<String> ids) async {
+    final merged = _syncedCertificateIds()..addAll(ids);
+    await _prefs.setStringList(_syncedCertificateIdsKey, merged.toList());
+  }
+
+  @override
+  Future<bool> hasPendingCloudWork() async {
+    final dirtyRecords = await _datasource.getCloudDirtyReviewRecords(
+      includeAllAudiences: true,
+    );
+    if (dirtyRecords.any(_isProductionReviewRecord)) return true;
+    if (_prefs.getBool(_dailyPlanCloudDirtyKey) ?? false) return true;
+
+    final logs = await _datasource.getKidsSessionLogs();
+    if (logs.any((log) => !log.isSynced)) return true;
+
+    return isReviewPullCursorStale();
   }
 
   @override
@@ -2128,6 +2251,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
               'lapses': r.lapses,
               'review_state': r.reviewState.name,
               'created_by_mode': r.createdByMode.name,
+              'sync_version': r.lastReviewedAt.toUtc().millisecondsSinceEpoch,
             },
           )
           .toList();
@@ -2176,6 +2300,64 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       certRows: certRows,
       streakRow: streakRow,
       activityRows: activityRows,
+    );
+  }
+
+  RemoteChildProductionSummary _buildProductionSummaryFromAggregates({
+    required Map<String, dynamic> reviewSummary,
+    required Map<String, dynamic>? dailyPlanRow,
+    required List<Map<String, dynamic>> certRows,
+    required Map<String, dynamic>? streakRow,
+    required List<Map<String, dynamic>> activityRows,
+  }) {
+    final reviewCount = reviewSummary['review_count'] as int? ?? 0;
+    final memorizedCount = reviewSummary['memorized_count'] as int? ?? 0;
+    final overdueCount = reviewSummary['overdue_count'] as int? ?? 0;
+    final nextReviewRaw = reviewSummary['next_review_at'] as String?;
+    final latestReviewRaw = reviewSummary['latest_review_at'] as String?;
+    final certificates = certRows
+        .map(
+          (row) => RemoteCertificateAward(
+            certId: row['cert_id'] as String,
+            titleAr: row['title_ar'] as String,
+            certType: row['cert_type'] as String,
+            earnedAt: DateTime.parse(row['earned_at'] as String),
+          ),
+        )
+        .toList();
+    final activeDays = activityRows
+        .where((row) => (row['activity_count'] as int? ?? 0) > 0)
+        .length;
+    final planSurahId = dailyPlanRow?['surah_id'] as int?;
+    final planTotal = dailyPlanRow?['total_items'] as int? ?? 0;
+    final planCompleted = dailyPlanRow?['completed_count'] as int? ?? 0;
+    final completionPercent = reviewCount == 0
+        ? 0.0
+        : ((memorizedCount / AppConstants.totalAyahs) * 100).clamp(0.0, 100.0);
+
+    return RemoteChildProductionSummary(
+      totalMemorizedAyahs: memorizedCount,
+      totalAyahsTracked: reviewCount,
+      completionPercent: completionPercent,
+      currentSurahId: planSurahId ?? reviewSummary['last_surah_id'] as int?,
+      lastMemorizedSurahId: reviewSummary['last_surah_id'] as int?,
+      lastMemorizedAyahNumber: reviewSummary['last_ayah_number'] as int?,
+      lastMemorizedAt: latestReviewRaw == null
+          ? null
+          : DateTime.tryParse(latestReviewRaw)?.toUtc(),
+      reviewsCompleted: reviewCount,
+      reviewsOverdue: overdueCount,
+      nextReviewAt: nextReviewRaw == null
+          ? null
+          : DateTime.tryParse(nextReviewRaw)?.toUtc(),
+      dailyPlanSurahId: planSurahId,
+      dailyPlanTotal: planTotal,
+      dailyPlanCompleted: planCompleted,
+      currentStreak: streakRow?['current_streak'] as int?,
+      longestStreak: streakRow?['longest_streak'] as int?,
+      activeDaysLast30: activeDays,
+      certificates: certificates,
+      smartCoachKind: null,
     );
   }
 }

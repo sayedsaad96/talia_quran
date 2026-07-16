@@ -89,4 +89,7 @@ class _FakeRepository implements MemorizationPlusRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+
+  @override
+  Future<bool> hasPendingCloudWork() async => false;
 }

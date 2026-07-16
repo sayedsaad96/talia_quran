@@ -366,5 +366,8 @@ class _FakeMemPlusRepository implements MemorizationPlusRepository {
     }
     return super.noSuchMethod(invocation);
   }
+
+  @override
+  Future<bool> hasPendingCloudWork() async => false;
 }
 
