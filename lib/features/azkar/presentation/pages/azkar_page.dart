@@ -3,12 +3,38 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../domain/entities/azkar_entities.dart';
+import '../../domain/repositories/azkar_repository.dart';
 
-class AzkarPage extends StatelessWidget {
+class AzkarPage extends StatefulWidget {
   const AzkarPage({super.key});
+
+  @override
+  State<AzkarPage> createState() => _AzkarPageState();
+}
+
+class _AzkarPageState extends State<AzkarPage> {
+  late Future<Map<AzkarCategory, int>> _countsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _countsFuture = _loadCounts();
+  }
+
+  Future<Map<AzkarCategory, int>> _loadCounts() async {
+    final repo = getIt<AzkarRepository>();
+    final counts = <AzkarCategory, int>{};
+    for (final category in AzkarCategory.values) {
+      final result = await repo.getAzkar(category);
+      counts[category] = result.fold((_) => 0, (list) => list.length);
+    }
+    return counts;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -18,63 +44,69 @@ class AzkarPage extends StatelessWidget {
       backgroundColor: isDark
           ? AppColors.darkBackground
           : AppColors.lightBackground,
-      body: CustomScrollView(
-        slivers: [
-          _buildAppBar(context, isDark),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.lg,
-              AppSpacing.pagePadding,
-              120, // Prevent cutoff by bottom nav
-            ),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _AzkarCategoryCard(
-                  title: context.l10n.morningAzkar,
-                  subtitle: context.l10n.zikrCount(12),
-                  icon: Icons.wb_sunny_rounded,
-                  gradientColors: const [Color(0xFFFF8C42), Color(0xFFFF6B00)],
-                  route: 'morning',
-                  delay: 0,
-                  isDark: isDark,
+      body: FutureBuilder<Map<AzkarCategory, int>>(
+        future: _countsFuture,
+        builder: (context, snapshot) {
+          final counts = snapshot.data;
+          return CustomScrollView(
+            slivers: [
+              _buildAppBar(context, isDark),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pagePadding,
+                  AppSpacing.lg,
+                  AppSpacing.pagePadding,
+                  120, // Prevent cutoff by bottom nav
                 ),
-                const SizedBox(height: AppSpacing.md),
-                _AzkarCategoryCard(
-                  title: context.l10n.eveningAzkar,
-                  subtitle: context.l10n.zikrCount(13),
-                  icon: Icons.nightlight_round,
-                  gradientColors: const [Color(0xFF2D5A8E), Color(0xFF1A3A5C)],
-                  route: 'evening',
-                  delay: 80,
-                  isDark: isDark,
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    _AzkarCategoryCard(
+                      title: context.l10n.morningAzkar,
+                      subtitle: counts == null ? '...' : context.l10n.zikrCount(counts[AzkarCategory.morning] ?? 0),
+                      icon: Icons.wb_sunny_rounded,
+                      gradientColors: const [Color(0xFFFF8C42), Color(0xFFFF6B00)],
+                      route: 'morning',
+                      delay: 0,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _AzkarCategoryCard(
+                      title: context.l10n.eveningAzkar,
+                      subtitle: counts == null ? '...' : context.l10n.zikrCount(counts[AzkarCategory.evening] ?? 0),
+                      icon: Icons.nightlight_round,
+                      gradientColors: const [Color(0xFF2D5A8E), Color(0xFF1A3A5C)],
+                      route: 'evening',
+                      delay: 80,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _AzkarCategoryCard(
+                      title: context.l10n.generalAzkar,
+                      subtitle: counts == null ? '...' : context.l10n.azkarCount(counts[AzkarCategory.general] ?? 0),
+                      icon: Icons.spa_rounded,
+                      gradientColors: const [Color(0xFF1A6B5A), Color(0xFF0F4A3E)],
+                      route: 'general',
+                      delay: 160,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    _AzkarCategoryCard(
+                      title: context.l10n.duas,
+                      subtitle: counts == null ? '...' : context.l10n.duaCount(counts[AzkarCategory.duas] ?? 0),
+                      icon: Icons.volunteer_activism_rounded,
+                      gradientColors: const [Color(0xFFE11D48), Color(0xFF881337)],
+                      route: 'duas',
+                      delay: 240,
+                      isDark: isDark,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+                    _DailyTip(isDark: isDark),
+                  ]),
                 ),
-                const SizedBox(height: AppSpacing.md),
-                _AzkarCategoryCard(
-                  title: context.l10n.generalAzkar,
-                  subtitle: context.l10n.azkarCount(8),
-                  icon: Icons.spa_rounded,
-                  gradientColors: const [Color(0xFF1A6B5A), Color(0xFF0F4A3E)],
-                  route: 'general',
-                  delay: 160,
-                  isDark: isDark,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                _AzkarCategoryCard(
-                  title: context.l10n.duas,
-                  subtitle: context.l10n.duaCount(16),
-                  icon: Icons.volunteer_activism_rounded,
-                  gradientColors: const [Color(0xFFE11D48), Color(0xFF881337)],
-                  route: 'duas',
-                  delay: 240,
-                  isDark: isDark,
-                ),
-                const SizedBox(height: AppSpacing.xl),
-                _DailyTip(isDark: isDark),
-              ]),
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
     );
   }

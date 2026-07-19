@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -12,6 +15,8 @@ import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
+import '../cubits/memorization_identity_cubit.dart';
+import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../theme/kids_theme.dart';
 
 class MemorizationHubPage extends StatefulWidget {
@@ -44,49 +49,139 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
     });
   }
 
+  Future<void> _confirmPathSelection(
+    BuildContext context, {
+    required MemorizationPath path,
+    required String title,
+    required String description,
+  }) async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                context.l10n.memorizationPathConfirmTitle,
+                style: AppTypography.headlineSmall.copyWith(
+                  fontFamily: 'Amiri',
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '$title\n$description',
+                style: AppTypography.bodyMedium.copyWith(height: 1.6),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  const Icon(Icons.info_outline_rounded, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      context.l10n.memorizationPathCanChangeLater,
+                      style: AppTypography.bodySmall,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              FilledButton(
+                onPressed: () => Navigator.pop(sheetContext, true),
+                child: Text(context.l10n.confirm),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(sheetContext, false),
+                child: Text(context.l10n.goBack),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      unawaited(context.read<MemorizationIdentityCubit>().selectPath(path));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
-      body: FutureBuilder<_HubLoadResult>(
-        future: _hubFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: LoadingWidget());
-          }
-          if (snapshot.hasError) {
-            return ErrorStateWidget(
-              message: context.l10n.errorOccurred,
-              onRetry: _retryTargets,
-            );
-          }
-          return CustomScrollView(
-            slivers: [
-              _HubAppBar(isDark: isDark),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.pagePadding,
-                  AppSpacing.lg,
-                  AppSpacing.pagePadding,
-                  120,
-                ),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate(
-                    _sectionsFor(
-                      context,
-                      snapshot.data?.targets,
-                      snapshot.data?.dailyPlan,
-                      isDark,
+    return BlocProvider(
+      create: (context) => getIt<MemorizationIdentityCubit>(),
+      child: Scaffold(
+        backgroundColor: isDark
+            ? AppColors.darkBackground
+            : AppColors.lightBackground,
+        body: BlocConsumer<MemorizationIdentityCubit, MemorizationIdentityState>(
+          listener: (context, state) {
+            if (state is MemorizationIdentitySuccess) {
+              final profile = state.profile;
+              if (profile.isAdult) {
+                _retryTargets();
+              } else if (profile.isChild) {
+                _retryTargets();
+                final authState = context.read<AuthCubit>().state;
+                context.push(
+                  authState is AuthAuthenticated
+                      ? AppRoutes.memorizationPlusGuardianLinking
+                      : AppRoutes.memorizationPlusKidsHome,
+                );
+              }
+            } else if (state is MemorizationIdentityError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.message)),
+              );
+            }
+          },
+          builder: (context, state) {
+            final isSelectingPath = state is MemorizationIdentityLoading;
+            return FutureBuilder<_HubLoadResult>(
+              future: _hubFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: LoadingWidget());
+                }
+                if (snapshot.hasError) {
+                  return ErrorStateWidget(
+                    message: context.l10n.errorOccurred,
+                    onRetry: _retryTargets,
+                  );
+                }
+                return CustomScrollView(
+                  slivers: [
+                    _HubAppBar(isDark: isDark),
+                    SliverPadding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.pagePadding,
+                        AppSpacing.lg,
+                        AppSpacing.pagePadding,
+                        120,
+                      ),
+                      sliver: SliverList(
+                        delegate: SliverChildListDelegate(
+                          _sectionsFor(
+                            context,
+                            snapshot.data?.targets,
+                            snapshot.data?.dailyPlan,
+                            isDark,
+                            isSelectingPath,
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+                  ],
+                );
+              },
+            );
+          },
+        ),
       ),
     );
   }
@@ -96,6 +191,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
     MemorizationNavigationTargets? targets,
     DailyPlan? dailyPlan,
     bool isDark,
+    bool isSelectingPath,
   ) {
     final profile = targets?.profile;
     if (profile?.isAdult == true) {
@@ -245,22 +341,50 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
     }
 
     return [
-      _PathChoiceCard(
-        icon: Icons.psychology_alt_rounded,
-        title: context.isArabic ? 'حفظ الكبار' : 'Adult Memorization',
-        description: context.isArabic
-            ? 'خطة يومية وتدريب بالسورة واختبار مراجعة.'
-            : "Today's plan, practice by surah, and review quiz.",
-        isDark: isDark,
+      Text(
+        context.l10n.memorizationPathQuestion,
+        style: AppTypography.headlineMedium,
+        textAlign: TextAlign.center,
       ),
-      const SizedBox(height: AppSpacing.md),
-      _PathChoiceCard(
-        icon: Icons.child_care_rounded,
-        title: context.isArabic ? 'حفظ الأطفال' : 'Kids Memorization',
-        description: context.isArabic
-            ? 'مهام قصيرة ورحلة ومكافآت للطفل.'
-            : 'Current mission, journey, and rewards for kids.',
-        isDark: isDark,
+      const SizedBox(height: 16),
+      Text(
+        context.l10n.memorizationPathDescription,
+        style: AppTypography.bodyMedium.copyWith(
+          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+        ),
+        textAlign: TextAlign.center,
+      ),
+      const SizedBox(height: 48),
+      _UnifiedPathChoiceCard(
+        title: context.l10n.memorizationPathAdultsTitle,
+        description: context.l10n.memorizationPathAdultsDesc,
+        icon: Icons.person_outline,
+        color: AppColors.primary,
+        isLoading: isSelectingPath,
+        onTap: () {
+          _confirmPathSelection(
+            context,
+            path: MemorizationPath.adult,
+            title: context.l10n.memorizationPathAdultsTitle,
+            description: context.l10n.memorizationPathAdultsDesc,
+          );
+        },
+      ),
+      const SizedBox(height: 24),
+      _UnifiedPathChoiceCard(
+        title: context.l10n.memorizationPathKidsTitle,
+        description: context.l10n.memorizationPathKidsDesc,
+        icon: Icons.child_care,
+        color: AppColors.gold,
+        isLoading: isSelectingPath,
+        onTap: () {
+          _confirmPathSelection(
+            context,
+            path: MemorizationPath.child,
+            title: context.l10n.memorizationPathKidsTitle,
+            description: context.l10n.memorizationPathKidsDesc,
+          );
+        },
       ),
     ];
   }
@@ -519,27 +643,93 @@ class _HubActionCard extends StatelessWidget {
   }
 }
 
-class _PathChoiceCard extends StatelessWidget {
-  const _PathChoiceCard({
-    required this.icon,
+class _UnifiedPathChoiceCard extends StatelessWidget {
+  const _UnifiedPathChoiceCard({
     required this.title,
     required this.description,
-    required this.isDark,
+    required this.icon,
+    required this.color,
+    required this.isLoading,
+    required this.onTap,
   });
 
-  final IconData icon;
   final String title;
   final String description;
-  final bool isDark;
+  final IconData icon;
+  final Color color;
+  final bool isLoading;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return _HubActionCard(
-      icon: icon,
-      title: title,
-      description: description,
-      route: AppRoutes.memorizationPlus,
-      isDark: isDark,
+    final isDark = context.isDark;
+    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    return GestureDetector(
+      onTap: isLoading ? null : onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.1),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(24),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 40, color: color),
+            ),
+            const SizedBox(width: 24),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTypography.titleLarge.copyWith(color: textColor),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    description,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: secondaryTextColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (isLoading)
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: secondaryTextColor,
+                ),
+              )
+            else
+              Icon(
+                context.isArabic ? Icons.arrow_back_ios_new : Icons.arrow_forward_ios,
+                color: secondaryTextColor,
+                size: 20,
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
