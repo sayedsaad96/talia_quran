@@ -5,12 +5,21 @@ import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
 
+import 'package:flutter_animate/flutter_animate.dart';
+
 void main() {
+  setUpAll(() {
+    Animate.defaultDuration = Duration.zero;
+  });
+
   group('KidsGamifiedStagePage', () {
     testWidgets('renders stage info and starts mission', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
-      addTearDown(tester.view.reset);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
 
       var started = false;
 
@@ -41,7 +50,10 @@ void main() {
     testWidgets('back button triggers onBack callback', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
-      addTearDown(tester.view.reset);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
 
       var backCalled = false;
 
@@ -141,6 +153,7 @@ class _TestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       locale: const Locale('en'),
+      theme: ThemeData(splashFactory: NoSplash.splashFactory),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

@@ -7,14 +7,23 @@ import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_house_card.dart';
 
+import 'package:flutter_animate/flutter_animate.dart';
+
 void main() {
+  setUpAll(() {
+    Animate.defaultDuration = Duration.zero;
+  });
+
   group('KidsGamifiedJourneyPage', () {
     testWidgets('renders journey stages and selects unlocked house', (
       tester,
     ) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
-      addTearDown(tester.view.reset);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
 
       KidsJourneyStage? selectedStage;
 
@@ -46,7 +55,10 @@ void main() {
     ) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
-      addTearDown(tester.view.reset);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
 
       KidsJourneyStage? selectedStage;
 
@@ -68,12 +80,16 @@ void main() {
       expect(selectedStage, isNull);
       // Should show a SnackBar with locked message
       expect(find.byType(SnackBar), findsOneWidget);
+      await tester.pump(const Duration(seconds: 5));
     });
 
     testWidgets('renders empty state when no stages exist', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
-      addTearDown(tester.view.reset);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
 
       const emptyState = KidsJourneyLoaded(
         surahId: 114,
@@ -109,7 +125,10 @@ void main() {
     testWidgets('back button triggers onBack callback', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
-      addTearDown(tester.view.reset);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
 
       var backCalled = false;
 
@@ -178,6 +197,7 @@ class _TestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       locale: const Locale('en'),
+      theme: ThemeData(splashFactory: NoSplash.splashFactory),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

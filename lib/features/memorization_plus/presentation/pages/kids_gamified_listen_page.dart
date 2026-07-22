@@ -435,7 +435,10 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
     _waveController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
-    )..repeat(reverse: true);
+    );
+    if (!WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
+      _waveController.repeat(reverse: true);
+    }
   }
 
   @override

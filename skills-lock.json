@@ -13,6 +13,12 @@
       "skillPath": "skills/clean-code-guard/SKILL.md",
       "computedHash": "dbc49cbc3735474569b1a6789f9493b7b7de37a9ba136e26d033713d1c683119"
     },
+    "code-review": {
+      "source": "mattpocock/skills",
+      "sourceType": "github",
+      "skillPath": "skills/engineering/code-review/SKILL.md",
+      "computedHash": "7c3170d8b1b904418358af0474f82e74c89a2dd66c12c956caefdc0aa81ea09f"
+    },
     "dart-add-unit-test": {
       "source": "dart-lang/skills",
       "sourceType": "github",

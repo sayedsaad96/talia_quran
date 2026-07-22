@@ -73,7 +73,10 @@ class _TestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<MemorizationSessionCubit>.value(
       value: cubit,
-      child: MaterialApp(home: Scaffold(body: child)),
+      child: MaterialApp(
+        theme: ThemeData(splashFactory: NoSplash.splashFactory),
+        home: Scaffold(body: child),
+      ),
     );
   }
 }

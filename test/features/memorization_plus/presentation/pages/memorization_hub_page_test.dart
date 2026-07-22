@@ -9,6 +9,8 @@ import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/memorization_hub_page.dart';
+import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/cubits/memorization_identity_cubit.dart';
 
 void main() {
   setUp(() async {
@@ -26,8 +28,16 @@ void main() {
       tester.view.physicalSize = const Size(900, 1800);
       addTearDown(tester.view.reset);
 
-      getIt.registerSingleton<MemorizationPlusRepository>(
-        _ProfileRepository(_profile(MemorizationPath.adult)),
+      final repo = _ProfileRepository(_profile(MemorizationPath.adult));
+      getIt.registerSingleton<MemorizationPlusRepository>(repo);
+      getIt.registerLazySingleton<MemorizationPathResolver>(
+        () => MemorizationPathResolver(repo),
+      );
+      getIt.registerFactory<MemorizationIdentityCubit>(
+        () => MemorizationIdentityCubit(
+          repository: repo,
+          pathResolver: getIt<MemorizationPathResolver>(),
+        ),
       );
 
       await tester.pumpWidget(const _TestApp(child: MemorizationHubPage()));
@@ -51,8 +61,16 @@ void main() {
     tester.view.physicalSize = const Size(900, 1400);
     addTearDown(tester.view.reset);
 
-    getIt.registerSingleton<MemorizationPlusRepository>(
-      _ProfileRepository(_profile(MemorizationPath.child)),
+    final repo = _ProfileRepository(_profile(MemorizationPath.child));
+    getIt.registerSingleton<MemorizationPlusRepository>(repo);
+    getIt.registerLazySingleton<MemorizationPathResolver>(
+      () => MemorizationPathResolver(repo),
+    );
+    getIt.registerFactory<MemorizationIdentityCubit>(
+      () => MemorizationIdentityCubit(
+        repository: repo,
+        pathResolver: getIt<MemorizationPathResolver>(),
+      ),
     );
 
     await tester.pumpWidget(const _TestApp(child: MemorizationHubPage()));
@@ -73,17 +91,25 @@ void main() {
     tester.view.physicalSize = const Size(900, 1400);
     addTearDown(tester.view.reset);
 
-    getIt.registerSingleton<MemorizationPlusRepository>(
-      const _ProfileRepository(null),
+    const repo = _ProfileRepository(null);
+    getIt.registerSingleton<MemorizationPlusRepository>(repo);
+    getIt.registerLazySingleton<MemorizationPathResolver>(
+      () => MemorizationPathResolver(repo),
+    );
+    getIt.registerFactory<MemorizationIdentityCubit>(
+      () => MemorizationIdentityCubit(
+        repository: repo,
+        pathResolver: getIt<MemorizationPathResolver>(),
+      ),
     );
 
     await tester.pumpWidget(const _TestApp(child: MemorizationHubPage()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Adult Memorization'), findsOneWidget);
-    expect(find.text('Kids Memorization'), findsOneWidget);
-    expect(find.textContaining("Today's plan"), findsOneWidget);
-    expect(find.textContaining('Current mission'), findsOneWidget);
+    expect(find.text('Adult path'), findsOneWidget);
+    expect(find.text('Kids path'), findsOneWidget);
+    expect(find.textContaining('smart review'), findsOneWidget);
+    expect(find.textContaining('interactive memorization'), findsOneWidget);
     expect(find.text('Parent Dashboard'), findsNothing);
   });
 }

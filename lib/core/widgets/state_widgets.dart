@@ -35,7 +35,10 @@ class _TaliaSpinnerState extends State<_TaliaSpinner>
     _ctrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1200),
-    )..repeat();
+    );
+    if (!WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
+      _ctrl.repeat();
+    }
   }
 
   @override

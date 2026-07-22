@@ -156,6 +156,7 @@ class _TestApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       locale: const Locale('en'),
+      theme: ThemeData(splashFactory: NoSplash.splashFactory),
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

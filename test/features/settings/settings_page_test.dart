@@ -439,8 +439,8 @@ class _SettingsTestApp extends StatelessWidget {
       child: MaterialApp.router(
         locale: locale,
         themeMode: themeMode,
-        theme: ThemeData.light(useMaterial3: true),
-        darkTheme: ThemeData.dark(useMaterial3: true),
+        theme: ThemeData.light(useMaterial3: true).copyWith(splashFactory: NoSplash.splashFactory),
+        darkTheme: ThemeData.dark(useMaterial3: true).copyWith(splashFactory: NoSplash.splashFactory),
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,

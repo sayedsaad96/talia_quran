@@ -24,56 +24,118 @@ class UnifiedHeroActionCard extends StatelessWidget {
     final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
     final subTextColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              primary.withValues(alpha: 0.14),
-              primary.withValues(alpha: 0.05),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        splashColor: AppColors.gold.withValues(alpha: 0.1),
+        highlightColor: AppColors.primary.withValues(alpha: 0.05),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [
+                      AppColors.primaryDark.withValues(alpha: 0.7),
+                      AppColors.darkSurfaceVariant.withValues(alpha: 0.9),
+                    ]
+                  : [
+                      AppColors.lightSurface,
+                      AppColors.primary.withValues(alpha: 0.05),
+                    ],
+            ),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            border: Border.all(
+              color: isDark
+                  ? AppColors.gold.withValues(alpha: 0.3)
+                  : AppColors.primary.withValues(alpha: 0.2),
+              width: 1.2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? AppColors.primaryDark.withValues(alpha: 0.6)
+                    : AppColors.primary.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+              if (isDark)
+                BoxShadow(
+                  color: AppColors.gold.withValues(alpha: 0.08),
+                  blurRadius: 10,
+                  spreadRadius: -2,
+                ),
             ],
           ),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border.all(color: primary.withValues(alpha: 0.24)),
-        ),
-        child: Row(
-          children: [
-            Icon(data.icon, color: primary, size: 30),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    data.title,
-                    style: AppTypography.titleMedium.copyWith(
-                      color: textColor,
-                      fontFamily: 'Amiri',
-                      fontWeight: FontWeight.w800,
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  gradient: isDark ? AppColors.goldGradient : AppColors.primaryGradient,
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isDark ? AppColors.goldDark : AppColors.primary)
+                          .withValues(alpha: 0.3),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
                     ),
-                  ),
-                  Text(
-                    data.subtitle,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: subTextColor,
-                    ),
-                  ),
-                ],
+                  ],
+                ),
+                child: Icon(
+                  data.icon,
+                  color: isDark ? AppColors.darkBackground : Colors.white,
+                  size: 26,
+                ),
               ),
-            ),
-            Icon(
-              context.isArabic
-                  ? Icons.arrow_back_ios_new_rounded
-                  : Icons.arrow_forward_ios_rounded,
-              color: primary,
-              size: 16,
-            ),
-          ],
+              const SizedBox(width: AppSpacing.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data.title,
+                      style: AppTypography.headlineSmall.copyWith(
+                        color: textColor,
+                        fontFamily: 'Amiri',
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      data.subtitle,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: subTextColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.xs + 2),
+                decoration: BoxDecoration(
+                  color: (isDark ? AppColors.gold : primary).withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  context.isArabic
+                      ? Icons.arrow_back_ios_new_rounded
+                      : Icons.arrow_forward_ios_rounded,
+                  color: isDark ? AppColors.goldLight : primary,
+                  size: 14,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+    ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic);
   }
 }

@@ -8,7 +8,7 @@ import 'package:talia_quran/core/l10n/app_localizations_en.dart';
 /// that were extracted into the ARB localization files during the cleanup
 /// sprint. Each entry maps a source file to the literals that must not return.
 const _removedLiterals = <String, List<String>>{
-  'lib/features/memorization_plus/presentation/cubits/parent_dashboard_cubit.dart':
+  'lib/features/memorization_plus/presentation/cubits/family_dashboard_cubit.dart':
       ['أدخل رمزًا من 4 أرقام', 'رمز غير صحيح'],
   'lib/features/azkar/presentation/pages/azkar_category_page.dart': [
     'اضغط مطولاً للتراجع',
