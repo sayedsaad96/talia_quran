@@ -60,6 +60,62 @@ abstract class AppDecorations {
     return royalGlass(isDark: isDark);
   }
 
+  static BoxDecoration bentoCard({
+    required bool isDark,
+    double radius = AppSpacing.radiusLg,
+    Color? accentGlow,
+  }) {
+    return BoxDecoration(
+      color: isDark ? AppColors.darkCard : AppColors.lightCard,
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(
+        color: isDark
+            ? AppColors.glassBorderDark
+            : AppColors.glassBorderLight,
+        width: 1.0,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: accentGlow ??
+              (isDark
+                  ? Colors.black.withValues(alpha: 0.35)
+                  : AppColors.primary.withValues(alpha: 0.05)),
+          blurRadius: 16,
+          offset: const Offset(0, 6),
+          spreadRadius: -2,
+        ),
+      ],
+    );
+  }
+
+  static BoxDecoration floatingGlass({
+    required bool isDark,
+    double radius = AppSpacing.radiusFull,
+  }) {
+    return BoxDecoration(
+      color: isDark
+          ? AppColors.darkSurface.withValues(alpha: 0.85)
+          : AppColors.lightSurface.withValues(alpha: 0.90),
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(
+        color: isDark
+            ? AppColors.glassBorderDark
+            : AppColors.glassBorderLight,
+        width: 1.0,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: isDark
+              ? Colors.black.withValues(alpha: 0.45)
+              : AppColors.primary.withValues(alpha: 0.12),
+          blurRadius: 24,
+          offset: const Offset(0, 8),
+          spreadRadius: 2,
+        ),
+      ],
+    );
+  }
+
   static BoxDecoration primary({double radius = AppSpacing.radiusMd}) {
     return BoxDecoration(
       gradient: AppColors.primaryGradient,

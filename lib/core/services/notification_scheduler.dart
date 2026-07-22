@@ -1,5 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import '../di/injection.dart';
 import '../l10n/app_localizations.dart';
+import '../services/streak_reader.dart';
+import '../../features/progress/domain/repositories/progress_repository.dart';
 
 import 'notification_service.dart';
 
@@ -13,6 +16,22 @@ class NotificationScheduler {
 
     // First, sync timezone
     await _service.configureLocalTimezone();
+
+    int currentStreak = 1;
+    int dueReviews = 0;
+
+    try {
+      if (getIt.isRegistered<StreakReader>()) {
+        final streakEntity = await getIt<StreakReader>().getStreak();
+        currentStreak = streakEntity.currentStreak;
+      }
+      if (getIt.isRegistered<ProgressRepository>()) {
+        final progressResult = await getIt<ProgressRepository>().getOverallProgress();
+        progressResult.fold((_) => null, (p) => dueReviews = p.reviewAyahs);
+      }
+    } catch (_) {
+      // Non-critical fallback
+    }
 
     final reviewEnabled =
         prefs.getBool(TaliaNotificationService.dailyReviewPreferenceKey) ??
@@ -43,8 +62,11 @@ class NotificationScheduler {
             '${TaliaNotificationService.dailyReviewPreferenceKey}_minute',
           ) ??
           0;
-      // Note: we can pass pending review count if we had it, but default is 0
-      final body = l10n.notificationDailyReviewBody;
+
+      final body = dueReviews > 0
+          ? l10n.notificationDailyReviewBodyCount(dueReviews)
+          : l10n.notificationDailyReviewBody;
+
       await _service.scheduleDailyReviewReminder(
         title: l10n.notificationDailyReviewTitle,
         body: body,
@@ -53,25 +75,28 @@ class NotificationScheduler {
       );
     } else {
       await _service.cancelDailyReviewReminder();
-      if (streakEnabled) {
-        final hour =
-            prefs.getInt(
-              '${TaliaNotificationService.streakAlertPreferenceKey}_hour',
-            ) ??
-            22;
-        final minute =
-            prefs.getInt(
-              '${TaliaNotificationService.streakAlertPreferenceKey}_minute',
-            ) ??
-            0;
-        await _service.scheduleStreakProtectionAlert(
-          title: l10n.notificationStreakAlertTitle(1),
-          body: l10n.notificationStreakAlertBody,
-          currentStreak: 1,
-          hour: hour,
-          minute: minute,
-        );
-      }
+    }
+
+    if (streakEnabled) {
+      final hour =
+          prefs.getInt(
+            '${TaliaNotificationService.streakAlertPreferenceKey}_hour',
+          ) ??
+          22;
+      final minute =
+          prefs.getInt(
+            '${TaliaNotificationService.streakAlertPreferenceKey}_minute',
+          ) ??
+          0;
+      await _service.scheduleStreakProtectionAlert(
+        title: l10n.notificationStreakAlertTitle(currentStreak),
+        body: l10n.notificationStreakAlertBody,
+        currentStreak: currentStreak,
+        hour: hour,
+        minute: minute,
+      );
+    } else {
+      await _service.cancelStreakAlert();
     }
 
     await _service.scheduleDailyAyahReminder(

@@ -39,6 +39,19 @@ abstract class AppColors {
   static const Color darkTextSecondary = Color(0xFFA8B0BC);
   static const Color darkTextHint = Color(0xFF5A6370);
 
+  // ─── OLED Pitch Black Theme (Optional) ────────────────────────────────────────
+  static const Color oledBackground = Color(0xFF000000);
+  static const Color oledSurface = Color(0xFF0A0A0A);
+  static const Color oledSurfaceVariant = Color(0xFF141414);
+  static const Color oledCard = Color(0xFF121212);
+  static const Color oledDivider = Color(0xFF222222);
+
+  // ─── Glassmorphism & Glow Effects ───────────────────────────────────────────
+  static const Color glassBorderLight = Color(0x1F0D5C53);
+  static const Color glassBorderDark = Color(0x26FFFFFF);
+  static const Color goldGlow = Color(0x40F59E0B);
+  static const Color primaryGlow = Color(0x330D5C53);
+
   // ─── Kids Mode Colors ────────────────────────────────────────────────────────
   /// Vibrant playful green for Kids Mode UI elements
   static const Color kidsGreen = Color(0xFF27AE60);

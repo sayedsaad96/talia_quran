@@ -1912,6 +1912,82 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
             (t) => setState(() => _dailyDuaTime = t),
           ),
         ),
+        _SettingsDivider(isDark: widget.isDark),
+        InkWell(
+          onTap: () async {
+            await getIt<TaliaNotificationService>().showImmediateTestNotification(
+              title: context.isArabic
+                  ? 'تالية ✨ إشعار تفاعلي تجريبي'
+                  : 'Talia ✨ Interactive Test',
+              body: context.isArabic
+                  ? 'أهلاً بك! جرب الأزرار التفاعلية بالأسفل للانتقال المباشر للمراجعة أو الورد ⚡'
+                  : 'Welcome! Try the interactive action buttons below to jump to Review or Wird ⚡',
+            );
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    context.isArabic
+                        ? 'تم إرسال الإشعار التفاعلي التجريبي بنجاح ✨'
+                        : 'Interactive test notification sent successfully ✨',
+                  ),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          },
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.md,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: primary.withValues(alpha: 0.11),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.touch_app_rounded, color: primary, size: 21),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.isArabic
+                            ? 'تجربة الإشعارات التفاعلية'
+                            : 'Test Interactive Notification',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: textColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        context.isArabic
+                            ? 'إرسال إشعار تجريبي فوري لاختبار المظهر والأزرار'
+                            : 'Send immediate test notification to preview actions',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: subtextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.send_rounded,
+                  size: 18,
+                  color: primary,
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }

@@ -46,6 +46,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   int? _currentPageNumber;
   bool _showLongPressHint = false;
   bool _showReadConfirmedFeedback = false;
+  bool _isFocusMode = false;
 
   final QuranReadConfirmationGate _readConfirmationGate =
       QuranReadConfirmationGate();
@@ -331,6 +332,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                       isTajweed: true,
                       pageBackgroundColor: bg,
                       onPageChanged: (page) {
+                        HapticFeedback.selectionClick();
                         setState(() => _currentPageNumber = page);
                         _saveCurrentPage(page);
                         _registerPageInteraction(page, context);
@@ -343,28 +345,56 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                             verseNumber,
                             details,
                           ),
-                      topBar: _MushafTopBar(
-                        surahName: firstSurah?.nameAr ?? '',
-                        juzNumber: juzNumber,
-                        gold: gold,
-                        bg: bg,
-                        onClose: () {
-                          if (context.canPop()) {
-                            context.pop();
-                          } else {
-                            context.go('/');
-                          }
-                        },
-                      ),
-                      bottomBar: _MushafFooter(
-                        pageNumber: pageNumber,
-                        hizbNumber: MushafHizbHelper.getHizb(pageNumber),
-                        gold: gold,
-                        bg: bg,
-                        showReadConfirmed: _showReadConfirmedFeedback,
-                      ),
+                      topBar: _isFocusMode
+                          ? null
+                          : _MushafTopBar(
+                              surahName: firstSurah?.nameAr ?? '',
+                              juzNumber: juzNumber,
+                              gold: gold,
+                              bg: bg,
+                              onToggleFocus: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _isFocusMode = true);
+                              },
+                              onClose: () {
+                                if (context.canPop()) {
+                                  context.pop();
+                                } else {
+                                  context.go('/');
+                                }
+                              },
+                            ),
+                      bottomBar: _isFocusMode
+                          ? null
+                          : _MushafFooter(
+                              pageNumber: pageNumber,
+                              hizbNumber: MushafHizbHelper.getHizb(pageNumber),
+                              gold: gold,
+                              bg: bg,
+                              showReadConfirmed: _showReadConfirmedFeedback,
+                            ),
                     ),
                   ),
+                  if (_isFocusMode)
+                    PositionedDirectional(
+                      top: 16,
+                      end: 16,
+                      child: GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          setState(() => _isFocusMode = false);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: bg.withValues(alpha: 0.8),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: gold.withValues(alpha: 0.5)),
+                          ),
+                          child: Icon(Icons.fullscreen_exit_rounded, color: gold, size: 22),
+                        ),
+                      ),
+                    ),
                   if (_showLongPressHint)
                     PositionedDirectional(
                       top: 54,
@@ -393,6 +423,7 @@ class _MushafTopBar extends StatelessWidget {
     required this.gold,
     required this.bg,
     required this.onClose,
+    this.onToggleFocus,
   });
 
   final String surahName;
@@ -400,6 +431,7 @@ class _MushafTopBar extends StatelessWidget {
   final Color gold;
   final Color bg;
   final VoidCallback onClose;
+  final VoidCallback? onToggleFocus;
 
   @override
   Widget build(BuildContext context) {
@@ -438,6 +470,20 @@ class _MushafTopBar extends StatelessWidget {
                   height: 1.5,
                 ),
               ),
+              if (onToggleFocus != null) ...[
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: onToggleFocus,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: gold.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(Icons.fullscreen_rounded, color: gold, size: 16),
+                  ),
+                ),
+              ],
               const SizedBox(width: 6),
               GestureDetector(
                 onTap: onClose,

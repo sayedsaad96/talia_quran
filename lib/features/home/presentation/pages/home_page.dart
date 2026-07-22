@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +13,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/constants/xp_constants.dart';

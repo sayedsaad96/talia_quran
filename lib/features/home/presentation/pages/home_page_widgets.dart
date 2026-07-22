@@ -326,13 +326,15 @@ class _DailyWirdCard extends StatelessWidget {
         : AppColors.lightTextPrimary;
 
     return GestureDetector(
-      onTap: () => context.push('/quran/page/$pageNumber'),
+      onTap: () {
+        HapticFeedback.selectionClick();
+        context.push('/quran/page/$pageNumber');
+      },
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : AppColors.lightCard,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+        decoration: AppDecorations.bentoCard(
+          isDark: isDark,
+          accentGlow: AppColors.primary.withValues(alpha: 0.1),
         ),
         child: Row(
           children: [
@@ -1456,8 +1458,6 @@ class _HomeEngagementSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
     final textColor = isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
@@ -1465,10 +1465,11 @@ class _HomeEngagementSection extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: border, width: 0.5),
+      decoration: AppDecorations.bentoCard(
+        isDark: isDark,
+        accentGlow: isDark
+            ? AppColors.gold.withValues(alpha: 0.12)
+            : AppColors.primary.withValues(alpha: 0.06),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

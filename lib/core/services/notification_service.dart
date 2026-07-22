@@ -47,24 +47,51 @@ class TaliaNotificationService {
     'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي.',
   ];
 
-  // ─── Notification Channel ───────────────────────────────────────────────────
-  static const _androidChannel = AndroidNotificationDetails(
+  // ─── Notification Channel & Interactive Actions ──────────────────────────────
+  static final List<AndroidNotificationAction> _interactiveReviewActions = [
+    const AndroidNotificationAction(
+      'action_review',
+      '⚡ ابدأ المراجعة',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+    const AndroidNotificationAction(
+      'action_quran',
+      '📖 الورد اليومي',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
+  static final List<DarwinNotificationCategory> _darwinCategories = [
+    DarwinNotificationCategory(
+      'review_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain('action_review', '⚡ ابدأ المراجعة'),
+        DarwinNotificationAction.plain('action_quran', '📖 الورد اليومي'),
+      ],
+    ),
+  ];
+
+  static final _androidChannel = AndroidNotificationDetails(
     'talia_reminders',
     'تذكيرات تالية',
     channelDescription: 'تذكيرات يومية للمراجعة والحفظ',
     importance: Importance.high,
     priority: Priority.high,
-    color: Color(0xFF2E7D4F),
+    color: const Color(0xFF2E7D4F),
     icon: _notificationIcon,
     playSound: true,
+    actions: _interactiveReviewActions,
   );
 
-  static const _notificationDetails = NotificationDetails(
+  static final _notificationDetails = NotificationDetails(
     android: _androidChannel,
-    iOS: DarwinNotificationDetails(
+    iOS: const DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
+      categoryIdentifier: 'review_category',
     ),
   );
 
@@ -83,14 +110,15 @@ class TaliaNotificationService {
     await configureLocalTimezone();
 
     const androidSettings = AndroidInitializationSettings(_notificationIcon);
-    const iosSettings = DarwinInitializationSettings(
+    final iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
+      notificationCategories: _darwinCategories,
     );
 
     await _plugin.initialize(
-      settings: const InitializationSettings(
+      settings: InitializationSettings(
         android: androidSettings,
         iOS: iosSettings,
       ),
@@ -106,7 +134,18 @@ class TaliaNotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    final payload = response.payload;
+    String? payload;
+    if (response.actionId != null && response.actionId!.isNotEmpty) {
+      payload = switch (response.actionId) {
+        'action_review' => '/memorization',
+        'action_quran' => '/quran',
+        'action_azkar' => '/azkar',
+        _ => response.payload,
+      };
+    } else {
+      payload = response.payload;
+    }
+
     if (payload == null || payload.isEmpty || !payload.startsWith('/')) {
       return;
     }
@@ -408,7 +447,44 @@ class TaliaNotificationService {
     );
   }
 
-  // ─── Cancel All ────────────────────────────────────────────────────────────
+  // ─── Cancel All & Test Notifications ───────────────────────────────────────
+
+  /// Shows an immediate test notification with interactive action buttons.
+  Future<void> showImmediateTestNotification({
+    required String title,
+    required String body,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await requestPermissions();
+
+    final testDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'talia_test_channel',
+        'إشعار تفاعلي تجريبي',
+        channelDescription: 'إشعار تفاعلي تجريبي لتقييم المظهر والتجربة',
+        importance: Importance.max,
+        priority: Priority.high,
+        color: const Color(0xFF2E7D4F),
+        icon: _notificationIcon,
+        playSound: true,
+        actions: _interactiveReviewActions,
+      ),
+      iOS: const DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        categoryIdentifier: 'review_category',
+      ),
+    );
+
+    await _plugin.show(
+      id: 9999,
+      title: title,
+      body: body,
+      notificationDetails: testDetails,
+      payload: '/memorization',
+    );
+  }
 
   /// Cancel all scheduled notifications.
   Future<void> cancelAll() async {

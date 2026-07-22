@@ -94,14 +94,14 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/images/logo_icon_padded.png"
 
 flutter_native_splash:
-  color: "#ffffff"
+  color: "#061811"
   image: "assets/images/logo_new_padded.png"
   fullscreen: true
   ios_content_mode: scaleAspectFit
   android_gravity: center
   android_12:
     image: "assets/images/logo_new_padded.png"
-    icon_background_color: "#ffffff"
+    icon_background_color: "#061811"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
