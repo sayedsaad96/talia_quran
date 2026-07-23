@@ -16,6 +16,8 @@ import '../../../../core/services/audio_cache_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
+import '../../../../core/widgets/social_share/social_share_model.dart';
+import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../data/datasources/bookmark_service.dart';
 import '../../domain/entities/quran_entities.dart';
@@ -762,6 +764,9 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                         entry.ayahNumber,
                       );
                       await bookmarkService.toggle(entry);
+                      if (!wasBookmarked) {
+                        unawaited(HapticFeedback.mediumImpact());
+                      }
                       if (context.mounted) {
                         final messenger = ScaffoldMessenger.of(context);
                         final navigator = Navigator.of(context);
@@ -782,6 +787,21 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                           ),
                         );
                       }
+                    },
+                  ),
+                  _OptionBtn(
+                    icon: Icons.share_rounded,
+                    label: context.l10n.share,
+                    color: AppColors.primary,
+                    onTap: () {
+                      Navigator.pop(context);
+                      final data = SocialShareData(
+                        content: widget.ayah.text.trim(),
+                        title: 'سورة ${widget.surahName}',
+                        subtitle: 'الآية رقم ${widget.ayah.numberInSurah}',
+                        category: SocialShareCategory.quranAyah,
+                      );
+                      SocialShareSheet.show(context, data);
                     },
                   ),
                 ],

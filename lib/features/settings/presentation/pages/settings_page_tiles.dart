@@ -1914,28 +1914,7 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
         ),
         _SettingsDivider(isDark: widget.isDark),
         InkWell(
-          onTap: () async {
-            await getIt<TaliaNotificationService>().showImmediateTestNotification(
-              title: context.isArabic
-                  ? 'تالية ✨ إشعار تفاعلي تجريبي'
-                  : 'Talia ✨ Interactive Test',
-              body: context.isArabic
-                  ? 'أهلاً بك! جرب الأزرار التفاعلية بالأسفل للانتقال المباشر للمراجعة أو الورد ⚡'
-                  : 'Welcome! Try the interactive action buttons below to jump to Review or Wird ⚡',
-            );
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    context.isArabic
-                        ? 'تم إرسال الإشعار التفاعلي التجريبي بنجاح ✨'
-                        : 'Interactive test notification sent successfully ✨',
-                  ),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            }
-          },
+          onTap: () => _showTestNotificationPicker(context),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           child: Padding(
             padding: const EdgeInsets.symmetric(
@@ -1970,8 +1949,8 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
                       const SizedBox(height: 2),
                       Text(
                         context.isArabic
-                            ? 'إرسال إشعار تجريبي فوري لاختبار المظهر والأزرار'
-                            : 'Send immediate test notification to preview actions',
+                            ? 'اختبار إشعارات الأذكار، المراجعة، والسلسلة المخصصة'
+                            : 'Test customized Azkar, Review, and Streak notifications',
                         style: AppTypography.labelSmall.copyWith(
                           color: subtextColor,
                         ),
@@ -1989,6 +1968,202 @@ class _NotificationSettingTileState extends State<_NotificationSettingTile> {
           ),
         ),
       ],
+    );
+  }
+
+  Future<void> _showTestNotificationPicker(BuildContext context) async {
+    final surface = widget.isDark ? AppColors.darkCard : AppColors.lightCard;
+    final textColor =
+        widget.isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final subtextColor = widget.isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.isArabic
+                      ? 'اختر نوع الإشعار التفاعلي للتجربة'
+                      : 'Select notification type to test',
+                  style: AppTypography.titleMedium.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  context.isArabic
+                      ? 'سيصلك إشعار فوري يحتوي على أزرار التفاعل المطابقة لمضمونه'
+                      : 'You will receive an instant notification with actions matching its topic',
+                  style: AppTypography.bodySmall.copyWith(color: subtextColor),
+                ),
+                const SizedBox(height: 16),
+                ListTile(
+                  leading: const Icon(
+                    Icons.wb_sunny_rounded,
+                    color: Color(0xFFF39C12),
+                  ),
+                  title: Text(
+                    context.isArabic ? 'أذكار الصباح ☀️' : 'Morning Azkar ☀️',
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    context.isArabic
+                        ? 'الأزرار: [ ☀️ قراءة أذكار الصباح ] [ 📖 الورد اليومي ]'
+                        : 'Actions: [ ☀️ Read Morning Azkar ] [ 📖 Daily Portion ]',
+                    style: TextStyle(color: subtextColor, fontSize: 12),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await getIt<TaliaNotificationService>()
+                        .showImmediateTestNotification(
+                          title: context.isArabic
+                              ? 'أذكار الصباح ☀️'
+                              : 'Morning Azkar ☀️',
+                          body: context.isArabic
+                              ? 'ابدأ يومك بذكر الله وطمأنينة القلب ✨'
+                              : 'Start your day with remembrance of Allah ✨',
+                          type: 'azkar',
+                        );
+                    _showTestSuccessSnackBar();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.menu_book_rounded,
+                    color: AppColors.primary,
+                  ),
+                  title: Text(
+                    context.isArabic
+                        ? 'المراجعة اليومية 📖'
+                        : 'Daily Review 📖',
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    context.isArabic
+                        ? 'الأزرار: [ ⚡ ابدأ المراجعة ] [ 📖 الورد اليومي ]'
+                        : 'Actions: [ ⚡ Start Review ] [ 📖 Daily Portion ]',
+                    style: TextStyle(color: subtextColor, fontSize: 12),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await getIt<TaliaNotificationService>()
+                        .showImmediateTestNotification(
+                          title: context.isArabic
+                              ? 'وقت المراجعة اليومية 📖'
+                              : 'Daily Review Time 📖',
+                          body: context.isArabic
+                              ? 'لديك 5 آيات مستحقة للمراجعة اليوم ⚡'
+                              : 'You have 5 ayahs due for review today ⚡',
+                          type: 'review',
+                        );
+                    _showTestSuccessSnackBar();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.local_fire_department_rounded,
+                    color: Color(0xFFE67E22),
+                  ),
+                  title: Text(
+                    context.isArabic
+                        ? 'حماية السلسلة 🔥'
+                        : 'Streak Protection 🔥',
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    context.isArabic
+                        ? 'الأزرار: [ 🔥 احمي السلسلة الآن ] [ 📖 قراءة الورد ]'
+                        : 'Actions: [ 🔥 Protect Streak Now ] [ 📖 Read Portion ]',
+                    style: TextStyle(color: subtextColor, fontSize: 12),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await getIt<TaliaNotificationService>()
+                        .showImmediateTestNotification(
+                          title: context.isArabic
+                              ? '⚠️ لا تُضيِّع 7 أيام متتالية!'
+                              : "⚠️ Don't lose 7 days streak!",
+                          body: context.isArabic
+                              ? 'لم تراجع حفظك اليوم بعد — احمي سلسلتك الآن 🔥'
+                              : "You haven't reviewed today — protect your streak now 🔥",
+                          type: 'streak',
+                        );
+                    _showTestSuccessSnackBar();
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.volunteer_activism_rounded,
+                    color: Color(0xFF2980B9),
+                  ),
+                  title: Text(
+                    context.isArabic ? 'دعاء اليوم 🤲' : 'Daily Dua 🤲',
+                    style: TextStyle(
+                      color: textColor,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  subtitle: Text(
+                    context.isArabic
+                        ? 'الأزرار: [ 🤲 قراءة أدعية اليوم ] [ ✨ الأذكار ]'
+                        : "Actions: [ 🤲 Read Today's Duas ] [ ✨ Azkar ]",
+                    style: TextStyle(color: subtextColor, fontSize: 12),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    await getIt<TaliaNotificationService>()
+                        .showImmediateTestNotification(
+                          title: context.isArabic
+                              ? 'دعاء اليوم 🤲'
+                              : 'Daily Dua 🤲',
+                          body:
+                              'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.',
+                          type: 'dua',
+                        );
+                    _showTestSuccessSnackBar();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showTestSuccessSnackBar() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          context.isArabic
+              ? 'تم إرسال الإشعار التفاعلي التجريبي بنجاح ✨'
+              : 'Interactive test notification sent successfully ✨',
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
     );
   }
 }

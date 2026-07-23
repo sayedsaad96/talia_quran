@@ -59,6 +59,10 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     emit(state.copyWith(selectedGoal: goal));
   }
 
+  void selectDailyCommitment(int minutes) {
+    emit(state.copyWith(dailyCommitmentMinutes: minutes));
+  }
+
   Future<void> continueAsGuest() => complete(OnboardingAuthIntent.guest);
 
   Future<void> signInOrCreateAccount() => complete(OnboardingAuthIntent.signIn);

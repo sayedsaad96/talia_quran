@@ -127,78 +127,88 @@ class _AyahListenButtonState extends State<AyahListenButton> {
     final isSmall = widget.size == AyahListenButtonSize.small;
 
     final buttonColor = _error != null
-        ? Colors.red
+        ? AppColors.error
         : _isPlaying
-        ? Colors.blue
+        ? AppColors.gold
         : (isDark ? AppColors.primaryLight : AppColors.primary);
 
     final containerSize = isSmall ? 36.0 : 48.0;
     final iconSize = isSmall ? 18.0 : 24.0;
 
-    return GestureDetector(
-      onTap: _toggle,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: containerSize,
-            height: containerSize,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: _isPlaying
-                  ? Colors.blue
-                  : (isDark ? AppColors.darkCard : AppColors.lightCard),
-              border: Border.all(
-                color: buttonColor.withValues(alpha: _isPlaying ? 1.0 : 0.6),
-                width: 2,
-              ),
-              boxShadow: _isPlaying
-                  ? [
-                      BoxShadow(
-                        color: Colors.blue.withValues(alpha: 0.3),
-                        blurRadius: 10,
-                        spreadRadius: 2,
-                      ),
-                    ]
-                  : null,
-            ),
-            child: _isLoading
-                ? Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: buttonColor,
+    return Semantics(
+      button: true,
+      label: _isPlaying ? 'إيقاف تلاوة الآية' : 'استماع للآية',
+      child: GestureDetector(
+        onTap: _toggle,
+        behavior: HitTestBehavior.opaque,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          child: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: containerSize,
+                  height: containerSize,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: _isPlaying
+                        ? AppColors.gold.withValues(alpha: 0.15)
+                        : (isDark ? AppColors.darkCard : AppColors.lightCard),
+                    border: Border.all(
+                      color: buttonColor.withValues(alpha: _isPlaying ? 1.0 : 0.6),
+                      width: 2,
                     ),
-                  )
-                : Icon(
-                    _error != null
-                        ? Icons.wifi_off_rounded
-                        : _isPlaying
-                        ? Icons.pause_rounded
-                        : Icons.headphones_rounded,
-                    color: _isPlaying ? Colors.white : buttonColor,
-                    size: iconSize,
+                    boxShadow: _isPlaying
+                        ? [
+                            BoxShadow(
+                              color: AppColors.gold.withValues(alpha: 0.3),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            ),
+                          ]
+                        : null,
                   ),
-          ),
-          if (!isSmall) ...[
-            const SizedBox(height: 4),
-            Text(
-              widget.label ??
-                  (_error != null
-                      ? 'خطأ'
-                      : _isPlaying
-                      ? 'إيقاف'
-                      : 'استمع'),
-              style: AppTypography.labelSmall.copyWith(
-                color: _isPlaying
-                    ? Colors.blue
-                    : (isDark ? Colors.white70 : Colors.black87),
-                fontWeight: _isPlaying ? FontWeight.bold : FontWeight.normal,
-              ),
+                  child: _isLoading
+                      ? Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: buttonColor,
+                          ),
+                        )
+                      : Icon(
+                          _error != null
+                              ? Icons.wifi_off_rounded
+                              : _isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.headphones_rounded,
+                          color: _isPlaying ? AppColors.gold : buttonColor,
+                          size: iconSize,
+                        ),
+                ),
+                if (!isSmall) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    widget.label ??
+                        (_error != null
+                            ? 'خطأ'
+                            : _isPlaying
+                            ? 'إيقاف'
+                            : 'استمع'),
+                    style: AppTypography.labelSmall.copyWith(
+                      color: _isPlaying
+                          ? AppColors.gold
+                          : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                      fontWeight: _isPlaying ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ],
             ),
-          ],
-        ],
+          ),
+        ),
       ),
     );
   }

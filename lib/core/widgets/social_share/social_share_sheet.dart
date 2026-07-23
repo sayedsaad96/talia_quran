@@ -1,0 +1,393 @@
+import 'dart:async';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:gal/gal.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:screenshot/screenshot.dart';
+import 'package:share_plus/share_plus.dart';
+
+import '../../constants/app_spacing.dart';
+import '../../theme/app_colors.dart';
+import '../../theme/app_typography.dart';
+import 'social_share_card.dart';
+import 'social_share_model.dart';
+import 'social_share_theme.dart';
+
+class SocialShareSheet extends StatefulWidget {
+  final SocialShareData data;
+
+  const SocialShareSheet({super.key, required this.data});
+
+  static Future<void> show(BuildContext context, SocialShareData data) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => SocialShareSheet(data: data),
+    );
+  }
+
+  @override
+  State<SocialShareSheet> createState() => _SocialShareSheetState();
+}
+
+class _SocialShareSheetState extends State<SocialShareSheet> {
+  final ScreenshotController _screenshotController = ScreenshotController();
+  SocialShareThemeType _selectedThemeType = SocialShareThemeType.emeraldDark;
+  bool _isExporting = false;
+
+  SocialShareTheme get _currentTheme => SocialShareTheme.get(_selectedThemeType);
+
+  Future<Uint8List?> _captureCardImage() async {
+    try {
+      return await _screenshotController.capture(
+        delay: const Duration(milliseconds: 50),
+        pixelRatio: 3.0,
+      );
+    } catch (e) {
+      debugPrint('Error capturing social card image: $e');
+      return null;
+    }
+  }
+
+  Future<void> _shareAsImage() async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+
+    try {
+      final imageBytes = await _captureCardImage();
+      if (imageBytes == null) {
+        if (mounted) {
+          _showSnackBar('تعذر إنشاء صورة البطاقة، يرجى المحاولة مرة أخرى.');
+        }
+        return;
+      }
+
+      final tempDir = await getTemporaryDirectory();
+      final file = File(
+        '${tempDir.path}/talia_share_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+      await file.writeAsBytes(imageBytes);
+
+      await SharePlus.instance.share(
+        ShareParams(
+          files: [XFile(file.path)],
+          text: widget.data.toPlainShareText(),
+        ),
+      );
+    } catch (e) {
+      debugPrint('Error sharing social image: $e');
+      if (mounted) {
+        _showSnackBar('حدث خطأ أثناء مشاركة الصورة');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
+    }
+  }
+
+  Future<void> _saveToGallery() async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+
+    try {
+      final hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        final granted = await Gal.requestAccess();
+        if (!granted) {
+          if (mounted) {
+            _showSnackBar('يلزم الحصول على إذن الوصول لمعرض الصور للحفظ');
+          }
+          return;
+        }
+      }
+
+      final imageBytes = await _captureCardImage();
+      if (imageBytes == null) {
+        if (mounted) {
+          _showSnackBar('تعذر جلب صورة البطاقة للحفظ');
+        }
+        return;
+      }
+
+      await Gal.putImageBytes(
+        imageBytes,
+        name: 'talia_card_${DateTime.now().millisecondsSinceEpoch}.png',
+      );
+
+      if (mounted) {
+        unawaited(HapticFeedback.mediumImpact());
+        _showSnackBar('تم حفظ البطاقة بنجاح في معرض الصور! 📸');
+      }
+    } catch (e) {
+      debugPrint('Error saving social card image: $e');
+      if (mounted) {
+        _showSnackBar('تعذر حفظ الصورة في المعرض');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isExporting = false);
+      }
+    }
+  }
+
+  void _shareAsText() {
+    unawaited(HapticFeedback.lightImpact());
+    unawaited(
+      SharePlus.instance.share(
+        ShareParams(text: widget.data.toPlainShareText()),
+      ),
+    );
+  }
+
+  void _showSnackBar(String text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      padding: EdgeInsets.only(
+        top: AppSpacing.md,
+        bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag Handle
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? AppColors.darkDivider
+                    : AppColors.lightDivider,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+
+          // Header
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.share_outlined,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      'مشاركة بطاقة سوشيال ميديا',
+                      style: AppTypography.titleMedium.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.sm),
+
+          // Card Preview Scroll Area
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Center(
+                child: Screenshot(
+                  controller: _screenshotController,
+                  child: SocialShareCard(
+                    data: widget.data,
+                    theme: _currentTheme,
+                    width: 360,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.md),
+
+          // Theme Selector Label & Chips
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Text(
+                'اختر مظهر البطاقة:',
+                style: AppTypography.labelSmall.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.xs),
+
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              itemCount: SocialShareThemeType.values.length,
+              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.xs),
+              itemBuilder: (context, index) {
+                final themeType = SocialShareThemeType.values[index];
+                final isSelected = themeType == _selectedThemeType;
+                final themeObj = SocialShareTheme.get(themeType);
+
+                return ChoiceChip(
+                  label: Text(themeType.displayName),
+                  selected: isSelected,
+                  onSelected: (selected) {
+                    if (selected) {
+                      unawaited(HapticFeedback.selectionClick());
+                      setState(() => _selectedThemeType = themeType);
+                    }
+                  },
+                  avatar: Container(
+                    width: 16,
+                    height: 16,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: themeObj.accentColor,
+                      border: Border.all(color: Colors.white, width: 1),
+                    ),
+                  ),
+                  selectedColor: AppColors.primary.withValues(alpha: 0.2),
+                  backgroundColor: isDark
+                      ? AppColors.darkSurfaceVariant
+                      : AppColors.lightSurfaceVariant,
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? AppColors.primary
+                        : (isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary),
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                  side: BorderSide(
+                    color: isSelected ? AppColors.primary : Colors.transparent,
+                  ),
+                );
+              },
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // Action Buttons
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Row(
+              children: [
+                // Primary Share Image Button
+                Expanded(
+                  flex: 3,
+                  child: ElevatedButton.icon(
+                    onPressed: _isExporting ? null : _shareAsImage,
+                    icon: _isExporting
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.send_rounded, size: 18),
+                    label: Text(
+                      _isExporting ? 'جاري التجهيز...' : 'مشاركة كصورة 📸',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: AppSpacing.xs),
+
+                // Save to Gallery
+                IconButton.filledTonal(
+                  onPressed: _isExporting ? null : _saveToGallery,
+                  icon: const Icon(Icons.download_rounded, size: 20),
+                  tooltip: 'حفظ المعرض',
+                  style: IconButton.styleFrom(
+                    backgroundColor: isDark
+                        ? AppColors.darkSurfaceVariant
+                        : AppColors.lightSurfaceVariant,
+                    foregroundColor: AppColors.primary,
+                    padding: const EdgeInsets.all(14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(width: AppSpacing.xs),
+
+                // Share as Text
+                IconButton.filledTonal(
+                  onPressed: _isExporting ? null : _shareAsText,
+                  icon: const Icon(Icons.short_text_rounded, size: 20),
+                  tooltip: 'مشاركة كنص',
+                  style: IconButton.styleFrom(
+                    backgroundColor: isDark
+                        ? AppColors.darkSurfaceVariant
+                        : AppColors.lightSurfaceVariant,
+                    foregroundColor: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                    padding: const EdgeInsets.all(14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

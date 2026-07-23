@@ -139,6 +139,8 @@ class RemoteChildProductionSummaryBuilder {
       lapses: row['lapses'] as int? ?? 0,
       reviewState: reviewState,
       createdByMode: createdByMode,
+      difficulty: (row['difficulty'] as num?)?.toDouble() ?? 5.0,
+      stability: (row['stability'] as num?)?.toDouble() ?? 0.0,
     );
   }
 

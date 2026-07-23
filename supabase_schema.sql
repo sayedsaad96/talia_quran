@@ -1093,6 +1093,8 @@ CREATE TABLE IF NOT EXISTS public.ayah_review_records_cloud (
   created_by_mode TEXT NOT NULL
     CHECK (created_by_mode IN ('v2Session', 'kidsMode', 'hifz')),
   sync_version BIGINT NOT NULL DEFAULT 1,
+  difficulty DOUBLE PRECISION NOT NULL DEFAULT 5.0,
+  stability DOUBLE PRECISION NOT NULL DEFAULT 0.0,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT unique_user_ayah_review UNIQUE (user_id, surah_id, ayah_number)
 );
@@ -1223,7 +1225,8 @@ CREATE OR REPLACE FUNCTION public.upsert_ayah_review_records(
   p_data JSONB
   -- Array of { surah_id, ayah_number, strength_level, interval_days,
   --   last_reviewed_at, next_review_date, total_reviews, last_rating,
-  --   ease_factor, lapses, review_state, created_by_mode, sync_version }
+  --   ease_factor, lapses, review_state, created_by_mode, sync_version,
+  --   difficulty, stability }
 )
 RETURNS VOID AS $$
 DECLARE
@@ -1240,7 +1243,8 @@ BEGIN
   INSERT INTO public.ayah_review_records_cloud (
     user_id, surah_id, ayah_number, strength_level, interval_days,
     last_reviewed_at, next_review_date, total_reviews, last_rating,
-    ease_factor, lapses, review_state, created_by_mode, sync_version
+    ease_factor, lapses, review_state, created_by_mode, sync_version,
+    difficulty, stability
   )
   SELECT
     v_uid,
@@ -1259,7 +1263,9 @@ BEGIN
     COALESCE(
       (item->>'sync_version')::BIGINT,
       (EXTRACT(EPOCH FROM (item->>'last_reviewed_at')::TIMESTAMPTZ) * 1000)::BIGINT
-    )
+    ),
+    COALESCE((item->>'difficulty')::DOUBLE PRECISION, 5.0),
+    COALESCE((item->>'stability')::DOUBLE PRECISION, 0.0)
   FROM jsonb_array_elements(p_data) AS item
   ON CONFLICT (user_id, surah_id, ayah_number)
   DO UPDATE SET
@@ -1274,6 +1280,8 @@ BEGIN
     review_state = EXCLUDED.review_state,
     created_by_mode = EXCLUDED.created_by_mode,
     sync_version = EXCLUDED.sync_version,
+    difficulty = EXCLUDED.difficulty,
+    stability = EXCLUDED.stability,
     updated_at = NOW()
   WHERE EXCLUDED.sync_version > ayah_review_records_cloud.sync_version
      OR (

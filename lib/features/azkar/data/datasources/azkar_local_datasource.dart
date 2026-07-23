@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../domain/entities/azkar_entities.dart';
@@ -14,9 +15,13 @@ class AzkarLocalDatasourceImpl implements AzkarLocalDatasource {
   @override
   Future<List<ZikrModel>> getAzkar(AzkarCategory category) async {
     try {
-      _cache ??=
-          jsonDecode(await rootBundle.loadString('assets/data/azkar.json'))
-              as Map<String, dynamic>;
+      if (_cache == null) {
+        final jsonStr = await rootBundle.loadString('assets/data/azkar.json');
+        _cache = await compute(
+          (String str) => jsonDecode(str) as Map<String, dynamic>,
+          jsonStr,
+        );
+      }
 
       final key = switch (category) {
         AzkarCategory.morning => 'morning',

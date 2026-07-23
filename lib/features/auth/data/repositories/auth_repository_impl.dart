@@ -454,14 +454,19 @@ class AuthRepositoryImpl implements AuthRepository {
     await _isar.writeTxn(() async {
       final local = await _isar.streakIsars.get(1) ?? StreakIsar();
 
+      final cloudCurrent = cloud['current_streak'] as int;
+      final cloudLongest = cloud['longest_streak'] as int;
+      final localHigher =
+          local.currentStreak > cloudCurrent || local.longestStreak > cloudLongest;
+
       local.currentStreak =
-          local.currentStreak > (cloud['current_streak'] as int)
-          ? local.currentStreak
-          : cloud['current_streak'] as int;
+          local.currentStreak > cloudCurrent
+              ? local.currentStreak
+              : cloudCurrent;
       local.longestStreak =
-          local.longestStreak > (cloud['longest_streak'] as int)
-          ? local.longestStreak
-          : cloud['longest_streak'] as int;
+          local.longestStreak > cloudLongest
+              ? local.longestStreak
+              : cloudLongest;
       local.freezesAvailable = cloud['freezes_available'] as int;
 
       if (cloud['last_activity_date'] != null) {
@@ -472,7 +477,8 @@ class AuthRepositoryImpl implements AuthRepository {
         }
       }
 
-      local.cloudDirty = false;
+      // Keep cloudDirty = true if local state was higher, so subsequent push syncs it up!
+      local.cloudDirty = localHigher;
       local.lastSyncedAt = DateTime.now().toUtc();
       await _isar.streakIsars.put(local);
     });
@@ -504,10 +510,11 @@ class AuthRepositoryImpl implements AuthRepository {
     await _isar.writeTxn(() async {
       final local = await _isar.xpIsars.get(1) ?? XpIsar();
       final cloudXp = cloud['total_xp'] as int;
+      final localHigher = local.totalXp > cloudXp;
       if (cloudXp > local.totalXp) {
         local.totalXp = cloudXp;
       }
-      local.cloudDirty = false;
+      local.cloudDirty = localHigher;
       local.lastSyncedAt = DateTime.now().toUtc();
       await _isar.xpIsars.put(local);
     });
@@ -586,6 +593,22 @@ class AuthRepositoryImpl implements AuthRepository {
     for (final key in _authScopedPreferenceKeys) {
       await _prefs.remove(key);
     }
+    // Wipe progress-related SharedPreferences keys to isolate user data
+    final keysToWipe = _prefs.getKeys().where(
+          (k) =>
+              k.startsWith('mem_plus_') ||
+              k == 'read_pages' ||
+              k.startsWith('hifz_'),
+        );
+    for (final key in keysToWipe) {
+      await _prefs.remove(key);
+    }
+    // Wipe local Isar tables on logout to prevent cross-account progress leaks
+    await _isar.writeTxn(() async {
+      await _isar.streakIsars.clear();
+      await _isar.xpIsars.clear();
+      await _isar.dailyActivityIsars.clear();
+    });
   }
 
   String? _toDateOnlyString(DateTime? value) =>

@@ -166,10 +166,10 @@ class _SurahBookmarkGroup extends StatelessWidget {
               key: ValueKey(entry.key),
               direction: DismissDirection.endToStart,
               background: Container(
-                alignment: Alignment.centerLeft,
-                padding: const EdgeInsets.only(left: 24),
+                alignment: AlignmentDirectional.centerEnd,
+                padding: const EdgeInsetsDirectional.only(end: 24),
                 decoration: BoxDecoration(
-                  color: Colors.red.shade400,
+                  color: AppColors.error,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
                 child: const Icon(Icons.delete_rounded, color: Colors.white),

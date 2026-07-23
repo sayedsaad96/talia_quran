@@ -8,7 +8,6 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
@@ -169,16 +168,9 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         progress: state.progress,
                         childName: childName,
                         onSettingsTap: onPathSettingsTap,
-                        onAvatarTap: () {
-                          // Allow tapping avatar to do something if needed
-                        },
+                        onAvatarTap: () {},
                       ),
                       const SizedBox(height: AppSpacing.xl),
-                      _KidsStartHerePanel(
-                        hasCurrentStage: state.currentStage != null,
-                        onStartTap: onMissionTap,
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
                       KidsMissionCard(
                         stage: state.currentStage,
                         surahName:
@@ -199,86 +191,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
   }
 }
 
-class _KidsStartHerePanel extends StatelessWidget {
-  const _KidsStartHerePanel({
-    required this.hasCurrentStage,
-    required this.onStartTap,
-  });
 
-  final bool hasCurrentStage;
-  final VoidCallback onStartTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      decoration: BoxDecoration(
-        color: KidsTheme.goldStar.withValues(alpha: 0.18),
-        borderRadius: KidsTheme.cardRadius,
-        border: Border.all(color: KidsTheme.goldStar.withValues(alpha: 0.45)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: const BoxDecoration(
-              color: KidsTheme.goldStar,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.play_arrow_rounded,
-              color: KidsTheme.nightSkyDark,
-              size: 30,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  context.isArabic ? 'ابدأ من هنا' : 'Start here',
-                  style: AppTypography.titleLarge.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  context.isArabic
-                      ? 'افتح مهمة اليوم ثم اجمع النجوم عند إكمال الآيات.'
-                      : 'Open today\'s mission, then collect stars as ayahs are completed.',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: Colors.white.withValues(alpha: 0.82),
-                    height: 1.35,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          FilledButton.icon(
-            onPressed: onStartTap,
-            icon: const Icon(Icons.flag_rounded, size: 18),
-            label: Text(
-              hasCurrentStage
-                  ? (context.isArabic ? 'المهمة' : 'Mission')
-                  : (context.isArabic ? 'الخريطة' : 'Map'),
-            ),
-            style: FilledButton.styleFrom(
-              backgroundColor: KidsTheme.goldStar,
-              foregroundColor: KidsTheme.nightSkyDark,
-              textStyle: AppTypography.labelMedium.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _KidsHomeBottomNav extends StatelessWidget {
   const _KidsHomeBottomNav({

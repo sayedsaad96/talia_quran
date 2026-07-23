@@ -151,7 +151,22 @@ class _TopBar extends StatelessWidget {
                     color: subTextColor,
                   ),
           ),
-          Expanded(child: _StepIndicator(currentStep: currentStep)),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${context.isArabic ? 'الخطوة' : 'Step'} ${currentStep + 1} ${context.isArabic ? 'من' : 'of'} ${OnboardingState.stepCount}',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: subTextColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                _StepIndicator(currentStep: currentStep),
+              ],
+            ),
+          ),
           TextButton(
             onPressed: onSkip,
             child: Text(context.l10n.onboardingSkip),
@@ -547,6 +562,11 @@ class _FinalSetupStep extends StatelessWidget {
           title: context.l10n.onboardingFinalTitle,
           subtitle: context.l10n.onboardingFinalSubtitle,
           children: [
+            _CommitmentSelector(
+              selectedMinutes: state.dailyCommitmentMinutes,
+              onSelect: (mins) => context.read<OnboardingCubit>().selectDailyCommitment(mins),
+            ),
+            const SizedBox(height: AppSpacing.md),
             _SummaryCard(state: state),
             if (state.isChild) ...[
               const SizedBox(height: AppSpacing.md),
@@ -645,6 +665,12 @@ class _SummaryCard extends StatelessWidget {
             icon: Icons.flag_rounded,
             label: context.l10n.onboardingSummaryGoal,
             value: _goalLabel(context, state.selectedGoal, state.isChild),
+          ),
+          const Divider(height: AppSpacing.lg),
+          _SummaryRow(
+            icon: Icons.timer_outlined,
+            label: 'الالتزام اليومي',
+            value: '${state.dailyCommitmentMinutes} دقيقة يومياً',
           ),
         ],
       ),
@@ -924,4 +950,129 @@ class _FeatureHighlight {
   final IconData icon;
   final String title;
   final String description;
+}
+
+class _CommitmentSelector extends StatelessWidget {
+  const _CommitmentSelector({
+    required this.selectedMinutes,
+    required this.onSelect,
+  });
+
+  final int selectedMinutes;
+  final ValueChanged<int> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.isDark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'تحديد الالتزام اليومي',
+          style: AppTypography.titleMedium.copyWith(
+            fontWeight: FontWeight.bold,
+            color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.xs),
+        Text(
+          'اختر الوقت المناسب لك يومياً لضبط خطتك الشخصية والتنبيهات',
+          style: AppTypography.bodySmall.copyWith(
+            color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          children: [
+            _CommitmentOption(
+              minutes: 5,
+              title: '5 دقائق',
+              subtitle: 'ورد ميسر',
+              selected: selectedMinutes == 5,
+              onTap: () => onSelect(5),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            _CommitmentOption(
+              minutes: 15,
+              title: '15 دقيقة',
+              subtitle: 'ورد منتظم',
+              selected: selectedMinutes == 15,
+              onTap: () => onSelect(15),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            _CommitmentOption(
+              minutes: 30,
+              title: '30 دقيقة',
+              subtitle: 'ورد مكثف',
+              selected: selectedMinutes == 30,
+              onTap: () => onSelect(30),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _CommitmentOption extends StatelessWidget {
+  const _CommitmentOption({
+    required this.minutes,
+    required this.title,
+    required this.subtitle,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final int minutes;
+  final String title;
+  final String subtitle;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.isDark;
+    final primary = isDark ? AppColors.goldLight : AppColors.primary;
+    final surface = selected
+        ? (isDark
+            ? AppColors.primary.withValues(alpha: 0.25)
+            : AppColors.primary.withValues(alpha: 0.1))
+        : (isDark ? AppColors.darkCard : AppColors.lightCard);
+    final border = selected ? primary : (isDark ? AppColors.darkDivider : AppColors.lightDivider);
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: 4),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: border, width: selected ? 1.5 : 1.0),
+          ),
+          child: Column(
+            children: [
+              Text(
+                title,
+                style: AppTypography.titleSmall.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: selected ? primary : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: AppTypography.labelSmall.copyWith(
+                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                  fontSize: 10,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

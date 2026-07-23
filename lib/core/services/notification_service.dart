@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -48,7 +49,8 @@ class TaliaNotificationService {
   ];
 
   // ─── Notification Channel & Interactive Actions ──────────────────────────────
-  static final List<AndroidNotificationAction> _interactiveReviewActions = [
+  // 1. Daily Review Actions & Category
+  static final List<AndroidNotificationAction> _reviewActions = [
     const AndroidNotificationAction(
       'action_review',
       '⚡ ابدأ المراجعة',
@@ -63,6 +65,96 @@ class TaliaNotificationService {
     ),
   ];
 
+  // 2. Streak Protection Actions & Category
+  static final List<AndroidNotificationAction> _streakActions = [
+    const AndroidNotificationAction(
+      'action_streak',
+      '🔥 احمي السلسلة الآن',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+    const AndroidNotificationAction(
+      'action_quran',
+      '📖 قراءة الورد',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
+  // 3. Daily Ayah Actions & Category
+  static final List<AndroidNotificationAction> _dailyAyahActions = [
+    const AndroidNotificationAction(
+      'action_daily_ayah',
+      '✨ قراءة آية اليوم',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+    const AndroidNotificationAction(
+      'action_quran',
+      '📖 المصحف الشريف',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
+  // 4. Morning Azkar Actions & Category
+  static final List<AndroidNotificationAction> _morningAzkarActions = [
+    const AndroidNotificationAction(
+      'action_morning_azkar',
+      '☀️ قراءة أذكار الصباح',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+    const AndroidNotificationAction(
+      'action_quran',
+      '📖 الورد اليومي',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
+  // 5. Evening Azkar Actions & Category
+  static final List<AndroidNotificationAction> _eveningAzkarActions = [
+    const AndroidNotificationAction(
+      'action_evening_azkar',
+      '🌙 قراءة أذكار المساء',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+    const AndroidNotificationAction(
+      'action_quran',
+      '📖 الورد اليومي',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
+  // 6. Daily Dua Actions & Category
+  static final List<AndroidNotificationAction> _dailyDuaActions = [
+    const AndroidNotificationAction(
+      'action_daily_dua',
+      '🤲 قراءة أدعية اليوم',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+    const AndroidNotificationAction(
+      'action_azkar',
+      '✨ الأذكار',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
+  // 7. Kids Review Actions & Category
+  static final List<AndroidNotificationAction> _kidsReviewActions = [
+    const AndroidNotificationAction(
+      'action_kids_review',
+      '🌟 ابدأ التسميع يا بطل',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
   static final List<DarwinNotificationCategory> _darwinCategories = [
     DarwinNotificationCategory(
       'review_category',
@@ -71,29 +163,188 @@ class TaliaNotificationService {
         DarwinNotificationAction.plain('action_quran', '📖 الورد اليومي'),
       ],
     ),
+    DarwinNotificationCategory(
+      'streak_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain('action_streak', '🔥 احمي السلسلة الآن'),
+        DarwinNotificationAction.plain('action_quran', '📖 قراءة الورد'),
+      ],
+    ),
+    DarwinNotificationCategory(
+      'daily_ayah_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain('action_daily_ayah', '✨ قراءة آية اليوم'),
+        DarwinNotificationAction.plain('action_quran', '📖 المصحف الشريف'),
+      ],
+    ),
+    DarwinNotificationCategory(
+      'morning_azkar_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain('action_morning_azkar', '☀️ قراءة أذكار الصباح'),
+        DarwinNotificationAction.plain('action_quran', '📖 الورد اليومي'),
+      ],
+    ),
+    DarwinNotificationCategory(
+      'evening_azkar_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain('action_evening_azkar', '🌙 قراءة أذكار المساء'),
+        DarwinNotificationAction.plain('action_quran', '📖 الورد اليومي'),
+      ],
+    ),
+    DarwinNotificationCategory(
+      'daily_dua_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain('action_daily_dua', '🤲 قراءة أدعية اليوم'),
+        DarwinNotificationAction.plain('action_azkar', '✨ الأذكار'),
+      ],
+    ),
+    DarwinNotificationCategory(
+      'kids_review_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain('action_kids_review', '🌟 ابدأ التسميع يا بطل'),
+      ],
+    ),
   ];
 
-  static final _androidChannel = AndroidNotificationDetails(
-    'talia_reminders',
-    'تذكيرات تالية',
-    channelDescription: 'تذكيرات يومية للمراجعة والحفظ',
-    importance: Importance.high,
-    priority: Priority.high,
-    color: const Color(0xFF2E7D4F),
-    icon: _notificationIcon,
-    playSound: true,
-    actions: _interactiveReviewActions,
-  );
+  static NotificationDetails get _dailyReviewNotificationDetails => NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_reminders',
+          'تذكيرات تالية',
+          channelDescription: 'تذكيرات يومية للمراجعة والحفظ',
+          importance: Importance.high,
+          priority: Priority.high,
+          color: const Color(0xFF2E7D4F),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _reviewActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'review_category',
+        ),
+      );
 
-  static final _notificationDetails = NotificationDetails(
-    android: _androidChannel,
-    iOS: const DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-      categoryIdentifier: 'review_category',
-    ),
-  );
+  static NotificationDetails get _streakNotificationDetails => NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_streak',
+          'تنبيهات السلسلة',
+          channelDescription: 'تنبيهات حماية السلسلة اليومية',
+          importance: Importance.max,
+          priority: Priority.high,
+          color: const Color(0xFFE67E22),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _streakActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'streak_category',
+        ),
+      );
+
+  static NotificationDetails get _dailyAyahNotificationDetails => NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_daily_ayah',
+          'آية اليوم',
+          channelDescription: 'تذكيرات قراءة آية اليوم من القرآن الكريم',
+          importance: Importance.high,
+          priority: Priority.high,
+          color: const Color(0xFF148275),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _dailyAyahActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'daily_ayah_category',
+        ),
+      );
+
+  static NotificationDetails get _morningAzkarNotificationDetails => NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_azkar_morning',
+          'أذكار الصباح',
+          channelDescription: 'تذكيرات أذكار الصباح',
+          importance: Importance.high,
+          priority: Priority.high,
+          color: const Color(0xFFF39C12),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _morningAzkarActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'morning_azkar_category',
+        ),
+      );
+
+  static NotificationDetails get _eveningAzkarNotificationDetails => NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_azkar_evening',
+          'أذكار المساء',
+          channelDescription: 'تذكيرات أذكار المساء',
+          importance: Importance.high,
+          priority: Priority.high,
+          color: const Color(0xFF8E44AD),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _eveningAzkarActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'evening_azkar_category',
+        ),
+      );
+
+  static NotificationDetails get _dailyDuaNotificationDetails => NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_daily_dua',
+          'دعاء اليوم',
+          channelDescription: 'تذكيرات دعاء اليوم والابتهالات',
+          importance: Importance.high,
+          priority: Priority.high,
+          color: const Color(0xFF2980B9),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _dailyDuaActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'daily_dua_category',
+        ),
+      );
+
+  static NotificationDetails get _kidsReviewNotificationDetails => NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_kids',
+          'تسميع الأطفال',
+          channelDescription: 'تذكيرات مراجعة وتسميع الأطفال',
+          importance: Importance.high,
+          priority: Priority.high,
+          color: const Color(0xFF27AE60),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _kidsReviewActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'kids_review_category',
+        ),
+      );
 
   /// Initialize the notification system. Must be called on app startup.
   Future<void> initialize() async {
@@ -138,8 +389,14 @@ class TaliaNotificationService {
     if (response.actionId != null && response.actionId!.isNotEmpty) {
       payload = switch (response.actionId) {
         'action_review' => '/memorization',
+        'action_streak' => '/memorization',
         'action_quran' => '/quran',
+        'action_daily_ayah' => '/quran/daily',
+        'action_morning_azkar' => '/azkar/morning',
+        'action_evening_azkar' => '/azkar/evening',
+        'action_daily_dua' => '/azkar/duas',
         'action_azkar' => '/azkar',
+        'action_kids_review' => '/memorization-plus/kids-journey?surahId=1',
         _ => response.payload,
       };
     } else {
@@ -203,7 +460,7 @@ class TaliaNotificationService {
       title: title,
       body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
-      notificationDetails: _notificationDetails,
+      notificationDetails: _dailyReviewNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: '/memorization',
@@ -237,7 +494,7 @@ class TaliaNotificationService {
       title: title,
       body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
-      notificationDetails: _notificationDetails,
+      notificationDetails: _streakNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: '/memorization',
@@ -265,7 +522,7 @@ class TaliaNotificationService {
       title: title,
       body: body,
       scheduledDate: _nextInstanceOfTime(7, 0),
-      notificationDetails: _notificationDetails,
+      notificationDetails: _dailyAyahNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: '/quran/daily',
@@ -295,7 +552,7 @@ class TaliaNotificationService {
       title: title,
       body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
-      notificationDetails: _notificationDetails,
+      notificationDetails: _morningAzkarNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: '/azkar/morning',
@@ -323,7 +580,7 @@ class TaliaNotificationService {
       title: title,
       body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
-      notificationDetails: _notificationDetails,
+      notificationDetails: _eveningAzkarNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: '/azkar/evening',
@@ -360,7 +617,7 @@ class TaliaNotificationService {
         title: title,
         body: body,
         scheduledDate: scheduledDate,
-        notificationDetails: _notificationDetails,
+        notificationDetails: _dailyDuaNotificationDetails,
         androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
         payload: '/azkar/duas',
       );
@@ -388,7 +645,7 @@ class TaliaNotificationService {
       title: title,
       body: body,
       scheduledDate: _nextInstanceOfTime(hour, minute),
-      notificationDetails: _notificationDetails,
+      notificationDetails: _kidsReviewNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       matchDateTimeComponents: DateTimeComponents.time,
       payload: '/memorization-plus/kids-journey?surahId=1',
@@ -431,17 +688,7 @@ class TaliaNotificationService {
       title: title,
       body: body,
       scheduledDate: alertTime,
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'streak_alert',
-          'تنبيه الـ Streak',
-          channelDescription: 'تنبيه عند خطر انقطاع التسلسل اليومي',
-          importance: Importance.max,
-          priority: Priority.high,
-          icon: _notificationIcon,
-        ),
-        iOS: DarwinNotificationDetails(),
-      ),
+      notificationDetails: _streakNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       payload: '/memorization',
     );
@@ -453,36 +700,35 @@ class TaliaNotificationService {
   Future<void> showImmediateTestNotification({
     required String title,
     required String body,
+    String type = 'azkar',
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await requestPermissions();
 
-    final testDetails = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'talia_test_channel',
-        'إشعار تفاعلي تجريبي',
-        channelDescription: 'إشعار تفاعلي تجريبي لتقييم المظهر والتجربة',
-        importance: Importance.max,
-        priority: Priority.high,
-        color: const Color(0xFF2E7D4F),
-        icon: _notificationIcon,
-        playSound: true,
-        actions: _interactiveReviewActions,
-      ),
-      iOS: const DarwinNotificationDetails(
-        presentAlert: true,
-        presentBadge: true,
-        presentSound: true,
-        categoryIdentifier: 'review_category',
-      ),
-    );
+    final testDetails = switch (type) {
+      'azkar' => _morningAzkarNotificationDetails,
+      'evening_azkar' => _eveningAzkarNotificationDetails,
+      'streak' => _streakNotificationDetails,
+      'dua' => _dailyDuaNotificationDetails,
+      'kids' => _kidsReviewNotificationDetails,
+      _ => _dailyReviewNotificationDetails,
+    };
+
+    final payload = switch (type) {
+      'azkar' => '/azkar/morning',
+      'evening_azkar' => '/azkar/evening',
+      'streak' => '/memorization',
+      'dua' => '/azkar/duas',
+      'kids' => '/memorization-plus/kids-journey?surahId=1',
+      _ => '/memorization',
+    };
 
     await _plugin.show(
       id: 9999,
       title: title,
       body: body,
       notificationDetails: testDetails,
-      payload: '/memorization',
+      payload: payload,
     );
   }
 
@@ -510,18 +756,26 @@ class TaliaNotificationService {
     return scheduled;
   }
 
+  List<String>? _cachedDuas;
+
   Future<List<String>> _loadDailyDuas() async {
+    if (_cachedDuas != null && _cachedDuas!.isNotEmpty) return _cachedDuas!;
     try {
-      final data =
-          jsonDecode(await rootBundle.loadString('assets/data/azkar.json'))
-              as Map<String, dynamic>;
+      final jsonStr = await rootBundle.loadString('assets/data/azkar.json');
+      final data = await compute(
+        (String str) => jsonDecode(str) as Map<String, dynamic>,
+        jsonStr,
+      );
       final duas = (data['duas'] as List<dynamic>? ?? const [])
           .map((item) => item as Map<String, dynamic>)
           .map((item) => item['text'] as String? ?? '')
           .where((text) => text.trim().isNotEmpty)
           .map(_compactNotificationText)
           .toList();
-      if (duas.isNotEmpty) return duas;
+      if (duas.isNotEmpty) {
+        _cachedDuas = duas;
+        return duas;
+      }
     } catch (_) {
       // Keep notification scheduling resilient if assets are unavailable.
     }

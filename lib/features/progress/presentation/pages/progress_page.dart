@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:percent_indicator/percent_indicator.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
@@ -11,6 +10,8 @@ import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../../core/widgets/social_share/social_share_model.dart';
+import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
@@ -99,21 +100,19 @@ class _ProgressView extends StatelessWidget {
             tooltip: context.l10n.shareProgress,
             onPressed: () {
               final profileState = context.read<ProfileCubit>().state;
-              final hasName =
-                  profileState is ProfileLoaded && profileState.profile.hasName;
-              final text = hasName
-                  ? context.l10n.shareProgressWithName(
-                      state.progress.memorizedAyahs,
-                      profileState.profile.displayName,
-                      state.progress.readPagesCount,
-                      state.progress.streakDays,
-                    )
-                  : context.l10n.shareProgressText(
-                      state.progress.memorizedAyahs,
-                      state.progress.readPagesCount,
-                      state.progress.streakDays,
-                    );
-              SharePlus.instance.share(ShareParams(text: text));
+              final name = profileState is ProfileLoaded && profileState.profile.hasName
+                  ? profileState.profile.displayName
+                  : null;
+              final data = SocialShareData(
+                content: '📊 ملخص تقدمي في رحلتي مع القرآن الكريم:\n'
+                    '📖 ${state.progress.readPagesCount} صفحة مقروءة\n'
+                    '🧠 ${state.progress.memorizedAyahs} آية محفوظة\n'
+                    '🔥 ${state.progress.streakDays} أيام من الاستمرارية المتواصلة',
+                title: 'حصاد الإنجاز والتقدم',
+                category: SocialShareCategory.progress,
+                userName: name,
+              );
+              SocialShareSheet.show(context, data);
             },
           ),
       ],

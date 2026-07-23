@@ -3,13 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/social_share/social_share_model.dart';
+import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../cubits/azkar_cubit.dart';
@@ -364,9 +365,12 @@ class _ZikrCard extends StatelessWidget {
                       ),
                       onPressed: () {
                         HapticFeedback.lightImpact();
-                        final shareText =
-                            '${zikr.text}\n\n${zikr.reference}\n\n${context.l10n.sharedFromTalia}';
-                        SharePlus.instance.share(ShareParams(text: shareText));
+                        final data = SocialShareData(
+                          content: zikr.text.trim(),
+                          subtitle: zikr.reference.trim(),
+                          category: SocialShareCategory.azkar,
+                        );
+                        SocialShareSheet.show(context, data);
                       },
                     ),
                   ],

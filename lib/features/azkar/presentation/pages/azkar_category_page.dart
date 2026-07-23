@@ -5,12 +5,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/social_share/social_share_model.dart';
+import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../cubits/azkar_cubit.dart';
@@ -142,11 +143,14 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
 
   void _shareZikr(BuildContext context, ZikrSession session) {
     unawaited(HapticFeedback.lightImpact());
-    unawaited(
-      SharePlus.instance.share(
-        ShareParams(text: _shareableText(context, session)),
-      ),
+    final isDua = widget.state.category == AzkarCategory.duas;
+    final data = SocialShareData(
+      content: session.zikr.text.trim(),
+      subtitle: session.zikr.reference.trim(),
+      title: widget.title,
+      category: isDua ? SocialShareCategory.dua : SocialShareCategory.azkar,
     );
+    SocialShareSheet.show(context, data);
   }
 
   void _handleCounterTap(BuildContext context, int index, ZikrSession session) {

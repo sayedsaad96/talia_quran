@@ -91,7 +91,7 @@ class ActivityHeatmap extends StatelessWidget {
               (i) => Container(
                 width: 10,
                 height: 10,
-                margin: const EdgeInsets.only(right: 3),
+                margin: const EdgeInsetsDirectional.only(end: 3),
                 decoration: BoxDecoration(
                   color: _getColor([0, 3, 10, 20, 35][i], cs),
                   borderRadius: BorderRadius.circular(2),

@@ -2252,6 +2252,8 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
               'review_state': r.reviewState.name,
               'created_by_mode': r.createdByMode.name,
               'sync_version': r.lastReviewedAt.toUtc().millisecondsSinceEpoch,
+              'difficulty': r.difficulty,
+              'stability': r.stability,
             },
           )
           .toList();

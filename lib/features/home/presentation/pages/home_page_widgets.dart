@@ -161,8 +161,8 @@ class _HeroIconButton extends StatelessWidget {
             child: InkWell(
               onTap: onTap,
               child: SizedBox(
-                width: 42,
-                height: 42,
+                width: 48,
+                height: 48,
                 child: Icon(
                   icon,
                   color: Colors.white.withValues(alpha: 0.82),
@@ -1577,7 +1577,12 @@ class _HomeEngagementTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 20),
+          if (icon == Icons.local_fire_department_rounded)
+            Icon(icon, color: color, size: 20)
+                .animate(onPlay: (controller) => controller.repeat(reverse: true))
+                .scaleXY(begin: 0.92, end: 1.08, duration: 1600.ms, curve: Curves.easeInOut)
+          else
+            Icon(icon, color: color, size: 20),
           const SizedBox(height: 6),
           Text(
             label,

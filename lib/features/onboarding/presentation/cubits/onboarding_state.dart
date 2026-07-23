@@ -34,6 +34,7 @@ class OnboardingState extends Equatable {
     this.selectedUserType = OnboardingUserType.adult,
     this.selectedGoal = OnboardingGoal.reading,
     this.authIntent = OnboardingAuthIntent.guest,
+    this.dailyCommitmentMinutes = 15,
     this.currentStep = 0,
     this.status = OnboardingStatus.editing,
     this.completedRoute,
@@ -45,6 +46,7 @@ class OnboardingState extends Equatable {
   final OnboardingUserType selectedUserType;
   final OnboardingGoal selectedGoal;
   final OnboardingAuthIntent authIntent;
+  final int dailyCommitmentMinutes;
   final int currentStep;
   final OnboardingStatus status;
   final String? completedRoute;
@@ -57,6 +59,7 @@ class OnboardingState extends Equatable {
     OnboardingUserType? selectedUserType,
     OnboardingGoal? selectedGoal,
     OnboardingAuthIntent? authIntent,
+    int? dailyCommitmentMinutes,
     int? currentStep,
     OnboardingStatus? status,
     String? completedRoute,
@@ -66,6 +69,8 @@ class OnboardingState extends Equatable {
       selectedUserType: selectedUserType ?? this.selectedUserType,
       selectedGoal: selectedGoal ?? this.selectedGoal,
       authIntent: authIntent ?? this.authIntent,
+      dailyCommitmentMinutes:
+          dailyCommitmentMinutes ?? this.dailyCommitmentMinutes,
       currentStep: currentStep ?? this.currentStep,
       status: status ?? this.status,
       completedRoute: completedRoute ?? this.completedRoute,
@@ -78,6 +83,7 @@ class OnboardingState extends Equatable {
     selectedUserType,
     selectedGoal,
     authIntent,
+    dailyCommitmentMinutes,
     currentStep,
     status,
     completedRoute,

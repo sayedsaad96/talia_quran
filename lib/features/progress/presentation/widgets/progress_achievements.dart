@@ -318,35 +318,16 @@ class _AchievementTile extends StatelessWidget {
                   child: FilledButton.icon(
                     onPressed: () {
                       final profileState = context.read<ProfileCubit>().state;
-                      final hasName =
-                          profileState is ProfileLoaded &&
-                          profileState.profile.hasName;
-                      final isMemorizationAchievement =
-                          achievement.category ==
-                          AchievementCategory.memorization;
-                      final text = hasName
-                          ? (isMemorizationAchievement
-                                ? context.l10n
-                                      .shareMemorizationAchievementWithName(
-                                        description,
-                                        profileState.profile.displayName,
-                                        title,
-                                      )
-                                : context.l10n.shareAchievementWithName(
-                                    description,
-                                    profileState.profile.displayName,
-                                    title,
-                                  ))
-                          : (isMemorizationAchievement
-                                ? context.l10n.shareMemorizationAchievementText(
-                                    description,
-                                    title,
-                                  )
-                                : context.l10n.shareAchievementText(
-                                    description,
-                                    title,
-                                  ));
-                      SharePlus.instance.share(ShareParams(text: text));
+                      final name = profileState is ProfileLoaded && profileState.profile.hasName
+                          ? profileState.profile.displayName
+                          : null;
+                      final data = SocialShareData(
+                        content: description,
+                        title: title,
+                        category: SocialShareCategory.achievement,
+                        userName: name,
+                      );
+                      SocialShareSheet.show(context, data);
                     },
                     icon: const Icon(Icons.share_rounded, size: 20),
                     label: Text(context.l10n.shareAchievement),

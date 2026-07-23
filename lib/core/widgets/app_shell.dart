@@ -42,6 +42,28 @@ class AppShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
+    final isWide = context.screenWidth >= 600;
+
+    if (isWide) {
+      return Scaffold(
+        body: Row(
+          children: [
+            _TaliaNavRail(
+              currentIndex: navigationShell.currentIndex,
+              isDark: isDark,
+              tabs: _tabs,
+              onTap: _onTap,
+            ),
+            VerticalDivider(
+              width: 1,
+              thickness: 1,
+              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+            ),
+            Expanded(child: navigationShell),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
       body: navigationShell,
@@ -51,6 +73,62 @@ class AppShell extends StatelessWidget {
         isDark: isDark,
         tabs: _tabs,
         onTap: _onTap,
+      ),
+    );
+  }
+}
+
+class _TaliaNavRail extends StatelessWidget {
+  const _TaliaNavRail({
+    required this.currentIndex,
+    required this.isDark,
+    required this.tabs,
+    required this.onTap,
+  });
+
+  final int currentIndex;
+  final bool isDark;
+  final List<_TabItem> tabs;
+  final ValueChanged<int> onTap;
+
+  List<String> _labels(BuildContext ctx) => [
+    ctx.l10n.home,
+    ctx.l10n.quran,
+    ctx.l10n.memorization,
+    ctx.l10n.azkar,
+    ctx.l10n.progress,
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final labels = _labels(context);
+    final selectedColor = isDark ? AppColors.goldLight : AppColors.primary;
+    final unselectedColor = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
+
+    return NavigationRail(
+      selectedIndex: currentIndex,
+      onDestinationSelected: onTap,
+      labelType: NavigationRailLabelType.all,
+      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      selectedIconTheme: IconThemeData(color: selectedColor, size: 24),
+      unselectedIconTheme: IconThemeData(color: unselectedColor, size: 24),
+      selectedLabelTextStyle: AppTypography.labelMedium.copyWith(
+        color: selectedColor,
+        fontWeight: FontWeight.bold,
+      ),
+      unselectedLabelTextStyle: AppTypography.labelMedium.copyWith(
+        color: unselectedColor,
+      ),
+      indicatorColor: isDark
+          ? AppColors.gold.withValues(alpha: 0.18)
+          : AppColors.primary.withValues(alpha: 0.12),
+      destinations: List.generate(
+        tabs.length,
+        (i) => NavigationRailDestination(
+          icon: Icon(tabs[i].icon),
+          selectedIcon: Icon(tabs[i].icon),
+          label: Text(labels[i]),
+        ),
       ),
     );
   }
@@ -94,7 +172,7 @@ class _TaliaBottomNav extends StatelessWidget {
                 isDark: isDark,
                 radius: AppSpacing.radiusFull,
               ),
-              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
               child: Row(
                 children: [
                   ...List.generate(tabs.length, (i) {
@@ -140,46 +218,54 @@ class _NavItem extends StatelessWidget {
     final inactive = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
     final color = isSelected ? primary : inactive;
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
-            curve: Curves.easeOutCubic,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 14,
-              vertical: 6,
-            ),
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? (isDark
-                      ? AppColors.gold.withValues(alpha: 0.18)
-                      : AppColors.primary.withValues(alpha: 0.12))
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(
-                AppSpacing.radiusFull,
+    return Semantics(
+      label: label,
+      selected: isSelected,
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? (isDark
+                          ? AppColors.gold.withValues(alpha: 0.18)
+                          : AppColors.primary.withValues(alpha: 0.12))
+                      : Colors.transparent,
+                  borderRadius: BorderRadius.circular(
+                    AppSpacing.radiusFull,
+                  ),
+                ),
+                child: Icon(icon, color: color, size: 22),
               ),
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(height: 2),
-          AnimatedDefaultTextStyle(
-            duration: const Duration(milliseconds: 200),
-            style: AppTypography.labelSmall.copyWith(
-              color: color,
-              fontWeight: isSelected
-                  ? FontWeight.w700
-                  : FontWeight.w400,
-              fontSize: 10.5,
-            ),
-            child: Text(label),
-          ),
-        ],
-      ).animate(target: isSelected ? 1 : 0).scaleXY(begin: 1, end: 1.05, duration: 150.ms),
+              const SizedBox(height: 2),
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: AppTypography.labelSmall.copyWith(
+                  color: color,
+                  fontWeight: isSelected
+                      ? FontWeight.w700
+                      : FontWeight.w400,
+                  fontSize: 10.5,
+                ),
+                child: Text(label),
+              ),
+            ],
+          ).animate(target: isSelected ? 1 : 0).scaleXY(begin: 1, end: 1.05, duration: 150.ms),
+        ),
+      ),
     );
   }
 }
