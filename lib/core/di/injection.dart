@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:isar/isar.dart';
@@ -152,6 +154,7 @@ Future<void> configureDependencies() async {
     () => NotificationScheduler(getIt<TaliaNotificationService>()),
   );
   getIt.registerSingleton<ProgressEventsBus>(ProgressEventsBus());
+
 
   // ─── New Core Services ──────────────────────────────────────────────────────
   // ─── Datasources ────────────────────────────────────────────────────────────

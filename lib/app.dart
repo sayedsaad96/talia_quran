@@ -12,10 +12,16 @@ import 'core/router/app_router.dart';
 import 'core/services/app_session_service.dart';
 import 'core/services/notification_service.dart';
 import 'core/services/notification_scheduler.dart';
+import 'core/services/app_initializer.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/cubits/auth_cubit.dart';
 import 'features/settings/presentation/cubits/profile_cubit.dart';
+
+/// Notifier that signals when [AppInitializer] has finished.
+/// Listened to by [TaliaApp] to rebuild from the splash-only shell
+/// into the full BlocProvider tree + GoRouter.
+final ValueNotifier<bool> appInitializedNotifier = ValueNotifier<bool>(false);
 
 class TaliaApp extends StatefulWidget {
   const TaliaApp({super.key});
@@ -25,40 +31,35 @@ class TaliaApp extends StatefulWidget {
 }
 
 class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
-  late final TaliaNotificationService _notificationService =
-      getIt<TaliaNotificationService>();
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _notificationService.onPayloadReceived = _openNotification;
-    AppRouter.router.routerDelegate.addListener(_saveCurrentLocation);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final payload = _notificationService.takePendingLaunchPayload();
-      if (payload != null) {
-        _openNotification(payload);
-      }
-    });
+    appInitializedNotifier.addListener(_onInitialized);
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _notificationService.onPayloadReceived = null;
-    AppRouter.router.routerDelegate.removeListener(_saveCurrentLocation);
+    appInitializedNotifier.removeListener(_onInitialized);
     super.dispose();
+  }
+
+  void _onInitialized() {
+    if (appInitializedNotifier.value && mounted) {
+      setState(() {});
+    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Only process lifecycle events after initialization.
+    if (!AppInitializer.isInitialized) return;
+
     if (state == AppLifecycleState.resumed) {
-      // Refresh notifications on resume to sync timezone/time
       final currentLocale = getIt<LocaleCubit>().state;
       final l10n = lookupAppLocalizations(currentLocale);
       getIt<NotificationScheduler>().refreshNotifications(l10n);
-      // Outbox-driven cloud sync: runs only when pending work exists or
-      // pull cursor is stale (debounced inside AuthCubit).
       getIt<AuthCubit>().resyncOnResume();
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden ||
@@ -68,12 +69,8 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     }
   }
 
-  void _openNotification(String payload) {
-    if (!mounted || payload.isEmpty || !payload.startsWith('/')) return;
-    AppRouter.router.go(payload);
-  }
-
   void _saveCurrentLocation() {
+    if (!AppInitializer.isInitialized) return;
     final location = AppRouter.router.routerDelegate.currentConfiguration.uri
         .toString();
     unawaited(getIt<AppSessionService>().saveLocation(location));
@@ -81,13 +78,44 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    // Before initialization, show a minimal app with only the splash route.
+    if (!AppInitializer.isInitialized) {
+      return MaterialApp.router(
+        title: 'تالية',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        routerConfig: AppRouter.splashOnlyRouter,
+      );
+    }
+
+    // After initialization, show the full app with all providers.
+    return _buildFullApp();
+  }
+
+  bool _fullAppWired = false;
+
+  Widget _buildFullApp() {
+    // Wire up notification handler only once.
+    if (!_fullAppWired) {
+      _fullAppWired = true;
+      final notificationService = getIt<TaliaNotificationService>();
+      notificationService.onPayloadReceived = _openNotification;
+
+      // Check for pending launch payload.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final payload = notificationService.takePendingLaunchPayload();
+        if (payload != null) {
+          _openNotification(payload);
+        }
+      });
+    }
+
     return MultiBlocProvider(
       providers: [
         BlocProvider(create: (_) => getIt<ThemeCubit>()..loadTheme()),
         BlocProvider(create: (_) => getIt<LocaleCubit>()..loadLocale()),
         BlocProvider(create: (_) => getIt<ProfileCubit>()..loadProfile()),
-        // AuthCubit is a GetIt singleton — use value: so the framework does
-        // not dispose it when this widget is torn down.
         BlocProvider.value(value: getIt<AuthCubit>()),
       ],
       child: BlocListener<AuthCubit, AuthState>(
@@ -122,5 +150,10 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  void _openNotification(String payload) {
+    if (!mounted || payload.isEmpty || !payload.startsWith('/')) return;
+    AppRouter.router.go(payload);
   }
 }

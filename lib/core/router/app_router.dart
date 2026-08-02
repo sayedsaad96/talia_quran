@@ -258,9 +258,22 @@ abstract class AppRouter {
   // UX-4 FIX: Removed _shellNavigatorKey — no longer needed with StatefulShellRoute.
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+  /// Minimal router used before DI is initialized.
+  /// Only contains the splash route — no auth guards or DI dependencies.
+  static final GoRouter splashOnlyRouter = GoRouter(
+    initialLocation: AppRoutes.splash,
+    debugLogDiagnostics: kDebugMode,
+    routes: [
+      GoRoute(
+        path: AppRoutes.splash,
+        builder: (context, state) => const SplashPage(),
+      ),
+    ],
+  );
+
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: AppRoutes.splash,
+    initialLocation: AppRoutes.home,
     debugLogDiagnostics: kDebugMode,
     // AUTH GATE: redirect unauthenticated users to /login for all protected routes.
     refreshListenable: _AuthNotifier(getIt<AuthCubit>()),

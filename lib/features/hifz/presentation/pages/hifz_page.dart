@@ -161,23 +161,25 @@ class _HifzView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text(
-                            ctx.l10n.memorization,
-                            style: AppTypography.headlineLarge.copyWith(
-                              color: Colors.white,
-                              fontFamily: 'Amiri',
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Text(
+                              ctx.l10n.memorization,
+                              style: AppTypography.headlineLarge.copyWith(
+                                color: Colors.white,
+                                fontFamily: 'Amiri',
+                              ),
                             ),
-                          ),
-                          Text(
-                            ctx.l10n.selectSurah,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: Colors.white70,
+                            Text(
+                              ctx.l10n.selectSurah,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: Colors.white70,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                       if (state is HifzLoaded && state.selectedPath != null)
                         IconButton(

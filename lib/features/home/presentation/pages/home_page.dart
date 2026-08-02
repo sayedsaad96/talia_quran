@@ -45,8 +45,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage>
-    with WidgetsBindingObserver {
+class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   // Track whether the app was backgrounded so we only trigger a reload on a
   // real resume (background → foreground), not on every lifecycle tick.
   bool _wasInBackground = false;
@@ -168,7 +167,7 @@ class _HomeContent extends StatelessWidget {
     final isKids = state.isKids;
     return CustomScrollView(
       slivers: [
-        // ─── Hero Header ─────────────────────────────────────────────────────
+        // ─── Hero Header ───────────────────────────────────────────────────
         SliverToBoxAdapter(
           child: _HeroHeader(state: state, isDark: isDark),
         ),
@@ -176,11 +175,15 @@ class _HomeContent extends StatelessWidget {
         // ─── Sign-In Nudge Banner ───────────────────────────────────────────
         SliverToBoxAdapter(child: _SignInNudgeBanner(isDark: isDark)),
 
-        if (JourneyFeatureFlags.unifiedJourneyEnabled && state.heroAction != null)
+        if (JourneyFeatureFlags.unifiedJourneyEnabled &&
+            state.heroAction != null)
           Builder(
             builder: (context) {
               final action = state.heroAction!;
-              final presentationData = const UnifiedJourneyActionMapper().map(context, action);
+              final presentationData = const UnifiedJourneyActionMapper().map(
+                context,
+                action,
+              );
 
               return SliverToBoxAdapter(
                 child: Padding(
