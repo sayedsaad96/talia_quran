@@ -88,26 +88,36 @@ class ThemeOption extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Container(
-              width: 36,
-              height: 36,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                color: isSelected
+                    ? color.withValues(alpha: 0.18)
+                    : color.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? color : color.withValues(alpha: 0.2),
+                  width: isSelected ? 1.5 : 1.0,
+                ),
               ),
-              child: Icon(icon, color: color, size: 18),
+              child: Icon(icon, color: color, size: 20),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Text(
                 label,
-                style: AppTypography.bodyMedium.copyWith(color: textColor),
+                style: AppTypography.bodyMedium.copyWith(
+                  color: textColor,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                ),
               ),
             ),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 20,
-              height: 20,
+              width: 22,
+              height: 22,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isSelected ? color : Colors.transparent,
@@ -124,7 +134,7 @@ class ThemeOption extends StatelessWidget {
                   ? const Icon(
                       Icons.check_rounded,
                       color: Colors.white,
-                      size: 12,
+                      size: 13,
                     )
                   : null,
             ),
@@ -150,7 +160,7 @@ class LocaleSettingTile extends StatelessWidget {
           children: [
             LocaleOption(
               label: context.l10n.arabic,
-              sublabel: 'Arabic',
+              sublabel: 'العربية',
               flag: '🇸🇦',
               isSelected: isAr,
               color: primary,
@@ -215,7 +225,22 @@ class LocaleOption extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Text(flag, style: const TextStyle(fontSize: 24)),
+            Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected
+                      ? color
+                      : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
+                  width: isSelected ? 1.5 : 1.0,
+                ),
+              ),
+              child: Text(flag, style: const TextStyle(fontSize: 20)),
+            ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
@@ -223,12 +248,16 @@ class LocaleOption extends StatelessWidget {
                 children: [
                   Text(
                     label,
-                    style: AppTypography.bodyMedium.copyWith(color: textColor),
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: textColor,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                    ),
                   ),
                   Text(
                     sublabel,
                     style: AppTypography.labelSmall.copyWith(
                       color: subtextColor,
+                      fontSize: 11,
                     ),
                   ),
                 ],
@@ -236,8 +265,8 @@ class LocaleOption extends StatelessWidget {
             ),
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 20,
-              height: 20,
+              width: 22,
+              height: 22,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isSelected ? color : Colors.transparent,
@@ -254,7 +283,7 @@ class LocaleOption extends StatelessWidget {
                   ? const Icon(
                       Icons.check_rounded,
                       color: Colors.white,
-                      size: 12,
+                      size: 13,
                     )
                   : null,
             ),

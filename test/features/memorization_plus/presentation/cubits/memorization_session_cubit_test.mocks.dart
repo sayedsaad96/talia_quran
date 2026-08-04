@@ -2555,8 +2555,9 @@ class MockAudioCacheService extends _i1.Mock implements _i26.AudioCacheService {
   @override
   _i10.Future<String> getAudioPath(
     int? surahId,
-    int? ayahNumber,
-  ) =>
+    int? ayahNumber, {
+    dynamic reciter,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #getAudioPath,
@@ -2564,6 +2565,7 @@ class MockAudioCacheService extends _i1.Mock implements _i26.AudioCacheService {
             surahId,
             ayahNumber,
           ],
+          {#reciter: reciter},
         ),
         returnValue: _i10.Future<String>.value(_i22.dummyValue<String>(
           this,
@@ -2573,6 +2575,7 @@ class MockAudioCacheService extends _i1.Mock implements _i26.AudioCacheService {
               surahId,
               ayahNumber,
             ],
+            {#reciter: reciter},
           ),
         )),
       ) as _i10.Future<String>);
@@ -2580,8 +2583,9 @@ class MockAudioCacheService extends _i1.Mock implements _i26.AudioCacheService {
   @override
   _i10.Future<String> getAudioSource(
     int? surahId,
-    int? ayahNumber,
-  ) =>
+    int? ayahNumber, {
+    dynamic reciter,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #getAudioSource,
@@ -2589,6 +2593,7 @@ class MockAudioCacheService extends _i1.Mock implements _i26.AudioCacheService {
             surahId,
             ayahNumber,
           ],
+          {#reciter: reciter},
         ),
         returnValue: _i10.Future<String>.value(_i22.dummyValue<String>(
           this,
@@ -2598,6 +2603,7 @@ class MockAudioCacheService extends _i1.Mock implements _i26.AudioCacheService {
               surahId,
               ayahNumber,
             ],
+            {#reciter: reciter},
           ),
         )),
       ) as _i10.Future<String>);
@@ -2606,6 +2612,7 @@ class MockAudioCacheService extends _i1.Mock implements _i26.AudioCacheService {
   _i10.Future<void> prefetchSession({
     required int? surahId,
     required List<int>? ayahNumbers,
+    dynamic reciter,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -2614,6 +2621,7 @@ class MockAudioCacheService extends _i1.Mock implements _i26.AudioCacheService {
           {
             #surahId: surahId,
             #ayahNumbers: ayahNumbers,
+            #reciter: reciter,
           },
         ),
         returnValue: _i10.Future<void>.value(),

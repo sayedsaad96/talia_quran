@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -60,7 +61,6 @@ class _ChildOnboardingPageState extends State<ChildOnboardingPage> {
     }
 
     final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final textColor = isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
@@ -77,6 +77,7 @@ class _ChildOnboardingPageState extends State<ChildOnboardingPage> {
         description: isArabic
             ? 'مسار أبسط وممتع يناسب الطفل داخل منطقة الحفظ.'
             : 'A simpler, playful path inside the memorization area.',
+        color: AppColors.gold,
       ),
       _ChildOnboardingStep(
         icon: Icons.flag_rounded,
@@ -84,6 +85,7 @@ class _ChildOnboardingPageState extends State<ChildOnboardingPage> {
         description: isArabic
             ? 'كل مهمة تقود الطفل إلى آيات قليلة وواضحة.'
             : 'Each mission focuses the child on a small set of ayahs.',
+        color: AppColors.kidsGreen,
       ),
       _ChildOnboardingStep(
         icon: Icons.stars_rounded,
@@ -91,6 +93,7 @@ class _ChildOnboardingPageState extends State<ChildOnboardingPage> {
         description: isArabic
             ? 'النجوم والنقاط تشجع الاستمرار بدون ضغط.'
             : 'Stars and points encourage steady progress without pressure.',
+        color: AppColors.amber,
       ),
       _ChildOnboardingStep(
         icon: Icons.family_restroom_rounded,
@@ -98,6 +101,7 @@ class _ChildOnboardingPageState extends State<ChildOnboardingPage> {
         description: isArabic
             ? 'يمكن لولي الأمر متابعة التقدم وربط الحساب لاحقاً.'
             : 'A parent can follow progress and link accounts later.',
+        color: AppColors.info,
       ),
     ];
 
@@ -109,43 +113,84 @@ class _ChildOnboardingPageState extends State<ChildOnboardingPage> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(
             AppSpacing.pagePadding,
-            AppSpacing.lg,
+            AppSpacing.md,
             AppSpacing.pagePadding,
-            AppSpacing.lg,
+            AppSpacing.md,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              IconButton(
-                onPressed: () => context.go(AppRoutes.onboarding),
-                icon: Icon(
-                  Directionality.of(context) == TextDirection.rtl
-                      ? Icons.arrow_forward_rounded
-                      : Icons.arrow_back_rounded,
-                ),
-                color: subTextColor,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  IconButton(
+                    onPressed: () => context.go(AppRoutes.onboarding),
+                    icon: Icon(
+                      Directionality.of(context) == TextDirection.rtl
+                          ? Icons.arrow_forward_rounded
+                          : Icons.arrow_back_rounded,
+                    ),
+                    color: subTextColor,
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.gold.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.stars_rounded, color: AppColors.gold, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          isArabic ? 'رحلة البراعم' : 'Kids Journey',
+                          style: AppTypography.labelSmall.copyWith(
+                            color: AppColors.gold,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              Center(
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.gold.withValues(alpha: 0.12),
+                    border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                  ),
+                  child: const Icon(Icons.auto_awesome_rounded, color: AppColors.gold, size: 36),
+                ).animate().fadeIn(duration: 300.ms).scale(begin: const Offset(0.85, 0.85)),
               ),
               const SizedBox(height: AppSpacing.sm),
-              Icon(Icons.auto_awesome_rounded, color: primary, size: 44),
-              const SizedBox(height: AppSpacing.md),
               Text(
                 isArabic ? 'قبل أن يبدأ الطفل' : 'Before Your Child Starts',
+                textAlign: TextAlign.center,
                 style: AppTypography.headlineMedium.copyWith(
                   color: textColor,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.sm),
+              ).animate().fadeIn(duration: 320.ms).slideY(begin: 0.05),
+              const SizedBox(height: 4),
               Text(
                 isArabic
                     ? 'هذه لمحة سريعة عن تجربة الأطفال حتى يعرف الطفل أين يبدأ، ويعرف ولي الأمر كيف يتابع.'
                     : 'A quick orientation so the child knows where to begin, and the parent knows what to expect.',
+                textAlign: TextAlign.center,
                 style: AppTypography.bodyMedium.copyWith(
                   color: subTextColor,
-                  height: 1.5,
+                  height: 1.45,
+                  fontSize: 13,
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+              ).animate().fadeIn(duration: 350.ms),
+              const SizedBox(height: AppSpacing.md),
               Expanded(
                 child: ListView.separated(
                   itemCount: steps.length,
@@ -155,27 +200,63 @@ class _ChildOnboardingPageState extends State<ChildOnboardingPage> {
                     step: steps[index],
                     isDark: isDark,
                     surface: surface,
-                    primary: primary,
+                    index: index,
                   ),
                 ),
               ),
-              const SizedBox(height: AppSpacing.md),
-              FilledButton.icon(
-                onPressed: () => _startKidsPath(context),
-                icon: const Icon(Icons.play_arrow_rounded),
-                label: Text(isArabic ? 'ابدأ وضع الأطفال' : 'Start Kids Mode'),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 54),
-                  backgroundColor: primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
+              const SizedBox(height: AppSpacing.sm),
+              // Gold CTA
+              Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  gradient: const LinearGradient(
+                    colors: [AppColors.goldLight, AppColors.goldDark],
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.gold.withValues(alpha: 0.35),
+                      blurRadius: 14,
+                      offset: const Offset(0, 5),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _startKidsPath(context),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    child: Container(
+                      height: 52,
+                      alignment: Alignment.center,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.play_arrow_rounded, color: Colors.white, size: 24),
+                          const SizedBox(width: AppSpacing.xs),
+                          Text(
+                            isArabic ? 'ابدأ وضع الأطفال' : 'Start Kids Mode',
+                            style: AppTypography.titleMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
-              TextButton(
-                onPressed: () => context.push(AppRoutes.tutorialGuide),
-                child: Text(isArabic ? 'عرض الدليل أولاً' : 'View guide first'),
+              const SizedBox(height: 4),
+              Center(
+                child: TextButton(
+                  onPressed: () => context.push(AppRoutes.tutorialGuide),
+                  child: Text(
+                    isArabic ? 'عرض الدليل أولاً' : 'View guide first',
+                    style: AppTypography.labelMedium.copyWith(
+                      color: subTextColor,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -190,13 +271,13 @@ class _ChildOnboardingTile extends StatelessWidget {
     required this.step,
     required this.isDark,
     required this.surface,
-    required this.primary,
+    required this.index,
   });
 
   final _ChildOnboardingStep step;
   final bool isDark;
   final Color surface;
-  final Color primary;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
@@ -212,18 +293,25 @@ class _ChildOnboardingTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: primary.withValues(alpha: 0.16)),
+        border: Border.all(color: step.color.withValues(alpha: 0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: step.color.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            width: 42,
-            height: 42,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.12),
+              color: step.color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
-            child: Icon(step.icon, color: primary, size: 22),
+            child: Icon(step.icon, color: step.color, size: 24),
           ),
           const SizedBox(width: AppSpacing.md),
           Expanded(
@@ -234,7 +322,8 @@ class _ChildOnboardingTile extends StatelessWidget {
                   step.title,
                   style: AppTypography.titleMedium.copyWith(
                     color: textColor,
-                    fontWeight: FontWeight.w800,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -243,6 +332,7 @@ class _ChildOnboardingTile extends StatelessWidget {
                   style: AppTypography.bodySmall.copyWith(
                     color: subTextColor,
                     height: 1.35,
+                    fontSize: 12,
                   ),
                 ),
               ],
@@ -250,7 +340,7 @@ class _ChildOnboardingTile extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).animate().fadeIn(duration: 280.ms, delay: (100 + index * 50).ms).slideY(begin: 0.05);
   }
 }
 
@@ -259,9 +349,11 @@ class _ChildOnboardingStep {
     required this.icon,
     required this.title,
     required this.description,
+    required this.color,
   });
 
   final IconData icon;
   final String title;
   final String description;
+  final Color color;
 }

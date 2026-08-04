@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:just_audio/just_audio.dart';
 import 'quran_audio_service.dart';
+import 'quran_reciter.dart';
 
 /// Intelligent audio caching service for Quran audio files.
 ///
@@ -20,11 +21,8 @@ class AudioCacheService {
   );
 
   /// Returns a local file path for the given ayah audio.
-  ///
-  /// If the audio is already cached, returns the cached path immediately.
-  /// Otherwise, downloads and caches the file first.
-  Future<String> getAudioPath(int surahId, int ayahNumber) async {
-    final url = QuranAudioService.buildUrl(surahId, ayahNumber);
+  Future<String> getAudioPath(int surahId, int ayahNumber, {QuranReciter? reciter}) async {
+    final url = QuranAudioService.buildUrl(surahId, ayahNumber, reciter: reciter);
     final fileInfo = await _cacheManager.getFileFromCache(url);
     if (fileInfo != null) {
       return fileInfo.file.path;
@@ -34,10 +32,8 @@ class AudioCacheService {
   }
 
   /// Returns a URL or cached file path suitable for audio player.
-  ///
-  /// Tries cache first for instant playback, falls back to network URL.
-  Future<String> getAudioSource(int surahId, int ayahNumber) async {
-    final url = QuranAudioService.buildUrl(surahId, ayahNumber);
+  Future<String> getAudioSource(int surahId, int ayahNumber, {QuranReciter? reciter}) async {
+    final url = QuranAudioService.buildUrl(surahId, ayahNumber, reciter: reciter);
     final fileInfo = await _cacheManager.getFileFromCache(url);
     if (fileInfo != null) {
       return fileInfo.file.path;
@@ -48,11 +44,10 @@ class AudioCacheService {
   }
 
   /// Pre-downloads audio files for an upcoming session.
-  ///
-  /// Limits concurrency to avoid network saturation.
   Future<void> prefetchSession({
     required int surahId,
     required List<int> ayahNumbers,
+    QuranReciter? reciter,
   }) async {
     const int batchSize = 5;
     for (int i = 0; i < ayahNumbers.length; i += batchSize) {
@@ -64,7 +59,7 @@ class AudioCacheService {
       // Process batch concurrently
       await Future.wait(
         batch.map((ayahNumber) async {
-          final url = QuranAudioService.buildUrl(surahId, ayahNumber);
+          final url = QuranAudioService.buildUrl(surahId, ayahNumber, reciter: reciter);
           try {
             await _cacheManager.getSingleFile(url);
           } catch (_) {
@@ -77,9 +72,6 @@ class AudioCacheService {
 
   /// Plays an audio source on the given [player], correctly handling both
   /// network URLs and cached local file paths.
-  ///
-  /// Use this instead of calling [AudioPlayer.setUrl] directly so that cached
-  /// file paths (returned by [getAudioSource]) are handled properly.
   static Future<void> playFromSource(AudioPlayer player, String source) async {
     if (source.startsWith('http://') || source.startsWith('https://')) {
       await player.setUrl(source);

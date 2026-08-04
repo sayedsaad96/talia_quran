@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/theme/app_colors.dart';
 import 'tutorial_guide_definition.dart';
 import 'widgets/tutorial_guide_section_card.dart';
 
@@ -19,6 +20,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS1Title,
           category: l10n.tutorialS1Cat,
           icon: Icons.rocket_launch_rounded,
+          accentColor: AppColors.primaryLight,
           whatItDoes: l10n.tutorialS1Does,
           howToOpen: l10n.tutorialS1Open,
           steps: [
@@ -41,6 +43,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS2Title,
           category: l10n.tutorialS2Cat,
           icon: Icons.home_rounded,
+          accentColor: AppColors.primary,
           whatItDoes: l10n.tutorialS2Does,
           howToOpen: l10n.tutorialS2Open,
           steps: [
@@ -64,6 +67,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS3Title,
           category: l10n.tutorialS3Cat,
           icon: Icons.menu_book_rounded,
+          accentColor: AppColors.info,
           whatItDoes: l10n.tutorialS3Does,
           howToOpen: l10n.tutorialS3Open,
           steps: [
@@ -88,6 +92,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS4Title,
           category: l10n.tutorialS4Cat,
           icon: Icons.bookmark_rounded,
+          accentColor: AppColors.info,
           whatItDoes: l10n.tutorialS4Does,
           howToOpen: l10n.tutorialS4Open,
           steps: [
@@ -111,6 +116,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS5Title,
           category: l10n.tutorialS5Cat,
           icon: Icons.auto_stories_rounded,
+          accentColor: AppColors.gold,
           whatItDoes: l10n.tutorialS5Does,
           howToOpen: l10n.tutorialS5Open,
           steps: [
@@ -134,6 +140,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS6Title,
           category: l10n.tutorialS6Cat,
           icon: Icons.spa_rounded,
+          accentColor: AppColors.success,
           whatItDoes: l10n.tutorialS6Does,
           howToOpen: l10n.tutorialS6Open,
           steps: [
@@ -158,6 +165,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS7Title,
           category: l10n.tutorialS7Cat,
           icon: Icons.psychology_rounded,
+          accentColor: AppColors.goldDark,
           whatItDoes: l10n.tutorialS7Does,
           howToOpen: l10n.tutorialS7Open,
           steps: [
@@ -182,6 +190,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS8Title,
           category: l10n.tutorialS8Cat,
           icon: Icons.dashboard_customize_rounded,
+          accentColor: AppColors.gold,
           whatItDoes: l10n.tutorialS8Does,
           howToOpen: l10n.tutorialS8Open,
           steps: [
@@ -206,6 +215,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS9Title,
           category: l10n.tutorialS9Cat,
           icon: Icons.family_restroom_rounded,
+          accentColor: AppColors.amber,
           whatItDoes: l10n.tutorialS9Does,
           howToOpen: l10n.tutorialS9Open,
           steps: [
@@ -229,6 +239,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS10Title,
           category: l10n.tutorialS10Cat,
           icon: Icons.bar_chart_rounded,
+          accentColor: AppColors.success,
           whatItDoes: l10n.tutorialS10Does,
           howToOpen: l10n.tutorialS10Open,
           steps: [
@@ -253,6 +264,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS11Title,
           category: l10n.tutorialS11Cat,
           icon: Icons.settings_rounded,
+          accentColor: AppColors.primaryLight,
           whatItDoes: l10n.tutorialS11Does,
           howToOpen: l10n.tutorialS11Open,
           steps: [
@@ -278,6 +290,7 @@ class TutorialGuideMapper {
           title: l10n.tutorialS12Title,
           category: l10n.tutorialS12Cat,
           icon: Icons.storage_rounded,
+          accentColor: AppColors.info,
           whatItDoes: l10n.tutorialS12Does,
           howToOpen: l10n.tutorialS12Open,
           steps: [

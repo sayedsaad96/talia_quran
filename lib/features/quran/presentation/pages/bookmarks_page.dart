@@ -78,33 +78,44 @@ class _EmptyBookmarks extends StatelessWidget {
     final textColor = isDark
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.bookmark_outline_rounded,
-            size: 64,
-            color: textColor.withValues(alpha: 0.4),
-          ),
-          const SizedBox(height: AppSpacing.md),
-          Text(
-            context.isArabic ? 'لا توجد علامات مرجعية بعد' : 'No bookmarks yet',
-            style: AppTypography.titleMedium.copyWith(color: textColor),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 48),
-            child: Text(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.08),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.bookmark_outline_rounded,
+                size: 56,
+                color: primary.withValues(alpha: 0.7),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              context.isArabic ? 'لا توجد علامات مرجعية بعد' : 'No bookmarks yet',
+              style: AppTypography.titleMedium.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
               context.isArabic
-                  ? 'اضغط مرتين على أي آية في القارئ لحفظها كعلامة مرجعية'
-                  : 'Double-tap any ayah in the reader to save it as a bookmark',
-              style: AppTypography.bodySmall.copyWith(color: textColor),
+                  ? 'اضغط مطوّلاً على أي آية أثناء القراءة لحفظها كعلامة مرجعية وتصل إليها بسهولة هنا'
+                  : 'Long-press any ayah while reading to save it as a bookmark',
+              style: AppTypography.bodySmall.copyWith(color: textColor, height: 1.5),
               textAlign: TextAlign.center,
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -35,13 +35,13 @@ class TutorialGuideTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 color: primary.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.menu_book_rounded, color: primary),
+              child: Icon(Icons.menu_book_rounded, color: primary, size: 22),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -52,13 +52,14 @@ class TutorialGuideTile extends StatelessWidget {
                     context.l10n.tutorialGuideTitle,
                     style: AppTypography.bodyMedium.copyWith(
                       color: textColor,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     context.l10n.tutorialGuideSubtitle,
                     style: AppTypography.labelSmall.copyWith(
                       color: subtextColor,
+                      fontSize: 12,
                     ),
                   ),
                 ],
@@ -78,7 +79,6 @@ class PrivacyPolicyTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final textColor = isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
@@ -97,13 +97,13 @@ class PrivacyPolicyTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: primary.withValues(alpha: 0.12),
+                color: AppColors.info.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.privacy_tip_outlined, color: primary),
+              child: const Icon(Icons.privacy_tip_outlined, color: AppColors.info, size: 22),
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
@@ -114,13 +114,14 @@ class PrivacyPolicyTile extends StatelessWidget {
                     context.l10n.privacyPolicy,
                     style: AppTypography.bodyMedium.copyWith(
                       color: textColor,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     context.l10n.settingsPrivacyPolicySubtitle,
                     style: AppTypography.labelSmall.copyWith(
                       color: subtextColor,
+                      fontSize: 12,
                     ),
                   ),
                 ],
@@ -140,67 +141,85 @@ class AboutTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subtextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
-
     return BlocBuilder<SettingsCubit, SettingsState>(
       builder: (context, state) {
-        final version = state.appVersion ?? '—';
-        final buildNumber = state.appBuildNumber ?? '—';
+        final version = state.appVersion ?? '1.0.0';
+        final buildNumber = state.appBuildNumber ?? '1';
 
-        return Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Row(
+        return Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            gradient: isDark
+                ? AppColors.heroGradientDark
+                : AppColors.heroGradientLight,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-                child: Center(
-                  child: Image.asset(
-                    'assets/images/logo_new.png',
-                    width: 46,
-                    height: 46,
+              Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                    ),
+                    child: Center(
+                      child: Image.asset(
+                        'assets/images/logo_new.png',
+                        width: 44,
+                        height: 44,
+                      ),
+                    ),
                   ),
-                ),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.settingsAppBrand,
+                          style: AppTypography.titleLarge.copyWith(
+                            color: Colors.white,
+                            fontFamily: context.isArabic ? 'Amiri' : null,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+                              ),
+                              child: Text(
+                                'v$version ($buildNumber)',
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.settingsAppBrand,
-                      style: AppTypography.titleLarge.copyWith(
-                        color: textColor,
-                      ),
-                    ),
-                    Text(
-                      context.l10n.settingsVersion(version),
-                      style: AppTypography.bodySmall.copyWith(
-                        color: subtextColor,
-                      ),
-                    ),
-                    Text(
-                      context.l10n.settingsBuild(buildNumber),
-                      style: AppTypography.bodySmall.copyWith(
-                        color: subtextColor,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      context.l10n.taliaDescription,
-                      style: AppTypography.labelSmall.copyWith(
-                        color: subtextColor,
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                context.l10n.taliaDescription,
+                style: AppTypography.bodySmall.copyWith(
+                  color: Colors.white.withValues(alpha: 0.85),
+                  height: 1.45,
+                  fontSize: 12,
                 ),
               ),
             ],

@@ -10,10 +10,14 @@ class SettingsSection extends StatelessWidget {
     super.key,
     required this.title,
     required this.children,
+    this.accentColor,
+    this.icon,
   });
 
   final String title;
   final List<Widget> children;
+  final Color? accentColor;
+  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
@@ -21,6 +25,7 @@ class SettingsSection extends StatelessWidget {
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = (isDark ? AppColors.darkDivider : AppColors.lightDivider)
         .withValues(alpha: isDark ? 0.55 : 0.8);
+    final accent = accentColor ?? (isDark ? AppColors.primaryLight : AppColors.primary);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -30,19 +35,37 @@ class SettingsSection extends StatelessWidget {
             start: AppSpacing.xs,
             bottom: AppSpacing.sm,
           ),
-          child: Text(
-            title,
-            style: AppTypography.labelMedium.copyWith(
-              color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
-              letterSpacing: 0,
-              fontWeight: FontWeight.w800,
-            ),
+          child: Row(
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 16, color: accent),
+                const SizedBox(width: 6),
+              ] else ...[
+                Container(
+                  width: 3,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: accent,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text(
+                title,
+                style: AppTypography.labelMedium.copyWith(
+                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ),
         ),
         Material(
           color: surface,
           elevation: isDark ? 0 : 1,
-          shadowColor: Colors.black.withValues(alpha: 0.05),
+          shadowColor: Colors.black.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           clipBehavior: Clip.antiAlias,
           child: DecoratedBox(
@@ -59,16 +82,19 @@ class SettingsSection extends StatelessWidget {
 }
 
 class SettingsDivider extends StatelessWidget {
-  const SettingsDivider({super.key, required this.isDark});
+  const SettingsDivider({super.key, required this.isDark, this.indent = 56});
 
   final bool isDark;
+  final double indent;
 
   @override
   Widget build(BuildContext context) {
     return Divider(
       height: 0.5,
-      color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-      indent: 64,
+      thickness: 0.5,
+      color: (isDark ? AppColors.darkDivider : AppColors.lightDivider)
+          .withValues(alpha: 0.6),
+      indent: indent,
     );
   }
 }
@@ -81,10 +107,10 @@ class SettingsTrailingChevron extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Icon(
-      context.isArabic
+      Directionality.of(context) == TextDirection.rtl
           ? Icons.arrow_back_ios_rounded
           : Icons.arrow_forward_ios_rounded,
-      size: 16,
+      size: 14,
       color: color,
     );
   }
@@ -118,13 +144,14 @@ class SettingsInlineHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: iconColor, size: 20),
+          Icon(icon, color: iconColor, size: 18),
           const SizedBox(width: AppSpacing.sm),
           Text(
             title,
             style: AppTypography.labelMedium.copyWith(
               color: textColor,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
             ),
           ),
         ],

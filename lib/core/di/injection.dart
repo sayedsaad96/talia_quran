@@ -11,6 +11,7 @@ import '../services/app_version_service.dart';
 import '../services/hifz_migration_service.dart';
 import '../services/notification_service.dart';
 import '../services/notification_scheduler.dart';
+import '../services/quran_reciter_service.dart';
 import '../services/streak_reader.dart';
 import '../services/streak_service.dart';
 import '../services/xp_service.dart';
@@ -141,6 +142,9 @@ Future<void> configureDependencies() async {
     ),
   );
   getIt.registerSingleton<AudioCacheService>(AudioCacheService.instance);
+  getIt.registerSingleton<QuranReciterService>(
+    QuranReciterService(getIt<SharedPreferences>()),
+  );
   getIt.registerSingleton<AppSessionService>(
     AppSessionService(getIt<SharedPreferences>()),
   );

@@ -20,7 +20,14 @@ import '../widgets/settings_section.dart';
 
 void _showSettingsError(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
+    SnackBar(
+      content: Text(message),
+      backgroundColor: AppColors.error,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+    ),
   );
 }
 
@@ -57,7 +64,10 @@ class _SettingsView extends StatelessWidget {
             context.read<SettingsCubit>().clearTransientMessages();
           } else if (state.showMemorizationPathResetSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(context.l10n.memorizationPathReset)),
+              SnackBar(
+                content: Text(context.l10n.memorizationPathReset),
+                backgroundColor: AppColors.success,
+              ),
             );
             context.read<SettingsCubit>().clearTransientMessages();
           }
@@ -73,7 +83,7 @@ class _SettingsView extends StatelessWidget {
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pagePadding,
-                    AppSpacing.lg,
+                    AppSpacing.md,
                     AppSpacing.pagePadding,
                     120,
                   ),
@@ -81,6 +91,8 @@ class _SettingsView extends StatelessWidget {
                     delegate: SliverChildListDelegate([
                       SettingsSection(
                         title: context.l10n.settingsSectionAccount,
+                        accentColor: isDark ? AppColors.primaryLight : AppColors.primary,
+                        icon: Icons.person_rounded,
                         children: [
                           AccountSection(isDark: isDark),
                           SettingsDivider(isDark: isDark),
@@ -90,6 +102,8 @@ class _SettingsView extends StatelessWidget {
                       const SizedBox(height: AppSpacing.lg),
                       SettingsSection(
                         title: context.l10n.settingsSectionAppearance,
+                        accentColor: AppColors.amber,
+                        icon: Icons.palette_rounded,
                         children: [
                           SettingsInlineHeader(
                             isDark: isDark,
@@ -111,6 +125,8 @@ class _SettingsView extends StatelessWidget {
                       const SizedBox(height: AppSpacing.lg),
                       SettingsSection(
                         title: context.l10n.settingsSectionQuranMemorization,
+                        accentColor: AppColors.gold,
+                        icon: Icons.auto_stories_rounded,
                         children: [
                           AccuracySettingTile(isDark: isDark),
                           SettingsDivider(isDark: isDark),
@@ -135,6 +151,8 @@ class _SettingsView extends StatelessWidget {
                           state.shouldShowParentSection) ...[
                         SettingsSection(
                           title: context.l10n.settingsSectionKidsGuardian,
+                          accentColor: AppColors.kidsGreen,
+                          icon: Icons.family_restroom_rounded,
                           children: [
                             if (state.isAdultPath)
                               ParentModeToggle(
@@ -155,16 +173,22 @@ class _SettingsView extends StatelessWidget {
                       ],
                       SettingsSection(
                         title: context.l10n.settingsSectionProgressAchievements,
+                        accentColor: AppColors.success,
+                        icon: Icons.notifications_active_rounded,
                         children: [NotificationSettingTile(isDark: isDark)],
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       SettingsSection(
                         title: context.l10n.settingsSectionHelpTutorial,
+                        accentColor: AppColors.info,
+                        icon: Icons.help_outline_rounded,
                         children: [TutorialGuideTile(isDark: isDark)],
                       ),
                       const SizedBox(height: AppSpacing.lg),
                       SettingsSection(
                         title: context.l10n.settingsSectionPrivacySecurity,
+                        accentColor: AppColors.warning,
+                        icon: Icons.security_rounded,
                         children: [
                           PrivacyPolicyTile(isDark: isDark),
                           BlocBuilder<AuthCubit, AuthState>(
@@ -188,6 +212,8 @@ class _SettingsView extends StatelessWidget {
                       const SizedBox(height: AppSpacing.lg),
                       SettingsSection(
                         title: context.l10n.settingsSectionAboutTalia,
+                        accentColor: isDark ? AppColors.primaryLight : AppColors.primary,
+                        icon: Icons.info_outline_rounded,
                         children: [AboutTile(isDark: isDark)],
                       ),
                     ]),
@@ -204,6 +230,7 @@ class _SettingsView extends StatelessWidget {
   SliverAppBar _buildAppBar(BuildContext context, bool isDark) {
     return SliverAppBar(
       pinned: true,
+      expandedHeight: 160,
       backgroundColor: isDark
           ? AppColors.darkBackground
           : AppColors.lightBackground,
@@ -211,12 +238,10 @@ class _SettingsView extends StatelessWidget {
       scrolledUnderElevation: 0.5,
       leading: IconButton(
         icon: Icon(
-          context.isArabic
-              ? Icons.arrow_back_ios_rounded
-              : Icons.arrow_forward_ios_rounded,
-          color: isDark
-              ? AppColors.darkTextPrimary
-              : AppColors.lightTextPrimary,
+          Directionality.of(context) == TextDirection.rtl
+              ? Icons.arrow_forward_rounded
+              : Icons.arrow_back_rounded,
+          color: Colors.white,
           size: 20,
         ),
         onPressed: () {
@@ -227,15 +252,57 @@ class _SettingsView extends StatelessWidget {
           }
         },
       ),
-      title: Text(
-        context.l10n.settings,
-        style: AppTypography.headlineSmall.copyWith(
-          color: isDark
-              ? AppColors.darkTextPrimary
-              : AppColors.lightTextPrimary,
+      flexibleSpace: FlexibleSpaceBar(
+        titlePadding: const EdgeInsetsDirectional.fromSTEB(
+          AppSpacing.pagePadding,
+          0,
+          AppSpacing.pagePadding,
+          AppSpacing.md,
+        ),
+        title: Text(
+          context.l10n.settings,
+          style: AppTypography.titleLarge.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontFamily: context.isArabic ? 'Amiri' : null,
+            fontSize: 20,
+          ),
+        ),
+        background: Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: isDark
+                      ? AppColors.heroGradientDark
+                      : AppColors.heroGradientLight,
+                ),
+              ),
+            ),
+            Positioned(
+              left: Directionality.of(context) == TextDirection.rtl ? null : -20,
+              right: Directionality.of(context) == TextDirection.rtl ? -20 : null,
+              top: -10,
+              child: Icon(
+                Icons.settings_rounded,
+                size: 170,
+                color: Colors.white.withValues(alpha: 0.07),
+              ),
+            ),
+            PositionedDirectional(
+              start: AppSpacing.pagePadding,
+              top: 74,
+              child: Text(
+                'مركز التحكم والتفضيلات الشخصية',
+                style: AppTypography.bodySmall.copyWith(
+                  color: Colors.white.withValues(alpha: 0.8),
+                  fontSize: 12,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
-      centerTitle: true,
     );
   }
 }

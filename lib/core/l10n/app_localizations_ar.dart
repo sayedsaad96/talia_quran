@@ -2866,53 +2866,55 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeGoToSettings => 'انتقل إلى الإعدادات';
 
   @override
-  String get notificationDailyReviewTitle => 'وقت المراجعة اليومية 📖';
+  String get notificationDailyReviewTitle => 'جاهز نراجع سوا؟ 📖';
 
   @override
   String notificationDailyReviewBodyCount(Object count) {
-    return 'لديك $count آية للمراجعة اليوم';
+    return 'عندك $count آية مستنية مراجعتك النهاردة.. يلا خطوة بخطوة! ✨';
   }
 
   @override
-  String get notificationDailyReviewBody => 'حان وقت مراجعة حفظك اليومي';
+  String get notificationDailyReviewBody => 'يلا بينا نرجع للمصحف ونثبت حفظ اليوم 🌸';
 
   @override
   String notificationStreakAlertTitle(Object count) {
-    return '⚠️ لا تُضيِّع $count يوماً!';
+    return '⚠️ متضيعش إنجاز $count يوم!';
   }
 
   @override
   String get notificationStreakAlertBody =>
-      'لم تراجع حفظك اليوم بعد — لا تزال قادرًا';
+      'فاضل تكة صغيرة وتكمل وردك النهاردة.. متكسلش، تقدر تعملها! 🔥';
 
   @override
-  String get notificationDailyAyahTitle => 'آية اليوم ✨';
+  String get notificationDailyAyahTitle => 'آية تفتح لك يومك ✨';
 
   @override
-  String get notificationDailyAyahBody => 'اقرأ وردك اليومي من القرآن الكريم';
+  String get notificationDailyAyahBody =>
+      'خدلك دقيقة روق بالك مع وردك النهاردة من القرآن الكريم 🌿';
 
   @override
-  String get notificationMorningAzkarTitle => 'أذكار الصباح ☀️';
+  String get notificationMorningAzkarTitle => 'صبحك الله بالخير ☀️';
 
   @override
   String get notificationMorningAzkarBody =>
-      'ابدأ يومك بذكر الله وطمأنينة القلب';
+      'يلا ابدأ يومك بذكر الله وطمئن قلبك.. أذكار الصباح في انتظارك';
 
   @override
-  String get notificationEveningAzkarTitle => 'أذكار المساء 🌙';
+  String get notificationEveningAzkarTitle => 'مساء الخير والسكينة 🌙';
 
   @override
-  String get notificationEveningAzkarBody => 'اختم يومك بذكر الله وحفظه';
+  String get notificationEveningAzkarBody =>
+      'يومك كان زحمة؟ خذ لحظة هدوء مع أذكار المساء واختم يومك بحفظ الله';
 
   @override
-  String get notificationKidsReviewTitle => 'وقت التسميع يا بطل! 🌟';
+  String get notificationKidsReviewTitle => 'يلا يا بطل جاهز؟ 🌟';
 
   @override
   String get notificationKidsReviewBody =>
-      'مرحلتك الجديدة جاهزة، هيا نكمل الحفظ!';
+      'مرحلتك الجديدة مستنياك.. يلا نكمل ونجمع نجوم جديدة! 🚀';
 
   @override
-  String get notificationDailyDuaTitle => 'دعاء اليوم 🤲';
+  String get notificationDailyDuaTitle => 'دعوة من القلب 🤲';
 
   @override
   String get homeTourTitle => 'تحتاج جولة سريعة؟';

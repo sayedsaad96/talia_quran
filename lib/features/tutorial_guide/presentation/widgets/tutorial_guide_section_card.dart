@@ -16,6 +16,7 @@ class TutorialGuideSection {
     required this.tips,
     required this.notes,
     required this.whenUseful,
+    this.accentColor,
   });
 
   final String title;
@@ -27,6 +28,7 @@ class TutorialGuideSection {
   final List<String> tips;
   final List<String> notes;
   final String whenUseful;
+  final Color? accentColor;
 
   bool matches(String query) {
     final normalized = query.trim();
@@ -59,7 +61,8 @@ class TutorialGuideSectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final primary = section.accentColor ??
+        (isDark ? AppColors.primaryLight : AppColors.primary);
     final textColor = isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
@@ -67,86 +70,146 @@ class TutorialGuideSectionCard extends StatelessWidget {
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
 
-    return AppCard(
-      borderRadius: BorderRadiusDirectional.circular(AppSpacing.radiusLg),
-      child: Theme(
-        data: theme.copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          initiallyExpanded: initiallyExpanded,
-          tilePadding: const EdgeInsetsDirectional.fromSTEB(
-            AppSpacing.md,
-            AppSpacing.sm,
-            AppSpacing.md,
-            AppSpacing.sm,
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.06),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
-          childrenPadding: const EdgeInsetsDirectional.fromSTEB(
-            AppSpacing.md,
-            0,
-            AppSpacing.md,
-            AppSpacing.md,
-          ),
-          leading: Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.12),
-              borderRadius: BorderRadiusDirectional.circular(
-                AppSpacing.radiusMd,
+        ],
+      ),
+      child: AppCard(
+        borderRadius: BorderRadiusDirectional.circular(AppSpacing.radiusLg),
+        border: Border.all(color: primary.withValues(alpha: 0.18)),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          child: Stack(
+            children: [
+              // Left Accent Line Indicator
+              Positioned(
+                top: 0,
+                bottom: 0,
+                right: Directionality.of(context) == TextDirection.rtl ? 0 : null,
+                left: Directionality.of(context) == TextDirection.rtl ? null : 0,
+                child: Container(
+                  width: 4,
+                  decoration: BoxDecoration(
+                    color: primary,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(4),
+                      bottom: Radius.circular(4),
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: Icon(section.icon, color: primary, size: 22),
+              Theme(
+                data: theme.copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  initiallyExpanded: initiallyExpanded,
+                  tilePadding: const EdgeInsetsDirectional.fromSTEB(
+                    AppSpacing.md + 4,
+                    AppSpacing.sm,
+                    AppSpacing.md,
+                    AppSpacing.sm,
+                  ),
+                  childrenPadding: const EdgeInsetsDirectional.fromSTEB(
+                    AppSpacing.md + 4,
+                    0,
+                    AppSpacing.md,
+                    AppSpacing.md,
+                  ),
+                  leading: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: primary.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(section.icon, color: primary, size: 22),
+                  ),
+                  title: Text(
+                    section.title,
+                    style: AppTypography.titleMedium.copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  subtitle: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        ),
+                        child: Text(
+                          section.category,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: primary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  iconColor: primary,
+                  collapsedIconColor: subtextColor,
+                  children: [
+                    const Divider(height: 1),
+                    const SizedBox(height: AppSpacing.md),
+                    _GuideBlock(
+                      title: 'ما فائدتها؟',
+                      body: section.whatItDoes,
+                      icon: Icons.info_outline_rounded,
+                      color: primary,
+                    ),
+                    _GuideBlock(
+                      title: 'طريقة الفتح',
+                      body: section.howToOpen,
+                      icon: Icons.touch_app_rounded,
+                      color: AppColors.info,
+                    ),
+                    _GuideStepListBlock(
+                      title: 'خطوات الاستخدام',
+                      items: section.steps,
+                      icon: Icons.format_list_numbered_rtl_rounded,
+                      color: AppColors.success,
+                    ),
+                    if (section.tips.isNotEmpty)
+                      _GuidePillListBlock(
+                        title: 'نصائح سريعة',
+                        items: section.tips,
+                        icon: Icons.lightbulb_outline_rounded,
+                        color: AppColors.gold,
+                        backgroundColor: AppColors.gold.withValues(alpha: 0.08),
+                      ),
+                    if (section.notes.isNotEmpty)
+                      _GuidePillListBlock(
+                        title: 'تنبيهات شائعة',
+                        items: section.notes,
+                        icon: Icons.warning_amber_rounded,
+                        color: AppColors.warning,
+                        backgroundColor: AppColors.warning.withValues(alpha: 0.08),
+                      ),
+                    _GuideBlock(
+                      title: 'متى تستخدمها؟',
+                      body: section.whenUseful,
+                      icon: Icons.check_circle_outline_rounded,
+                      color: primary,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          title: Text(
-            section.title,
-            style: AppTypography.titleMedium.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          subtitle: Text(
-            section.category,
-            style: AppTypography.labelSmall.copyWith(color: subtextColor),
-          ),
-          iconColor: primary,
-          collapsedIconColor: subtextColor,
-          children: [
-            _GuideBlock(
-              title: 'ما فائدتها؟',
-              body: section.whatItDoes,
-              icon: Icons.info_outline_rounded,
-              color: primary,
-            ),
-            _GuideBlock(
-              title: 'طريقة الفتح',
-              body: section.howToOpen,
-              icon: Icons.touch_app_rounded,
-              color: AppColors.info,
-            ),
-            _GuideListBlock(
-              title: 'خطوات الاستخدام',
-              items: section.steps,
-              icon: Icons.format_list_numbered_rtl_rounded,
-              color: AppColors.success,
-            ),
-            _GuideListBlock(
-              title: 'نصائح سريعة',
-              items: section.tips,
-              icon: Icons.lightbulb_outline_rounded,
-              color: AppColors.gold,
-            ),
-            _GuideListBlock(
-              title: 'تنبيهات شائعة',
-              items: section.notes,
-              icon: Icons.error_outline_rounded,
-              color: AppColors.warning,
-            ),
-            _GuideBlock(
-              title: 'متى تستخدمها؟',
-              body: section.whenUseful,
-              icon: Icons.check_circle_outline_rounded,
-              color: AppColors.primary,
-            ),
-          ],
         ),
       ),
     );
@@ -175,31 +238,35 @@ class _GuideBlock extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _BlockTitle(title: title, icon: icon, color: color),
-          const SizedBox(height: AppSpacing.xs),
-          Text(
-            body,
-            style: AppTypography.bodySmall.copyWith(
-              color: subtextColor,
-              height: 1.55,
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: isDark ? 0.06 : 0.04),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(color: color.withValues(alpha: 0.12)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _BlockTitle(title: title, icon: icon, color: color),
+            const SizedBox(height: 6),
+            Text(
+              body,
+              style: AppTypography.bodySmall.copyWith(
+                color: subtextColor,
+                height: 1.55,
+                fontSize: 12.5,
+              ),
             ),
-          ),
-          Divider(
-            height: AppSpacing.lg,
-            color: (isDark ? AppColors.darkDivider : AppColors.lightDivider)
-                .withValues(alpha: 0.7),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _GuideListBlock extends StatelessWidget {
-  const _GuideListBlock({
+class _GuideStepListBlock extends StatelessWidget {
+  const _GuideStepListBlock({
     required this.title,
     required this.items,
     required this.icon,
@@ -225,36 +292,110 @@ class _GuideListBlock extends StatelessWidget {
         children: [
           _BlockTitle(title: title, icon: icon, color: color),
           const SizedBox(height: AppSpacing.xs),
-          ...items.map(
-            (item) => Padding(
+          ...List.generate(items.length, (index) {
+            return Padding(
               padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.xs),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsetsDirectional.only(top: 7),
-                    child: Icon(Icons.circle, size: 6, color: color),
+                  Container(
+                    width: 22,
+                    height: 22,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '${index + 1}',
+                      style: AppTypography.labelSmall.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                      ),
+                    ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-                      item,
+                      items[index],
                       style: AppTypography.bodySmall.copyWith(
                         color: subtextColor,
-                        height: 1.55,
+                        height: 1.5,
+                        fontSize: 12.5,
                       ),
                     ),
                   ),
                 ],
               ),
-            ),
-          ),
-          Divider(
-            height: AppSpacing.lg,
-            color: (isDark ? AppColors.darkDivider : AppColors.lightDivider)
-                .withValues(alpha: 0.7),
-          ),
+            );
+          }),
         ],
+      ),
+    );
+  }
+}
+
+class _GuidePillListBlock extends StatelessWidget {
+  const _GuidePillListBlock({
+    required this.title,
+    required this.items,
+    required this.icon,
+    required this.color,
+    required this.backgroundColor,
+  });
+
+  final String title;
+  final List<String> items;
+  final IconData icon;
+  final Color color;
+  final Color backgroundColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(bottom: AppSpacing.md),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.sm),
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(color: color.withValues(alpha: 0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _BlockTitle(title: title, icon: icon, color: color),
+            const SizedBox(height: AppSpacing.xs),
+            ...items.map(
+              (item) => Padding(
+                padding: const EdgeInsetsDirectional.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.star_rounded, size: 14, color: color),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        item,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: subtextColor,
+                          height: 1.45,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -278,14 +419,15 @@ class _BlockTitle extends StatelessWidget {
     return Row(
       children: [
         Icon(icon, color: color, size: 18),
-        const SizedBox(width: AppSpacing.sm),
+        const SizedBox(width: AppSpacing.xs),
         Text(
           title,
           style: AppTypography.labelMedium.copyWith(
             color: isDark
                 ? AppColors.darkTextPrimary
                 : AppColors.lightTextPrimary,
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
           ),
         ),
       ],

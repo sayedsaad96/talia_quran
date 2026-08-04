@@ -13,6 +13,8 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/services/audio_cache_service.dart';
+import '../../../../core/services/quran_reciter.dart';
+import '../../../../core/services/quran_reciter_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
@@ -24,6 +26,7 @@ import '../../domain/entities/quran_entities.dart';
 import '../cubits/quran_page_cubit.dart';
 import '../cubits/surah_detail_cubit.dart';
 import '../services/quran_read_confirmation_gate.dart';
+import '../widgets/reciter_selector_sheet.dart';
 
 class QuranReaderPage extends StatefulWidget {
   const QuranReaderPage({super.key, this.surahId, this.pageNumber});
@@ -443,7 +446,15 @@ class _MushafTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: bg,
+      decoration: BoxDecoration(
+        color: bg,
+        border: Border(
+          bottom: BorderSide(
+            color: gold.withValues(alpha: 0.15),
+            width: 0.8,
+          ),
+        ),
+      ),
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -477,8 +488,20 @@ class _MushafTopBar extends StatelessWidget {
                   height: 1.5,
                 ),
               ),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => ReciterSelectorSheet.show(context),
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: gold.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.record_voice_over_rounded, color: gold, size: 16),
+                ),
+              ),
               if (onToggleFocus != null) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: 6),
                 GestureDetector(
                   onTap: onToggleFocus,
                   child: Container(
@@ -677,9 +700,11 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
     try {
       widget.onInteraction();
       setState(() => _isPlaying = true);
+      final reciter = getIt<QuranReciterService>().currentReciter.value;
       final source = await AudioCacheService.instance.getAudioSource(
         widget.ayah.surahId,
         widget.ayah.numberInSurah,
+        reciter: reciter,
       );
       await AudioCacheService.playFromSource(_player, source);
       unawaited(_playerSub?.cancel() ?? Future.value());
@@ -698,6 +723,7 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
     final isDark = context.isDark;
     final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final reciterService = getIt<QuranReciterService>();
 
     return Container(
       decoration: BoxDecoration(
@@ -713,17 +739,73 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
               Container(
                 width: 40,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                margin: const EdgeInsets.only(bottom: AppSpacing.md),
                 decoration: BoxDecoration(
                   color: Colors.grey.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
               Text(
-                '${context.l10n.ayahs} ${widget.ayah.numberInSurah}',
-                style: AppTypography.titleMedium,
+                'سورة ${widget.surahName} • الآية ${widget.ayah.numberInSurah}',
+                style: AppTypography.titleMedium.copyWith(
+                  color: primary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              const SizedBox(height: AppSpacing.xl),
+              const SizedBox(height: AppSpacing.md),
+              // Full Ayah Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: primary.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(
+                    color: primary.withValues(alpha: 0.15),
+                  ),
+                ),
+                child: Text(
+                  widget.ayah.text.trim(),
+                  style: const TextStyle(
+                    fontFamily: 'Amiri',
+                    fontSize: 20,
+                    height: 1.8,
+                  ),
+                  textAlign: TextAlign.center,
+                  textDirection: TextDirection.rtl,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              // Reciter Selector Button
+              ValueListenableBuilder<QuranReciter>(
+                valueListenable: reciterService.currentReciter,
+                builder: (context, reciter, _) {
+                  return InkWell(
+                    onTap: () => ReciterSelectorSheet.show(context),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.mic_rounded, size: 14, color: primary),
+                          const SizedBox(width: 4),
+                          Text(
+                            context.isArabic ? reciter.nameAr : reciter.nameEn,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(Icons.swap_horiz_rounded, size: 14, color: primary),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.lg),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [

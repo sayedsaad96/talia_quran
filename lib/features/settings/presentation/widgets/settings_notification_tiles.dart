@@ -11,7 +11,14 @@ import 'settings_section.dart';
 
 void _showSettingsError(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
+    SnackBar(
+      content: Text(message),
+      backgroundColor: AppColors.error,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+    ),
   );
 }
 
@@ -80,6 +87,16 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
       hour: prefs.getInt('${_dailyDuaKey}_hour') ?? 9,
       minute: prefs.getInt('${_dailyDuaKey}_minute') ?? 0,
     );
+  }
+
+  int get _activeRemindersCount {
+    int count = 0;
+    if (_reviewEnabled) count++;
+    if (_streakEnabled) count++;
+    if (_morningAzkarEnabled) count++;
+    if (_eveningAzkarEnabled) count++;
+    if (_dailyDuaEnabled) count++;
+    return count;
   }
 
   String _formatTime(TimeOfDay time) {
@@ -280,73 +297,107 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
     required Color textColor,
     required Color subtextColor,
   }) {
-    final effectiveOpacity = isEnabled ? 1.0 : 0.64;
+    final effectiveOpacity = isEnabled ? 1.0 : 0.55;
 
-    return InkWell(
-      onTap: onTapEdit,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: AnimatedOpacity(
-        opacity: effectiveOpacity,
-        duration: const Duration(milliseconds: 180),
-        child: Padding(
-          padding: const EdgeInsetsDirectional.symmetric(
-            horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: primaryColor.withValues(alpha: 0.11),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: primaryColor, size: 21),
+    return AnimatedOpacity(
+      opacity: effectiveOpacity,
+      duration: const Duration(milliseconds: 200),
+      child: Padding(
+        padding: const EdgeInsetsDirectional.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.sm,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: isEnabled
+                    ? primaryColor.withValues(alpha: 0.12)
+                    : primaryColor.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: textColor,
-                        fontWeight: FontWeight.w600,
+              child: Icon(
+                icon,
+                color: isEnabled ? primaryColor : subtextColor,
+                size: 21,
+              ),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  GestureDetector(
+                    onTap: isEnabled ? onTapEdit : null,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isEnabled
+                            ? primaryColor.withValues(alpha: 0.08)
+                            : Colors.transparent,
+                        borderRadius:
+                            BorderRadius.circular(AppSpacing.radiusSm),
+                        border: Border.all(
+                          color: isEnabled
+                              ? primaryColor.withValues(alpha: 0.25)
+                              : subtextColor.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.access_time_rounded,
+                            size: 12,
+                            color: isEnabled ? primaryColor : subtextColor,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            context.l10n.notificationEverydayAt(
+                              _formatTime(time),
+                            ),
+                            style: AppTypography.labelSmall.copyWith(
+                              color: isEnabled ? primaryColor : subtextColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 11,
+                            ),
+                          ),
+                          if (isEnabled) ...[
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.edit_rounded,
+                              size: 11,
+                              color: primaryColor,
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Wrap(
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 6,
-                      children: [
-                        Text(
-                          context.l10n.notificationEverydayAt(
-                            _formatTime(time),
-                          ),
-                          style: AppTypography.labelSmall.copyWith(
-                            color: subtextColor,
-                          ),
-                        ),
-                        Icon(
-                          Icons.edit_rounded,
-                          size: 14,
-                          color: primaryColor.withValues(alpha: 0.72),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-              const SizedBox(width: AppSpacing.sm),
-              Switch(
-                value: isEnabled,
-                onChanged: isSaving ? null : onToggle,
-                activeThumbColor: primaryColor,
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Switch(
+              value: isEnabled,
+              onChanged: isSaving ? null : onToggle,
+              activeThumbColor: primaryColor,
+            ),
+          ],
         ),
       ),
     );
@@ -364,13 +415,67 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
 
     return Column(
       children: [
+        // Status Bar Summary
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.md,
+            AppSpacing.sm,
+          ),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: primary.withValues(alpha: widget.isDark ? 0.12 : 0.07),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              border: Border.all(color: primary.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: _activeRemindersCount > 0
+                        ? AppColors.success
+                        : AppColors.warning,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_activeRemindersCount > 0
+                                ? AppColors.success
+                                : AppColors.warning)
+                            .withValues(alpha: 0.4),
+                        blurRadius: 6,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    context.isArabic
+                        ? 'حالة التنبيهات: $_activeRemindersCount من 5 تذكيرات مفعلة'
+                        : 'Notification status: $_activeRemindersCount of 5 reminders active',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         _buildTimeEditorTile(
           title: context.l10n.dailyReviewReminder,
           time: _reviewTime,
           isEnabled: _reviewEnabled,
           isSaving: _savingReview,
           onToggle: _toggleReview,
-          icon: Icons.notifications_active_rounded,
+          icon: Icons.auto_stories_rounded,
           primaryColor: primary,
           textColor: textColor,
           subtextColor: subtextColor,
@@ -388,8 +493,8 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
           isEnabled: _streakEnabled,
           isSaving: _savingStreak,
           onToggle: _toggleStreak,
-          icon: Icons.shield_rounded,
-          primaryColor: primary,
+          icon: Icons.local_fire_department_rounded,
+          primaryColor: AppColors.amber,
           textColor: textColor,
           subtextColor: subtextColor,
           onTapEdit: () => _pickTime(
@@ -407,7 +512,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
           isSaving: _savingMorningAzkar,
           onToggle: _toggleMorningAzkar,
           icon: Icons.wb_sunny_rounded,
-          primaryColor: primary,
+          primaryColor: AppColors.gold,
           textColor: textColor,
           subtextColor: subtextColor,
           onTapEdit: () => _pickTime(
@@ -425,7 +530,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
           isSaving: _savingEveningAzkar,
           onToggle: _toggleEveningAzkar,
           icon: Icons.nightlight_round,
-          primaryColor: primary,
+          primaryColor: const Color(0xFF8E44AD),
           textColor: textColor,
           subtextColor: subtextColor,
           onTapEdit: () => _pickTime(
@@ -443,7 +548,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
           isSaving: _savingDailyDua,
           onToggle: _toggleDailyDua,
           icon: Icons.volunteer_activism_rounded,
-          primaryColor: primary,
+          primaryColor: AppColors.info,
           textColor: textColor,
           subtextColor: subtextColor,
           onTapEdit: () => _pickTime(
@@ -468,7 +573,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                   width: 42,
                   height: 42,
                   decoration: BoxDecoration(
-                    color: primary.withValues(alpha: 0.11),
+                    color: primary.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(Icons.touch_app_rounded, color: primary, size: 21),
@@ -484,16 +589,17 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                             : 'Test Interactive Notification',
                         style: AppTypography.bodyMedium.copyWith(
                           color: textColor,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         context.isArabic
-                            ? 'اختبار إشعارات الأذكار، المراجعة، والسلسلة المخصصة'
-                            : 'Test customized Azkar, Review, and Streak notifications',
+                            ? 'اختبار إشعارات الأذكار والمراجعة باللهجة المشجعة'
+                            : 'Test customized Azkar and Review notifications',
                         style: AppTypography.labelSmall.copyWith(
                           color: subtextColor,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -540,33 +646,33 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                       : 'Select notification type to test',
                   style: AppTypography.titleMedium.copyWith(
                     color: textColor,
-                    fontWeight: FontWeight.w700,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   context.isArabic
-                      ? 'سيصلك إشعار فوري يحتوي على أزرار التفاعل المطابقة لمضمونه'
-                      : 'You will receive an instant notification with actions matching its topic',
+                      ? 'سيصلك إشعار تحفيزي فوري يحتوي على أزرار التفاعل المباشرة'
+                      : 'You will receive an encouraging notification with action buttons',
                   style: AppTypography.bodySmall.copyWith(color: subtextColor),
                 ),
                 const SizedBox(height: 16),
                 ListTile(
                   leading: const Icon(
                     Icons.wb_sunny_rounded,
-                    color: Color(0xFFF39C12),
+                    color: AppColors.gold,
                   ),
                   title: Text(
-                    context.isArabic ? 'أذكار الصباح ☀️' : 'Morning Azkar ☀️',
+                    context.isArabic ? 'صبحك الله بالخير ☀️' : 'Morning Azkar ☀️',
                     style: TextStyle(
                       color: textColor,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   subtitle: Text(
                     context.isArabic
-                        ? 'الأزرار: [ ☀️ قراءة أذكار الصباح ] [ 📖 الورد اليومي ]'
-                        : 'Actions: [ ☀️ Read Morning Azkar ] [ 📖 Daily Portion ]',
+                        ? 'يلا ابدأ يومك بذكر الله وطمئن قلبك.. أذكار الصباح في انتظارك'
+                        : 'Start your day with remembrance of Allah ✨',
                     style: TextStyle(color: subtextColor, fontSize: 12),
                   ),
                   onTap: () async {
@@ -574,10 +680,10 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     await getIt<TaliaNotificationService>()
                         .showImmediateTestNotification(
                           title: context.isArabic
-                              ? 'أذكار الصباح ☀️'
+                              ? 'صبحك الله بالخير ☀️'
                               : 'Morning Azkar ☀️',
                           body: context.isArabic
-                              ? 'ابدأ يومك بذكر الله وطمأنينة القلب ✨'
+                              ? 'يلا ابدأ يومك بذكر الله وطمئن قلبك.. أذكار الصباح في انتظارك'
                               : 'Start your day with remembrance of Allah ✨',
                           type: 'azkar',
                         );
@@ -591,17 +697,17 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                   ),
                   title: Text(
                     context.isArabic
-                        ? 'المراجعة اليومية 📖'
+                        ? 'جاهز نراجع سوا؟ 📖'
                         : 'Daily Review 📖',
                     style: TextStyle(
                       color: textColor,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   subtitle: Text(
                     context.isArabic
-                        ? 'الأزرار: [ ⚡ ابدأ المراجعة ] [ 📖 الورد اليومي ]'
-                        : 'Actions: [ ⚡ Start Review ] [ 📖 Daily Portion ]',
+                        ? 'عندك 5 آيات مستنية مراجعتك النهاردة.. يلا خطوة بخطوة! ✨'
+                        : 'You have 5 ayahs due for review today ⚡',
                     style: TextStyle(color: subtextColor, fontSize: 12),
                   ),
                   onTap: () async {
@@ -609,10 +715,10 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     await getIt<TaliaNotificationService>()
                         .showImmediateTestNotification(
                           title: context.isArabic
-                              ? 'وقت المراجعة اليومية 📖'
+                              ? 'جاهز نراجع سوا؟ 📖'
                               : 'Daily Review Time 📖',
                           body: context.isArabic
-                              ? 'لديك 5 آيات مستحقة للمراجعة اليوم ⚡'
+                              ? 'عندك 5 آيات مستنية مراجعتك النهاردة.. يلا خطوة بخطوة! ✨'
                               : 'You have 5 ayahs due for review today ⚡',
                           type: 'review',
                         );
@@ -622,21 +728,21 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                 ListTile(
                   leading: const Icon(
                     Icons.local_fire_department_rounded,
-                    color: Color(0xFFE67E22),
+                    color: AppColors.amber,
                   ),
                   title: Text(
                     context.isArabic
-                        ? 'حماية السلسلة 🔥'
+                        ? '⚠️ متضيعش إنجاز 7 أيام!'
                         : 'Streak Protection 🔥',
                     style: TextStyle(
                       color: textColor,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   subtitle: Text(
                     context.isArabic
-                        ? 'الأزرار: [ 🔥 احمي السلسلة الآن ] [ 📖 قراءة الورد ]'
-                        : 'Actions: [ 🔥 Protect Streak Now ] [ 📖 Read Portion ]',
+                        ? 'فاضل تكة صغيرة وتكمل وردك النهاردة.. متكسلش، تقدر تعملها! 🔥'
+                        : "You haven't reviewed today — protect your streak now 🔥",
                     style: TextStyle(color: subtextColor, fontSize: 12),
                   ),
                   onTap: () async {
@@ -644,10 +750,10 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     await getIt<TaliaNotificationService>()
                         .showImmediateTestNotification(
                           title: context.isArabic
-                              ? '⚠️ لا تُضيِّع 7 أيام متتالية!'
+                              ? '⚠️ متضيعش إنجاز 7 أيام!'
                               : "⚠️ Don't lose 7 days streak!",
                           body: context.isArabic
-                              ? 'لم تراجع حفظك اليوم بعد — احمي سلسلتك الآن 🔥'
+                              ? 'فاضل تكة صغيرة وتكمل وردك النهاردة.. متكسلش، تقدر تعملها! 🔥'
                               : "You haven't reviewed today — protect your streak now 🔥",
                           type: 'streak',
                         );
@@ -657,19 +763,19 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                 ListTile(
                   leading: const Icon(
                     Icons.volunteer_activism_rounded,
-                    color: Color(0xFF2980B9),
+                    color: AppColors.info,
                   ),
                   title: Text(
-                    context.isArabic ? 'دعاء اليوم 🤲' : 'Daily Dua 🤲',
+                    context.isArabic ? 'دعوة من القلب 🤲' : 'Daily Dua 🤲',
                     style: TextStyle(
                       color: textColor,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   subtitle: Text(
                     context.isArabic
-                        ? 'الأزرار: [ 🤲 قراءة أدعية اليوم ] [ ✨ الأذكار ]'
-                        : "Actions: [ 🤲 Read Today's Duas ] [ ✨ Azkar ]",
+                        ? 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.'
+                        : "Actions: [ 🤲 Read Today's Duas ]",
                     style: TextStyle(color: subtextColor, fontSize: 12),
                   ),
                   onTap: () async {
@@ -677,7 +783,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     await getIt<TaliaNotificationService>()
                         .showImmediateTestNotification(
                           title: context.isArabic
-                              ? 'دعاء اليوم 🤲'
+                              ? 'دعوة من القلب 🤲'
                               : 'Daily Dua 🤲',
                           body:
                               'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.',
@@ -700,10 +806,13 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
       SnackBar(
         content: Text(
           context.isArabic
-              ? 'تم إرسال الإشعار التفاعلي التجريبي بنجاح ✨'
+              ? 'تم إرسال الإشعار التفاعلي بنجاح ✨'
               : 'Interactive test notification sent successfully ✨',
         ),
         behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        ),
       ),
     );
   }

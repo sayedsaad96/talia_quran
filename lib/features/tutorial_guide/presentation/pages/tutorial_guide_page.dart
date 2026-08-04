@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -64,14 +65,17 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
             SliverPadding(
               padding: const EdgeInsetsDirectional.fromSTEB(
                 AppSpacing.pagePadding,
-                AppSpacing.lg,
+                AppSpacing.md,
                 AppSpacing.pagePadding,
                 120,
               ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  const TutorialGuideQuickStartCard(),
-                  const SizedBox(height: AppSpacing.lg),
+                  const TutorialGuideQuickStartCard()
+                      .animate()
+                      .fadeIn(duration: 300.ms)
+                      .slideY(begin: 0.05),
+                  const SizedBox(height: AppSpacing.md),
                   _SearchField(
                     controller: _searchController,
                     onChanged: (value) => setState(() => _query = value),
@@ -79,29 +83,33 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
                       _searchController.clear();
                       setState(() => _query = '');
                     },
-                  ),
-                  const SizedBox(height: AppSpacing.md),
+                  ).animate().fadeIn(duration: 320.ms, delay: 50.ms),
+                  const SizedBox(height: AppSpacing.sm),
                   _CategoryChips(
                     categories: _categories,
                     selected: _selectedCategory ?? context.l10n.all,
                     onSelected: (category) {
                       setState(() => _selectedCategory = category);
                     },
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
+                  ).animate().fadeIn(duration: 350.ms, delay: 100.ms),
+                  const SizedBox(height: AppSpacing.md),
                   if (sections.isEmpty)
                     const _EmptyGuideSearch()
                   else
                     ...List.generate(sections.length, (index) {
                       return Padding(
                         padding: const EdgeInsetsDirectional.only(
-                          bottom: AppSpacing.md,
+                          bottom: AppSpacing.sm,
                         ),
-                        child: TutorialGuideSectionCard(
-                          section: sections[index],
-                          initiallyExpanded:
-                              _query.trim().isNotEmpty && index == 0,
-                        ),
+                        child:
+                            TutorialGuideSectionCard(
+                              section: sections[index],
+                              initiallyExpanded:
+                                  _query.trim().isNotEmpty && index == 0,
+                            ).animate().fadeIn(
+                              duration: 280.ms,
+                              delay: (100 + index * 40).ms,
+                            ),
                       );
                     }),
                 ]),
@@ -114,9 +122,11 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
   }
 
   SliverAppBar _buildAppBar(BuildContext context, bool isDark) {
+    final titleText = context.l10n.tutorialGuideTitle;
+
     return SliverAppBar(
       pinned: true,
-      expandedHeight: 142,
+      expandedHeight: 180,
       backgroundColor: isDark
           ? AppColors.darkBackground
           : AppColors.lightBackground,
@@ -124,10 +134,10 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
       scrolledUnderElevation: 0.5,
       leading: IconButton(
         icon: Icon(
-          Icons.arrow_back_ios_rounded,
-          color: isDark
-              ? AppColors.darkTextPrimary
-              : AppColors.lightTextPrimary,
+          Directionality.of(context) == TextDirection.rtl
+              ? Icons.arrow_forward_rounded
+              : Icons.arrow_back_rounded,
+          color: Colors.white,
         ),
         onPressed: () => Navigator.of(context).maybePop(),
       ),
@@ -139,38 +149,101 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
           AppSpacing.md,
         ),
         title: Text(
-          'دليل استخدام تالية',
+          titleText,
           style: AppTypography.titleLarge.copyWith(
-            color: isDark
-                ? AppColors.darkTextPrimary
-                : AppColors.lightTextPrimary,
-            fontWeight: FontWeight.w800,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontFamily: context.isArabic ? 'Amiri' : null,
+            fontSize: 20,
           ),
         ),
-        background: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: isDark
-                ? AppColors.heroGradientDark
-                : AppColors.heroGradientLight,
-          ),
-          child: Align(
-            alignment: AlignmentDirectional.centerStart,
-            child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(
-                AppSpacing.pagePadding,
-                74,
-                AppSpacing.pagePadding,
-                0,
-              ),
-              child: Text(
-                'شرح عملي لكل مزايا التطبيق الموجودة حاليًا',
-                style: AppTypography.bodySmall.copyWith(
-                  color: Colors.white.withValues(alpha: 0.72),
+        background: Stack(
+          children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: isDark
+                      ? AppColors.heroGradientDark
+                      : AppColors.heroGradientLight,
                 ),
               ),
             ),
-          ),
+            // Background ambient pattern
+            Positioned(
+              right: -30,
+              top: -20,
+              child: Icon(
+                Icons.menu_book_rounded,
+                size: 180,
+                color: Colors.white.withValues(alpha: 0.06),
+              ),
+            ),
+            PositionedDirectional(
+              start: AppSpacing.pagePadding,
+              top: 74,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'مركز المعرفة وشرح مزايا تالية',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: Colors.white.withValues(alpha: 0.8),
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Row(
+                    children: [
+                      _AppBarBadge(
+                        icon: Icons.topic_rounded,
+                        label: '12 موضوعاً',
+                      ),
+                      SizedBox(width: 6),
+                      _AppBarBadge(
+                        icon: Icons.auto_awesome_rounded,
+                        label: '80+ نصيحة وشرح',
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _AppBarBadge extends StatelessWidget {
+  const _AppBarBadge({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: AppColors.goldLight),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: AppTypography.labelSmall.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 10,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -197,16 +270,24 @@ class _SearchField extends StatelessWidget {
       onChanged: onChanged,
       textDirection: context.textDirection,
       decoration: InputDecoration(
-        hintText: 'ابحث عن ميزة أو خطوة استخدام',
-        prefixIcon: Icon(Icons.search_rounded, color: primary),
+        hintText: 'ابحث عن ميزة أو خطوة استخدام...',
+        hintStyle: AppTypography.bodyMedium.copyWith(
+          color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+          fontSize: 13,
+        ),
+        prefixIcon: Icon(Icons.search_rounded, color: primary, size: 20),
         suffixIcon: controller.text.isEmpty
             ? null
             : IconButton(
-                icon: const Icon(Icons.close_rounded),
+                icon: const Icon(Icons.close_rounded, size: 18),
                 onPressed: onClear,
               ),
         filled: true,
         fillColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 12,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
           borderSide: BorderSide(
@@ -245,11 +326,11 @@ class _CategoryChips extends StatelessWidget {
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
 
     return SizedBox(
-      height: 42,
+      height: 36,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: categories.length,
-        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.sm),
+        separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.xs),
         itemBuilder: (context, index) {
           final category = categories[index];
           final isSelected = category == selected;
@@ -258,20 +339,22 @@ class _CategoryChips extends StatelessWidget {
             selected: isSelected,
             showCheckmark: false,
             onSelected: (_) => onSelected(category),
-            selectedColor: primary.withValues(alpha: 0.16),
+            selectedColor: primary,
             backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
             side: BorderSide(
               color: isSelected
                   ? primary
                   : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
             ),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
             labelStyle: AppTypography.labelMedium.copyWith(
               color: isSelected
-                  ? primary
+                  ? Colors.white
                   : (isDark
                         ? AppColors.darkTextSecondary
                         : AppColors.lightTextSecondary),
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              fontSize: 12,
             ),
           );
         },
@@ -288,28 +371,29 @@ class _EmptyGuideSearch extends StatelessWidget {
     final isDark = context.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     return Container(
-      padding: const EdgeInsetsDirectional.all(AppSpacing.lg),
-      alignment: AlignmentDirectional.center,
+      padding: const EdgeInsets.all(AppSpacing.lg),
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCard : AppColors.lightCard,
-        borderRadius: BorderRadiusDirectional.circular(AppSpacing.radiusLg),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         border: Border.all(
           color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
         ),
       ),
       child: Column(
         children: [
-          Icon(Icons.search_off_rounded, color: primary, size: 42),
+          Icon(Icons.search_off_rounded, color: primary, size: 44),
           const SizedBox(height: AppSpacing.sm),
           Text(
             'لا توجد نتائج مطابقة',
             style: AppTypography.titleMedium.copyWith(
+              fontWeight: FontWeight.bold,
               color: isDark
                   ? AppColors.darkTextPrimary
                   : AppColors.lightTextPrimary,
             ),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: 4),
           Text(
             'جرّب كلمة أقصر مثل: القرآن، الحفظ، الأذكار، الإشعارات.',
             textAlign: TextAlign.center,
