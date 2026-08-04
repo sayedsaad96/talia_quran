@@ -166,7 +166,7 @@ class _TaliaBottomNav extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
               decoration: AppDecorations.floatingGlass(
                 isDark: isDark,
@@ -261,6 +261,17 @@ class _NavItem extends StatelessWidget {
                   fontSize: 10.5,
                 ),
                 child: Text(label),
+              ),
+              const SizedBox(height: 2),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                curve: Curves.easeOutCubic,
+                width: isSelected ? 4 : 0,
+                height: isSelected ? 4 : 0,
+                decoration: BoxDecoration(
+                  color: primary,
+                  shape: BoxShape.circle,
+                ),
               ),
             ],
           ).animate(target: isSelected ? 1 : 0).scaleXY(begin: 1, end: 1.05, duration: 150.ms),

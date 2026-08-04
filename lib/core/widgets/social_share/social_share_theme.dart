@@ -4,7 +4,8 @@ enum SocialShareThemeType {
   emeraldDark,
   midnightGold,
   dawnLight,
-  royalGradient;
+  royalGradient,
+  parchmentGold;
 
   String get displayName {
     switch (this) {
@@ -16,6 +17,8 @@ enum SocialShareThemeType {
         return 'الفجر الهادئ';
       case SocialShareThemeType.royalGradient:
         return 'الأرجوان الملكي';
+      case SocialShareThemeType.parchmentGold:
+        return 'الرق الدافئ';
     }
   }
 }
@@ -31,6 +34,7 @@ class SocialShareTheme {
   final Color badgeBackground;
   final Color badgeTextColor;
   final Color patternColor;
+  final Color glowColor;
   final bool isDark;
 
   const SocialShareTheme({
@@ -44,6 +48,7 @@ class SocialShareTheme {
     required this.badgeBackground,
     required this.badgeTextColor,
     required this.patternColor,
+    required this.glowColor,
     required this.isDark,
   });
 
@@ -58,6 +63,7 @@ class SocialShareTheme {
     badgeBackground: Color(0x33E5C158),
     badgeTextColor: Color(0xFFF3E2A9),
     patternColor: Color(0x1AEAEEEC),
+    glowColor: Color(0x331A6B5A),
     isDark: true,
   );
 
@@ -72,6 +78,7 @@ class SocialShareTheme {
     badgeBackground: Color(0x33F8E089),
     badgeTextColor: Color(0xFFFDE8A5),
     patternColor: Color(0x18FFFFFF),
+    glowColor: Color(0x33D4A017),
     isDark: true,
   );
 
@@ -86,6 +93,7 @@ class SocialShareTheme {
     badgeBackground: Color(0x1A0D5C53),
     badgeTextColor: Color(0xFF0D5C53),
     patternColor: Color(0x0C0D5C53),
+    glowColor: Color(0x200D5C53),
     isDark: false,
   );
 
@@ -100,7 +108,23 @@ class SocialShareTheme {
     badgeBackground: Color(0x33FFD700),
     badgeTextColor: Color(0xFFFFF3B0),
     patternColor: Color(0x20FFFFFF),
+    glowColor: Color(0x33FFD700),
     isDark: true,
+  );
+
+  static const SocialShareTheme parchmentGold = SocialShareTheme(
+    type: SocialShareThemeType.parchmentGold,
+    backgroundGradient: [Color(0xFFF5EDD6), Color(0xFFEDE4C8), Color(0xFFE5DAAF)],
+    cardBackground: Color(0xFFFAF5E8),
+    borderColor: Color(0xFFC8A97A),
+    accentColor: Color(0xFF8B6914),
+    textPrimary: Color(0xFF1C2B2F),
+    textSecondary: Color(0xFF5C6B6F),
+    badgeBackground: Color(0x26C8A97A),
+    badgeTextColor: Color(0xFF7A5C10),
+    patternColor: Color(0x1AC8A97A),
+    glowColor: Color(0x33C8A97A),
+    isDark: false,
   );
 
   static SocialShareTheme get(SocialShareThemeType type) {
@@ -113,6 +137,8 @@ class SocialShareTheme {
         return dawnLight;
       case SocialShareThemeType.royalGradient:
         return royalGradient;
+      case SocialShareThemeType.parchmentGold:
+        return parchmentGold;
     }
   }
 }

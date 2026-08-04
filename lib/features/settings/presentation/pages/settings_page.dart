@@ -1,32 +1,22 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/services/notification_scheduler.dart';
-import '../../../../core/services/notification_service.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/l10n/locale_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
-
-import '../../../../core/theme/theme_cubit.dart';
-import '../../../auth/domain/entities/app_user.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
-import '../../../memorization_plus/domain/entities/memorization_entities.dart';
-import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
-import '../../../memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
-import '../../data/user_profile.dart';
-import '../../../../core/router/app_router.dart';
-
-part 'settings_page_tiles.dart';
+import '../widgets/settings_account_tiles.dart';
+import '../widgets/settings_appearance_tiles.dart';
+import '../widgets/settings_info_tiles.dart';
+import '../widgets/settings_memorization_tiles.dart';
+import '../widgets/settings_notification_tiles.dart';
+import '../widgets/settings_parent_tiles.dart';
+import '../widgets/settings_section.dart';
 
 void _showSettingsError(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -89,49 +79,49 @@ class _SettingsView extends StatelessWidget {
                   ),
                   sliver: SliverList(
                     delegate: SliverChildListDelegate([
-                      _SettingsSection(
+                      SettingsSection(
                         title: context.l10n.settingsSectionAccount,
                         children: [
-                          _AccountSection(isDark: isDark),
-                          _SettingsDivider(isDark: isDark),
-                          _ProfileSettingTile(isDark: isDark),
+                          AccountSection(isDark: isDark),
+                          SettingsDivider(isDark: isDark),
+                          ProfileSettingTile(isDark: isDark),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      _SettingsSection(
+                      SettingsSection(
                         title: context.l10n.settingsSectionAppearance,
                         children: [
-                          _SettingsInlineHeader(
+                          SettingsInlineHeader(
                             isDark: isDark,
                             icon: Icons.translate_rounded,
                             title: context.l10n.language,
                           ),
-                          _SettingsDivider(isDark: isDark),
-                          _LocaleSettingTile(isDark: isDark),
-                          _SettingsDivider(isDark: isDark),
-                          _SettingsInlineHeader(
+                          SettingsDivider(isDark: isDark),
+                          LocaleSettingTile(isDark: isDark),
+                          SettingsDivider(isDark: isDark),
+                          SettingsInlineHeader(
                             isDark: isDark,
                             icon: Icons.palette_rounded,
                             title: context.l10n.theme,
                           ),
-                          _SettingsDivider(isDark: isDark),
-                          _ThemeSettingTile(isDark: isDark),
+                          SettingsDivider(isDark: isDark),
+                          ThemeSettingTile(isDark: isDark),
                         ],
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      _SettingsSection(
+                      SettingsSection(
                         title: context.l10n.settingsSectionQuranMemorization,
                         children: [
-                          _AccuracySettingTile(isDark: isDark),
-                          _SettingsDivider(isDark: isDark),
-                          _MemorizationPathSummaryTile(
+                          AccuracySettingTile(isDark: isDark),
+                          SettingsDivider(isDark: isDark),
+                          MemorizationPathSummaryTile(
                             isDark: isDark,
                             profile: state.memorizationProfile,
                           ),
                           if (state.memorizationProfile?.hasSelectedPath ==
                               true) ...[
-                            _SettingsDivider(isDark: isDark),
-                            _ResetMemorizationPathTile(
+                            SettingsDivider(isDark: isDark),
+                            ResetMemorizationPathTile(
                               isDark: isDark,
                               onReset: context
                                   .read<SettingsCubit>()
@@ -143,11 +133,11 @@ class _SettingsView extends StatelessWidget {
                       const SizedBox(height: AppSpacing.lg),
                       if (state.isAdultPath ||
                           state.shouldShowParentSection) ...[
-                        _SettingsSection(
+                        SettingsSection(
                           title: context.l10n.settingsSectionKidsGuardian,
                           children: [
                             if (state.isAdultPath)
-                              _ParentModeToggle(
+                              ParentModeToggle(
                                 isDark: isDark,
                                 isParentMode: state.isParentMode,
                                 onChanged: context
@@ -156,27 +146,27 @@ class _SettingsView extends StatelessWidget {
                               ),
                             if (state.isAdultPath &&
                                 state.shouldShowParentSection)
-                              _SettingsDivider(isDark: isDark),
+                              SettingsDivider(isDark: isDark),
                             if (state.shouldShowParentSection)
-                              _ParentDashboardTile(isDark: isDark),
+                              ParentDashboardTile(isDark: isDark),
                           ],
                         ),
                         const SizedBox(height: AppSpacing.lg),
                       ],
-                      _SettingsSection(
+                      SettingsSection(
                         title: context.l10n.settingsSectionProgressAchievements,
-                        children: [_NotificationSettingTile(isDark: isDark)],
+                        children: [NotificationSettingTile(isDark: isDark)],
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      _SettingsSection(
+                      SettingsSection(
                         title: context.l10n.settingsSectionHelpTutorial,
-                        children: [_TutorialGuideTile(isDark: isDark)],
+                        children: [TutorialGuideTile(isDark: isDark)],
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      _SettingsSection(
+                      SettingsSection(
                         title: context.l10n.settingsSectionPrivacySecurity,
                         children: [
-                          _PrivacyPolicyTile(isDark: isDark),
+                          PrivacyPolicyTile(isDark: isDark),
                           BlocBuilder<AuthCubit, AuthState>(
                             builder: (context, authState) {
                               if (authState is! AuthAuthenticated) {
@@ -184,8 +174,8 @@ class _SettingsView extends StatelessWidget {
                               }
                               return Column(
                                 children: [
-                                  _SettingsDivider(isDark: isDark),
-                                  _DeleteAccountTile(
+                                  SettingsDivider(isDark: isDark),
+                                  DeleteAccountTile(
                                     isDark: isDark,
                                     email: authState.user.email,
                                   ),
@@ -196,9 +186,9 @@ class _SettingsView extends StatelessWidget {
                         ],
                       ),
                       const SizedBox(height: AppSpacing.lg),
-                      _SettingsSection(
+                      SettingsSection(
                         title: context.l10n.settingsSectionAboutTalia,
-                        children: [_AboutTile(isDark: isDark)],
+                        children: [AboutTile(isDark: isDark)],
                       ),
                     ]),
                   ),

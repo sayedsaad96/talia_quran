@@ -22,6 +22,18 @@ abstract final class KidsTheme {
   static const Color successGreen = AppColors.success;
   static const Color errorRed = AppColors.error;
 
+  // ─── Sky Palette ───────────────────────────────────────────────────────────
+  static const Color skyBlueDeep = Color(0xFF0B1437);
+  static const Color skyBlueMid = Color(0xFF1A2E5A);
+  static const Color emeraldGlow = Color(0xFF00C97A);
+  static const Color warmSunset = Color(0xFFFFAA44);
+
+  static const LinearGradient kidsCardGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [Color(0xFF1A2E5A), Color(0xFF0F1E3A)],
+  );
+
   static const LinearGradient backgroundGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,

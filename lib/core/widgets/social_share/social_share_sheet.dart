@@ -36,6 +36,7 @@ class SocialShareSheet extends StatefulWidget {
 class _SocialShareSheetState extends State<SocialShareSheet> {
   final ScreenshotController _screenshotController = ScreenshotController();
   SocialShareThemeType _selectedThemeType = SocialShareThemeType.emeraldDark;
+  SocialShareFormat _selectedFormat = SocialShareFormat.portrait;
   bool _isExporting = false;
 
   SocialShareTheme get _currentTheme => SocialShareTheme.get(_selectedThemeType);
@@ -43,7 +44,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
   Future<Uint8List?> _captureCardImage() async {
     try {
       return await _screenshotController.capture(
-        delay: const Duration(milliseconds: 50),
+        delay: const Duration(milliseconds: 60),
         pixelRatio: 3.0,
       );
     } catch (e) {
@@ -157,6 +158,9 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.9,
+      ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -174,14 +178,12 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: isDark
-                    ? AppColors.darkDivider
-                    : AppColors.lightDivider,
+                color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
 
           // Header
           Padding(
@@ -216,28 +218,80 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
             ),
           ),
 
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.xs),
 
-          // Card Preview Scroll Area
+          // Card Preview Scroll Area with AnimatedSwitcher
           Flexible(
             child: SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
               child: Center(
-                child: Screenshot(
-                  controller: _screenshotController,
-                  child: SocialShareCard(
-                    data: widget.data,
-                    theme: _currentTheme,
-                    width: 360,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  child: Screenshot(
+                    key: ValueKey('$_selectedThemeType-$_selectedFormat'),
+                    controller: _screenshotController,
+                    child: SocialShareCard(
+                      data: widget.data,
+                      theme: _currentTheme,
+                      format: _selectedFormat,
+                      width: 320,
+                    ),
                   ),
                 ),
               ),
             ),
           ),
 
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
 
-          // Theme Selector Label & Chips
+          // Format Picker (Aspect Ratio Selector)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: SocialShareFormat.values.map((fmt) {
+                final isSelected = fmt == _selectedFormat;
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: ChoiceChip(
+                    avatar: Icon(
+                      fmt.icon,
+                      size: 14,
+                      color: isSelected
+                          ? AppColors.primary
+                          : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                    ),
+                    label: Text(fmt.displayName),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      if (selected) {
+                        unawaited(HapticFeedback.selectionClick());
+                        setState(() => _selectedFormat = fmt);
+                      }
+                    },
+                    selectedColor: AppColors.primary.withValues(alpha: 0.18),
+                    backgroundColor: isDark
+                        ? AppColors.darkSurfaceVariant
+                        : AppColors.lightSurfaceVariant,
+                    labelStyle: TextStyle(
+                      color: isSelected
+                          ? AppColors.primary
+                          : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                      fontSize: 11,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                    side: BorderSide(
+                      color: isSelected ? AppColors.primary : Colors.transparent,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          const SizedBox(height: AppSpacing.xs),
+
+          // Theme Selector Section
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             child: Align(
@@ -257,7 +311,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
           const SizedBox(height: AppSpacing.xs),
 
           SizedBox(
-            height: 40,
+            height: 48,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
@@ -268,46 +322,20 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                 final isSelected = themeType == _selectedThemeType;
                 final themeObj = SocialShareTheme.get(themeType);
 
-                return ChoiceChip(
-                  label: Text(themeType.displayName),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    if (selected) {
-                      unawaited(HapticFeedback.selectionClick());
-                      setState(() => _selectedThemeType = themeType);
-                    }
+                return _ThemePreviewTile(
+                  theme: themeObj,
+                  isSelected: isSelected,
+                  isDark: isDark,
+                  onTap: () {
+                    unawaited(HapticFeedback.selectionClick());
+                    setState(() => _selectedThemeType = themeType);
                   },
-                  avatar: Container(
-                    width: 16,
-                    height: 16,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: themeObj.accentColor,
-                      border: Border.all(color: Colors.white, width: 1),
-                    ),
-                  ),
-                  selectedColor: AppColors.primary.withValues(alpha: 0.2),
-                  backgroundColor: isDark
-                      ? AppColors.darkSurfaceVariant
-                      : AppColors.lightSurfaceVariant,
-                  labelStyle: TextStyle(
-                    color: isSelected
-                        ? AppColors.primary
-                        : (isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary),
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                  ),
-                  side: BorderSide(
-                    color: isSelected ? AppColors.primary : Colors.transparent,
-                  ),
                 );
               },
             ),
           ),
 
-          const SizedBox(height: AppSpacing.lg),
+          const SizedBox(height: AppSpacing.md),
 
           // Action Buttons
           Padding(
@@ -317,28 +345,42 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                 // Primary Share Image Button
                 Expanded(
                   flex: 3,
-                  child: ElevatedButton.icon(
-                    onPressed: _isExporting ? null : _shareAsImage,
-                    icon: _isExporting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.send_rounded, size: 18),
-                    label: Text(
-                      _isExporting ? 'جاري التجهيز...' : 'مشاركة كصورة 📸',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: AppColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                    child: ElevatedButton.icon(
+                      onPressed: _isExporting ? null : _shareAsImage,
+                      icon: _isExporting
+                          ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(Icons.send_rounded, size: 18),
+                      label: Text(
+                        _isExporting ? 'جاري التجهيز...' : 'مشاركة كصورة 📸',
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                     ),
                   ),
@@ -387,6 +429,75 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Rich theme preview tile widget showing mini gradient + accent border
+class _ThemePreviewTile extends StatelessWidget {
+  final SocialShareTheme theme;
+  final bool isSelected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _ThemePreviewTile({
+    required this.theme,
+    required this.isSelected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: theme.backgroundGradient,
+          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected
+                ? theme.accentColor
+                : (isDark ? Colors.white12 : Colors.black12),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: theme.accentColor.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: theme.accentColor,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              theme.type.displayName,
+              style: TextStyle(
+                color: theme.textPrimary,
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

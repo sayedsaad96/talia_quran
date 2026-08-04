@@ -30,6 +30,17 @@ class CertificateAward extends Equatable {
   final String? surahNameAr;
   final String? surahNameEn;
 
+  String get verificationCode {
+    final prefix = switch (type) {
+      CertificateType.juz => 'J${juzNumber ?? 1}',
+      CertificateType.surah => 'S${surahId ?? 1}',
+      CertificateType.halfQuran => 'HQ',
+      CertificateType.fullQuran => 'FQ',
+    };
+    final hash = (id.hashCode.abs() % 9000 + 1000).toString();
+    return 'TL-${earnedAt.year}-$prefix-$hash';
+  }
+
   Map<String, dynamic> toJson() => {
     'id': id,
     'titleAr': titleAr,

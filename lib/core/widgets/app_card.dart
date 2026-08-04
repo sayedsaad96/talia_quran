@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_colors.dart';
+import '../theme/app_decorations.dart';
 import '../constants/app_spacing.dart';
 
 class AppCard extends StatelessWidget {
@@ -127,5 +128,93 @@ class GlassCard extends StatelessWidget {
       ),
       child: padding != null ? Padding(padding: padding!, child: child) : child,
     );
+  }
+}
+
+/// Spiritual parchment-inspired card
+class SpiritualCard extends StatelessWidget {
+  const SpiritualCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.margin,
+    this.onTap,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final decoration = AppDecorations.spiritualCard(isDark: isDark);
+
+    Widget card = Container(
+      margin: margin,
+      decoration: decoration,
+      child: padding != null ? Padding(padding: padding!, child: child) : child,
+    );
+
+    if (onTap != null) {
+      card = ClipRRect(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            child: card,
+          ),
+        ),
+      );
+    }
+
+    return card;
+  }
+}
+
+/// Gold rim achievement card
+class AchievementCard extends StatelessWidget {
+  const AchievementCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.margin,
+    this.onTap,
+  });
+
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final decoration = AppDecorations.goldRimCard(isDark: isDark);
+
+    Widget card = Container(
+      margin: margin,
+      decoration: decoration,
+      child: padding != null ? Padding(padding: padding!, child: child) : child,
+    );
+
+    if (onTap != null) {
+      card = ClipRRect(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            child: card,
+          ),
+        ),
+      );
+    }
+
+    return card;
   }
 }

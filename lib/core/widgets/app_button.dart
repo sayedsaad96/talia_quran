@@ -4,7 +4,7 @@ import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 import '../constants/app_spacing.dart';
 
-enum AppButtonVariant { primary, secondary, ghost, danger }
+enum AppButtonVariant { primary, secondary, ghost, danger, goldPrimary }
 
 enum AppButtonSize { small, medium, large }
 
@@ -161,6 +161,17 @@ class _AppButtonState extends State<AppButton>
           gradient: const LinearGradient(
             colors: [Color(0xFFC0392B), Color(0xFF922B21)],
           ),
+        );
+      case AppButtonVariant.goldPrimary:
+        return _PrimaryButton(
+          label: widget.label,
+          icon: widget.icon,
+          isLoading: widget.isLoading,
+          height: _height,
+          padding: _padding,
+          textStyle: _textStyle,
+          width: widget.width,
+          gradient: AppColors.goldGradient,
         );
     }
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../theme/app_colors.dart';
@@ -224,6 +225,46 @@ class ErrorStateWidget extends StatelessWidget {
                 icon: Icons.refresh_rounded,
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Empty Journey Widget ───────────────────────────────────────────────────
+
+class EmptyJourneyWidget extends StatelessWidget {
+  const EmptyJourneyWidget({super.key, required this.onStart});
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.xl),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.menu_book_rounded, size: 64, color: AppColors.gold)
+                .animate(onPlay: (c) => c.repeat(reverse: true))
+                .scale(
+                  begin: const Offset(1, 1),
+                  end: const Offset(1.05, 1.05),
+                  duration: 2000.ms,
+                ),
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'ابدأ رحلتك مع القرآن',
+              style: AppTypography.headlineSmall.copyWith(fontFamily: 'Amiri'),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            AppButton(
+              label: 'ابدأ الآن',
+              onPressed: onStart,
+              variant: AppButtonVariant.primary,
+              size: AppButtonSize.medium,
+            ),
           ],
         ),
       ),

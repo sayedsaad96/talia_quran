@@ -43,6 +43,34 @@ enum SocialShareCategory {
   }
 }
 
+enum SocialShareFormat {
+  portrait,
+  square,
+  story;
+
+  String get displayName {
+    switch (this) {
+      case SocialShareFormat.portrait:
+        return 'بطاقة (4:5)';
+      case SocialShareFormat.square:
+        return 'مربع (1:1)';
+      case SocialShareFormat.story:
+        return 'ستوري (9:16)';
+    }
+  }
+
+  IconData get icon {
+    switch (this) {
+      case SocialShareFormat.portrait:
+        return Icons.crop_portrait_rounded;
+      case SocialShareFormat.square:
+        return Icons.crop_square_rounded;
+      case SocialShareFormat.story:
+        return Icons.smartphone_rounded;
+    }
+  }
+}
+
 class SocialShareData {
   final String content;
   final String? title;
@@ -74,7 +102,7 @@ class SocialShareData {
       buffer.writeln(subtitle);
     }
     buffer.writeln();
-    buffer.write('— تمت المشاركة عبر تطبيق تالية للقرآن الكريم 🌙');
+    buffer.write('— تمت المشاركة عبر تطبيق تالية للقرآن الكريم');
     return buffer.toString();
   }
 }

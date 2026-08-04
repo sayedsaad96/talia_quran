@@ -128,12 +128,12 @@ class _AzkarPageState extends State<AzkarPage> {
                 ? const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+                    colors: [Color(0xFF0A1E2A), Color(0xFF071520)],
                   )
                 : const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF38BDF8), Color(0xFF0284C7)],
+                    colors: [Color(0xFF0F4C5C), Color(0xFF0A3545)],
                   ),
           ),
           child: Stack(

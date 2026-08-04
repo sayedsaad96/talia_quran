@@ -2,76 +2,166 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../../core/services/achievement_service.dart';
 
-// ─── Painter للزخارف الإسلامية ───────────────────────────────────────────
-class IslamicOrnamentPainter extends CustomPainter {
-  const IslamicOrnamentPainter({required this.color});
-  final Color color;
+enum CertificateStyleType {
+  classicParchment,
+  emeraldRoyal,
+  pearlGold;
+
+  String get displayName {
+    switch (this) {
+      case CertificateStyleType.classicParchment:
+        return 'الرق الذهبي';
+      case CertificateStyleType.emeraldRoyal:
+        return 'الزمرد الملكي';
+      case CertificateStyleType.pearlGold:
+        return 'اللؤلؤ الفاخر';
+    }
+  }
+}
+
+class CertificateStyleTheme {
+  final CertificateStyleType type;
+  final List<Color> bgGradient;
+  final Color borderColor;
+  final Color innerBorderColor;
+  final Color primaryText;
+  final Color secondaryText;
+  final Color accentGold;
+  final Color badgeBg;
+  final Color badgeText;
+  final Color sealBg;
+  final Color sealGold;
+  final bool isDark;
+
+  const CertificateStyleTheme({
+    required this.type,
+    required this.bgGradient,
+    required this.borderColor,
+    required this.innerBorderColor,
+    required this.primaryText,
+    required this.secondaryText,
+    required this.accentGold,
+    required this.badgeBg,
+    required this.badgeText,
+    required this.sealBg,
+    required this.sealGold,
+    required this.isDark,
+  });
+
+  static const CertificateStyleTheme classicParchment = CertificateStyleTheme(
+    type: CertificateStyleType.classicParchment,
+    bgGradient: [Color(0xFFF9F6ED), Color(0xFFF2ECE0)],
+    borderColor: Color(0xFFC09B4E),
+    innerBorderColor: Color(0x660D251C),
+    primaryText: Color(0xFF0D251C),
+    secondaryText: Color(0xCC0D251C),
+    accentGold: Color(0xFFC09B4E),
+    badgeBg: Color(0xFF0D251C),
+    badgeText: Color(0xFFF7F4EA),
+    sealBg: Color(0xFFF7F4EA),
+    sealGold: Color(0xFFC09B4E),
+    isDark: false,
+  );
+
+  static const CertificateStyleTheme emeraldRoyal = CertificateStyleTheme(
+    type: CertificateStyleType.emeraldRoyal,
+    bgGradient: [Color(0xFF041F1A), Color(0xFF0A2B24), Color(0xFF041613)],
+    borderColor: Color(0xFFE5C158),
+    innerBorderColor: Color(0x66E5C158),
+    primaryText: Color(0xFFFAF7F0),
+    secondaryText: Color(0xCCD5E0DC),
+    accentGold: Color(0xFFE5C158),
+    badgeBg: Color(0xFFE5C158),
+    badgeText: Color(0xFF041F1A),
+    sealBg: Color(0xFF0A2B24),
+    sealGold: Color(0xFFE5C158),
+    isDark: true,
+  );
+
+  static const CertificateStyleTheme pearlGold = CertificateStyleTheme(
+    type: CertificateStyleType.pearlGold,
+    bgGradient: [Color(0xFFFFFFFF), Color(0xFFFAF7F2)],
+    borderColor: Color(0xFFD4AF37),
+    innerBorderColor: Color(0x40D4AF37),
+    primaryText: Color(0xFF1F2927),
+    secondaryText: Color(0xCC5A6663),
+    accentGold: Color(0xFFB8860B),
+    badgeBg: Color(0xFF1A6B5A),
+    badgeText: Color(0xFFFFFFFF),
+    sealBg: Color(0xFFFFFFFF),
+    sealGold: Color(0xFFD4AF37),
+    isDark: false,
+  );
+
+  static CertificateStyleTheme get(CertificateStyleType type) {
+    switch (type) {
+      case CertificateStyleType.classicParchment:
+        return classicParchment;
+      case CertificateStyleType.emeraldRoyal:
+        return emeraldRoyal;
+      case CertificateStyleType.pearlGold:
+        return pearlGold;
+    }
+  }
+}
+
+// ─── Painter للزخارف والإطارات الإسلامية الناصعة Vector ─────────────────
+class CertificateFramePainter extends CustomPainter {
+  const CertificateFramePainter({required this.theme});
+  final CertificateStyleTheme theme;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color.withValues(alpha: 0.3)
+    final outerBorderPaint = Paint()
+      ..color = theme.borderColor
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
+      ..strokeWidth = 3.0;
 
-    _drawCornerOrnament(canvas, paint, Offset.zero, 0, size.width * 0.22);
-    _drawCornerOrnament(
-      canvas,
-      paint,
-      Offset(size.width, 0),
-      math.pi / 2,
-      size.width * 0.22,
-    );
-    _drawCornerOrnament(
-      canvas,
-      paint,
-      Offset(0, size.height),
-      -math.pi / 2,
-      size.width * 0.22,
-    );
-    _drawCornerOrnament(
-      canvas,
-      paint,
-      Offset(size.width, size.height),
-      math.pi,
-      size.width * 0.22,
-    );
+    final innerBorderPaint = Paint()
+      ..color = theme.innerBorderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    // 1. Outer & Inner Frame Lines
+    const margin = 12.0;
+    final outerRect = Rect.fromLTWH(margin, margin, size.width - margin * 2, size.height - margin * 2);
+    final innerRect = Rect.fromLTWH(margin + 6, margin + 6, size.width - (margin + 6) * 2, size.height - (margin + 6) * 2);
+
+    canvas.drawRRect(RRect.fromRectAndRadius(outerRect, const Radius.circular(8)), outerBorderPaint);
+    canvas.drawRRect(RRect.fromRectAndRadius(innerRect, const Radius.circular(6)), innerBorderPaint);
+
+    // 2. Corner Ornaments (Custom Geometric Arches)
+    _drawCornerOrnament(canvas, const Offset(14, 14), 0, size.width * 0.15);
+    _drawCornerOrnament(canvas, Offset(size.width - margin - 2, margin + 2), math.pi / 2, size.width * 0.15);
+    _drawCornerOrnament(canvas, Offset(margin + 2, size.height - margin - 2), -math.pi / 2, size.width * 0.15);
+    _drawCornerOrnament(canvas, Offset(size.width - margin - 2, size.height - margin - 2), math.pi, size.width * 0.15);
   }
 
-  void _drawCornerOrnament(
-    Canvas canvas,
-    Paint paint,
-    Offset corner,
-    double rotation,
-    double size,
-  ) {
+  void _drawCornerOrnament(Canvas canvas, Offset corner, double rotation, double ornamentSize) {
     canvas.save();
     canvas.translate(corner.dx, corner.dy);
     canvas.rotate(rotation);
+
+    final paint = Paint()
+      ..color = theme.accentGold.withValues(alpha: 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+
     for (int i = 1; i <= 3; i++) {
-      final rect = Rect.fromLTWH(
-        8.0 * i,
-        8.0 * i,
-        size - 16.0 * i,
-        size - 16.0 * i,
-      );
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(rect, Radius.circular(4.0 * i)),
-        paint,
-      );
+      final rect = Rect.fromLTWH(4.0 * i, 4.0 * i, ornamentSize - 8.0 * i, ornamentSize - 8.0 * i);
+      canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(3.0 * i)), paint);
     }
-    for (int i = 0; i < 5; i++) {
-      canvas.drawLine(
-        Offset(10 + i * 6.0, size),
-        Offset(size, 10 + i * 6.0),
-        paint,
-      );
-    }
+
+    final dotPaint = Paint()
+      ..color = theme.accentGold
+      ..style = PaintingStyle.fill;
+    canvas.drawCircle(Offset(ornamentSize * 0.3, ornamentSize * 0.3), 2.5, dotPaint);
+
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(IslamicOrnamentPainter old) => old.color != color;
+  bool shouldRepaint(CertificateFramePainter old) => old.theme.type != theme.type;
 }
 
 // ─── Certificate Widget ───────────────────────────────────────────────────
@@ -81,11 +171,15 @@ class CertificateWidget extends StatelessWidget {
     required this.userName,
     required this.award,
     required this.completionDate,
+    this.styleType = CertificateStyleType.classicParchment,
   });
 
   final String userName;
   final CertificateAward award;
   final DateTime completionDate;
+  final CertificateStyleType styleType;
+
+  CertificateStyleTheme get theme => CertificateStyleTheme.get(styleType);
 
   String get _arabicJuzNumber {
     if (award.juzNumber == null) return '';
@@ -156,25 +250,27 @@ class CertificateWidget extends StatelessWidget {
     return '${completionDate.year}/${completionDate.month.toString().padLeft(2, '0')}/${completionDate.day.toString().padLeft(2, '0')}';
   }
 
+  bool get _isFullOrHalf => award.type == CertificateType.fullQuran || award.type == CertificateType.halfQuran;
+
   @override
   Widget build(BuildContext context) {
-    const darkGreen = Color(0xFF0D251C);
-    const goldAccent = Color(0xFFC09B4E);
-    const bgBeige = Color(0xFFF7F4EA);
-
     return Directionality(
       textDirection: TextDirection.rtl,
       child: AspectRatio(
         aspectRatio: 1.414,
         child: Container(
           decoration: BoxDecoration(
-            color: bgBeige,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: theme.bgGradient,
+            ),
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.2),
-                blurRadius: 15,
-                spreadRadius: 5,
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 18,
+                spreadRadius: 4,
               ),
             ],
           ),
@@ -182,238 +278,238 @@ class CertificateWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             child: Stack(
               children: [
-                // ─── الخلفية ──────────────────────────────────────────
+                // ─── إطار الزخرفة المتجهي Vector ───────────────────────
                 Positioned.fill(
-                  child: Image.asset(
-                    'assets/images/certificate.png',
-                    fit: BoxFit.cover,
-                    cacheWidth: 1024,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        margin: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: goldAccent, width: 2),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const CustomPaint(
-                          painter: IslamicOrnamentPainter(color: goldAccent),
-                        ),
-                      );
-                    },
+                  child: CustomPaint(
+                    painter: CertificateFramePainter(theme: theme),
+                  ),
+                ),
+
+                // ─── وسام ختم القرآن العائم (إذا كان ختم أو نصف) ────────
+                if (_isFullOrHalf)
+                  Positioned(
+                    top: 24,
+                    left: 28,
+                    child: _RoyalRibbonBadge(theme: theme),
+                  ),
+
+                // ─── كود التوثيق المرجعي ─────────────────────────────
+                Positioned(
+                  bottom: 18,
+                  right: 28,
+                  child: Text(
+                    'كود التوثيق: ${award.verificationCode}',
+                    style: TextStyle(
+                      fontFamily: 'Amiri',
+                      fontSize: 10,
+                      color: theme.secondaryText.withValues(alpha: 0.7),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
 
                 // ─── المحتوى الرئيسي ─────────────────────────────────
                 Positioned.fill(
-                  child: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: Center(
-                      child: FractionallySizedBox(
-                        widthFactor: 0.65, // لضبط المساحة المركزية
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.center,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                // ─── اللوجو (أعلى) ───────────────────
-                                Image.asset(
-                                  'assets/images/logo_new.png',
-                                  width: 50,
-                                  height: 70,
-                                  cacheWidth: 100,
-                                  fit: BoxFit.contain,
-                                  errorBuilder: (_, _, _) => const Icon(
-                                    Icons.menu_book_rounded,
-                                    color: darkGreen,
-                                    size: 80,
-                                  ),
+                  child: Center(
+                    child: FractionallySizedBox(
+                      widthFactor: 0.68,
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.center,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // ─── اللوجو (أعلى) ───────────────────
+                              Image.asset(
+                                'assets/images/logo_new.png',
+                                width: 48,
+                                height: 68,
+                                cacheWidth: 100,
+                                fit: BoxFit.contain,
+                                errorBuilder: (_, _, _) => Icon(
+                                  Icons.menu_book_rounded,
+                                  color: theme.accentGold,
+                                  size: 70,
                                 ),
+                              ),
 
-                                const SizedBox(height: 12),
+                              const SizedBox(height: 10),
 
-                                // ─── عنوان الشهادة ────────────────────
-                                Text(
-                                  _certificateTitle,
-                                  style: const TextStyle(
-                                    fontFamily: 'Amiri',
-                                    fontSize: 34,
-                                    fontWeight: FontWeight.bold,
-                                    color: darkGreen,
-                                  ),
+                              // ─── عنوان الشهادة ────────────────────
+                              Text(
+                                _certificateTitle,
+                                style: TextStyle(
+                                  fontFamily: 'Amiri',
+                                  fontSize: 34,
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.primaryText,
                                 ),
+                              ),
 
-                                const SizedBox(height: 12),
+                              const SizedBox(height: 10),
 
-                                // ─── سطر الشهادة مع خطوط الزخرفة ─────────────
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _buildDecorativeLine(goldAccent),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      'تشهد منصة تالية لتحفيظ القرآن الكريم بأن',
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontFamily: 'Amiri',
-                                        fontSize: 18,
-                                        color: darkGreen.withValues(alpha: 0.8),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    _buildDecorativeLine(goldAccent),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 20),
-
-                                // ─── اسم الطالب مع زخرفة جانبية ──────────────
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    _buildOrnamentIcon(goldAccent),
-                                    const SizedBox(width: 16),
-                                    Text(
-                                      userName,
-                                      style: const TextStyle(
-                                        fontFamily: 'Amiri',
-                                        fontSize: 42,
-                                        fontWeight: FontWeight.bold,
-                                        color: goldAccent,
-                                      ),
-                                      textAlign: TextAlign.center,
-                                    ),
-                                    const SizedBox(width: 16),
-                                    _buildOrnamentIcon(goldAccent),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 12),
-
-                                Text(
-                                  'قد أتم بنجاح حفظ',
-                                  style: TextStyle(
-                                    fontFamily: 'Amiri',
-                                    fontSize: 20,
-                                    color: darkGreen.withValues(alpha: 0.8),
-                                  ),
-                                ),
-
-                                const SizedBox(height: 12),
-
-                                // ─── بادج الإنجاز ─────────────────────
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 32,
-                                    vertical: 10,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: darkGreen,
-                                    borderRadius: BorderRadius.circular(24),
-                                  ),
-                                  child: Text(
-                                    _achievementText,
-                                    style: const TextStyle(
+                              // ─── سطر الشهادة مع خطوط الزخرفة ─────────────
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildDecorativeLine(theme.accentGold),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    'تشهد منصة تالية لتحفيظ القرآن الكريم بأن',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
                                       fontFamily: 'Amiri',
-                                      fontSize: 24,
+                                      fontSize: 18,
+                                      color: theme.secondaryText,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  _buildDecorativeLine(theme.accentGold),
+                                ],
+                              ),
+
+                              const SizedBox(height: 16),
+
+                              // ─── اسم الطالب مع زخرفة جانبية ──────────────
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _buildOrnamentIcon(theme.accentGold),
+                                  const SizedBox(width: 16),
+                                  Text(
+                                    userName,
+                                    style: TextStyle(
+                                      fontFamily: 'Amiri',
+                                      fontSize: 42,
                                       fontWeight: FontWeight.bold,
-                                      color: bgBeige,
+                                      color: theme.accentGold,
                                     ),
+                                    textAlign: TextAlign.center,
                                   ),
+                                  const SizedBox(width: 16),
+                                  _buildOrnamentIcon(theme.accentGold),
+                                ],
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              Text(
+                                'قد أتم بنجاح حفظ',
+                                style: TextStyle(
+                                  fontFamily: 'Amiri',
+                                  fontSize: 19,
+                                  color: theme.secondaryText,
                                 ),
+                              ),
 
-                                const SizedBox(height: 16),
+                              const SizedBox(height: 10),
 
-                                // ─── آية قرآنية ───────────────────────
-                                const Text(
-                                  '﴿ إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ ﴾',
+                              // ─── بادج الإنجاز ─────────────────────
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 32,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: theme.badgeBg,
+                                  borderRadius: BorderRadius.circular(24),
+                                  border: Border.all(color: theme.accentGold.withValues(alpha: 0.5), width: 1),
+                                ),
+                                child: Text(
+                                  _achievementText,
                                   style: TextStyle(
                                     fontFamily: 'Amiri',
-                                    fontSize: 26,
-                                    color: darkGreen,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: theme.badgeText,
                                   ),
                                 ),
-                                Text(
-                                  '(الإسراء: 9)',
-                                  style: TextStyle(
-                                    fontFamily: 'Amiri',
-                                    fontSize: 14,
-                                    color: darkGreen.withValues(alpha: 0.6),
+                              ),
+
+                              const SizedBox(height: 14),
+
+                              // ─── آية قرآنية ───────────────────────
+                              Text(
+                                '﴿ إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ ﴾',
+                                style: TextStyle(
+                                  fontFamily: 'Amiri',
+                                  fontSize: 24,
+                                  color: theme.primaryText,
+                                ),
+                              ),
+                              Text(
+                                '(الإسراء: 9)',
+                                style: TextStyle(
+                                  fontFamily: 'Amiri',
+                                  fontSize: 13,
+                                  color: theme.secondaryText.withValues(alpha: 0.7),
+                                ),
+                              ),
+
+                              const SizedBox(height: 10),
+
+                              Text(
+                                'نسأل الله تعالى أن يجعل القرآن الكريم ربيع قلبه\nونور صدره ورفيق دربه في الدنيا والآخرة.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontFamily: 'Amiri',
+                                  fontSize: 17,
+                                  color: theme.secondaryText,
+                                  height: 1.5,
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // ─── التاريخ والختم ─────────────────
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // التاريخ (يمين)
+                                  Column(
+                                    children: [
+                                      Text(
+                                        _formattedDate,
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: theme.primaryText,
+                                          fontWeight: FontWeight.bold,
+                                          fontFamily: 'Amiri',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Container(
+                                        width: 90,
+                                        height: 1,
+                                        color: theme.primaryText.withValues(alpha: 0.5),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'التاريخ',
+                                        style: TextStyle(
+                                          fontFamily: 'Amiri',
+                                          fontSize: 14,
+                                          color: theme.secondaryText,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ),
 
-                                const SizedBox(height: 12),
+                                  const SizedBox(width: 180),
 
-                                Text(
-                                  'نسأل الله تعالى أن يجعل القرآن الكريم ربيع قلبه\nونور صدره ورفيق دربه في الدنيا والآخرة.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontFamily: 'Amiri',
-                                    fontSize: 18,
-                                    color: darkGreen.withValues(alpha: 0.8),
-                                    height: 1.6,
+                                  // ختم التطبيق الرسمى (يسار)
+                                  _AppSeal(
+                                    size: 104,
+                                    theme: theme,
                                   ),
-                                ),
-
-                                const SizedBox(height: 24),
-
-                                // ─── التاريخ والختم ─────────────────
-                                // في الاتجاه RTL: أول عنصر يظهر على اليمين (التاريخ)، وثاني عنصر على اليسار (الختم)
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    // التاريخ (يمين)
-                                    Column(
-                                      children: [
-                                        Text(
-                                          _formattedDate,
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            color: darkGreen,
-                                            fontWeight: FontWeight.bold,
-                                            fontFamily: 'Amiri',
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Container(
-                                          width: 90,
-                                          height: 1,
-                                          color: darkGreen.withValues(
-                                            alpha: 0.5,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          'التاريخ',
-                                          style: TextStyle(
-                                            fontFamily: 'Amiri',
-                                            fontSize: 14,
-                                            color: darkGreen.withValues(
-                                              alpha: 0.8,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(width: 190),
-
-                                    // ختم التطبيق (يسار)
-                                    const _AppSeal(
-                                      size: 108,
-                                      darkGreen: darkGreen,
-                                      goldAccent: goldAccent,
-                                      bgBeige: bgBeige,
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -437,42 +533,79 @@ class CertificateWidget extends StatelessWidget {
           height: 4,
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
-        Container(width: 60, height: 1, color: color),
+        Container(width: 50, height: 1, color: color),
       ],
     );
   }
 
   Widget _buildOrnamentIcon(Color color) {
     return SizedBox(
-      width: 28,
-      height: 28,
+      width: 26,
+      height: 26,
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // المربع الأول
           Container(
-            width: 16,
-            height: 16,
+            width: 15,
+            height: 15,
             decoration: BoxDecoration(
               border: Border.all(color: color, width: 1.5),
             ),
           ),
-          // المربع الثاني مائل بزاوية 45 درجة لتكوين نجمة إسلامية (ثمانية)
           Transform.rotate(
             angle: math.pi / 4,
             child: Container(
-              width: 16,
-              height: 16,
+              width: 15,
+              height: 15,
               decoration: BoxDecoration(
                 border: Border.all(color: color, width: 1.5),
               ),
             ),
           ),
-          // نقطة في المنتصف
           Container(
-            width: 6,
-            height: 6,
+            width: 5,
+            height: 5,
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Royal Ribbon Badge for Full Quran / Half Quran completion
+class _RoyalRibbonBadge extends StatelessWidget {
+  final CertificateStyleTheme theme;
+  const _RoyalRibbonBadge({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: theme.accentGold,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: theme.accentGold.withValues(alpha: 0.4),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.workspace_premium_rounded, size: 16, color: Colors.white),
+          const SizedBox(width: 4),
+          Text(
+            'وسام ختم القرآن',
+            style: TextStyle(
+              fontFamily: 'Amiri',
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: theme.badgeBg,
+            ),
           ),
         ],
       ),
@@ -483,15 +616,11 @@ class CertificateWidget extends StatelessWidget {
 class _AppSeal extends StatelessWidget {
   const _AppSeal({
     required this.size,
-    required this.darkGreen,
-    required this.goldAccent,
-    required this.bgBeige,
+    required this.theme,
   });
 
   final double size;
-  final Color darkGreen;
-  final Color goldAccent;
-  final Color bgBeige;
+  final CertificateStyleTheme theme;
 
   @override
   Widget build(BuildContext context) {
@@ -501,42 +630,37 @@ class _AppSeal extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // Outer shadow and base
           Container(
             width: size,
             height: size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: bgBeige,
+              color: theme.sealBg,
               boxShadow: [
                 BoxShadow(
-                  color: goldAccent.withValues(alpha: 0.3),
-                  blurRadius: 12,
+                  color: theme.sealGold.withValues(alpha: 0.35),
+                  blurRadius: 10,
                   spreadRadius: 2,
                   offset: const Offset(0, 4),
                 ),
               ],
             ),
           ),
-
-          // The Islamic Ornament Painter
           CustomPaint(
             size: Size.square(size),
             painter: _AppSealPainter(
-              darkGreen: darkGreen,
-              goldAccent: goldAccent,
-              bgBeige: bgBeige,
+              darkGreen: theme.primaryText,
+              goldAccent: theme.sealGold,
+              bgBeige: theme.sealBg,
             ),
           ),
-
-          // Inner Circle for Text
           Container(
             width: size * 0.58,
             height: size * 0.58,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: darkGreen,
-              border: Border.all(color: goldAccent, width: 1.5),
+              color: theme.badgeBg,
+              border: Border.all(color: theme.sealGold, width: 1.5),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.2),
@@ -547,14 +671,12 @@ class _AppSeal extends StatelessWidget {
               ],
             ),
           ),
-
-          // Content
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 Icons.menu_book_rounded,
-                color: goldAccent,
+                color: theme.sealGold,
                 size: size * 0.16,
               ),
               const SizedBox(height: 2),
@@ -564,7 +686,7 @@ class _AppSeal extends StatelessWidget {
                   fontFamily: 'Amiri',
                   fontSize: size * 0.13,
                   fontWeight: FontWeight.bold,
-                  color: goldAccent,
+                  color: theme.sealGold,
                   height: 1.1,
                 ),
               ),
@@ -592,7 +714,6 @@ class _AppSealPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    // 1. Outer decorative border (Scalloped / Sunburst)
     final outerPath = Path();
     const int petals = 32;
     for (var i = 0; i < petals * 2; i++) {
@@ -624,7 +745,6 @@ class _AppSealPainter extends CustomPainter {
         ..strokeWidth = 0.5,
     );
 
-    // Inner background
     canvas.drawCircle(center, radius - 5, Paint()..color = bgBeige);
     canvas.drawCircle(
       center,
@@ -635,7 +755,6 @@ class _AppSealPainter extends CustomPainter {
         ..strokeWidth = 1.0,
     );
 
-    // 2. The Rub el Hizb (8-point star formed by 2 overlapping squares)
     final starRadius = radius - 12;
     final rectWidth = starRadius * math.sqrt(2);
 
@@ -658,14 +777,12 @@ class _AppSealPainter extends CustomPainter {
         width: rectWidth,
         height: rectWidth,
       );
-      // Fill
       canvas.drawRect(
         rect,
         Paint()
           ..color = goldAccent.withValues(alpha: 0.15)
           ..style = PaintingStyle.fill,
       );
-      // Stroke
       canvas.drawRect(rect, goldStroke);
       canvas.drawRect(
         Rect.fromCenter(
@@ -678,10 +795,8 @@ class _AppSealPainter extends CustomPainter {
       canvas.restore();
     }
 
-    // 3. Ornaments at the 8 vertices
     for (var i = 0; i < 8; i++) {
       final angle = (math.pi * 2 * i) / 8;
-      // Slightly extending past the star radius for aesthetics
       final p = Offset(
         center.dx + math.cos(angle) * (starRadius + 2.5),
         center.dy + math.sin(angle) * (starRadius + 2.5),
@@ -709,30 +824,6 @@ class _AppSealPainter extends CustomPainter {
           ..style = PaintingStyle.fill,
       );
     }
-
-    // 4. Subtle inner 16-point star (geometry lines)
-    final innerStar = Path();
-    for (var i = 0; i < 16; i++) {
-      final angle = (math.pi * 2 * i) / 16;
-      final r = i.isEven ? starRadius - 5 : starRadius - 16;
-      final p = Offset(
-        center.dx + math.cos(angle) * r,
-        center.dy + math.sin(angle) * r,
-      );
-      if (i == 0) {
-        innerStar.moveTo(p.dx, p.dy);
-      } else {
-        innerStar.lineTo(p.dx, p.dy);
-      }
-    }
-    innerStar.close();
-    canvas.drawPath(
-      innerStar,
-      Paint()
-        ..color = goldAccent.withValues(alpha: 0.5)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.0,
-    );
   }
 
   @override

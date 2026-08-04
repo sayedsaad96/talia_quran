@@ -52,6 +52,29 @@ abstract class AppColors {
   static const Color goldGlow = Color(0x40F59E0B);
   static const Color primaryGlow = Color(0x330D5C53);
 
+  // ─── Glow & Ambient Colors ────────────────────────────────────────────────────
+  static const Color ambientTeal = Color(0xFF1A6B5A);
+  static const Color ambientGold = Color(0xFFD4A017);
+  static const Color shimmerBase = Color(0xFF2A3540);
+  static const Color shimmerHighlight = Color(0xFF3D5060);
+
+  // ─── Spiritual Palette ────────────────────────────────────────────────────────
+  static const Color parchmentWarm = Color(0xFFF5EDD6); // كالرق الدافئ — light
+  static const Color inkDeep = Color(0xFF1C2B2F); // حبر عميق — dark
+  static const Color moonlight = Color(0xFFE8F4F0); // ضوء القمر
+  static const Color desertSand = Color(0xFFC8A97A); // رمال الصحراء
+
+  // ─── Radial Glow Gradients ────────────────────────────────────────────────────
+  static RadialGradient get radialGlowPrimary => const RadialGradient(
+    colors: [Color(0x4D1A6B5A), Colors.transparent],
+    radius: 0.9,
+  );
+
+  static RadialGradient get radialGlowGold => const RadialGradient(
+    colors: [Color(0x33D4A017), Colors.transparent],
+    radius: 0.9,
+  );
+
   // ─── Kids Mode Colors ────────────────────────────────────────────────────────
   /// Vibrant playful green for Kids Mode UI elements
   static const Color kidsGreen = Color(0xFF27AE60);

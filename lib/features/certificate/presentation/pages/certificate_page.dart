@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gal/gal.dart';
@@ -10,6 +11,8 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/social_share/social_share_model.dart';
+import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../widgets/certificate_widget.dart';
 
 class CertificatePage extends StatefulWidget {
@@ -28,6 +31,7 @@ class CertificatePage extends StatefulWidget {
 
 class _CertificatePageState extends State<CertificatePage> {
   final _screenshotController = ScreenshotController();
+  CertificateStyleType _selectedStyle = CertificateStyleType.classicParchment;
   bool _isSaving = false;
 
   @override
@@ -42,7 +46,6 @@ class _CertificatePageState extends State<CertificatePage> {
 
   @override
   void dispose() {
-    // M05 FIX: Restore both portrait orientations when leaving
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -64,7 +67,8 @@ class _CertificatePageState extends State<CertificatePage> {
         CertificateWidget(
           userName: widget.userName,
           award: widget.award,
-          completionDate: widget.award.earnedAt, // L02 FIX
+          completionDate: widget.award.earnedAt,
+          styleType: _selectedStyle,
         ),
         pixelRatio: 3.0,
       );
@@ -86,7 +90,7 @@ class _CertificatePageState extends State<CertificatePage> {
         CertificateType.halfQuran => l10n.shareCertificateHalfQuran,
         CertificateType.fullQuran => l10n.shareCertificateFullQuran,
       };
-      // Always share as a high-quality image.
+
       final bytes = await _captureCertificateBytes();
 
       await SharePlus.instance.share(
@@ -98,7 +102,7 @@ class _CertificatePageState extends State<CertificatePage> {
               name: _certificateFileName,
             ),
           ],
-          text: shareText,
+          text: '$shareText\nكود التوثيق: ${widget.award.verificationCode}',
         ),
       );
     } catch (e) {
@@ -110,6 +114,17 @@ class _CertificatePageState extends State<CertificatePage> {
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
+  }
+
+  void _shareToSocialMediaCard() {
+    final data = SocialShareData(
+      content: 'حصلت بحمد الله على ${widget.award.titleAr} بتقدير ممتاز من منصة تالية للقرآن الكريم ✨',
+      title: 'شهادة إتمام ومواظبة',
+      subtitle: 'رقم التوثيق: ${widget.award.verificationCode}',
+      category: SocialShareCategory.certificate,
+      userName: widget.userName,
+    );
+    SocialShareSheet.show(context, data);
   }
 
   Future<void> _saveToGallery() async {
@@ -125,7 +140,6 @@ class _CertificatePageState extends State<CertificatePage> {
                 content: Text(context.l10n.certificateGalleryPermissionError),
               ),
             );
-            // M06 FIX: Reset saving state before returning
             setState(() => _isSaving = false);
           }
           return;
@@ -157,21 +171,14 @@ class _CertificatePageState extends State<CertificatePage> {
   Future<void> _saveAsPdf() async {
     setState(() => _isSaving = true);
     try {
-      final bytes = await _screenshotController.captureFromWidget(
-        CertificateWidget(
-          userName: widget.userName,
-          award: widget.award,
-          completionDate: widget.award.earnedAt, // L02 FIX
-        ),
-        pixelRatio: 3.0,
-      );
+      final bytes = await _captureCertificateBytes();
 
       final pdf = pw.Document();
       final image = pw.MemoryImage(bytes);
 
       pdf.addPage(
         pw.Page(
-          pageFormat: PdfPageFormat.a4,
+          pageFormat: PdfPageFormat.a4.landscape,
           margin: pw.EdgeInsets.zero,
           build: (pw.Context context) {
             return pw.Center(child: pw.Image(image, fit: pw.BoxFit.contain));
@@ -183,7 +190,7 @@ class _CertificatePageState extends State<CertificatePage> {
 
       await Printing.layoutPdf(
         onLayout: (PdfPageFormat format) async => pdfBytes,
-        name: 'talia_certificate.pdf',
+        name: 'talia_certificate_${widget.award.id}.pdf',
       );
     } catch (e) {
       if (mounted) {
@@ -264,7 +271,7 @@ class _CertificatePageState extends State<CertificatePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0D131A),
       body: Stack(
         children: [
           // 1. Certificate Viewer (Full Screen, Arabic layout)
@@ -277,13 +284,18 @@ class _CertificatePageState extends State<CertificatePage> {
                   maxScale: 4.0,
                   child: Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 60),
                       child: Screenshot(
                         controller: _screenshotController,
-                        child: CertificateWidget(
-                          userName: widget.userName,
-                          award: widget.award,
-                          completionDate: widget.award.earnedAt,
+                        child: AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 300),
+                          child: CertificateWidget(
+                            key: ValueKey(_selectedStyle),
+                            userName: widget.userName,
+                            award: widget.award,
+                            completionDate: widget.award.earnedAt,
+                            styleType: _selectedStyle,
+                          ),
                         ),
                       ),
                     ),
@@ -293,7 +305,7 @@ class _CertificatePageState extends State<CertificatePage> {
             ),
           ),
 
-          // 2. Close button (ambient reading direction)
+          // 2. Close button
           PositionedDirectional(
             top: 16,
             start: 16,
@@ -310,69 +322,123 @@ class _CertificatePageState extends State<CertificatePage> {
             ),
           ),
 
-          // 3. Action Buttons (ambient reading direction)
+          // 3. Style Switcher Bar (Bottom Center)
+          Positioned(
+            bottom: 20,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(30),
+                    border: Border.all(color: Colors.white24, width: 1),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: CertificateStyleType.values.map((style) {
+                      final isSelected = style == _selectedStyle;
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: ChoiceChip(
+                          label: Text(
+                            style.displayName,
+                            style: TextStyle(
+                              fontFamily: 'Amiri',
+                              fontSize: 12,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? Colors.black : Colors.white70,
+                            ),
+                          ),
+                          selected: isSelected,
+                          selectedColor: const Color(0xFFE5C158),
+                          backgroundColor: Colors.white12,
+                          onSelected: (selected) {
+                            if (selected) {
+                              unawaited(HapticFeedback.selectionClick());
+                              setState(() => _selectedStyle = style);
+                            }
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // 4. Action Buttons (Bottom Left / Start)
           PositionedDirectional(
-            bottom: 24,
+            bottom: 20,
             start: 24,
             child: SafeArea(
               child: _isSaving
                   ? Container(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(12),
                       decoration: const BoxDecoration(
                         color: Colors.black54,
                         shape: BoxShape.circle,
                       ),
                       child: const CircularProgressIndicator(
                         color: Color(0xFFC9A84C),
+                        strokeWidth: 2,
                       ),
                     )
-                  : Column(
+                  : Row(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         ElevatedButton.icon(
                           onPressed: _share,
-                          icon: const Icon(Icons.share_rounded),
-                          label: Text(
-                            context.l10n.share,
-                            style: const TextStyle(
+                          icon: const Icon(Icons.share_rounded, size: 18),
+                          label: const Text(
+                            'مشاركة الشهادة',
+                            style: TextStyle(
                               fontFamily: 'Amiri',
-                              fontSize: 16,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFC9A84C),
-                            foregroundColor: Colors.white,
+                            foregroundColor: Colors.black,
                             padding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 20,
+                              vertical: 10,
+                              horizontal: 14,
                             ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        ElevatedButton.icon(
-                          onPressed: _showSaveOptions,
-                          icon: const Icon(Icons.download_rounded),
-                          label: Text(
-                            context.l10n.save,
-                            style: const TextStyle(
-                              fontFamily: 'Amiri',
-                              fontSize: 16,
-                            ),
+                        const SizedBox(width: 8),
+                        IconButton.filledTonal(
+                          onPressed: _shareToSocialMediaCard,
+                          icon: const Icon(Icons.stars_rounded, size: 20),
+                          tooltip: 'بطاقة سوشيال ميديا',
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.white24,
+                            foregroundColor: const Color(0xFFE5C158),
+                            padding: const EdgeInsets.all(10),
                           ),
-                          style: ElevatedButton.styleFrom(
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton.filledTonal(
+                          onPressed: _showSaveOptions,
+                          icon: const Icon(Icons.download_rounded, size: 20),
+                          tooltip: 'حفظ الشهادة',
+                          style: IconButton.styleFrom(
                             backgroundColor: Colors.white24,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                              horizontal: 20,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                            padding: const EdgeInsets.all(10),
                           ),
                         ),
                       ],

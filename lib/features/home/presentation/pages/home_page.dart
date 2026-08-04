@@ -18,6 +18,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/constants/xp_constants.dart';
 import '../../../../core/widgets/activity_heatmap.dart';
+import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/journey/journey_feature_flags.dart';
@@ -139,7 +140,7 @@ class _HomeView extends StatelessWidget {
       body: BlocBuilder<HomeCubit, HomeState>(
         builder: (context, state) {
           if (state is HomeLoading) {
-            return const Center(child: LoadingWidget());
+            return const HomeSkeletonLoader();
           }
           if (state is HomeError) {
             return ErrorStateWidget(

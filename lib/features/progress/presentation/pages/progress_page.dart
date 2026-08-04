@@ -10,6 +10,7 @@ import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/section_header.dart';
+import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
@@ -56,7 +57,7 @@ class _ProgressView extends StatelessWidget {
             slivers: [
               _buildAppBar(context, isDark, state),
               if (state is ProgressLoading)
-                const SliverFillRemaining(child: LoadingWidget()),
+                const SliverFillRemaining(child: ProgressSkeletonLoader()),
               if (state is ProgressError)
                 SliverFillRemaining(
                   child: ErrorStateWidget(
@@ -104,10 +105,10 @@ class _ProgressView extends StatelessWidget {
                   ? profileState.profile.displayName
                   : null;
               final data = SocialShareData(
-                content: '📊 ملخص تقدمي في رحلتي مع القرآن الكريم:\n'
-                    '📖 ${state.progress.readPagesCount} صفحة مقروءة\n'
-                    '🧠 ${state.progress.memorizedAyahs} آية محفوظة\n'
-                    '🔥 ${state.progress.streakDays} أيام من الاستمرارية المتواصلة',
+                content: 'ملخص تقدمي في رحلتي مع القرآن الكريم:\n'
+                    '• ${state.progress.readPagesCount} صفحة مقروءة\n'
+                    '• ${state.progress.memorizedAyahs} آية محفوظة\n'
+                    '• ${state.progress.streakDays} أيام استمرارية متواصلة',
                 title: 'حصاد الإنجاز والتقدم',
                 category: SocialShareCategory.progress,
                 userName: name,
@@ -124,12 +125,12 @@ class _ProgressView extends StatelessWidget {
                 ? const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF0A1520), Color(0xFF0D1117)],
+                    colors: [Color(0xFF0A2A22), Color(0xFF0D1117)],
                   )
                 : const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF2D5A8E), Color(0xFF1A3A5C)],
+                    colors: [Color(0xFF1A6B5A), Color(0xFF2E4B3A)],
                   ),
           ),
           child: SafeArea(

@@ -1,19 +1,46 @@
 part of 'home_page.dart';
 
-class _HeroHeader extends StatelessWidget {
+class _HeroHeader extends StatefulWidget {
   const _HeroHeader({required this.state, required this.isDark});
 
   final HomeLoaded state;
   final bool isDark;
 
-  String _greetingText(BuildContext context) => switch (state.greeting) {
+  @override
+  State<_HeroHeader> createState() => _HeroHeaderState();
+}
+
+class _HeroHeaderState extends State<_HeroHeader>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _floatController;
+  late final Animation<double> _floatAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _floatController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat(reverse: true);
+    _floatAnimation = Tween<double>(begin: -4, end: 4).animate(
+      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _floatController.dispose();
+    super.dispose();
+  }
+
+  String _greetingText(BuildContext context) => switch (widget.state.greeting) {
     'morning' => context.l10n.greetingMorning,
     'afternoon' => context.l10n.greetingAfternoon,
     'evening' => context.l10n.greetingEvening,
     _ => context.l10n.greetingNight,
   };
 
-  IconData _greetingIcon() => switch (state.greeting) {
+  IconData _greetingIcon() => switch (widget.state.greeting) {
     'morning' => Icons.wb_sunny_rounded,
     'afternoon' => Icons.wb_cloudy_rounded,
     'evening' => Icons.wb_twilight_rounded,
@@ -22,7 +49,7 @@ class _HeroHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bottomColor = isDark
+    final bottomColor = widget.isDark
         ? AppColors.darkBackground
         : AppColors.lightBackground;
 
@@ -114,11 +141,19 @@ class _HeroHeader extends StatelessWidget {
                         ),
                       ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
                       const SizedBox(width: 8),
-                      Image.asset(
-                        'assets/images/logo.png',
-                        width: 32,
-                        height: 32,
-                      ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
+                      AnimatedBuilder(
+                        animation: _floatAnimation,
+                        builder: (context, child) => Transform.translate(
+                          offset: Offset(0, _floatAnimation.value),
+                          child: child,
+                        ),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 32,
+                          height: 32,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 2),
@@ -132,7 +167,10 @@ class _HeroHeader extends StatelessWidget {
                     textDirection: TextDirection.rtl,
                   ).animate().fadeIn(duration: 460.ms),
                   const SizedBox(height: AppSpacing.lg),
-                  _AchievementRow(progress: state.progress, isKids: state.isKids),
+                  _AchievementRow(
+                    progress: widget.state.progress,
+                    isKids: widget.state.isKids,
+                  ),
                 ],
               ),
             ),
