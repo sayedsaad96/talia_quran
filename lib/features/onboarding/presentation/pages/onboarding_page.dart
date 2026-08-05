@@ -88,39 +88,44 @@ class _OnboardingViewState extends State<_OnboardingView> {
                   ),
                 ),
                 // Main Content Column
-                Column(
-                  children: [
-                    _TopBar(
-                      currentStep: state.currentStep,
-                      onBack: state.currentStep == 0
-                          ? null
-                          : () => _goToStep(state.currentStep - 1),
-                      onSkip: state.isLoading
-                          ? null
-                          : () => context.read<OnboardingCubit>().skip(),
+                Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 600),
+                    child: Column(
+                      children: [
+                        _TopBar(
+                          currentStep: state.currentStep,
+                          onBack: state.currentStep == 0
+                              ? null
+                              : () => _goToStep(state.currentStep - 1),
+                          onSkip: state.isLoading
+                              ? null
+                              : () => context.read<OnboardingCubit>().skip(),
+                        ),
+                        Expanded(
+                          child: PageView(
+                            controller: _pageController,
+                            physics: state.isLoading
+                                ? const NeverScrollableScrollPhysics()
+                                : const BouncingScrollPhysics(),
+                            onPageChanged: (step) =>
+                                context.read<OnboardingCubit>().goToStep(step),
+                            children: const [
+                              _WelcomeStep(),
+                              _UserTypeStep(),
+                              _GoalStep(),
+                              _FeatureHighlightsStep(),
+                              _FinalSetupStep(),
+                            ],
+                          ),
+                        ),
+                        _BottomBar(
+                          state: state,
+                          onNext: () => _goToStep(state.currentStep + 1),
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      child: PageView(
-                        controller: _pageController,
-                        physics: state.isLoading
-                            ? const NeverScrollableScrollPhysics()
-                            : const BouncingScrollPhysics(),
-                        onPageChanged: (step) =>
-                            context.read<OnboardingCubit>().goToStep(step),
-                        children: const [
-                          _WelcomeStep(),
-                          _UserTypeStep(),
-                          _GoalStep(),
-                          _FeatureHighlightsStep(),
-                          _FinalSetupStep(),
-                        ],
-                      ),
-                    ),
-                    _BottomBar(
-                      state: state,
-                      onNext: () => _goToStep(state.currentStep + 1),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
@@ -501,13 +506,13 @@ class _WelcomeStep extends StatelessWidget {
       title: context.l10n.onboardingWelcomeTitle,
       subtitle: context.l10n.onboardingWelcomeSubtitle,
       children: [
-        GridView.count(
+        GridView.extent(
+          maxCrossAxisExtent: 220,
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
           mainAxisSpacing: AppSpacing.sm,
           crossAxisSpacing: AppSpacing.sm,
-          childAspectRatio: 1.5,
+          childAspectRatio: 1.45,
           children: [
             _WelcomeFeatureCard(
               icon: Icons.menu_book_rounded,

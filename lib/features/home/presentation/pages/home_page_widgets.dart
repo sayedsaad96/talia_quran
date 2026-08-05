@@ -667,12 +667,12 @@ class _QuickActionsGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GridView.extent(
-      maxCrossAxisExtent: 220,
+      maxCrossAxisExtent: 190,
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: AppSpacing.sm,
       mainAxisSpacing: AppSpacing.sm,
-      childAspectRatio: 1.65,
+      childAspectRatio: 1.55,
       children: [
         _QuickActionButton(
           icon: Icons.menu_book_rounded,

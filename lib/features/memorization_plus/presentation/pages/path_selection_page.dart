@@ -60,44 +60,50 @@ class _PathSelectionView extends StatelessWidget {
           final isLoading = state is MemorizationIdentityLoading;
           final isDark = context.isDark;
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24.0,
-              vertical: 32.0,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  context.l10n.memorizationPathQuestion,
-                  style: AppTypography.headlineMedium,
-                  textAlign: TextAlign.center,
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 32.0,
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  context.l10n.memorizationPathDescription,
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextSecondary
-                        : AppColors.lightTextSecondary,
-                  ),
-                  textAlign: TextAlign.center,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      context.l10n.memorizationPathQuestion,
+                      style: AppTypography.headlineMedium,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      context.l10n.memorizationPathDescription,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : AppColors.lightTextSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (state is MemorizationIdentityError) ...[
+                      const SizedBox(height: 20),
+                      ErrorInfoBanner(
+                        type: ErrorInfoBannerType.error,
+                        title: context.l10n.memorizationPathSelectionFailedTitle,
+                        message: state.message,
+                      ),
+                    ],
+                    const SizedBox(height: 48),
+                    ..._pathCards(context, isLoading),
+                    if (isLoading) ...[
+                      const SizedBox(height: 32),
+                      const Center(child: CircularProgressIndicator()),
+                    ],
+                  ],
                 ),
-                if (state is MemorizationIdentityError) ...[
-                  const SizedBox(height: 20),
-                  ErrorInfoBanner(
-                    type: ErrorInfoBannerType.error,
-                    title: context.l10n.memorizationPathSelectionFailedTitle,
-                    message: state.message,
-                  ),
-                ],
-                const SizedBox(height: 48),
-                ..._pathCards(context, isLoading),
-                if (isLoading) ...[
-                  const SizedBox(height: 32),
-                  const Center(child: CircularProgressIndicator()),
-                ],
-              ],
+              ),
             ),
           );
         },

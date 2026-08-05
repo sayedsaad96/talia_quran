@@ -26,6 +26,8 @@ import '../../domain/entities/quran_entities.dart';
 import '../cubits/quran_page_cubit.dart';
 import '../cubits/surah_detail_cubit.dart';
 import '../services/quran_read_confirmation_gate.dart';
+import '../widgets/app_quran_page_view.dart';
+import '../widgets/quran_page_font_guard.dart';
 import '../widgets/reciter_selector_sheet.dart';
 
 class QuranReaderPage extends StatefulWidget {
@@ -241,7 +243,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
             },
             builder: (context, state) {
               if (state is SurahDetailLoading) {
-                return const Center(child: CircularProgressIndicator());
+                return QuranPageSkeletonLoader(isDark: context.isDark);
               }
               if (state is SurahDetailError) {
                 return ErrorStateWidget(
@@ -302,7 +304,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
               ? state.detail
               : _currentDetail;
           if (detail == null && state is QuranPageLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return QuranPageSkeletonLoader(isDark: context.isDark);
           }
           if (detail == null && state is QuranPageError) {
             return ErrorStateWidget(
@@ -333,7 +335,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                         _registerPageInteraction(pageNumber, context),
                     onPointerSignal: (_) =>
                         _registerPageInteraction(pageNumber, context),
-                    child: qcf.QuranPageView(
+                    child: AppQuranPageView(
                       pageController: _pageController!,
                       highlights: _highlights,
                       isDarkMode: isDark,

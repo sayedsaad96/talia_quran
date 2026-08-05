@@ -151,9 +151,12 @@ class _LoginPageState extends State<LoginPage> {
             final isLoading = state is AuthLoading;
 
             return SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Form(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 480),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Form(
                   key: _formKey,
                   child: Column(
                     children: [
@@ -369,8 +372,10 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-            );
-          },
+            ),
+          ),
+        );
+      },
         ),
       ),
     );

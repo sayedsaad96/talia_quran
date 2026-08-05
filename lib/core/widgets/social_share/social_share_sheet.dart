@@ -159,7 +159,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.9,
+        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
       ),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
@@ -167,7 +167,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
       ),
       padding: EdgeInsets.only(
         top: AppSpacing.md,
-        bottom: MediaQuery.of(context).padding.bottom + AppSpacing.md,
+        bottom: MediaQuery.paddingOf(context).bottom + AppSpacing.md,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

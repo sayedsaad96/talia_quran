@@ -2874,7 +2874,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get notificationDailyReviewBody => 'يلا بينا نرجع للمصحف ونثبت حفظ اليوم 🌸';
+  String get notificationDailyReviewBody =>
+      'يلا بينا نرجع للمصحف ونثبت حفظ اليوم 🌸';
 
   @override
   String notificationStreakAlertTitle(Object count) {

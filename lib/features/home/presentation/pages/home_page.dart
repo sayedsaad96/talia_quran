@@ -149,7 +149,13 @@ class _HomeView extends StatelessWidget {
             );
           }
           if (state is HomeLoaded) {
-            return _HomeContent(state: state, isDark: isDark);
+            return Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 840),
+                child: _HomeContent(state: state, isDark: isDark),
+              ),
+            );
           }
           return const SizedBox.shrink();
         },

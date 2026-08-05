@@ -39,63 +39,94 @@ class HomeSkeletonLoader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Padding(
-      padding: EdgeInsets.all(AppSpacing.pagePadding),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Hero area
-            SkeletonBox(
-              width: double.infinity,
-              height: 180,
-              radius: AppSpacing.radiusXl,
-            ),
-            SizedBox(height: AppSpacing.lg),
-            // Bento grid top row
-            Row(
+    final size = MediaQuery.sizeOf(context);
+    final isSmallScreen = size.height < 650;
+
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.pagePadding,
+            vertical: AppSpacing.md,
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  flex: 3,
-                  child: SkeletonBox(
-                    width: double.infinity,
-                    height: 140,
-                    radius: AppSpacing.radiusXl,
-                  ),
+                // Top App Bar / Greeting Placeholder
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SkeletonBox(
+                          width: size.width * 0.4,
+                          height: 22,
+                          radius: AppSpacing.radiusSm,
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        SkeletonBox(
+                          width: size.width * 0.25,
+                          height: 14,
+                          radius: AppSpacing.radiusSm,
+                        ),
+                      ],
+                    ),
+                    const SkeletonBox(
+                      width: 44,
+                      height: 44,
+                      radius: AppSpacing.radiusFull,
+                    ),
+                  ],
                 ),
-                SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  flex: 2,
-                  child: SkeletonBox(
-                    width: double.infinity,
-                    height: 140,
-                    radius: AppSpacing.radiusXl,
-                  ),
+                SizedBox(height: isSmallScreen ? AppSpacing.md : AppSpacing.lg),
+
+                // Hero Header Card
+                SkeletonBox(
+                  width: double.infinity,
+                  height: isSmallScreen ? 140 : 170,
+                  radius: AppSpacing.radiusXl,
+                ),
+                SizedBox(height: isSmallScreen ? AppSpacing.sm : AppSpacing.md),
+
+                // Next Action / Resume Session Card
+                SkeletonBox(
+                  width: double.infinity,
+                  height: isSmallScreen ? 70 : 85,
+                  radius: AppSpacing.radiusLg,
+                ),
+                SizedBox(height: isSmallScreen ? AppSpacing.sm : AppSpacing.md),
+
+                // Bento Grid Cards
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: SkeletonBox(
+                        width: double.infinity,
+                        height: isSmallScreen ? 110 : 130,
+                        radius: AppSpacing.radiusLg,
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      flex: 2,
+                      child: SkeletonBox(
+                        width: double.infinity,
+                        height: isSmallScreen ? 110 : 130,
+                        radius: AppSpacing.radiusLg,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-            SizedBox(height: AppSpacing.sm),
-            // Bento grid bottom row
-            Row(
-              children: [
-                Expanded(
-                  child: SkeletonBox(
-                    width: double.infinity,
-                    height: 80,
-                    radius: AppSpacing.radiusLg,
-                  ),
-                ),
-                SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: SkeletonBox(
-                    width: double.infinity,
-                    height: 80,
-                    radius: AppSpacing.radiusLg,
-                  ),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );

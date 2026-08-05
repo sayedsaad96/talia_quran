@@ -13,6 +13,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../cubits/quran_page_cubit.dart';
+import '../widgets/app_quran_page_view.dart';
+import '../widgets/quran_page_font_guard.dart';
 
 class KidsQuranReaderPage extends StatefulWidget {
   const KidsQuranReaderPage({super.key, this.surahId, this.pageNumber});
@@ -84,7 +86,7 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
               ? state.detail
               : _currentDetail;
           if (detail == null && state is QuranPageLoading) {
-            return const Scaffold(body: Center(child: LoadingWidget()));
+            return Scaffold(body: QuranPageSkeletonLoader(isDark: context.isDark));
           }
           if (detail == null && state is QuranPageError) {
             return Scaffold(
@@ -155,7 +157,7 @@ class KidsQuranReaderContent extends StatelessWidget {
             Expanded(
               child:
                   reader ??
-                  qcf.QuranPageView(
+                  AppQuranPageView(
                     pageController: pageController!,
                     highlights: const <qcf.HighlightVerse>[],
                     isDarkMode: isDark,

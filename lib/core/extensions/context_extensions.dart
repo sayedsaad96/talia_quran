@@ -22,6 +22,8 @@ extension BuildContextX on BuildContext {
   double get topPadding => MediaQuery.paddingOf(this).top;
   double get bottomPadding => MediaQuery.paddingOf(this).bottom;
   bool get isSmallScreen => screenWidth < 360;
+  bool get isWideScreen => screenWidth >= 600;
+  bool get isTablet => screenWidth >= 720;
 
   // ─── Navigation ──────────────────────────────────────────────────────────────
   void showSnackBar(String message, {bool isError = false}) {

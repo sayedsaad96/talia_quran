@@ -237,7 +237,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
               ),
               SizedBox(
                 height:
-                    MediaQuery.of(sheetContext).padding.bottom + AppSpacing.md,
+                    MediaQuery.paddingOf(sheetContext).bottom + AppSpacing.md,
               ),
             ],
           ),
@@ -789,7 +789,7 @@ void _showAddChildOptions(BuildContext context) {
               _showManualTokenDialog(context);
             },
           ),
-          SizedBox(height: MediaQuery.of(sheetContext).padding.bottom),
+          SizedBox(height: MediaQuery.paddingOf(sheetContext).bottom),
         ],
       ),
     ),

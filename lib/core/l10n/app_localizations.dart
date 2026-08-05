@@ -5236,85 +5236,85 @@ abstract class AppLocalizations {
   /// No description provided for @notificationDailyReviewTitle.
   ///
   /// In ar, this message translates to:
-  /// **'وقت المراجعة اليومية 📖'**
+  /// **'جاهز نراجع سوا؟ 📖'**
   String get notificationDailyReviewTitle;
 
   /// No description provided for @notificationDailyReviewBodyCount.
   ///
   /// In ar, this message translates to:
-  /// **'لديك {count} آية للمراجعة اليوم'**
+  /// **'عندك {count} آية مستنية مراجعتك النهاردة.. يلا خطوة بخطوة! ✨'**
   String notificationDailyReviewBodyCount(Object count);
 
   /// No description provided for @notificationDailyReviewBody.
   ///
   /// In ar, this message translates to:
-  /// **'حان وقت مراجعة حفظك اليومي'**
+  /// **'يلا بينا نرجع للمصحف ونثبت حفظ اليوم 🌸'**
   String get notificationDailyReviewBody;
 
   /// No description provided for @notificationStreakAlertTitle.
   ///
   /// In ar, this message translates to:
-  /// **'⚠️ لا تُضيِّع {count} يوماً!'**
+  /// **'⚠️ متضيعش إنجاز {count} يوم!'**
   String notificationStreakAlertTitle(Object count);
 
   /// No description provided for @notificationStreakAlertBody.
   ///
   /// In ar, this message translates to:
-  /// **'لم تراجع حفظك اليوم بعد — لا تزال قادرًا'**
+  /// **'فاضل تكة صغيرة وتكمل وردك النهاردة.. متكسلش، تقدر تعملها! 🔥'**
   String get notificationStreakAlertBody;
 
   /// No description provided for @notificationDailyAyahTitle.
   ///
   /// In ar, this message translates to:
-  /// **'آية اليوم ✨'**
+  /// **'آية تفتح لك يومك ✨'**
   String get notificationDailyAyahTitle;
 
   /// No description provided for @notificationDailyAyahBody.
   ///
   /// In ar, this message translates to:
-  /// **'اقرأ وردك اليومي من القرآن الكريم'**
+  /// **'خدلك دقيقة روق بالك مع وردك النهاردة من القرآن الكريم 🌿'**
   String get notificationDailyAyahBody;
 
   /// No description provided for @notificationMorningAzkarTitle.
   ///
   /// In ar, this message translates to:
-  /// **'أذكار الصباح ☀️'**
+  /// **'صبحك الله بالخير ☀️'**
   String get notificationMorningAzkarTitle;
 
   /// No description provided for @notificationMorningAzkarBody.
   ///
   /// In ar, this message translates to:
-  /// **'ابدأ يومك بذكر الله وطمأنينة القلب'**
+  /// **'يلا ابدأ يومك بذكر الله وطمئن قلبك.. أذكار الصباح في انتظارك'**
   String get notificationMorningAzkarBody;
 
   /// No description provided for @notificationEveningAzkarTitle.
   ///
   /// In ar, this message translates to:
-  /// **'أذكار المساء 🌙'**
+  /// **'مساء الخير والسكينة 🌙'**
   String get notificationEveningAzkarTitle;
 
   /// No description provided for @notificationEveningAzkarBody.
   ///
   /// In ar, this message translates to:
-  /// **'اختم يومك بذكر الله وحفظه'**
+  /// **'يومك كان زحمة؟ خذ لحظة هدوء مع أذكار المساء واختم يومك بحفظ الله'**
   String get notificationEveningAzkarBody;
 
   /// No description provided for @notificationKidsReviewTitle.
   ///
   /// In ar, this message translates to:
-  /// **'وقت التسميع يا بطل! 🌟'**
+  /// **'يلا يا بطل جاهز؟ 🌟'**
   String get notificationKidsReviewTitle;
 
   /// No description provided for @notificationKidsReviewBody.
   ///
   /// In ar, this message translates to:
-  /// **'مرحلتك الجديدة جاهزة، هيا نكمل الحفظ!'**
+  /// **'مرحلتك الجديدة مستنياك.. يلا نكمل ونجمع نجوم جديدة! 🚀'**
   String get notificationKidsReviewBody;
 
   /// No description provided for @notificationDailyDuaTitle.
   ///
   /// In ar, this message translates to:
-  /// **'دعاء اليوم 🤲'**
+  /// **'دعوة من القلب 🤲'**
   String get notificationDailyDuaTitle;
 
   /// No description provided for @homeTourTitle.

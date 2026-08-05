@@ -48,63 +48,69 @@ class _AzkarPageState extends State<AzkarPage> {
         future: _countsFuture,
         builder: (context, snapshot) {
           final counts = snapshot.data;
-          return CustomScrollView(
-            slivers: [
-              _buildAppBar(context, isDark),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.pagePadding,
-                  AppSpacing.lg,
-                  AppSpacing.pagePadding,
-                  120, // Prevent cutoff by bottom nav
-                ),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    _AzkarCategoryCard(
-                      title: context.l10n.morningAzkar,
-                      subtitle: counts == null ? '...' : context.l10n.zikrCount(counts[AzkarCategory.morning] ?? 0),
-                      icon: Icons.wb_sunny_rounded,
-                      gradientColors: const [Color(0xFFFF8C42), Color(0xFFFF6B00)],
-                      route: 'morning',
-                      delay: 0,
-                      isDark: isDark,
+          return Align(
+            alignment: Alignment.topCenter,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: CustomScrollView(
+                slivers: [
+                  _buildAppBar(context, isDark),
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.pagePadding,
+                      AppSpacing.lg,
+                      AppSpacing.pagePadding,
+                      120, // Prevent cutoff by bottom nav
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    _AzkarCategoryCard(
-                      title: context.l10n.eveningAzkar,
-                      subtitle: counts == null ? '...' : context.l10n.zikrCount(counts[AzkarCategory.evening] ?? 0),
-                      icon: Icons.nightlight_round,
-                      gradientColors: const [Color(0xFF2D5A8E), Color(0xFF1A3A5C)],
-                      route: 'evening',
-                      delay: 80,
-                      isDark: isDark,
+                    sliver: SliverList(
+                      delegate: SliverChildListDelegate([
+                        _AzkarCategoryCard(
+                          title: context.l10n.morningAzkar,
+                          subtitle: counts == null ? '...' : context.l10n.zikrCount(counts[AzkarCategory.morning] ?? 0),
+                          icon: Icons.wb_sunny_rounded,
+                          gradientColors: const [Color(0xFFFF8C42), Color(0xFFFF6B00)],
+                          route: 'morning',
+                          delay: 0,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _AzkarCategoryCard(
+                          title: context.l10n.eveningAzkar,
+                          subtitle: counts == null ? '...' : context.l10n.zikrCount(counts[AzkarCategory.evening] ?? 0),
+                          icon: Icons.nightlight_round,
+                          gradientColors: const [Color(0xFF2D5A8E), Color(0xFF1A3A5C)],
+                          route: 'evening',
+                          delay: 80,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _AzkarCategoryCard(
+                          title: context.l10n.generalAzkar,
+                          subtitle: counts == null ? '...' : context.l10n.azkarCount(counts[AzkarCategory.general] ?? 0),
+                          icon: Icons.spa_rounded,
+                          gradientColors: const [Color(0xFF1A6B5A), Color(0xFF0F4A3E)],
+                          route: 'general',
+                          delay: 160,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+                        _AzkarCategoryCard(
+                          title: context.l10n.duas,
+                          subtitle: counts == null ? '...' : context.l10n.duaCount(counts[AzkarCategory.duas] ?? 0),
+                          icon: Icons.volunteer_activism_rounded,
+                          gradientColors: const [Color(0xFFE11D48), Color(0xFF881337)],
+                          route: 'duas',
+                          delay: 240,
+                          isDark: isDark,
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+                        _DailyTip(isDark: isDark),
+                      ]),
                     ),
-                    const SizedBox(height: AppSpacing.md),
-                    _AzkarCategoryCard(
-                      title: context.l10n.generalAzkar,
-                      subtitle: counts == null ? '...' : context.l10n.azkarCount(counts[AzkarCategory.general] ?? 0),
-                      icon: Icons.spa_rounded,
-                      gradientColors: const [Color(0xFF1A6B5A), Color(0xFF0F4A3E)],
-                      route: 'general',
-                      delay: 160,
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    _AzkarCategoryCard(
-                      title: context.l10n.duas,
-                      subtitle: counts == null ? '...' : context.l10n.duaCount(counts[AzkarCategory.duas] ?? 0),
-                      icon: Icons.volunteer_activism_rounded,
-                      gradientColors: const [Color(0xFFE11D48), Color(0xFF881337)],
-                      route: 'duas',
-                      delay: 240,
-                      isDark: isDark,
-                    ),
-                    const SizedBox(height: AppSpacing.xl),
-                    _DailyTip(isDark: isDark),
-                  ]),
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           );
         },
       ),

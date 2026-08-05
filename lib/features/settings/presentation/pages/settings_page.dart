@@ -77,8 +77,12 @@ class _SettingsView extends StatelessWidget {
             backgroundColor: isDark
                 ? AppColors.darkBackground
                 : AppColors.lightBackground,
-            body: CustomScrollView(
-              slivers: [
+            body: Align(
+              alignment: Alignment.topCenter,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 720),
+                child: CustomScrollView(
+                  slivers: [
                 _buildAppBar(context, isDark),
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(
@@ -221,8 +225,10 @@ class _SettingsView extends StatelessWidget {
                 ),
               ],
             ),
-          );
-        },
+          ),
+        ),
+      );
+    },
       ),
     );
   }
