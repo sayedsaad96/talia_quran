@@ -32,31 +32,39 @@ class SocialShareCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isAchievement = data.category == SocialShareCategory.achievement ||
+        data.category == SocialShareCategory.progress;
+
     return AspectRatio(
       aspectRatio: _aspectRatio,
       child: Container(
         width: width,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
             colors: theme.backgroundGradient,
           ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: theme.borderColor, width: 2),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: theme.borderColor, width: 2.2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 28,
+              offset: const Offset(0, 12),
+            ),
+            BoxShadow(
+              color: theme.accentColor.withValues(alpha: 0.15),
+              blurRadius: 18,
+              spreadRadius: -2,
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(24),
           child: Stack(
             children: [
-              // Background Islamic Pattern Overlay (Geometric Octagram)
+              // ─── 1. Background Islamic Geometric Pattern ──────────────────
               Positioned.fill(
                 child: CustomPaint(
                   painter: _IslamicPatternPainter(
@@ -65,13 +73,13 @@ class SocialShareCard extends StatelessWidget {
                 ),
               ),
 
-              // Ambient Inner Radial Glow
+              // ─── 2. Ambient Radial Glow Header ────────────────────────────
               Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: RadialGradient(
-                      center: const Alignment(0, -0.6),
-                      radius: 0.8,
+                      center: const Alignment(0, -0.5),
+                      radius: 0.85,
                       colors: [
                         theme.glowColor,
                         Colors.transparent,
@@ -81,31 +89,40 @@ class SocialShareCard extends StatelessWidget {
                 ),
               ),
 
-              // Top Corner Decorators (Left & Right)
+              // ─── 3. Islamic Mihrab Arch Silhouette Overlay ─────────────────
+              Positioned.fill(
+                child: CustomPaint(
+                  painter: _MihrabArchPainter(
+                    color: theme.accentColor.withValues(alpha: 0.12),
+                  ),
+                ),
+              ),
+
+              // ─── 4. Corner Ornaments (Top & Bottom) ───────────────────────
               Positioned(
-                top: 14,
-                left: 14,
+                top: 12,
+                left: 12,
                 child: _CornerDecorator(color: theme.accentColor),
               ),
               Positioned(
-                top: 14,
-                right: 14,
+                top: 12,
+                right: 12,
                 child: Transform.scale(
                   scaleX: -1,
                   child: _CornerDecorator(color: theme.accentColor),
                 ),
               ),
               Positioned(
-                bottom: 14,
-                left: 14,
+                bottom: 12,
+                left: 12,
                 child: Transform.scale(
                   scaleY: -1,
                   child: _CornerDecorator(color: theme.accentColor),
                 ),
               ),
               Positioned(
-                bottom: 14,
-                right: 14,
+                bottom: 12,
+                right: 12,
                 child: Transform.scale(
                   scaleX: -1,
                   scaleY: -1,
@@ -113,125 +130,39 @@ class SocialShareCard extends StatelessWidget {
                 ),
               ),
 
-              // Main Content Body
+              // ─── 5. Main Card Content Body ────────────────────────────────
               Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: AppSpacing.lg,
-                  vertical: AppSpacing.xl,
+                  vertical: AppSpacing.md,
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // Header Section (Branding & Category Badge)
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: theme.accentColor.withValues(alpha: 0.6),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  'assets/images/logo_icon_padded.png',
-                                  width: 34,
-                                  height: 34,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => Icon(
-                                    Icons.auto_awesome,
-                                    color: theme.accentColor,
-                                    size: 22,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.sm),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'تالية',
-                                  style: AppTypography.displaySmall.copyWith(
-                                    color: theme.accentColor,
-                                    fontSize: 22,
-                                    height: 1.0,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  'رفيقك في رحلة القرآن',
-                                  style: AppTypography.labelSmall.copyWith(
-                                    color: theme.textSecondary.withValues(alpha: 0.85),
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        // Badge Tag
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.md,
-                            vertical: AppSpacing.xs,
-                          ),
-                          decoration: BoxDecoration(
-                            color: theme.badgeBackground,
-                            borderRadius: BorderRadius.circular(30),
-                            border: Border.all(
-                              color: theme.accentColor.withValues(alpha: 0.4),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                data.category.icon,
-                                size: 14,
-                                color: theme.badgeTextColor,
-                              ),
-                              const SizedBox(width: AppSpacing.xs),
-                              Text(
-                                data.badgeText,
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: theme.badgeTextColor,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                    // Header Section (Branding & Logo)
+                    _CardHeader(theme: theme, badgeText: data.badgeText, categoryIcon: data.category.icon),
 
-                    // Middle Card Content Frame
+                    // Middle Section (Golden Achievement Medal + Card Container)
                     Expanded(
                       child: Container(
                         width: double.infinity,
-                        margin: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                        padding: const EdgeInsets.all(AppSpacing.lg),
+                        margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
                         decoration: BoxDecoration(
-                          color: theme.cardBackground.withValues(alpha: 0.78),
-                          borderRadius: BorderRadius.circular(18),
+                          color: theme.cardBackground.withValues(alpha: 0.82),
+                          borderRadius: BorderRadius.circular(20),
                           border: Border.all(
-                            color: theme.borderColor.withValues(alpha: 0.35),
-                            width: 1,
+                            color: theme.borderColor.withValues(alpha: 0.4),
+                            width: 1.2,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
-                              blurRadius: 10,
+                              color: Colors.black.withValues(alpha: 0.12),
+                              blurRadius: 12,
                               offset: const Offset(0, 4),
                             ),
                           ],
@@ -241,21 +172,27 @@ class SocialShareCard extends StatelessWidget {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                // Quran Ayah Decorative Header
+                                // Illuminated Golden Medal Emblem for Achievements
+                                if (isAchievement) ...[
+                                  _GoldenAchievementMedal(theme: theme),
+                                  const SizedBox(height: AppSpacing.sm),
+                                ],
+
+                                // Bismillah for Quran Ayah shares
                                 if (data.category == SocialShareCategory.quranAyah) ...[
                                   Text(
                                     '﴿ بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيمِ ﴾',
                                     textAlign: TextAlign.center,
                                     style: AppTypography.displaySmall.copyWith(
-                                      color: theme.accentColor.withValues(alpha: 0.9),
+                                      color: theme.accentColor.withValues(alpha: 0.95),
                                       fontSize: 16,
                                       fontFamily: 'Amiri',
                                     ),
                                   ),
-                                  const SizedBox(height: AppSpacing.sm),
+                                  const SizedBox(height: AppSpacing.xs),
                                 ],
 
-                                // Title (If Any)
+                                // Title (e.g., الصفحة الأولى / إنجاز جديد)
                                 if (data.title != null && data.title!.isNotEmpty) ...[
                                   Text(
                                     data.title!,
@@ -263,37 +200,38 @@ class SocialShareCard extends StatelessWidget {
                                     style: AppTypography.headlineMedium.copyWith(
                                       color: theme.accentColor,
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 18,
-                                      fontFamily: data.category == SocialShareCategory.quranAyah ? 'Amiri' : null,
+                                      fontSize: isAchievement ? 20 : 18,
+                                      fontFamily: 'Amiri',
+                                      height: 1.25,
                                     ),
                                   ),
-                                  const SizedBox(height: AppSpacing.sm),
+                                  const SizedBox(height: AppSpacing.xs),
                                 ],
 
-                                // Main Text Content
+                                // Main Content (e.g. اقرأ أول صفحة من القرآن)
                                 Text(
                                   data.content,
                                   textAlign: TextAlign.center,
                                   textDirection: TextDirection.rtl,
                                   style: AppTypography.displaySmall.copyWith(
                                     color: theme.textPrimary,
-                                    fontSize: data.content.length > 200
-                                        ? 15
-                                        : (data.content.length > 100 ? 17 : 21),
-                                    height: 1.8,
-                                    fontFamily: (data.category == SocialShareCategory.quranAyah || data.category == SocialShareCategory.dua) ? 'Amiri' : null,
+                                    fontSize: data.content.length > 180
+                                        ? 14
+                                        : (data.content.length > 90 ? 16 : 19),
+                                    height: 1.75,
+                                    fontFamily: 'Amiri',
+                                    fontWeight: isAchievement ? FontWeight.w600 : FontWeight.normal,
                                   ),
                                 ),
 
-                                // Subtitle / Verse Ref / Source
+                                // Subtitle / Reference
                                 if (data.subtitle != null && data.subtitle!.isNotEmpty) ...[
-                                  const SizedBox(height: AppSpacing.md),
+                                  const SizedBox(height: AppSpacing.xs),
                                   Divider(
                                     color: theme.borderColor.withValues(alpha: 0.35),
-                                    indent: 40,
-                                    endIndent: 40,
+                                    indent: 48,
+                                    endIndent: 48,
                                   ),
-                                  const SizedBox(height: AppSpacing.xs),
                                   Text(
                                     data.subtitle!,
                                     textAlign: TextAlign.center,
@@ -301,6 +239,7 @@ class SocialShareCard extends StatelessWidget {
                                       color: theme.accentColor,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
+                                      fontFamily: 'Amiri',
                                     ),
                                   ),
                                 ],
@@ -311,79 +250,8 @@ class SocialShareCard extends StatelessWidget {
                       ),
                     ),
 
-                    // Footer Section (User Name Tag & App Footer)
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (data.userName != null && data.userName!.isNotEmpty) ...[
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.person_outline_rounded,
-                                size: 14,
-                                color: theme.textSecondary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'رحلة ${data.userName}',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: theme.textSecondary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.xs),
-                        ],
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                height: 1,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Colors.transparent,
-                                      theme.borderColor.withValues(alpha: 0.5),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
-                              child: Icon(
-                                Icons.stars_rounded,
-                                size: 14,
-                                color: theme.accentColor,
-                              ),
-                            ),
-                            Expanded(
-                              child: Container(
-                                height: 1,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      theme.borderColor.withValues(alpha: 0.5),
-                                      Colors.transparent,
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          'تمت المشاركة عبر تطبيق تالية للقرآن الكريم',
-                          style: AppTypography.labelSmall.copyWith(
-                            color: theme.textSecondary.withValues(alpha: 0.75),
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
+                    // Footer Section (User Name Tag & App Signature)
+                    _CardFooter(theme: theme, userName: data.userName),
                   ],
                 ),
               ),
@@ -395,6 +263,250 @@ class SocialShareCard extends StatelessWidget {
   }
 }
 
+/// Header with Talia App branding and category badge
+class _CardHeader extends StatelessWidget {
+  final SocialShareTheme theme;
+  final String badgeText;
+  final IconData categoryIcon;
+
+  const _CardHeader({
+    required this.theme,
+    required this.badgeText,
+    required this.categoryIcon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: theme.accentColor.withValues(alpha: 0.7),
+                  width: 1.5,
+                ),
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/logo_icon_padded.png',
+                  width: 32,
+                  height: 32,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, _, _) => Icon(
+                    Icons.auto_awesome_rounded,
+                    color: theme.accentColor,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.xs),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'تالية',
+                  style: AppTypography.displaySmall.copyWith(
+                    color: theme.accentColor,
+                    fontSize: 20,
+                    height: 1.0,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Amiri',
+                  ),
+                ),
+                Text(
+                  'رفيقك في رحلة القرآن',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: theme.textSecondary.withValues(alpha: 0.85),
+                    fontSize: 9.5,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: 3,
+          ),
+          decoration: BoxDecoration(
+            color: theme.badgeBackground,
+            borderRadius: BorderRadius.circular(30),
+            border: Border.all(
+              color: theme.accentColor.withValues(alpha: 0.45),
+              width: 1,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                categoryIcon,
+                size: 13,
+                color: theme.badgeTextColor,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                badgeText,
+                style: AppTypography.labelSmall.copyWith(
+                  color: theme.badgeTextColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// 3D Illuminated Golden Medal Emblem Widget for Achievements
+class _GoldenAchievementMedal extends StatelessWidget {
+  final SocialShareTheme theme;
+
+  const _GoldenAchievementMedal({required this.theme});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 58,
+      height: 58,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            theme.accentColor,
+            theme.borderColor,
+            const Color(0xFF8B6508),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.accentColor.withValues(alpha: 0.45),
+            blurRadius: 14,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(3),
+      child: Container(
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: theme.cardBackground,
+          border: Border.all(
+            color: theme.accentColor.withValues(alpha: 0.8),
+            width: 1.5,
+          ),
+        ),
+        child: Icon(
+          Icons.workspace_premium_rounded,
+          color: theme.accentColor,
+          size: 32,
+        ),
+      ),
+    );
+  }
+}
+
+/// Card Footer showing user name & Quran signature
+class _CardFooter extends StatelessWidget {
+  final SocialShareTheme theme;
+  final String? userName;
+
+  const _CardFooter({required this.theme, this.userName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (userName != null && userName!.isNotEmpty) ...[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.person_outline_rounded,
+                size: 13,
+                color: theme.accentColor,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'رحلة $userName مع القرآن',
+                style: AppTypography.labelSmall.copyWith(
+                  color: theme.accentColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  fontFamily: 'Amiri',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+        ],
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      theme.borderColor.withValues(alpha: 0.5),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              child: Icon(
+                Icons.stars_rounded,
+                size: 12,
+                color: theme.accentColor,
+              ),
+            ),
+            Expanded(
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      theme.borderColor.withValues(alpha: 0.5),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'تمت المشاركة عبر تطبيق تالية للقرآن الكريم',
+          style: AppTypography.labelSmall.copyWith(
+            color: theme.textSecondary.withValues(alpha: 0.75),
+            fontSize: 9.5,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Corner Decorator Painter
 class _CornerDecorator extends StatelessWidget {
   final Color color;
 
@@ -403,7 +515,7 @@ class _CornerDecorator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      size: const Size(32, 32),
+      size: const Size(30, 30),
       painter: _CornerPainter(color: color),
     );
   }
@@ -417,7 +529,7 @@ class _CornerPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withValues(alpha: 0.7)
+      ..color = color.withValues(alpha: 0.75)
       ..strokeWidth = 1.8
       ..style = PaintingStyle.stroke;
 
@@ -453,7 +565,7 @@ class _IslamicPatternPainter extends CustomPainter {
       ..strokeWidth = 0.8
       ..style = PaintingStyle.stroke;
 
-    const sizeStep = 60.0;
+    const sizeStep = 54.0;
     for (double x = 0; x < size.width + sizeStep; x += sizeStep) {
       for (double y = 0; y < size.height + sizeStep; y += sizeStep) {
         _drawOctagram(canvas, Offset(x, y), sizeStep * 0.35, paint);
@@ -462,11 +574,9 @@ class _IslamicPatternPainter extends CustomPainter {
   }
 
   void _drawOctagram(Canvas canvas, Offset center, double radius, Paint paint) {
-    // Square 1
     final rect = Rect.fromCircle(center: center, radius: radius);
     canvas.drawRect(rect, paint);
 
-    // Square 2 rotated 45 degrees
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(45 * math.pi / 180);
@@ -476,5 +586,53 @@ class _IslamicPatternPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _IslamicPatternPainter oldDelegate) =>
+      oldDelegate.color != color;
+}
+
+/// Islamic Mihrab Arch Silhouette Painter for Top Card Overlay
+class _MihrabArchPainter extends CustomPainter {
+  final Color color;
+
+  _MihrabArchPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1.2
+      ..style = PaintingStyle.stroke;
+
+    final path = Path();
+    final topMargin = size.height * 0.08;
+    final archWidth = size.width * 0.75;
+    final archHeight = size.height * 0.22;
+    final left = (size.width - archWidth) / 2;
+    final right = left + archWidth;
+
+    path.moveTo(left, topMargin + archHeight);
+    path.lineTo(left, topMargin + archHeight * 0.4);
+    path.cubicTo(
+      left,
+      topMargin,
+      size.width / 2 - archWidth * 0.2,
+      topMargin,
+      size.width / 2,
+      topMargin - 6,
+    );
+    path.cubicTo(
+      size.width / 2 + archWidth * 0.2,
+      topMargin,
+      right,
+      topMargin,
+      right,
+      topMargin + archHeight * 0.4,
+    );
+    path.lineTo(right, topMargin + archHeight);
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _MihrabArchPainter oldDelegate) =>
       oldDelegate.color != color;
 }

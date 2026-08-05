@@ -146,143 +146,96 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
     }
   }
 
-  Future<void> _toggleReview(bool value) async {
+  Future<void> _toggleSetting({
+    required String key,
+    required bool value,
+    required bool previous,
+    required void Function(bool) onSavingStateChanged,
+    required void Function(bool) onValueStateChanged,
+    required String errorMessage,
+  }) async {
     final l10n = context.l10n;
-    final previous = _reviewEnabled;
+    if (!mounted) return;
     setState(() {
-      _reviewEnabled = value;
-      _savingReview = true;
+      onValueStateChanged(value);
+      onSavingStateChanged(true);
     });
 
     try {
-      await _ensureNotificationPermissionIfEnabling(value);
-      final saved = await getIt<SharedPreferences>().setBool(_reviewKey, value);
+      final saved = await getIt<SharedPreferences>().setBool(key, value);
       if (!saved) {
-        throw StateError('Failed to save daily review notification setting');
+        throw StateError('Failed to save setting $key');
       }
-      await getIt<NotificationScheduler>().refreshNotifications(l10n);
+      try {
+        await _ensureNotificationPermissionIfEnabling(value);
+        await getIt<NotificationScheduler>().refreshNotifications(l10n);
+      } catch (e) {
+        debugPrint('Error scheduling notification for $key: $e');
+      }
     } catch (_) {
       if (!mounted) return;
-      setState(() => _reviewEnabled = previous);
-      _showSettingsError(context, l10n.reviewReminderSaveError);
+      setState(() => onValueStateChanged(previous));
+      _showSettingsError(context, errorMessage);
     } finally {
       if (mounted) {
-        setState(() => _savingReview = false);
+        setState(() => onSavingStateChanged(false));
       }
     }
+  }
+
+  Future<void> _toggleReview(bool value) async {
+    await _toggleSetting(
+      key: _reviewKey,
+      value: value,
+      previous: _reviewEnabled,
+      onSavingStateChanged: (s) => _savingReview = s,
+      onValueStateChanged: (v) => _reviewEnabled = v,
+      errorMessage: context.l10n.reviewReminderSaveError,
+    );
   }
 
   Future<void> _toggleStreak(bool value) async {
-    final l10n = context.l10n;
-    final previous = _streakEnabled;
-    setState(() {
-      _streakEnabled = value;
-      _savingStreak = true;
-    });
-
-    try {
-      await _ensureNotificationPermissionIfEnabling(value);
-      final saved = await getIt<SharedPreferences>().setBool(_streakKey, value);
-      if (!saved) {
-        throw StateError('Failed to save streak notification setting');
-      }
-      await getIt<NotificationScheduler>().refreshNotifications(l10n);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _streakEnabled = previous);
-      _showSettingsError(context, l10n.streakReminderSaveError);
-    } finally {
-      if (mounted) {
-        setState(() => _savingStreak = false);
-      }
-    }
+    await _toggleSetting(
+      key: _streakKey,
+      value: value,
+      previous: _streakEnabled,
+      onSavingStateChanged: (s) => _savingStreak = s,
+      onValueStateChanged: (v) => _streakEnabled = v,
+      errorMessage: context.l10n.streakReminderSaveError,
+    );
   }
 
   Future<void> _toggleMorningAzkar(bool value) async {
-    final l10n = context.l10n;
-    final previous = _morningAzkarEnabled;
-    setState(() {
-      _morningAzkarEnabled = value;
-      _savingMorningAzkar = true;
-    });
-
-    try {
-      await _ensureNotificationPermissionIfEnabling(value);
-      final saved = await getIt<SharedPreferences>().setBool(
-        _morningAzkarKey,
-        value,
-      );
-      if (!saved) {
-        throw StateError('Failed to save morning azkar notification setting');
-      }
-      await getIt<NotificationScheduler>().refreshNotifications(l10n);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _morningAzkarEnabled = previous);
-      _showSettingsError(context, l10n.morningAzkarSaveError);
-    } finally {
-      if (mounted) {
-        setState(() => _savingMorningAzkar = false);
-      }
-    }
+    await _toggleSetting(
+      key: _morningAzkarKey,
+      value: value,
+      previous: _morningAzkarEnabled,
+      onSavingStateChanged: (s) => _savingMorningAzkar = s,
+      onValueStateChanged: (v) => _morningAzkarEnabled = v,
+      errorMessage: context.l10n.morningAzkarSaveError,
+    );
   }
 
   Future<void> _toggleEveningAzkar(bool value) async {
-    final l10n = context.l10n;
-    final previous = _eveningAzkarEnabled;
-    setState(() {
-      _eveningAzkarEnabled = value;
-      _savingEveningAzkar = true;
-    });
-
-    try {
-      await _ensureNotificationPermissionIfEnabling(value);
-      final saved = await getIt<SharedPreferences>().setBool(
-        _eveningAzkarKey,
-        value,
-      );
-      if (!saved) {
-        throw StateError('Failed to save evening azkar notification setting');
-      }
-      await getIt<NotificationScheduler>().refreshNotifications(l10n);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _eveningAzkarEnabled = previous);
-      _showSettingsError(context, l10n.eveningAzkarSaveError);
-    } finally {
-      if (mounted) {
-        setState(() => _savingEveningAzkar = false);
-      }
-    }
+    await _toggleSetting(
+      key: _eveningAzkarKey,
+      value: value,
+      previous: _eveningAzkarEnabled,
+      onSavingStateChanged: (s) => _savingEveningAzkar = s,
+      onValueStateChanged: (v) => _eveningAzkarEnabled = v,
+      errorMessage: context.l10n.eveningAzkarSaveError,
+    );
   }
 
   Future<void> _toggleDailyDua(bool value) async {
-    final l10n = context.l10n;
-    final previous = _dailyDuaEnabled;
-    setState(() {
-      _dailyDuaEnabled = value;
-      _savingDailyDua = true;
-    });
-
-    try {
-      await _ensureNotificationPermissionIfEnabling(value);
-      final saved = await getIt<SharedPreferences>().setBool(
-        _dailyDuaKey,
-        value,
-      );
-      if (!saved) {
-        throw StateError('Failed to save daily dua notification setting');
-      }
-      await getIt<NotificationScheduler>().refreshNotifications(l10n);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _dailyDuaEnabled = previous);
-      _showSettingsError(context, l10n.dailyDuaSaveError);
-    } finally {
-      if (mounted) {
-        setState(() => _savingDailyDua = false);
-      }
-    }
+    await _toggleSetting(
+      key: _dailyDuaKey,
+      value: value,
+      previous: _dailyDuaEnabled,
+      onSavingStateChanged: (s) => _savingDailyDua = s,
+      onValueStateChanged: (v) => _dailyDuaEnabled = v,
+      errorMessage: context.l10n.dailyDuaSaveError,
+    );
   }
 
   Widget _buildTimeEditorTile({

@@ -76,6 +76,14 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   }
 
   @override
+  void didUpdateWidget(QuranReaderPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.pageNumber != null && widget.pageNumber != oldWidget.pageNumber) {
+      _openAtPage(_normalizePageNumber(widget.pageNumber!));
+    }
+  }
+
+  @override
   void dispose() {
     _readTimer?.cancel();
     _readConfirmedFeedbackTimer?.cancel();
@@ -87,7 +95,22 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
 
   void _openAtPage(int pageNumber) {
     _currentPageNumber = pageNumber;
-    _pageController ??= PageController(initialPage: pageNumber - 1);
+    if (_pageController == null) {
+      _pageController = PageController(initialPage: pageNumber - 1);
+    } else if (_pageController!.hasClients) {
+      final currentPos = (_pageController!.page ?? 0).round() + 1;
+      if ((currentPos - pageNumber).abs() == 1) {
+        unawaited(
+          _pageController!.animateToPage(
+            pageNumber - 1,
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
+          ),
+        );
+      } else {
+        _pageController!.jumpToPage(pageNumber - 1);
+      }
+    }
     _saveCurrentPage(pageNumber);
     _loadPage(pageNumber);
     // Lazy-load QCF fonts for the current page and nearby pages.

@@ -327,6 +327,7 @@ class _AchievementTile extends StatelessWidget {
                         category: SocialShareCategory.achievement,
                         userName: name,
                       );
+                      Navigator.pop(context);
                       SocialShareSheet.show(context, data);
                     },
                     icon: const Icon(Icons.share_rounded, size: 20),

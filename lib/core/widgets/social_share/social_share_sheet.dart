@@ -156,138 +156,144 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final cardWidth = (screenWidth - AppSpacing.md * 2).clamp(280.0, 360.0);
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
-      ),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      padding: EdgeInsets.only(
-        top: AppSpacing.md,
-        bottom: MediaQuery.paddingOf(context).bottom + AppSpacing.md,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Drag Handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 600,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+        ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          const SizedBox(height: AppSpacing.xs),
+          padding: EdgeInsets.only(
+            top: AppSpacing.md,
+            bottom: MediaQuery.paddingOf(context).bottom + AppSpacing.md,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Drag Handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
 
-          // Header
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+              // Header
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(
-                      Icons.share_outlined,
-                      color: AppColors.primary,
-                      size: 22,
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.share_outlined,
+                          color: AppColors.primary,
+                          size: 22,
+                        ),
+                        const SizedBox(width: AppSpacing.xs),
+                        Text(
+                          'مشاركة بطاقة سوشيال ميديا',
+                          style: AppTypography.titleMedium.copyWith(
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : AppColors.lightTextPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: AppSpacing.xs),
-                    Text(
-                      'مشاركة بطاقة سوشيال ميديا',
-                      style: AppTypography.titleMedium.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    IconButton(
+                      icon: const Icon(Icons.close_rounded),
+                      onPressed: () => Navigator.pop(context),
                     ),
                   ],
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
+              ),
 
-          const SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.xs),
 
-          // Card Preview Scroll Area with AnimatedSwitcher
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Center(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 300),
-                  child: Screenshot(
-                    key: ValueKey('$_selectedThemeType-$_selectedFormat'),
-                    controller: _screenshotController,
-                    child: SocialShareCard(
-                      data: widget.data,
-                      theme: _currentTheme,
-                      format: _selectedFormat,
-                      width: 320,
+              // Card Preview Scroll Area with AnimatedSwitcher
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  child: Center(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 300),
+                      child: Screenshot(
+                        key: ValueKey('$_selectedThemeType-$_selectedFormat'),
+                        controller: _screenshotController,
+                        child: SocialShareCard(
+                          data: widget.data,
+                          theme: _currentTheme,
+                          format: _selectedFormat,
+                          width: cardWidth,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ),
 
-          const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.sm),
 
-          // Format Picker (Aspect Ratio Selector)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: SocialShareFormat.values.map((fmt) {
-                final isSelected = fmt == _selectedFormat;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ChoiceChip(
-                    avatar: Icon(
-                      fmt.icon,
-                      size: 14,
-                      color: isSelected
-                          ? AppColors.primary
-                          : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
-                    ),
-                    label: Text(fmt.displayName),
-                    selected: isSelected,
-                    onSelected: (selected) {
-                      if (selected) {
-                        unawaited(HapticFeedback.selectionClick());
-                        setState(() => _selectedFormat = fmt);
-                      }
-                    },
-                    selectedColor: AppColors.primary.withValues(alpha: 0.18),
-                    backgroundColor: isDark
-                        ? AppColors.darkSurfaceVariant
-                        : AppColors.lightSurfaceVariant,
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? AppColors.primary
-                          : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
-                      fontSize: 11,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                    ),
-                    side: BorderSide(
-                      color: isSelected ? AppColors.primary : Colors.transparent,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
+              // Format Picker (Aspect Ratio Selector with Horizontal Scroll Safety)
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: SocialShareFormat.values.map((fmt) {
+                    final isSelected = fmt == _selectedFormat;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ChoiceChip(
+                        avatar: Icon(
+                          fmt.icon,
+                          size: 14,
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                        ),
+                        label: Text(fmt.displayName),
+                        selected: isSelected,
+                        onSelected: (selected) {
+                          if (selected) {
+                            unawaited(HapticFeedback.selectionClick());
+                            setState(() => _selectedFormat = fmt);
+                          }
+                        },
+                        selectedColor: AppColors.primary.withValues(alpha: 0.18),
+                        backgroundColor: isDark
+                            ? AppColors.darkSurfaceVariant
+                            : AppColors.lightSurfaceVariant,
+                        labelStyle: TextStyle(
+                          color: isSelected
+                              ? AppColors.primary
+                              : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                          fontSize: 11,
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                        side: BorderSide(
+                          color: isSelected ? AppColors.primary : Colors.transparent,
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
 
           const SizedBox(height: AppSpacing.xs),
 
@@ -430,7 +436,9 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
           ),
         ],
       ),
-    );
+    ),
+  ),
+);
   }
 }
 

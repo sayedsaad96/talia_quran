@@ -97,15 +97,16 @@ Future<void> configureDependencies() async {
   getIt.registerSingleton<SharedPreferences>(sharedPrefs);
 
   final dir = await getApplicationDocumentsDirectory();
-  final isar = await Isar.open([
-    IsarAyahProgressSchema,
-    IsarAyahReviewRecordSchema,
-    IsarV2SessionSchema, // V2 session persistence
-    StreakIsarSchema,
-    XpIsarSchema,
-    DailyActivityIsarSchema, // For yearly activity heatmap
-    CloudSyncQueueItemSchema,
-  ], directory: dir.path);
+  final isar = Isar.getInstance() ??
+      await Isar.open([
+        IsarAyahProgressSchema,
+        IsarAyahReviewRecordSchema,
+        IsarV2SessionSchema, // V2 session persistence
+        StreakIsarSchema,
+        XpIsarSchema,
+        DailyActivityIsarSchema, // For yearly activity heatmap
+        CloudSyncQueueItemSchema,
+      ], directory: dir.path);
   getIt.registerSingleton<Isar>(isar);
   getIt.registerLazySingleton<CloudSyncQueue>(() => CloudSyncQueue(isar));
   getIt.registerLazySingleton<V2SessionLocalDatasource>(

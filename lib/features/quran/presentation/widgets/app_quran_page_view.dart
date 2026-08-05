@@ -48,10 +48,16 @@ class AppQuranPageView extends StatelessWidget {
     required this.isDarkMode,
   }) : pages = _loadQuranData(quranPagesCount);
 
+  static List<qcf.QuranPage>? _cachedPages;
+
   static List<qcf.QuranPage> _loadQuranData(int count) {
+    if (_cachedPages != null && _cachedPages!.length == count) {
+      return _cachedPages!;
+    }
     final processor = GetPage();
     processor.getQuran(count);
-    return processor.staticPages;
+    _cachedPages = processor.staticPages;
+    return _cachedPages!;
   }
 
   @override
@@ -61,7 +67,10 @@ class AppQuranPageView extends StatelessWidget {
       child: Container(
         color: pageBackgroundColor ?? Colors.transparent,
         child: PageView.builder(
-          allowImplicitScrolling: false,
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
+          allowImplicitScrolling: true,
           controller: pageController,
           itemCount: pages.length,
           onPageChanged: (index) {
@@ -78,18 +87,20 @@ class AppQuranPageView extends StatelessWidget {
                   child: QuranPageFontGuard(
                     pageNumber: pageNum,
                     isDark: isDarkMode,
-                    child: qcf.QuranSinglePageWidget(
-                      key: ValueKey('page_content_$pageNum'),
-                      isTajweed: isTajweed,
-                      page: pages[index],
-                      pageIndex: pageNum,
-                      highlights: highlights,
-                      onLongPress: onLongPress,
-                      pageController: pageController,
-                      surahHeaderBuilder: surahHeaderBuilder,
-                      basmallahBuilder: basmallahBuilder,
-                      ayahStyle: ayahStyle,
-                      isDark: isDarkMode,
+                    child: RepaintBoundary(
+                      child: qcf.QuranSinglePageWidget(
+                        key: ValueKey('page_content_$pageNum'),
+                        isTajweed: isTajweed,
+                        page: pages[index],
+                        pageIndex: pageNum,
+                        highlights: highlights,
+                        onLongPress: onLongPress,
+                        pageController: pageController,
+                        surahHeaderBuilder: surahHeaderBuilder,
+                        basmallahBuilder: basmallahBuilder,
+                        ayahStyle: ayahStyle,
+                        isDark: isDarkMode,
+                      ),
                     ),
                   ),
                 ),
