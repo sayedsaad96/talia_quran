@@ -54,8 +54,8 @@ class _SplashPageState extends State<SplashPage> {
       // rebuild with the full BlocProvider tree and GoRouter.
       appInitializedNotifier.value = true;
 
-      // Give the framework one frame to rebuild TaliaApp with the full router.
-      await Future<void>.delayed(const Duration(milliseconds: 100));
+      // Give the framework time to display full 100% progress animation smoothly before navigation.
+      await Future<void>.delayed(const Duration(milliseconds: 500));
 
       if (mounted) {
         _navigateToNextScreen();
@@ -154,35 +154,116 @@ class _SplashPageState extends State<SplashPage> {
                       .fadeIn(duration: 600.ms)
                       .slideY(begin: 0.2, end: 0, curve: Curves.easeOutCubic),
                   const SizedBox(height: AppSpacing.xl + AppSpacing.lg),
-                  // Progress indicator
+                  // Animated & Interactive Progress indicator
                   SizedBox(
-                    width: 240,
-                    child: Column(
-                      children: [
-                        ClipRRect(
-                          borderRadius:
-                              BorderRadius.circular(AppSpacing.radiusFull),
-                          child: LinearProgressIndicator(
-                            value: _progress > 0 ? _progress : null,
-                            minHeight: 4,
-                            backgroundColor:
-                                primary.withValues(alpha: 0.12),
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(primary),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.sm),
-                        Text(
-                          _currentStep,
-                          textAlign: TextAlign.center,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: subTextColor,
-                          ),
-                        ),
-                      ],
+                    width: 250,
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween<double>(begin: 0.0, end: _progress),
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, animatedProgress, child) {
+                        return Column(
+                          children: [
+                            Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusFull,
+                                  ),
+                                  child: LinearProgressIndicator(
+                                    value: animatedProgress > 0
+                                        ? animatedProgress
+                                        : null,
+                                    minHeight: 6,
+                                    backgroundColor:
+                                        primary.withValues(alpha: 0.12),
+                                    valueColor:
+                                        AlwaysStoppedAnimation<Color>(primary),
+                                  ),
+                                ),
+                                Positioned.fill(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusFull,
+                                    ),
+                                    child: IgnorePointer(
+                                      child: Container(
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.white.withValues(alpha: 0.0),
+                                              Colors.white.withValues(alpha: 0.45),
+                                              Colors.white.withValues(alpha: 0.0),
+                                            ],
+                                            stops: const [0.0, 0.5, 1.0],
+                                          ),
+                                        ),
+                                      )
+                                          .animate(
+                                            onPlay: (controller) =>
+                                                controller.repeat(),
+                                          )
+                                          .slideX(
+                                            begin: -1.2,
+                                            end: 1.2,
+                                            duration: 1200.ms,
+                                            curve: Curves.easeInOutSine,
+                                          ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Expanded(
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 300),
+                                    transitionBuilder: (child, animation) {
+                                      return FadeTransition(
+                                        opacity: animation,
+                                        child: SlideTransition(
+                                          position: Tween<Offset>(
+                                            begin: const Offset(0, 0.3),
+                                            end: Offset.zero,
+                                          ).animate(animation),
+                                          child: child,
+                                        ),
+                                      );
+                                    },
+                                    child: Text(
+                                      _currentStep.isEmpty
+                                          ? 'جارٍ التحميل...'
+                                          : _currentStep,
+                                      key: ValueKey<String>(_currentStep),
+                                      textAlign: TextAlign.center,
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: subTextColor,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (animatedProgress > 0) ...[
+                                  const SizedBox(width: AppSpacing.xs),
+                                  Text(
+                                    '${(animatedProgress * 100).toInt()}%',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   )
-                      .animate(delay: 700.ms)
+                      .animate(delay: 300.ms)
                       .fadeIn(duration: 400.ms),
                   if (_initError) ...[
                     const SizedBox(height: AppSpacing.lg),
