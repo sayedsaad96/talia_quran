@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-07T00:00:00+03:00",
+  "title": "Design System: Talia Quran",
+  "extensions": {
+    "colorMeta": {
+      "royal-teal": { "role": "primary", "displayName": "Royal Teal", "canonical": "#0D5C53", "tonalRamp": ["#042F2E", "#063D39", "#0D5C53", "#148275", "#4FA99E", "#93CFC8", "#D2ECE8", "#F0FAF8"] },
+      "warm-gold": { "role": "secondary", "displayName": "Warm Gold", "canonical": "#F59E0B", "tonalRamp": ["#5E3800", "#8C5600", "#B87300", "#D97706", "#F59E0B", "#FBBF24", "#FDE68A", "#FFF8DF"] },
+      "warm-paper": { "role": "neutral", "displayName": "Warm Paper", "canonical": "#FDFCF8", "tonalRamp": ["#2B2924", "#514D44", "#777166", "#9E988D", "#C6C0B5", "#E5E0D7", "#F4F2EC", "#FDFCF8"] },
+      "night": { "role": "neutral", "displayName": "Deep Night", "canonical": "#021210", "tonalRamp": ["#021210", "#041D1A", "#0A2925", "#103B35", "#1A5149", "#3F786F", "#83AAA4", "#D9EEEA"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Quranic Display", "purpose": "High-importance display and Quranic moments." },
+      "headline": { "displayName": "Arabic Headline", "purpose": "Screen and section hierarchy." },
+      "body": { "displayName": "Arabic Reading Body", "purpose": "Sustained interface reading." },
+      "label": { "displayName": "Arabic Label", "purpose": "Controls, navigation, and compact metadata." }
+    },
+    "shadows": [
+      { "name": "card-ambient", "value": "0 6px 16px -2px rgba(13, 92, 83, 0.06)", "purpose": "Elevated cards that need gentle separation." },
+      { "name": "action-ambient", "value": "0 4px 12px rgba(13, 92, 83, 0.30)", "purpose": "Primary action emphasis." },
+      { "name": "floating-navigation", "value": "0 8px 24px 2px rgba(13, 92, 83, 0.12)", "purpose": "Floating bottom navigation." }
+    ],
+    "motion": [
+      { "name": "button-press", "value": "80ms ease-out, scale(0.96)", "purpose": "Tactile press feedback for app buttons." },
+      { "name": "navigation-selection", "value": "220ms easeOutCubic", "purpose": "Active navigation indicator changes." }
+    ],
+    "breakpoints": [
+      { "name": "expanded-navigation", "value": "600px" }
+    ]
+  },
+  "components": [
+    { "name": "Primary Button", "kind": "button", "refersTo": "button-primary", "description": "Main learner action with a teal gradient and gentle press feedback.", "html": "<button class=\"ds-btn-primary\">ابدأ الحفظ</button>", "css": ".ds-btn-primary { height: 56px; padding: 16px 32px; border: 0; border-radius: 12px; background: linear-gradient(135deg, #0D5C53, #042F2E); color: #FFFFFF; font: 600 14px/1.3 'Noto Naskh Arabic', serif; box-shadow: 0 4px 12px rgba(13, 92, 83, .30); transition: transform 80ms ease-out, opacity 150ms ease; } .ds-btn-primary:hover, .ds-btn-primary:focus-visible { opacity: .92; } .ds-btn-primary:focus-visible { outline: 2px solid #FBBF24; outline-offset: 3px; } .ds-btn-primary:active { transform: scale(.96); }" },
+    { "name": "Secondary Button", "kind": "button", "refersTo": "button-secondary", "description": "Supportive secondary action with restrained teal emphasis.", "html": "<button class=\"ds-btn-secondary\">متابعة</button>", "css": ".ds-btn-secondary { height: 56px; padding: 16px 32px; border: 1px solid rgba(13, 92, 83, .30); border-radius: 12px; background: rgba(13, 92, 83, .08); color: #0D5C53; font: 600 14px/1.3 'Noto Naskh Arabic', serif; transition: background 150ms ease, transform 80ms ease-out; } .ds-btn-secondary:hover, .ds-btn-secondary:focus-visible { background: rgba(13, 92, 83, .14); } .ds-btn-secondary:focus-visible { outline: 2px solid #148275; outline-offset: 3px; } .ds-btn-secondary:active { transform: scale(.96); }" },
+    { "name": "Default Card", "kind": "card", "refersTo": "card-default", "description": "Quiet content container with an optional soft ambient lift.", "html": "<section class=\"ds-card\"><strong>ورد اليوم</strong><span>مراجعة هادئة ومنظمة</span></section>", "css": ".ds-card { display: grid; gap: 8px; padding: 20px; border: .5px solid #EBE8DF; border-radius: 16px; background: #FFFFFF; color: #1A1209; font: 400 16px/1.6 'Noto Naskh Arabic', serif; box-shadow: 0 6px 16px -2px rgba(13, 92, 83, .06); } .ds-card strong { font-weight: 700; } .ds-card span { color: #6B5E4E; font-size: 14px; }" },
+    { "name": "Text Field", "kind": "input", "refersTo": "field-default", "description": "Filled, low-noise text entry with a clear teal focus state.", "html": "<input class=\"ds-input\" aria-label=\"البحث\" placeholder=\"ابحث\" />", "css": ".ds-input { width: 100%; height: 56px; box-sizing: border-box; padding: 16px; border: 1.5px solid transparent; border-radius: 12px; background: #F4F2EC; color: #1A1209; font: 400 16px/1.6 'Noto Naskh Arabic', serif; transition: border-color 150ms ease; } .ds-input::placeholder { color: #AA9E92; } .ds-input:hover { background: #FFFFFF; } .ds-input:focus-visible { outline: none; border-color: #0D5C53; }" },
+    { "name": "Active Navigation Item", "kind": "nav", "refersTo": "nav-item-active", "description": "Compact active destination using a teal pill, label, and small status dot.", "html": "<button class=\"ds-nav-item\"><span class=\"ds-nav-icon\">◉</span><span>الحفظ</span><i></i></button>", "css": ".ds-nav-item { display: grid; justify-items: center; gap: 2px; min-width: 48px; min-height: 48px; padding: 6px 14px; border: 0; border-radius: 999px; background: rgba(13, 92, 83, .12); color: #0D5C53; font: 700 10.5px/1.3 'Noto Naskh Arabic', serif; transition: transform 150ms ease, background 220ms cubic-bezier(.2,0,0,1); } .ds-nav-item:hover, .ds-nav-item:focus-visible { background: rgba(13, 92, 83, .18); } .ds-nav-item:focus-visible { outline: 2px solid #148275; outline-offset: 3px; } .ds-nav-item:active { transform: scale(1.05); } .ds-nav-icon { font-size: 22px; line-height: 1; } .ds-nav-item i { width: 4px; height: 4px; border-radius: 999px; background: #0D5C53; }" }
+  ],
+  "narrative": {
+    "northStar": "The Guided Sanctuary",
+    "overview": "Talia is a calm, structured, confidence-building mobile experience that gently guides learners through a memorization practice while keeping the Quran at the center of attention. Its visual language combines Royal Teal, Warm Gold, warm paper surfaces, and Arabic-first typography to feel trustworthy, reverent, and enduring rather than trend-driven. The system is deliberately low-noise: clear hierarchy, generous reading space, and tactile controls support daily use without competing for attention.",
+    "keyCharacteristics": ["Arabic-first readability", "Teal-led guidance; gold-led meaning and achievement", "Softly lifted rounded surfaces", "Focused, restrained motion"],
+    "rules": [
+      { "name": "Meaningful Gold", "body": "Gold is never the routine action, navigation, or default interactive color. Reserve it for progress, achievement, spiritual emphasis, milestones, and premium highlights.", "section": "colors" },
+      { "name": "Readability Before Fashion", "body": "Accessibility, Arabic typography, and legibility take precedence over visual trends, density, or novelty.", "section": "typography" },
+      { "name": "Quiet Depth", "body": "Elevation clarifies hierarchy; it must not become decoration, spectacle, or a substitute for layout.", "section": "elevation" }
+    ],
+    "dos": ["Do make the memorization journey and Quran reading comfortable for extended daily use.", "Do use Royal Teal for ordinary guidance and Warm Gold only for meaningful progress and emphasis.", "Do preserve generous Arabic line-height and clear RTL reading structure."],
+    "donts": ["Don't use gold for routine actions, persistent navigation, or default interactive surfaces.", "Don't compress Arabic or Quranic text to make room for decorative treatment.", "Don't turn reflection, progress, or study into screen-time-maximizing spectacle."]
+  }
+}

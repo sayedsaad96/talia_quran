@@ -180,8 +180,6 @@ class _HomeContent extends StatelessWidget {
         ),
 
         // ─── Sign-In Nudge Banner ───────────────────────────────────────────
-        SliverToBoxAdapter(child: _SignInNudgeBanner(isDark: isDark)),
-
         if (JourneyFeatureFlags.unifiedJourneyEnabled &&
             state.heroAction != null)
           Builder(
@@ -245,6 +243,23 @@ class _HomeContent extends StatelessWidget {
             ),
           ),
 
+        // ─── Daily Wird Card ────────────────────────────────────────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pagePadding,
+              AppSpacing.md,
+              AppSpacing.pagePadding,
+              0,
+            ),
+            child: _DailyWirdCard(state: state, isDark: isDark),
+          ),
+        ),
+
+        // Support prompts follow today's prescribed practice, so they never
+        // compete with the first action a learner sees.
+        SliverToBoxAdapter(child: _SignInNudgeBanner(isDark: isDark)),
+
         if (state.lastRestorableLocation == null)
           SliverToBoxAdapter(child: _TutorialPromptBanner(isDark: isDark)),
 
@@ -267,19 +282,6 @@ class _HomeContent extends StatelessWidget {
               },
             ),
           ),
-
-        // ─── Daily Wird Card ────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.sectionGap,
-              AppSpacing.pagePadding,
-              0,
-            ),
-            child: _DailyWirdCard(state: state, isDark: isDark),
-          ),
-        ),
 
         // ─── Engagement Stats ─────────────────────────────────────────────
         SliverToBoxAdapter(
@@ -341,7 +343,14 @@ class _HomeContent extends StatelessWidget {
         ),
 
         // ─── Bottom padding (above nav bar) ──────────────────────────────────
-        const SliverToBoxAdapter(child: SizedBox(height: 120)),
+        SliverToBoxAdapter(
+          child: SizedBox(
+            height:
+                MediaQuery.paddingOf(context).bottom +
+                AppSpacing.xxl +
+                AppSpacing.lg,
+          ),
+        ),
       ],
     );
   }

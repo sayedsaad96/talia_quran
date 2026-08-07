@@ -258,6 +258,8 @@ class _AchievementBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final maxWidth =
+        MediaQuery.sizeOf(context).width - (AppSpacing.pagePadding * 2);
     String title = context.l10n.levelBeginner;
     IconData icon = Icons.stars_rounded;
     Color color = const Color(0xFFC0C0C0);
@@ -296,42 +298,49 @@ class _AchievementBadge extends StatelessWidget {
           },
         );
       },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(width: 8),
-            if (categoryLabel.isNotEmpty) ...[
-              Text(
-                categoryLabel,
-                style: AppTypography.titleSmall.copyWith(
-                  color: color.withValues(alpha: 0.9),
-                  fontWeight: FontWeight.w600,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            border: Border.all(color: color.withValues(alpha: 0.4), width: 1.5),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(width: 8),
+              if (categoryLabel.isNotEmpty) ...[
+                Text(
+                  categoryLabel,
+                  style: AppTypography.titleSmall.copyWith(
+                    color: color.withValues(alpha: 0.9),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                  height: 16,
+                  width: 1.5,
+                  color: color.withValues(alpha: 0.4),
+                ),
+              ],
+              Flexible(
+                child: Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16,
+                  ),
                 ),
               ),
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                height: 16,
-                width: 1.5,
-                color: color.withValues(alpha: 0.4),
-              ),
             ],
-            Text(
-              title,
-              style: AppTypography.titleMedium.copyWith(
-                color: color,
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -563,38 +572,58 @@ class _ProgressSection extends StatelessWidget {
             )
           else
             // ── Adults: 3-pill row (reading, memorization, XP)
-            Row(
-              children: [
-                Expanded(
-                  child: _ProgressMetricPill(
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final metrics = [
+                  _ProgressMetricPill(
                     label: context.l10n.reading,
                     value: '${progress.readPagesCount}/${progress.totalQuranPages}',
                     icon: Icons.menu_book_rounded,
                     color: primary,
                     isDark: isDark,
                   ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: _ProgressMetricPill(
+                  _ProgressMetricPill(
                     label: context.l10n.hifz,
                     value: '${progress.memorizedAyahs}/${progress.totalAyahs}',
                     icon: Icons.auto_stories_rounded,
                     color: const Color(0xFF2D5A8E),
                     isDark: isDark,
                   ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: _ProgressMetricPill(
+                  _ProgressMetricPill(
                     label: 'XP',
                     value: '$totalXp',
                     icon: Icons.bolt_rounded,
                     color: const Color(0xFFFF8C42),
                     isDark: isDark,
                   ),
-                ),
-              ],
+                ];
+
+                if (constraints.maxWidth >= 440) {
+                  return Row(
+                    children: [
+                      Expanded(child: metrics[0]),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: metrics[1]),
+                      const SizedBox(width: AppSpacing.sm),
+                      Expanded(child: metrics[2]),
+                    ],
+                  );
+                }
+
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: metrics[0]),
+                        const SizedBox(width: AppSpacing.sm),
+                        Expanded(child: metrics[1]),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    SizedBox(width: double.infinity, child: metrics[2]),
+                  ],
+                );
+              },
             ),
         ],
       ),
@@ -638,19 +667,20 @@ class _ProgressMetricPill extends StatelessWidget {
         children: [
           Icon(icon, color: color, size: 18),
           const SizedBox(height: 6),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: AppTypography.titleSmall.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.w800,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(
+              value,
+              style: AppTypography.titleSmall.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
           Text(
             label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            maxLines: 2,
             style: AppTypography.labelSmall.copyWith(color: subTextColor),
           ),
         ],

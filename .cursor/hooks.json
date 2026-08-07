@@ -5,6 +5,10 @@
       {
         "command": "node \"C:\\\\Users\\\\SayedSaad\\\\.cursor\\\\skills\\\\impeccable\\\\scripts\\\\hook-before-edit.mjs\"",
         "timeout": 5
+      },
+      {
+        "command": "[ ! -f \".cursor/skills/impeccable/scripts/hook-before-edit.mjs\" ] || node \".cursor/skills/impeccable/scripts/hook-before-edit.mjs\"",
+        "timeout": 5
       }
     ]
   }
