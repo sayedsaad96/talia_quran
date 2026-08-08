@@ -12,6 +12,7 @@ import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../../core/memorization/memorization_path_resolver.dart';
+import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/memorization/smart_coach_recommendation.dart';
 import '../../../../core/memorization/usecases/get_smart_coach_recommendation_usecase.dart';
 import '../../../../core/services/app_session_service.dart';
@@ -197,7 +198,11 @@ class HomeCubit extends Cubit<HomeState> {
         return null;
       }
 
-      final recordsResult = await _memorizationRepository.getAllReviewRecords();
+      final recordsResult = await _memorizationRepository.getAllReviewRecords(
+        scope: isKids
+            ? ReviewRecordReadScope.kids
+            : ReviewRecordReadScope.adult,
+      );
       final records = recordsResult.getOrElse(() => []);
       
       const aggregator = MemorizationInsightsAggregator();

@@ -30,6 +30,7 @@ import '../../features/hifz/domain/entities/hifz_entities.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/memorization_plus/domain/entities/memorization_entities.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import '../memorization/review_record_audience_scope.dart';
 import '../utils/talia_logger.dart';
 
 /// Service that runs the one-time migration of Hifz data into MemorizationPlus.
@@ -141,6 +142,7 @@ final class HifzMigrationService {
         final existingResult = await _memPlusRepo.getReviewRecord(
           progress.surahId,
           progress.ayahNumber,
+          scope: ReviewRecordReadScope.adult,
         );
 
         final alreadyExists = existingResult.fold(
@@ -177,7 +179,9 @@ final class HifzMigrationService {
   }
 
   Future<void> _runRepair() async {
-    final recordsResult = await _memPlusRepo.getAllReviewRecords();
+    final recordsResult = await _memPlusRepo.getAllReviewRecords(
+      scope: ReviewRecordReadScope.adult,
+    );
     final records = recordsResult.fold((_) => <AyahReviewRecord>[], (r) => r);
     if (records.isEmpty) return;
 

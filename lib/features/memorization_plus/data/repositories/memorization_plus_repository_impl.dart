@@ -244,6 +244,15 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, int>> claimLocalReviewRecords() async {
+    try {
+      return Right(await _datasource.claimLocalReviewRecords());
+    } catch (e) {
+      return Left(CacheFailure(e.toString()));
+    }
+  }
+
   // ─── Kids progress ───────────────────────────────────────────────────────────
 
   @override

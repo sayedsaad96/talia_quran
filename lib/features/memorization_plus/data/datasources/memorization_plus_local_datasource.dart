@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
+import '../../../../core/memorization/review_record_identity.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../models/isar_ayah_review_record.dart';
 import '../models/memorization_models.dart';
@@ -30,6 +32,14 @@ abstract class MemorizationPlusLocalDatasource {
   // Review records
   Future<void> migrateReviewRecordsToIsarIfNeeded();
   Future<void> migrateAudienceScopedReviewKeysIfNeeded();
+
+  /// Re-keys every review row to `owner|audience|surah|ayah`. Idempotent.
+  Future<void> migrateReviewRecordIdentityIfNeeded();
+
+  /// Transfers `local`-owned review records to the signed-in account on first
+  /// sign-in. Returns the number of records claimed.
+  Future<int> claimLocalReviewRecords();
+
   Future<AyahReviewRecordModel?> getReviewRecord(
     int surahId,
     int ayahNumber, {
@@ -93,6 +103,7 @@ abstract class MemorizationPlusLocalDatasource {
 mixin MemorizationLocalStorageMixin {
   SharedPreferences get _prefs;
   Isar? get _isar;
+  RecordOwnerProvider get _owner;
 
   /// Provided by [MemorizationPlansStorageMixin]; declared here so
   /// [MemorizationIdentityStorageMixin] can fall back to it when no smart
@@ -141,12 +152,19 @@ class MemorizationPlusLocalDatasourceImpl
         MemorizationKidsStorageMixin,
         MemorizationPlansStorageMixin
     implements MemorizationPlusLocalDatasource {
-  MemorizationPlusLocalDatasourceImpl(this._prefs, {Isar? isar}) : _isar = isar;
+  MemorizationPlusLocalDatasourceImpl(
+    this._prefs, {
+    Isar? isar,
+    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
+  })  : _isar = isar,
+        _owner = owner;
 
   @override
   final SharedPreferences _prefs;
   @override
   final Isar? _isar;
+  @override
+  final RecordOwnerProvider _owner;
 
   // ─── Key namespace (isolated from existing features) ────────────────────────
   /// Authoritative identity profile — single source of truth for path/identity.
@@ -160,6 +178,8 @@ class MemorizationPlusLocalDatasourceImpl
   static const _kTrack = 'mem_plus_track';
   static const _kReviewPrefix = 'mem_plus_review';
   static const _kReviewIsarMigration = 'mem_plus_reviews_migrated_to_isar_v1';
+  static const _kReviewIdentityMigration = 'mem_plus_review_identity_keys_v1';
+  static const _kLocalRecordsClaimedBy = 'mem_plus_local_records_claimed_by';
   static const _kDailyPlan = 'mem_plus_daily_plan';
   static const _kKidsProgress = 'mem_plus_kids_progress';
   static const _kKidsSessionLogs = 'mem_plus_kids_session_logs';

@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../../core/memorization/review_record_filters.dart';
 import '../../../../../core/progress/progress_changed_reason.dart';
 import '../../../../../core/progress/progress_events_bus.dart';
@@ -35,7 +36,9 @@ class MemorizationDailyPlanService {
     required int newAyahsPerDay,
   }) async {
     try {
-      final allRecords = (await _datasource.getAllReviewRecords())
+      final allRecords = (await _datasource.getAllReviewRecords(
+        scope: ReviewRecordReadScope.adult,
+      ))
           .where(ReviewRecordFilters.isAdultCompatible)
           .toList();
 

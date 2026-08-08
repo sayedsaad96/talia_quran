@@ -4,8 +4,10 @@ import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../../core/memorization/review_record_cloud_merge.dart';
+import '../../../../../core/memorization/review_record_identity.dart';
 import '../../../../certificate/domain/entities/certificate_award.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
@@ -21,13 +23,15 @@ class MemorizationProductionSyncService {
     this._datasource,
     this._prefs,
     this._gateway,
-    this._mappers,
-  );
+    this._mappers, {
+    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
+  }) : _owner = owner;
 
   final MemorizationPlusLocalDatasource _datasource;
   final SharedPreferences _prefs;
   final MemorizationCloudGateway _gateway;
   final MemorizationCloudMappers _mappers;
+  final RecordOwnerProvider _owner;
 
   /// Daily-plan dirty flag is also written by the facade's `saveDailyPlan`.
   static const dailyPlanCloudDirtyKey = 'daily_plan_cloud_dirty';
@@ -299,14 +303,14 @@ class MemorizationProductionSyncService {
   }
 
   String _reviewRecordStorageKey(AyahReviewRecord record) =>
-      ReviewRecordAudienceScope.storageKey(
+      ReviewRecordIdentity(
+        ownerUserId: _owner.currentOwnerId,
+        audience: ReviewRecordAudienceScope.scopeForWriteMode(
+          record.createdByMode,
+        ),
         surahId: record.surahId,
         ayahNumber: record.ayahNumber,
-        mode: record.createdByMode,
-        scoped: ReviewRecordAudienceScope.isEnabled(
-          readBool: (key) => _prefs.getBool(key) ?? false,
-        ),
-      );
+      ).storageKey;
 
   Future<void> _pushReviewRecordsBatch(
     SupabaseClient client,

@@ -587,6 +587,23 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
+  _i5.Future<_i2.Either<_i6.Failure, int>> claimLocalReviewRecords() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #claimLocalReviewRecords,
+          [],
+        ),
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, int>>.value(
+            _FakeEither_0<_i6.Failure, int>(
+          this,
+          Invocation.method(
+            #claimLocalReviewRecords,
+            [],
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, int>>);
+
+  @override
   _i5.Future<_i2.Either<_i6.Failure, _i11.KidsProgress>> getKidsProgress() =>
       (super.noSuchMethod(
         Invocation.method(
@@ -895,15 +912,13 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
-  _i5.Future<bool> hasPendingCloudWork() =>
-      (super.noSuchMethod(
+  _i5.Future<bool> hasPendingCloudWork() => (super.noSuchMethod(
         Invocation.method(
           #hasPendingCloudWork,
           [],
         ),
         returnValue: _i5.Future<bool>.value(false),
       ) as _i5.Future<bool>);
-
 
   @override
   _i5.Future<_i2.Either<_i6.Failure, List<_i11.RemoteChildSummary>>>
@@ -1161,6 +1176,24 @@ class MockMemorizationPlusRepository extends _i1.Mock
           ),
         )),
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
+  _i5.Future<_i2.Either<_i6.Failure, _i11.FamilyDashboard>>
+      getFamilyDashboard() => (super.noSuchMethod(
+            Invocation.method(
+              #getFamilyDashboard,
+              [],
+            ),
+            returnValue:
+                _i5.Future<_i2.Either<_i6.Failure, _i11.FamilyDashboard>>.value(
+                    _FakeEither_0<_i6.Failure, _i11.FamilyDashboard>(
+              this,
+              Invocation.method(
+                #getFamilyDashboard,
+                [],
+              ),
+            )),
+          ) as _i5.Future<_i2.Either<_i6.Failure, _i11.FamilyDashboard>>);
 }
 
 /// A class which mocks [AppSessionService].

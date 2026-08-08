@@ -51,6 +51,8 @@ void main() {
         .thenAnswer((_) async => const Right(null));
     when(mockMemPlusRepository.resyncProductionDataToCloud())
         .thenAnswer((_) async => const Right(null));
+    when(mockMemPlusRepository.claimLocalReviewRecords())
+        .thenAnswer((_) async => const Right(0));
     when(mockMemPlusRepository.hasPendingCloudWork())
         .thenAnswer((_) async => true);
     when(mockAchievementService.getAllEarnedCertificates()).thenReturn(const []);

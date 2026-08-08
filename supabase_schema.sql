@@ -1092,11 +1092,14 @@ CREATE TABLE IF NOT EXISTS public.ayah_review_records_cloud (
     CHECK (review_state IN ('newCard', 'learning', 'review', 'relearning')),
   created_by_mode TEXT NOT NULL
     CHECK (created_by_mode IN ('v2Session', 'kidsMode', 'hifz')),
+  audience TEXT GENERATED ALWAYS AS (
+    CASE WHEN created_by_mode = 'kidsMode' THEN 'kids' ELSE 'adult' END
+  ) STORED,
   sync_version BIGINT NOT NULL DEFAULT 1,
   difficulty DOUBLE PRECISION NOT NULL DEFAULT 5.0,
   stability DOUBLE PRECISION NOT NULL DEFAULT 0.0,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT unique_user_ayah_review UNIQUE (user_id, surah_id, ayah_number)
+  CONSTRAINT unique_user_audience_ayah_review UNIQUE (user_id, audience, surah_id, ayah_number)
 );
 
 CREATE INDEX IF NOT EXISTS idx_ayah_review_records_cloud_user
@@ -1267,7 +1270,7 @@ BEGIN
     COALESCE((item->>'difficulty')::DOUBLE PRECISION, 5.0),
     COALESCE((item->>'stability')::DOUBLE PRECISION, 0.0)
   FROM jsonb_array_elements(p_data) AS item
-  ON CONFLICT (user_id, surah_id, ayah_number)
+  ON CONFLICT ON CONSTRAINT unique_user_audience_ayah_review
   DO UPDATE SET
     strength_level = EXCLUDED.strength_level,
     interval_days = EXCLUDED.interval_days,

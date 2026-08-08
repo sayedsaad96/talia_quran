@@ -192,15 +192,13 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
       ) as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);
 
   @override
-  _i4.Future<bool> hasPendingCloudPush() =>
-      (super.noSuchMethod(
+  _i4.Future<bool> hasPendingCloudPush() => (super.noSuchMethod(
         Invocation.method(
           #hasPendingCloudPush,
           [],
         ),
         returnValue: _i4.Future<bool>.value(false),
       ) as _i4.Future<bool>);
-
 
   @override
   _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> resendConfirmation(
@@ -680,6 +678,23 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i4.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
+  _i4.Future<_i2.Either<_i6.Failure, int>> claimLocalReviewRecords() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #claimLocalReviewRecords,
+          [],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i6.Failure, int>>.value(
+            _FakeEither_0<_i6.Failure, int>(
+          this,
+          Invocation.method(
+            #claimLocalReviewRecords,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i6.Failure, int>>);
+
+  @override
   _i4.Future<_i2.Either<_i6.Failure, _i8.KidsProgress>> getKidsProgress() =>
       (super.noSuchMethod(
         Invocation.method(
@@ -987,15 +1002,13 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i4.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
-  _i4.Future<bool> hasPendingCloudWork() =>
-      (super.noSuchMethod(
+  _i4.Future<bool> hasPendingCloudWork() => (super.noSuchMethod(
         Invocation.method(
           #hasPendingCloudWork,
           [],
         ),
         returnValue: _i4.Future<bool>.value(false),
       ) as _i4.Future<bool>);
-
 
   @override
   _i4.Future<_i2.Either<_i6.Failure, List<_i8.RemoteChildSummary>>>
@@ -1252,6 +1265,24 @@ class MockMemorizationPlusRepository extends _i1.Mock
           ),
         )),
       ) as _i4.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
+  _i4.Future<_i2.Either<_i6.Failure, _i8.FamilyDashboard>>
+      getFamilyDashboard() => (super.noSuchMethod(
+            Invocation.method(
+              #getFamilyDashboard,
+              [],
+            ),
+            returnValue:
+                _i4.Future<_i2.Either<_i6.Failure, _i8.FamilyDashboard>>.value(
+                    _FakeEither_0<_i6.Failure, _i8.FamilyDashboard>(
+              this,
+              Invocation.method(
+                #getFamilyDashboard,
+                [],
+              ),
+            )),
+          ) as _i4.Future<_i2.Either<_i6.Failure, _i8.FamilyDashboard>>);
 }
 
 /// A class which mocks [AchievementService].

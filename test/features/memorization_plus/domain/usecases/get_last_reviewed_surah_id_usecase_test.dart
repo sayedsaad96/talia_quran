@@ -30,7 +30,7 @@ void main() {
           ),
         );
 
-        final result = await useCase();
+        final result = await useCase(ReviewRecordReadScope.adult);
 
         expect(result, const Right(2));
       },
@@ -50,7 +50,7 @@ void main() {
         ),
       );
 
-      final result = await useCase();
+      final result = await useCase(ReviewRecordReadScope.adult);
 
       expect(result, const Right(null));
     });

@@ -454,5 +454,9 @@ class _FakeMemPlusRepository implements MemorizationPlusRepository {
   }
 
   @override
+  Future<Either<Failure, int>> claimLocalReviewRecords() async =>
+      const Right(0);
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

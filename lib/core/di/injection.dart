@@ -28,6 +28,7 @@ import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/session_engine.dart';
 import '../progress/progress_events_bus.dart';
+import '../identity/record_owner_provider.dart';
 import '../sync/cloud_sync_queue.dart';
 import '../sync/cloud_sync_queue_item.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
@@ -118,11 +119,17 @@ Future<void> configureDependencies() async {
   await hifzDatasource.migrateFromSharedPreferencesIfNeeded();
   getIt.registerLazySingleton<HifzLocalDatasource>(() => hifzDatasource);
 
+  getIt.registerLazySingleton<RecordOwnerProvider>(
+    () => const SupabaseRecordOwnerProvider(),
+  );
+
   final memorizationPlusDatasource = MemorizationPlusLocalDatasourceImpl(
     sharedPrefs,
     isar: isar,
+    owner: getIt<RecordOwnerProvider>(),
   );
   await memorizationPlusDatasource.migrateReviewRecordsToIsarIfNeeded();
+  await memorizationPlusDatasource.migrateReviewRecordIdentityIfNeeded();
 
   // ─── Core ───────────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ThemeCubit>(

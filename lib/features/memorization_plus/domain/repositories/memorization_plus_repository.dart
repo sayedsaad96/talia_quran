@@ -61,6 +61,9 @@ abstract class MemorizationPlusRepository {
   });
   Future<Either<Failure, void>> saveReviewRecord(AyahReviewRecord record);
 
+  /// Transfers guest (`local`) review records to the signed-in account once.
+  Future<Either<Failure, int>> claimLocalReviewRecords();
+
   // ─── Kids progress ──────────────────────────────────────────────────────────
   Future<Either<Failure, KidsProgress>> getKidsProgress();
   Future<Either<Failure, void>> saveKidsProgress(KidsProgress progress);

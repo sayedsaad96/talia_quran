@@ -142,6 +142,32 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> _performCloudSync() async {
 
+    final memPlusForClaim = _memPlusRepository;
+
+    if (memPlusForClaim != null) {
+
+      final claim = await memPlusForClaim.claimLocalReviewRecords();
+
+      claim.fold(
+
+        (failure) => TaliaLogger.w('Guest record claim failed', failure.message),
+
+        (count) {
+
+          if (count > 0) {
+
+            TaliaLogger.i('Claimed $count guest review records for account');
+
+          }
+
+        },
+
+      );
+
+    }
+
+
+
     await _processSyncQueue();
 
 

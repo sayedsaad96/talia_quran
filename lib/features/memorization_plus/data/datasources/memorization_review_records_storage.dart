@@ -1,58 +1,54 @@
 part of 'memorization_plus_local_datasource.dart';
 
-/// Review-record storage: Isar/SharedPreferences CRUD, legacy migrations and
+/// Review-record storage: Isar/SharedPreferences CRUD, identity migrations and
 /// cloud dirty tracking.
 mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
   String _reviewKey(int surahId, int ayahNumber) =>
       '${MemorizationPlusLocalDatasourceImpl._kReviewPrefix}_${surahId}_$ayahNumber';
 
-  bool get _audienceScopedReads => ReviewRecordAudienceScope.isEnabled(
-    readBool: (key) => _prefs.getBool(key) ?? false,
-  );
+  /// Identity of the row this record must be written to, under the active owner.
+  ReviewRecordIdentity _writeIdentity(AyahReviewRecordModel record) =>
+      ReviewRecordIdentity(
+        ownerUserId: _owner.currentOwnerId,
+        audience: ReviewRecordAudienceScope.scopeForWriteMode(
+          record.createdByMode,
+        ),
+        surahId: record.surahId,
+        ayahNumber: record.ayahNumber,
+      );
+
+  ReviewRecordIdentity _readIdentity({
+    required int surahId,
+    required int ayahNumber,
+    required ReviewRecordReadScope scope,
+  }) =>
+      ReviewRecordIdentity(
+        ownerUserId: _owner.currentOwnerId,
+        audience: scope,
+        surahId: surahId,
+        ayahNumber: ayahNumber,
+      );
+
+  Future<void> _runReviewRecordMigrations() async {
+    await migrateReviewRecordsToIsarIfNeeded();
+    await migrateReviewRecordIdentityIfNeeded();
+  }
+
+  /// All rows owned by the active account, optionally narrowed to one audience.
+  Future<List<IsarAyahReviewRecord>> _ownedRows(
+    Isar isar, {
+    ReviewRecordReadScope? scope,
+  }) async {
+    final query = isar.isarAyahReviewRecords
+        .filter()
+        .ownerUserIdEqualTo(_owner.currentOwnerId);
+    if (scope == null) return query.findAll();
+    return query.audienceEqualTo(scope.name).findAll();
+  }
 
   Future<void> migrateAudienceScopedReviewKeysIfNeeded() async {
-    if (!_audienceScopedReads) return;
-    if (_prefs.getBool(ReviewRecordAudienceScope.migrationKey) == true) {
-      return;
-    }
-
-    final isar = _isar;
-    if (isar == null) {
-      await _prefs.setBool(ReviewRecordAudienceScope.migrationKey, true);
-      return;
-    }
-
-    await migrateReviewRecordsToIsarIfNeeded();
-    final records = await isar.isarAyahReviewRecords.where().findAll();
-
-    await isar.writeTxn(() async {
-      for (final record in records) {
-        if (!ReviewRecordAudienceScope.isLegacyCompositeKey(
-          record.compositeKey,
-        )) {
-          continue;
-        }
-        final model = record.toModel();
-        final scopedKey = ReviewRecordAudienceScope.storageKey(
-          surahId: model.surahId,
-          ayahNumber: model.ayahNumber,
-          mode: model.createdByMode,
-          scoped: true,
-        );
-        if (scopedKey == record.compositeKey) continue;
-
-        final existing = await isar.isarAyahReviewRecords.getByCompositeKey(
-          scopedKey,
-        );
-        if (existing != null) continue;
-
-        final migrated = IsarAyahReviewRecord.fromModel(model)
-          ..compositeKey = scopedKey;
-        await isar.isarAyahReviewRecords.put(migrated);
-      }
-    });
-
-    await _prefs.setBool(ReviewRecordAudienceScope.migrationKey, true);
+    // Superseded by [migrateReviewRecordIdentityIfNeeded]. Kept on the
+    // interface so older call sites compile; no longer invoked on read/write.
   }
 
   Future<void> migrateReviewRecordsToIsarIfNeeded() async {
@@ -109,56 +105,147 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
     return _prefs
         .getKeys()
         .where(
-          (key) =>
-              key.startsWith('${MemorizationPlusLocalDatasourceImpl._kReviewPrefix}_'),
+          (key) => key.startsWith(
+            '${MemorizationPlusLocalDatasourceImpl._kReviewPrefix}_',
+          ),
         )
         .toList();
   }
 
-  Future<AyahReviewRecordModel?> _getIsarReviewRecord(
-    int surahId,
-    int ayahNumber, {
-    required ReviewRecordReadScope scope,
-  }) async {
+  /// Re-keys every review row to `owner|audience|surah|ayah`.
+  ///
+  /// Handles all three historical key generations. Runs once per installation
+  /// and is safe to call on every read: the prefs flag short-circuits it.
+  Future<void> migrateReviewRecordIdentityIfNeeded() async {
+    if (_prefs.getBool(
+          MemorizationPlusLocalDatasourceImpl._kReviewIdentityMigration,
+        ) ??
+        false) {
+      return;
+    }
+
     final isar = _isar;
-    if (isar == null) return null;
-
-    await migrateReviewRecordsToIsarIfNeeded();
-    await migrateAudienceScopedReviewKeysIfNeeded();
-
-    if (!_audienceScopedReads) {
-      final record = await isar.isarAyahReviewRecords.getByCompositeKey(
-        ReviewRecordAudienceScope.legacyKey(surahId, ayahNumber),
+    if (isar == null) {
+      await _prefs.setBool(
+        MemorizationPlusLocalDatasourceImpl._kReviewIdentityMigration,
+        true,
       );
-      return record?.toModel();
+      return;
     }
 
-    final scopedKey = ReviewRecordAudienceScope.readKey(
-      surahId: surahId,
-      ayahNumber: ayahNumber,
-      scope: scope,
-      scoped: true,
-    );
-    final scoped = await isar.isarAyahReviewRecords.getByCompositeKey(
-      scopedKey,
-    );
-    if (scoped != null) return scoped.toModel();
+    final ownerUserId = _owner.currentOwnerId;
+    final isLocalOwner = ownerUserId == ReviewRecordIdentity.localOwnerId;
+    final rows = await isar.isarAyahReviewRecords.where().findAll();
 
-    if (scope == ReviewRecordReadScope.adult) {
-      final legacy = await isar.isarAyahReviewRecords.getByCompositeKey(
-        ReviewRecordAudienceScope.legacyKey(surahId, ayahNumber),
-      );
-      final legacyModel = legacy?.toModel();
-      if (legacyModel != null &&
-          ReviewRecordAudienceScope.matchesReadScope(
-            legacyModel,
-            ReviewRecordReadScope.adult,
-          )) {
-        return legacyModel;
+    await isar.writeTxn(() async {
+      for (final row in rows) {
+        final generation = ReviewRecordIdentity.generationOf(row.compositeKey);
+        if (generation == ReviewRecordKeyGeneration.identity) continue;
+
+        final model = row.toModel();
+        final audience = switch (generation) {
+          ReviewRecordKeyGeneration.audienceScoped =>
+            row.compositeKey.startsWith(ReviewRecordAudienceScope.kidsPrefix)
+                ? ReviewRecordReadScope.kids
+                : ReviewRecordReadScope.adult,
+          _ => ReviewRecordAudienceScope.scopeForWriteMode(model.createdByMode),
+        };
+        final identity = ReviewRecordIdentity(
+          ownerUserId: ownerUserId,
+          audience: audience,
+          surahId: model.surahId,
+          ayahNumber: model.ayahNumber,
+        );
+
+        final occupied = await isar.isarAyahReviewRecords.getByCompositeKey(
+          identity.storageKey,
+        );
+        if (occupied != null) {
+          // A row already owns this identity. Keep it and drop the stale
+          // duplicate rather than losing the newer review state.
+          await isar.isarAyahReviewRecords.delete(row.id);
+          continue;
+        }
+
+        row.compositeKey = identity.storageKey;
+        row.ownerUserId = identity.ownerUserId;
+        row.audience = identity.audience.name;
+        if (isLocalOwner) {
+          row.cloudDirty = false;
+        }
+        await isar.isarAyahReviewRecords.put(row);
       }
+    });
+
+    await _prefs.setBool(
+      MemorizationPlusLocalDatasourceImpl._kReviewIdentityMigration,
+      true,
+    );
+  }
+
+  /// Transfers `local`-owned review records to the signed-in account on first
+  /// sign-in. Returns the number of records claimed.
+  Future<int> claimLocalReviewRecords() async {
+    final isar = _isar;
+    final ownerUserId = _owner.currentOwnerId;
+    if (isar == null || ownerUserId == ReviewRecordIdentity.localOwnerId) {
+      return 0;
+    }
+    if (_prefs.getString(
+          MemorizationPlusLocalDatasourceImpl._kLocalRecordsClaimedBy,
+        ) !=
+        null) {
+      return 0;
     }
 
-    return null;
+    await _runReviewRecordMigrations();
+
+    // Only an account with no history of its own may absorb guest data.
+    final alreadyOwned = await isar.isarAyahReviewRecords
+        .filter()
+        .ownerUserIdEqualTo(ownerUserId)
+        .count();
+    if (alreadyOwned > 0) return 0;
+
+    final localRows = await isar.isarAyahReviewRecords
+        .filter()
+        .ownerUserIdEqualTo(ReviewRecordIdentity.localOwnerId)
+        .findAll();
+    if (localRows.isEmpty) return 0;
+
+    var claimed = 0;
+    await isar.writeTxn(() async {
+      for (final row in localRows) {
+        final parsed = ReviewRecordIdentity.tryParse(row.compositeKey);
+        if (parsed == null) continue;
+        final identity = ReviewRecordIdentity(
+          ownerUserId: ownerUserId,
+          audience: parsed.audience,
+          surahId: parsed.surahId,
+          ayahNumber: parsed.ayahNumber,
+        );
+        final occupied = await isar.isarAyahReviewRecords.getByCompositeKey(
+          identity.storageKey,
+        );
+        if (occupied != null) continue;
+
+        row.compositeKey = identity.storageKey;
+        row.ownerUserId = identity.ownerUserId;
+        // Claimed records have never been uploaded under this account.
+        row.cloudDirty = true;
+        row.lastSyncedAt = null;
+        await isar.isarAyahReviewRecords.put(row);
+        claimed++;
+      }
+    });
+
+    if (claimed > 0) {
+      await _prefs.setString(
+        MemorizationPlusLocalDatasourceImpl._kLocalRecordsClaimedBy,
+        ownerUserId,
+      );
+    }
+    return claimed;
   }
 
   Future<AyahReviewRecordModel?> getReviewRecord(
@@ -167,19 +254,26 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
     ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
   }) async {
     final isar = _isar;
-    if (isar != null) {
-      return _getIsarReviewRecord(surahId, ayahNumber, scope: scope);
+    if (isar == null) {
+      final raw = _prefs.getString(_reviewKey(surahId, ayahNumber));
+      if (raw == null) return null;
+      final model = _tryParse(raw, AyahReviewRecordModel.fromJson);
+      if (model == null) return null;
+      return ReviewRecordAudienceScope.matchesReadScope(model, scope)
+          ? model
+          : null;
     }
 
-    final raw = _prefs.getString(_reviewKey(surahId, ayahNumber));
-    if (raw == null) return null;
-    final model = _tryParse(raw, AyahReviewRecordModel.fromJson);
-    if (model == null) return null;
-    if (_audienceScopedReads &&
-        !ReviewRecordAudienceScope.matchesReadScope(model, scope)) {
-      return null;
-    }
-    return model;
+    await _runReviewRecordMigrations();
+    final identity = _readIdentity(
+      surahId: surahId,
+      ayahNumber: ayahNumber,
+      scope: scope,
+    );
+    final row = await isar.isarAyahReviewRecords.getByCompositeKey(
+      identity.storageKey,
+    );
+    return row?.toModel();
   }
 
   Future<List<AyahReviewRecordModel>> getAllReviewRecords({
@@ -187,32 +281,29 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
     bool includeAllAudiences = false,
   }) async {
     final isar = _isar;
-    if (isar != null) {
-      await migrateReviewRecordsToIsarIfNeeded();
-      await migrateAudienceScopedReviewKeysIfNeeded();
-      final records = await isar.isarAyahReviewRecords.where().findAll();
-      final models = records.map((record) => record.toModel()).toList();
-      if (!_audienceScopedReads || includeAllAudiences) return models;
-      return models
-          .where((m) => ReviewRecordAudienceScope.matchesReadScope(m, scope))
+    if (isar == null) {
+      return _legacyReviewKeys()
+          .map((k) {
+            final raw = _prefs.getString(k);
+            return raw == null
+                ? null
+                : _tryParse(raw, AyahReviewRecordModel.fromJson);
+          })
+          .whereType<AyahReviewRecordModel>()
+          .where(
+            (m) =>
+                includeAllAudiences ||
+                ReviewRecordAudienceScope.matchesReadScope(m, scope),
+          )
           .toList();
     }
 
-    return _legacyReviewKeys()
-        .map((k) {
-          final raw = _prefs.getString(k);
-          return raw == null
-              ? null
-              : _tryParse(raw, AyahReviewRecordModel.fromJson);
-        })
-        .whereType<AyahReviewRecordModel>()
-        .where(
-          (m) =>
-              !_audienceScopedReads ||
-              includeAllAudiences ||
-              ReviewRecordAudienceScope.matchesReadScope(m, scope),
-        )
-        .toList();
+    await _runReviewRecordMigrations();
+    final rows = await _ownedRows(
+      isar,
+      scope: includeAllAudiences ? null : scope,
+    );
+    return rows.map((row) => row.toModel()).toList();
   }
 
   Future<void> saveReviewRecord(
@@ -220,33 +311,29 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
     bool markCloudDirty = true,
   }) async {
     final isar = _isar;
-    if (isar != null) {
-      await migrateReviewRecordsToIsarIfNeeded();
-      await migrateAudienceScopedReviewKeysIfNeeded();
-      final compositeKey = ReviewRecordAudienceScope.storageKey(
-        surahId: record.surahId,
-        ayahNumber: record.ayahNumber,
-        mode: record.createdByMode,
-        scoped: _audienceScopedReads,
+    if (isar == null) {
+      await _setStringOrThrow(
+        _reviewKey(record.surahId, record.ayahNumber),
+        jsonEncode(record.toJson()),
       );
-      final isarRecord = IsarAyahReviewRecord.fromModel(record)
-        ..compositeKey = compositeKey;
-      if (markCloudDirty) {
-        isarRecord.cloudDirty = true;
-      } else {
-        isarRecord.cloudDirty = false;
-        isarRecord.lastSyncedAt = DateTime.now().toUtc();
-      }
-      await isar.writeTxn(() async {
-        await isar.isarAyahReviewRecords.put(isarRecord);
-      });
       return;
     }
 
-    await _setStringOrThrow(
-      _reviewKey(record.surahId, record.ayahNumber),
-      jsonEncode(record.toJson()),
-    );
+    await _runReviewRecordMigrations();
+    final identity = _writeIdentity(record);
+    final isarRecord = IsarAyahReviewRecord.fromModel(record)
+      ..compositeKey = identity.storageKey
+      ..ownerUserId = identity.ownerUserId
+      ..audience = identity.audience.name;
+    if (markCloudDirty) {
+      isarRecord.cloudDirty = true;
+    } else {
+      isarRecord.cloudDirty = false;
+      isarRecord.lastSyncedAt = DateTime.now().toUtc();
+    }
+    await isar.writeTxn(() async {
+      await isar.isarAyahReviewRecords.put(isarRecord);
+    });
   }
 
   Future<List<AyahReviewRecordModel>> getCloudDirtyReviewRecords({
@@ -257,23 +344,14 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
       return getAllReviewRecords(includeAllAudiences: includeAllAudiences);
     }
 
-    await migrateReviewRecordsToIsarIfNeeded();
-    await migrateAudienceScopedReviewKeysIfNeeded();
-    final records = await isar.isarAyahReviewRecords
-        .filter()
-        .group(
-          (q) => q.cloudDirtyEqualTo(true).or().cloudDirtyIsNull(),
-        )
-        .findAll();
-    final models = records.map((record) => record.toModel()).toList();
-    if (!_audienceScopedReads || includeAllAudiences) return models;
-    return models
-        .where(
-          (m) => ReviewRecordAudienceScope.matchesReadScope(
-            m,
-            ReviewRecordReadScope.adult,
-          ),
-        )
+    await _runReviewRecordMigrations();
+    final rows = await _ownedRows(
+      isar,
+      scope: includeAllAudiences ? null : ReviewRecordReadScope.adult,
+    );
+    return rows
+        .where((row) => row.cloudDirty != false)
+        .map((row) => row.toModel())
         .toList();
   }
 
@@ -286,10 +364,9 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
     final syncedAt = DateTime.now().toUtc();
     await isar.writeTxn(() async {
       for (final compositeKey in compositeKeys) {
-        final record = await isar.isarAyahReviewRecords
-            .filter()
-            .compositeKeyEqualTo(compositeKey)
-            .findFirst();
+        final record = await isar.isarAyahReviewRecords.getByCompositeKey(
+          compositeKey,
+        );
         if (record == null) continue;
         record.cloudDirty = false;
         record.lastSyncedAt = syncedAt;
