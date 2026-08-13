@@ -89,6 +89,7 @@ abstract class MemorizationPlusRepository {
   Future<Either<Failure, List<ParentReward>>> claimParentReward(String id);
   Future<Either<Failure, String>> createChildLinkToken();
   Future<Either<Failure, void>> acceptChildLinkToken(String token);
+  Future<Either<Failure, void>> pullKidsProgressFromCloud();
   Future<Either<Failure, void>> syncKidsProgressToCloud();
 
   /// True when kids progress/logs, review rows, daily plan, or certificates
@@ -126,6 +127,9 @@ abstract class MemorizationPlusRepository {
   /// Pulls production SRS/plan from cloud when logged in.
   /// Opt out via [CloudSyncFeatureFlags.productionPullKey] = false in prefs.
   Future<Either<Failure, void>> pullProductionDataFromCloud();
+
+  /// Pulls certificate awards for the signed-in user from the cloud mirror.
+  Future<Either<Failure, List<CertificateAward>>> pullCertificatesFromCloud();
 
   /// Best-effort push of newly-earned certificates to the cloud mirror.
   Future<Either<Failure, void>> pushCertificatesToCloud(

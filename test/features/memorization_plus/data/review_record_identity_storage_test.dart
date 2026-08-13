@@ -6,6 +6,7 @@ import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
+import 'package:talia_quran/core/memorization/review_record_cloud_push_acknowledgement.dart';
 import 'package:talia_quran/core/memorization/review_record_identity.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
@@ -83,23 +84,25 @@ void main() {
       });
     });
 
-    test('write stores the four-part identity key, owner and audience',
-        () async {
-      final datasource = datasourceFor('user-a');
-      await datasource.saveReviewRecord(
-        _record(
-          surahId: 67,
-          ayahNumber: 3,
-          mode: ReviewRecordCreatedByMode.v2Session,
-        ),
-      );
+    test(
+      'write stores the four-part identity key, owner and audience',
+      () async {
+        final datasource = datasourceFor('user-a');
+        await datasource.saveReviewRecord(
+          _record(
+            surahId: 67,
+            ayahNumber: 3,
+            mode: ReviewRecordCreatedByMode.v2Session,
+          ),
+        );
 
-      final rows = await isar.isarAyahReviewRecords.where().findAll();
-      expect(rows, hasLength(1));
-      expect(rows.single.compositeKey, 'user-a|adult|67|3');
-      expect(rows.single.ownerUserId, 'user-a');
-      expect(rows.single.audience, 'adult');
-    });
+        final rows = await isar.isarAyahReviewRecords.where().findAll();
+        expect(rows, hasLength(1));
+        expect(rows.single.compositeKey, 'user-a|adult|67|3');
+        expect(rows.single.ownerUserId, 'user-a');
+        expect(rows.single.audience, 'adult');
+      },
+    );
 
     test('adult and kids records on one ayah coexist for one owner', () async {
       final datasource = datasourceFor('user-a');
@@ -164,43 +167,45 @@ void main() {
       expect(await isar.isarAyahReviewRecords.where().count(), 2);
     });
 
-    test('getAllReviewRecords returns only the active owner and audience',
-        () async {
-      await datasourceFor('user-a').saveReviewRecord(
-        _record(
-          surahId: 1,
-          ayahNumber: 1,
-          mode: ReviewRecordCreatedByMode.v2Session,
-        ),
-      );
-      await datasourceFor('user-a').saveReviewRecord(
-        _record(
-          surahId: 1,
-          ayahNumber: 2,
-          mode: ReviewRecordCreatedByMode.kidsMode,
-        ),
-      );
-      await datasourceFor('user-b').saveReviewRecord(
-        _record(
-          surahId: 1,
-          ayahNumber: 3,
-          mode: ReviewRecordCreatedByMode.v2Session,
-        ),
-      );
+    test(
+      'getAllReviewRecords returns only the active owner and audience',
+      () async {
+        await datasourceFor('user-a').saveReviewRecord(
+          _record(
+            surahId: 1,
+            ayahNumber: 1,
+            mode: ReviewRecordCreatedByMode.v2Session,
+          ),
+        );
+        await datasourceFor('user-a').saveReviewRecord(
+          _record(
+            surahId: 1,
+            ayahNumber: 2,
+            mode: ReviewRecordCreatedByMode.kidsMode,
+          ),
+        );
+        await datasourceFor('user-b').saveReviewRecord(
+          _record(
+            surahId: 1,
+            ayahNumber: 3,
+            mode: ReviewRecordCreatedByMode.v2Session,
+          ),
+        );
 
-      final adultA = await datasourceFor('user-a').getAllReviewRecords();
-      expect(adultA.map((r) => r.ayahNumber), [1]);
+        final adultA = await datasourceFor('user-a').getAllReviewRecords();
+        expect(adultA.map((r) => r.ayahNumber), [1]);
 
-      final kidsA = await datasourceFor(
-        'user-a',
-      ).getAllReviewRecords(scope: ReviewRecordReadScope.kids);
-      expect(kidsA.map((r) => r.ayahNumber), [2]);
+        final kidsA = await datasourceFor(
+          'user-a',
+        ).getAllReviewRecords(scope: ReviewRecordReadScope.kids);
+        expect(kidsA.map((r) => r.ayahNumber), [2]);
 
-      final allA = await datasourceFor(
-        'user-a',
-      ).getAllReviewRecords(includeAllAudiences: true);
-      expect(allA.map((r) => r.ayahNumber).toSet(), {1, 2});
-    });
+        final allA = await datasourceFor(
+          'user-a',
+        ).getAllReviewRecords(includeAllAudiences: true);
+        expect(allA.map((r) => r.ayahNumber).toSet(), {1, 2});
+      },
+    );
 
     test('includeAllAudiences never crosses the owner boundary', () async {
       await datasourceFor('user-b').saveReviewRecord(
@@ -236,6 +241,38 @@ void main() {
       await datasource.markReviewRecordsCloudSynced([identity.storageKey]);
       expect(await datasource.getCloudDirtyReviewRecords(), isEmpty);
     });
+
+    test(
+      'rejected cloud rows remain dirty after acknowledged rows clear',
+      () async {
+        final datasource = datasourceFor('user-a');
+        final acceptedRecord = _record(
+          surahId: 9,
+          ayahNumber: 1,
+          mode: ReviewRecordCreatedByMode.v2Session,
+        );
+        final rejectedRecord = _record(
+          surahId: 9,
+          ayahNumber: 2,
+          mode: ReviewRecordCreatedByMode.v2Session,
+        );
+        await datasource.saveReviewRecord(acceptedRecord);
+        await datasource.saveReviewRecord(rejectedRecord);
+
+        final acknowledgedKeys =
+            ReviewRecordCloudPushAcknowledgement.storageKeys(
+              ownerUserId: 'user-a',
+              sentRecords: [acceptedRecord, rejectedRecord],
+              acknowledgedRows: const [
+                {'surah_id': 9, 'ayah_number': 1, 'audience': 'adult'},
+              ],
+            );
+        await datasource.markReviewRecordsCloudSynced(acknowledgedKeys);
+
+        final remaining = await datasource.getCloudDirtyReviewRecords();
+        expect(remaining.map((record) => record.ayahNumber), [2]);
+      },
+    );
   });
 
   group('identity migration', () {
@@ -310,6 +347,82 @@ void main() {
       expect(rows.single.cloudDirty, isFalse);
     });
 
+    test('migration leaves another owner legacy row untouched', () async {
+      final otherOwnerRow =
+          IsarAyahReviewRecord.fromModel(
+              _record(
+                surahId: 67,
+                ayahNumber: 4,
+                mode: ReviewRecordCreatedByMode.v2Session,
+              ),
+            )
+            ..compositeKey = '67_4'
+            ..ownerUserId = 'user-b'
+            ..audience = 'adult';
+      await isar.writeTxn(() => isar.isarAyahReviewRecords.put(otherOwnerRow));
+
+      await datasourceFor('user-a').migrateReviewRecordIdentityIfNeeded();
+
+      final row = await isar.isarAyahReviewRecords.getByCompositeKey('67_4');
+      expect(row, isNotNull);
+      expect(row!.ownerUserId, 'user-b');
+      expect(row.audience, 'adult');
+    });
+
+    test('migration re-keys a local legacy row for the active owner', () async {
+      final localRow =
+          IsarAyahReviewRecord.fromModel(
+              _record(
+                surahId: 67,
+                ayahNumber: 5,
+                mode: ReviewRecordCreatedByMode.v2Session,
+              ),
+            )
+            ..compositeKey = '67_5'
+            ..ownerUserId = ReviewRecordIdentity.localOwnerId;
+      await isar.writeTxn(() => isar.isarAyahReviewRecords.put(localRow));
+
+      await datasourceFor('user-a').migrateReviewRecordIdentityIfNeeded();
+
+      final row = await isar.isarAyahReviewRecords.getByCompositeKey(
+        'user-a|adult|67|5',
+      );
+      expect(row, isNotNull);
+      expect(row!.ownerUserId, 'user-a');
+    });
+
+    test('retags legacy adult records to v2Session once', () async {
+      await seedRow('67_3', ReviewRecordCreatedByMode.adultMemPlus);
+
+      final datasource = datasourceFor('user-a');
+      await datasource.migrateReviewRecordIdentityIfNeeded();
+
+      final row = await isar.isarAyahReviewRecords.getByCompositeKey(
+        'user-a|adult|67|3',
+      );
+      expect(row!.toModel().createdByMode, ReviewRecordCreatedByMode.v2Session);
+
+      await datasource.migrateReviewRecordIdentityIfNeeded();
+      expect(await isar.isarAyahReviewRecords.where().count(), 1);
+    });
+
+    test(
+      'source retag migration is a no-op without legacy adult records',
+      () async {
+        await seedRow('67_3', ReviewRecordCreatedByMode.kidsMode);
+
+        await datasourceFor('user-a').migrateReviewRecordIdentityIfNeeded();
+
+        final row = await isar.isarAyahReviewRecords.getByCompositeKey(
+          'user-a|kids|67|3',
+        );
+        expect(
+          row!.toModel().createdByMode,
+          ReviewRecordCreatedByMode.kidsMode,
+        );
+      },
+    );
+
     test('migration is idempotent and does not duplicate rows', () async {
       await seedRow('67_3', ReviewRecordCreatedByMode.v2Session);
 
@@ -321,31 +434,76 @@ void main() {
       expect(prefs.getBool('mem_plus_review_identity_keys_v1'), isTrue);
     });
 
-    test('an existing identity row is never overwritten by a legacy row',
-        () async {
-      final existing = IsarAyahReviewRecord.fromModel(
-        _record(
-          surahId: 67,
-          ayahNumber: 3,
-          mode: ReviewRecordCreatedByMode.v2Session,
-          strengthLevel: 6,
-          totalReviews: 20,
-        ),
-      )
-        ..compositeKey = 'user-a|adult|67|3'
-        ..ownerUserId = 'user-a'
-        ..audience = 'adult';
-      await isar.writeTxn(() => isar.isarAyahReviewRecords.put(existing));
-      await seedRow('67_3', ReviewRecordCreatedByMode.v2Session);
+    test(
+      'migration keeps the newer legacy review when an identity exists',
+      () async {
+        final existing =
+            IsarAyahReviewRecord.fromModel(
+                _record(
+                  surahId: 67,
+                  ayahNumber: 3,
+                  mode: ReviewRecordCreatedByMode.v2Session,
+                  strengthLevel: 6,
+                  totalReviews: 20,
+                ),
+              )
+              ..compositeKey = 'user-a|adult|67|3'
+              ..ownerUserId = 'user-a'
+              ..audience = 'adult';
+        await isar.writeTxn(() => isar.isarAyahReviewRecords.put(existing));
+        final legacy = IsarAyahReviewRecord.fromModel(
+          AyahReviewRecordModel.fromEntity(
+            _record(
+              surahId: 67,
+              ayahNumber: 3,
+              mode: ReviewRecordCreatedByMode.v2Session,
+              strengthLevel: 2,
+              totalReviews: 3,
+            ).copyWith(lastReviewedAt: DateTime.utc(2026, 8, 9)),
+          ),
+        )..compositeKey = '67_3';
+        await isar.writeTxn(() => isar.isarAyahReviewRecords.put(legacy));
 
-      await datasourceFor('user-a').migrateReviewRecordIdentityIfNeeded();
+        await datasourceFor('user-a').migrateReviewRecordIdentityIfNeeded();
 
-      final row = await isar.isarAyahReviewRecords.getByCompositeKey(
-        'user-a|adult|67|3',
-      );
-      expect(row!.strengthLevel, 6);
-      expect(row.totalReviews, 20);
-    });
+        final row = await isar.isarAyahReviewRecords.getByCompositeKey(
+          'user-a|adult|67|3',
+        );
+        expect(row!.strengthLevel, 2);
+        expect(row.totalReviews, 3);
+      },
+    );
+
+    test(
+      'migration keeps the newer identity review when legacy data is stale',
+      () async {
+        final existing =
+            IsarAyahReviewRecord.fromModel(
+                AyahReviewRecordModel.fromEntity(
+                  _record(
+                    surahId: 67,
+                    ayahNumber: 3,
+                    mode: ReviewRecordCreatedByMode.v2Session,
+                    strengthLevel: 6,
+                    totalReviews: 20,
+                  ).copyWith(lastReviewedAt: DateTime.utc(2026, 8, 9)),
+                ),
+              )
+              ..compositeKey = 'user-a|adult|67|3'
+              ..ownerUserId = 'user-a'
+              ..audience = 'adult';
+        await isar.writeTxn(() => isar.isarAyahReviewRecords.put(existing));
+        await seedRow('67_3', ReviewRecordCreatedByMode.v2Session);
+
+        await datasourceFor('user-a').migrateReviewRecordIdentityIfNeeded();
+
+        final row = await isar.isarAyahReviewRecords.getByCompositeKey(
+          'user-a|adult|67|3',
+        );
+        expect(row!.strengthLevel, 6);
+        expect(row.totalReviews, 20);
+      },
+    );
   });
 
   group('guest-to-account claim', () {
@@ -380,9 +538,7 @@ void main() {
     });
 
     Future<void> seedLocalGuestRecord({int ayahNumber = 3}) async {
-      await datasourceFor(
-        ReviewRecordIdentity.localOwnerId,
-      ).saveReviewRecord(
+      await datasourceFor(ReviewRecordIdentity.localOwnerId).saveReviewRecord(
         _record(
           surahId: 67,
           ayahNumber: ayahNumber,
@@ -414,7 +570,9 @@ void main() {
       await seedLocalGuestRecord();
       await datasourceFor('user-a').claimLocalReviewRecords();
 
-      final claimedByB = await datasourceFor('user-b').claimLocalReviewRecords();
+      final claimedByB = await datasourceFor(
+        'user-b',
+      ).claimLocalReviewRecords();
       expect(claimedByB, 0);
       expect(await datasourceFor('user-b').getReviewRecord(67, 3), isNull);
     });

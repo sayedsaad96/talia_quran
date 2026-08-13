@@ -38,22 +38,13 @@ class HifzRepositoryImpl implements HifzRepository {
 
   @override
   Future<Either<Failure, void>> saveAyahProgress(AyahProgress progress) async {
-    try {
-      final model = progress is AyahProgressModel
-          ? progress
-          : AyahProgressModel(
-              surahId: progress.surahId,
-              ayahNumber: progress.ayahNumber,
-              status: progress.status,
-              repetitions: progress.repetitions,
-              nextReviewDate: progress.nextReviewDate,
-              lastReviewDate: progress.lastReviewDate,
-            );
-      await _datasource.saveAyahProgress(model);
-      return const Right(null);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
-    }
+    // IS-5: production writes retired with HifzPage. Migration/read APIs stay
+    // for upgrades; new progress belongs in Memorization Plus review records.
+    return const Left(
+      CacheFailure(
+        'Hifz write API retired; use Memorization Plus',
+      ),
+    );
   }
 
   @override
@@ -124,11 +115,11 @@ class HifzRepositoryImpl implements HifzRepository {
 
   @override
   Future<Either<Failure, void>> saveHifzPath(String path) async {
-    try {
-      await _datasource.saveHifzPath(path);
-      return const Right(null);
-    } catch (e) {
-      return Left(CacheFailure(e.toString()));
-    }
+    // IS-5: path selection lives on MemorizationProfile / PracticeSurah flow.
+    return const Left(
+      CacheFailure(
+        'Hifz write API retired; use Memorization Plus',
+      ),
+    );
   }
 }

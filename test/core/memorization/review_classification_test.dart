@@ -41,6 +41,25 @@ void main() {
       expect(classification.isVisibleForReview, isTrue);
     });
 
+    test(
+      'classifies a due review from a prior local calendar day as overdue',
+      () {
+        final now = DateTime(2026, 6, 9, 0, 30);
+        final classification = classifier.classify(
+          ReviewClassificationInput(
+            now: now,
+            lastReviewedAt: now.subtract(const Duration(days: 6)),
+            nextReviewDate: DateTime(2026, 6, 8, 23, 59),
+            strengthLevel: 3,
+            totalReviews: 2,
+          ),
+        );
+
+        expect(classification.isDue, isTrue);
+        expect(classification.isOverdue, isTrue);
+      },
+    );
+
     test('surfaces memorized due records without legacy near/far buckets', () {
       final now = DateTime.utc(2026, 6, 9, 12);
       final classification = classifier.classify(

@@ -4,7 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../quran/domain/repositories/quran_repository.dart';
+import '../../domain/entities/memorization_entities.dart';
+import '../../domain/repositories/memorization_plus_repository.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_reward_dialog.dart';
 
@@ -14,7 +15,6 @@ class KidsGamifiedCompletionPage extends StatefulWidget {
     required this.surahId,
     required this.completedAyahNumber,
     this.starsEarned = 1,
-    this.gemsEarned = 0,
     this.onNext,
     this.onReturnToMap,
   });
@@ -22,7 +22,6 @@ class KidsGamifiedCompletionPage extends StatefulWidget {
   final int surahId;
   final int completedAyahNumber;
   final int starsEarned;
-  final int gemsEarned;
   final VoidCallback? onNext;
   final VoidCallback? onReturnToMap;
 
@@ -33,26 +32,25 @@ class KidsGamifiedCompletionPage extends StatefulWidget {
 
 class _KidsGamifiedCompletionPageState
     extends State<KidsGamifiedCompletionPage> {
-  bool? _hasNextAyah;
+  KidsJourneyMission? _nextMission;
 
   @override
   void initState() {
     super.initState();
-    _loadNextAyahAvailability();
+    _loadNextMission();
   }
 
-  Future<void> _loadNextAyahAvailability() async {
-    final result = await getIt<QuranRepository>().getSurahDetail(
-      widget.surahId,
+  Future<void> _loadNextMission() async {
+    final result = await getIt<MemorizationPlusRepository>().getKidsJourney(
+      surahId: widget.surahId,
     );
     if (!mounted) return;
-    final ayahCount = result.fold(
+    final mission = result.fold(
       (_) => null,
-      (detail) => detail.surah.ayahCount,
+      KidsJourneyMissionResolver.nextMission,
     );
     setState(() {
-      _hasNextAyah =
-          ayahCount != null && widget.completedAyahNumber < ayahCount;
+      _nextMission = mission;
     });
   }
 
@@ -60,36 +58,22 @@ class _KidsGamifiedCompletionPageState
   Widget build(BuildContext context) {
     return KidsGamifiedCompletionContent(
       starsEarned: widget.starsEarned,
-      gemsEarned: widget.gemsEarned,
-      showNextButton: _hasNextAyah ?? true,
-      onNext: widget.onNext ?? () => _openNextAyah(context),
+      showNextButton: _nextMission != null,
+      onNext: widget.onNext ?? () => _openNextMission(context),
       onReturnToMap: widget.onReturnToMap ?? () => _returnToMap(context),
     );
   }
 
-  Future<void> _openNextAyah(BuildContext context) async {
-    if (_hasNextAyah == false) {
-      _returnToMap(context);
-      return;
-    }
-
-    final result = await getIt<QuranRepository>().getSurahDetail(
-      widget.surahId,
-    );
-    if (!context.mounted) return;
-
-    final ayahCount = result.fold(
-      (_) => null,
-      (detail) => detail.surah.ayahCount,
-    );
-    if (ayahCount == null || widget.completedAyahNumber >= ayahCount) {
+  void _openNextMission(BuildContext context) {
+    final mission = _nextMission;
+    if (mission == null) {
       _returnToMap(context);
       return;
     }
 
     context.pushReplacement(
-      '${AppRoutes.memorizationPlusKids}?surahId=${widget.surahId}'
-      '&ayahNumber=${widget.completedAyahNumber + 1}',
+      '${AppRoutes.memorizationPlusKids}?surahId=${mission.surahId}'
+      '&ayahNumber=${mission.ayahNumber}',
     );
   }
 
@@ -101,18 +85,48 @@ class _KidsGamifiedCompletionPageState
 }
 
 @visibleForTesting
+class KidsJourneyMission {
+  const KidsJourneyMission({required this.surahId, required this.ayahNumber});
+
+  final int surahId;
+  final int ayahNumber;
+}
+
+@visibleForTesting
+abstract final class KidsJourneyMissionResolver {
+  static KidsJourneyMission? nextMission(List<KidsJourneyStage> stages) {
+    KidsJourneyStage? stage;
+    for (final candidate in stages) {
+      if (candidate.status == KidsJourneyStageStatus.current) {
+        stage = candidate;
+        break;
+      }
+    }
+    for (final candidate in stages) {
+      if (stage == null &&
+          candidate.status == KidsJourneyStageStatus.needsReview) {
+        stage = candidate;
+      }
+    }
+    if (stage == null || !stage.isUnlocked) return null;
+    return KidsJourneyMission(
+      surahId: stage.surahId,
+      ayahNumber: stage.nextAyahToStart,
+    );
+  }
+}
+
+@visibleForTesting
 class KidsGamifiedCompletionContent extends StatelessWidget {
   const KidsGamifiedCompletionContent({
     super.key,
     required this.starsEarned,
-    this.gemsEarned = 0,
     this.showNextButton = true,
     required this.onNext,
     required this.onReturnToMap,
   });
 
   final int starsEarned;
-  final int gemsEarned;
   final bool showNextButton;
   final VoidCallback onNext;
   final VoidCallback onReturnToMap;
@@ -129,7 +143,6 @@ class KidsGamifiedCompletionContent extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: KidsRewardDialog(
                 starsEarned: starsEarned,
-                gemsEarned: gemsEarned,
                 showNextButton: showNextButton,
                 onNext: onNext,
                 onReturnToMap: onReturnToMap,

@@ -17,6 +17,7 @@ import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../../../core/constants/speech_constants.dart';
+import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/memorization/v2/hint_usage.dart';
 import '../../../../core/memorization/v2/session_adapters.dart';
 import '../../../../core/memorization/v2/session_engine.dart';
@@ -65,6 +66,7 @@ class MSActive extends MemorizationSessionState {
     required this.recognizedText,
     required this.isEvaluating,
     this.speechIssue,
+    this.audioFailed = false,
   });
 
   final V2SessionState sessionState;
@@ -75,6 +77,7 @@ class MSActive extends MemorizationSessionState {
 
   /// Non-null when STT encounters a permission or availability error.
   final V2SpeechIssue? speechIssue;
+  final bool audioFailed;
 
   MSActive copyWith({
     V2SessionState? sessionState,
@@ -85,6 +88,7 @@ class MSActive extends MemorizationSessionState {
     bool? isEvaluating,
     V2SpeechIssue? speechIssue,
     bool clearSpeechIssue = false,
+    bool? audioFailed,
   }) {
     return MSActive(
       sessionState: sessionState ?? this.sessionState,
@@ -95,6 +99,7 @@ class MSActive extends MemorizationSessionState {
           : (recognizedText ?? this.recognizedText),
       isEvaluating: isEvaluating ?? this.isEvaluating,
       speechIssue: clearSpeechIssue ? null : (speechIssue ?? this.speechIssue),
+      audioFailed: audioFailed ?? this.audioFailed,
     );
   }
 
@@ -106,6 +111,7 @@ class MSActive extends MemorizationSessionState {
     recognizedText,
     isEvaluating,
     speechIssue,
+    audioFailed,
   ];
 }
 
@@ -125,6 +131,7 @@ enum V2SpeechIssue {
   permissionDenied,
   permissionPermanentlyDenied,
   unavailable,
+  noSpeech,
 }
 
 // ─── Cubit ─────────────────────────────────────────────────────────────────
@@ -201,8 +208,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   }
 
   void _handleSpeechStatus(String status) {
-    if (status == 'notListening' || status == 'done') {
-      TaliaLogger.d('V2: Speech status: $status');
+    if (status != 'notListening' && status != 'done') return;
+    TaliaLogger.d('V2: Speech status: $status');
+    if (state is MSActive && (state as MSActive).isRecording) {
+      unawaited(stopRecording());
     }
   }
 
@@ -238,7 +247,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // 2. Load surah detail to get all ayahs.
     final surahResult = await _quranRepo.getSurahDetail(surahId);
     if (surahResult.isLeft()) {
-      emit(const MSError(message: 'فشل في تحميل بيانات السورة'));
+      emit(const MSError(message: CubitMessageCodes.v2SurahLoadFailed));
       return;
     }
 
@@ -270,7 +279,12 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
           ),
         );
         unawaited(_progressAdapter.save(_sessionState!));
-        unawaited(_prefetchBlockAudio(_sessionState!.surahId, _sessionState!.blockAyahs));
+        unawaited(
+          _prefetchBlockAudio(
+            _sessionState!.surahId,
+            _sessionState!.blockAyahs,
+          ),
+        );
         return;
       }
     }
@@ -281,7 +295,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     final blockAyahs = allAyahs.sublist(startIndex, endIndex);
 
     if (blockAyahs.isEmpty) {
-      emit(const MSError(message: 'لا توجد آيات في النطاق المحدد'));
+      emit(const MSError(message: CubitMessageCodes.v2NoAyahsInRange));
       return;
     }
 
@@ -333,12 +347,13 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   }
 
   /// User requests a hint during memorizing.
-  void useHint(V2HintLevel level) {
+  Future<void> useHint(V2HintLevel level) async {
     _assertActive();
     final updated = _engine.useHint(_sessionState!, level);
     if (!identical(updated, _sessionState)) {
       _sessionState = updated;
       _emitActive();
+      await _progressAdapter.save(_sessionState!);
     }
   }
 
@@ -364,6 +379,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   Future<void> startRecording() async {
     _assertActive();
     final st = state as MSActive;
+    if (st.isRecording || st.isEvaluating) return;
 
     if (st.isPlaying) await stopAudio();
 
@@ -446,6 +462,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       emit(st.copyWith(isPlaying: true));
     } catch (e, stack) {
       TaliaLogger.e('V2: Failed to play ayah audio', e, stack);
+      if (state is MSActive) {
+        emit((state as MSActive).copyWith(isPlaying: false, audioFailed: true));
+      }
     }
   }
 
@@ -505,8 +524,17 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     }
 
     _sessionState = newState;
+    final noSpeech =
+        spokenText.trim().isEmpty &&
+        newState.phase == previousState.phase &&
+        newState.lastRecitationResult == previousState.lastRecitationResult;
     emit(
-      (state as MSActive).copyWith(sessionState: newState, isEvaluating: false),
+      (state as MSActive).copyWith(
+        sessionState: newState,
+        isEvaluating: false,
+        speechIssue: noSpeech ? V2SpeechIssue.noSpeech : null,
+        clearSpeechIssue: !noSpeech,
+      ),
     );
 
     // Handle post-evaluation side effects.
@@ -519,12 +547,23 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     V2SessionState newState,
   ) async {
     final lastResult = newState.lastRecitationResult;
-
-    // Record only the ayah that just passed individual recitation.
-    if (previousState.phase == V2SessionPhase.reciting &&
+    final passedAyah = previousState.currentAyah;
+    final alreadyRecorded = previousState.passedAyahNumbers.contains(
+      passedAyah.numberInSurah,
+    );
+    final shouldRecordPass =
+        previousState.phase == V2SessionPhase.reciting &&
         lastResult != null &&
-        lastResult.passed) {
-      final passedAyah = previousState.currentAyah;
+        lastResult.passed &&
+        !alreadyRecorded;
+
+    // Persist the passed-ayah set before the SRS write so a crash between
+    // the two cannot replay the same recitation as a second review.
+    if (newState.phase != V2SessionPhase.completed) {
+      await _progressAdapter.save(newState);
+    }
+
+    if (shouldRecordPass) {
       await _reviewAdapter.recordPass(
         surahId: previousState.surahId,
         ayahNumber: passedAyah.numberInSurah,
@@ -539,17 +578,15 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (newState.phase == V2SessionPhase.completed) {
       await _onBlockCompleted(newState);
     }
-
-    // Save session state for resume (unless completed).
-    if (newState.phase != V2SessionPhase.completed) {
-      await _progressAdapter.save(newState);
-    }
   }
 
   /// Called when the session reaches the completed phase.
   Future<void> _onBlockCompleted(V2SessionState finalState) async {
     // Signal weak ayahs to Smart Coach.
-    await _reviewAdapter.recordWeakAyahs(finalState.failureTracker);
+    await _reviewAdapter.recordWeakAyahs(
+      finalState.failureTracker,
+      passedAyahNumbers: finalState.passedAyahNumbers,
+    );
 
     // Gamification (streak, XP, certificates).
     final awards = await _gamificationAdapter.onBlockCompleted(finalState);
@@ -568,12 +605,23 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   Future<void> onBlockCompletedForTesting(V2SessionState finalState) =>
       _onBlockCompleted(finalState);
 
+  @visibleForTesting
+  Future<void> evaluateCurrentRecitationForTesting([String? spokenText]) async {
+    if (spokenText != null && state is MSActive) {
+      emit((state as MSActive).copyWith(recognizedText: spokenText));
+    }
+    await _evaluateCurrentRecitation();
+  }
+
+  @visibleForTesting
+  Future<void> handlePostEvaluationForTesting(
+    V2SessionState previousState,
+    V2SessionState newState,
+  ) => _handlePostEvaluation(previousState, newState);
+
   /// Prefetches audio for all ayahs in the block.
   Future<void> _prefetchBlockAudio(int surahId, List<Ayah> blockAyahs) async {
     final numbers = blockAyahs.map((a) => a.numberInSurah).toList();
-    await _audioCache.prefetchSession(
-      surahId: surahId,
-      ayahNumbers: numbers,
-    );
+    await _audioCache.prefetchSession(surahId: surahId, ayahNumbers: numbers);
   }
 }

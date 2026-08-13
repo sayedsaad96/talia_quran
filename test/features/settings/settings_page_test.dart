@@ -174,8 +174,7 @@ void main() {
 
     await _scrollUntilVisible(tester, 'About Talia');
 
-    expect(find.text('Version 1.3.0'), findsOneWidget);
-    expect(find.text('Build 45'), findsOneWidget);
+    expect(find.text('v1.3.0 (45)'), findsOneWidget);
   });
 
   testWidgets('about section falls back when app version is unavailable', (
@@ -188,8 +187,7 @@ void main() {
 
     await _scrollUntilVisible(tester, 'About Talia');
 
-    expect(find.text('Version —'), findsOneWidget);
-    expect(find.text('Build —'), findsOneWidget);
+    expect(find.text('v— (—)'), findsOneWidget);
   });
 
   testWidgets('progress section keeps all reminder controls visible', (
@@ -439,8 +437,12 @@ class _SettingsTestApp extends StatelessWidget {
       child: MaterialApp.router(
         locale: locale,
         themeMode: themeMode,
-        theme: ThemeData.light(useMaterial3: true).copyWith(splashFactory: NoSplash.splashFactory),
-        darkTheme: ThemeData.dark(useMaterial3: true).copyWith(splashFactory: NoSplash.splashFactory),
+        theme: ThemeData.light(
+          useMaterial3: true,
+        ).copyWith(splashFactory: NoSplash.splashFactory),
+        darkTheme: ThemeData.dark(
+          useMaterial3: true,
+        ).copyWith(splashFactory: NoSplash.splashFactory),
         localizationsDelegates: const [
           AppLocalizations.delegate,
           GlobalMaterialLocalizations.delegate,
@@ -534,13 +536,15 @@ class _FakeAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<Either<Failure, Unit>> pullProgressFromCloud() async => const Right(unit);
+  Future<Either<Failure, Unit>> pullProgressFromCloud() async =>
+      const Right(unit);
 
   @override
   Future<bool> hasPendingCloudPush() async => false;
 
   @override
-  Future<Either<Failure, Unit>> syncProgressToCloud() async => const Right(unit);
+  Future<Either<Failure, Unit>> syncProgressToCloud() async =>
+      const Right(unit);
 
   Future<void> dispose() async {
     await _authController.close();

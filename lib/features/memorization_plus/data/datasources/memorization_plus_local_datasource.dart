@@ -3,6 +3,7 @@ import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
+import '../../../../core/memorization/review_record_cloud_merge.dart';
 import '../../../../core/memorization/review_record_identity.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../models/isar_ayah_review_record.dart';
@@ -156,8 +157,8 @@ class MemorizationPlusLocalDatasourceImpl
     this._prefs, {
     Isar? isar,
     RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-  })  : _isar = isar,
-        _owner = owner;
+  }) : _isar = isar,
+       _owner = owner;
 
   @override
   final SharedPreferences _prefs;
@@ -179,6 +180,7 @@ class MemorizationPlusLocalDatasourceImpl
   static const _kReviewPrefix = 'mem_plus_review';
   static const _kReviewIsarMigration = 'mem_plus_reviews_migrated_to_isar_v1';
   static const _kReviewIdentityMigration = 'mem_plus_review_identity_keys_v1';
+  static const _kReviewSourceMigration = 'mem_plus_review_source_tags_v2';
   static const _kLocalRecordsClaimedBy = 'mem_plus_local_records_claimed_by';
   static const _kDailyPlan = 'mem_plus_daily_plan';
   static const _kKidsProgress = 'mem_plus_kids_progress';

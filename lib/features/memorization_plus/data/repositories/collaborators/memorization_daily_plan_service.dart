@@ -10,7 +10,7 @@ import '../../../../quran/domain/repositories/quran_repository.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
-import 'memorization_production_sync_service.dart';
+import '../../../../../core/memorization/plan_cloud_dirty_keys.dart';
 
 /// Daily-plan domain: generates today's memorization plan (direction-aware,
 /// custom-plan aware), serves the cached plan with same-day staleness handling,
@@ -195,8 +195,9 @@ class MemorizationDailyPlanService {
         retentionReview: const [],
       );
 
-      // Cache the plan
+      // Cache the plan and mark it dirty so offline generates upload on reconnect.
       await _datasource.saveDailyPlan(DailyPlanModel.fromEntity(bestPlan));
+      await _prefs.setBool(PlanCloudDirtyKeys.dailyPlan, true);
 
       return Right(bestPlan);
     } catch (e) {
@@ -242,10 +243,7 @@ class MemorizationDailyPlanService {
   Future<Either<Failure, void>> saveDailyPlan(DailyPlan plan) async {
     try {
       await _datasource.saveDailyPlan(DailyPlanModel.fromEntity(plan));
-      await _prefs.setBool(
-        MemorizationProductionSyncService.dailyPlanCloudDirtyKey,
-        true,
-      );
+      await _prefs.setBool(PlanCloudDirtyKeys.dailyPlan, true);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

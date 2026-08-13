@@ -985,6 +985,23 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i4.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
+  _i4.Future<_i2.Either<_i6.Failure, void>> pullKidsProgressFromCloud() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #pullKidsProgressFromCloud,
+          [],
+        ),
+        returnValue: _i4.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #pullKidsProgressFromCloud,
+            [],
+          ),
+        )),
+      ) as _i4.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
   _i4.Future<_i2.Either<_i6.Failure, void>> syncKidsProgressToCloud() =>
       (super.noSuchMethod(
         Invocation.method(
@@ -1214,6 +1231,25 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i4.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
+  _i4.Future<_i2.Either<_i6.Failure, List<_i10.CertificateAward>>>
+      pullCertificatesFromCloud() => (super.noSuchMethod(
+            Invocation.method(
+              #pullCertificatesFromCloud,
+              [],
+            ),
+            returnValue: _i4.Future<
+                    _i2.Either<_i6.Failure, List<_i10.CertificateAward>>>.value(
+                _FakeEither_0<_i6.Failure, List<_i10.CertificateAward>>(
+              this,
+              Invocation.method(
+                #pullCertificatesFromCloud,
+                [],
+              ),
+            )),
+          ) as _i4
+              .Future<_i2.Either<_i6.Failure, List<_i10.CertificateAward>>>);
+
+  @override
   _i4.Future<_i2.Either<_i6.Failure, void>> pushCertificatesToCloud(
           List<_i10.CertificateAward>? certificates) =>
       (super.noSuchMethod(
@@ -1313,6 +1349,20 @@ class MockAchievementService extends _i1.Mock
         ),
         returnValue: <_i10.CertificateAward>[],
       ) as List<_i10.CertificateAward>);
+
+  @override
+  _i4.Future<int> mergeEarnedFromCloud(
+    List<_i10.CertificateAward>? remote, {
+    required bool? isKids,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #mergeEarnedFromCloud,
+          [remote],
+          {#isKids: isKids},
+        ),
+        returnValue: _i4.Future<int>.value(0),
+      ) as _i4.Future<int>);
 
   @override
   bool hasNewCertificate({required bool? isKids}) => (super.noSuchMethod(

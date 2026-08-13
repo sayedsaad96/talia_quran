@@ -201,7 +201,9 @@ void main() {
         expect(stages.first.status, KidsJourneyStageStatus.current);
 
         const metrics = ProgressMetricsService();
-        final records = await datasource.getAllReviewRecords();
+        final records = await datasource.getAllReviewRecords(
+          includeAllAudiences: true,
+        );
         final adult = metrics.calculate(
           records: records,
           now: DateTime.utc(2026, 6, 1),

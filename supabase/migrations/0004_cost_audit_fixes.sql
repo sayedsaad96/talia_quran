@@ -313,6 +313,8 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 REVOKE ALL ON FUNCTION public.get_remote_children_dashboard() FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.get_remote_children_dashboard() TO authenticated;
 
+-- Unused by the Flutter client. Kept historically for existing databases;
+-- 0010 drops these functions so new environments do not recreate them.
 -- Optional paginated detail for a single child (on-demand).
 CREATE OR REPLACE FUNCTION public.pull_child_review_records_page(
   p_child_user_id UUID,

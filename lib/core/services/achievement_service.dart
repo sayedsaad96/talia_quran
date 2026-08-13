@@ -99,6 +99,34 @@ class AchievementService {
       ..sort((a, b) => b.earnedAt.compareTo(a.earnedAt));
   }
 
+  /// Unions [remote] into the local earned list for [isKids] without enqueueing
+  /// cloud pushes. Used on login restore so pull does not immediately re-push.
+  ///
+  /// Returns how many certificates were newly added.
+  Future<int> mergeEarnedFromCloud(
+    List<CertificateAward> remote, {
+    required bool isKids,
+  }) async {
+    if (remote.isEmpty) return 0;
+    final existing = getEarnedCertificates(isKids: isKids);
+    final byId = {for (final c in existing) c.id: c};
+    var added = 0;
+    for (final award in remote) {
+      if (byId.containsKey(award.id)) continue;
+      byId[award.id] = award;
+      added += 1;
+    }
+    if (added == 0) return 0;
+    final merged = byId.values.toList()
+      ..sort((a, b) => b.earnedAt.compareTo(a.earnedAt));
+    await _prefs.setString(
+      _getEarnedKey(isKids),
+      jsonEncode(merged.map((c) => c.toJson()).toList()),
+    );
+    _progressEvents.notify(ProgressChangedReason.certificate);
+    return added;
+  }
+
   /// True when there are new (unseen) certificates for the specified path.
   bool hasNewCertificate({required bool isKids}) {
     return _prefs.getBool(_getNewBadgeKey(isKids)) ?? false;

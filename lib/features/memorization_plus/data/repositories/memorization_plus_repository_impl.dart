@@ -64,7 +64,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         _progressEvents,
       );
   late final MemorizationCustomPlanService _customPlan =
-      MemorizationCustomPlanService(_datasource);
+      MemorizationCustomPlanService(_datasource, _prefs);
   late final MemorizationFamilyService _family = MemorizationFamilyService(
     _datasource,
     _profile,
@@ -336,6 +336,10 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       _parentAccess.acceptChildLinkToken(token);
 
   @override
+  Future<Either<Failure, void>> pullKidsProgressFromCloud() =>
+      _kidsCloudSync.pullKidsProgressFromCloud();
+
+  @override
   Future<Either<Failure, void>> syncKidsProgressToCloud() =>
       _kidsCloudSync.syncKidsProgressToCloud();
 
@@ -407,6 +411,10 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, void>> resyncProductionDataToCloud() =>
       _productionSync.resyncProductionDataToCloud();
+
+  @override
+  Future<Either<Failure, List<CertificateAward>>> pullCertificatesFromCloud() =>
+      _productionSync.pullCertificatesFromCloud();
 
   @override
   Future<Either<Failure, void>> pushCertificatesToCloud(

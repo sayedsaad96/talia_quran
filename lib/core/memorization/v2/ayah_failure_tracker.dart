@@ -87,6 +87,9 @@ final class V2AyahFailureTracker extends Equatable {
   Iterable<V2AyahFailureRecord> get allFailures => _records.values;
   Iterable<V2AyahFailureRecord> get weakAyahs =>
       _records.values.where((r) => r.isWeak);
+  Iterable<V2AyahFailureRecord> weakAyahsExcluding(
+    Set<int> passedAyahNumbers,
+  ) => weakAyahs.where((record) => !passedAyahNumbers.contains(record.ayahNumber));
   Set<String> get weakAyahKeys => weakAyahs.map((r) => r.ayahKey).toSet();
   bool get hasWeakAyahs => _records.values.any((r) => r.isWeak);
   int get totalFailures =>

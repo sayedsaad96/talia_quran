@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
+import '../../domain/repositories/memorization_plus_repository.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_stage_details.dart';
 
-class KidsGamifiedStagePage extends StatelessWidget {
+class KidsGamifiedStagePage extends StatefulWidget {
   const KidsGamifiedStagePage({
     super.key,
     required this.stage,
@@ -23,21 +25,55 @@ class KidsGamifiedStagePage extends StatelessWidget {
   final VoidCallback? onStartMission;
 
   @override
+  State<KidsGamifiedStagePage> createState() => _KidsGamifiedStagePageState();
+}
+
+class _KidsGamifiedStagePageState extends State<KidsGamifiedStagePage> {
+  late KidsJourneyStage _stage;
+
+  @override
+  void initState() {
+    super.initState();
+    _stage = widget.stage;
+    _loadAuthoritativeStage();
+  }
+
+  Future<void> _loadAuthoritativeStage() async {
+    final result = await getIt<MemorizationPlusRepository>().getKidsJourney(
+      surahId: widget.stage.surahId,
+    );
+    if (!mounted) return;
+    final stage = result.fold((_) => null, (stages) {
+      for (final candidate in stages) {
+        if (candidate.stageNumber == widget.stage.stageNumber &&
+            candidate.startAyah == widget.stage.startAyah &&
+            candidate.endAyah == widget.stage.endAyah) {
+          return candidate;
+        }
+      }
+      return null;
+    });
+    if (stage != null) {
+      setState(() => _stage = stage);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final resolvedSurahName =
-        surahName ?? '${context.l10n.surah} ${stage.surahId}';
+        widget.surahName ?? '${context.l10n.surah} ${_stage.surahId}';
     return KidsGamifiedStageContent(
-      stage: stage,
+      stage: _stage,
       surahName: resolvedSurahName,
       onBack: () => context.canPop()
           ? context.pop()
           : context.go(
               MemorizationNavigationResolver.kidsHomeFallbackLocation(
-                stage.surahId,
+                _stage.surahId,
               ),
             ),
-      onStartMission: stage.isUnlocked
-          ? (onStartMission ?? () => _startMission(context, stage))
+      onStartMission: _stage.isUnlocked
+          ? (widget.onStartMission ?? () => _startMission(context, _stage))
           : null,
     );
   }

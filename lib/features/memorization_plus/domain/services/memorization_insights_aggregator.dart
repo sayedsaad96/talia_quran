@@ -1,4 +1,5 @@
 import '../entities/memorization_entities.dart';
+import '../../../../core/memorization/review_record_filters.dart';
 import '../usecases/fsrs_agreement_usecase.dart';
 import '../usecases/leech_analysis_usecase.dart';
 import '../usecases/migration_readiness_usecase.dart';
@@ -22,6 +23,17 @@ class MemorizationInsightsAggregator {
   final FsrsAnalyticsService fsrsAnalyticsService;
   final FsrsAgreementUsecase agreementUsecase;
   final MigrationReadinessUsecase migrationReadinessUsecase;
+
+  /// Generates adult journey insights from the same production records that
+  /// feed the progress surface.
+  MemorizationInsightsReport generateAdultProduction(
+    List<AyahReviewRecord> records,
+    DateTime now,
+  ) =>
+      generate(
+        records.where(ReviewRecordFilters.isAdultProductionCount).toList(),
+        now,
+      );
 
   MemorizationInsightsReport generate(List<AyahReviewRecord> records, DateTime now) {
     final retentionScore = retentionUsecase.analyze(records);

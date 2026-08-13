@@ -11,12 +11,17 @@ import 'smart_coach_recommendation.dart';
 class SmartCoachEngine {
   const SmartCoachEngine();
 
-  SmartCoachRecommendation? recommend(MemorizationSnapshot snapshot) {
+  SmartCoachRecommendation? recommend(
+    MemorizationSnapshot snapshot, {
+    DateTime? now,
+  }) {
+    final operationNow = (now ?? DateTime.now()).toUtc();
     if (snapshot.profile.isChild) {
       return _kidsRecommendation(snapshot);
     }
     if (snapshot.profile.isAdult) {
-      final memPlusRec = _adultMemPlusRecommendation(snapshot) ??
+      final memPlusRec =
+          _adultMemPlusRecommendation(snapshot, operationNow) ??
           _continueV2SessionRecommendation(snapshot);
       if (memPlusRec != null) return memPlusRec;
     }
@@ -25,6 +30,7 @@ class SmartCoachEngine {
 
   SmartCoachRecommendation? _adultMemPlusRecommendation(
     MemorizationSnapshot snapshot,
+    DateTime now,
   ) {
     final records = snapshot.reviewRecords
         .where(ReviewRecordFilters.isAdultCompatible)
@@ -36,7 +42,7 @@ class SmartCoachEngine {
     //   2. oldest nextReviewDate (most overdue first)
     //   3. highest totalReviews  (most practiced = most worth protecting)
     final weakDue = records.where((r) {
-      final classification = r.reviewClassification;
+      final classification = r.classifyAt(now);
       return classification.isDue &&
           r.lastRating == PerformanceRating.weak &&
           !classification.isMemorized;
@@ -56,7 +62,7 @@ class SmartCoachEngine {
     //   2. lowest strengthLevel   (weakest knowledge first)
     //   3. highest totalReviews   (most practiced = most worth protecting)
     final dueNear = records.where((r) {
-      final classification = r.reviewClassification;
+      final classification = r.classifyAt(now);
       return classification.isDue && classification.isNearRevision;
     }).toList()..sort(_compareNearFarDue);
     if (dueNear.isNotEmpty) {
@@ -70,7 +76,7 @@ class SmartCoachEngine {
     // ── Priority 3: Far due ────────────────────────────────────────────────
     // Same tie-breaker policy as near due.
     final dueFar = records.where((r) {
-      final classification = r.reviewClassification;
+      final classification = r.classifyAt(now);
       return classification.isDue && classification.isFarRevision;
     }).toList()..sort(_compareNearFarDue);
     if (dueFar.isNotEmpty) {
@@ -93,7 +99,7 @@ class SmartCoachEngine {
     // naturally safe because kidsMode records are isMemorized, and weak/
     // near/far require !isMemorized.
     final memorizedDue = records.where((r) {
-      return r.reviewClassification.isMemorizedDue &&
+      return r.classifyAt(now).isMemorizedDue &&
           ReviewRecordFilters.isAdultCompatible(r);
     }).toList()..sort(ReviewRecordFilters.compareMemorizedDue);
     if (memorizedDue.isNotEmpty) {

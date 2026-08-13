@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:isar/isar.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/identity/account_data_reset.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -29,16 +29,10 @@ class ServerFailure extends Failure {
 }
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl(this._isar, this._prefs);
+  AuthRepositoryImpl(this._isar, this._accountDataReset);
 
   final Isar _isar;
-  final SharedPreferences _prefs;
-  static const Set<String> _authScopedPreferenceKeys = {
-    // Copied from the authenticated Supabase display name on login. Keep
-    // local-first Quran, Hifz, Memorization Plus, bookmarks, theme, and locale
-    // intact so signing out does not destroy guest/offline progress.
-    'user_profile',
-  };
+  final AccountDataReset _accountDataReset;
 
   bool get _isSupabaseInitialized {
     try {
@@ -306,7 +300,12 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<Either<Failure, Unit>> signOut() async {
     try {
-      if (!_isSupabaseInitialized) return const Right(unit);
+      if (!_isSupabaseInitialized) {
+        // Still a real logout from the user's point of view: local
+        // account-owned data must not survive it.
+        await _clearLocalUserData();
+        return const Right(unit);
+      }
       await _supabase.auth.signOut();
       await _clearLocalUserData();
       return const Right(unit);
@@ -589,27 +588,8 @@ class AuthRepositoryImpl implements AuthRepository {
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
-  Future<void> _clearLocalUserData() async {
-    for (final key in _authScopedPreferenceKeys) {
-      await _prefs.remove(key);
-    }
-    // Wipe progress-related SharedPreferences keys to isolate user data
-    final keysToWipe = _prefs.getKeys().where(
-          (k) =>
-              k.startsWith('mem_plus_') ||
-              k == 'read_pages' ||
-              k.startsWith('hifz_'),
-        );
-    for (final key in keysToWipe) {
-      await _prefs.remove(key);
-    }
-    // Wipe local Isar tables on logout to prevent cross-account progress leaks
-    await _isar.writeTxn(() async {
-      await _isar.streakIsars.clear();
-      await _isar.xpIsars.clear();
-      await _isar.dailyActivityIsars.clear();
-    });
-  }
+  Future<void> _clearLocalUserData() =>
+      _accountDataReset.clearAccountOwnedData();
 
   String? _toDateOnlyString(DateTime? value) =>
       value?.toIso8601String().substring(0, 10);

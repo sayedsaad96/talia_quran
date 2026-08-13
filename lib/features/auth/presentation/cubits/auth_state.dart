@@ -22,6 +22,14 @@ class AuthAuthenticated extends AuthState {
   List<Object?> get props => [user];
 }
 
+class AuthAccountDataDiscarded extends AuthAuthenticated {
+  const AuthAccountDataDiscarded({required super.user});
+}
+
+class AuthSignOutBlockedPendingData extends AuthAuthenticated {
+  const AuthSignOutBlockedPendingData({required super.user});
+}
+
 class AuthUnauthenticated extends AuthState {
   const AuthUnauthenticated();
 }

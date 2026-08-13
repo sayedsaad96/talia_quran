@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -17,11 +18,16 @@ import '../utils/talia_logger.dart';
 /// while initialization proceeds.
 class AppInitializer {
   AppInitializer._();
-  
+
   static bool _initialized = false;
-  
+
   /// Whether initialization has already completed.
   static bool get isInitialized => _initialized;
+
+  @visibleForTesting
+  static void resetForTesting({bool initialized = false}) {
+    _initialized = initialized;
+  }
 
   /// Runs all heavy initialization steps, reporting progress via [onProgress].
   ///
@@ -37,33 +43,34 @@ class AppInitializer {
     void Function(String step, double progress)? onProgress,
   }) async {
     if (_initialized) return;
-    
+
     try {
       // Step 1: Supabase
       onProgress?.call('جارٍ الاتصال...', 0.1);
       await _initSupabase();
-      
+
       // Step 2: Dependency Injection (heaviest step — Isar, migrations, etc.)
       onProgress?.call('جارٍ تجهيز البيانات...', 0.3);
+      if (getIt.isRegistered<SharedPreferences>()) {
+        await getIt.reset();
+      }
       await configureDependencies();
-      
+
       // Step 3: Notifications
       onProgress?.call('جارٍ إعداد التنبيهات...', 0.6);
       await _initNotifications();
-      
+
       // Step 4: First-launch notification scheduling
       onProgress?.call('جارٍ ضبط المواعيد...', 0.8);
       await _scheduleFirstLaunchNotifications();
-      
+
       // Step 5: Background tasks (fire-and-forget)
       _startBackgroundTasks();
-      
+
       onProgress?.call('جاهز!', 1.0);
       _initialized = true;
     } catch (error, stack) {
       TaliaLogger.e('AppInitializer failed', error, stack);
-      // Mark as initialized anyway so the app can proceed to error handling
-      _initialized = true;
       rethrow;
     }
   }
@@ -78,14 +85,23 @@ class AppInitializer {
       return true;
     }());
 
-    if (supabaseConfig.isConfigured) {
-      await Supabase.initialize(
-        url: supabaseConfig.url.trim(),
-        publishableKey: supabaseConfig.anonKey.trim(),
-      );
-      TaliaLogger.d('SUPABASE INIT SUCCESS');
-    } else {
+    if (!supabaseConfig.isConfigured) {
       TaliaLogger.w('SUPABASE INIT SKIPPED');
+      return;
+    }
+    if (_isSupabaseReady()) return;
+    await Supabase.initialize(
+      url: supabaseConfig.url.trim(),
+      publishableKey: supabaseConfig.anonKey.trim(),
+    );
+    TaliaLogger.d('SUPABASE INIT SUCCESS');
+  }
+
+  static bool _isSupabaseReady() {
+    try {
+      return Supabase.instance.isInitialized;
+    } catch (_) {
+      return false;
     }
   }
 

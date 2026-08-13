@@ -126,10 +126,10 @@ class AyahReviewRecord extends Equatable {
   /// FSRS Analytics: True if Scheduler interval is strictly less than FSRS interval
   final bool? schedulerEarlierThanFsrs;
 
-  ReviewClassification get reviewClassification =>
+  ReviewClassification classifyAt(DateTime now) =>
       const ReviewClassifier().classify(
         ReviewClassificationInput(
-          now: DateTime.now().toUtc(),
+          now: now,
           lastReviewedAt: lastReviewedAt,
           nextReviewDate: nextReviewDate,
           strengthLevel: strengthLevel,
@@ -137,7 +137,11 @@ class AyahReviewRecord extends Equatable {
         ),
       );
 
+  ReviewClassification get reviewClassification =>
+      classifyAt(DateTime.now().toUtc());
+
   bool get isDue => reviewClassification.isDue;
+  bool get isOverdue => reviewClassification.isOverdue;
   bool get isNew => reviewClassification.isNew;
   bool get isMemorized => reviewClassification.isMemorized;
   bool get isMemorizedDue => reviewClassification.isMemorizedDue;

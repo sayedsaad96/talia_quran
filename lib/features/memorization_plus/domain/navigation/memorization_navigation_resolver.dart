@@ -43,7 +43,7 @@ class MemorizationNavigationResolver {
     final cachedPlanSurahId = await _cachedPlanSurahId(customPlan, cachedPlan);
     final adultPlanSurahId =
         cachedPlanSurahId ?? await _activeAdultPlanSurahId(customPlan);
-    final quizSurahId = await _reviewQuizSurahId(cachedPlanSurahId);
+    final quizSurahId = await _reviewQuizSurahId(adultPlanSurahId);
     final kidsSurahId = await _activeKidsSurahId();
 
     return MemorizationNavigationTargets(
@@ -210,6 +210,13 @@ class MemorizationNavigationResolver {
     int? surahAyahCount,
   }) {
     if (!_isValidSurahId(surahId)) return AppRoutes.memorizationPlusCustomPlan;
+
+    if (intent == PendingAyahIntent.continueDailyPlan &&
+        cachedPlan != null &&
+        cachedPlan.surahId == surahId &&
+        cachedPlan.isRequiredPlanCompleted) {
+      return AppRoutes.memorizationHub;
+    }
 
     final target = _pendingAyahResolver.resolve(
       PendingAyahResolverInput(

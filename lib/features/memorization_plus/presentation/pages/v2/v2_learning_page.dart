@@ -20,12 +20,9 @@ class V2LearningPage extends StatelessWidget {
     return V2PhaseScaffold(
       session: state.sessionState,
       icon: Icons.menu_book_rounded,
-      title: context.isArabic ? 'تعلّم الآية' : 'Learn the ayah',
-      subtitle: context.isArabic
-          ? 'استمع واقرأ الآية بهدوء قبل محاولة حفظها.'
-          : 'Listen and read before trying to memorize.',
-      primaryActionLabel:
-          context.isArabic ? 'انتقل للحفظ' : 'Start memorizing',
+      title: context.l10n.v2LearningTitle,
+      subtitle: context.l10n.v2LearningSubtitle,
+      primaryActionLabel: context.l10n.v2StartMemorizing,
       primaryActionIcon: Icons.psychology_rounded,
       onPrimaryAction: () =>
           context.read<MemorizationSessionCubit>().advanceToMemorizing(),

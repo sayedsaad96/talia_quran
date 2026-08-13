@@ -52,6 +52,10 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   @override
   Future<void> migrateAudienceScopedReviewKeysIfNeeded() async {}
   @override
+  Future<void> migrateReviewRecordIdentityIfNeeded() async {}
+  @override
+  Future<int> claimLocalReviewRecords() async => 0;
+  @override
   Future<void> deleteCustomPlan() async {}
   @override
   Future<List<AyahReviewRecordModel>> getAllReviewRecords({

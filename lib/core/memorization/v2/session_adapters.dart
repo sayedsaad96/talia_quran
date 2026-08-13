@@ -9,6 +9,7 @@
 
 import 'package:dartz/dartz.dart';
 
+import '../../../core/error/app_failure.dart';
 import '../../../core/services/achievement_service.dart';
 import '../../../core/services/streak_service.dart';
 import '../../../core/services/xp_service.dart';
@@ -51,7 +52,7 @@ final class V2SessionReviewAdapter {
   ///   none      → excellent
   ///   firstWord → average
   ///   fullAyah  → weak
-  Future<void> recordPass({
+  Future<Either<Failure, void>> recordPass({
     required int surahId,
     required int ayahNumber,
     required V2HintLevel hintLevel,
@@ -66,7 +67,9 @@ final class V2SessionReviewAdapter {
     };
 
     // Fetch existing record or build a fresh baseline.
-    final readScope = ReviewRecordAudienceScope.scopeForWriteMode(createdByMode);
+    final readScope = ReviewRecordAudienceScope.scopeForWriteMode(
+      createdByMode,
+    );
     final existingResult = await _repository.getReviewRecord(
       surahId,
       ayahNumber,
@@ -95,11 +98,14 @@ final class V2SessionReviewAdapter {
         .schedule(baseRecord, rating)
         .copyWith(createdByMode: createdByMode);
 
-    await _repository.saveReviewRecord(scheduled);
+    final saveResult = await _repository.saveReviewRecord(scheduled);
+    final saveFailure = saveResult.fold((failure) => failure, (_) => null);
+    if (saveFailure != null) return Left(saveFailure);
 
     // B1: mark today's plan item when this ayah is in the cached plan.
     final markPlan = _markDailyPlanCompleted;
-    if (markPlan != null) {
+    if (markPlan != null &&
+        createdByMode != ReviewRecordCreatedByMode.kidsMode) {
       await markPlan(
         MarkDailyPlanAyahCompletedParams(
           surahId: surahId,
@@ -107,14 +113,18 @@ final class V2SessionReviewAdapter {
         ),
       );
     }
+    return const Right(null);
   }
 
   /// Records weak ayah signals after a block review failure.
   ///
   /// Marks each weak ayah with [PerformanceRating.weak] so Smart Coach
   /// picks them up as priority items in subsequent sessions.
-  Future<void> recordWeakAyahs(V2AyahFailureTracker tracker) async {
-    for (final record in tracker.weakAyahs) {
+  Future<void> recordWeakAyahs(
+    V2AyahFailureTracker tracker, {
+    required Set<int> passedAyahNumbers,
+  }) async {
+    for (final record in tracker.weakAyahsExcluding(passedAyahNumbers)) {
       await recordPass(
         surahId: record.surahId,
         ayahNumber: record.ayahNumber,
@@ -226,8 +236,7 @@ final class V2SessionProgressAdapter {
     // gates. The Cubit has already filtered out terminal/pre-start phases.
     const phaseValues = V2SessionPhase.values;
     final savedPhaseIndex = saved.phaseIndex;
-    final phase = savedPhaseIndex >= 0 &&
-            savedPhaseIndex < phaseValues.length
+    final phase = savedPhaseIndex >= 0 && savedPhaseIndex < phaseValues.length
         ? phaseValues[savedPhaseIndex]
         : (() {
             TaliaLogger.w(
@@ -295,9 +304,8 @@ final class V2SessionGamificationAdapter {
       // 2. XP — single event per completed block.
       await _xp.addXp('v2_block_completed');
 
-      // 3. Certificates — reads AyahReviewRecord across all sources
-      //    (adultMemPlus + v2Session + legacy). v2Session records are
-      //    adult-compatible per ReviewRecordFilters, so they qualify.
+      // 3. Certificates — reads adult-compatible AyahReviewRecords.
+      //    V2 session records qualify per ReviewRecordFilters.
       return await _achievements.checkAndUnlockCertificates(isKids: false);
     } catch (e, stack) {
       TaliaLogger.e(

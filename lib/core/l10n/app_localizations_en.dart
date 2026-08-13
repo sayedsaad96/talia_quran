@@ -548,6 +548,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Do you want to sign out? Local progress on this device will remain available.';
 
   @override
+  String get signOutPendingDataTitle => 'Unsynced progress';
+
+  @override
+  String get signOutPendingDataWarning =>
+      'Some memorization progress has not reached the cloud yet. Signing out now will delete it from this device.';
+
+  @override
+  String get signOutAnyway => 'Sign out anyway';
+
+  @override
   String get dailyReviewReminder => 'Daily Review Reminder';
 
   @override
@@ -3680,4 +3690,180 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get childDetailOpenFullDashboard => 'Open Full Dashboard';
+
+  @override
+  String get kidsPreparing => 'Getting things ready...';
+
+  @override
+  String get kidsUnexpectedError => 'Something went wrong!';
+
+  @override
+  String get v2LearningTitle => 'Learn the ayah';
+
+  @override
+  String get v2LearningSubtitle => 'Listen and read before trying to memorize.';
+
+  @override
+  String get v2StartMemorizing => 'Start memorizing';
+
+  @override
+  String get v2MemorizingTitle => 'Memorize the ayah';
+
+  @override
+  String get v2MemorizingSubtitle =>
+      'Practice from memory. Hints are only available here.';
+
+  @override
+  String get v2ReadyToRecite => 'I am ready';
+
+  @override
+  String get v2FirstWordHint => 'First word';
+
+  @override
+  String get v2ShowAyahHint => 'Show ayah';
+
+  @override
+  String get v2RecitationTitle => 'Recite from memory';
+
+  @override
+  String get v2RecitationSubtitle =>
+      'The ayah text is hidden. Record without hints.';
+
+  @override
+  String get v2StartRecording => 'Start recording';
+
+  @override
+  String get v2StopRecording => 'Stop recording';
+
+  @override
+  String get v2RemediationTitle => 'Short remediation';
+
+  @override
+  String get v2RemediationSubtitle =>
+      'Listen and read again, then return to recitation.';
+
+  @override
+  String get v2TryAgain => 'Try again';
+
+  @override
+  String get v2BlockReviewPendingTitle => 'Block review';
+
+  @override
+  String get v2BlockReviewPendingSubtitle =>
+      'All individual ayahs passed. Next, recite the full block from memory.';
+
+  @override
+  String get v2StartBlockReview => 'Start Block Review';
+
+  @override
+  String get v2BlockReviewTitle => 'Recite the full block';
+
+  @override
+  String v2BlockReviewSubtitle(int startAyah, int endAyah) {
+    return 'Text is hidden. Record ayahs $startAyah-$endAyah together without hints.';
+  }
+
+  @override
+  String get v2CompletionTitle => 'Session complete';
+
+  @override
+  String get v2CompletionSubtitle =>
+      'This memorization block has been completed.';
+
+  @override
+  String get v2MemorizationHub => 'Memorization Hub';
+
+  @override
+  String get v2TryWithoutHint => 'Try without a hint first';
+
+  @override
+  String get v2FirstWordRevealed => 'First word revealed';
+
+  @override
+  String get v2Evaluating => 'Evaluating...';
+
+  @override
+  String get v2RecordingNow => 'Recording now';
+
+  @override
+  String get v2PressRecord => 'Press record when you are ready';
+
+  @override
+  String get v2MicrophoneUnavailable => 'Microphone is not available';
+
+  @override
+  String get v2NoSpeechDetected =>
+      'We could not hear a recitation. Please record again.';
+
+  @override
+  String get v2MicrophonePermissionDenied =>
+      'Microphone permission is required to record.';
+
+  @override
+  String get v2MicrophoneOpenSettings =>
+      'Microphone access is blocked. Open Settings to allow it.';
+
+  @override
+  String get v2AudioPlaybackFailed =>
+      'Could not play the ayah audio. Try again.';
+
+  @override
+  String v2RemediationAttempts(int count) {
+    return 'Attempts needing remediation: $count';
+  }
+
+  @override
+  String v2AyahRange(int startAyah, int endAyah) {
+    return 'Ayahs $startAyah-$endAyah';
+  }
+
+  @override
+  String v2BlockProgress(int passed, int total) {
+    return '$passed/$total ayahs passed individually.';
+  }
+
+  @override
+  String get v2EvaluatingBlock => 'Evaluating block...';
+
+  @override
+  String get v2RecordingBlock => 'Recording block now';
+
+  @override
+  String get v2Playing => 'Playing';
+
+  @override
+  String get v2ListenToAyah => 'Listen to ayah';
+
+  @override
+  String get v2Passed => 'Passed';
+
+  @override
+  String get v2Retries => 'Retries';
+
+  @override
+  String get v2SurahLoadFailed => 'Could not load surah data.';
+
+  @override
+  String get v2NoAyahsInRange =>
+      'No ayahs are available in the selected range.';
+
+  @override
+  String get kidsRecordingUnavailable =>
+      'The microphone did not work. Try again or ask a parent for help.';
+
+  @override
+  String get kidsRecordingNotCaptured =>
+      'We could not hear your recitation clearly. Please record the ayah again.';
+
+  @override
+  String get kidsRecitationMismatch =>
+      'The ayah did not match. Listen again and then record your recitation.';
+
+  @override
+  String get kidsAyahAlreadyCompleted =>
+      'You already completed this ayah. Open the map to continue.';
+
+  @override
+  String get accountSwitchOfflineDataDiscarded =>
+      'Unsynced progress from the previous account was not uploaded and has been removed from this device.';
 }

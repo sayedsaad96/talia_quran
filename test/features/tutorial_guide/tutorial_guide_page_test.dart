@@ -11,6 +11,7 @@ void main() {
     );
 
     expect(_pageDirection(tester), TextDirection.ltr);
+    await _drainGuideAnimations(tester);
   });
 
   testWidgets('keeps RTL direction in Arabic locale', (tester) async {
@@ -19,7 +20,12 @@ void main() {
     );
 
     expect(_pageDirection(tester), TextDirection.rtl);
+    await _drainGuideAnimations(tester);
   });
+}
+
+Future<void> _drainGuideAnimations(WidgetTester tester) async {
+  await tester.pump(const Duration(seconds: 2));
 }
 
 TextDirection _pageDirection(WidgetTester tester) {

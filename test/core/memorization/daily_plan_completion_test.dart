@@ -132,6 +132,41 @@ void main() {
       expect(reasons, contains(ProgressChangedReason.dailyPlan));
       expect(reasons, contains(ProgressChangedReason.reviewRecord));
     });
+
+    test('V2SessionReviewAdapter does not mark adult plan for kids pass', () async {
+      final plan = DailyPlan(
+        generatedAt: DateTime.now().toUtc(),
+        surahId: 1,
+        newAyahs: const [
+          DailyPlanAyah(
+            surahId: 1,
+            ayahNumber: 2,
+            ayahText: 'text',
+            record: null,
+          ),
+        ],
+        nearRevision: const [],
+        farRevision: const [],
+        completedAyahNums: const [],
+      );
+      await datasource.saveDailyPlan(DailyPlanModel.fromEntity(plan));
+
+      final adapter = V2SessionReviewAdapter(
+        repository: repository,
+        scheduler: const ScheduleNextReviewUsecase(),
+        markDailyPlanCompleted: MarkDailyPlanAyahCompletedUsecase(repository),
+      );
+
+      await adapter.recordPass(
+        surahId: 1,
+        ayahNumber: 2,
+        hintLevel: V2HintLevel.none,
+        createdByMode: ReviewRecordCreatedByMode.kidsMode,
+      );
+
+      final cached = await datasource.getCachedDailyPlan();
+      expect(cached?.completedAyahNums, isEmpty);
+    });
   });
 }
 

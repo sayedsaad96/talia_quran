@@ -77,6 +77,7 @@ class AzkarCubit extends Cubit<AzkarState> {
     // Automatically navigate to the next unfinished zikr
     if (session.isDone && !allDone) {
       await Future.delayed(const Duration(milliseconds: 400));
+      if (isClosed) return;
       final latestState = this.state;
       if (latestState is AzkarLoaded && latestState.currentIndex == idx) {
         int nextIndex = latestState.sessions.indexWhere(

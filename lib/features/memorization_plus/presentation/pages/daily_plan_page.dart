@@ -77,8 +77,13 @@ class _DailyPlanPageState extends State<DailyPlanPage> {
 
           return _DailyPlanBody(
             plan: plan,
-            continueRoute: data.continueRoute,
             isDark: isDark,
+            onContinue: plan.isRequiredPlanCompleted
+                ? null
+                : () async {
+                    await context.push(data.continueRoute);
+                    if (mounted) _retry();
+                  },
           );
         },
       ),
@@ -96,13 +101,13 @@ class _DailyPlanViewData {
 class _DailyPlanBody extends StatelessWidget {
   const _DailyPlanBody({
     required this.plan,
-    required this.continueRoute,
     required this.isDark,
+    this.onContinue,
   });
 
   final DailyPlan plan;
-  final String continueRoute;
   final bool isDark;
+  final Future<void> Function()? onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -166,12 +171,14 @@ class _DailyPlanBody extends StatelessWidget {
             plan: plan,
             isDark: isDark,
           ),
-        const SizedBox(height: AppSpacing.lg),
-        FilledButton.icon(
-          onPressed: () => context.push(continueRoute),
-          icon: const Icon(Icons.play_arrow_rounded),
-          label: Text(context.l10n.continueMemorizing),
-        ),
+        if (onContinue != null) ...[
+          const SizedBox(height: AppSpacing.lg),
+          FilledButton.icon(
+            onPressed: onContinue,
+            icon: const Icon(Icons.play_arrow_rounded),
+            label: Text(context.l10n.continueMemorizing),
+          ),
+        ],
       ],
     );
   }

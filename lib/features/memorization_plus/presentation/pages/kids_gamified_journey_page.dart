@@ -237,8 +237,6 @@ String _stageDetailsLocation(KidsJourneyStage stage) {
       'stageNumber': '${stage.stageNumber}',
       'startAyah': '${stage.startAyah}',
       'endAyah': '${stage.endAyah}',
-      'completedAyahs': stage.completedAyahs.join(','),
-      'status': stage.status.name,
     },
   ).query;
   return '${AppRoutes.memorizationPlusKidsStage}?$query';

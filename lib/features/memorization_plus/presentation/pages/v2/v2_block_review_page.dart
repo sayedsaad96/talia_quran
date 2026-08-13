@@ -22,12 +22,9 @@ class V2BlockReviewPendingPage extends StatelessWidget {
     return V2PhaseScaffold(
       session: session,
       icon: Icons.fact_check_rounded,
-      title: context.isArabic ? 'مراجعة المقطع' : 'Block review',
-      subtitle: context.isArabic
-          ? 'أنهيت الآيات منفردة. الخطوة التالية تسميع المقطع كاملاً من الذاكرة.'
-          : 'All individual ayahs passed. Next, recite the full block from memory.',
-      primaryActionLabel:
-          context.isArabic ? 'ابدأ مراجعة المقطع' : 'Start Block Review',
+      title: context.l10n.v2BlockReviewPendingTitle,
+      subtitle: context.l10n.v2BlockReviewPendingSubtitle,
+      primaryActionLabel: context.l10n.v2StartBlockReview,
       primaryActionIcon: Icons.play_arrow_rounded,
       onPrimaryAction: () =>
           context.read<MemorizationSessionCubit>().startBlockReview(),
@@ -51,18 +48,19 @@ class V2BlockReviewPage extends StatelessWidget {
     final start = session.blockAyahs.first.numberInSurah;
     final end = session.blockAyahs.last.numberInSurah;
     final isRecording = state.isRecording;
+    final isEvaluating = state.isEvaluating;
     return V2PhaseScaffold(
       session: session,
       icon: Icons.mic_external_on_rounded,
-      title: context.isArabic ? 'سمّع المقطع كاملاً' : 'Recite the full block',
-      subtitle: context.isArabic
-          ? 'النص مخفي الآن. سجّل الآيات $start-$end كاملة بدون تلميحات.'
-          : 'Text is hidden. Record ayahs $start-$end together without hints.',
-      primaryActionLabel: isRecording
-          ? (context.isArabic ? 'إيقاف التسجيل' : 'Stop recording')
-          : (context.isArabic ? 'بدء التسجيل' : 'Start recording'),
-      primaryActionIcon:
-          isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+      title: context.l10n.v2BlockReviewTitle,
+      subtitle: context.l10n.v2BlockReviewSubtitle(start, end),
+      primaryActionLabel: isEvaluating
+          ? context.l10n.v2EvaluatingBlock
+          : isRecording
+          ? context.l10n.v2StopRecording
+          : context.l10n.v2StartRecording,
+      primaryActionIcon: isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+      primaryActionEnabled: !isEvaluating,
       onPrimaryAction: () {
         final cubit = context.read<MemorizationSessionCubit>();
         return isRecording ? cubit.stopRecording() : cubit.startRecording();

@@ -80,7 +80,6 @@ void main() {
         tester,
         KidsGamifiedCompletionContent(
           starsEarned: 3,
-          gemsEarned: 1,
           onNext: () {},
           onReturnToMap: () {},
         ),

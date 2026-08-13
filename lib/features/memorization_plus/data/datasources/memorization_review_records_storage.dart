@@ -21,13 +21,12 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
     required int surahId,
     required int ayahNumber,
     required ReviewRecordReadScope scope,
-  }) =>
-      ReviewRecordIdentity(
-        ownerUserId: _owner.currentOwnerId,
-        audience: scope,
-        surahId: surahId,
-        ayahNumber: ayahNumber,
-      );
+  }) => ReviewRecordIdentity(
+    ownerUserId: _owner.currentOwnerId,
+    audience: scope,
+    surahId: surahId,
+    ayahNumber: ayahNumber,
+  );
 
   Future<void> _runReviewRecordMigrations() async {
     await migrateReviewRecordsToIsarIfNeeded();
@@ -39,9 +38,9 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
     Isar isar, {
     ReviewRecordReadScope? scope,
   }) async {
-    final query = isar.isarAyahReviewRecords
-        .filter()
-        .ownerUserIdEqualTo(_owner.currentOwnerId);
+    final query = isar.isarAyahReviewRecords.filter().ownerUserIdEqualTo(
+      _owner.currentOwnerId,
+    );
     if (scope == null) return query.findAll();
     return query.audienceEqualTo(scope.name).findAll();
   }
@@ -114,71 +113,152 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
 
   /// Re-keys every review row to `owner|audience|surah|ayah`.
   ///
-  /// Handles all three historical key generations. Runs once per installation
-  /// and is safe to call on every read: the prefs flag short-circuits it.
+  /// Handles all three historical key generations. The identity and source-tag
+  /// migrations each run once and are safe to invoke on every read.
   Future<void> migrateReviewRecordIdentityIfNeeded() async {
-    if (_prefs.getBool(
-          MemorizationPlusLocalDatasourceImpl._kReviewIdentityMigration,
-        ) ??
-        false) {
-      return;
-    }
-
     final isar = _isar;
     if (isar == null) {
       await _prefs.setBool(
         MemorizationPlusLocalDatasourceImpl._kReviewIdentityMigration,
         true,
       );
+      await _migrateLegacyAdultMemPlusRecordsIfNeeded();
       return;
     }
 
-    final ownerUserId = _owner.currentOwnerId;
-    final isLocalOwner = ownerUserId == ReviewRecordIdentity.localOwnerId;
-    final rows = await isar.isarAyahReviewRecords.where().findAll();
+    if (!(_prefs.getBool(
+          MemorizationPlusLocalDatasourceImpl._kReviewIdentityMigration,
+        ) ??
+        false)) {
+      await _migrateEligibleLegacyRows(isar);
 
+      await _prefs.setBool(
+        MemorizationPlusLocalDatasourceImpl._kReviewIdentityMigration,
+        true,
+      );
+    }
+
+    await _migrateLegacyAdultMemPlusRecordsIfNeeded();
+  }
+
+  Future<void> _migrateEligibleLegacyRows(Isar isar) async {
+    final ownerUserId = _owner.currentOwnerId;
+    final rows = await isar.isarAyahReviewRecords.where().findAll();
     await isar.writeTxn(() async {
       for (final row in rows) {
-        final generation = ReviewRecordIdentity.generationOf(row.compositeKey);
-        if (generation == ReviewRecordKeyGeneration.identity) continue;
-
-        final model = row.toModel();
-        final audience = switch (generation) {
-          ReviewRecordKeyGeneration.audienceScoped =>
-            row.compositeKey.startsWith(ReviewRecordAudienceScope.kidsPrefix)
-                ? ReviewRecordReadScope.kids
-                : ReviewRecordReadScope.adult,
-          _ => ReviewRecordAudienceScope.scopeForWriteMode(model.createdByMode),
-        };
-        final identity = ReviewRecordIdentity(
-          ownerUserId: ownerUserId,
-          audience: audience,
-          surahId: model.surahId,
-          ayahNumber: model.ayahNumber,
-        );
-
-        final occupied = await isar.isarAyahReviewRecords.getByCompositeKey(
-          identity.storageKey,
-        );
-        if (occupied != null) {
-          // A row already owns this identity. Keep it and drop the stale
-          // duplicate rather than losing the newer review state.
-          await isar.isarAyahReviewRecords.delete(row.id);
-          continue;
-        }
-
-        row.compositeKey = identity.storageKey;
-        row.ownerUserId = identity.ownerUserId;
-        row.audience = identity.audience.name;
-        if (isLocalOwner) {
-          row.cloudDirty = false;
-        }
-        await isar.isarAyahReviewRecords.put(row);
+        await _migrateLegacyRow(isar, row, ownerUserId);
       }
     });
+  }
+
+  Future<void> _migrateLegacyRow(
+    Isar isar,
+    IsarAyahReviewRecord row,
+    String ownerUserId,
+  ) async {
+    final generation = ReviewRecordIdentity.generationOf(row.compositeKey);
+    if (generation == ReviewRecordKeyGeneration.identity ||
+        !_isEligibleLegacyRow(row, ownerUserId)) {
+      return;
+    }
+
+    final identity = _identityForLegacyRow(row, generation, ownerUserId);
+    final occupied = await isar.isarAyahReviewRecords.getByCompositeKey(
+      identity.storageKey,
+    );
+    if (occupied != null) {
+      await _mergeLegacyRow(isar, row, occupied, identity);
+      return;
+    }
+
+    row.compositeKey = identity.storageKey;
+    row.ownerUserId = identity.ownerUserId;
+    row.audience = identity.audience.name;
+    if (ownerUserId == ReviewRecordIdentity.localOwnerId) {
+      row.cloudDirty = false;
+    }
+    await isar.isarAyahReviewRecords.put(row);
+  }
+
+  ReviewRecordIdentity _identityForLegacyRow(
+    IsarAyahReviewRecord row,
+    ReviewRecordKeyGeneration generation,
+    String ownerUserId,
+  ) {
+    final model = row.toModel();
+    final audience = switch (generation) {
+      ReviewRecordKeyGeneration.audienceScoped =>
+        row.compositeKey.startsWith(ReviewRecordAudienceScope.kidsPrefix)
+            ? ReviewRecordReadScope.kids
+            : ReviewRecordReadScope.adult,
+      _ => ReviewRecordAudienceScope.scopeForWriteMode(model.createdByMode),
+    };
+    return ReviewRecordIdentity(
+      ownerUserId: ownerUserId,
+      audience: audience,
+      surahId: model.surahId,
+      ayahNumber: model.ayahNumber,
+    );
+  }
+
+  Future<void> _mergeLegacyRow(
+    Isar isar,
+    IsarAyahReviewRecord legacyRow,
+    IsarAyahReviewRecord occupiedRow,
+    ReviewRecordIdentity identity,
+  ) async {
+    final legacyModel = legacyRow.toModel();
+    final merged = ReviewRecordCloudMerge.merge(
+      local: occupiedRow.toModel(),
+      remote: legacyModel,
+    );
+    final legacyIsNewer = merged.lastReviewedAt == legacyModel.lastReviewedAt;
+    final mergedRow =
+        IsarAyahReviewRecord.fromModel(AyahReviewRecordModel.fromEntity(merged))
+          ..id = occupiedRow.id
+          ..compositeKey = identity.storageKey
+          ..ownerUserId = identity.ownerUserId
+          ..audience = identity.audience.name
+          ..cloudDirty =
+              identity.ownerUserId == ReviewRecordIdentity.localOwnerId
+              ? false
+              : legacyIsNewer || occupiedRow.cloudDirty != false
+          ..lastSyncedAt = legacyIsNewer ? null : occupiedRow.lastSyncedAt;
+    await isar.isarAyahReviewRecords.put(mergedRow);
+    await isar.isarAyahReviewRecords.delete(legacyRow.id);
+  }
+
+  bool _isEligibleLegacyRow(IsarAyahReviewRecord row, String ownerUserId) {
+    final rowOwnerId = row.ownerUserId;
+    return rowOwnerId == null ||
+        rowOwnerId == ReviewRecordIdentity.localOwnerId ||
+        rowOwnerId == ownerUserId;
+  }
+
+  Future<void> _migrateLegacyAdultMemPlusRecordsIfNeeded() async {
+    if (_prefs.getBool(
+          MemorizationPlusLocalDatasourceImpl._kReviewSourceMigration,
+        ) ??
+        false) {
+      return;
+    }
+
+    final isar = _isar;
+    if (isar != null) {
+      final rows = await _ownedRows(isar, scope: ReviewRecordReadScope.adult);
+      await isar.writeTxn(() async {
+        for (final row in rows) {
+          if (row.createdByModeIndex ==
+              ReviewRecordCreatedByMode.adultMemPlus.index) {
+            row.createdByModeIndex = ReviewRecordCreatedByMode.v2Session.index;
+            await isar.isarAyahReviewRecords.put(row);
+          }
+        }
+      });
+    }
 
     await _prefs.setBool(
-      MemorizationPlusLocalDatasourceImpl._kReviewIdentityMigration,
+      MemorizationPlusLocalDatasourceImpl._kReviewSourceMigration,
       true,
     );
   }

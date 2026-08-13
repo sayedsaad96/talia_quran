@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/v2/ayah_failure_tracker.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
@@ -75,6 +77,13 @@ class _TestApp extends StatelessWidget {
       value: cubit,
       child: MaterialApp(
         theme: ThemeData(splashFactory: NoSplash.splashFactory),
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(body: child),
       ),
     );

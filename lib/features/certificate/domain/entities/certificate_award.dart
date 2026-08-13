@@ -67,6 +67,31 @@ class CertificateAward extends Equatable {
         surahNameEn: json['surahNameEn'] as String?,
       );
 
+  /// Maps a `certificate_awards_cloud` row onto the local award shape.
+  factory CertificateAward.fromCloudRow(Map<String, dynamic> row) {
+    final id = row['cert_id'] as String;
+    final typeName = row['cert_type'] as String? ?? 'juz';
+    final type = CertificateType.values.firstWhere(
+      (e) => e.name == typeName,
+      orElse: () => CertificateType.juz,
+    );
+    int? juzNumber;
+    int? surahId;
+    if (id.startsWith('cert_juz_')) {
+      juzNumber = int.tryParse(id.substring('cert_juz_'.length));
+    } else if (id.startsWith('cert_surah_')) {
+      surahId = int.tryParse(id.substring('cert_surah_'.length));
+    }
+    return CertificateAward(
+      id: id,
+      titleAr: row['title_ar'] as String? ?? id,
+      type: type,
+      earnedAt: DateTime.parse(row['earned_at'] as String).toUtc(),
+      juzNumber: juzNumber,
+      surahId: surahId,
+    );
+  }
+
   @override
   List<Object?> get props => [
     id,

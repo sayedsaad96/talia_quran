@@ -11,6 +11,7 @@ import 'review_due_evaluator.dart';
 class ReviewClassification {
   const ReviewClassification({
     required this.isDue,
+    required this.isOverdue,
     required this.isNew,
     required this.isMemorized,
     required this.isNearRevision,
@@ -18,6 +19,7 @@ class ReviewClassification {
   });
 
   final bool isDue;
+  final bool isOverdue;
   final bool isNew;
   final bool isMemorized;
   final bool isNearRevision;
@@ -51,9 +53,23 @@ class ReviewClassifier {
       scheduledAt: input.nextReviewDate,
       policy: ReviewDuePolicy.onOrAfterScheduledTime,
     );
+    final localNow = input.now.toLocal();
+    final localScheduledAt = input.nextReviewDate.toLocal();
+    final startOfLocalToday = DateTime(
+      localNow.year,
+      localNow.month,
+      localNow.day,
+    );
+    final startOfScheduledDay = DateTime(
+      localScheduledAt.year,
+      localScheduledAt.month,
+      localScheduledAt.day,
+    );
+    final isOverdue = isDue && startOfScheduledDay.isBefore(startOfLocalToday);
 
     return ReviewClassification(
       isDue: isDue,
+      isOverdue: isOverdue,
       isNew: isNew,
       isMemorized: isMemorized,
       isNearRevision:
