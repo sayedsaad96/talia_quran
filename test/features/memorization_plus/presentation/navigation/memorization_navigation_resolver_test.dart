@@ -60,7 +60,7 @@ void main() {
       },
     );
 
-    test('custom adult plan opens Today Plan but not Review Quiz', () async {
+    test('custom adult plan opens both Today Plan and Review Quiz', () async {
       final resolver = MemorizationNavigationResolver(
         _FakeRepository(customPlan: _customPlan(3, PlanTargetUser.adult)),
       );
@@ -71,7 +71,10 @@ void main() {
         Uri.parse(targets.todayPlanLocation).queryParameters['surahId'],
         '3',
       );
-      expect(targets.reviewQuizLocation, AppRoutes.memorizationPlusCustomPlan);
+      expect(
+        Uri.parse(targets.reviewQuizLocation).queryParameters['surahId'],
+        '3',
+      );
     });
   });
 }

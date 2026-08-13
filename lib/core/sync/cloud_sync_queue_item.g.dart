@@ -37,6 +37,11 @@ const CloudSyncQueueItemSchema = CollectionSchema(
       id: 3,
       name: r'nextRetryAt',
       type: IsarType.dateTime,
+    ),
+    r'ownerUserId': PropertySchema(
+      id: 4,
+      name: r'ownerUserId',
+      type: IsarType.string,
     )
   },
   estimateSize: _cloudSyncQueueItemEstimateSize,
@@ -45,14 +50,19 @@ const CloudSyncQueueItemSchema = CollectionSchema(
   deserializeProp: _cloudSyncQueueItemDeserializeProp,
   idName: r'id',
   indexes: {
-    r'kind': IndexSchema(
-      id: 1484550194077596484,
-      name: r'kind',
+    r'kind_ownerUserId': IndexSchema(
+      id: 3192849093089552935,
+      name: r'kind_ownerUserId',
       unique: true,
       replace: true,
       properties: [
         IndexPropertySchema(
           name: r'kind',
+          type: IndexType.hash,
+          caseSensitive: true,
+        ),
+        IndexPropertySchema(
+          name: r'ownerUserId',
           type: IndexType.hash,
           caseSensitive: true,
         )
@@ -74,6 +84,7 @@ int _cloudSyncQueueItemEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.kind.length * 3;
+  bytesCount += 3 + object.ownerUserId.length * 3;
   return bytesCount;
 }
 
@@ -87,6 +98,7 @@ void _cloudSyncQueueItemSerialize(
   writer.writeDateTime(offsets[1], object.createdAt);
   writer.writeString(offsets[2], object.kind);
   writer.writeDateTime(offsets[3], object.nextRetryAt);
+  writer.writeString(offsets[4], object.ownerUserId);
 }
 
 CloudSyncQueueItem _cloudSyncQueueItemDeserialize(
@@ -101,6 +113,7 @@ CloudSyncQueueItem _cloudSyncQueueItemDeserialize(
   object.id = id;
   object.kind = reader.readString(offsets[2]);
   object.nextRetryAt = reader.readDateTime(offsets[3]);
+  object.ownerUserId = reader.readString(offsets[4]);
   return object;
 }
 
@@ -119,6 +132,8 @@ P _cloudSyncQueueItemDeserializeProp<P>(
       return (reader.readString(offset)) as P;
     case 3:
       return (reader.readDateTime(offset)) as P;
+    case 4:
+      return (reader.readString(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -139,57 +154,93 @@ void _cloudSyncQueueItemAttach(
 }
 
 extension CloudSyncQueueItemByIndex on IsarCollection<CloudSyncQueueItem> {
-  Future<CloudSyncQueueItem?> getByKind(String kind) {
-    return getByIndex(r'kind', [kind]);
+  Future<CloudSyncQueueItem?> getByKindOwnerUserId(
+      String kind, String ownerUserId) {
+    return getByIndex(r'kind_ownerUserId', [kind, ownerUserId]);
   }
 
-  CloudSyncQueueItem? getByKindSync(String kind) {
-    return getByIndexSync(r'kind', [kind]);
+  CloudSyncQueueItem? getByKindOwnerUserIdSync(
+      String kind, String ownerUserId) {
+    return getByIndexSync(r'kind_ownerUserId', [kind, ownerUserId]);
   }
 
-  Future<bool> deleteByKind(String kind) {
-    return deleteByIndex(r'kind', [kind]);
+  Future<bool> deleteByKindOwnerUserId(String kind, String ownerUserId) {
+    return deleteByIndex(r'kind_ownerUserId', [kind, ownerUserId]);
   }
 
-  bool deleteByKindSync(String kind) {
-    return deleteByIndexSync(r'kind', [kind]);
+  bool deleteByKindOwnerUserIdSync(String kind, String ownerUserId) {
+    return deleteByIndexSync(r'kind_ownerUserId', [kind, ownerUserId]);
   }
 
-  Future<List<CloudSyncQueueItem?>> getAllByKind(List<String> kindValues) {
-    final values = kindValues.map((e) => [e]).toList();
-    return getAllByIndex(r'kind', values);
+  Future<List<CloudSyncQueueItem?>> getAllByKindOwnerUserId(
+      List<String> kindValues, List<String> ownerUserIdValues) {
+    final len = kindValues.length;
+    assert(ownerUserIdValues.length == len,
+        'All index values must have the same length');
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([kindValues[i], ownerUserIdValues[i]]);
+    }
+
+    return getAllByIndex(r'kind_ownerUserId', values);
   }
 
-  List<CloudSyncQueueItem?> getAllByKindSync(List<String> kindValues) {
-    final values = kindValues.map((e) => [e]).toList();
-    return getAllByIndexSync(r'kind', values);
+  List<CloudSyncQueueItem?> getAllByKindOwnerUserIdSync(
+      List<String> kindValues, List<String> ownerUserIdValues) {
+    final len = kindValues.length;
+    assert(ownerUserIdValues.length == len,
+        'All index values must have the same length');
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([kindValues[i], ownerUserIdValues[i]]);
+    }
+
+    return getAllByIndexSync(r'kind_ownerUserId', values);
   }
 
-  Future<int> deleteAllByKind(List<String> kindValues) {
-    final values = kindValues.map((e) => [e]).toList();
-    return deleteAllByIndex(r'kind', values);
+  Future<int> deleteAllByKindOwnerUserId(
+      List<String> kindValues, List<String> ownerUserIdValues) {
+    final len = kindValues.length;
+    assert(ownerUserIdValues.length == len,
+        'All index values must have the same length');
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([kindValues[i], ownerUserIdValues[i]]);
+    }
+
+    return deleteAllByIndex(r'kind_ownerUserId', values);
   }
 
-  int deleteAllByKindSync(List<String> kindValues) {
-    final values = kindValues.map((e) => [e]).toList();
-    return deleteAllByIndexSync(r'kind', values);
+  int deleteAllByKindOwnerUserIdSync(
+      List<String> kindValues, List<String> ownerUserIdValues) {
+    final len = kindValues.length;
+    assert(ownerUserIdValues.length == len,
+        'All index values must have the same length');
+    final values = <List<dynamic>>[];
+    for (var i = 0; i < len; i++) {
+      values.add([kindValues[i], ownerUserIdValues[i]]);
+    }
+
+    return deleteAllByIndexSync(r'kind_ownerUserId', values);
   }
 
-  Future<Id> putByKind(CloudSyncQueueItem object) {
-    return putByIndex(r'kind', object);
+  Future<Id> putByKindOwnerUserId(CloudSyncQueueItem object) {
+    return putByIndex(r'kind_ownerUserId', object);
   }
 
-  Id putByKindSync(CloudSyncQueueItem object, {bool saveLinks = true}) {
-    return putByIndexSync(r'kind', object, saveLinks: saveLinks);
-  }
-
-  Future<List<Id>> putAllByKind(List<CloudSyncQueueItem> objects) {
-    return putAllByIndex(r'kind', objects);
-  }
-
-  List<Id> putAllByKindSync(List<CloudSyncQueueItem> objects,
+  Id putByKindOwnerUserIdSync(CloudSyncQueueItem object,
       {bool saveLinks = true}) {
-    return putAllByIndexSync(r'kind', objects, saveLinks: saveLinks);
+    return putByIndexSync(r'kind_ownerUserId', object, saveLinks: saveLinks);
+  }
+
+  Future<List<Id>> putAllByKindOwnerUserId(List<CloudSyncQueueItem> objects) {
+    return putAllByIndex(r'kind_ownerUserId', objects);
+  }
+
+  List<Id> putAllByKindOwnerUserIdSync(List<CloudSyncQueueItem> objects,
+      {bool saveLinks = true}) {
+    return putAllByIndexSync(r'kind_ownerUserId', objects,
+        saveLinks: saveLinks);
   }
 }
 
@@ -273,28 +324,28 @@ extension CloudSyncQueueItemQueryWhere
   }
 
   QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterWhereClause>
-      kindEqualTo(String kind) {
+      kindEqualToAnyOwnerUserId(String kind) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(IndexWhereClause.equalTo(
-        indexName: r'kind',
+        indexName: r'kind_ownerUserId',
         value: [kind],
       ));
     });
   }
 
   QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterWhereClause>
-      kindNotEqualTo(String kind) {
+      kindNotEqualToAnyOwnerUserId(String kind) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'kind',
+              indexName: r'kind_ownerUserId',
               lower: [],
               upper: [kind],
               includeUpper: false,
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'kind',
+              indexName: r'kind_ownerUserId',
               lower: [kind],
               includeLower: false,
               upper: [],
@@ -302,15 +353,60 @@ extension CloudSyncQueueItemQueryWhere
       } else {
         return query
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'kind',
+              indexName: r'kind_ownerUserId',
               lower: [kind],
               includeLower: false,
               upper: [],
             ))
             .addWhereClause(IndexWhereClause.between(
-              indexName: r'kind',
+              indexName: r'kind_ownerUserId',
               lower: [],
               upper: [kind],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterWhereClause>
+      kindOwnerUserIdEqualTo(String kind, String ownerUserId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'kind_ownerUserId',
+        value: [kind, ownerUserId],
+      ));
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterWhereClause>
+      kindEqualToOwnerUserIdNotEqualTo(String kind, String ownerUserId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'kind_ownerUserId',
+              lower: [kind],
+              upper: [kind, ownerUserId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'kind_ownerUserId',
+              lower: [kind, ownerUserId],
+              includeLower: false,
+              upper: [kind],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'kind_ownerUserId',
+              lower: [kind, ownerUserId],
+              includeLower: false,
+              upper: [kind],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'kind_ownerUserId',
+              lower: [kind],
+              upper: [kind, ownerUserId],
               includeUpper: false,
             ));
       }
@@ -679,6 +775,142 @@ extension CloudSyncQueueItemQueryFilter
       ));
     });
   }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterFilterCondition>
+      ownerUserIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterFilterCondition>
+      ownerUserIdGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterFilterCondition>
+      ownerUserIdLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterFilterCondition>
+      ownerUserIdBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ownerUserId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterFilterCondition>
+      ownerUserIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterFilterCondition>
+      ownerUserIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterFilterCondition>
+      ownerUserIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterFilterCondition>
+      ownerUserIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'ownerUserId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterFilterCondition>
+      ownerUserIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerUserId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterFilterCondition>
+      ownerUserIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'ownerUserId',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension CloudSyncQueueItemQueryObject
@@ -742,6 +974,20 @@ extension CloudSyncQueueItemQuerySortBy
       sortByNextRetryAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextRetryAt', Sort.desc);
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterSortBy>
+      sortByOwnerUserId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerUserId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterSortBy>
+      sortByOwnerUserIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerUserId', Sort.desc);
     });
   }
 }
@@ -817,6 +1063,20 @@ extension CloudSyncQueueItemQuerySortThenBy
       return query.addSortBy(r'nextRetryAt', Sort.desc);
     });
   }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterSortBy>
+      thenByOwnerUserId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerUserId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QAfterSortBy>
+      thenByOwnerUserIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerUserId', Sort.desc);
+    });
+  }
 }
 
 extension CloudSyncQueueItemQueryWhereDistinct
@@ -846,6 +1106,13 @@ extension CloudSyncQueueItemQueryWhereDistinct
       distinctByNextRetryAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'nextRetryAt');
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, CloudSyncQueueItem, QDistinct>
+      distinctByOwnerUserId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'ownerUserId', caseSensitive: caseSensitive);
     });
   }
 }
@@ -882,6 +1149,13 @@ extension CloudSyncQueueItemQueryProperty
       nextRetryAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nextRetryAt');
+    });
+  }
+
+  QueryBuilder<CloudSyncQueueItem, String, QQueryOperations>
+      ownerUserIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'ownerUserId');
     });
   }
 }

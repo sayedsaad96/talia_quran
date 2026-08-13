@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../../core/services/streak_reader.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
@@ -26,6 +27,66 @@ class MemorizationKidsCloudSyncService {
 
   Either<Failure, SupabaseClient> get _supabaseOrFailure =>
       _gateway.supabaseOrFailure();
+
+  Future<Either<Failure, void>> pullKidsProgressFromCloud() async {
+    try {
+      final clientResult = _supabaseOrFailure;
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
+
+      final user = client.auth.currentUser;
+      if (user == null) return const Right(null);
+
+      final progressRows = await client
+          .from('kids_progress_cloud')
+          .select()
+          .eq('child_user_id', user.id)
+          .limit(1);
+      final logRows = await client
+          .from('kids_session_logs')
+          .select()
+          .eq('child_user_id', user.id)
+          .order('completed_at', ascending: true);
+
+      final remote = _mappers.progressFromCloud(
+        progressRows.isEmpty ? null : progressRows.first,
+      );
+      final local = await _datasource.getKidsProgress();
+      final localLogs = await _datasource.getKidsSessionLogs();
+      final remoteLogs = logRows
+          .map((row) => _mappers.logFromCloud(Map<String, dynamic>.from(row)))
+          .toList();
+      final mergedLogs = KidsSessionLogsCloudMerge.merge(
+        local: localLogs,
+        remote: remoteLogs,
+      );
+      final mergedProgress = KidsProgressCloudMerge.merge(
+        local: local,
+        remote: remote,
+      );
+      final reconciledProgress = mergedProgress.copyWith(
+        ayahsCompleted: KidsSessionLogsCloudMerge.completedAyahsCount(
+          mergedLogs,
+        ),
+      );
+
+      await _datasource.saveKidsProgress(
+        KidsProgressModel.fromEntity(reconciledProgress),
+      );
+      await _datasource.saveKidsSessionLogs(
+        mergedLogs.map(KidsSessionLogModel.fromEntity).toList(),
+      );
+      return const Right(null);
+    } catch (e) {
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
 
   Future<Either<Failure, void>> syncKidsProgressToCloud() async {
     try {

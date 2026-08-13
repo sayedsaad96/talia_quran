@@ -10,6 +10,7 @@ import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/router/app_router.dart';
+import 'package:talia_quran/core/services/app_initializer.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/onboarding/presentation/cubits/onboarding_cubit.dart';
@@ -22,18 +23,20 @@ void main() {
   setUp(() async {
     await getIt.reset();
     SharedPreferences.setMockInitialValues({});
+    AppInitializer.resetForTesting(initialized: true);
   });
 
   tearDown(() async {
     await getIt.reset();
+    AppInitializer.resetForTesting();
   });
 
   group('SplashPage routing', () {
     testWidgets('first launch routes to onboarding', (tester) async {
       await _registerCore();
       await tester.pumpWidget(_TestRouterApp(router: _splashRouter()));
-      await tester.pump(const Duration(milliseconds: 2600));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('onboarding route'), findsOneWidget);
     });
@@ -41,8 +44,8 @@ void main() {
     testWidgets('returning user routes to home', (tester) async {
       await _registerCore(initialPrefs: {'isFirstTimeAppOpen': false});
       await tester.pumpWidget(_TestRouterApp(router: _splashRouter()));
-      await tester.pump(const Duration(milliseconds: 2600));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
 
       expect(find.text('home route'), findsOneWidget);
     });

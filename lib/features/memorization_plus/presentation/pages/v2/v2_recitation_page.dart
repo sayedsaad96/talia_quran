@@ -17,18 +17,19 @@ class V2RecitationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isRecording = state.isRecording;
+    final isEvaluating = state.isEvaluating;
     return V2PhaseScaffold(
       session: state.sessionState,
       icon: Icons.mic_rounded,
-      title: context.isArabic ? 'سمّع من حفظك' : 'Recite from memory',
-      subtitle: context.isArabic
-          ? 'النص مخفي الآن. سجّل تسميعك بدون تلميحات.'
-          : 'The ayah text is hidden. Record without hints.',
-      primaryActionLabel: isRecording
-          ? (context.isArabic ? 'إيقاف التسجيل' : 'Stop recording')
-          : (context.isArabic ? 'بدء التسجيل' : 'Start recording'),
-      primaryActionIcon:
-          isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+      title: context.l10n.v2RecitationTitle,
+      subtitle: context.l10n.v2RecitationSubtitle,
+      primaryActionLabel: isEvaluating
+          ? context.l10n.v2Evaluating
+          : isRecording
+          ? context.l10n.v2StopRecording
+          : context.l10n.v2StartRecording,
+      primaryActionIcon: isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+      primaryActionEnabled: !isEvaluating,
       onPrimaryAction: () {
         final cubit = context.read<MemorizationSessionCubit>();
         return isRecording ? cubit.stopRecording() : cubit.startRecording();

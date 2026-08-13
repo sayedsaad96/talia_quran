@@ -10,7 +10,6 @@ enum SmartCoachRecommendationKind {
   memorizeNewAyahs,
   kidsCurrentMission,
   continueV2Session,
-  hifzReviewDue,
 }
 
 /// Machine-readable explanation code for the recommendation.

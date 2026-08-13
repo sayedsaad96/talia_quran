@@ -1,4 +1,14 @@
 -- ═══════════════════════════════════════════════════════════════════════════════
+-- Talia Quran — Canonical Supabase schema
+--
+-- Fresh projects: apply this file, then numbered migrations that are not
+-- already represented here (currently through 0010).
+-- Existing projects: apply supabase/migrations/0002.sql … 0010.sql in order.
+-- Client requires 0007–0010 (audience uniqueness, custom plans, v2 review
+-- acknowledgement + composite cursor, kids session log ayah uniqueness).
+-- Legacy ayah_progress / bookmarks / certificates tables were dropped in 0005
+-- and are not created here.
+-- ═══════════════════════════════════════════════════════════════════════════════
 
 
 -- ═══════════════════════════════════════════════════════════════════════════════
@@ -63,7 +73,8 @@ CREATE TABLE IF NOT EXISTS public.kids_session_logs (
   points_earned INTEGER NOT NULL DEFAULT 0 CHECK (points_earned >= 0),
   completed_at TIMESTAMPTZ NOT NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT unique_child_session_log UNIQUE (child_user_id, local_id)
+  CONSTRAINT unique_child_session_log UNIQUE (child_user_id, local_id),
+  CONSTRAINT unique_child_session_log_ayah UNIQUE (child_user_id, surah_id, ayah_number)
 );
 
 CREATE INDEX IF NOT EXISTS idx_kids_session_logs_child
@@ -295,7 +306,7 @@ BEGIN
     v_uid, p_local_id, p_surah_id, p_ayah_number,
     p_repeats_completed, p_points_earned, p_completed_at
   )
-  ON CONFLICT (child_user_id, local_id) DO NOTHING;
+  ON CONFLICT (child_user_id, surah_id, ayah_number) DO NOTHING;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
@@ -331,7 +342,7 @@ BEGIN
     (item->>'points_earned')::INTEGER,
     (item->>'completed_at')::TIMESTAMPTZ
   FROM jsonb_array_elements(p_data) AS item
-  ON CONFLICT (child_user_id, local_id) DO NOTHING;
+  ON CONFLICT (child_user_id, surah_id, ayah_number) DO NOTHING;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
@@ -395,40 +406,10 @@ CREATE TRIGGER on_auth_user_created
   EXECUTE FUNCTION public.handle_new_user();
 
 
--- ─── 2. Ayah Progress (Memorization Tracking) ───────────────────────────────
--- DEPRECATED (2026-07): Legacy Hifz cloud mirror. Production memorization now
--- uses Isar review records locally and `ayah_review_records_cloud` for sync.
--- Kept for backward compatibility with older app builds; do not write here
--- from new client code.
--- Mirrors IsarAyahProgress — stores per-ayah memorization state
--- Legacy Hifz mirror (deprecated — app uses Isar + ayah_review_records_cloud).
-CREATE TABLE IF NOT EXISTS public.ayah_progress (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  surah_id INTEGER NOT NULL
-    CHECK (surah_id >= 1 AND surah_id <= 114),
-  ayah_number INTEGER NOT NULL
-    CHECK (ayah_number >= 1 AND ayah_number <= 286),
-  status TEXT NOT NULL DEFAULT 'notStarted'
-    CHECK (status IN ('notStarted', 'learning', 'review', 'memorized')),
-  repetitions INTEGER NOT NULL DEFAULT 0
-    CHECK (repetitions >= 0 AND repetitions <= 10000),
-  next_review_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  last_review_date TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-  -- One record per user + surah + ayah combination
-  CONSTRAINT unique_user_ayah UNIQUE (user_id, surah_id, ayah_number)
-);
-
--- Fast lookups by user
-CREATE INDEX IF NOT EXISTS idx_ayah_progress_user
-  ON public.ayah_progress(user_id);
-
--- Fast lookups for review-due ayahs
-CREATE INDEX IF NOT EXISTS idx_ayah_progress_review
-  ON public.ayah_progress(user_id, next_review_date);
+-- ─── 2. Ayah Progress (removed) ─────────────────────────────────────────────
+-- DEPRECATED and dropped in 0005_drop_deprecated_tables.sql.
+-- Production memorization uses Isar review records locally and
+-- `ayah_review_records_cloud` for sync. Do not recreate this table.
 
 
 -- ─── 3. Streak Data ─────────────────────────────────────────────────────────
@@ -472,41 +453,14 @@ CREATE INDEX IF NOT EXISTS idx_xp_history_user
   ON public.xp_history(user_id, created_at DESC);
 
 
--- ─── 6. Bookmarks ───────────────────────────────────────────────────────────
--- Legacy cloud bookmarks (deprecated — app uses local SharedPreferences).
-CREATE TABLE IF NOT EXISTS public.bookmarks (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  surah_id INTEGER NOT NULL
-    CHECK (surah_id >= 1 AND surah_id <= 114),
-  surah_name TEXT NOT NULL
-    CHECK (char_length(surah_name) <= 50),
-  ayah_number INTEGER NOT NULL
-    CHECK (ayah_number >= 1 AND ayah_number <= 286),
-  ayah_text TEXT NOT NULL DEFAULT ''
-    CHECK (char_length(ayah_text) <= 2000),
-  saved_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-  CONSTRAINT unique_user_bookmark UNIQUE (user_id, surah_id, ayah_number)
-);
-
-CREATE INDEX IF NOT EXISTS idx_bookmarks_user
-  ON public.bookmarks(user_id, saved_at DESC);
+-- ─── 6. Bookmarks (removed) ─────────────────────────────────────────────────
+-- DEPRECATED and dropped in 0005_drop_deprecated_tables.sql.
+-- The app stores bookmarks in local SharedPreferences.
 
 
--- ─── 7. Certificates ────────────────────────────────────────────────────────
--- Legacy Juz certificates (deprecated — app uses certificate_awards_cloud).
-CREATE TABLE IF NOT EXISTS public.certificates (
-  id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  juz_number INTEGER NOT NULL
-    CHECK (juz_number >= 1 AND juz_number <= 30),
-  completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  certificate_url TEXT
-    CHECK (certificate_url IS NULL OR char_length(certificate_url) <= 500),
-
-  CONSTRAINT unique_user_certificate UNIQUE (user_id, juz_number)
-);
+-- ─── 7. Certificates (removed) ──────────────────────────────────────────────
+-- DEPRECATED and dropped in 0005_drop_deprecated_tables.sql.
+-- Production certificates sync to `certificate_awards_cloud`.
 
 
 -- ─── 8. Auto-update `updated_at` Trigger ─────────────────────────────────────
@@ -525,7 +479,7 @@ DECLARE
 BEGIN
   FOR tbl IN
     SELECT unnest(ARRAY[
-      'profiles', 'ayah_progress', 'streaks', 'xp'
+      'profiles', 'streaks', 'xp'
     ])
   LOOP
     EXECUTE format(
@@ -545,12 +499,9 @@ END $$;
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 ALTER TABLE public.profiles        ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.ayah_progress   ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.streaks         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.xp              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.xp_history      ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.bookmarks       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.certificates    ENABLE ROW LEVEL SECURITY;
 
 -- ── Profiles ──
 -- SELECT: own profile only
@@ -569,12 +520,6 @@ CREATE POLICY "profiles_update_own"
 
 -- DELETE: BLOCKED — profiles are deleted only via CASCADE from auth.users
 -- (No DELETE policy = denied by default when RLS is on)
-
--- ── Ayah Progress ──
-CREATE POLICY "ayah_progress_all_own"
-  ON public.ayah_progress FOR ALL
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
 
 -- ── Streaks ──
 CREATE POLICY "streaks_all_own"
@@ -600,19 +545,6 @@ CREATE POLICY "xp_history_insert_own"
 -- UPDATE: BLOCKED — audit log is immutable
 -- DELETE: BLOCKED — audit log is immutable
 
--- ── Bookmarks ──
-CREATE POLICY "bookmarks_all_own"
-  ON public.bookmarks FOR ALL
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-
--- ── Certificates ──
-CREATE POLICY "certificates_all_own"
-  ON public.certificates FOR ALL
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
-
-
 -- ═══════════════════════════════════════════════════════════════════════════════
 --  Upsert Functions (SECURITY DEFINER — bypasses RLS but validates auth)
 --
@@ -620,46 +552,6 @@ CREATE POLICY "certificates_all_own"
 --  bypass RLS to do ON CONFLICT upserts. Each function validates auth.uid()
 --  is NOT NULL before proceeding, preventing unauthenticated access.
 -- ═══════════════════════════════════════════════════════════════════════════════
-
--- Bulk upsert ayah progress (called during sync)
-CREATE OR REPLACE FUNCTION public.upsert_ayah_progress(
-  p_data JSONB  -- Array of { surah_id, ayah_number, status, repetitions, next_review_date, last_review_date }
-)
-RETURNS VOID AS $$
-DECLARE
-  v_uid UUID := auth.uid();
-BEGIN
-  -- SECURITY: Reject unauthenticated calls
-  IF v_uid IS NULL THEN
-    RAISE EXCEPTION 'Not authenticated';
-  END IF;
-
-  -- SECURITY: Limit batch size to prevent abuse
-  IF jsonb_array_length(p_data) > 6236 THEN
-    RAISE EXCEPTION 'Batch too large (max 6236 ayahs)';
-  END IF;
-
-  INSERT INTO public.ayah_progress (
-    user_id, surah_id, ayah_number, status, repetitions, next_review_date, last_review_date
-  )
-  SELECT
-    v_uid,
-    (item->>'surah_id')::INTEGER,
-    (item->>'ayah_number')::INTEGER,
-    item->>'status',
-    (item->>'repetitions')::INTEGER,
-    (item->>'next_review_date')::TIMESTAMPTZ,
-    (item->>'last_review_date')::TIMESTAMPTZ
-  FROM jsonb_array_elements(p_data) AS item
-  ON CONFLICT (user_id, surah_id, ayah_number)
-  DO UPDATE SET
-    status = EXCLUDED.status,
-    repetitions = EXCLUDED.repetitions,
-    next_review_date = EXCLUDED.next_review_date,
-    last_review_date = EXCLUDED.last_review_date,
-    updated_at = NOW();
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Upsert streak data (called during sync)
 CREATE OR REPLACE FUNCTION public.upsert_streak(
@@ -731,11 +623,9 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 --  Only authenticated users should be able to call these
 -- ═══════════════════════════════════════════════════════════════════════════════
 
-REVOKE EXECUTE ON FUNCTION public.upsert_ayah_progress(JSONB) FROM anon;
 REVOKE EXECUTE ON FUNCTION public.upsert_streak(INTEGER, INTEGER, DATE, INTEGER) FROM anon;
 REVOKE EXECUTE ON FUNCTION public.upsert_xp(INTEGER) FROM anon;
 
-GRANT EXECUTE ON FUNCTION public.upsert_ayah_progress(JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.upsert_streak(INTEGER, INTEGER, DATE, INTEGER) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.upsert_xp(INTEGER) TO authenticated;
 
@@ -839,12 +729,9 @@ GRANT  EXECUTE ON FUNCTION public.upsert_daily_activities_batch(JSONB) TO authen
 -- ═══════════════════════════════════════════════════════════════════════════════
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.ayah_progress ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.streaks ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.xp ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.xp_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.certificates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.daily_activities ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.child_link_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.parent_child_links ENABLE ROW LEVEL SECURITY;
@@ -854,12 +741,9 @@ ALTER TABLE public.parent_rewards ENABLE ROW LEVEL SECURITY;
 
 REVOKE ALL ON TABLE
   public.profiles,
-  public.ayah_progress,
   public.streaks,
   public.xp,
   public.xp_history,
-  public.bookmarks,
-  public.certificates,
   public.daily_activities,
   public.child_link_requests,
   public.parent_child_links,
@@ -872,12 +756,9 @@ REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon, authenticated;
 GRANT USAGE ON SCHEMA public TO authenticated;
 
 GRANT SELECT, UPDATE ON public.profiles TO authenticated;
-GRANT SELECT ON public.ayah_progress TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.streaks TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.xp TO authenticated;
 GRANT SELECT, INSERT ON public.xp_history TO authenticated;
-GRANT SELECT ON public.bookmarks TO authenticated;
-GRANT SELECT ON public.certificates TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.daily_activities TO authenticated;
 GRANT SELECT ON public.child_link_requests TO authenticated;
 GRANT SELECT ON public.parent_child_links TO authenticated;
@@ -889,16 +770,10 @@ GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
 DROP POLICY IF EXISTS "profiles_parent_read_linked_child" ON public.profiles;
-DROP POLICY IF EXISTS "ayah_progress_all_own" ON public.ayah_progress;
-DROP POLICY IF EXISTS "ayah_progress_select_own" ON public.ayah_progress;
 DROP POLICY IF EXISTS "streaks_all_own" ON public.streaks;
 DROP POLICY IF EXISTS "xp_all_own" ON public.xp;
 DROP POLICY IF EXISTS "xp_history_select_own" ON public.xp_history;
 DROP POLICY IF EXISTS "xp_history_insert_own" ON public.xp_history;
-DROP POLICY IF EXISTS "bookmarks_all_own" ON public.bookmarks;
-DROP POLICY IF EXISTS "bookmarks_select_own" ON public.bookmarks;
-DROP POLICY IF EXISTS "certificates_all_own" ON public.certificates;
-DROP POLICY IF EXISTS "certificates_select_own" ON public.certificates;
 DROP POLICY IF EXISTS "daily_activities_all_own" ON public.daily_activities;
 DROP POLICY IF EXISTS "Users can manage their own daily activities" ON public.daily_activities;
 DROP POLICY IF EXISTS "child_link_requests_child_own" ON public.child_link_requests;
@@ -933,10 +808,6 @@ CREATE POLICY "profiles_parent_read_linked_child"
     )
   );
 
-CREATE POLICY "ayah_progress_select_own"
-  ON public.ayah_progress FOR SELECT TO authenticated
-  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
-
 CREATE POLICY "streaks_all_own"
   ON public.streaks FOR ALL TO authenticated
   USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id)
@@ -954,14 +825,6 @@ CREATE POLICY "xp_history_select_own"
 CREATE POLICY "xp_history_insert_own"
   ON public.xp_history FOR INSERT TO authenticated
   WITH CHECK ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
-
-CREATE POLICY "bookmarks_select_own"
-  ON public.bookmarks FOR SELECT TO authenticated
-  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
-
-CREATE POLICY "certificates_select_own"
-  ON public.certificates FOR SELECT TO authenticated
-  USING ((SELECT auth.uid()) IS NOT NULL AND (SELECT auth.uid()) = user_id);
 
 CREATE POLICY "daily_activities_all_own"
   ON public.daily_activities FOR ALL TO authenticated
@@ -1040,13 +903,11 @@ CREATE POLICY "parent_rewards_child_read"
 
 ALTER FUNCTION public.handle_new_user() SET search_path = public;
 ALTER FUNCTION public.update_updated_at() SET search_path = public;
-ALTER FUNCTION public.upsert_ayah_progress(JSONB) SET search_path = public;
 ALTER FUNCTION public.upsert_streak(INTEGER, INTEGER, DATE, INTEGER) SET search_path = public;
 ALTER FUNCTION public.upsert_xp(INTEGER) SET search_path = public;
 
 REVOKE ALL ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.update_updated_at() FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.upsert_ayah_progress(JSONB) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.upsert_streak(INTEGER, INTEGER, DATE, INTEGER) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.upsert_xp(INTEGER) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.upsert_daily_activities_batch(JSONB) FROM PUBLIC, anon;
@@ -1055,7 +916,6 @@ REVOKE ALL ON FUNCTION public.accept_child_link_token_with_hash(TEXT) FROM PUBLI
 REVOKE ALL ON FUNCTION public.upsert_kids_progress_cloud(INTEGER, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) FROM PUBLIC, anon;
 REVOKE ALL ON FUNCTION public.insert_kids_session_log(TEXT, INTEGER, INTEGER, INTEGER, INTEGER, TIMESTAMPTZ) FROM PUBLIC, anon;
 
-GRANT EXECUTE ON FUNCTION public.upsert_ayah_progress(JSONB) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.upsert_streak(INTEGER, INTEGER, DATE, INTEGER) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.upsert_xp(INTEGER) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.upsert_daily_activities_batch(JSONB) TO authenticated;
@@ -1092,15 +952,21 @@ CREATE TABLE IF NOT EXISTS public.ayah_review_records_cloud (
     CHECK (review_state IN ('newCard', 'learning', 'review', 'relearning')),
   created_by_mode TEXT NOT NULL
     CHECK (created_by_mode IN ('v2Session', 'kidsMode', 'hifz')),
+  audience TEXT GENERATED ALWAYS AS (
+    CASE WHEN created_by_mode = 'kidsMode' THEN 'kids' ELSE 'adult' END
+  ) STORED,
   sync_version BIGINT NOT NULL DEFAULT 1,
   difficulty DOUBLE PRECISION NOT NULL DEFAULT 5.0,
   stability DOUBLE PRECISION NOT NULL DEFAULT 0.0,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  CONSTRAINT unique_user_ayah_review UNIQUE (user_id, surah_id, ayah_number)
+  CONSTRAINT unique_user_audience_ayah_review UNIQUE (user_id, audience, surah_id, ayah_number)
 );
 
 CREATE INDEX IF NOT EXISTS idx_ayah_review_records_cloud_user
   ON public.ayah_review_records_cloud(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_ayah_review_records_cloud_user_audience
+  ON public.ayah_review_records_cloud(user_id, audience);
 
 CREATE INDEX IF NOT EXISTS idx_ayah_review_records_cloud_user_updated
   ON public.ayah_review_records_cloud (user_id, updated_at, id);
@@ -1113,6 +979,14 @@ CREATE TABLE IF NOT EXISTS public.daily_plans_cloud (
   total_items INTEGER NOT NULL DEFAULT 0 CHECK (total_items >= 0),
   completed_count INTEGER NOT NULL DEFAULT 0 CHECK (completed_count >= 0),
   payload JSONB NOT NULL DEFAULT '{}'::JSONB CHECK (pg_column_size(payload) <= 20000),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ── Custom memorization plan (single row per user) ──
+CREATE TABLE IF NOT EXISTS public.custom_plans_cloud (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  payload JSONB NOT NULL DEFAULT '{}'::JSONB CHECK (pg_column_size(payload) <= 20000),
+  deleted_at TIMESTAMPTZ,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -1133,17 +1007,20 @@ CREATE INDEX IF NOT EXISTS idx_certificate_awards_cloud_user
 
 ALTER TABLE public.ayah_review_records_cloud ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.daily_plans_cloud ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.custom_plans_cloud ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.certificate_awards_cloud ENABLE ROW LEVEL SECURITY;
 
 REVOKE ALL ON TABLE
   public.ayah_review_records_cloud,
   public.daily_plans_cloud,
+  public.custom_plans_cloud,
   public.certificate_awards_cloud
 FROM anon, authenticated;
 
 GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT SELECT ON public.ayah_review_records_cloud TO authenticated;
 GRANT SELECT, INSERT, UPDATE ON public.daily_plans_cloud TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON public.custom_plans_cloud TO authenticated;
 GRANT SELECT, INSERT ON public.certificate_awards_cloud TO authenticated;
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
@@ -1173,6 +1050,22 @@ CREATE POLICY "daily_plans_cloud_parent_read"
     EXISTS (
       SELECT 1 FROM public.parent_child_links pcl
       WHERE pcl.child_user_id = daily_plans_cloud.user_id
+        AND pcl.parent_user_id = (SELECT auth.uid())
+        AND pcl.status = 'active'
+    )
+  );
+
+CREATE POLICY "custom_plans_cloud_owner_all"
+  ON public.custom_plans_cloud FOR ALL TO authenticated
+  USING ((SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) = user_id);
+
+CREATE POLICY "custom_plans_cloud_parent_read"
+  ON public.custom_plans_cloud FOR SELECT TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.parent_child_links pcl
+      WHERE pcl.child_user_id = custom_plans_cloud.user_id
         AND pcl.parent_user_id = (SELECT auth.uid())
         AND pcl.status = 'active'
     )
@@ -1267,7 +1160,7 @@ BEGIN
     COALESCE((item->>'difficulty')::DOUBLE PRECISION, 5.0),
     COALESCE((item->>'stability')::DOUBLE PRECISION, 0.0)
   FROM jsonb_array_elements(p_data) AS item
-  ON CONFLICT (user_id, surah_id, ayah_number)
+  ON CONFLICT ON CONSTRAINT unique_user_audience_ayah_review
   DO UPDATE SET
     strength_level = EXCLUDED.strength_level,
     interval_days = EXCLUDED.interval_days,
@@ -1294,9 +1187,105 @@ $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 REVOKE ALL ON FUNCTION public.upsert_ayah_review_records(JSONB) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.upsert_ayah_review_records(JSONB) TO authenticated;
 
+-- ── Acknowledged batch upsert (conflict-safe dirty-flag clearing) ──
+CREATE OR REPLACE FUNCTION public.upsert_ayah_review_records_v2(
+  p_data JSONB
+)
+RETURNS TABLE (
+  surah_id INTEGER,
+  ayah_number INTEGER,
+  audience TEXT
+) AS $$
+DECLARE
+  v_uid UUID := auth.uid();
+BEGIN
+  IF v_uid IS NULL THEN
+    RAISE EXCEPTION 'Not authenticated';
+  END IF;
+
+  IF jsonb_array_length(p_data) > 6236 THEN
+    RAISE EXCEPTION 'Batch too large (max 6236 ayahs)';
+  END IF;
+
+  RETURN QUERY
+  WITH input_rows AS (
+    SELECT
+      (item->>'surah_id')::INTEGER AS surah_id,
+      (item->>'ayah_number')::INTEGER AS ayah_number,
+      (item->>'strength_level')::INTEGER AS strength_level,
+      (item->>'interval_days')::INTEGER AS interval_days,
+      (item->>'last_reviewed_at')::TIMESTAMPTZ AS last_reviewed_at,
+      (item->>'next_review_date')::TIMESTAMPTZ AS next_review_date,
+      (item->>'total_reviews')::INTEGER AS total_reviews,
+      item->>'last_rating' AS last_rating,
+      (item->>'ease_factor')::DOUBLE PRECISION AS ease_factor,
+      (item->>'lapses')::INTEGER AS lapses,
+      item->>'review_state' AS review_state,
+      item->>'created_by_mode' AS created_by_mode,
+      COALESCE(
+        (item->>'sync_version')::BIGINT,
+        (EXTRACT(EPOCH FROM (item->>'last_reviewed_at')::TIMESTAMPTZ) * 1000)::BIGINT
+      ) AS sync_version,
+      COALESCE((item->>'difficulty')::DOUBLE PRECISION, 5.0) AS difficulty,
+      COALESCE((item->>'stability')::DOUBLE PRECISION, 0.0) AS stability
+    FROM jsonb_array_elements(p_data) AS item
+  ),
+  applied_rows AS (
+    INSERT INTO public.ayah_review_records_cloud (
+      user_id, surah_id, ayah_number, strength_level, interval_days,
+      last_reviewed_at, next_review_date, total_reviews, last_rating,
+      ease_factor, lapses, review_state, created_by_mode, sync_version,
+      difficulty, stability
+    )
+    SELECT
+      v_uid, surah_id, ayah_number, strength_level, interval_days,
+      last_reviewed_at, next_review_date, total_reviews, last_rating,
+      ease_factor, lapses, review_state, created_by_mode, sync_version,
+      difficulty, stability
+    FROM input_rows
+    ON CONFLICT ON CONSTRAINT unique_user_audience_ayah_review
+    DO UPDATE SET
+      strength_level = EXCLUDED.strength_level,
+      interval_days = EXCLUDED.interval_days,
+      total_reviews = EXCLUDED.total_reviews,
+      lapses = EXCLUDED.lapses,
+      ease_factor = EXCLUDED.ease_factor,
+      last_reviewed_at = EXCLUDED.last_reviewed_at,
+      next_review_date = EXCLUDED.next_review_date,
+      last_rating = EXCLUDED.last_rating,
+      review_state = EXCLUDED.review_state,
+      created_by_mode = EXCLUDED.created_by_mode,
+      sync_version = EXCLUDED.sync_version,
+      difficulty = EXCLUDED.difficulty,
+      stability = EXCLUDED.stability,
+      updated_at = NOW()
+    WHERE EXCLUDED.sync_version > ayah_review_records_cloud.sync_version
+       OR (
+         EXCLUDED.sync_version = ayah_review_records_cloud.sync_version
+         AND EXCLUDED.last_reviewed_at > ayah_review_records_cloud.last_reviewed_at
+       )
+    RETURNING
+      ayah_review_records_cloud.surah_id,
+      ayah_review_records_cloud.ayah_number,
+      ayah_review_records_cloud.audience
+  )
+  SELECT
+    applied_rows.surah_id,
+    applied_rows.ayah_number,
+    applied_rows.audience
+  FROM applied_rows;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+REVOKE ALL ON FUNCTION public.upsert_ayah_review_records_v2(JSONB)
+  FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.upsert_ayah_review_records_v2(JSONB)
+  TO authenticated;
+
 -- ── Delta pull (preferred) ──
 CREATE OR REPLACE FUNCTION public.pull_ayah_review_records_since(
-  p_cursor TIMESTAMPTZ DEFAULT 'epoch'::TIMESTAMPTZ,
+  p_cursor_updated_at TIMESTAMPTZ DEFAULT 'epoch'::TIMESTAMPTZ,
+  p_cursor_id BIGINT DEFAULT 0,
   p_limit INTEGER DEFAULT 500
 )
 RETURNS SETOF public.ayah_review_records_cloud AS $$
@@ -1311,15 +1300,21 @@ BEGIN
   SELECT *
   FROM public.ayah_review_records_cloud
   WHERE user_id = auth.uid()
-    AND updated_at > COALESCE(p_cursor, 'epoch'::TIMESTAMPTZ)
+    AND (
+      updated_at > COALESCE(p_cursor_updated_at, 'epoch'::TIMESTAMPTZ)
+      OR (
+        updated_at = COALESCE(p_cursor_updated_at, 'epoch'::TIMESTAMPTZ)
+        AND id > COALESCE(p_cursor_id, 0)
+      )
+    )
   ORDER BY updated_at ASC, id ASC
   LIMIT v_limit;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
-REVOKE ALL ON FUNCTION public.pull_ayah_review_records_since(TIMESTAMPTZ, INTEGER)
+REVOKE ALL ON FUNCTION public.pull_ayah_review_records_since(TIMESTAMPTZ, BIGINT, INTEGER)
   FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION public.pull_ayah_review_records_since(TIMESTAMPTZ, INTEGER)
+GRANT EXECUTE ON FUNCTION public.pull_ayah_review_records_since(TIMESTAMPTZ, BIGINT, INTEGER)
   TO authenticated;
 
 -- ── Full pull (legacy clients) ──

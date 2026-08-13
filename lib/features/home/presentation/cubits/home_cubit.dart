@@ -12,6 +12,7 @@ import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../../memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../../core/memorization/memorization_path_resolver.dart';
+import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/memorization/smart_coach_recommendation.dart';
 import '../../../../core/memorization/usecases/get_smart_coach_recommendation_usecase.dart';
 import '../../../../core/services/app_session_service.dart';
@@ -114,6 +115,8 @@ class HomeCubit extends Cubit<HomeState> {
     final coachFuture = _getCoachRecommendation();
 
     final progressResult = await progressFuture;
+    OverallProgress? overallProgress;
+    progressResult.fold((_) {}, (progress) => overallProgress = progress);
     final quranPageResult = await quranPageFuture;
     QuranPageDetail? dailyWirdDetail;
     quranPageResult.fold((l) => null, (r) => dailyWirdDetail = r);
@@ -155,6 +158,7 @@ class HomeCubit extends Cubit<HomeState> {
         customPlan: customPlan,
         dailyWirdDetail: dailyWirdDetail,
         isKids: isKids,
+        overallProgress: overallProgress,
       );
     } catch (e, s) {
       TaliaLogger.w('Failed to evaluate hero action', e, s);
@@ -190,6 +194,7 @@ class HomeCubit extends Cubit<HomeState> {
     required CustomMemorizationPlan? customPlan,
     required QuranPageDetail? dailyWirdDetail,
     required bool isKids,
+    required OverallProgress? overallProgress,
   }) async {
     try {
       final isEnabled = _prefs.getBool('unified_journey_enabled') ?? true;
@@ -197,19 +202,29 @@ class HomeCubit extends Cubit<HomeState> {
         return null;
       }
 
-      final recordsResult = await _memorizationRepository.getAllReviewRecords();
+      final recordsResult = await _memorizationRepository.getAllReviewRecords(
+        scope: isKids
+            ? ReviewRecordReadScope.kids
+            : ReviewRecordReadScope.adult,
+      );
       final records = recordsResult.getOrElse(() => []);
-      
+      final now = DateTime.now().toUtc();
       const aggregator = MemorizationInsightsAggregator();
-      final insights = aggregator.generate(records, DateTime.now());
-      
+      final insights = aggregator.generateAdultProduction(records, now);
       const adaptiveUsecase = AdaptiveRecommendationsUsecase();
-      final adaptiveReport = adaptiveUsecase.generate(insights);
-      
-      final criticals = adaptiveReport.recommendations
-          .where((r) => (r.priority == RecommendationPriority.critical || r.priority == RecommendationPriority.high) && r.type != RecommendationType.reviewBacklog)
+      final recommendations = insights.totalRecordsAnalyzed == 0
+          ? const <MemorizationRecommendation>[]
+          : adaptiveUsecase.generate(insights).recommendations;
+
+      final criticals = recommendations
+          .where(
+            (r) =>
+                (r.priority == RecommendationPriority.critical ||
+                    r.priority == RecommendationPriority.high) &&
+                r.type != RecommendationType.reviewBacklog,
+          )
           .toList();
-      final backlogs = adaptiveReport.recommendations
+      final backlogs = recommendations
           .where((r) => r.type == RecommendationType.reviewBacklog)
           .toList();
 
@@ -217,17 +232,26 @@ class HomeCubit extends Cubit<HomeState> {
         lastRestorableLocation: lastLocation,
         hasCriticalLearningAlert: criticals.isNotEmpty,
         learningAlertType: criticals.isNotEmpty ? criticals.first.type : null,
-        hasReviewBacklog: backlogs.isNotEmpty,
-        overdueAyahs: insights.dueAyahs,
+        hasReviewBacklog:
+            (overallProgress?.reviewAyahs ?? 0) > 0 && backlogs.isNotEmpty,
+        overdueAyahs: overallProgress?.overdueReviews ?? 0,
         hasSmartPlan: coachRecommendation != null || customPlan != null,
-        isSmartPlanReview: coachRecommendation != null &&
-            (coachRecommendation.kind == SmartCoachRecommendationKind.reviewDueNear ||
-                coachRecommendation.kind == SmartCoachRecommendationKind.reviewDueFar ||
-                coachRecommendation.kind == SmartCoachRecommendationKind.memorizedReviewDue ||
-                coachRecommendation.kind == SmartCoachRecommendationKind.reviewWeakAyah ||
-                coachRecommendation.kind == SmartCoachRecommendationKind.hifzReviewDue),
-        smartPlanType: customPlan != null ? SmartPlanType.customPlan : (coachRecommendation != null ? SmartPlanType.reviewPlan : null),
-        smartPlanRoute: coachRecommendation?.route ?? (customPlan != null ? '/memorization' : null),
+        isSmartPlanReview:
+            coachRecommendation != null &&
+            (coachRecommendation.kind ==
+                    SmartCoachRecommendationKind.reviewDueNear ||
+                coachRecommendation.kind ==
+                    SmartCoachRecommendationKind.reviewDueFar ||
+                coachRecommendation.kind ==
+                    SmartCoachRecommendationKind.memorizedReviewDue ||
+                coachRecommendation.kind ==
+                    SmartCoachRecommendationKind.reviewWeakAyah),
+        smartPlanType: customPlan != null
+            ? SmartPlanType.customPlan
+            : (coachRecommendation != null ? SmartPlanType.reviewPlan : null),
+        smartPlanRoute:
+            coachRecommendation?.route ??
+            (customPlan != null ? '/memorization' : null),
         hasDailyWird: dailyWirdDetail != null,
         dailyWirdPageNumber: dailyWirdDetail?.pageNumber,
         isKids: isKids,
@@ -258,7 +282,7 @@ class HomeCubit extends Cubit<HomeState> {
       SmartCoachRecommendationKind.reviewDueNear ||
       SmartCoachRecommendationKind.reviewDueFar ||
       SmartCoachRecommendationKind.memorizedReviewDue ||
-      SmartCoachRecommendationKind.hifzReviewDue => true,
+      SmartCoachRecommendationKind.reviewWeakAyah => true,
       _ => false,
     };
     if (!coachUrgent) return unifiedAction;

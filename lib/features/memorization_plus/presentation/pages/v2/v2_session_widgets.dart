@@ -6,6 +6,7 @@
 // ignore_for_file: sort_child_properties_last
 
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../../core/constants/app_spacing.dart';
 import '../../../../../core/extensions/context_extensions.dart';
@@ -93,6 +94,7 @@ class V2PhaseScaffold extends StatelessWidget {
     required this.primaryActionIcon,
     required this.onPrimaryAction,
     required this.children,
+    this.primaryActionEnabled = true,
   });
 
   final V2SessionState session;
@@ -102,6 +104,7 @@ class V2PhaseScaffold extends StatelessWidget {
   final String primaryActionLabel;
   final IconData primaryActionIcon;
   final Future<void> Function() onPrimaryAction;
+  final bool primaryActionEnabled;
   final List<Widget> children;
 
   @override
@@ -139,7 +142,7 @@ class V2PhaseScaffold extends StatelessWidget {
           ...children,
           const SizedBox(height: AppSpacing.xl),
           FilledButton.icon(
-            onPressed: onPrimaryAction,
+            onPressed: primaryActionEnabled ? onPrimaryAction : null,
             icon: Icon(primaryActionIcon),
             label: Text(primaryActionLabel),
           ),
@@ -171,9 +174,7 @@ class V2AyahTextCard extends StatelessWidget {
         textAlign: TextAlign.center,
       ),
       footer: Text(
-        context.isArabic
-            ? 'الآية ${ayah.numberInSurah}'
-            : 'Ayah ${ayah.numberInSurah}',
+        context.l10n.hifzAyahNumberLabel(ayah.numberInSurah),
         textAlign: TextAlign.center,
         style: AppTypography.labelMedium.copyWith(
           color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
@@ -186,11 +187,7 @@ class V2AyahTextCard extends StatelessWidget {
 // ─── Hint card ────────────────────────────────────────────────────────────────
 
 class V2HintCard extends StatelessWidget {
-  const V2HintCard({
-    super.key,
-    required this.session,
-    required this.hintLevel,
-  });
+  const V2HintCard({super.key, required this.session, required this.hintLevel});
 
   final V2SessionState session;
   final V2HintLevel hintLevel;
@@ -211,7 +208,7 @@ class V2HintCard extends StatelessWidget {
               : AppColors.lightTextHint,
         ),
         footer: Text(
-          context.isArabic ? 'حاول من غير تلميح' : 'Try without a hint first',
+          context.l10n.v2TryWithoutHint,
           textAlign: TextAlign.center,
         ),
       ),
@@ -222,7 +219,7 @@ class V2HintCard extends StatelessWidget {
           style: AppTypography.quranLarge,
         ),
         footer: Text(
-          context.isArabic ? 'تم كشف أول كلمة' : 'First word revealed',
+          context.l10n.v2FirstWordRevealed,
           textAlign: TextAlign.center,
         ),
       ),
@@ -272,25 +269,19 @@ class V2HiddenTextCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = context.isDark ? AppColors.primaryLight : AppColors.primary;
-    final message = speechIssue == null
-        ? isEvaluating
-              ? (context.isArabic ? 'جار التقييم...' : 'Evaluating...')
-              : isRecording
-              ? (context.isArabic ? 'يتم التسجيل الآن' : 'Recording now')
-              : (context.isArabic
-                    ? 'اضغط التسجيل عندما تكون جاهزاً'
-                    : 'Press record when you are ready')
-        : (context.isArabic
-              ? 'تعذر استخدام الميكروفون'
-              : 'Microphone is not available');
-
     return V2PhaseCard(
       child: Icon(
         isRecording ? Icons.graphic_eq_rounded : Icons.mic_none_rounded,
         size: 64,
         color: primary,
       ),
-      footer: Text(message, textAlign: TextAlign.center),
+      footer: _SpeechIssueFooter(
+        isRecording: isRecording,
+        isEvaluating: isEvaluating,
+        speechIssue: speechIssue,
+        evaluatingLabel: context.l10n.v2Evaluating,
+        recordingLabel: context.l10n.v2RecordingNow,
+      ),
     );
   }
 }
@@ -315,9 +306,7 @@ class V2FailureSummary extends StatelessWidget {
         color: AppColors.warning,
       ),
       footer: Text(
-        context.isArabic
-            ? 'عدد المحاولات التي تحتاج مراجعة: $failures'
-            : 'Attempts needing remediation: $failures',
+        context.l10n.v2RemediationAttempts(failures),
         textAlign: TextAlign.center,
       ),
     );
@@ -349,15 +338,16 @@ class V2BlockReviewSummaryCard extends StatelessWidget {
       footer: Column(
         children: [
           Text(
-            context.isArabic ? 'الآيات $start-$end' : 'Ayahs $start-$end',
+            context.l10n.v2AyahRange(start, end),
             textAlign: TextAlign.center,
             style: AppTypography.titleLarge,
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            context.isArabic
-                ? 'تم اجتياز ${session.passedAyahNumbers.length}/${session.totalAyahsInBlock} آيات.'
-                : '${session.passedAyahNumbers.length}/${session.totalAyahsInBlock} ayahs passed individually.',
+            context.l10n.v2BlockProgress(
+              session.passedAyahNumbers.length,
+              session.totalAyahsInBlock,
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -387,21 +377,13 @@ class V2BlockReviewHiddenCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = context.isDark ? AppColors.primaryLight : AppColors.primary;
-    final message = speechIssue == null
-        ? isEvaluating
-              ? (context.isArabic
-                    ? 'جار تقييم المقطع...'
-                    : 'Evaluating block...')
-              : isRecording
-              ? (context.isArabic
-                    ? 'يتم تسجيل المقطع الآن'
-                    : 'Recording block now')
-              : (context.isArabic
-                    ? 'اضغط التسجيل عندما تكون جاهزاً'
-                    : 'Press record when you are ready')
-        : (context.isArabic
-              ? 'تعذر استخدام الميكروفون'
-              : 'Microphone is not available');
+    final footer = _SpeechIssueFooter(
+      isRecording: isRecording,
+      isEvaluating: isEvaluating,
+      speechIssue: speechIssue,
+      evaluatingLabel: context.l10n.v2EvaluatingBlock,
+      recordingLabel: context.l10n.v2RecordingBlock,
+    );
 
     return V2PhaseCard(
       child: Column(
@@ -415,13 +397,57 @@ class V2BlockReviewHiddenCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            context.isArabic ? 'الآيات $start-$end' : 'Ayahs $start-$end',
+            context.l10n.v2AyahRange(start, end),
             textAlign: TextAlign.center,
             style: AppTypography.titleMedium,
           ),
         ],
       ),
-      footer: Text(message, textAlign: TextAlign.center),
+      footer: footer,
+    );
+  }
+}
+
+class _SpeechIssueFooter extends StatelessWidget {
+  const _SpeechIssueFooter({
+    required this.isRecording,
+    required this.isEvaluating,
+    required this.speechIssue,
+    required this.evaluatingLabel,
+    required this.recordingLabel,
+  });
+
+  final bool isRecording;
+  final bool isEvaluating;
+  final V2SpeechIssue? speechIssue;
+  final String evaluatingLabel;
+  final String recordingLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final message = switch (speechIssue) {
+      V2SpeechIssue.noSpeech => context.l10n.v2NoSpeechDetected,
+      V2SpeechIssue.permissionDenied =>
+        context.l10n.v2MicrophonePermissionDenied,
+      V2SpeechIssue.permissionPermanentlyDenied =>
+        context.l10n.v2MicrophoneOpenSettings,
+      V2SpeechIssue.unavailable => context.l10n.v2MicrophoneUnavailable,
+      null => isEvaluating
+          ? evaluatingLabel
+          : isRecording
+          ? recordingLabel
+          : context.l10n.v2PressRecord,
+    };
+
+    return Column(
+      children: [
+        Text(message, textAlign: TextAlign.center),
+        if (speechIssue == V2SpeechIssue.permissionPermanentlyDenied)
+          TextButton(
+            onPressed: openAppSettings,
+            child: Text(context.l10n.openSettingsAction),
+          ),
+      ],
     );
   }
 }
@@ -446,9 +472,7 @@ class V2AudioAction extends StatelessWidget {
         isPlaying ? Icons.volume_up_rounded : Icons.play_arrow_rounded,
       ),
       label: Text(
-        isPlaying
-            ? (context.isArabic ? 'يتم التشغيل' : 'Playing')
-            : (context.isArabic ? 'استمع للآية' : 'Listen to ayah'),
+        isPlaying ? context.l10n.v2Playing : context.l10n.v2ListenToAyah,
       ),
     );
   }
@@ -474,7 +498,7 @@ class V2SummaryRow extends StatelessWidget {
       children: [
         Expanded(
           child: V2SummaryTile(
-            label: context.isArabic ? 'تم تسميعها' : 'Passed',
+            label: context.l10n.v2Passed,
             value: '$passed/$total',
             icon: Icons.check_circle_rounded,
             color: AppColors.success,
@@ -483,7 +507,7 @@ class V2SummaryRow extends StatelessWidget {
         const SizedBox(width: AppSpacing.sm),
         Expanded(
           child: V2SummaryTile(
-            label: context.isArabic ? 'محاولات' : 'Retries',
+            label: context.l10n.v2Retries,
             value: '$failures',
             icon: Icons.replay_rounded,
             color: AppColors.warning,

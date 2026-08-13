@@ -355,6 +355,8 @@ class _AccountSectionState extends State<AccountSection> {
               backgroundColor: Colors.red.shade700,
             ),
           );
+        } else if (state is AuthSignOutBlockedPendingData) {
+          _confirmForceSignOut(context);
         } else if (state is AuthAccountDeleted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -460,6 +462,47 @@ class _AccountSectionState extends State<AccountSection> {
                     : AppColors.lightDivider,
                 indent: 16,
                 endIndent: 16,
+              ),
+              InkWell(
+                onTap: () => _confirmGuestDataImport(context),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.symmetric(
+                    horizontal: AppSpacing.md,
+                    vertical: AppSpacing.sm,
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: primary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.cloud_upload_outlined,
+                          color: primary,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Text(
+                          context.isArabic
+                              ? 'نقل بيانات الحفظ المحلية'
+                              : 'Import local memorization data',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: textColor,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
               InkWell(
                 onTap: () => _confirmSignOut(context),
@@ -577,6 +620,49 @@ class _AccountSectionState extends State<AccountSection> {
     );
   }
 
+  void _confirmForceSignOut(BuildContext context) {
+    final isDark = context.isDark;
+    showDialog<void>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        backgroundColor: isDark ? AppColors.darkCard : AppColors.lightCard,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+        title: Text(
+          context.l10n.signOutPendingDataTitle,
+          style: AppTypography.titleLarge.copyWith(
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
+          ),
+        ),
+        content: Text(
+          context.l10n.signOutPendingDataWarning,
+          style: AppTypography.bodyMedium.copyWith(
+            color: isDark
+                ? AppColors.darkTextSecondary
+                : AppColors.lightTextSecondary,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogCtx).pop(),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () {
+              Navigator.of(dialogCtx).pop();
+              context.read<AuthCubit>().signOut(force: true);
+            },
+            child: Text(context.l10n.signOutAnyway),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _confirmSignOut(BuildContext context) {
     final isDark = context.isDark;
     showDialog<void>(
@@ -616,6 +702,51 @@ class _AccountSectionState extends State<AccountSection> {
             child: Text(context.l10n.signOut),
           ),
         ],
+      ),
+    );
+  }
+
+  Future<void> _confirmGuestDataImport(BuildContext context) async {
+    final shouldImport = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(
+          context.isArabic
+              ? 'نقل بيانات الحفظ المحلية؟'
+              : 'Import local memorization data?',
+        ),
+        content: Text(
+          context.isArabic
+              ? 'سيتم ربط بيانات الحفظ التي أُنشئت دون تسجيل دخول بهذا الحساب ومزامنتها معه.'
+              : 'Guest memorization data will be linked to this account and synced to it.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(context.isArabic ? 'نقل' : 'Import'),
+          ),
+        ],
+      ),
+    );
+    if (shouldImport != true || !context.mounted) return;
+
+    final claim = await context.read<AuthCubit>().importGuestReviewRecords();
+    if (!context.mounted) return;
+    claim.fold(
+      (failure) => _showSettingsError(context, failure.message),
+      (count) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            context.isArabic
+                ? 'تم نقل $count من سجلات الحفظ.'
+                : 'Imported $count memorization records.',
+          ),
+          backgroundColor: Colors.green.shade700,
+        ),
       ),
     );
   }

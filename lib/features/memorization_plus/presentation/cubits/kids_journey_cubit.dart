@@ -12,13 +12,11 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
   KidsJourneyCubit(
     this._getJourney,
     this._getKidsProgress,
-    this._remoteLink,
     this._quranRepository,
   ) : super(const KidsJourneyInitial());
 
   final GetKidsJourneyUsecase _getJourney;
   final GetKidsProgressUsecase _getKidsProgress;
-  final ParentRemoteLinkUsecase _remoteLink;
   final QuranRepository _quranRepository;
 
   Future<void> load({required int surahId}) async {
@@ -47,29 +45,6 @@ class KidsJourneyCubit extends Cubit<KidsJourneyState> {
         stages: journeyResult.getOrElse(() => const []),
         progress: progressResult.getOrElse(() => const KidsProgress.initial()),
         surahName: surahName,
-      ),
-    );
-  }
-
-  Future<void> createRemoteLinkQr() async {
-    final current = state;
-    if (current is! KidsJourneyLoaded) return;
-    emit(current.copyWith(isCreatingLink: true, clearMessage: true));
-    final result = await _remoteLink.createChildLinkToken();
-    result.fold(
-      (failure) => emit(
-        current.copyWith(
-          isCreatingLink: false,
-          message: failure.message,
-          clearQrPayload: true,
-        ),
-      ),
-      (token) => emit(
-        current.copyWith(
-          isCreatingLink: false,
-          qrPayload: 'talia-kids-link:$token',
-          message: 'تم إنشاء رمز الربط. صالح لمدة 10 دقائق.',
-        ),
       ),
     );
   }

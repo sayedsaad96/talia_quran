@@ -181,10 +181,7 @@ void main() {
           SmartCoachRecommendationKind.continueDailyPlan,
         );
         expect(recommendation?.startAyah, 7);
-        expect(
-          recommendation?.route,
-          contains('startAyah=7'),
-        );
+        expect(recommendation?.route, contains('startAyah=7'));
       },
     );
 
@@ -723,7 +720,7 @@ void main() {
       expect(
         engine.recommend(hifzSnapshot)?.kind,
         SmartCoachRecommendationKind.memorizedReviewDue,
-        reason: 'memorized-due before hifzReviewDue',
+        reason: 'memorized-due fallback remains available',
       );
     });
   });
@@ -834,41 +831,35 @@ void main() {
       expect(recommendation?.startAyah, 3);
     });
 
-    test(
-      'adult Smart Coach excludes unknown memorized-due record',
-      () {
-        final now = DateTime.now().toUtc();
-        final snapshot = MemorizationSnapshot(
-          profile: _adultProfile(),
-          reviewRecords: [
-            _memorizedDueRecord(
-              now: now,
-              ayahNumber: 5,
-            ).copyWith(createdByMode: ReviewRecordCreatedByMode.unknown),
-          ],
-        );
-        final recommendation = engine.recommend(snapshot);
-        expect(recommendation, isNull);
-      },
-    );
+    test('adult Smart Coach excludes unknown memorized-due record', () {
+      final now = DateTime.now().toUtc();
+      final snapshot = MemorizationSnapshot(
+        profile: _adultProfile(),
+        reviewRecords: [
+          _memorizedDueRecord(
+            now: now,
+            ayahNumber: 5,
+          ).copyWith(createdByMode: ReviewRecordCreatedByMode.unknown),
+        ],
+      );
+      final recommendation = engine.recommend(snapshot);
+      expect(recommendation, isNull);
+    });
 
-    test(
-      'adult Smart Coach excludes migration memorized-due record',
-      () {
-        final now = DateTime.now().toUtc();
-        final snapshot = MemorizationSnapshot(
-          profile: _adultProfile(),
-          reviewRecords: [
-            _memorizedDueRecord(
-              now: now,
-              ayahNumber: 7,
-            ).copyWith(createdByMode: ReviewRecordCreatedByMode.migration),
-          ],
-        );
-        final recommendation = engine.recommend(snapshot);
-        expect(recommendation, isNull);
-      },
-    );
+    test('adult Smart Coach excludes migration memorized-due record', () {
+      final now = DateTime.now().toUtc();
+      final snapshot = MemorizationSnapshot(
+        profile: _adultProfile(),
+        reviewRecords: [
+          _memorizedDueRecord(
+            now: now,
+            ayahNumber: 7,
+          ).copyWith(createdByMode: ReviewRecordCreatedByMode.migration),
+        ],
+      );
+      final recommendation = engine.recommend(snapshot);
+      expect(recommendation, isNull);
+    });
 
     test('kidsMode does not shadow adult v2Session memorized-due record', () {
       final now = DateTime.now().toUtc();
@@ -939,7 +930,6 @@ void main() {
           SmartCoachRecommendationKind.memorizedReviewDue,
         );
         expect(recommendation?.route, contains('session'));
-        
       },
     );
 
@@ -963,23 +953,20 @@ void main() {
       },
     );
 
-    test(
-      'unknown memorized-due is ignored by adult Smart Coach',
-      () {
-        final now = DateTime.now().toUtc();
-        final snapshot = MemorizationSnapshot(
-          profile: _adultProfile(),
-          reviewRecords: [
-            _memorizedDueRecord(
-              now: now,
-              ayahNumber: 2,
-            ).copyWith(createdByMode: ReviewRecordCreatedByMode.unknown),
-          ],
-        );
-        final recommendation = engine.recommend(snapshot);
-        expect(recommendation, isNull);
-      },
-    );
+    test('unknown memorized-due is ignored by adult Smart Coach', () {
+      final now = DateTime.now().toUtc();
+      final snapshot = MemorizationSnapshot(
+        profile: _adultProfile(),
+        reviewRecords: [
+          _memorizedDueRecord(
+            now: now,
+            ayahNumber: 2,
+          ).copyWith(createdByMode: ReviewRecordCreatedByMode.unknown),
+        ],
+      );
+      final recommendation = engine.recommend(snapshot);
+      expect(recommendation, isNull);
+    });
 
     test(
       'kids profile still returns kids mission regardless of review records',

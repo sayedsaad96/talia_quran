@@ -1,5 +1,8 @@
 import 'package:dartz/dartz.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/memorization/plan_cloud_dirty_keys.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
@@ -8,9 +11,10 @@ import '../../models/memorization_models.dart';
 /// plan. Saving also clears the daily-plan cache so a stale entry point never
 /// overrides the freshly configured range.
 class MemorizationCustomPlanService {
-  MemorizationCustomPlanService(this._datasource);
+  MemorizationCustomPlanService(this._datasource, this._prefs);
 
   final MemorizationPlusLocalDatasource _datasource;
+  final SharedPreferences _prefs;
 
   Future<Either<Failure, CustomMemorizationPlan?>> getCustomPlan() async {
     try {
@@ -27,6 +31,11 @@ class MemorizationCustomPlanService {
     try {
       await _datasource.saveCustomPlan(
         CustomMemorizationPlanModel.fromEntity(plan),
+      );
+      await _prefs.setBool(PlanCloudDirtyKeys.customPlan, true);
+      await _prefs.setString(
+        PlanCloudDirtyKeys.customPlanLocalUpdatedAt,
+        DateTime.now().toUtc().toIso8601String(),
       );
       // Clear the cached daily plan so that a stale surahId from a previous
       // session does not override the correct entry point (endSurahId) when
@@ -45,6 +54,11 @@ class MemorizationCustomPlanService {
   Future<Either<Failure, void>> deleteCustomPlan() async {
     try {
       await _datasource.deleteCustomPlan();
+      await _prefs.setBool(PlanCloudDirtyKeys.customPlan, true);
+      await _prefs.setString(
+        PlanCloudDirtyKeys.customPlanLocalUpdatedAt,
+        DateTime.now().toUtc().toIso8601String(),
+      );
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

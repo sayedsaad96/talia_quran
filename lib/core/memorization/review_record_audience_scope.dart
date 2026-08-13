@@ -1,7 +1,7 @@
 import '../../features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'review_record_filters.dart';
 
-/// Which audience bucket to use when reading/writing Isar review rows (B4).
+/// Which audience bucket to use when reading/writing review rows.
 enum ReviewRecordReadScope {
   /// Adult V2 / Hifz production records (`v2Session`, `hifz`, legacy adult).
   adult,
@@ -10,53 +10,28 @@ enum ReviewRecordReadScope {
   kids,
 }
 
-/// Composite-key helpers and prefs flag for audience-scoped Isar storage.
+/// Audience helpers for review-record identity scoping.
 ///
-/// When [isEnabled] is false, legacy `${surahId}_${ayahNumber}` keys are used
-/// (backward compatible). When true, adult and kids rows are stored separately.
+/// Identity keys are always scoped (`owner|audience|surah|ayah`). The legacy
+/// `adult_` / `kids_` prefixes remain only so migration can recognize Gen-2
+/// composite keys written before owner identity landed.
 class ReviewRecordAudienceScope {
   ReviewRecordAudienceScope._();
 
-  static const prefsKey = 'use_audience_scoped_reads';
-  static const migrationKey = 'mem_plus_audience_scoped_keys_v1';
-
   static const adultPrefix = 'adult_';
   static const kidsPrefix = 'kids_';
-
-  static bool isEnabled({required bool Function(String key) readBool}) =>
-      readBool(prefsKey);
 
   static String legacyKey(int surahId, int ayahNumber) =>
       '${surahId}_$ayahNumber';
 
   static bool isLegacyCompositeKey(String compositeKey) =>
       !compositeKey.startsWith(adultPrefix) &&
-      !compositeKey.startsWith(kidsPrefix);
+      !compositeKey.startsWith(kidsPrefix) &&
+      !compositeKey.contains('|');
 
-  static String storageKey({
-    required int surahId,
-    required int ayahNumber,
-    required ReviewRecordCreatedByMode mode,
-    required bool scoped,
-  }) {
-    if (!scoped) return legacyKey(surahId, ayahNumber);
-    final prefix = mode == ReviewRecordCreatedByMode.kidsMode
-        ? kidsPrefix
-        : adultPrefix;
-    return '$prefix${surahId}_$ayahNumber';
-  }
-
-  static String readKey({
-    required int surahId,
-    required int ayahNumber,
-    required ReviewRecordReadScope scope,
-    required bool scoped,
-  }) {
-    if (!scoped) return legacyKey(surahId, ayahNumber);
-    final prefix =
-        scope == ReviewRecordReadScope.kids ? kidsPrefix : adultPrefix;
-    return '$prefix${surahId}_$ayahNumber';
-  }
+  static bool isAudiencePrefixedCompositeKey(String compositeKey) =>
+      compositeKey.startsWith(adultPrefix) ||
+      compositeKey.startsWith(kidsPrefix);
 
   static ReviewRecordReadScope scopeForWriteMode(
     ReviewRecordCreatedByMode mode,

@@ -1119,6 +1119,24 @@ abstract class AppLocalizations {
   /// **'هل تريد تسجيل الخروج؟ سيبقى تقدمك المحلي متاحًا على هذا الجهاز.'**
   String get signOutWarning;
 
+  /// No description provided for @signOutPendingDataTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدم غير مزامن'**
+  String get signOutPendingDataTitle;
+
+  /// No description provided for @signOutPendingDataWarning.
+  ///
+  /// In ar, this message translates to:
+  /// **'بعض تقدم الحفظ لم يصل إلى السحابة بعد. تسجيل الخروج الآن سيحذفه من هذا الجهاز.'**
+  String get signOutPendingDataWarning;
+
+  /// No description provided for @signOutAnyway.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الخروج على أي حال'**
+  String get signOutAnyway;
+
   /// No description provided for @dailyReviewReminder.
   ///
   /// In ar, this message translates to:
@@ -6708,6 +6726,292 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'فتح لوحة التحكم الكاملة'**
   String get childDetailOpenFullDashboard;
+
+  /// No description provided for @kidsPreparing.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارٍ التحضير...'**
+  String get kidsPreparing;
+
+  /// No description provided for @kidsUnexpectedError.
+  ///
+  /// In ar, this message translates to:
+  /// **'يبدو أن شيئًا ما حدث!'**
+  String get kidsUnexpectedError;
+
+  /// No description provided for @v2LearningTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعلّم الآية'**
+  String get v2LearningTitle;
+
+  /// No description provided for @v2LearningSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع واقرأ الآية بهدوء قبل محاولة حفظها.'**
+  String get v2LearningSubtitle;
+
+  /// No description provided for @v2StartMemorizing.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتقل للحفظ'**
+  String get v2StartMemorizing;
+
+  /// No description provided for @v2MemorizingTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ الآية'**
+  String get v2MemorizingTitle;
+
+  /// No description provided for @v2MemorizingSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'درّب ذاكرتك. التلميحات متاحة هنا فقط.'**
+  String get v2MemorizingSubtitle;
+
+  /// No description provided for @v2ReadyToRecite.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنا جاهز للتسميع'**
+  String get v2ReadyToRecite;
+
+  /// No description provided for @v2FirstWordHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'أول كلمة'**
+  String get v2FirstWordHint;
+
+  /// No description provided for @v2ShowAyahHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار الآية'**
+  String get v2ShowAyahHint;
+
+  /// No description provided for @v2RecitationTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سمّع من حفظك'**
+  String get v2RecitationTitle;
+
+  /// No description provided for @v2RecitationSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'النص مخفي الآن. سجّل تسميعك بدون تلميحات.'**
+  String get v2RecitationSubtitle;
+
+  /// No description provided for @v2StartRecording.
+  ///
+  /// In ar, this message translates to:
+  /// **'بدء التسجيل'**
+  String get v2StartRecording;
+
+  /// No description provided for @v2StopRecording.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف التسجيل'**
+  String get v2StopRecording;
+
+  /// No description provided for @v2RemediationTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة قصيرة'**
+  String get v2RemediationTitle;
+
+  /// No description provided for @v2RemediationSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع واقرأ الآية مرة أخرى، ثم ارجع لمحاولة التسميع.'**
+  String get v2RemediationSubtitle;
+
+  /// No description provided for @v2TryAgain.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحاول مرة أخرى'**
+  String get v2TryAgain;
+
+  /// No description provided for @v2BlockReviewPendingTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة المقطع'**
+  String get v2BlockReviewPendingTitle;
+
+  /// No description provided for @v2BlockReviewPendingSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنهيت الآيات منفردة. الخطوة التالية تسميع المقطع كاملاً من الذاكرة.'**
+  String get v2BlockReviewPendingSubtitle;
+
+  /// No description provided for @v2StartBlockReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ مراجعة المقطع'**
+  String get v2StartBlockReview;
+
+  /// No description provided for @v2BlockReviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سمّع المقطع كاملاً'**
+  String get v2BlockReviewTitle;
+
+  /// No description provided for @v2BlockReviewSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'النص مخفي الآن. سجّل الآيات {startAyah}-{endAyah} كاملة بدون تلميحات.'**
+  String v2BlockReviewSubtitle(int startAyah, int endAyah);
+
+  /// No description provided for @v2CompletionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتملت الجلسة'**
+  String get v2CompletionTitle;
+
+  /// No description provided for @v2CompletionSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم حفظ آيات هذا المقطع بنجاح.'**
+  String get v2CompletionSubtitle;
+
+  /// No description provided for @v2MemorizationHub.
+  ///
+  /// In ar, this message translates to:
+  /// **'مركز الحفظ'**
+  String get v2MemorizationHub;
+
+  /// No description provided for @v2TryWithoutHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'حاول من غير تلميح'**
+  String get v2TryWithoutHint;
+
+  /// No description provided for @v2FirstWordRevealed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم كشف أول كلمة'**
+  String get v2FirstWordRevealed;
+
+  /// No description provided for @v2Evaluating.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارٍ التقييم...'**
+  String get v2Evaluating;
+
+  /// No description provided for @v2RecordingNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتم التسجيل الآن'**
+  String get v2RecordingNow;
+
+  /// No description provided for @v2PressRecord.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضغط التسجيل عندما تكون جاهزًا'**
+  String get v2PressRecord;
+
+  /// No description provided for @v2MicrophoneUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر استخدام الميكروفون'**
+  String get v2MicrophoneUnavailable;
+
+  String get v2NoSpeechDetected;
+
+  String get v2MicrophonePermissionDenied;
+
+  String get v2MicrophoneOpenSettings;
+
+  String get v2AudioPlaybackFailed;
+
+  /// No description provided for @v2RemediationAttempts.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدد المحاولات التي تحتاج مراجعة: {count}'**
+  String v2RemediationAttempts(int count);
+
+  /// No description provided for @v2AyahRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآيات {startAyah}-{endAyah}'**
+  String v2AyahRange(int startAyah, int endAyah);
+
+  /// No description provided for @v2BlockProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم اجتياز {passed}/{total} آيات.'**
+  String v2BlockProgress(int passed, int total);
+
+  /// No description provided for @v2EvaluatingBlock.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارٍ تقييم المقطع...'**
+  String get v2EvaluatingBlock;
+
+  /// No description provided for @v2RecordingBlock.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتم تسجيل المقطع الآن'**
+  String get v2RecordingBlock;
+
+  /// No description provided for @v2Playing.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتم التشغيل'**
+  String get v2Playing;
+
+  /// No description provided for @v2ListenToAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع للآية'**
+  String get v2ListenToAyah;
+
+  /// No description provided for @v2Passed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تسميعها'**
+  String get v2Passed;
+
+  /// No description provided for @v2Retries.
+  ///
+  /// In ar, this message translates to:
+  /// **'محاولات'**
+  String get v2Retries;
+
+  /// No description provided for @v2SurahLoadFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحميل بيانات السورة.'**
+  String get v2SurahLoadFailed;
+
+  /// No description provided for @v2NoAyahsInRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد آيات في النطاق المحدد.'**
+  String get v2NoAyahsInRange;
+
+  /// No description provided for @kidsRecordingUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.'**
+  String get kidsRecordingUnavailable;
+
+  /// No description provided for @kidsRecordingNotCaptured.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم نسمع تلاوتك بوضوح. اضغط وسجّل الآية مرة أخرى.'**
+  String get kidsRecordingNotCaptured;
+
+  /// No description provided for @kidsRecitationMismatch.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآية لم تتطابق. استمع للآية مرة أخرى ثم سجّل تلاوتك.'**
+  String get kidsRecitationMismatch;
+
+  String get kidsAyahAlreadyCompleted;
+
+  /// No description provided for @accountSwitchOfflineDataDiscarded.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر رفع التقدم غير المتزامن للحساب السابق، لذا تمت إزالته من هذا الجهاز.'**
+  String get accountSwitchOfflineDataDiscarded;
 }
 
 class _AppLocalizationsDelegate

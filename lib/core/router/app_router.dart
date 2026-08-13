@@ -16,7 +16,7 @@ import '../../features/quran/presentation/pages/kids_quran_reader_page.dart';
 import '../../features/quran/presentation/pages/quran_page.dart';
 import '../../features/quran/presentation/pages/quran_reader_page.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
-import '../../features/hifz/presentation/pages/hifz_page.dart';
+import '../../features/memorization_plus/presentation/pages/practice_surah_page.dart';
 import '../../features/azkar/presentation/pages/azkar_page.dart';
 import '../../features/azkar/presentation/pages/azkar_category_page.dart';
 import '../../features/azkar/presentation/pages/general_azkar_page.dart';
@@ -57,6 +57,7 @@ abstract class AppRoutes {
   static const String quran = '/quran';
   static const String quranDaily = '/quran/daily';
   static const String hifz = '/hifz';
+
   /// Surah picker for adult "Practice by Surah" (replaces bare `/hifz` browse).
   static const String hifzPracticeSurah = '/memorization/practice-surah';
   static const String memorizationHub = '/memorization';
@@ -133,10 +134,7 @@ final _publicRoutes = <String>[
   if (kDebugMode) AppRoutes.qcfRenderingPoc,
 ];
 
-final _remoteProtectedRoutes = <String>[
-
-  AppRoutes.familyDashboard,
-];
+final _remoteProtectedRoutes = <String>[AppRoutes.familyDashboard];
 
 class MemorizationRouteGuard {
   const MemorizationRouteGuard._();
@@ -178,18 +176,58 @@ class MemorizationRouteGuard {
   ///
   /// Checks condition:
   ///   1. Profile must be adult (kids go to their own home).
-  static Future<String?> v2SessionRedirect() async {
+  static Future<String?> v2SessionRedirect(GoRouterState state) async {
     // Check 1: adult-only guard.
     final profile = await _readProfile();
     if (profile?.isChild == true) return AppRoutes.memorizationPlusKidsHome;
 
-    return null; // proceed to V2SessionPage
+    return invalidV2SessionRedirect(state);
+  }
+
+  /// Safe destination for malformed V2 session deep links.
+  static const invalidV2SessionLocation = AppRoutes.memorizationHub;
+
+  static String? invalidV2SessionRedirect(GoRouterState state) {
+    final extra = state.extra as Map<String, dynamic>?;
+    final surahId =
+        extra?['surahId'] as int? ??
+        int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+    final startAyah =
+        extra?['startAyah'] as int? ??
+        int.tryParse(state.uri.queryParameters['startAyah'] ?? '') ??
+        1;
+    final blockSize =
+        extra?['blockSize'] as int? ??
+        int.tryParse(state.uri.queryParameters['blockSize'] ?? '') ??
+        5;
+    if (!AppRouter._isValidSurahId(surahId) || startAyah < 1 || blockSize < 1) {
+      return invalidV2SessionLocation;
+    }
+    return null;
   }
 
   static Future<String?> kidsOnlyRedirect() async {
     final profile = await _readProfile();
     if (profile == null || profile.isChild) return null;
     return AppRoutes.memorizationPlus;
+  }
+
+  /// Resolves a notification's generic Kids journey link to the active map.
+  static Future<String?> kidsJourneyRedirect(GoRouterState state) async {
+    final profile = await _readProfile();
+    if (profile != null && !profile.isChild) return AppRoutes.memorizationPlus;
+
+    final surahId = int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+    if (AppRouter._isValidSurahId(surahId)) return null;
+
+    try {
+      final repository = getIt<MemorizationPlusRepository>();
+      return (await MemorizationNavigationResolver(
+        repository,
+      ).resolve()).kidsJourneyLocation;
+    } catch (_) {
+      return AppRoutes.memorizationPlusKidsHome;
+    }
   }
 
   static Future<String?> parentDashboardRedirect() async {
@@ -467,7 +505,8 @@ abstract class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationPlusKidsJourney,
-        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
+        redirect: (context, state) =>
+            MemorizationRouteGuard.kidsJourneyRedirect(state),
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final surahId =
@@ -572,19 +611,14 @@ abstract class AppRouter {
               completedAyahNumber < 1) {
             return const PathSelectionPage();
           }
-          final starsEarned =
-              extra?['starsEarned'] as int? ??
-              int.tryParse(state.uri.queryParameters['starsEarned'] ?? '') ??
-              1;
-          final gemsEarned =
-              extra?['gemsEarned'] as int? ??
-              int.tryParse(state.uri.queryParameters['gemsEarned'] ?? '') ??
-              0;
+          final starsEarned = resolveKidsCompletionStarsEarned(
+            extra: extra,
+            queryParameters: state.uri.queryParameters,
+          );
           return KidsGamifiedCompletionPage(
             surahId: surahId!,
             completedAyahNumber: completedAyahNumber,
             starsEarned: starsEarned,
-            gemsEarned: gemsEarned,
           );
         },
       ),
@@ -624,7 +658,7 @@ abstract class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationV2Session,
         redirect: (context, state) =>
-            MemorizationRouteGuard.v2SessionRedirect(),
+            MemorizationRouteGuard.v2SessionRedirect(state),
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final surahId =
@@ -639,7 +673,7 @@ abstract class AppRouter {
               int.tryParse(state.uri.queryParameters['blockSize'] ?? '') ??
               5;
           if (!_isValidSurahId(surahId) || startAyah < 1 || blockSize < 1) {
-            return const PathSelectionPage();
+            return const MemorizationHubPage();
           }
           return V2SessionPage(
             surahId: surahId!,
@@ -695,7 +729,7 @@ abstract class AppRouter {
                 redirect: (context, state) =>
                     MemorizationRouteGuard.adultOnlyRedirect(),
                 pageBuilder: (_, _) =>
-                    const NoTransitionPage(child: HifzPage()),
+                    const NoTransitionPage(child: PracticeSurahPage()),
               ),
             ],
           ),
@@ -738,9 +772,28 @@ abstract class AppRouter {
   static bool _isValidSurahId(int? surahId) =>
       surahId != null && surahId >= 1 && surahId <= 114;
 
+  @visibleForTesting
+  static int resolveKidsCompletionStarsEarned({
+    Map<String, dynamic>? extra,
+    Map<String, String> queryParameters = const {},
+  }) {
+    return extra?['starsEarned'] as int? ??
+        int.tryParse(queryParameters['starsEarned'] ?? '') ??
+        0;
+  }
+
   static KidsJourneyStage? _parseKidsJourneyStage(GoRouterState state) {
     final extra = state.extra;
-    if (extra is KidsJourneyStage) return extra;
+    if (extra is KidsJourneyStage) {
+      return KidsJourneyStage(
+        stageNumber: extra.stageNumber,
+        surahId: extra.surahId,
+        startAyah: extra.startAyah,
+        endAyah: extra.endAyah,
+        completedAyahs: extra.completedAyahs,
+        status: KidsJourneyStageStatus.locked,
+      );
+    }
 
     final extraMap = extra is Map<String, dynamic> ? extra : null;
     final query = state.uri.queryParameters;
@@ -768,26 +821,14 @@ abstract class AppRouter {
     final completedAyahs = extraMap?['completedAyahs'] is List<int>
         ? extraMap!['completedAyahs'] as List<int>
         : _parseAyahNumbers(query['completedAyahs']) ?? const <int>[];
-    final status = _parseKidsJourneyStageStatus(
-      extraMap?['status'] as String? ?? query['status'],
-    );
-
     return KidsJourneyStage(
       stageNumber: stageNumber,
       surahId: surahId!,
       startAyah: startAyah,
       endAyah: endAyah,
       completedAyahs: completedAyahs,
-      status: status,
+      status: KidsJourneyStageStatus.locked,
     );
-  }
-
-  static KidsJourneyStageStatus _parseKidsJourneyStageStatus(String? value) {
-    if (value == null || value.isEmpty) return KidsJourneyStageStatus.locked;
-    for (final status in KidsJourneyStageStatus.values) {
-      if (status.name == value) return status;
-    }
-    return KidsJourneyStageStatus.current;
   }
 
   static List<int>? _parseAyahNumbers(String? value) {

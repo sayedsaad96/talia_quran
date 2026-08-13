@@ -12,6 +12,17 @@ class IsarAyahReviewRecord {
   @Index(unique: true, replace: true)
   late String compositeKey;
 
+  /// Owning account id, or `ReviewRecordIdentity.localOwnerId` for records
+  /// written with no signed-in account. Null only on rows written before the
+  /// identity migration ran; the migration backfills every row.
+  @Index()
+  String? ownerUserId;
+
+  /// `ReviewRecordReadScope.name` — `adult` or `kids`. Null only on rows
+  /// written before the identity migration ran.
+  @Index()
+  String? audience;
+
   late int surahId;
   late int ayahNumber;
   late int strengthLevel;
@@ -109,6 +120,9 @@ class IsarAyahReviewRecord {
     );
   }
 
+  /// Note: [ownerUserId], [audience] and the identity [compositeKey] are set by
+  /// the storage layer, not here. [AyahReviewRecordModel] is the cloud payload
+  /// shape and deliberately carries no ownership.
   static IsarAyahReviewRecord fromModel(AyahReviewRecordModel model) {
     return IsarAyahReviewRecord()
       ..compositeKey = '${model.surahId}_${model.ayahNumber}'

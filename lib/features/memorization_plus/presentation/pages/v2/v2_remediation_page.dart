@@ -20,12 +20,9 @@ class V2RemediationPage extends StatelessWidget {
     return V2PhaseScaffold(
       session: state.sessionState,
       icon: Icons.healing_rounded,
-      title: context.isArabic ? 'مراجعة قصيرة' : 'Short remediation',
-      subtitle: context.isArabic
-          ? 'استمع واقرأ الآية مرة أخرى، ثم ارجع لمحاولة التسميع.'
-          : 'Listen and read again, then return to recitation.',
-      primaryActionLabel:
-          context.isArabic ? 'أحاول مرة أخرى' : 'Try again',
+      title: context.l10n.v2RemediationTitle,
+      subtitle: context.l10n.v2RemediationSubtitle,
+      primaryActionLabel: context.l10n.v2TryAgain,
       primaryActionIcon: Icons.replay_rounded,
       onPrimaryAction: () =>
           context.read<MemorizationSessionCubit>().completeRemediation(),

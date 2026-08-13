@@ -22,10 +22,8 @@ class V2CompletionPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final title = context.isArabic ? 'اكتملت الجلسة' : 'Session complete';
-    final subtitle = context.isArabic
-        ? 'تم حفظ آيات هذا المقطع بنجاح.'
-        : 'This memorization block has been completed.';
+    final title = context.l10n.v2CompletionTitle;
+    final subtitle = context.l10n.v2CompletionSubtitle;
 
     return SafeArea(
       child: Padding(
@@ -65,7 +63,7 @@ class V2CompletionPage extends StatelessWidget {
             FilledButton.icon(
               onPressed: () => context.go(AppRoutes.memorizationHub),
               icon: const Icon(Icons.hub_rounded),
-              label: Text(context.isArabic ? 'مركز الحفظ' : 'Memorization Hub'),
+              label: Text(context.l10n.v2MemorizationHub),
             ),
           ],
         ),

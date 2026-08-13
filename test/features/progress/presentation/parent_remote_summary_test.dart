@@ -42,6 +42,42 @@ void main() {
       expect(summary.activeDaysLast30, 1);
     });
 
+    test('reports completed reviews as total review events', () {
+      final now = DateTime.utc(2026, 7, 9, 9);
+
+      final summary = builder.build(
+        reviewRows: [
+          {
+            ..._reviewRow(
+              surahId: 67,
+              ayahNumber: 1,
+              strengthLevel: 6,
+              createdByMode: ReviewRecordCreatedByMode.kidsMode,
+              lastReviewedAt: now,
+            ),
+            'total_reviews': 3,
+          },
+          {
+            ..._reviewRow(
+              surahId: 67,
+              ayahNumber: 2,
+              strengthLevel: 4,
+              createdByMode: ReviewRecordCreatedByMode.kidsMode,
+              lastReviewedAt: now,
+            ),
+            'total_reviews': 2,
+          },
+        ],
+        dailyPlanRow: null,
+        certRows: const [],
+        streakRow: null,
+        activityRows: const [],
+      );
+
+      expect(summary.totalAyahsTracked, 2);
+      expect(summary.reviewsCompleted, 5);
+    });
+
     test('parses certificate and daily-plan rows for parent display', () {
       final now = DateTime.utc(2026, 7, 9, 9);
 

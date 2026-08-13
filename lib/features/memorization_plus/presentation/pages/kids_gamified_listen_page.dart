@@ -116,7 +116,7 @@ class _KidsGamifiedListenView extends StatelessWidget {
 
           if (state is KidsModeError) {
             return ErrorStateWidget(
-              message: state.message,
+              message: context.localizedCubitMessage(state.message),
               onRetry: () => context.read<KidsModeCubit>().load(
                 surahId,
                 ayahNumber,
@@ -525,8 +525,11 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 120),
                       width: 5,
-                      height: 8 + (24 * heights[i] *
-                          (0.4 + 0.6 * ((v + i * 0.15) % 1.0))),
+                      height:
+                          8 +
+                          (24 *
+                              heights[i] *
+                              (0.4 + 0.6 * ((v + i * 0.15) % 1.0))),
                       decoration: BoxDecoration(
                         color: KidsTheme.forestGreen.withValues(
                           alpha: 0.6 + 0.4 * ((v + i * 0.1) % 1.0),
@@ -534,8 +537,7 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
                         borderRadius: BorderRadius.circular(3),
                       ),
                     ),
-                    if (i < heights.length - 1)
-                      const SizedBox(width: 4),
+                    if (i < heights.length - 1) const SizedBox(width: 4),
                   ],
                 ],
               );

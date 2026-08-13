@@ -1,11 +1,18 @@
+import 'dart:convert';
 import 'dart:math';
 
 import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/identity/record_owner_provider.dart';
+import '../../../../../core/memorization/custom_plan_cloud_merge.dart';
+import '../../../../../core/memorization/daily_plan_cloud_merge.dart';
+import '../../../../../core/memorization/plan_cloud_dirty_keys.dart';
 import '../../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../../core/memorization/review_record_cloud_merge.dart';
+import '../../../../../core/memorization/review_record_cloud_push_acknowledgement.dart';
+import '../../../../../core/memorization/review_record_pull_cursor.dart';
 import '../../../../certificate/domain/entities/certificate_award.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
@@ -13,24 +20,29 @@ import '../../models/memorization_models.dart';
 import 'memorization_cloud_gateway.dart';
 import 'memorization_cloud_mappers.dart';
 
-/// Production-mode cloud sync: pull production review records + daily plan
-/// from Supabase, resync dirty local rows back up, push certificates and
+/// Production-mode cloud sync: pull production review records, daily plan,
+/// and custom plan from Supabase; resync dirty local rows; push certificates;
 /// answer "is there pending cloud work" for the auth gate.
 class MemorizationProductionSyncService {
   MemorizationProductionSyncService(
     this._datasource,
     this._prefs,
     this._gateway,
-    this._mappers,
-  );
+    this._mappers, {
+    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
+  }) : _owner = owner;
 
   final MemorizationPlusLocalDatasource _datasource;
   final SharedPreferences _prefs;
   final MemorizationCloudGateway _gateway;
   final MemorizationCloudMappers _mappers;
+  final RecordOwnerProvider _owner;
 
   /// Daily-plan dirty flag is also written by the facade's `saveDailyPlan`.
-  static const dailyPlanCloudDirtyKey = 'daily_plan_cloud_dirty';
+  static const dailyPlanCloudDirtyKey = PlanCloudDirtyKeys.dailyPlan;
+
+  /// Custom-plan dirty flag — set on save/delete in [MemorizationCustomPlanService].
+  static const customPlanCloudDirtyKey = PlanCloudDirtyKeys.customPlan;
 
   static const _reviewPullCursorKey = 'ayah_review_pull_cursor';
   static const _syncedCertificateIdsKey = 'synced_certificate_ids';
@@ -53,6 +65,10 @@ class MemorizationProductionSyncService {
       final client = _supabase;
       final user = client.auth.currentUser;
       if (user == null) return const Right(null);
+      final expectedOwner = user.id;
+      if (_owner.currentOwnerId != expectedOwner) {
+        return const Right(null);
+      }
 
       var cursor = _readReviewPullCursor();
       var pages = 0;
@@ -62,13 +78,18 @@ class MemorizationProductionSyncService {
         pages += 1;
         List<dynamic> rows;
         try {
-          rows = await client.rpc(
-            'pull_ayah_review_records_since',
-            params: {
-              'p_cursor': cursor.toUtc().toIso8601String(),
-              'p_limit': 500,
-            },
-          ) as List<dynamic>? ??
+          rows =
+              await client.rpc(
+                    'pull_ayah_review_records_since',
+                    params: {
+                      'p_cursor_updated_at': cursor.updatedAt
+                          .toUtc()
+                          .toIso8601String(),
+                      'p_cursor_id': cursor.id,
+                      'p_limit': 500,
+                    },
+                  )
+                  as List<dynamic>? ??
               const [];
         } on PostgrestException catch (e) {
           if (!_gateway.isMissingRpc(e, 'pull_ayah_review_records_since')) {
@@ -77,36 +98,45 @@ class MemorizationProductionSyncService {
           // Legacy fallback: one full pull, then stop.
           rows =
               await client.rpc('pull_ayah_review_records') as List<dynamic>? ??
-                  const [];
-          await _applyCloudReviewRows(rows.cast<Map<String, dynamic>>());
+              const [];
+          await _applyCloudReviewRows(
+            rows.cast<Map<String, dynamic>>(),
+            expectedOwner: expectedOwner,
+          );
           await _mergeDailyPlanFromCloud(client, user.id);
+          await _mergeCustomPlanFromCloud(client, user.id);
           await _markReviewPullCompleted();
           return const Right(null);
         }
 
         final cloudRows = rows.cast<Map<String, dynamic>>();
         if (cloudRows.isEmpty) break;
+        if (_owner.currentOwnerId != expectedOwner) {
+          return const Right(null);
+        }
 
-        await _applyCloudReviewRows(cloudRows);
+        await _applyCloudReviewRows(cloudRows, expectedOwner: expectedOwner);
 
-        DateTime? newest;
+        ReviewRecordPullCursor? newest;
         for (final row in cloudRows) {
-          final updatedRaw = row['updated_at'] as String?;
-          if (updatedRaw == null) continue;
-          final updated = DateTime.parse(updatedRaw).toUtc();
-          if (newest == null || updated.isAfter(newest)) newest = updated;
+          try {
+            final rowCursor = ReviewRecordPullCursor.fromCloudRow(row);
+            if (newest == null || newest.isBefore(rowCursor)) {
+              newest = rowCursor;
+            }
+          } on FormatException {
+            // Invalid rows cannot advance the cursor and will be retried.
+          }
         }
         if (newest != null) {
           cursor = newest;
-          await _prefs.setString(
-            _reviewPullCursorKey,
-            cursor.toIso8601String(),
-          );
+          await _prefs.setString(_reviewPullCursorKey, cursor.toStorage());
         }
         if (cloudRows.length < 500) break;
       }
 
       await _mergeDailyPlanFromCloud(client, user.id);
+      await _mergeCustomPlanFromCloud(client, user.id);
       await _markReviewPullCompleted();
       return const Right(null);
     } catch (e) {
@@ -114,24 +144,18 @@ class MemorizationProductionSyncService {
     }
   }
 
-  DateTime _readReviewPullCursor() {
-    final raw = _prefs.getString(_reviewPullCursorKey);
-    if (raw == null || raw.isEmpty) {
-      return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-    }
-    try {
-      return DateTime.parse(raw).toUtc();
-    } catch (_) {
-      return DateTime.fromMillisecondsSinceEpoch(0, isUtc: true);
-    }
-  }
+  ReviewRecordPullCursor _readReviewPullCursor() =>
+      ReviewRecordPullCursor.fromStorage(
+        _prefs.getString(_reviewPullCursorKey),
+      );
 
   bool isReviewPullCursorStale() {
     final lastPullRaw = _prefs.getString('${_reviewPullCursorKey}_pulled_at');
     if (lastPullRaw == null) return true;
     try {
       final lastPull = DateTime.parse(lastPullRaw).toUtc();
-      return DateTime.now().toUtc().difference(lastPull) > _pullCursorStaleAfter;
+      return DateTime.now().toUtc().difference(lastPull) >
+          _pullCursorStaleAfter;
     } catch (_) {
       return true;
     }
@@ -145,9 +169,14 @@ class MemorizationProductionSyncService {
   }
 
   Future<void> _applyCloudReviewRows(
-    List<Map<String, dynamic>> cloudRows,
-  ) async {
+    List<Map<String, dynamic>> cloudRows, {
+    required String expectedOwner,
+  }) async {
     for (final row in cloudRows) {
+      final rowOwner = row['user_id'] as String?;
+      if (rowOwner != null && rowOwner != expectedOwner) continue;
+      if (_owner.currentOwnerId != expectedOwner) return;
+
       final cloudRecord = _mappers.reviewRecordFromCloud(row);
       if (!_isProductionReviewRecord(cloudRecord)) continue;
 
@@ -165,10 +194,7 @@ class MemorizationProductionSyncService {
       );
       final mergedModel = AyahReviewRecordModel.fromEntity(merged);
       if (localModel == null || localModel != mergedModel) {
-        await _datasource.saveReviewRecord(
-          mergedModel,
-          markCloudDirty: false,
-        );
+        await _datasource.saveReviewRecord(mergedModel, markCloudDirty: false);
       }
     }
   }
@@ -177,6 +203,7 @@ class MemorizationProductionSyncService {
     SupabaseClient client,
     String userId,
   ) async {
+    final localDirty = _prefs.getBool(dailyPlanCloudDirtyKey) ?? false;
     final rows = await client
         .from('daily_plans_cloud')
         .select()
@@ -186,7 +213,11 @@ class MemorizationProductionSyncService {
     final row = rows.first;
     final cloudGeneratedAt = DateTime.parse(row['generated_at'] as String);
     final local = await _datasource.getCachedDailyPlan();
-    if (local != null && !cloudGeneratedAt.isAfter(local.generatedAt.toUtc())) {
+    if (!DailyPlanCloudMerge.shouldApplyRemote(
+      localDirty: localDirty,
+      localGeneratedAt: local?.generatedAt,
+      remoteGeneratedAt: cloudGeneratedAt,
+    )) {
       return false;
     }
 
@@ -202,12 +233,58 @@ class MemorizationProductionSyncService {
     }
   }
 
+  Future<bool> _mergeCustomPlanFromCloud(
+    SupabaseClient client,
+    String userId,
+  ) async {
+    final localDirty = _prefs.getBool(customPlanCloudDirtyKey) ?? false;
+
+    final rows = await client
+        .from('custom_plans_cloud')
+        .select()
+        .eq('user_id', userId);
+    if (rows.isEmpty) return false;
+
+    final row = rows.first;
+    final updatedRaw = row['updated_at'];
+    if (updatedRaw is! String) return false;
+    final remoteUpdatedAt = DateTime.tryParse(updatedRaw);
+    if (remoteUpdatedAt == null ||
+        !CustomPlanCloudMerge.shouldApplyRemote(
+          localDirty: localDirty,
+          localUpdatedAt: _readCustomPlanLocalUpdatedAt(),
+          remoteUpdatedAt: remoteUpdatedAt,
+        )) {
+      return false;
+    }
+    final deletedAt = row['deleted_at'];
+    try {
+      if (deletedAt != null) {
+        await _datasource.deleteCustomPlan();
+        await _prefs.setBool(customPlanCloudDirtyKey, false);
+        await _writeCustomPlanLocalUpdatedAt(remoteUpdatedAt);
+        return true;
+      }
+      final payload = row['payload'];
+      if (payload is! Map<String, dynamic>) return false;
+      await _datasource.saveCustomPlan(
+        CustomMemorizationPlanModel.fromJson(payload),
+      );
+      await _prefs.setBool(customPlanCloudDirtyKey, false);
+      await _writeCustomPlanLocalUpdatedAt(remoteUpdatedAt);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<Either<Failure, void>> resyncProductionDataToCloud() async {
     try {
       if (!_isSupabaseReady) return const Right(null);
       final client = _supabase;
       final user = client.auth.currentUser;
       if (user == null) return const Right(null);
+      if (_owner.currentOwnerId != user.id) return const Right(null);
 
       final dirtyRecords = await _datasource.getCloudDirtyReviewRecords(
         includeAllAudiences: true,
@@ -216,24 +293,63 @@ class MemorizationProductionSyncService {
           .where(_isProductionReviewRecord)
           .toList();
       if (productionRecords.isNotEmpty) {
-        await _pushReviewRecordsBatch(client, productionRecords);
-        await _datasource.markReviewRecordsCloudSynced(
-          productionRecords.map(_reviewRecordStorageKey),
+        final acknowledgedKeys = await _pushReviewRecordsBatch(
+          client,
+          productionRecords,
         );
+        await _datasource.markReviewRecordsCloudSynced(acknowledgedKeys);
       }
 
       if (_prefs.getBool(dailyPlanCloudDirtyKey) ?? false) {
         final cachedPlan = await _datasource.getCachedDailyPlan();
         if (cachedPlan != null) {
           await _upsertDailyPlanRow(client, user.id, cachedPlan);
-          await _prefs.setBool(dailyPlanCloudDirtyKey, false);
         }
+        // Clear dirty even when cache is empty (e.g. cleared after custom-plan save).
+        await _prefs.setBool(dailyPlanCloudDirtyKey, false);
+      }
+
+      if (_prefs.getBool(customPlanCloudDirtyKey) ?? false) {
+        final syncedAt = await _upsertCustomPlanRow(client, user.id);
+        await _writeCustomPlanLocalUpdatedAt(syncedAt);
+        await _prefs.setBool(customPlanCloudDirtyKey, false);
       }
 
       return const Right(null);
     } catch (e) {
       // Best-effort resync: local state remains authoritative. The next
       // resume/login retry will pick up anything that failed here.
+      return Left(NetworkFailure(e.toString()));
+    }
+  }
+
+  /// Pulls certificate awards for the signed-in user.
+  ///
+  /// Cloud rows have no audience column yet, so callers should merge into the
+  /// adult list and recompute kids awards from local kids review records.
+  Future<Either<Failure, List<CertificateAward>>>
+  pullCertificatesFromCloud() async {
+    try {
+      if (!_isSupabaseReady) return const Right([]);
+      final client = _supabase;
+      final user = client.auth.currentUser;
+      if (user == null) return const Right([]);
+      if (_owner.currentOwnerId != user.id) return const Right([]);
+
+      final rows = await client
+          .from('certificate_awards_cloud')
+          .select()
+          .eq('user_id', user.id)
+          .order('earned_at', ascending: false);
+      final awards = rows
+          .cast<Map<String, dynamic>>()
+          .map(CertificateAward.fromCloudRow)
+          .toList();
+      if (awards.isNotEmpty) {
+        await _markCertificatesSynced(awards.map((c) => c.id));
+      }
+      return Right(awards);
+    } catch (e) {
       return Left(NetworkFailure(e.toString()));
     }
   }
@@ -291,6 +407,8 @@ class MemorizationProductionSyncService {
     );
     if (dirtyRecords.any(_isProductionReviewRecord)) return true;
     if (_prefs.getBool(dailyPlanCloudDirtyKey) ?? false) return true;
+    if (_prefs.getBool(customPlanCloudDirtyKey) ?? false) return true;
+    if (_hasUnsyncedCertificates()) return true;
 
     final logs = await _datasource.getKidsSessionLogs();
     if (logs.any((log) => !log.isSynced)) return true;
@@ -298,26 +416,46 @@ class MemorizationProductionSyncService {
     return isReviewPullCursorStale();
   }
 
-  String _reviewRecordStorageKey(AyahReviewRecord record) =>
-      ReviewRecordAudienceScope.storageKey(
-        surahId: record.surahId,
-        ayahNumber: record.ayahNumber,
-        mode: record.createdByMode,
-        scoped: ReviewRecordAudienceScope.isEnabled(
-          readBool: (key) => _prefs.getBool(key) ?? false,
-        ),
-      );
+  /// True when local earned certificates are missing from the synced-id set.
+  ///
+  /// Keys match [AchievementService] preference storage so resume/login keep
+  /// pushing until the cloud mirror acknowledges every award.
+  bool _hasUnsyncedCertificates() {
+    final synced = _syncedCertificateIds();
+    for (final key in const [
+      'earned_certificates_v2',
+      'earned_certificates_v2_kids',
+    ]) {
+      final raw = _prefs.getString(key);
+      if (raw == null || raw.isEmpty) continue;
+      try {
+        final decoded = jsonDecode(raw);
+        if (decoded is! List) continue;
+        for (final item in decoded) {
+          if (item is! Map) continue;
+          final id = item['id'];
+          if (id is String && id.isNotEmpty && !synced.contains(id)) {
+            return true;
+          }
+        }
+      } catch (_) {
+        // Corrupt local JSON must not block other pending work checks.
+      }
+    }
+    return false;
+  }
 
-  Future<void> _pushReviewRecordsBatch(
+  Future<Set<String>> _pushReviewRecordsBatch(
     SupabaseClient client,
     List<AyahReviewRecord> records,
   ) async {
-    if (records.isEmpty) return;
+    if (records.isEmpty) return <String>{};
     const chunkSize = 500;
+    final acknowledgedKeys = <String>{};
     for (var i = 0; i < records.length; i += chunkSize) {
       final end = min(i + chunkSize, records.length);
-      final payload = records
-          .sublist(i, end)
+      final batch = records.sublist(i, end);
+      final payload = batch
           .map(
             (r) => {
               'surah_id': r.surahId,
@@ -338,11 +476,33 @@ class MemorizationProductionSyncService {
             },
           )
           .toList();
-      await client.rpc(
-        'upsert_ayah_review_records',
-        params: {'p_data': payload},
-      );
+      try {
+        final response = await client.rpc(
+          'upsert_ayah_review_records_v2',
+          params: {'p_data': payload},
+        );
+        if (response is List) {
+          acknowledgedKeys.addAll(
+            ReviewRecordCloudPushAcknowledgement.storageKeys(
+              ownerUserId: _owner.currentOwnerId,
+              sentRecords: batch,
+              acknowledgedRows: response.whereType<Map<String, dynamic>>(),
+            ),
+          );
+        }
+      } on PostgrestException catch (e) {
+        if (!_gateway.isMissingRpc(e, 'upsert_ayah_review_records_v2')) {
+          rethrow;
+        }
+        // Old servers do not report conflict-rejected rows. Push for backwards
+        // compatibility but retain every dirty flag until the v2 RPC is live.
+        await client.rpc(
+          'upsert_ayah_review_records',
+          params: {'p_data': payload},
+        );
+      }
     }
+    return acknowledgedKeys;
   }
 
   Future<void> _upsertDailyPlanRow(
@@ -360,4 +520,39 @@ class MemorizationProductionSyncService {
       'updated_at': DateTime.now().toUtc().toIso8601String(),
     }, onConflict: 'user_id');
   }
+
+  Future<DateTime> _upsertCustomPlanRow(
+    SupabaseClient client,
+    String userId,
+  ) async {
+    final plan = await _datasource.getCustomPlan();
+    final now = DateTime.now().toUtc();
+    if (plan == null) {
+      await client.from('custom_plans_cloud').upsert({
+        'user_id': userId,
+        'payload': <String, dynamic>{},
+        'deleted_at': now.toIso8601String(),
+        'updated_at': now.toIso8601String(),
+      }, onConflict: 'user_id');
+      return now;
+    }
+    await client.from('custom_plans_cloud').upsert({
+      'user_id': userId,
+      'payload': CustomMemorizationPlanModel.fromEntity(plan).toJson(),
+      'deleted_at': null,
+      'updated_at': now.toIso8601String(),
+    }, onConflict: 'user_id');
+    return now;
+  }
+
+  DateTime? _readCustomPlanLocalUpdatedAt() {
+    final raw = _prefs.getString(PlanCloudDirtyKeys.customPlanLocalUpdatedAt);
+    return raw == null ? null : DateTime.tryParse(raw)?.toUtc();
+  }
+
+  Future<void> _writeCustomPlanLocalUpdatedAt(DateTime timestamp) =>
+      _prefs.setString(
+        PlanCloudDirtyKeys.customPlanLocalUpdatedAt,
+        timestamp.toUtc().toIso8601String(),
+      );
 }

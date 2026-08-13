@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -113,17 +114,27 @@ class _V2SessionViewState extends State<_V2SessionView> {
     return BlocConsumer<MemorizationSessionCubit, MemorizationSessionState>(
       listenWhen: (previous, current) {
         if (current is MSError) return true;
-        return current is MSCompleted && previous is! MSCompleted;
+        if (current is MSCompleted && previous is! MSCompleted) return true;
+        final prevActive = previous is MSActive ? previous : null;
+        final currActive = current is MSActive ? current : null;
+        return currActive != null &&
+            currActive.audioFailed &&
+            prevActive?.audioFailed != true;
       },
       listener: (context, state) {
         if (state is MSError) {
-          context.showSnackBar(state.message, isError: true);
+          context.showSnackBar(
+            context.localizedCubitMessage(state.message),
+            isError: true,
+          );
+          return;
+        }
+        if (state is MSActive && state.audioFailed) {
+          context.showSnackBar(context.l10n.v2AudioPlaybackFailed, isError: true);
           return;
         }
         if (state is MSCompleted && state.awards.isNotEmpty) {
-          unawaited(
-            showCertificateCelebrationDialog(context, state.awards),
-          );
+          unawaited(showCertificateCelebrationDialog(context, state.awards));
         }
       },
       builder: (context, state) {
@@ -133,19 +144,18 @@ class _V2SessionViewState extends State<_V2SessionView> {
           canPop: allowPop,
           onPopInvokedWithResult: (didPop, _) {
             unawaited(
-              _onPopInvoked(
-                didPop: didPop,
-                sessionAllowsPop: sessionAllowsPop,
-              ),
+              _onPopInvoked(didPop: didPop, sessionAllowsPop: sessionAllowsPop),
             );
           },
           child: Scaffold(
-            backgroundColor:
-                isDark ? AppColors.darkBackground : AppColors.lightBackground,
+            backgroundColor: isDark
+                ? AppColors.darkBackground
+                : AppColors.lightBackground,
             appBar: AppBar(
               title: Text(context.l10n.memorizationSessionTitle),
-              backgroundColor:
-                  isDark ? AppColors.darkSurface : AppColors.primary,
+              backgroundColor: isDark
+                  ? AppColors.darkSurface
+                  : AppColors.primary,
               foregroundColor: Colors.white,
             ),
             body: _buildBody(context, state),
@@ -161,7 +171,7 @@ class _V2SessionViewState extends State<_V2SessionView> {
     }
     if (state is MSError) {
       return ErrorStateWidget(
-        message: state.message,
+        message: context.localizedCubitMessage(state.message),
         onRetry: () => context.go(AppRoutes.memorizationPlus),
       );
     }
@@ -172,8 +182,7 @@ class _V2SessionViewState extends State<_V2SessionView> {
 
     return switch (state.sessionState.phase) {
       V2SessionPhase.created ||
-      V2SessionPhase.learning =>
-        V2LearningPage(state: state),
+      V2SessionPhase.learning => V2LearningPage(state: state),
       V2SessionPhase.memorizing => V2MemorizingPage(state: state),
       V2SessionPhase.reciting => V2RecitationPage(state: state),
       V2SessionPhase.remediation => V2RemediationPage(state: state),

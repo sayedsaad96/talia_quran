@@ -31,8 +31,8 @@ part 'kids_mode_state.dart';
 class KidsModeCubit extends Cubit<KidsModeState> {
   KidsModeCubit(
     this._getKidsProgress,
+    this._getKidsJourney,
     this._awardPoints,
-    this._saveKidsSessionLog,
     this._achievementService,
     this._quranRepository,
     this._sessionEngine,
@@ -60,8 +60,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   }
 
   final GetKidsProgressUsecase _getKidsProgress;
+  final GetKidsJourneyUsecase _getKidsJourney;
   final AwardKidsPointsUsecase _awardPoints;
-  final SaveKidsSessionLogUsecase _saveKidsSessionLog;
   final AchievementService _achievementService;
   final QuranRepository _quranRepository;
   final V2SessionEngine _sessionEngine;
@@ -92,6 +92,23 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   Future<void> load(int surahId, int ayahNumber, String ayahText) async {
     emit(const KidsModeLoading());
+
+    final journeyResult = await _getKidsJourney(
+      GetKidsJourneyParams(surahId: surahId),
+    );
+    final isUnlocked = journeyResult.fold(
+      (_) => false,
+      (stages) => stages.any(
+        (stage) =>
+            stage.isUnlocked &&
+            ayahNumber >= stage.startAyah &&
+            ayahNumber <= stage.endAyah,
+      ),
+    );
+    if (!isUnlocked) {
+      emit(const KidsModeError(CubitMessageCodes.kidsJourneyStageLocked));
+      return;
+    }
 
     String resolvedText = ayahText;
     if (resolvedText.isEmpty ||
@@ -226,9 +243,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     if (_loopCount < _maxLoops) {
       emit(st.copyWith(mustListenFirst: true));
       Future.delayed(const Duration(seconds: 2), () {
-        if (state is KidsModeLoaded) {
-          emit((state as KidsModeLoaded).copyWith(mustListenFirst: false));
-        }
+        if (isClosed || state is! KidsModeLoaded) return;
+        emit((state as KidsModeLoaded).copyWith(mustListenFirst: false));
       });
       return;
     }
@@ -353,9 +369,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       emit(st.copyWith(mustListenFirst: true));
       // Clear the flag after 2 seconds
       Future.delayed(const Duration(seconds: 2), () {
-        if (state is KidsModeLoaded) {
-          emit((state as KidsModeLoaded).copyWith(mustListenFirst: false));
-        }
+        if (isClosed || state is! KidsModeLoaded) return;
+        emit((state as KidsModeLoaded).copyWith(mustListenFirst: false));
       });
       return;
     }
@@ -384,20 +399,37 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         emit(
           st.copyWith(
             progress: completion.progress,
-            isCompleted: true,
+            isCompleted: false,
             sessionStarsEarned: 0,
+            recordingError: CubitMessageCodes.kidsAyahAlreadyCompleted,
+          ),
+        );
+        return;
+      }
+
+      final reviewResult = await _reviewAdapter.recordPass(
+        surahId: st.surahId,
+        ayahNumber: st.ayahNumber,
+        hintLevel: V2HintLevel.none,
+        createdByMode: ReviewRecordCreatedByMode.kidsMode,
+      );
+      final reviewFailure = reviewResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (reviewFailure != null) {
+        emit(
+          st.copyWith(
+            progress: completion.progress,
+            isCompleted: true,
+            sessionStarsEarned: completion.starsEarned,
+            recordingError: CubitMessageCodes.hifzReviewSaveFailed,
           ),
         );
         return;
       }
 
       final completedSession = _completeV2Session(st.sessionState);
-      await _reviewAdapter.recordPass(
-        surahId: st.surahId,
-        ayahNumber: st.ayahNumber,
-        hintLevel: V2HintLevel.none,
-        createdByMode: ReviewRecordCreatedByMode.kidsMode,
-      );
 
       // RISK-5 FIX: record streak & XP from Kids Mode — same as Hifz & Adults
       try {
@@ -407,16 +439,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         // Non-critical
       }
 
-      await _saveKidsSessionLog(
-        SaveKidsSessionLogParams(
-          surahId: st.surahId,
-          ayahNumber: st.ayahNumber,
-          repeatsCompleted: _loopCount,
-          pointsEarned: completion.pointsEarned,
-        ),
+      final newAwards = await _achievementService.checkAndUnlockCertificates(
+        isKids: true,
       );
-
-      final newAwards = await _achievementService.checkAndUnlockCertificates(isKids: true);
       await _appSessionService?.clearLastRestorableLocation();
       emit(
         st.copyWith(
@@ -520,6 +545,7 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
 
   final SpeechToText _speechToText;
   bool _speechEnabled = false;
+  void Function(KidsRecitationCaptureResult result)? _onCaptureFailure;
 
   // Tracks the latest words during an active session so stop() can flush them.
   String _latestRecognizedWords = '';
@@ -556,6 +582,11 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
       if (!internalCompleter.isCompleted) internalCompleter.complete(result);
     }
 
+    _onCaptureFailure = (result) {
+      completeInternal(result);
+      _completeIfOpen(externalCompleter, result);
+    };
+
     try {
       await _speechToText.listen(
         onResult: (SpeechRecognitionResult result) {
@@ -586,29 +617,33 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
 
     // Race: STT auto-finalizes OR user presses "Done" (externalCompleter).
     // On timeout, return whatever words were collected so far.
-    final result = await Future.any([
-      internalCompleter.future,
-      if (externalCompleter != null) externalCompleter.future,
-    ]).timeout(
-      const Duration(seconds: 35),
-      onTimeout: () async {
-        await _speechToText.stop();
-        return KidsRecitationCaptureResult.captured(
-          words: _latestRecognizedWords,
+    final result =
+        await Future.any([
+          internalCompleter.future,
+          if (externalCompleter != null) externalCompleter.future,
+        ]).timeout(
+          const Duration(seconds: 35),
+          onTimeout: () async {
+            await _speechToText.stop();
+            return KidsRecitationCaptureResult.captured(
+              words: _latestRecognizedWords,
+            );
+          },
         );
-      },
-    );
 
     // Always patch in the latest recognized words so the evaluator in
     // startRecording() has the most up-to-date text, regardless of which
     // completer fired (STT auto-final, user Done, or timeout).
-    if (!result.isError) {
-      return KidsRecitationCaptureResult.captured(
-        words: _latestRecognizedWords,
-      );
+    try {
+      if (!result.isError) {
+        return KidsRecitationCaptureResult.captured(
+          words: _latestRecognizedWords,
+        );
+      }
+      return result;
+    } finally {
+      _onCaptureFailure = null;
     }
-
-    return result;
   }
 
   @override
@@ -633,7 +668,11 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
 
   Future<bool> _initializeSpeech() {
     return _speechToText.initialize(
-      onError: (SpeechRecognitionError error) {},
+      onError: (SpeechRecognitionError error) {
+        _onCaptureFailure?.call(
+          const KidsRecitationCaptureResult.unavailable(),
+        );
+      },
       onStatus: (status) {},
     );
   }

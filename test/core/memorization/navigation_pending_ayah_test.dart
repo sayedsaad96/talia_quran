@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/pending_ayah_resolver.dart';
+import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
@@ -127,6 +128,33 @@ void main() {
 
       expect(targets.todayPlanLocation, contains('surahId=2'));
       expect(targets.todayPlanLocation, contains('startAyah=4'));
+    });
+
+    test('completed daily plan does not open a V2 session at ayah 1', () async {
+      final nav = MemorizationNavigationResolver(
+        _FakeRepository(
+          cachedPlan: DailyPlan(
+            generatedAt: DateTime.utc(2026, 7, 8),
+            surahId: 2,
+            newAyahs: const [
+              DailyPlanAyah(
+                surahId: 2,
+                ayahNumber: 1,
+                ayahText: 'text',
+                record: null,
+              ),
+            ],
+            nearRevision: const [],
+            farRevision: const [],
+            completedAyahNums: const [1],
+          ),
+        ),
+      );
+
+      final targets = await nav.resolve();
+
+      expect(targets.todayPlanLocation, AppRoutes.memorizationHub);
+      expect(targets.todayPlanLocation, isNot(contains('startAyah=1')));
     });
 
     test('practiceSurahSessionLocation resolves learning ayah for Hifz tile',

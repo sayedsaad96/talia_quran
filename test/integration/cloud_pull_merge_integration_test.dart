@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/memorization/remote_child_production_summary_builder.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/memorization/review_record_cloud_merge.dart';
@@ -42,9 +43,7 @@ void main() {
 
     setUp(() async {
       await _initializeIsarCoreForTests();
-      SharedPreferences.setMockInitialValues({
-        ReviewRecordAudienceScope.prefsKey: true,
-      });
+      SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final dir = await Directory.systemTemp.createTemp(
         'talia_cloud_pull_merge_',
@@ -61,7 +60,11 @@ void main() {
         }
       });
 
-      datasource = MemorizationPlusLocalDatasourceImpl(prefs, isar: isar);
+      datasource = MemorizationPlusLocalDatasourceImpl(
+        prefs,
+        isar: isar,
+        owner: const FixedRecordOwnerProvider('user-a'),
+      );
     });
 
     test('merges remote kids row without clobbering adult row', () async {

@@ -115,6 +115,20 @@ void main() {
         V2RemediationLevel.weakAyah,
       );
     });
+
+    test('does not return weak ayahs that passed in the same session', () {
+      var tracker = const V2AyahFailureTracker();
+      for (var i = 0; i < kWeakAyahFailureThreshold; i++) {
+        tracker = tracker.recordFailure(surahId: 1, ayahNumber: 1);
+      }
+      for (var i = 0; i < kWeakAyahFailureThreshold; i++) {
+        tracker = tracker.recordFailure(surahId: 1, ayahNumber: 2);
+      }
+
+      final weakAyahs = tracker.weakAyahsExcluding(const {1});
+
+      expect(weakAyahs.map((ayah) => ayah.ayahNumber), [2]);
+    });
   });
 }
 

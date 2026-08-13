@@ -1,5 +1,7 @@
 // lib/features/memorization_plus/presentation/pages/v2/v2_memorizing_page.dart
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -27,12 +29,9 @@ class V2MemorizingPage extends StatelessWidget {
     return V2PhaseScaffold(
       session: session,
       icon: Icons.psychology_rounded,
-      title: context.isArabic ? 'احفظ الآية' : 'Memorize the ayah',
-      subtitle: context.isArabic
-          ? 'درّب ذاكرتك. التلميحات متاحة هنا فقط.'
-          : 'Practice from memory. Hints are only available here.',
-      primaryActionLabel:
-          context.isArabic ? 'أنا جاهز للتسميع' : 'I am ready',
+      title: context.l10n.v2MemorizingTitle,
+      subtitle: context.l10n.v2MemorizingSubtitle,
+      primaryActionLabel: context.l10n.v2ReadyToRecite,
       primaryActionIcon: Icons.mic_rounded,
       onPrimaryAction: () =>
           context.read<MemorizationSessionCubit>().advanceToReciting(),
@@ -50,20 +49,22 @@ class V2MemorizingPage extends StatelessWidget {
           runSpacing: AppSpacing.sm,
           children: [
             V2HintButton(
-              label: context.isArabic ? 'أول كلمة' : 'First word',
+              label: context.l10n.v2FirstWordHint,
               icon: Icons.short_text_rounded,
-              onPressed: () =>
-                  context.read<MemorizationSessionCubit>().useHint(
-                    V2HintLevel.firstWord,
-                  ),
+              onPressed: () => unawaited(
+                context.read<MemorizationSessionCubit>().useHint(
+                  V2HintLevel.firstWord,
+                ),
+              ),
             ),
             V2HintButton(
-              label: context.isArabic ? 'إظهار الآية' : 'Show ayah',
+              label: context.l10n.v2ShowAyahHint,
               icon: Icons.visibility_rounded,
-              onPressed: () =>
-                  context.read<MemorizationSessionCubit>().useHint(
-                    V2HintLevel.fullAyah,
-                  ),
+              onPressed: () => unawaited(
+                context.read<MemorizationSessionCubit>().useHint(
+                  V2HintLevel.fullAyah,
+                ),
+              ),
             ),
           ],
         ),

@@ -13,6 +13,38 @@ const _removedLiterals = <String, List<String>>{
   'lib/features/azkar/presentation/pages/azkar_category_page.dart': [
     'اضغط مطولاً للتراجع',
   ],
+  'lib/features/memorization_plus/presentation/pages/v2/v2_learning_page.dart':
+      ['تعلّم الآية', 'Learn the ayah'],
+  'lib/features/memorization_plus/presentation/pages/v2/v2_memorizing_page.dart':
+      ['احفظ الآية', 'Memorize the ayah'],
+  'lib/features/memorization_plus/presentation/pages/v2/v2_recitation_page.dart':
+      ['سمّع من حفظك', 'Recite from memory'],
+  'lib/features/memorization_plus/presentation/pages/v2/v2_remediation_page.dart':
+      ['مراجعة قصيرة', 'Short remediation'],
+  'lib/features/memorization_plus/presentation/pages/v2/v2_block_review_page.dart':
+      ['مراجعة المقطع', 'Block review'],
+  'lib/features/memorization_plus/presentation/pages/v2/v2_completion_page.dart':
+      ['اكتملت الجلسة', 'Session complete'],
+  'lib/features/memorization_plus/presentation/widgets/kids_loading_widget.dart':
+      ['جاري التحضير...', 'يبدو أن شيئاً ما حدث!', 'حاول مرة أخرى'],
+  'lib/features/home/presentation/pages/home_page_widgets.dart': [
+    'راجع قبل الحفظ الجديد',
+    'Review before new content',
+    'مراجعة بعيدة مستحقة',
+    'Long-term review due',
+    'راجع الآية الصعبة',
+    'Review a difficult ayah',
+    'أكمل خطة اليوم',
+    "Continue today's plan",
+    'احفظ آيات جديدة',
+    'Memorize new ayahs',
+    'المهمة الحالية',
+    'Current Mission',
+    'متابعة جلسة الحفظ',
+    'Continue Session',
+    'مراجعة الحفظ مستحقة',
+    'Hifz review due',
+  ],
 };
 
 void main() {
@@ -29,12 +61,17 @@ void main() {
       expect(ar.hifzExcellentMemorization, 'ممتاز! حفظ متقن.');
       expect(ar.hifzNeedsAyahReview, 'تحتاج إلى مراجعة هذه الآية.');
       expect(ar.hifzNoVoiceRecognized, '(لم يتم التعرف على صوت)');
+      expect(ar.v2LearningTitle, 'تعلّم الآية');
+      expect(ar.v2BlockReviewSubtitle(1, 5), contains('1-5'));
+      expect(ar.kidsPreparing, 'جارٍ التحضير...');
       expect(ar.parentDashboardPinInvalid, 'أدخل رمزًا من 4 أرقام');
       expect(ar.parentDashboardPinIncorrect, 'رمز غير صحيح');
       expect(ar.bookmarkSaveError, isNotEmpty);
       expect(ar.longPressToUndo, isNotEmpty);
       expect(ar.hifzReviewRangeHint(1, 5), contains('1'));
       expect(ar.hifzReviewRangeHint(1, 5), contains('5'));
+      expect(ar.signOutPendingDataTitle, 'تقدم غير مزامن');
+      expect(ar.signOutAnyway, 'تسجيل الخروج على أي حال');
 
       expect(en.hifzStartRecitation, 'Start recitation');
       expect(en.hifzLeaveSessionMessage, contains('will be saved'));
@@ -44,9 +81,14 @@ void main() {
       expect(en.hifzExcellentMemorization, 'Excellent! Perfect memorization.');
       expect(en.hifzNeedsAyahReview, 'You need to review this Ayah.');
       expect(en.hifzNoVoiceRecognized, '(No voice recognized)');
+      expect(en.v2LearningTitle, 'Learn the ayah');
+      expect(en.v2BlockReviewSubtitle(1, 5), contains('1-5'));
+      expect(en.kidsPreparing, 'Getting things ready...');
       expect(en.parentDashboardLinking, isNotEmpty);
       expect(en.parentDashboardChildLinked, isNotEmpty);
       expect(en.guardianLinkingSlowHint, isNotEmpty);
+      expect(en.signOutPendingDataTitle, 'Unsynced progress');
+      expect(en.signOutAnyway, 'Sign out anyway');
       expect(en.hifzReviewRangeHint(2, 4), contains('2'));
       expect(en.hifzReviewRangeHint(2, 4), contains('4'));
     });
@@ -69,6 +111,5 @@ void main() {
         }
       });
     });
-
   });
 }

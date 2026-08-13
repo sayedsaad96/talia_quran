@@ -7,11 +7,12 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/navigation/memorization_navigation_resolver.dart';
+import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/custom_plan_cubit.dart';
 
 const List<int> _standardSurahAyahCounts = [
@@ -321,6 +322,20 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
     context.read<CustomPlanCubit>().savePlan(plan);
   }
 
+  Future<void> _goToSavedPlan(
+    BuildContext context,
+    CustomMemorizationPlan plan,
+  ) async {
+    final resolver = MemorizationNavigationResolver(
+      getIt<MemorizationPlusRepository>(),
+    );
+    final destination = plan.targetUser == PlanTargetUser.child
+        ? await resolver.childOnboardingLocation()
+        : await resolver.adultEntryLocation();
+    if (!context.mounted) return;
+    context.go(destination);
+  }
+
   Future<void> _showDeletePlanConfirmation(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -362,8 +377,9 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 ),
               ),
             );
-            // Navigate to memorization hub after plan is saved.
-            context.go(AppRoutes.memorizationHub);
+            // Navigate directly into the freshly saved plan (session/journey)
+            // instead of dropping the user back on the hub.
+            _goToSavedPlan(context, state.plan);
           } else if (state is CustomPlanLoaded) {
             _populateFromExisting(state.plan);
           }

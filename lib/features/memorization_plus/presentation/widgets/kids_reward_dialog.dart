@@ -9,14 +9,12 @@ class KidsRewardDialog extends StatelessWidget {
   const KidsRewardDialog({
     super.key,
     required this.starsEarned,
-    this.gemsEarned = 0,
     this.showNextButton = true,
     this.onNext,
     this.onReturnToMap,
   });
 
   final int starsEarned;
-  final int gemsEarned;
   final bool showNextButton;
   final VoidCallback? onNext;
   final VoidCallback? onReturnToMap;
@@ -68,12 +66,6 @@ class KidsRewardDialog extends StatelessWidget {
                 label: context.l10n.kidsGamifiedEarnedStars(starsEarned),
                 color: KidsTheme.goldStar,
               ),
-              if (gemsEarned > 0)
-                _RewardPill(
-                  icon: Icons.diamond_rounded,
-                  label: context.l10n.kidsGamifiedEarnedGems(gemsEarned),
-                  color: const Color(0xFF67E8F9),
-                ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -106,7 +98,7 @@ class KidsRewardDialog extends StatelessWidget {
                           ? Icons.arrow_back_rounded
                           : Icons.arrow_forward_rounded,
                     ),
-                    label: Text(context.l10n.kidsGamifiedNextStage),
+                    label: Text(context.l10n.kidsGamifiedStartMission),
                     style: FilledButton.styleFrom(
                       backgroundColor: KidsTheme.goldStar,
                       foregroundColor: KidsTheme.nightSkyDark,

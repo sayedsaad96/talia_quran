@@ -32,8 +32,8 @@ void main() {
     KidsModeCubit buildCubit({required KidsRecitationRecorder recorder}) =>
         KidsModeCubit(
           GetKidsProgressUsecase(repository),
+          GetKidsJourneyUsecase(repository),
           AwardKidsPointsUsecase(repository),
-          SaveKidsSessionLogUsecase(repository),
           achievementService,
           quranRepository,
           V2SessionEngine(),
@@ -94,10 +94,66 @@ void main() {
         expect(repository.markCalls, 1);
         expect(streakService.recordCalls, 1);
         expect(xpService.addCalls, 1);
-        expect(repository.saveLogCalls, 1);
+        expect(repository.awardLogWrites, 1);
+        expect(repository.saveLogCalls, 0);
         expect(achievementService.checkCalls, 1);
       },
     );
+
+    test('review record failure still awards points then emits error', () async {
+      repository.reviewWriteFailure = const CacheFailure('review write failed');
+      repository.awardCompleter = Completer()
+        ..complete(
+          const Right(
+            KidsCompletionResult(
+              progress: KidsProgress.initial(),
+              pointsEarned: 14,
+              starsEarned: 1,
+              alreadyCompleted: false,
+            ),
+          ),
+        );
+
+      await cubit.load(114, 1, 'ayah text');
+      cubit.debugSetLoopCount(3);
+
+      await cubit.markCompleted();
+
+      expect(cubit.state, isA<KidsModeLoaded>());
+      final loaded = cubit.state as KidsModeLoaded;
+      expect(loaded.isCompleted, isTrue);
+      expect(loaded.recordingError, CubitMessageCodes.hifzReviewSaveFailed);
+      expect(repository.markCalls, 1);
+      expect(repository.awardCalls, 1);
+      expect(repository.awardLogWrites, 1);
+      expect(repository.saveLogCalls, 0);
+    });
+
+    test('load rejects an ayah in a locked journey stage', () async {
+      repository.journey = const [
+        KidsJourneyStage(
+          stageNumber: 1,
+          surahId: 114,
+          startAyah: 1,
+          endAyah: 5,
+          completedAyahs: [],
+          status: KidsJourneyStageStatus.current,
+        ),
+        KidsJourneyStage(
+          stageNumber: 2,
+          surahId: 114,
+          startAyah: 6,
+          endAyah: 6,
+          completedAyahs: [],
+          status: KidsJourneyStageStatus.locked,
+        ),
+      ];
+
+      await cubit.load(114, 6, 'ayah text');
+
+      expect(cubit.state, isA<KidsModeError>());
+      expect(repository.getJourneyCalls, 1);
+    });
 
     test(
       'startRecording does not complete when no recitation is captured',
@@ -142,7 +198,9 @@ void main() {
 
       cubit = buildCubit(
         recorder: _FakeKidsRecitationRecorder(
-          result: const KidsRecitationCaptureResult.captured(words: 'ayah text'),
+          result: const KidsRecitationCaptureResult.captured(
+            words: 'ayah text',
+          ),
         ),
       );
 
@@ -155,8 +213,44 @@ void main() {
       expect(state.isCompleted, isTrue);
       expect(repository.awardCalls, 1);
       expect(repository.markCalls, 1);
-      expect(repository.saveLogCalls, 1);
+      expect(repository.awardLogWrites, 1);
+      expect(repository.saveLogCalls, 0);
     });
+
+    test(
+      'replay of an already-completed ayah does not record SRS pass',
+      () async {
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress.initial(),
+                pointsEarned: 0,
+                starsEarned: 0,
+                alreadyCompleted: true,
+              ),
+            ),
+          );
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+
+        await cubit.markCompleted();
+
+        expect(cubit.state, isA<KidsModeLoaded>());
+        final loaded = cubit.state as KidsModeLoaded;
+        expect(loaded.isCompleted, isFalse);
+        expect(loaded.sessionStarsEarned, 0);
+        expect(
+          loaded.recordingError,
+          CubitMessageCodes.kidsAyahAlreadyCompleted,
+        );
+        expect(repository.awardCalls, 1);
+        expect(repository.markCalls, 0);
+        expect(streakService.recordCalls, 0);
+        expect(xpService.addCalls, 0);
+      },
+    );
 
     test(
       'markCompleted records StreakService activity as the single streak source',
@@ -204,25 +298,51 @@ KidsSessionLog _sessionLog() => KidsSessionLog(
 
 class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
   Completer<Either<Failure, KidsCompletionResult>>? awardCompleter;
+  List<KidsJourneyStage> journey = const [
+    KidsJourneyStage(
+      stageNumber: 1,
+      surahId: 114,
+      startAyah: 1,
+      endAyah: 6,
+      completedAyahs: [],
+      status: KidsJourneyStageStatus.current,
+    ),
+  ];
   int awardCalls = 0;
+  int getJourneyCalls = 0;
   int markCalls = 0;
+  int awardLogWrites = 0;
   int saveLogCalls = 0;
+  Failure? reviewWriteFailure;
 
   @override
   Future<Either<Failure, KidsProgress>> getKidsProgress() async =>
       const Right(KidsProgress.initial());
 
   @override
+  Future<Either<Failure, List<KidsJourneyStage>>> getKidsJourney({
+    required int surahId,
+  }) async {
+    expect(surahId, 114);
+    getJourneyCalls++;
+    return Right(journey);
+  }
+
+  @override
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
     required int surahId,
     required int ayahNumber,
     required int repeatsCompleted,
-  }) {
+  }) async {
     expect(surahId, 114);
     expect(ayahNumber, 1);
     expect(repeatsCompleted, 3);
     awardCalls++;
-    return awardCompleter!.future;
+    final result = await awardCompleter!.future;
+    result.fold((_) {}, (completion) {
+      if (!completion.alreadyCompleted) awardLogWrites++;
+    });
+    return result;
   }
 
   @override
@@ -244,6 +364,8 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
     expect(record.ayahNumber, 1);
     expect(record.createdByMode, ReviewRecordCreatedByMode.kidsMode);
     markCalls++;
+    final failure = reviewWriteFailure;
+    if (failure != null) return Left(failure);
     return const Right(null);
   }
 
@@ -273,7 +395,9 @@ class _FakeAchievementService implements AchievementService {
   int checkCalls = 0;
 
   @override
-  Future<List<CertificateAward>> checkAndUnlockCertificates({required bool isKids}) async {
+  Future<List<CertificateAward>> checkAndUnlockCertificates({
+    required bool isKids,
+  }) async {
     checkCalls++;
     return const [];
   }

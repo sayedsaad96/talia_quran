@@ -176,6 +176,7 @@ void main() {
       strengthLevel: 0,
       reviewState: ReviewState.learning,
       lastRating: PerformanceRating.average,
+      createdByMode: ReviewRecordCreatedByMode.v2Session,
     );
     when(
       mockMemRepo.getAllReviewRecords(),
@@ -203,6 +204,7 @@ void main() {
         strengthLevel: 3,
         reviewState: ReviewState.relearning,
         lastRating: PerformanceRating.excellent,
+        createdByMode: ReviewRecordCreatedByMode.v2Session,
       ),
     );
     when(
@@ -217,6 +219,36 @@ void main() {
     // HomeCubit will prioritize p2CriticalAlert over p3ReviewBacklog.
     expect(state.heroAction!.priority, UnifiedJourneyPriority.p2CriticalAlert);
     expect(state.heroAction!.intent, JourneyIntent.review);
+  });
+
+  test('ignores kids rows when evaluating the adult review workload', () async {
+    final records = List.generate(
+      101,
+      (index) => AyahReviewRecord(
+        surahId: 1,
+        ayahNumber: index + 1,
+        lastReviewedAt: DateTime.now().subtract(const Duration(days: 5)),
+        nextReviewDate: DateTime.now().subtract(const Duration(days: 1)),
+        totalReviews: 3,
+        intervalDays: 5,
+        easeFactor: 2.5,
+        strengthLevel: 3,
+        reviewState: ReviewState.relearning,
+        lastRating: PerformanceRating.excellent,
+        createdByMode: ReviewRecordCreatedByMode.kidsMode,
+      ),
+    );
+    when(
+      mockMemRepo.getAllReviewRecords(),
+    ).thenAnswer((_) async => Right(records));
+
+    await cubit.load();
+    final state = cubit.state as HomeLoaded;
+
+    expect(
+      state.heroAction?.priority,
+      UnifiedJourneyPriority.p6FreeExploration,
+    );
   });
 
   test('Scenario 4: Smart Coach Recommendation emits P4 Action', () async {
@@ -280,43 +312,46 @@ void main() {
     },
   );
 
-  test('xp-only progress event refreshes totalXp without full reload', () async {
-    var progressLoads = 0;
-    when(mockGetProgress.call()).thenAnswer((_) async {
-      progressLoads++;
-      return const Right(
-        OverallProgress(
-          memorizedAyahs: 10,
-          totalAyahs: 100,
-          memorizedSurahs: 1,
-          totalSurahs: 114,
-          memorizedJuz: 0,
-          totalJuz: 30,
-          readAyahs: 50,
-          readSurahs: 2,
-          readJuz: 1,
-          streakDays: 5,
-          lastActiveDate: null,
-          achievements: [],
-          readPagesCount: 10,
-          totalQuranPages: 604,
-          learningAyahs: 5,
-          reviewAyahs: 5,
-        ),
-      );
-    });
+  test(
+    'xp-only progress event refreshes totalXp without full reload',
+    () async {
+      var progressLoads = 0;
+      when(mockGetProgress.call()).thenAnswer((_) async {
+        progressLoads++;
+        return const Right(
+          OverallProgress(
+            memorizedAyahs: 10,
+            totalAyahs: 100,
+            memorizedSurahs: 1,
+            totalSurahs: 114,
+            memorizedJuz: 0,
+            totalJuz: 30,
+            readAyahs: 50,
+            readSurahs: 2,
+            readJuz: 1,
+            streakDays: 5,
+            lastActiveDate: null,
+            achievements: [],
+            readPagesCount: 10,
+            totalQuranPages: 604,
+            learningAyahs: 5,
+            reviewAyahs: 5,
+          ),
+        );
+      });
 
-    await cubit.load();
-    expect((cubit.state as HomeLoaded).totalXp, 120);
-    expect(progressLoads, 1);
+      await cubit.load();
+      expect((cubit.state as HomeLoaded).totalXp, 120);
+      expect(progressLoads, 1);
 
-    xpService.totalXp = 250;
-    progressEvents.notify(ProgressChangedReason.xp);
-    await Future<void>.delayed(const Duration(milliseconds: 50));
+      xpService.totalXp = 250;
+      progressEvents.notify(ProgressChangedReason.xp);
+      await Future<void>.delayed(const Duration(milliseconds: 50));
 
-    expect((cubit.state as HomeLoaded).totalXp, 250);
-    expect(progressLoads, 1);
-  });
+      expect((cubit.state as HomeLoaded).totalXp, 250);
+      expect(progressLoads, 1);
+    },
+  );
 }
 
 class _FakeXpService implements XpService {

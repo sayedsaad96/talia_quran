@@ -1,4 +1,5 @@
 import '../../../../core/memorization/pending_ayah_resolver.dart';
+import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/router/app_router.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/memorization_plus_repository.dart';
@@ -34,11 +35,15 @@ class MemorizationNavigationResolver {
     final profile = await _profile();
     final customPlan = await _customPlan();
     final cachedPlan = await _cachedPlan();
-    final reviewRecords = await _reviewRecords();
+    final reviewRecords = await _reviewRecords(
+      profile?.isChild == true
+          ? ReviewRecordReadScope.kids
+          : ReviewRecordReadScope.adult,
+    );
     final cachedPlanSurahId = await _cachedPlanSurahId(customPlan, cachedPlan);
     final adultPlanSurahId =
         cachedPlanSurahId ?? await _activeAdultPlanSurahId(customPlan);
-    final quizSurahId = await _reviewQuizSurahId(cachedPlanSurahId);
+    final quizSurahId = await _reviewQuizSurahId(adultPlanSurahId);
     final kidsSurahId = await _activeKidsSurahId();
 
     return MemorizationNavigationTargets(
@@ -63,7 +68,7 @@ class MemorizationNavigationResolver {
   Future<String> adultEntryLocation() async {
     final customPlan = await _customPlan();
     final cachedPlan = await _cachedPlan();
-    final reviewRecords = await _reviewRecords();
+    final reviewRecords = await _reviewRecords(ReviewRecordReadScope.adult);
     final surahId =
         await _cachedPlanSurahId(customPlan, cachedPlan) ??
         await _activeAdultPlanSurahId(customPlan);
@@ -81,7 +86,7 @@ class MemorizationNavigationResolver {
     int? surahAyahCount,
   }) async {
     final cachedPlan = await _cachedPlan();
-    final reviewRecords = await _reviewRecords();
+    final reviewRecords = await _reviewRecords(ReviewRecordReadScope.adult);
     return _v2SessionLocation(
       surahId: surahId,
       intent: PendingAyahIntent.practiceSurah,
@@ -154,7 +159,9 @@ class MemorizationNavigationResolver {
   Future<int?> _reviewQuizSurahId(int? adultPlanSurahId) async {
     if (_isValidSurahId(adultPlanSurahId)) return adultPlanSurahId;
 
-    final result = await GetLastReviewedSurahIdUseCase(_repository)();
+    final result = await GetLastReviewedSurahIdUseCase(
+      _repository,
+    )(ReviewRecordReadScope.adult);
     return result.fold((_) => null, (surahId) => surahId);
   }
 
@@ -183,8 +190,10 @@ class MemorizationNavigationResolver {
     return result.fold((_) => null, (plan) => plan);
   }
 
-  Future<List<AyahReviewRecord>> _reviewRecords() async {
-    final result = await _repository.getAllReviewRecords();
+  Future<List<AyahReviewRecord>> _reviewRecords(
+    ReviewRecordReadScope scope,
+  ) async {
+    final result = await _repository.getAllReviewRecords(scope: scope);
     return result.fold((_) => <AyahReviewRecord>[], (records) => records);
   }
 
@@ -201,6 +210,13 @@ class MemorizationNavigationResolver {
     int? surahAyahCount,
   }) {
     if (!_isValidSurahId(surahId)) return AppRoutes.memorizationPlusCustomPlan;
+
+    if (intent == PendingAyahIntent.continueDailyPlan &&
+        cachedPlan != null &&
+        cachedPlan.surahId == surahId &&
+        cachedPlan.isRequiredPlanCompleted) {
+      return AppRoutes.memorizationHub;
+    }
 
     final target = _pendingAyahResolver.resolve(
       PendingAyahResolverInput(

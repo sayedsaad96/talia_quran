@@ -8,6 +8,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/datasources/bookmark_service.dart';
+import '../../domain/bookmark_reader_location.dart';
 
 /// Dedicated bookmarks browser showing all saved ayahs grouped by Surah.
 class BookmarksTab extends StatefulWidget {
@@ -54,8 +55,7 @@ class _BookmarksTabState extends State<BookmarksTab> {
               entries: entries,
               isDark: isDark,
               onTap: (entry) {
-                // Navigate to surah detail — the surah list will show the correct surah
-                context.push('/quran/surah/${entry.surahId}');
+                context.push(bookmarkReaderLocation(entry));
               },
               onDismissed: _removeBookmark,
             ).animate().fadeIn(

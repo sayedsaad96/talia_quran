@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../theme/kids_theme.dart';
 
@@ -24,7 +25,7 @@ class KidsLoadingWidget extends StatelessWidget {
               ),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'جاري التحضير...',
+            context.l10n.kidsPreparing,
             style: AppTypography.titleSmall.copyWith(
               fontFamily: 'Amiri',
               color: KidsTheme.goldStar,
@@ -50,7 +51,7 @@ class KidsErrorWidget extends StatelessWidget {
           const Icon(Icons.home_rounded, size: 64, color: KidsTheme.goldStar),
           const SizedBox(height: AppSpacing.md),
           Text(
-            'يبدو أن شيئاً ما حدث!',
+            context.l10n.kidsUnexpectedError,
             style: AppTypography.titleMedium.copyWith(
               fontFamily: 'Amiri',
               color: Colors.white,
@@ -63,7 +64,7 @@ class KidsErrorWidget extends StatelessWidget {
               backgroundColor: KidsTheme.goldStar,
               foregroundColor: Colors.black,
             ),
-            child: const Text('حاول مرة أخرى'),
+            child: Text(context.l10n.tryAgain),
           ),
         ],
       ),

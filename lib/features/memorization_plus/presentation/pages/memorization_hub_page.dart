@@ -49,6 +49,20 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
     });
   }
 
+  /// Resolves the adult destination fresh at tap-time so a newly saved plan is
+  /// honoured even though this hub is kept alive inside the IndexedStack shell
+  /// (its cached [_hubFuture] would otherwise still point at plan setup).
+  Future<void> _openAdultTarget({required bool isReview}) async {
+    final repository = getIt<MemorizationPlusRepository>();
+    final targets = await MemorizationNavigationResolver(repository).resolve();
+    if (!mounted) return;
+    final route = isReview
+        ? targets.reviewQuizLocation
+        : targets.todayPlanLocation;
+    await context.push(route);
+    if (mounted) _retryTargets();
+  }
+
   Future<void> _confirmPathSelection(
     BuildContext context, {
     required MemorizationPath path,
@@ -195,7 +209,6 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
   ) {
     final profile = targets?.profile;
     if (profile?.isAdult == true) {
-      final adultTargets = targets!;
       return [
         _HubSectionHeader(
           title: context.l10n.dailyPlanHeaderTitle,
@@ -209,15 +222,16 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           _HubDailyPlanSummaryCard(plan: dailyPlan, isDark: isDark),
         if (dailyPlan != null && dailyPlan.totalItems > 0)
           const SizedBox(height: AppSpacing.sm),
-        _HubActionCard.primary(
-          icon: Icons.today_rounded,
-          title: context.isArabic ? 'أكمل خطة اليوم' : "Continue Today's Plan",
-          description: context.isArabic
-              ? 'افتح ورد الحفظ والمراجعة الحالي.'
-              : 'Open your current memorization and review plan.',
-          route: adultTargets.todayPlanLocation,
-          isDark: isDark,
-        ),
+        if (dailyPlan?.isRequiredPlanCompleted != true)
+          _HubActionCard.primary(
+            icon: Icons.today_rounded,
+            title: context.isArabic ? 'أكمل خطة اليوم' : "Continue Today's Plan",
+            description: context.isArabic
+                ? 'افتح ورد الحفظ والمراجعة الحالي.'
+                : 'Open your current memorization and review plan.',
+            onTap: () => _openAdultTarget(isReview: false),
+            isDark: isDark,
+          ),
         const SizedBox(height: AppSpacing.sm),
         _HubActionCard(
           icon: Icons.checklist_rounded,
@@ -258,7 +272,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           icon: Icons.mic_rounded,
           title: context.l10n.reviewQuizTitle,
           description: context.l10n.memorizationHubReviewCardDescription,
-          route: adultTargets.reviewQuizLocation,
+          onTap: () => _openAdultTarget(isReview: true),
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -547,22 +561,27 @@ class _HubActionCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.description,
-    required this.route,
     required this.isDark,
-  }) : primary = false;
+    this.route,
+    this.onTap,
+  }) : primary = false,
+       assert(route != null || onTap != null, 'route or onTap required');
 
   const _HubActionCard.primary({
     required this.icon,
     required this.title,
     required this.description,
-    required this.route,
     required this.isDark,
-  }) : primary = true;
+    this.route,
+    this.onTap,
+  }) : primary = true,
+       assert(route != null || onTap != null, 'route or onTap required');
 
   final IconData icon;
   final String title;
   final String description;
-  final String route;
+  final String? route;
+  final VoidCallback? onTap;
   final bool isDark;
   final bool primary;
 
@@ -578,7 +597,7 @@ class _HubActionCard extends StatelessWidget {
         : AppColors.lightTextSecondary;
 
     return InkWell(
-      onTap: () => context.push(route),
+      onTap: onTap ?? () => context.push(route!),
       borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),

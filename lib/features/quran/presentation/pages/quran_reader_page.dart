@@ -739,7 +739,11 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
         }
       });
     } catch (_) {
-      if (mounted) setState(() => _isPlaying = false);
+      if (!mounted) return;
+      setState(() => _isPlaying = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.v2AudioPlaybackFailed)),
+      );
     }
   }
 

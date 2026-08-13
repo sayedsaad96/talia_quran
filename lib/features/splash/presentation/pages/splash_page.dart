@@ -33,8 +33,10 @@ class _SplashPageState extends State<SplashPage> {
 
   Future<void> _runInitialization() async {
     if (AppInitializer.isInitialized) {
-      // Already initialized (e.g. hot restart) — navigate immediately.
-      _navigateToNextScreen();
+      // Already initialized (e.g. hot restart) — route after the current build.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigateToNextScreen();
+      });
       return;
     }
 
@@ -51,15 +53,10 @@ class _SplashPageState extends State<SplashPage> {
       );
 
       // Signal to TaliaApp that initialization is complete so it can
-      // rebuild with the full BlocProvider tree and GoRouter.
+      // rebuild with the full BlocProvider tree and GoRouter. Launch
+      // destination (onboarding / notification) is applied there because
+      // this SplashPage is disposed when the splash-only router is swapped.
       appInitializedNotifier.value = true;
-
-      // Give the framework time to display full 100% progress animation smoothly before navigation.
-      await Future<void>.delayed(const Duration(milliseconds: 500));
-
-      if (mounted) {
-        _navigateToNextScreen();
-      }
     } catch (error, stack) {
       TaliaLogger.e('Splash initialization failed', error, stack);
       if (mounted) {

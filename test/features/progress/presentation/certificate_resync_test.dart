@@ -57,12 +57,27 @@ void main() {
       memPlusRepository.pullProductionDataFromCloud(),
     ).thenAnswer((_) async => const Right(null));
     when(
+      memPlusRepository.pullCertificatesFromCloud(),
+    ).thenAnswer((_) async => const Right([]));
+    when(
+      memPlusRepository.pullKidsProgressFromCloud(),
+    ).thenAnswer((_) async => const Right(null));
+    when(
       memPlusRepository.resyncProductionDataToCloud(),
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      memPlusRepository.syncKidsProgressToCloud(),
     ).thenAnswer((_) async => const Right(null));
     when(
       memPlusRepository.pushCertificatesToCloud([certificate]),
     ).thenAnswer((_) async => const Right(null));
     when(achievementService.getAllEarnedCertificates()).thenReturn([certificate]);
+    when(
+      achievementService.mergeEarnedFromCloud(any, isKids: anyNamed('isKids')),
+    ).thenAnswer((_) async => 0);
+    when(
+      achievementService.checkAndUnlockCertificates(isKids: anyNamed('isKids')),
+    ).thenAnswer((_) async => const []);
   });
 
   tearDown(() async {
@@ -83,8 +98,11 @@ void main() {
     verifyInOrder([
       authRepository.pullProgressFromCloud(),
       memPlusRepository.pullProductionDataFromCloud(),
+      memPlusRepository.pullCertificatesFromCloud(),
+      memPlusRepository.pullKidsProgressFromCloud(),
       authRepository.syncProgressToCloud(),
       memPlusRepository.resyncProductionDataToCloud(),
+      memPlusRepository.syncKidsProgressToCloud(),
       achievementService.getAllEarnedCertificates(),
       memPlusRepository.pushCertificatesToCloud([certificate]),
     ]);

@@ -18,123 +18,133 @@ const IsarAyahReviewRecordSchema = CollectionSchema(
   name: r'IsarAyahReviewRecord',
   id: 2628122786368261413,
   properties: {
-    r'ayahNumber': PropertySchema(
+    r'audience': PropertySchema(
       id: 0,
+      name: r'audience',
+      type: IsarType.string,
+    ),
+    r'ayahNumber': PropertySchema(
+      id: 1,
       name: r'ayahNumber',
       type: IsarType.long,
     ),
     r'cloudDirty': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'cloudDirty',
       type: IsarType.bool,
     ),
     r'compositeKey': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'compositeKey',
       type: IsarType.string,
     ),
     r'createdByModeIndex': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'createdByModeIndex',
       type: IsarType.long,
     ),
     r'difficulty': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'difficulty',
       type: IsarType.double,
     ),
     r'easeFactor': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'easeFactor',
       type: IsarType.double,
     ),
     r'intervalDays': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'intervalDays',
       type: IsarType.long,
     ),
     r'lapses': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'lapses',
       type: IsarType.long,
     ),
     r'lastRatingIndex': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'lastRatingIndex',
       type: IsarType.long,
     ),
     r'lastReviewedAt': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'lastReviewedAt',
       type: IsarType.dateTime,
     ),
     r'lastSyncedAt': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'lastSyncedAt',
       type: IsarType.dateTime,
     ),
     r'nextReviewDate': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'nextReviewDate',
       type: IsarType.dateTime,
     ),
+    r'ownerUserId': PropertySchema(
+      id: 13,
+      name: r'ownerUserId',
+      type: IsarType.string,
+    ),
     r'predictedFsrsDueDate': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'predictedFsrsDueDate',
       type: IsarType.dateTime,
     ),
     r'predictedFsrsIntervalDays': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'predictedFsrsIntervalDays',
       type: IsarType.long,
     ),
     r'predictedRecallProbability': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'predictedRecallProbability',
       type: IsarType.double,
     ),
     r'predictedRetrievability': PropertySchema(
-      id: 15,
+      id: 17,
       name: r'predictedRetrievability',
       type: IsarType.double,
     ),
     r'reviewStateIndex': PropertySchema(
-      id: 16,
+      id: 18,
       name: r'reviewStateIndex',
       type: IsarType.long,
     ),
     r'schedulerEarlierThanFsrs': PropertySchema(
-      id: 17,
+      id: 19,
       name: r'schedulerEarlierThanFsrs',
       type: IsarType.bool,
     ),
     r'schedulerVsFsrsGapDays': PropertySchema(
-      id: 18,
+      id: 20,
       name: r'schedulerVsFsrsGapDays',
       type: IsarType.long,
     ),
     r'schedulerVsFsrsRatio': PropertySchema(
-      id: 19,
+      id: 21,
       name: r'schedulerVsFsrsRatio',
       type: IsarType.double,
     ),
     r'stability': PropertySchema(
-      id: 20,
+      id: 22,
       name: r'stability',
       type: IsarType.double,
     ),
     r'strengthLevel': PropertySchema(
-      id: 21,
+      id: 23,
       name: r'strengthLevel',
       type: IsarType.long,
     ),
     r'surahId': PropertySchema(
-      id: 22,
+      id: 24,
       name: r'surahId',
       type: IsarType.long,
     ),
     r'totalReviews': PropertySchema(
-      id: 23,
+      id: 25,
       name: r'totalReviews',
       type: IsarType.long,
     )
@@ -157,6 +167,32 @@ const IsarAyahReviewRecordSchema = CollectionSchema(
           caseSensitive: true,
         )
       ],
+    ),
+    r'ownerUserId': IndexSchema(
+      id: 1631799950038639233,
+      name: r'ownerUserId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'ownerUserId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'audience': IndexSchema(
+      id: -6290508362283539773,
+      name: r'audience',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'audience',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
   links: {},
@@ -173,7 +209,19 @@ int _isarAyahReviewRecordEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.audience;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   bytesCount += 3 + object.compositeKey.length * 3;
+  {
+    final value = object.ownerUserId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -183,30 +231,32 @@ void _isarAyahReviewRecordSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.ayahNumber);
-  writer.writeBool(offsets[1], object.cloudDirty);
-  writer.writeString(offsets[2], object.compositeKey);
-  writer.writeLong(offsets[3], object.createdByModeIndex);
-  writer.writeDouble(offsets[4], object.difficulty);
-  writer.writeDouble(offsets[5], object.easeFactor);
-  writer.writeLong(offsets[6], object.intervalDays);
-  writer.writeLong(offsets[7], object.lapses);
-  writer.writeLong(offsets[8], object.lastRatingIndex);
-  writer.writeDateTime(offsets[9], object.lastReviewedAt);
-  writer.writeDateTime(offsets[10], object.lastSyncedAt);
-  writer.writeDateTime(offsets[11], object.nextReviewDate);
-  writer.writeDateTime(offsets[12], object.predictedFsrsDueDate);
-  writer.writeLong(offsets[13], object.predictedFsrsIntervalDays);
-  writer.writeDouble(offsets[14], object.predictedRecallProbability);
-  writer.writeDouble(offsets[15], object.predictedRetrievability);
-  writer.writeLong(offsets[16], object.reviewStateIndex);
-  writer.writeBool(offsets[17], object.schedulerEarlierThanFsrs);
-  writer.writeLong(offsets[18], object.schedulerVsFsrsGapDays);
-  writer.writeDouble(offsets[19], object.schedulerVsFsrsRatio);
-  writer.writeDouble(offsets[20], object.stability);
-  writer.writeLong(offsets[21], object.strengthLevel);
-  writer.writeLong(offsets[22], object.surahId);
-  writer.writeLong(offsets[23], object.totalReviews);
+  writer.writeString(offsets[0], object.audience);
+  writer.writeLong(offsets[1], object.ayahNumber);
+  writer.writeBool(offsets[2], object.cloudDirty);
+  writer.writeString(offsets[3], object.compositeKey);
+  writer.writeLong(offsets[4], object.createdByModeIndex);
+  writer.writeDouble(offsets[5], object.difficulty);
+  writer.writeDouble(offsets[6], object.easeFactor);
+  writer.writeLong(offsets[7], object.intervalDays);
+  writer.writeLong(offsets[8], object.lapses);
+  writer.writeLong(offsets[9], object.lastRatingIndex);
+  writer.writeDateTime(offsets[10], object.lastReviewedAt);
+  writer.writeDateTime(offsets[11], object.lastSyncedAt);
+  writer.writeDateTime(offsets[12], object.nextReviewDate);
+  writer.writeString(offsets[13], object.ownerUserId);
+  writer.writeDateTime(offsets[14], object.predictedFsrsDueDate);
+  writer.writeLong(offsets[15], object.predictedFsrsIntervalDays);
+  writer.writeDouble(offsets[16], object.predictedRecallProbability);
+  writer.writeDouble(offsets[17], object.predictedRetrievability);
+  writer.writeLong(offsets[18], object.reviewStateIndex);
+  writer.writeBool(offsets[19], object.schedulerEarlierThanFsrs);
+  writer.writeLong(offsets[20], object.schedulerVsFsrsGapDays);
+  writer.writeDouble(offsets[21], object.schedulerVsFsrsRatio);
+  writer.writeDouble(offsets[22], object.stability);
+  writer.writeLong(offsets[23], object.strengthLevel);
+  writer.writeLong(offsets[24], object.surahId);
+  writer.writeLong(offsets[25], object.totalReviews);
 }
 
 IsarAyahReviewRecord _isarAyahReviewRecordDeserialize(
@@ -216,31 +266,33 @@ IsarAyahReviewRecord _isarAyahReviewRecordDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = IsarAyahReviewRecord();
-  object.ayahNumber = reader.readLong(offsets[0]);
-  object.cloudDirty = reader.readBoolOrNull(offsets[1]);
-  object.compositeKey = reader.readString(offsets[2]);
-  object.createdByModeIndex = reader.readLongOrNull(offsets[3]);
-  object.difficulty = reader.readDoubleOrNull(offsets[4]);
-  object.easeFactor = reader.readDoubleOrNull(offsets[5]);
+  object.audience = reader.readStringOrNull(offsets[0]);
+  object.ayahNumber = reader.readLong(offsets[1]);
+  object.cloudDirty = reader.readBoolOrNull(offsets[2]);
+  object.compositeKey = reader.readString(offsets[3]);
+  object.createdByModeIndex = reader.readLongOrNull(offsets[4]);
+  object.difficulty = reader.readDoubleOrNull(offsets[5]);
+  object.easeFactor = reader.readDoubleOrNull(offsets[6]);
   object.id = id;
-  object.intervalDays = reader.readLong(offsets[6]);
-  object.lapses = reader.readLongOrNull(offsets[7]);
-  object.lastRatingIndex = reader.readLongOrNull(offsets[8]);
-  object.lastReviewedAt = reader.readDateTime(offsets[9]);
-  object.lastSyncedAt = reader.readDateTimeOrNull(offsets[10]);
-  object.nextReviewDate = reader.readDateTime(offsets[11]);
-  object.predictedFsrsDueDate = reader.readDateTimeOrNull(offsets[12]);
-  object.predictedFsrsIntervalDays = reader.readLongOrNull(offsets[13]);
-  object.predictedRecallProbability = reader.readDoubleOrNull(offsets[14]);
-  object.predictedRetrievability = reader.readDoubleOrNull(offsets[15]);
-  object.reviewStateIndex = reader.readLongOrNull(offsets[16]);
-  object.schedulerEarlierThanFsrs = reader.readBoolOrNull(offsets[17]);
-  object.schedulerVsFsrsGapDays = reader.readLongOrNull(offsets[18]);
-  object.schedulerVsFsrsRatio = reader.readDoubleOrNull(offsets[19]);
-  object.stability = reader.readDoubleOrNull(offsets[20]);
-  object.strengthLevel = reader.readLong(offsets[21]);
-  object.surahId = reader.readLong(offsets[22]);
-  object.totalReviews = reader.readLong(offsets[23]);
+  object.intervalDays = reader.readLong(offsets[7]);
+  object.lapses = reader.readLongOrNull(offsets[8]);
+  object.lastRatingIndex = reader.readLongOrNull(offsets[9]);
+  object.lastReviewedAt = reader.readDateTime(offsets[10]);
+  object.lastSyncedAt = reader.readDateTimeOrNull(offsets[11]);
+  object.nextReviewDate = reader.readDateTime(offsets[12]);
+  object.ownerUserId = reader.readStringOrNull(offsets[13]);
+  object.predictedFsrsDueDate = reader.readDateTimeOrNull(offsets[14]);
+  object.predictedFsrsIntervalDays = reader.readLongOrNull(offsets[15]);
+  object.predictedRecallProbability = reader.readDoubleOrNull(offsets[16]);
+  object.predictedRetrievability = reader.readDoubleOrNull(offsets[17]);
+  object.reviewStateIndex = reader.readLongOrNull(offsets[18]);
+  object.schedulerEarlierThanFsrs = reader.readBoolOrNull(offsets[19]);
+  object.schedulerVsFsrsGapDays = reader.readLongOrNull(offsets[20]);
+  object.schedulerVsFsrsRatio = reader.readDoubleOrNull(offsets[21]);
+  object.stability = reader.readDoubleOrNull(offsets[22]);
+  object.strengthLevel = reader.readLong(offsets[23]);
+  object.surahId = reader.readLong(offsets[24]);
+  object.totalReviews = reader.readLong(offsets[25]);
   return object;
 }
 
@@ -252,52 +304,56 @@ P _isarAyahReviewRecordDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 2:
-      return (reader.readString(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 3:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 4:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 5:
       return (reader.readDoubleOrNull(offset)) as P;
     case 6:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 7:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 8:
       return (reader.readLongOrNull(offset)) as P;
     case 9:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 10:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 11:
       return (reader.readDateTime(offset)) as P;
-    case 12:
+    case 11:
       return (reader.readDateTimeOrNull(offset)) as P;
+    case 12:
+      return (reader.readDateTime(offset)) as P;
     case 13:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 14:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 15:
-      return (reader.readDoubleOrNull(offset)) as P;
-    case 16:
       return (reader.readLongOrNull(offset)) as P;
+    case 16:
+      return (reader.readDoubleOrNull(offset)) as P;
     case 17:
-      return (reader.readBoolOrNull(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 18:
       return (reader.readLongOrNull(offset)) as P;
     case 19:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 20:
-      return (reader.readDoubleOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 21:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 22:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDoubleOrNull(offset)) as P;
     case 23:
+      return (reader.readLong(offset)) as P;
+    case 24:
+      return (reader.readLong(offset)) as P;
+    case 25:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -500,10 +556,300 @@ extension IsarAyahReviewRecordQueryWhere
       }
     });
   }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
+      ownerUserIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'ownerUserId',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
+      ownerUserIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'ownerUserId',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
+      ownerUserIdEqualTo(String? ownerUserId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'ownerUserId',
+        value: [ownerUserId],
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
+      ownerUserIdNotEqualTo(String? ownerUserId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUserId',
+              lower: [],
+              upper: [ownerUserId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUserId',
+              lower: [ownerUserId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUserId',
+              lower: [ownerUserId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerUserId',
+              lower: [],
+              upper: [ownerUserId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
+      audienceIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'audience',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
+      audienceIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'audience',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
+      audienceEqualTo(String? audience) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'audience',
+        value: [audience],
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterWhereClause>
+      audienceNotEqualTo(String? audience) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'audience',
+              lower: [],
+              upper: [audience],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'audience',
+              lower: [audience],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'audience',
+              lower: [audience],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'audience',
+              lower: [],
+              upper: [audience],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
 }
 
 extension IsarAyahReviewRecordQueryFilter on QueryBuilder<IsarAyahReviewRecord,
     IsarAyahReviewRecord, QFilterCondition> {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> audienceIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'audience',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> audienceIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'audience',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> audienceEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'audience',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> audienceGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'audience',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> audienceLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'audience',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> audienceBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'audience',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> audienceStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'audience',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> audienceEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'audience',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+          QAfterFilterCondition>
+      audienceContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'audience',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+          QAfterFilterCondition>
+      audienceMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'audience',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> audienceIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'audience',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> audienceIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'audience',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
       QAfterFilterCondition> ayahNumberEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
@@ -1415,6 +1761,162 @@ extension IsarAyahReviewRecordQueryFilter on QueryBuilder<IsarAyahReviewRecord,
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ownerUserIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'ownerUserId',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ownerUserIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'ownerUserId',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ownerUserIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ownerUserIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ownerUserIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ownerUserIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ownerUserId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ownerUserIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ownerUserIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+          QAfterFilterCondition>
+      ownerUserIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'ownerUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+          QAfterFilterCondition>
+      ownerUserIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'ownerUserId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ownerUserIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerUserId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
+      QAfterFilterCondition> ownerUserIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'ownerUserId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord,
       QAfterFilterCondition> predictedFsrsDueDateIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -2252,6 +2754,20 @@ extension IsarAyahReviewRecordQueryLinks on QueryBuilder<IsarAyahReviewRecord,
 extension IsarAyahReviewRecordQuerySortBy
     on QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QSortBy> {
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByAudience() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'audience', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByAudienceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'audience', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
       sortByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ayahNumber', Sort.asc);
@@ -2416,6 +2932,20 @@ extension IsarAyahReviewRecordQuerySortBy
       sortByNextReviewDateDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'nextReviewDate', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByOwnerUserId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerUserId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      sortByOwnerUserIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerUserId', Sort.desc);
     });
   }
 
@@ -2590,6 +3120,20 @@ extension IsarAyahReviewRecordQuerySortBy
 
 extension IsarAyahReviewRecordQuerySortThenBy
     on QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QSortThenBy> {
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByAudience() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'audience', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByAudienceDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'audience', Sort.desc);
+    });
+  }
+
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
       thenByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
@@ -2773,6 +3317,20 @@ extension IsarAyahReviewRecordQuerySortThenBy
   }
 
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByOwnerUserId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerUserId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
+      thenByOwnerUserIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'ownerUserId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QAfterSortBy>
       thenByPredictedFsrsDueDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'predictedFsrsDueDate', Sort.asc);
@@ -2944,6 +3502,13 @@ extension IsarAyahReviewRecordQuerySortThenBy
 extension IsarAyahReviewRecordQueryWhereDistinct
     on QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct> {
   QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctByAudience({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'audience', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
       distinctByAyahNumber() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'ayahNumber');
@@ -3024,6 +3589,13 @@ extension IsarAyahReviewRecordQueryWhereDistinct
       distinctByNextReviewDate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'nextReviewDate');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, IsarAyahReviewRecord, QDistinct>
+      distinctByOwnerUserId({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'ownerUserId', caseSensitive: caseSensitive);
     });
   }
 
@@ -3120,6 +3692,13 @@ extension IsarAyahReviewRecordQueryProperty on QueryBuilder<
     });
   }
 
+  QueryBuilder<IsarAyahReviewRecord, String?, QQueryOperations>
+      audienceProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'audience');
+    });
+  }
+
   QueryBuilder<IsarAyahReviewRecord, int, QQueryOperations>
       ayahNumberProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -3200,6 +3779,13 @@ extension IsarAyahReviewRecordQueryProperty on QueryBuilder<
       nextReviewDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'nextReviewDate');
+    });
+  }
+
+  QueryBuilder<IsarAyahReviewRecord, String?, QQueryOperations>
+      ownerUserIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'ownerUserId');
     });
   }
 

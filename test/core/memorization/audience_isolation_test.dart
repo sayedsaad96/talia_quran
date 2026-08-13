@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
@@ -51,9 +52,7 @@ void main() {
 
     setUp(() async {
       await _initializeIsarCoreForTests();
-      SharedPreferences.setMockInitialValues({
-        ReviewRecordAudienceScope.prefsKey: true,
-      });
+      SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final dir = await Directory.systemTemp.createTemp('talia_audience_b4_');
       isar = await Isar.open(
@@ -68,7 +67,11 @@ void main() {
         }
       });
 
-      datasource = MemorizationPlusLocalDatasourceImpl(prefs, isar: isar);
+      datasource = MemorizationPlusLocalDatasourceImpl(
+        prefs,
+        isar: isar,
+        owner: const FixedRecordOwnerProvider('user-a'),
+      );
       progressEvents = ProgressEventsBus();
       repository = MemorizationPlusRepositoryImpl(
         datasource,

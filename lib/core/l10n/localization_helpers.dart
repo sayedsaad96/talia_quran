@@ -159,20 +159,18 @@ extension TaliaLocalizationHelpers on BuildContext {
       CubitMessageCodes.hifzReviewSaveFailed => l10n.hifzReviewSaveFailed,
       CubitMessageCodes.hifzMemorizationSaveFailed =>
         l10n.hifzMemorizationSaveFailed,
+      CubitMessageCodes.v2SurahLoadFailed => l10n.v2SurahLoadFailed,
+      CubitMessageCodes.v2NoAyahsInRange => l10n.v2NoAyahsInRange,
       CubitMessageCodes.kidsAudioPlaybackFailed => l10n.kidsAudioPlaybackFailed,
       CubitMessageCodes.kidsMicPermissionDenied => l10n.micPermissionError,
       CubitMessageCodes.kidsRecordingUnavailable =>
-        _isArabic
-            ? 'لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.'
-            : 'The microphone did not work. Try again or ask a parent for help.',
+        l10n.kidsRecordingUnavailable,
       CubitMessageCodes.kidsRecordingNotCaptured =>
-        _isArabic
-            ? 'لم نسمع تلاوتك بوضوح. اضغط وسجّل الآية مرة أخرى.'
-            : 'We could not hear your recitation clearly. Please record the ayah again.',
-      CubitMessageCodes.kidsRecitationMismatch =>
-        _isArabic
-            ? 'الآية لم تتطابق. استمع للآية مرة أخرى ثم سجّل تلاوتك.'
-            : 'The ayah did not match. Listen again and then record your recitation.',
+        l10n.kidsRecordingNotCaptured,
+      CubitMessageCodes.kidsRecitationMismatch => l10n.kidsRecitationMismatch,
+      CubitMessageCodes.kidsJourneyStageLocked => l10n.kidsGamifiedLockedStage,
+      CubitMessageCodes.kidsAyahAlreadyCompleted =>
+        l10n.kidsAyahAlreadyCompleted,
       _ => message,
     };
   }

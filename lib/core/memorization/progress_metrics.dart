@@ -18,7 +18,7 @@ enum ProgressAudience { adult, kids }
 /// - [learningAyahs]  : `started && !memorized` (disjoint from memorized).
 /// - [totalReviewEvents] : sum of `totalReviews` across counted records.
 /// - [dueReviews]     : started ayahs currently due for review (`now >= nextReviewDate`).
-/// - [overdueReviews] : started ayahs whose scheduled day is strictly in the past.
+/// - [overdueReviews] : started ayahs scheduled before the user's local day.
 /// - [retentionRate]  : `memorizedAyahs / startedAyahs` (0 when nothing started).
 class ProgressMetrics extends Equatable {
   const ProgressMetrics({

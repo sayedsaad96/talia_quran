@@ -78,7 +78,7 @@ class RemoteChildProductionSummaryBuilder {
       lastMemorizedSurahId: childMetrics.lastMemorizedSurahId,
       lastMemorizedAyahNumber: childMetrics.lastMemorizedAyahNumber,
       lastMemorizedAt: childMetrics.lastReviewedAt,
-      reviewsCompleted: childMetrics.startedAyahs,
+      reviewsCompleted: childMetrics.totalReviewEvents,
       reviewsOverdue: childMetrics.overdueReviews,
       nextReviewAt: nextReviewAt,
       dailyPlanSurahId: planData.surahId,

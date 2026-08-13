@@ -3,11 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/l10n/app_localizations.dart';
 import 'core/di/injection.dart';
 import 'core/l10n/locale_cubit.dart';
 import 'core/router/app_router.dart';
+import 'core/router/launch_destination.dart';
 
 import 'core/services/app_session_service.dart';
 import 'core/services/notification_service.dart';
@@ -22,6 +24,8 @@ import 'features/settings/presentation/cubits/profile_cubit.dart';
 /// Listened to by [TaliaApp] to rebuild from the splash-only shell
 /// into the full BlocProvider tree + GoRouter.
 final ValueNotifier<bool> appInitializedNotifier = ValueNotifier<bool>(false);
+final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
 
 class TaliaApp extends StatefulWidget {
   const TaliaApp({super.key});
@@ -102,12 +106,8 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       final notificationService = getIt<TaliaNotificationService>();
       notificationService.onPayloadReceived = _openNotification;
 
-      // Check for pending launch payload.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        final payload = notificationService.takePendingLaunchPayload();
-        if (payload != null) {
-          _openNotification(payload);
-        }
+        _applyLaunchNavigation(notificationService);
       });
     }
 
@@ -123,6 +123,16 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
           if (state is AuthPasswordRecoveryDetected) {
             AppRouter.router.go(AppRoutes.updatePassword);
           }
+          if (state is AuthAccountDataDiscarded) {
+            final locale = getIt<LocaleCubit>().state;
+            rootScaffoldMessengerKey.currentState?.showSnackBar(
+              SnackBar(
+                content: Text(
+                  lookupAppLocalizations(locale).accountSwitchOfflineDataDiscarded,
+                ),
+              ),
+            );
+          }
         },
         child: BlocBuilder<LocaleCubit, Locale>(
           builder: (context, locale) {
@@ -131,6 +141,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
                 return MaterialApp.router(
                   title: 'تالية',
                   debugShowCheckedModeBanner: false,
+                  scaffoldMessengerKey: rootScaffoldMessengerKey,
                   themeMode: themeMode,
                   theme: AppTheme.light,
                   darkTheme: AppTheme.dark,
@@ -150,6 +161,24 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         ),
       ),
     );
+  }
+
+  void _applyLaunchNavigation(TaliaNotificationService notificationService) {
+    if (!mounted) return;
+    final isFirstTime =
+        getIt<SharedPreferences>().getBool(
+          LaunchDestination.firstTimePreferenceKey,
+        ) ??
+        true;
+    final pending = notificationService.takePendingLaunch();
+    final location = LaunchDestination.resolve(
+      isFirstTime: isFirstTime,
+      payload: pending?.payload,
+      actionId: pending?.actionId,
+    );
+    if (location != AppRoutes.home) {
+      AppRouter.router.go(location);
+    }
   }
 
   void _openNotification(String payload) {

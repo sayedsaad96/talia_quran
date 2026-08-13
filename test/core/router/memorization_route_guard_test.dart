@@ -34,8 +34,15 @@ class _FakeMemoRepo implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
     ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
-  }) async =>
+  }) async => const Right([]);
+
+  @override
+  Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs() async =>
       const Right([]);
+
+  @override
+  Future<Either<Failure, CustomMemorizationPlan?>> getCustomPlan() async =>
+      const Right(null);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -96,6 +103,9 @@ class _FakeGoRouterState extends Fake implements GoRouterState {
 
   @override
   Uri get uri => _uri;
+
+  @override
+  Object? get extra => null;
 }
 
 MemorizationProfile _profile(MemorizationPath path) => MemorizationProfile(
@@ -236,23 +246,63 @@ void main() {
       expect(redirected, contains('startAyah='));
     });
 
-    test(
-      'redirects guests without legacy path to memorization-plus',
-      () async {
-        SharedPreferences.setMockInitialValues({});
-        if (getIt.isRegistered<SharedPreferences>()) {
-          getIt.unregister<SharedPreferences>();
-        }
-        getIt.registerSingleton<SharedPreferences>(
-          await SharedPreferences.getInstance(),
-        );
-        registerProfile(null);
-        final state = _FakeGoRouterState(Uri.parse(AppRoutes.hifz));
-        expect(
-          await MemorizationRouteGuard.hifzRedirect(state),
-          AppRoutes.memorizationPlus,
-        );
-      },
-    );
+    test('redirects guests without legacy path to memorization-plus', () async {
+      SharedPreferences.setMockInitialValues({});
+      if (getIt.isRegistered<SharedPreferences>()) {
+        getIt.unregister<SharedPreferences>();
+      }
+      getIt.registerSingleton<SharedPreferences>(
+        await SharedPreferences.getInstance(),
+      );
+      registerProfile(null);
+      final state = _FakeGoRouterState(Uri.parse(AppRoutes.hifz));
+      expect(
+        await MemorizationRouteGuard.hifzRedirect(state),
+        AppRoutes.memorizationPlus,
+      );
+    });
+  });
+
+  group('v2Session fallback', () {
+    test('sends invalid V2 session parameters to the memorization hub', () {
+      expect(
+        MemorizationRouteGuard.invalidV2SessionRedirect(
+          _FakeGoRouterState(
+            Uri.parse('${AppRoutes.memorizationV2Session}?surahId=0'),
+          ),
+        ),
+        AppRoutes.memorizationHub,
+      );
+    });
+  });
+
+  group('kidsJourneyRedirect', () {
+    test('sends a journey route without a surah to the kids home', () async {
+      registerProfile(_profile(MemorizationPath.child));
+      final state = _FakeGoRouterState(
+        Uri.parse(AppRoutes.memorizationPlusKidsJourney),
+      );
+
+      expect(
+        await MemorizationRouteGuard.kidsJourneyRedirect(state),
+        AppRoutes.memorizationPlusKidsHome,
+      );
+    });
+  });
+
+  group('resolveKidsCompletionStarsEarned', () {
+    test('defaults to 0 when extra and query are missing', () {
+      expect(AppRouter.resolveKidsCompletionStarsEarned(), 0);
+    });
+
+    test('prefers extra over query parameters', () {
+      expect(
+        AppRouter.resolveKidsCompletionStarsEarned(
+          extra: {'starsEarned': 3},
+          queryParameters: {'starsEarned': '1'},
+        ),
+        3,
+      );
+    });
   });
 }

@@ -18,7 +18,7 @@ void main() {
         SmartCoachRecommendationKind.reviewDueNear ||
         SmartCoachRecommendationKind.reviewDueFar ||
         SmartCoachRecommendationKind.memorizedReviewDue ||
-        SmartCoachRecommendationKind.hifzReviewDue => true,
+        SmartCoachRecommendationKind.reviewWeakAyah => true,
         _ => false,
       };
       if (!coachUrgent) return action;
@@ -41,10 +41,7 @@ void main() {
       expect(hero.priority, UnifiedJourneyPriority.p4SmartPlan);
 
       final dailyOnly = engine.evaluate(
-        const UnifiedJourneyInput(
-          hasDailyWird: true,
-          dailyWirdPageNumber: 12,
-        ),
+        const UnifiedJourneyInput(hasDailyWird: true, dailyWirdPageNumber: 12),
       );
       expect(dailyOnly.priority, UnifiedJourneyPriority.p5DailyGoal);
 

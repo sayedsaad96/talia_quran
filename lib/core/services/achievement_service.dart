@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../memorization/progress_metrics.dart';
 import '../memorization/progress_metrics_service.dart';
 import '../memorization/quran_structure_maps.dart';
+import '../memorization/review_record_audience_scope.dart';
 import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
 import '../sync/cloud_sync_queue.dart';
@@ -17,13 +18,26 @@ import '../../features/quran/data/datasources/quran_local_datasource.dart';
 // to receive CertificateAward and CertificateType without import changes.
 export '../../features/certificate/domain/entities/certificate_award.dart';
 
+/// Maps the certificate path flag onto the review-record read scope.
+///
+/// Exists as a named helper so the storage read scope can never drift from the
+/// [ProgressAudience] handed to [ProgressMetricsService].
+abstract final class AchievementServiceScope {
+  static ReviewRecordReadScope forIsKids(bool isKids) =>
+      isKids ? ReviewRecordReadScope.kids : ReviewRecordReadScope.adult;
+
+  static ProgressAudience audienceForIsKids(bool isKids) =>
+      isKids ? ProgressAudience.kids : ProgressAudience.adult;
+}
+
 /// Product policy (Sprint 9B — Shared Family / Device-Wide Achievements):
 ///
-/// Certificates are shared across the Talia device/profile experience.
-/// Eligibility is computed exclusively via [ProgressMetricsService] with
-/// [ProgressAudience.certificates]: an ayah must reach `strengthLevel >= 6`
-/// (true SRS memorized) from a production source (`v2Session`, `hifz`, or
-/// `kidsMode`). Legacy ambiguous tags never unlock certificates.
+/// Certificates are tracked per memorization path: the Adult path and the Kids
+/// path keep separate earned lists. Eligibility is computed by
+/// [ProgressMetricsService] for the matching [ProgressAudience]: an ayah must
+/// reach `strengthLevel >= 6` from a production source, which means
+/// `v2Session` or `hifz` for the Adult path and `kidsMode` for the Kids path.
+/// Legacy ambiguous tags (`unknown`, `migration`) never unlock certificates.
 class AchievementService {
   AchievementService(
     this._prefs,
@@ -85,6 +99,34 @@ class AchievementService {
       ..sort((a, b) => b.earnedAt.compareTo(a.earnedAt));
   }
 
+  /// Unions [remote] into the local earned list for [isKids] without enqueueing
+  /// cloud pushes. Used on login restore so pull does not immediately re-push.
+  ///
+  /// Returns how many certificates were newly added.
+  Future<int> mergeEarnedFromCloud(
+    List<CertificateAward> remote, {
+    required bool isKids,
+  }) async {
+    if (remote.isEmpty) return 0;
+    final existing = getEarnedCertificates(isKids: isKids);
+    final byId = {for (final c in existing) c.id: c};
+    var added = 0;
+    for (final award in remote) {
+      if (byId.containsKey(award.id)) continue;
+      byId[award.id] = award;
+      added += 1;
+    }
+    if (added == 0) return 0;
+    final merged = byId.values.toList()
+      ..sort((a, b) => b.earnedAt.compareTo(a.earnedAt));
+    await _prefs.setString(
+      _getEarnedKey(isKids),
+      jsonEncode(merged.map((c) => c.toJson()).toList()),
+    );
+    _progressEvents.notify(ProgressChangedReason.certificate);
+    return added;
+  }
+
   /// True when there are new (unseen) certificates for the specified path.
   bool hasNewCertificate({required bool isKids}) {
     return _prefs.getBool(_getNewBadgeKey(isKids)) ?? false;
@@ -103,7 +145,9 @@ class AchievementService {
     try {
       final alreadyEarnedIds = getEarnedCertificates(isKids: isKids).map((c) => c.id).toSet();
 
-      final memPlusRecords = await _memPlusDs.getAllReviewRecords();
+      final memPlusRecords = await _memPlusDs.getAllReviewRecords(
+        scope: AchievementServiceScope.forIsKids(isKids),
+      );
       final structure = await QuranStructureMaps.load(_quranDs);
       final surahs = await _quranDs.getSurahs();
       final surahAyahCounts = structure.surahAyahCounts;
@@ -116,7 +160,7 @@ class AchievementService {
         }
       }
 
-      final audience = isKids ? ProgressAudience.kids : ProgressAudience.adult;
+      final audience = AchievementServiceScope.audienceForIsKids(isKids);
 
       final metrics = _metrics.calculate(
         records: memPlusRecords,

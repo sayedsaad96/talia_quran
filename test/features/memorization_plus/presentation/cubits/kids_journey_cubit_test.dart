@@ -12,31 +12,19 @@ import 'package:talia_quran/features/quran/domain/repositories/quran_repository.
 
 import 'kids_journey_cubit_test.mocks.dart';
 
-@GenerateMocks([
-  GetKidsJourneyUsecase,
-  GetKidsProgressUsecase,
-  ParentRemoteLinkUsecase,
-  QuranRepository,
-])
+@GenerateMocks([GetKidsJourneyUsecase, GetKidsProgressUsecase, QuranRepository])
 void main() {
   late MockGetKidsJourneyUsecase mockGetJourney;
   late MockGetKidsProgressUsecase mockGetProgress;
-  late MockParentRemoteLinkUsecase mockRemoteLink;
   late MockQuranRepository mockQuranRepo;
   late KidsJourneyCubit cubit;
 
   setUp(() {
     mockGetJourney = MockGetKidsJourneyUsecase();
     mockGetProgress = MockGetKidsProgressUsecase();
-    mockRemoteLink = MockParentRemoteLinkUsecase();
     mockQuranRepo = MockQuranRepository();
 
-    cubit = KidsJourneyCubit(
-      mockGetJourney,
-      mockGetProgress,
-      mockRemoteLink,
-      mockQuranRepo,
-    );
+    cubit = KidsJourneyCubit(mockGetJourney, mockGetProgress, mockQuranRepo);
   });
 
   tearDown(() {
@@ -170,72 +158,5 @@ void main() {
         await expectation;
       },
     );
-  });
-
-  group('createRemoteLinkQr', () {
-    const tToken = 'abc-123';
-
-    test('does nothing if state is not KidsJourneyLoaded', () async {
-      await cubit.createRemoteLinkQr();
-      verifyNever(mockRemoteLink.createChildLinkToken());
-    });
-
-    test('emits states correctly when successful', () async {
-      const initialState = KidsJourneyLoaded(
-        surahId: 1,
-        stages: [],
-        progress: KidsProgress.initial(),
-        surahName: 'test',
-      );
-      cubit.emit(initialState);
-
-      when(
-        mockRemoteLink.createChildLinkToken(),
-      ).thenAnswer((_) async => const Right(tToken));
-
-      final expectation = expectLater(
-        cubit.stream,
-        emitsInOrder([
-          initialState.copyWith(isCreatingLink: true, clearMessage: true),
-          initialState.copyWith(
-            isCreatingLink: false,
-            qrPayload: 'talia-kids-link:$tToken',
-            message: 'تم إنشاء رمز الربط. صالح لمدة 10 دقائق.',
-          ),
-        ]),
-      );
-
-      await cubit.createRemoteLinkQr();
-      await expectation;
-    });
-
-    test('emits states correctly when fails', () async {
-      const initialState = KidsJourneyLoaded(
-        surahId: 1,
-        stages: [],
-        progress: KidsProgress.initial(),
-        surahName: 'test',
-      );
-      cubit.emit(initialState);
-
-      when(
-        mockRemoteLink.createChildLinkToken(),
-      ).thenAnswer((_) async => const Left(NetworkFailure('Network error')));
-
-      final expectation = expectLater(
-        cubit.stream,
-        emitsInOrder([
-          initialState.copyWith(isCreatingLink: true, clearMessage: true),
-          initialState.copyWith(
-            isCreatingLink: false,
-            message: 'Network error',
-            clearQrPayload: true,
-          ),
-        ]),
-      );
-
-      await cubit.createRemoteLinkQr();
-      await expectation;
-    });
   });
 }

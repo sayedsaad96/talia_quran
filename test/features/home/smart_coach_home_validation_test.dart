@@ -63,7 +63,7 @@ void main() {
       );
 
       await _pumpHome(tester);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Resume where you left off'), findsOneWidget);
       expect(find.text('Review before new content'), findsNothing);
@@ -87,7 +87,7 @@ void main() {
       );
 
       await _pumpHome(tester);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Resume where you left off'), findsOneWidget);
       expect(find.text('Retention review due'), findsNothing);
@@ -106,12 +106,12 @@ void main() {
       );
 
       await _pumpHome(tester);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Review before new content'), findsOneWidget);
 
       await tester.tap(find.text('Review before new content'));
-      await tester.pumpAndSettle();
+      await _pumpHomeAfterInteraction(tester);
 
       expect(find.text('coach-nav-daily-plan'), findsOneWidget);
     });
@@ -132,12 +132,12 @@ void main() {
       );
 
       await _pumpHome(tester);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Continue today\'s plan'), findsOneWidget);
 
       await tester.tap(find.text('Continue today\'s plan'));
-      await tester.pumpAndSettle();
+      await _pumpHomeAfterInteraction(tester);
 
       expect(find.text('coach-nav-daily-plan'), findsOneWidget);
     });
@@ -155,12 +155,12 @@ void main() {
       );
 
       await _pumpHome(tester);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Review a difficult ayah'), findsOneWidget);
 
       await tester.tap(find.text('Review a difficult ayah'));
-      await tester.pumpAndSettle();
+      await _pumpHomeAfterInteraction(tester);
 
       expect(find.text('coach-nav-quiz'), findsOneWidget);
     });
@@ -178,12 +178,12 @@ void main() {
       );
 
       await _pumpHome(tester);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Retention review due'), findsOneWidget);
 
       await tester.tap(find.text('Retention review due'));
-      await tester.pumpAndSettle();
+      await _pumpHomeAfterInteraction(tester);
 
       expect(find.text('coach-nav-quiz'), findsOneWidget);
     });
@@ -204,12 +204,12 @@ void main() {
       );
 
       await _pumpHome(tester);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Current Mission'), findsOneWidget);
 
       await tester.tap(find.text('Current Mission'));
-      await tester.pumpAndSettle();
+      await _pumpHomeAfterInteraction(tester);
 
       expect(find.text('coach-nav-kids-home'), findsOneWidget);
     });
@@ -228,7 +228,7 @@ void main() {
       );
 
       await _pumpHome(tester, locale: const Locale('en'));
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Review before new content'), findsOneWidget);
       expect(
@@ -237,23 +237,23 @@ void main() {
       );
     });
 
-    testWidgets('Hero Card Parity Test - Resume Session (Adults, Surah)', (tester) async {
-      final state = _homeLoaded(
-        lastRestorableLocation: '/quran/surah/2',
-      );
+    testWidgets('Hero Card Parity Test - Resume Session (Adults, Surah)', (
+      tester,
+    ) async {
+      final state = _homeLoaded(lastRestorableLocation: '/quran/surah/2');
 
       // 1. Test Legacy Parity
       JourneyFeatureFlags.unifiedJourneyEnabled = false;
       await _registerHome(state);
       await _pumpHome(tester, locale: const Locale('en'));
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Continue Surah Al-Baqarah'), findsOneWidget);
       expect(find.text('Last saved reading'), findsOneWidget);
 
       // 2. Test Unified Parity
       JourneyFeatureFlags.unifiedJourneyEnabled = true;
-      
+
       // We also need to inject a unified action for this test since our static cubit doesn't evaluate the engine.
       final unifiedState = state.copyWith(
         heroAction: const UnifiedJourneyAction(
@@ -269,7 +269,7 @@ void main() {
       await getIt.reset();
       await _registerHome(unifiedState);
       await _pumpHome(tester, locale: const Locale('en'));
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       // Should be identically transformed by the mapper!
       expect(find.text('Continue Surah Al-Baqarah'), findsOneWidget);
@@ -290,7 +290,7 @@ void main() {
       );
 
       await _pumpHome(tester, locale: const Locale('ar'));
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('راجع قبل الحفظ الجديد'), findsOneWidget);
       expect(find.textContaining('مراجعة قريبة مستحقة'), findsOneWidget);
@@ -311,7 +311,7 @@ void main() {
       );
 
       await _pumpHome(tester, locale: const Locale('en'));
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Retention review due'), findsOneWidget);
       expect(
@@ -337,7 +337,7 @@ void main() {
       );
 
       await _pumpHome(tester, locale: const Locale('ar'));
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('مراجعة تثبيت مستحقة'), findsOneWidget);
       expect(
@@ -363,11 +363,11 @@ void main() {
         );
 
         await _pumpHome(tester);
-        await tester.pumpAndSettle();
+        await _pumpHomeInitialFrames(tester);
 
         expect(find.text('Review a difficult ayah'), findsOneWidget);
         await tester.tap(find.text('Review a difficult ayah'));
-        await tester.pumpAndSettle();
+        await _pumpHomeAfterInteraction(tester);
 
         // Router strips query params when matching — quiz page stub is reached.
         expect(find.text('coach-nav-quiz'), findsOneWidget);
@@ -389,11 +389,11 @@ void main() {
         );
 
         await _pumpHome(tester);
-        await tester.pumpAndSettle();
+        await _pumpHomeInitialFrames(tester);
 
         expect(find.text('Retention review due'), findsOneWidget);
         await tester.tap(find.text('Retention review due'));
-        await tester.pumpAndSettle();
+        await _pumpHomeAfterInteraction(tester);
 
         expect(find.text('coach-nav-quiz'), findsOneWidget);
       },
@@ -416,7 +416,7 @@ void main() {
       );
 
       await _pumpHome(tester);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       // Resume section shown, coach card hidden.
       expect(find.text('Resume'), findsOneWidget);
@@ -435,7 +435,7 @@ void main() {
       );
 
       await _pumpHome(tester, themeMode: ThemeMode.light);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Review before new content'), findsOneWidget);
     });
@@ -452,32 +452,36 @@ void main() {
       );
 
       await _pumpHome(tester, themeMode: ThemeMode.dark);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Review before new content'), findsOneWidget);
     });
   });
 
   group('Feature Flag tests', () {
-    testWidgets('UnifiedHeroActionCard does not render when flag OFF', (tester) async {
+    testWidgets('UnifiedHeroActionCard does not render when flag OFF', (
+      tester,
+    ) async {
       JourneyFeatureFlags.unifiedJourneyEnabled = false;
-      
-      final state = _homeLoaded(
-        lastRestorableLocation: '${AppRoutes.memorizationV2Session}?surahId=2',
-      ).copyWith(
-        heroAction: const UnifiedJourneyAction(
-          priority: UnifiedJourneyPriority.p2CriticalAlert,
-          intent: JourneyIntent.resume,
-          route: '/route',
-          source: 'Test',
-          actionType: UnifiedJourneyActionType.criticalAlert,
-          metadata: {'learningAlertType': 'leechRecovery'},
-        ),
-      );
+
+      final state =
+          _homeLoaded(
+            lastRestorableLocation:
+                '${AppRoutes.memorizationV2Session}?surahId=2',
+          ).copyWith(
+            heroAction: const UnifiedJourneyAction(
+              priority: UnifiedJourneyPriority.p2CriticalAlert,
+              intent: JourneyIntent.resume,
+              route: '/route',
+              source: 'Test',
+              actionType: UnifiedJourneyActionType.criticalAlert,
+              metadata: {'learningAlertType': 'leechRecovery'},
+            ),
+          );
       await _registerHome(state);
 
       await _pumpHome(tester);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Focus on Weak Ayahs'), findsNothing);
       expect(find.text('Resume'), findsOneWidget); // Legacy ResumeSessionCard
@@ -485,23 +489,25 @@ void main() {
 
     testWidgets('UnifiedHeroActionCard renders when flag ON', (tester) async {
       JourneyFeatureFlags.unifiedJourneyEnabled = true;
-      
-      final state = _homeLoaded(
-        lastRestorableLocation: '${AppRoutes.memorizationV2Session}?surahId=2',
-      ).copyWith(
-        heroAction: const UnifiedJourneyAction(
-          priority: UnifiedJourneyPriority.p2CriticalAlert,
-          intent: JourneyIntent.resume,
-          route: '/route',
-          source: 'Test',
-          actionType: UnifiedJourneyActionType.criticalAlert,
-          metadata: {'learningAlertType': 'leechRecovery'},
-        ),
-      );
+
+      final state =
+          _homeLoaded(
+            lastRestorableLocation:
+                '${AppRoutes.memorizationV2Session}?surahId=2',
+          ).copyWith(
+            heroAction: const UnifiedJourneyAction(
+              priority: UnifiedJourneyPriority.p2CriticalAlert,
+              intent: JourneyIntent.resume,
+              route: '/route',
+              source: 'Test',
+              actionType: UnifiedJourneyActionType.criticalAlert,
+              metadata: {'learningAlertType': 'leechRecovery'},
+            ),
+          );
       await _registerHome(state);
 
       await _pumpHome(tester);
-      await tester.pumpAndSettle();
+      await _pumpHomeInitialFrames(tester);
 
       expect(find.text('Focus on Weak Ayahs'), findsOneWidget);
       expect(find.text('Resume'), findsNothing); // Legacy hidden
@@ -640,6 +646,19 @@ Future<void> _pumpHome(
   );
 }
 
+Future<void> _pumpHomeInitialFrames(WidgetTester tester) {
+  return _pumpHomeFrames(tester);
+}
+
+Future<void> _pumpHomeAfterInteraction(WidgetTester tester) {
+  return _pumpHomeFrames(tester);
+}
+
+Future<void> _pumpHomeFrames(WidgetTester tester) async {
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 100));
+}
+
 class _StaticHomeCubit extends Cubit<HomeState> implements HomeCubit {
   _StaticHomeCubit(HomeLoaded super.state);
 
@@ -719,7 +738,8 @@ class _FakeAchievementService implements AchievementService {
   bool hasNewCertificate({required bool isKids}) => false;
 
   @override
-  List<CertificateAward> getEarnedCertificates({required bool isKids}) => const [];
+  List<CertificateAward> getEarnedCertificates({required bool isKids}) =>
+      const [];
 
   @override
   List<CertificateAward> getAllEarnedCertificates() => const [];

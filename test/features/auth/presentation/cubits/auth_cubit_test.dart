@@ -8,6 +8,7 @@ import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
 import 'package:talia_quran/features/auth/domain/repositories/auth_repository.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
+import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
 import 'auth_cubit_test.mocks.dart';
@@ -37,6 +38,8 @@ void main() {
         .thenAnswer((_) async => const Right(unit));
     when(mockAuthRepository.syncProgressToCloud())
         .thenAnswer((_) async => const Right(unit));
+    when(mockAuthRepository.hasPendingCloudPush())
+        .thenAnswer((_) async => false);
     return AuthCubit(mockAuthRepository);
   }
 
@@ -249,6 +252,42 @@ void main() {
       await cubit.signOut();
       await expectation;
     });
+
+    test(
+      'blocks sign-out when pending cloud work remains after a failed flush',
+      () async {
+        when(
+          mockAuthRepository.hasPendingCloudPush(),
+        ).thenAnswer((_) async => true);
+        when(mockAuthRepository.syncProgressToCloud()).thenAnswer(
+          (_) async => const Left(NetworkFailure('offline')),
+        );
+
+        await cubit.signOut();
+
+        expect(cubit.state, isA<AuthSignOutBlockedPendingData>());
+        verifyNever(mockAuthRepository.signOut());
+      },
+    );
+
+    test('force sign-out proceeds even when pending work remains', () async {
+      when(
+        mockAuthRepository.hasPendingCloudPush(),
+      ).thenAnswer((_) async => true);
+      when(mockAuthRepository.signOut()).thenAnswer((_) async {
+        authStreamController.add(null);
+        return const Right(unit);
+      });
+
+      final expectation = expectLater(
+        cubit.stream,
+        emitsInOrder([isA<AuthLoading>(), isA<AuthUnauthenticated>()]),
+      );
+
+      await cubit.signOut(force: true);
+      await expectation;
+      verify(mockAuthRepository.signOut()).called(1);
+    });
   });
 
   // ─── Reset Password ────────────────────────────────────────────────────────
@@ -445,6 +484,24 @@ class _FakeMemPlusRepository implements MemorizationPlusRepository {
   }
 
   @override
+  Future<Either<Failure, List<CertificateAward>>> pullCertificatesFromCloud() async =>
+      const Right([]);
+
+  @override
+  Future<Either<Failure, void>> pullKidsProgressFromCloud() async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, void>> syncKidsProgressToCloud() async =>
+      const Right(null);
+
+  @override
+  Future<Either<Failure, void>> pushCertificatesToCloud(
+    List<CertificateAward> certificates,
+  ) async =>
+      const Right(null);
+
+  @override
   Future<bool> hasPendingCloudWork() async => true;
 
   @override
@@ -452,6 +509,10 @@ class _FakeMemPlusRepository implements MemorizationPlusRepository {
     resyncCallCount += 1;
     return const Right(null);
   }
+
+  @override
+  Future<Either<Failure, int>> claimLocalReviewRecords() async =>
+      const Right(0);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

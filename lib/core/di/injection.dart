@@ -28,6 +28,7 @@ import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/session_engine.dart';
 import '../progress/progress_events_bus.dart';
+import '../identity/record_owner_provider.dart';
 import '../sync/cloud_sync_queue.dart';
 import '../sync/cloud_sync_queue_item.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
@@ -44,13 +45,12 @@ import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dar
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
-import '../../features/hifz/presentation/cubits/hifz_cubit.dart';
+import '../../features/memorization_plus/presentation/cubits/practice_surah_cubit.dart';
 import '../../features/azkar/data/datasources/azkar_local_datasource.dart';
 import '../../features/azkar/data/repositories/azkar_repository_impl.dart';
 import '../../features/azkar/domain/repositories/azkar_repository.dart';
 import '../../features/azkar/domain/usecases/get_azkar_usecase.dart';
 import '../../features/azkar/presentation/cubits/azkar_cubit.dart';
-import '../journey/journey_diagnostics.dart';
 import '../journey/unified_journey_engine.dart';
 import '../../features/progress/data/datasources/progress_local_datasource.dart';
 import '../../features/progress/data/repositories/progress_repository_impl.dart';
@@ -87,6 +87,7 @@ import '../../features/streak/presentation/cubits/streak_cubit.dart';
 import '../../features/xp/data/models/xp_isar.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../identity/account_data_reset.dart';
 import '../../features/auth/presentation/cubits/auth_cubit.dart';
 
 final GetIt getIt = GetIt.instance;
@@ -97,7 +98,8 @@ Future<void> configureDependencies() async {
   getIt.registerSingleton<SharedPreferences>(sharedPrefs);
 
   final dir = await getApplicationDocumentsDirectory();
-  final isar = Isar.getInstance() ??
+  final isar =
+      Isar.getInstance() ??
       await Isar.open([
         IsarAyahProgressSchema,
         IsarAyahReviewRecordSchema,
@@ -108,7 +110,6 @@ Future<void> configureDependencies() async {
         CloudSyncQueueItemSchema,
       ], directory: dir.path);
   getIt.registerSingleton<Isar>(isar);
-  getIt.registerLazySingleton<CloudSyncQueue>(() => CloudSyncQueue(isar));
   getIt.registerLazySingleton<V2SessionLocalDatasource>(
     () => V2SessionLocalDatasource(getIt<Isar>()),
   );
@@ -118,11 +119,23 @@ Future<void> configureDependencies() async {
   await hifzDatasource.migrateFromSharedPreferencesIfNeeded();
   getIt.registerLazySingleton<HifzLocalDatasource>(() => hifzDatasource);
 
+  getIt.registerLazySingleton<RecordOwnerProvider>(
+    () => const SupabaseRecordOwnerProvider(),
+  );
+  getIt.registerLazySingleton<CloudSyncQueue>(
+    () => CloudSyncQueue(getIt<Isar>(), getIt<RecordOwnerProvider>()),
+  );
+  getIt.registerLazySingleton<AccountDataReset>(
+    () => AccountDataReset(getIt<Isar>(), getIt<SharedPreferences>()),
+  );
+
   final memorizationPlusDatasource = MemorizationPlusLocalDatasourceImpl(
     sharedPrefs,
     isar: isar,
+    owner: getIt<RecordOwnerProvider>(),
   );
   await memorizationPlusDatasource.migrateReviewRecordsToIsarIfNeeded();
+  await memorizationPlusDatasource.migrateReviewRecordIdentityIfNeeded();
 
   // ─── Core ───────────────────────────────────────────────────────────────────
   getIt.registerLazySingleton<ThemeCubit>(
@@ -159,7 +172,6 @@ Future<void> configureDependencies() async {
     () => NotificationScheduler(getIt<TaliaNotificationService>()),
   );
   getIt.registerSingleton<ProgressEventsBus>(ProgressEventsBus());
-
 
   // ─── New Core Services ──────────────────────────────────────────────────────
   // ─── Datasources ────────────────────────────────────────────────────────────
@@ -301,7 +313,7 @@ Future<void> configureDependencies() async {
     ),
   );
   getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(getIt<Isar>(), getIt<SharedPreferences>()),
+    () => AuthRepositoryImpl(getIt<Isar>(), getIt<AccountDataReset>()),
   );
 
   // ─── Usecases ───────────────────────────────────────────────────────────────
@@ -375,11 +387,10 @@ Future<void> configureDependencies() async {
       getIt<StreakService>(),
     ),
   );
-  getIt.registerFactory<HifzCubit>(
-    () => HifzCubit(
+  getIt.registerFactory<PracticeSurahCubit>(
+    () => PracticeSurahCubit(
       getIt<GetSurahsUsecase>(),
       getIt<MemorizationPlusRepository>(),
-      getIt<MemorizationPathResolver>(),
     ),
   );
   getIt.registerFactory<AzkarCubit>(
@@ -404,8 +415,8 @@ Future<void> configureDependencies() async {
   getIt.registerFactory<KidsModeCubit>(
     () => KidsModeCubit(
       getIt<GetKidsProgressUsecase>(),
+      getIt<GetKidsJourneyUsecase>(),
       getIt<AwardKidsPointsUsecase>(),
-      getIt<SaveKidsSessionLogUsecase>(),
       getIt<AchievementService>(),
       getIt<QuranRepository>(),
       getIt<V2SessionEngine>(),
@@ -423,7 +434,6 @@ Future<void> configureDependencies() async {
     () => KidsJourneyCubit(
       getIt<GetKidsJourneyUsecase>(),
       getIt<GetKidsProgressUsecase>(),
-      getIt<ParentRemoteLinkUsecase>(),
       getIt<QuranRepository>(),
     ),
   );
@@ -446,10 +456,9 @@ Future<void> configureDependencies() async {
       appSessionService: getIt<AppSessionService>(),
     ),
   );
-  
+
   getIt.registerSingleton<UnifiedJourneyEngine>(const UnifiedJourneyEngine());
-  getIt.registerSingleton<JourneyDiagnostics>(const NoOpJourneyDiagnostics());
-  
+
   getIt.registerFactory<HomeCubit>(
     () => HomeCubit(
       getIt<GetProgressUsecase>(),
@@ -476,6 +485,8 @@ Future<void> configureDependencies() async {
       getIt<ProgressEventsBus>(),
       getIt<AchievementService>(),
       getIt<CloudSyncQueue>(),
+      getIt<SharedPreferences>(),
+      getIt<AccountDataReset>(),
     ),
   );
 }

@@ -549,6 +549,16 @@ class AppLocalizationsAr extends AppLocalizations {
       'هل تريد تسجيل الخروج؟ سيبقى تقدمك المحلي متاحًا على هذا الجهاز.';
 
   @override
+  String get signOutPendingDataTitle => 'تقدم غير مزامن';
+
+  @override
+  String get signOutPendingDataWarning =>
+      'بعض تقدم الحفظ لم يصل إلى السحابة بعد. تسجيل الخروج الآن سيحذفه من هذا الجهاز.';
+
+  @override
+  String get signOutAnyway => 'تسجيل الخروج على أي حال';
+
+  @override
   String get dailyReviewReminder => 'تذكير المراجعة اليومية';
 
   @override
@@ -3747,4 +3757,175 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get childDetailOpenFullDashboard => 'فتح لوحة التحكم الكاملة';
+
+  @override
+  String get kidsPreparing => 'جارٍ التحضير...';
+
+  @override
+  String get kidsUnexpectedError => 'يبدو أن شيئًا ما حدث!';
+
+  @override
+  String get v2LearningTitle => 'تعلّم الآية';
+
+  @override
+  String get v2LearningSubtitle => 'استمع واقرأ الآية بهدوء قبل محاولة حفظها.';
+
+  @override
+  String get v2StartMemorizing => 'انتقل للحفظ';
+
+  @override
+  String get v2MemorizingTitle => 'احفظ الآية';
+
+  @override
+  String get v2MemorizingSubtitle => 'درّب ذاكرتك. التلميحات متاحة هنا فقط.';
+
+  @override
+  String get v2ReadyToRecite => 'أنا جاهز للتسميع';
+
+  @override
+  String get v2FirstWordHint => 'أول كلمة';
+
+  @override
+  String get v2ShowAyahHint => 'إظهار الآية';
+
+  @override
+  String get v2RecitationTitle => 'سمّع من حفظك';
+
+  @override
+  String get v2RecitationSubtitle =>
+      'النص مخفي الآن. سجّل تسميعك بدون تلميحات.';
+
+  @override
+  String get v2StartRecording => 'بدء التسجيل';
+
+  @override
+  String get v2StopRecording => 'إيقاف التسجيل';
+
+  @override
+  String get v2RemediationTitle => 'مراجعة قصيرة';
+
+  @override
+  String get v2RemediationSubtitle =>
+      'استمع واقرأ الآية مرة أخرى، ثم ارجع لمحاولة التسميع.';
+
+  @override
+  String get v2TryAgain => 'أحاول مرة أخرى';
+
+  @override
+  String get v2BlockReviewPendingTitle => 'مراجعة المقطع';
+
+  @override
+  String get v2BlockReviewPendingSubtitle =>
+      'أنهيت الآيات منفردة. الخطوة التالية تسميع المقطع كاملاً من الذاكرة.';
+
+  @override
+  String get v2StartBlockReview => 'ابدأ مراجعة المقطع';
+
+  @override
+  String get v2BlockReviewTitle => 'سمّع المقطع كاملاً';
+
+  @override
+  String v2BlockReviewSubtitle(int startAyah, int endAyah) {
+    return 'النص مخفي الآن. سجّل الآيات $startAyah-$endAyah كاملة بدون تلميحات.';
+  }
+
+  @override
+  String get v2CompletionTitle => 'اكتملت الجلسة';
+
+  @override
+  String get v2CompletionSubtitle => 'تم حفظ آيات هذا المقطع بنجاح.';
+
+  @override
+  String get v2MemorizationHub => 'مركز الحفظ';
+
+  @override
+  String get v2TryWithoutHint => 'حاول من غير تلميح';
+
+  @override
+  String get v2FirstWordRevealed => 'تم كشف أول كلمة';
+
+  @override
+  String get v2Evaluating => 'جارٍ التقييم...';
+
+  @override
+  String get v2RecordingNow => 'يتم التسجيل الآن';
+
+  @override
+  String get v2PressRecord => 'اضغط التسجيل عندما تكون جاهزًا';
+
+  @override
+  String get v2MicrophoneUnavailable => 'تعذر استخدام الميكروفون';
+
+  @override
+  String get v2NoSpeechDetected => 'لم نسمع تلاوة. سجّل مرة أخرى.';
+
+  @override
+  String get v2MicrophonePermissionDenied =>
+      'يلزم السماح بالميكروفون للتسجيل.';
+
+  @override
+  String get v2MicrophoneOpenSettings =>
+      'الوصول للميكروفون محظور. افتح الإعدادات للسماح به.';
+
+  @override
+  String get v2AudioPlaybackFailed => 'تعذر تشغيل صوت الآية. حاول مرة أخرى.';
+
+  @override
+  String v2RemediationAttempts(int count) {
+    return 'عدد المحاولات التي تحتاج مراجعة: $count';
+  }
+
+  @override
+  String v2AyahRange(int startAyah, int endAyah) {
+    return 'الآيات $startAyah-$endAyah';
+  }
+
+  @override
+  String v2BlockProgress(int passed, int total) {
+    return 'تم اجتياز $passed/$total آيات.';
+  }
+
+  @override
+  String get v2EvaluatingBlock => 'جارٍ تقييم المقطع...';
+
+  @override
+  String get v2RecordingBlock => 'يتم تسجيل المقطع الآن';
+
+  @override
+  String get v2Playing => 'يتم التشغيل';
+
+  @override
+  String get v2ListenToAyah => 'استمع للآية';
+
+  @override
+  String get v2Passed => 'تم تسميعها';
+
+  @override
+  String get v2Retries => 'محاولات';
+
+  @override
+  String get v2SurahLoadFailed => 'تعذر تحميل بيانات السورة.';
+
+  @override
+  String get v2NoAyahsInRange => 'لا توجد آيات في النطاق المحدد.';
+
+  @override
+  String get kidsRecordingUnavailable =>
+      'لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.';
+
+  @override
+  String get kidsRecordingNotCaptured =>
+      'لم نسمع تلاوتك بوضوح. اضغط وسجّل الآية مرة أخرى.';
+
+  @override
+  String get kidsRecitationMismatch =>
+      'الآية لم تتطابق. استمع للآية مرة أخرى ثم سجّل تلاوتك.';
+
+  @override
+  String get kidsAyahAlreadyCompleted =>
+      'أكملت هذه الآية من قبل. ارجع للخريطة للمتابعة.';
+
+  @override
+  String get accountSwitchOfflineDataDiscarded =>
+      'تعذر رفع التقدم غير المتزامن للحساب السابق، لذا تمت إزالته من هذا الجهاز.';
 }

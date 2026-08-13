@@ -58,8 +58,6 @@ class ProgressMetricsService {
     int? lastMemorizedAyahNumber;
     DateTime? lastMemorizedAt;
 
-    final startOfToday = DateTime.utc(now.year, now.month, now.day);
-
     for (final record in counted) {
       totalReviewEvents += record.totalReviews;
 
@@ -88,9 +86,10 @@ class ProgressMetricsService {
         lastReviewedAt = record.lastReviewedAt;
       }
 
-      if (_isDue(record, now)) {
+      final classification = _classify(record, now);
+      if (classification.isDue) {
         dueReviews++;
-        if (record.nextReviewDate.toUtc().isBefore(startOfToday)) {
+        if (classification.isOverdue) {
           overdueReviews++;
         }
       }
@@ -146,18 +145,14 @@ class ProgressMetricsService {
     };
   }
 
-  bool _isDue(AyahReviewRecord record, DateTime now) {
-    if (!ReviewRecordFilters.isStarted(record)) return false;
-    return _classifier
-        .classify(
-          ReviewClassificationInput(
-            now: now,
-            lastReviewedAt: record.lastReviewedAt,
-            nextReviewDate: record.nextReviewDate,
-            strengthLevel: record.strengthLevel,
-            totalReviews: record.totalReviews,
-          ),
-        )
-        .isDue;
-  }
+  ReviewClassification _classify(AyahReviewRecord record, DateTime now) =>
+      _classifier.classify(
+        ReviewClassificationInput(
+          now: now,
+          lastReviewedAt: record.lastReviewedAt,
+          nextReviewDate: record.nextReviewDate,
+          strengthLevel: record.strengthLevel,
+          totalReviews: record.totalReviews,
+        ),
+      );
 }

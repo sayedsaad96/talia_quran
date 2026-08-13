@@ -163,3 +163,9 @@ Memorization Plus
 - No dead memorization code, duplicate logic/storage, legacy production path, memory leak, security issue, or release blocker remains.
 - Every visible memorization feature has a verified execution path and persistence/synchronization proof.
 - The final audit answers yes to: one Memorization Plus system; full Adult/Kids and user isolation; no legacy behavior affecting production; complete restore and conflict-safe synchronization.
+
+### Evidence (2026-08-08)
+
+Recorded in [2026-08-08-is6-production-verification.md](./2026-08-08-is6-production-verification.md).
+
+**Decision: CONDITIONAL GO** after restoring `Talia_Quran` and applying remote migrations `review_record_audience_identity` (0007) and `custom_plans_cloud` (0008). Client isolation/sync track PASS; deferred Hifz package deletion and certificate audience design remain WARN.

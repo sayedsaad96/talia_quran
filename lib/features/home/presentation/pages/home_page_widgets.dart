@@ -239,9 +239,17 @@ class _AchievementRow extends StatelessWidget {
       runSpacing: AppSpacing.sm,
       children: [
         if (highestReading != null)
-          _AchievementBadge(achievement: highestReading, isDark: true, isKids: isKids),
+          _AchievementBadge(
+            achievement: highestReading,
+            isDark: true,
+            isKids: isKids,
+          ),
         if (highestMem != null)
-          _AchievementBadge(achievement: highestMem, isDark: true, isKids: isKids),
+          _AchievementBadge(
+            achievement: highestMem,
+            isDark: true,
+            isKids: isKids,
+          ),
         if (highestReading == null && highestMem == null)
           _AchievementBadge(achievement: null, isDark: true, isKids: isKids),
       ],
@@ -250,7 +258,11 @@ class _AchievementRow extends StatelessWidget {
 }
 
 class _AchievementBadge extends StatelessWidget {
-  const _AchievementBadge({required this.achievement, required this.isDark, required this.isKids});
+  const _AchievementBadge({
+    required this.achievement,
+    required this.isDark,
+    required this.isKids,
+  });
 
   final Achievement? achievement;
   final bool isDark;
@@ -281,15 +293,22 @@ class _AchievementBadge extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        final certs = getIt<AchievementService>().getEarnedCertificates(isKids: isKids);
-        if (certs.isEmpty) {
+        final certs = getIt<AchievementService>().getEarnedCertificates(
+          isKids: isKids,
+        );
+        final award =
+            achievement?.category == AchievementCategory.memorization &&
+                certs.isNotEmpty
+            ? certs.first
+            : null;
+        if (award == null) {
           context.go(AppRoutes.progress);
           return;
         }
         context.push(
           AppRoutes.certificate,
           extra: {
-            'award': certs.first,
+            'award': award,
             'userName': context.read<ProfileCubit>().state is ProfileLoaded
                 ? (context.read<ProfileCubit>().state as ProfileLoaded)
                       .profile
@@ -577,7 +596,8 @@ class _ProgressSection extends StatelessWidget {
                 final metrics = [
                   _ProgressMetricPill(
                     label: context.l10n.reading,
-                    value: '${progress.readPagesCount}/${progress.totalQuranPages}',
+                    value:
+                        '${progress.readPagesCount}/${progress.totalQuranPages}',
                     icon: Icons.menu_book_rounded,
                     color: primary,
                     isDark: isDark,
@@ -1138,26 +1158,6 @@ class _ResumeSessionCard extends StatelessWidget {
   final bool isKids;
 
   String? _normalizedLocation() {
-    final uri = Uri.tryParse(location);
-    if (uri == null) return location;
-
-    if (!isKids) {
-      if (uri.path == AppRoutes.hifz) {
-        final surahId = int.tryParse(uri.queryParameters['surahId'] ?? '');
-        if (surahId != null && surahId >= 1 && surahId <= 114) {
-          final startAyah =
-              int.tryParse(uri.queryParameters['startAyah'] ?? '') ??
-              int.tryParse(uri.queryParameters['ayahNumber'] ?? '');
-          final ayah = startAyah != null && startAyah > 0 ? startAyah : 1;
-          final query = Uri(
-            queryParameters: {'surahId': '$surahId', 'startAyah': '$ayah'},
-          ).query;
-          return '${AppRoutes.memorizationV2Session}?$query';
-        }
-        return null;
-      }
-    }
-
     return location;
   }
 
@@ -1316,20 +1316,14 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
 
     return switch (coach.kind) {
       SmartCoachRecommendationKind.reviewDueNear => (
-        context.isArabic
-            ? 'راجع قبل الحفظ الجديد'
-            : 'Review before new content',
-        context.isArabic
-            ? 'مراجعة قريبة مستحقة في $surahLabel$ayahLabel.'
-            : 'Near revision due in $surahLabel$ayahLabel.',
+        context.l10n.journeyReviewBeforeNewTitle,
+        context.l10n.journeyReviewBeforeNewDesc('$surahLabel$ayahLabel'),
         Icons.history_rounded,
         coach.route,
       ),
       SmartCoachRecommendationKind.reviewDueFar => (
-        context.isArabic ? 'مراجعة بعيدة مستحقة' : 'Long-term review due',
-        context.isArabic
-            ? 'حان وقت مراجعة $surahLabel$ayahLabel.'
-            : 'Time to review $surahLabel$ayahLabel.',
+        context.l10n.journeyLongTermReviewTitle,
+        context.l10n.journeyLongTermReviewDesc('$surahLabel$ayahLabel'),
         Icons.schedule_rounded,
         coach.route,
       ),
@@ -1342,51 +1336,36 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
         coach.route,
       ),
       SmartCoachRecommendationKind.reviewWeakAyah => (
-        context.isArabic ? 'راجع الآية الصعبة' : 'Review a difficult ayah',
-        context.isArabic
-            ? 'آخر مراجعة كانت صعبة في $surahLabel$ayahLabel.'
-            : 'Your last review was difficult for $surahLabel$ayahLabel.',
+        context.l10n.journeyReviewDifficultAyahTitle,
+        context.l10n.journeyReviewDifficultAyahDesc('$surahLabel$ayahLabel'),
         Icons.healing_rounded,
         coach.route,
       ),
       SmartCoachRecommendationKind.continueDailyPlan => (
-        context.isArabic ? 'أكمل خطة اليوم' : "Continue today's plan",
-        context.isArabic
-            ? '${coach.completedCount}/${coach.totalCount} من مهام اليوم.'
-            : '${coach.completedCount} of ${coach.totalCount} items done today.',
+        context.l10n.journeyContinueDailyPlanTitle,
+        context.l10n.journeyContinueDailyPlanDesc(
+          coach.completedCount ?? 0,
+          coach.totalCount ?? 0,
+        ),
         Icons.today_rounded,
         coach.route,
       ),
       SmartCoachRecommendationKind.memorizeNewAyahs => (
-        context.isArabic ? 'احفظ آيات جديدة' : 'Memorize new ayahs',
-        context.isArabic
-            ? 'ابدأ بالآيات الجديدة في $surahLabel$ayahLabel.'
-            : 'Start new ayahs in $surahLabel$ayahLabel.',
+        context.l10n.journeyMemorizeNewAyahsTitle,
+        context.l10n.journeyMemorizeNewAyahsDesc('$surahLabel$ayahLabel'),
         Icons.auto_awesome_rounded,
         coach.route,
       ),
       SmartCoachRecommendationKind.kidsCurrentMission => (
-        context.isArabic ? 'المهمة الحالية' : 'Current Mission',
-        context.isArabic
-            ? 'تابع مهمة الطفل الحالية.'
-            : "Continue the child's current mission.",
+        context.l10n.journeyCurrentMissionTitle,
+        context.l10n.journeyCurrentMissionDesc,
         Icons.star_rounded,
         coach.route,
       ),
       SmartCoachRecommendationKind.continueV2Session => (
-        context.isArabic ? 'متابعة جلسة الحفظ' : 'Continue Session',
-        context.isArabic
-            ? 'لديك جلسة حفظ مفتوحة لم تكتمل في $surahLabel.'
-            : 'You have an incomplete memorization session in $surahLabel.',
+        context.l10n.journeyContinueSessionTitle,
+        context.l10n.journeyContinueSessionDesc(surahLabel),
         Icons.play_circle_fill_rounded,
-        coach.route,
-      ),
-      SmartCoachRecommendationKind.hifzReviewDue => (
-        context.isArabic ? 'مراجعة الحفظ مستحقة' : 'Hifz review due',
-        context.isArabic
-            ? 'راجع مواضع الحفظ المستحقة في مسار الحفظ.'
-            : 'Review due items in your Hifz path.',
-        Icons.menu_book_rounded,
         coach.route,
       ),
     };
@@ -1394,7 +1373,7 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
 
   String _coachSurahName(BuildContext context, int? surahId) {
     if (surahId == null) {
-      return context.isArabic ? 'السورة' : 'your surah';
+      return context.l10n.journeyFallbackSurah;
     }
     return context.isArabic
         ? SurahNames.nameAr(surahId)
@@ -1403,11 +1382,9 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
 
   String _coachSurahLabel(BuildContext context, int? surahId) {
     if (surahId == null) {
-      return context.isArabic ? 'السورة' : 'your surah';
+      return context.l10n.journeyFallbackSurah;
     }
-    return context.isArabic
-        ? 'سورة ${SurahNames.nameAr(surahId)}'
-        : 'Surah ${SurahNames.nameEn(surahId)}';
+    return '${context.l10n.surah} ${_coachSurahName(context, surahId)}';
   }
 
   String _coachAyahLabel(BuildContext context, SmartCoachRecommendation coach) {
@@ -1415,9 +1392,9 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
     final end = coach.endAyah;
     if (start == null) return '';
     if (end == null || end == start) {
-      return context.isArabic ? '، الآية $start' : ', ayah $start';
+      return context.l10n.journeyAyahLabel(start);
     }
-    return context.isArabic ? '، الآيات $start–$end' : ', ayahs $start–$end';
+    return context.l10n.journeyAyahsLabel(start, end);
   }
 
   @override
@@ -1647,8 +1624,15 @@ class _HomeEngagementTile extends StatelessWidget {
         children: [
           if (icon == Icons.local_fire_department_rounded)
             Icon(icon, color: color, size: 20)
-                .animate(onPlay: (controller) => controller.repeat(reverse: true))
-                .scaleXY(begin: 0.92, end: 1.08, duration: 1600.ms, curve: Curves.easeInOut)
+                .animate(
+                  onPlay: (controller) => controller.repeat(reverse: true),
+                )
+                .scaleXY(
+                  begin: 0.92,
+                  end: 1.08,
+                  duration: 1600.ms,
+                  curve: Curves.easeInOut,
+                )
           else
             Icon(icon, color: color, size: 20),
           const SizedBox(height: 6),

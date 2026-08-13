@@ -695,6 +695,23 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
+  _i10.Future<_i2.Either<_i11.Failure, int>> claimLocalReviewRecords() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #claimLocalReviewRecords,
+          [],
+        ),
+        returnValue: _i10.Future<_i2.Either<_i11.Failure, int>>.value(
+            _FakeEither_0<_i11.Failure, int>(
+          this,
+          Invocation.method(
+            #claimLocalReviewRecords,
+            [],
+          ),
+        )),
+      ) as _i10.Future<_i2.Either<_i11.Failure, int>>);
+
+  @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.KidsProgress>> getKidsProgress() =>
       (super.noSuchMethod(
         Invocation.method(
@@ -985,6 +1002,23 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
+  _i10.Future<_i2.Either<_i11.Failure, void>> pullKidsProgressFromCloud() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #pullKidsProgressFromCloud,
+          [],
+        ),
+        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+            _FakeEither_0<_i11.Failure, void>(
+          this,
+          Invocation.method(
+            #pullKidsProgressFromCloud,
+            [],
+          ),
+        )),
+      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+
+  @override
   _i10.Future<_i2.Either<_i11.Failure, void>> syncKidsProgressToCloud() =>
       (super.noSuchMethod(
         Invocation.method(
@@ -1002,15 +1036,13 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
-  _i10.Future<bool> hasPendingCloudWork() =>
-      (super.noSuchMethod(
+  _i10.Future<bool> hasPendingCloudWork() => (super.noSuchMethod(
         Invocation.method(
           #hasPendingCloudWork,
           [],
         ),
         returnValue: _i10.Future<bool>.value(false),
       ) as _i10.Future<bool>);
-
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i3.RemoteChildSummary>>>
@@ -1217,6 +1249,26 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
+  _i10.Future<_i2.Either<_i11.Failure, List<_i15.CertificateAward>>>
+      pullCertificatesFromCloud() => (super.noSuchMethod(
+            Invocation.method(
+              #pullCertificatesFromCloud,
+              [],
+            ),
+            returnValue: _i10.Future<
+                    _i2
+                    .Either<_i11.Failure, List<_i15.CertificateAward>>>.value(
+                _FakeEither_0<_i11.Failure, List<_i15.CertificateAward>>(
+              this,
+              Invocation.method(
+                #pullCertificatesFromCloud,
+                [],
+              ),
+            )),
+          ) as _i10
+              .Future<_i2.Either<_i11.Failure, List<_i15.CertificateAward>>>);
+
+  @override
   _i10.Future<_i2.Either<_i11.Failure, void>> pushCertificatesToCloud(
           List<_i15.CertificateAward>? certificates) =>
       (super.noSuchMethod(
@@ -1269,6 +1321,24 @@ class MockMemorizationPlusRepository extends _i1.Mock
           ),
         )),
       ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+
+  @override
+  _i10.Future<_i2.Either<_i11.Failure, _i3.FamilyDashboard>>
+      getFamilyDashboard() => (super.noSuchMethod(
+            Invocation.method(
+              #getFamilyDashboard,
+              [],
+            ),
+            returnValue: _i10
+                .Future<_i2.Either<_i11.Failure, _i3.FamilyDashboard>>.value(
+                _FakeEither_0<_i11.Failure, _i3.FamilyDashboard>(
+              this,
+              Invocation.method(
+                #getFamilyDashboard,
+                [],
+              ),
+            )),
+          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.FamilyDashboard>>);
 }
 
 /// A class which mocks [ScheduleNextReviewUsecase].
@@ -1499,6 +1569,20 @@ class MockAchievementService extends _i1.Mock
         ),
         returnValue: <_i15.CertificateAward>[],
       ) as List<_i15.CertificateAward>);
+
+  @override
+  _i10.Future<int> mergeEarnedFromCloud(
+    List<_i15.CertificateAward>? remote, {
+    required bool? isKids,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #mergeEarnedFromCloud,
+          [remote],
+          {#isKids: isKids},
+        ),
+        returnValue: _i10.Future<int>.value(0),
+      ) as _i10.Future<int>);
 
   @override
   bool hasNewCertificate({required bool? isKids}) => (super.noSuchMethod(
