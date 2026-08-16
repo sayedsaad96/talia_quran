@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../share_card_content.dart';
 import '../social_share_model.dart';
 import '../social_share_copy.dart';
 import '../social_share_theme.dart';
 import '../talia_share_tokens.dart';
 
-/// Specialized Template for Duas & Azkar
+/// Specialized Template for Duas & Azkar — calm, reflective composition.
 class DuaZikrTemplate extends StatelessWidget {
   final SocialShareData data;
   final SocialShareTheme theme;
@@ -36,9 +37,9 @@ class DuaZikrTemplate extends StatelessWidget {
     final isCompact = format == SocialShareFormat.square;
     final textFontSize = _getTextFontSize(data.content.length);
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+    return ShareCardContent(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -83,7 +84,7 @@ class DuaZikrTemplate extends StatelessWidget {
             child: Text(
               '« ${data.content} »',
               textAlign: TextAlign.center,
-              textDirection: copy.direction,
+              textDirection: TextDirection.rtl,
               style: TaliaShareTypography.quranVerse(
                 color: theme.textPrimary,
                 fontSize: textFontSize,
@@ -93,8 +94,10 @@ class DuaZikrTemplate extends StatelessWidget {
             ),
           ),
 
-          // Optional Translation
-          if (data.translation != null && data.translation!.isNotEmpty) ...[
+          // Optional translation — English content only for English users.
+          if (!copy.isArabic &&
+              data.translation != null &&
+              data.translation!.isNotEmpty) ...[
             SizedBox(height: isCompact ? 6 : 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -132,11 +135,16 @@ class DuaZikrTemplate extends StatelessWidget {
                     color: theme.accentColor,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    data.subtitle!,
-                    style: TaliaShareTypography.badge(
-                      color: theme.accentColor,
-                      fontSize: isCompact ? 10.5 : 11.5,
+                  Flexible(
+                    child: Text(
+                      data.subtitle!,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      style: TaliaShareTypography.badge(
+                        color: theme.accentColor,
+                        fontSize: isCompact ? 10.5 : 11.5,
+                      ),
                     ),
                   ),
                 ],

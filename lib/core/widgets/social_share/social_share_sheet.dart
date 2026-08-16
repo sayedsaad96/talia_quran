@@ -13,6 +13,7 @@ import '../../di/injection.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import 'social_share_card.dart';
+import 'social_share_copy.dart';
 import '../../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
 class SocialShareSheet extends StatefulWidget {
@@ -63,9 +64,20 @@ class SocialShareSheet extends StatefulWidget {
 
 class _SocialShareSheetState extends State<SocialShareSheet> {
   final ScreenshotController _screenshotController = ScreenshotController();
-  SocialShareThemeType _selectedThemeType = SocialShareThemeType.emeraldDark;
+  late SocialShareThemeType _selectedThemeType;
   SocialShareFormat _selectedFormat = SocialShareFormat.portrait;
   bool _isExporting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Content-driven default: the share type (and audience) picks the
+    // opening style; the user can still switch to any palette.
+    _selectedThemeType = SocialShareThemeType.defaultFor(
+      widget.data.category,
+      audience: widget.data.audience,
+    );
+  }
 
   SocialShareTheme get _currentTheme => SocialShareTheme.get(_selectedThemeType);
 
@@ -97,12 +109,13 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
   Future<void> _shareAsImage() async {
     if (_isExporting) return;
     setState(() => _isExporting = true);
+    final copy = SocialShareCopy.of(context);
 
     try {
       final imageBytes = await _captureCardImage();
       if (imageBytes == null) {
         if (mounted) {
-          _showSnackBar('تعذر إنشاء صورة البطاقة، يرجى المحاولة مرة أخرى.');
+          _showSnackBar(copy.errorCapture);
         }
         return;
       }
@@ -116,13 +129,13 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
       await SharePlus.instance.share(
         ShareParams(
           files: [XFile(file.path)],
-          text: widget.data.toPlainShareText(),
+          text: widget.data.toPlainShareText(footer: copy.plainShareFooter),
         ),
       );
     } catch (e) {
       debugPrint('Error sharing social image: $e');
       if (mounted) {
-        _showSnackBar('حدث خطأ أثناء مشاركة الصورة');
+        _showSnackBar(copy.errorShare);
       }
     } finally {
       if (mounted) {
@@ -134,6 +147,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
   Future<void> _saveToGallery() async {
     if (_isExporting) return;
     setState(() => _isExporting = true);
+    final copy = SocialShareCopy.of(context);
 
     try {
       final hasAccess = await Gal.hasAccess();
@@ -141,7 +155,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
         final granted = await Gal.requestAccess();
         if (!granted) {
           if (mounted) {
-            _showSnackBar('يلزم الحصول على إذن الوصول لمعرض الصور للحفظ');
+            _showSnackBar(copy.permissionNeeded);
           }
           return;
         }
@@ -150,7 +164,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
       final imageBytes = await _captureCardImage();
       if (imageBytes == null) {
         if (mounted) {
-          _showSnackBar('تعذر جلب صورة البطاقة للحفظ');
+          _showSnackBar(copy.errorCaptureForSave);
         }
         return;
       }
@@ -162,12 +176,12 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
 
       if (mounted) {
         unawaited(HapticFeedback.mediumImpact());
-        _showSnackBar('تم حفظ البطاقة بنجاح في معرض الصور! 📸');
+        _showSnackBar(copy.savedToGallery);
       }
     } catch (e) {
       debugPrint('Error saving social card image: $e');
       if (mounted) {
-        _showSnackBar('تعذر حفظ الصورة في المعرض');
+        _showSnackBar(copy.errorSave);
       }
     } finally {
       if (mounted) {
@@ -177,10 +191,13 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
   }
 
   void _shareAsText() {
+    final copy = SocialShareCopy.of(context);
     unawaited(HapticFeedback.lightImpact());
     unawaited(
       SharePlus.instance.share(
-        ShareParams(text: widget.data.toPlainShareText()),
+        ShareParams(
+          text: widget.data.toPlainShareText(footer: copy.plainShareFooter),
+        ),
       ),
     );
   }
@@ -196,6 +213,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final copy = SocialShareCopy.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final cardWidth = (screenWidth - AppSpacing.md * 2).clamp(0.0, 360.0);
@@ -246,7 +264,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                         ),
                         const SizedBox(width: AppSpacing.xs),
                         Text(
-                          'مشاركة بطاقة سوشيال ميديا',
+                          copy.sheetTitle,
                           style: AppTypography.titleMedium.copyWith(
                             color: isDark
                                 ? AppColors.darkTextPrimary
@@ -266,22 +284,21 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
 
               const SizedBox(height: AppSpacing.xs),
 
-              // Card Preview Scroll Area with AnimatedSwitcher
+              // Card Preview Area.  The live preview is a plain render: the
+              // export re-renders offscreen on a fixed 360-logical canvas, so
+              // no capture boundary is needed around the preview itself.
               Flexible(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                   child: Center(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
-                      child: Screenshot(
+                      child: SocialShareCard(
                         key: ValueKey('$_selectedThemeType-$_selectedFormat'),
-                        controller: _screenshotController,
-                        child: SocialShareCard(
-                          data: widget.data,
-                          theme: _currentTheme,
-                          format: _selectedFormat,
-                          width: cardWidth,
-                        ),
+                        data: widget.data,
+                        theme: _currentTheme,
+                        format: _selectedFormat,
+                        width: cardWidth,
                       ),
                     ),
                   ),
@@ -308,7 +325,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                               ? AppColors.primary
                               : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
                         ),
-                        label: Text(fmt.displayName),
+                        label: Text(copy.formatName(fmt)),
                         selected: isSelected,
                         onSelected: (selected) {
                           if (selected) {
@@ -344,7 +361,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
             child: Align(
               alignment: Alignment.centerRight,
               child: Text(
-                'اختر مظهر البطاقة:',
+                copy.chooseStyle,
                 style: AppTypography.labelSmall.copyWith(
                   color: isDark
                       ? AppColors.darkTextSecondary
@@ -371,6 +388,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
 
                 return _ThemePreviewTile(
                   theme: themeObj,
+                  displayName: copy.themeName(themeType),
                   isSelected: isSelected,
                   isDark: isDark,
                   onTap: () {
@@ -417,7 +435,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                             )
                           : const Icon(Icons.send_rounded, size: 18),
                       label: Text(
-                        _isExporting ? 'جاري التجهيز...' : 'مشاركة كصورة 📸',
+                        _isExporting ? copy.preparing : copy.shareAsImage,
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       style: ElevatedButton.styleFrom(
@@ -439,7 +457,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                 IconButton.filledTonal(
                   onPressed: _isExporting ? null : _saveToGallery,
                   icon: const Icon(Icons.download_rounded, size: 20),
-                  tooltip: 'حفظ المعرض',
+                  tooltip: copy.saveToGalleryTooltip,
                   style: IconButton.styleFrom(
                     backgroundColor: isDark
                         ? AppColors.darkSurfaceVariant
@@ -458,7 +476,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                 IconButton.filledTonal(
                   onPressed: _isExporting ? null : _shareAsText,
                   icon: const Icon(Icons.short_text_rounded, size: 20),
-                  tooltip: 'مشاركة كنص',
+                  tooltip: copy.shareAsTextTooltip,
                   style: IconButton.styleFrom(
                     backgroundColor: isDark
                         ? AppColors.darkSurfaceVariant
@@ -478,20 +496,22 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
         ],
       ),
     ),
-  ),
-);
+    ),
+  );
   }
 }
 
 /// Rich theme preview tile widget showing mini gradient + accent border
 class _ThemePreviewTile extends StatelessWidget {
   final SocialShareTheme theme;
+  final String displayName;
   final bool isSelected;
   final bool isDark;
   final VoidCallback onTap;
 
   const _ThemePreviewTile({
     required this.theme,
+    required this.displayName,
     required this.isSelected,
     required this.isDark,
     required this.onTap,
@@ -538,7 +558,7 @@ class _ThemePreviewTile extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              theme.type.displayName,
+              displayName,
               style: TextStyle(
                 color: theme.textPrimary,
                 fontSize: 11,

@@ -8,6 +8,7 @@ abstract class TaliaShareColors {
   static const Color royalTealLight = Color(0xFF148275);
   static const Color royalTealDark = Color(0xFF042F2E);
   static const Color royalTealDeep = Color(0xFF021B19);
+  static const Color luminousTurquoise = Color(0xFF7EE0C9);
 
   // ─── Warm & Metallic Gold Accents ─────────────────────────────────────────
   static const Color warmGold = Color(0xFFF59E0B);
@@ -16,6 +17,13 @@ abstract class TaliaShareColors {
   static const Color metallicGold = Color(0xFFE5C158);
   static const Color champagneGold = Color(0xFFF3E2A9);
   static const Color deepGold = Color(0xFF8B6508);
+
+  // ─── Streak Ember & Medal Metals (shared across templates) ────────────────
+  static const Color streakEmber = Color(0xFFFF8C42);
+  static const Color streakEmberDeep = Color(0xFFFF6A00);
+  static const Color streakEmberLight = Color(0xFFFFB03A);
+  static const Color medalGold = Color(0xFFD4AF37);
+  static const Color medalInk = Color(0xFF2C1E03);
 
   // ─── Ivory & Parchment Surfaces ───────────────────────────────────────────
   static const Color luminousIvory = Color(0xFFFAF8F2);
@@ -29,6 +37,8 @@ abstract class TaliaShareColors {
   static const Color glowAmber = Color(0x33D4A017);
   static const Color patternSubtleLight = Color(0x1AEAEEEC);
   static const Color patternSubtleDark = Color(0x0C0D5C53);
+  static const Color kidsStarGold = Color(0xFFFBBF24);
+  static const Color kidsSparkleTeal = Color(0xFF77D6C7);
 
   // ─── Text & Ink ───────────────────────────────────────────────────────────
   static const Color inkDeep = Color(0xFF1C2B2F);
@@ -40,8 +50,9 @@ abstract class TaliaShareColors {
 
 /// Responsive Dimensions & Aspect Ratios
 abstract class TaliaShareDimensions {
-  /// Standard export dimensions
-  static const double baseWidth = 380.0;
+  /// Standard export canvas width.  Matches the fixed 360-logical export
+  /// canvas so previews and exports lay out identically.
+  static const double baseWidth = 360.0;
 
   // Aspect ratios
   static const double portraitRatio = 0.8; // 4:5 -> 1080x1350
@@ -87,20 +98,6 @@ abstract class TaliaShareTypography {
       height: height,
       letterSpacing: 0,
       wordSpacing: 1.5,
-    );
-  }
-
-  /// Bismillah styling
-  static TextStyle bismillah({
-    required Color color,
-    double fontSize = 15,
-  }) {
-    return TextStyle(
-      fontFamily: quranFontFamily,
-      fontSize: fontSize,
-      fontWeight: FontWeight.w600,
-      color: color,
-      letterSpacing: 0.5,
     );
   }
 
@@ -173,7 +170,7 @@ class IslamicOctagramPainter extends CustomPainter {
 
   const IslamicOctagramPainter({
     required this.color,
-    this.density = 56.0,
+    this.density = 64.0,
   });
 
   @override
@@ -261,13 +258,17 @@ class MihrabArchPainter extends CustomPainter {
 /// Golden Corner Arabesque Ornament
 class GoldenCornerPainter extends CustomPainter {
   final Color color;
+  final double opacity;
 
-  const GoldenCornerPainter({required this.color});
+  const GoldenCornerPainter({
+    required this.color,
+    this.opacity = 0.55,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withValues(alpha: 0.8)
+      ..color = color.withValues(alpha: opacity)
       ..strokeWidth = 1.6
       ..style = PaintingStyle.stroke;
 
@@ -284,12 +285,12 @@ class GoldenCornerPainter extends CustomPainter {
 
     // Inner decorative corner dot
     final dotPaint = Paint()
-      ..color = color
+      ..color = color.withValues(alpha: opacity)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(const Offset(5, 5), 2.2, dotPaint);
   }
 
   @override
   bool shouldRepaint(covariant GoldenCornerPainter oldDelegate) =>
-      oldDelegate.color != color;
+      oldDelegate.color != color || oldDelegate.opacity != opacity;
 }

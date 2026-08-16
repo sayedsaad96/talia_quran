@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../share_card_content.dart';
 import '../social_share_model.dart';
 import '../social_share_copy.dart';
 import '../social_share_theme.dart';
 import '../talia_share_tokens.dart';
 
-/// Specialized Template for Memorization Milestones
+/// Specialized Template for Memorization Milestones — progress & mastery.
 class MemorizationTemplate extends StatelessWidget {
   final SocialShareData data;
   final SocialShareTheme theme;
@@ -22,11 +23,13 @@ class MemorizationTemplate extends StatelessWidget {
     final copy = SocialShareCopy.of(context);
     final isCompact = format == SocialShareFormat.square;
     final isStory = format == SocialShareFormat.story;
+    final isKids = data.audience == SocialShareAudience.kids;
     final ayahs = data.memorizedAyahsCount ?? data.currentValue ?? 0;
+    final surahs = data.memorizedSurahsCount;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+    return ShareCardContent(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -74,7 +77,7 @@ class MemorizationTemplate extends StatelessWidget {
 
           SizedBox(height: isCompact ? 6 : 10),
 
-          // ─── 3. Stat Card Highlight ───────────────────────────────────────
+          // ─── 3. Stat Card Highlight (real ayah + surah counts) ───────────
           Container(
             padding: EdgeInsets.symmetric(
               horizontal: isCompact ? 16 : 24,
@@ -91,47 +94,96 @@ class MemorizationTemplate extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Column(
-                  children: [
-                    Text(
-                      '$ayahs',
-                      style: TaliaShareTypography.metricValue(
-                        color: theme.accentColor,
-                        fontSize: isCompact ? 24 : 32,
+                Flexible(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$ayahs',
+                        style: TaliaShareTypography.metricValue(
+                          color: theme.accentColor,
+                          fontSize: isCompact ? 24 : 32,
+                        ),
                       ),
-                    ),
-                    Text(
-                      copy.isArabic ? 'آية محفوظة' : 'ayahs memorized',
-                      style: TaliaShareTypography.badge(
-                        color: theme.textSecondary,
-                        fontSize: isCompact ? 10 : 11.5,
+                      Text(
+                        copy.ayahsLabel,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: TaliaShareTypography.badge(
+                          color: theme.textSecondary,
+                          fontSize: isCompact ? 10 : 11.5,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-                if (data.subtitle != null && data.subtitle!.isNotEmpty) ...[
+                if (surahs != null) ...[
                   Container(
                     height: 28,
                     width: 1,
                     margin: const EdgeInsets.symmetric(horizontal: 14),
                     color: theme.borderColor.withValues(alpha: 0.4),
                   ),
-                  Column(
-                    children: [
-                      const Icon(
-                        Icons.auto_stories_rounded,
-                        color: TaliaShareColors.warmGold,
-                        size: 20,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        data.subtitle!,
-                        style: TaliaShareTypography.badge(
-                          color: theme.accentColor,
-                          fontSize: isCompact ? 10 : 11.5,
+                  Flexible(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.auto_stories_rounded,
+                          color: TaliaShareColors.warmGold,
+                          size: 20,
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          '$surahs',
+                          style: TaliaShareTypography.metricValue(
+                            color: theme.accentColor,
+                            fontSize: isCompact ? 24 : 32,
+                          ),
+                        ),
+                        Text(
+                          copy.surahsLabel,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          style: TaliaShareTypography.badge(
+                            color: theme.textSecondary,
+                            fontSize: isCompact ? 10 : 11.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                if (surahs == null &&
+                    data.subtitle != null &&
+                    data.subtitle!.isNotEmpty) ...[
+                  Container(
+                    height: 28,
+                    width: 1,
+                    margin: const EdgeInsets.symmetric(horizontal: 14),
+                    color: theme.borderColor.withValues(alpha: 0.4),
+                  ),
+                  Flexible(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.auto_stories_rounded,
+                          color: TaliaShareColors.warmGold,
+                          size: 20,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          data.subtitle!,
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 2,
+                          style: TaliaShareTypography.badge(
+                            color: theme.accentColor,
+                            fontSize: isCompact ? 10 : 11.5,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ],
@@ -141,19 +193,31 @@ class MemorizationTemplate extends StatelessWidget {
           SizedBox(height: isCompact ? 6 : 10),
 
           // ─── 4. Motivational Message ──────────────────────────────────────
-          if (data.content.trim().isNotEmpty) Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(
-              data.content,
-              textAlign: TextAlign.center,
-              textDirection: copy.direction,
-              style: TaliaShareTypography.body(
-                color: theme.textPrimary,
-                fontSize: isCompact ? 12.5 : 14,
-                height: 1.5,
+          if (data.content.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                data.content,
+                textAlign: TextAlign.center,
+                style: TaliaShareTypography.body(
+                  color: theme.textPrimary,
+                  fontSize: isCompact ? 12.5 : 14,
+                  height: 1.5,
+                ),
               ),
             ),
-          ),
+
+          if (isKids) ...[
+            SizedBox(height: isCompact ? 4 : 6),
+            Text(
+              copy.kidsEncouragement,
+              textAlign: TextAlign.center,
+              style: TaliaShareTypography.badge(
+                color: theme.textSecondary,
+                fontSize: isCompact ? 10 : 11.5,
+              ),
+            ),
+          ],
 
           // ─── 5. Talia Companion Asset ─────────────────────────────────────
           if (data.showCharacter) ...[
@@ -161,9 +225,11 @@ class MemorizationTemplate extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.asset(
+                key: const ValueKey('share-character-image'),
                 data.effectiveCharacterAssetPath,
-                height: isCompact ? 48 : (isStory ? 76 : 58),
+                height: isCompact ? 48 : (isStory ? (isKids ? 88 : 76) : (isKids ? 68 : 58)),
                 fit: BoxFit.contain,
+                cacheWidth: 288,
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),
               ),
             ),

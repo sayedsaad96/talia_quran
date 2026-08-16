@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import '../share_card_content.dart';
 import '../social_share_model.dart';
+import '../social_share_copy.dart';
 import '../social_share_theme.dart';
 import '../talia_share_tokens.dart';
 
-/// Specialized Template for Official Memorization Certificates
+/// Specialized share-card Template for Official Memorization Certificates.
+/// (The certificate system itself is out of scope — this only renders share
+/// data; every label around the Arabic award title is localized copy.)
 class CertificateTemplate extends StatelessWidget {
   final SocialShareData data;
   final SocialShareTheme theme;
@@ -18,11 +22,12 @@ class CertificateTemplate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final copy = SocialShareCopy.of(context);
     final isCompact = format == SocialShareFormat.square;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+    return ShareCardContent(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -54,8 +59,8 @@ class CertificateTemplate extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: [
                       theme.accentColor,
-                      const Color(0xFFD4AF37),
-                      const Color(0xFF8B6508),
+                      TaliaShareColors.medalGold,
+                      TaliaShareColors.deepGold,
                     ],
                   ),
                   border: Border.all(
@@ -65,7 +70,7 @@ class CertificateTemplate extends StatelessWidget {
                 ),
                 child: const Icon(
                   Icons.verified_rounded,
-                  color: Color(0xFF2C1E03),
+                  color: TaliaShareColors.medalInk,
                   size: 30,
                 ),
               ),
@@ -76,7 +81,7 @@ class CertificateTemplate extends StatelessWidget {
 
           // ─── 2. Certificate Title ─────────────────────────────────────────
           Text(
-            data.title ?? 'شهادة إتمام ومواظبة',
+            data.title ?? copy.certificateTitle,
             textAlign: TextAlign.center,
             style: TaliaShareTypography.title(
               color: theme.accentColor,
@@ -86,21 +91,21 @@ class CertificateTemplate extends StatelessWidget {
 
           SizedBox(height: isCompact ? 4 : 8),
 
-          // ─── 3. Content ───────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(
-              data.content,
-              textAlign: TextAlign.center,
-              textDirection: TextDirection.rtl,
-              style: TaliaShareTypography.body(
-                color: theme.textPrimary,
-                fontSize: isCompact ? 13 : 14.5,
-                fontWeight: FontWeight.w600,
-                height: 1.5,
+          // ─── 3. Award sentence (real award title embedded) ───────────────
+          if (data.content.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                copy.certificateSentence(data.content),
+                textAlign: TextAlign.center,
+                style: TaliaShareTypography.body(
+                  color: theme.textPrimary,
+                  fontSize: isCompact ? 13 : 14.5,
+                  fontWeight: FontWeight.w600,
+                  height: 1.5,
+                ),
               ),
             ),
-          ),
 
           SizedBox(height: isCompact ? 8 : 12),
 
@@ -125,11 +130,16 @@ class CertificateTemplate extends StatelessWidget {
                     color: theme.accentColor,
                   ),
                   const SizedBox(width: 5),
-                  Text(
-                    data.subtitle ?? 'رقم التوثيق: ${data.verificationCode}',
-                    style: TaliaShareTypography.badge(
-                      color: theme.badgeTextColor,
-                      fontSize: isCompact ? 10.5 : 12,
+                  Flexible(
+                    child: Text(
+                      data.subtitle ??
+                          copy.verificationCode(data.verificationCode ?? ''),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TaliaShareTypography.badge(
+                        color: theme.badgeTextColor,
+                        fontSize: isCompact ? 10.5 : 12,
+                      ),
                     ),
                   ),
                 ],

@@ -6,6 +6,7 @@ import 'social_share_copy.dart';
 import 'social_share_theme.dart';
 import 'talia_share_tokens.dart';
 
+export 'share_card_content.dart';
 export 'share_card_shell.dart';
 export 'share_card_template_resolver.dart';
 export 'social_share_model.dart';

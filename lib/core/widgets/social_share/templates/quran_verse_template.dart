@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import '../share_card_content.dart';
 import '../social_share_model.dart';
 import '../social_share_copy.dart';
 import '../social_share_theme.dart';
 import '../talia_share_tokens.dart';
 
-/// Specialized Template for Quran Verses
+/// Specialized Template for Quran Verses.
+///
+/// The verse text is the hero: it comes verbatim from the trusted Quran
+/// source (`Ayah.text`) and no Quran wording is ever composed or hardcoded
+/// in presentation code.
 class QuranVerseTemplate extends StatelessWidget {
   final SocialShareData data;
   final SocialShareTheme theme;
@@ -37,31 +42,13 @@ class QuranVerseTemplate extends StatelessWidget {
     final verseFontSize = _getVerseFontSize(contentLength);
     final isCompact = format == SocialShareFormat.square;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+    return ShareCardContent(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ─── 1. Bismillah Header ──────────────────────────────────────────
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 3),
-            decoration: BoxDecoration(
-              color: theme.accentColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(
-              '﴿ بِسْمِ اللهِ الرَّحْمٰنِ الرَّحِيمِ ﴾',
-              textAlign: TextAlign.center,
-              style: TaliaShareTypography.bismillah(
-                color: theme.accentColor,
-                fontSize: isCompact ? 13.5 : 15.5,
-              ),
-            ),
-          ),
-          SizedBox(height: isCompact ? 8 : 12),
-
-          // ─── 2. Decorative Quran Verse Text ───────────────────────────────
+          // ─── 1. Decorative Quran Verse Text (the hero) ───────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 6),
             child: Text(
@@ -77,8 +64,11 @@ class QuranVerseTemplate extends StatelessWidget {
             ),
           ),
 
-          // Optional Translation
-          if (data.translation != null && data.translation!.isNotEmpty) ...[
+          // Optional translation — English content is only shown to English
+          // users so Arabic cards never mix in untranslated foreign text.
+          if (!copy.isArabic &&
+              data.translation != null &&
+              data.translation!.isNotEmpty) ...[
             SizedBox(height: isCompact ? 6 : 10),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -95,7 +85,7 @@ class QuranVerseTemplate extends StatelessWidget {
 
           SizedBox(height: isCompact ? 8 : 14),
 
-          // ─── 3. Surah & Ayah Badge Footer ─────────────────────────────────
+          // ─── 2. Surah & Ayah Badge Footer ─────────────────────────────────
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
@@ -115,26 +105,31 @@ class QuranVerseTemplate extends StatelessWidget {
                   color: theme.accentColor,
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  data.surahName == null ? (copy.isArabic ? 'القرآن الكريم' : 'The Holy Quran') : copy.surah(data.surahName!),
-                  style: TaliaShareTypography.title(
-                    color: theme.accentColor,
-                    fontSize: isCompact ? 13 : 14.5,
-                  ),
-                ),
-                if (data.subtitle != null || data.ayahNumber != null) ...[
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 6),
-                    child: Text(
-                      '•',
-                      style: TextStyle(color: theme.accentColor),
+                Flexible(
+                  child: Text(
+                    data.surahName == null ? copy.holyQuran : copy.surah(data.surahName!),
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TaliaShareTypography.title(
+                      color: theme.accentColor,
+                      fontSize: isCompact ? 13 : 14.5,
                     ),
                   ),
-                  Text(
-                    data.ayahNumber == null ? data.subtitle! : copy.ayah(data.ayahNumber!),
-                    style: TaliaShareTypography.badge(
-                      color: theme.accentColor.withValues(alpha: 0.9),
-                      fontSize: isCompact ? 11 : 12.5,
+                ),
+                if (data.ayahNumber != null) ...[
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 6),
+                    child: Text('•'),
+                  ),
+                  Flexible(
+                    child: Text(
+                      copy.ayah(data.ayahNumber!),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TaliaShareTypography.badge(
+                        color: theme.accentColor.withValues(alpha: 0.9),
+                        fontSize: isCompact ? 11 : 12.5,
+                      ),
                     ),
                   ),
                 ],

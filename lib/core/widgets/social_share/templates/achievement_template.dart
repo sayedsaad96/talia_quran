@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+import '../share_card_content.dart';
 import '../social_share_model.dart';
 import '../social_share_copy.dart';
 import '../social_share_theme.dart';
 import '../talia_share_tokens.dart';
 
-/// Specialized Template for Unlocked Achievements
+/// Specialized Template for Unlocked Achievements.
+///
+/// Adults get a refined, typography-forward variant; kids get a playful
+/// variant with the Talia companion cheering next to the medal.
 class AchievementTemplate extends StatelessWidget {
   final SocialShareData data;
   final SocialShareTheme theme;
@@ -22,10 +26,11 @@ class AchievementTemplate extends StatelessWidget {
     final copy = SocialShareCopy.of(context);
     final isCompact = format == SocialShareFormat.square;
     final isStory = format == SocialShareFormat.story;
+    final isKids = data.audience == SocialShareAudience.kids;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+    return ShareCardContent(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -61,8 +66,8 @@ class AchievementTemplate extends StatelessWidget {
                     end: Alignment.bottomRight,
                     colors: [
                       theme.accentColor,
-                      const Color(0xFFD4AF37),
-                      const Color(0xFF8B6508),
+                      TaliaShareColors.medalGold,
+                      TaliaShareColors.deepGold,
                     ],
                   ),
                   border: Border.all(
@@ -85,7 +90,7 @@ class AchievementTemplate extends StatelessWidget {
                         )
                       : Icon(
                           Icons.emoji_events_rounded,
-                          color: const Color(0xFF2C1E03),
+                          color: TaliaShareColors.medalInk,
                           size: isCompact ? 28 : 34,
                         ),
                 ),
@@ -102,7 +107,7 @@ class AchievementTemplate extends StatelessWidget {
               textAlign: TextAlign.center,
               style: TaliaShareTypography.title(
                 color: theme.accentColor,
-                fontSize: isCompact ? 18 : 22,
+                fontSize: isCompact ? 18 : (isKids ? 23 : 22),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -115,7 +120,6 @@ class AchievementTemplate extends StatelessWidget {
             child: Text(
               data.content,
               textAlign: TextAlign.center,
-              textDirection: copy.direction,
               style: TaliaShareTypography.body(
                 color: theme.textPrimary,
                 fontSize: isCompact ? 13 : 15,
@@ -147,28 +151,45 @@ class AchievementTemplate extends StatelessWidget {
                   color: theme.accentColor,
                 ),
                 const SizedBox(width: 5),
-                Text(
-                  data.targetValue != null && data.currentValue != null
-                      ? '${data.achievementUnlocked == false ? copy.progress(data.currentValue!, data.targetValue!) : copy.completed} (${copy.progress(data.currentValue!, data.targetValue!)})'
-                      : copy.achievementComplete,
-                  style: TaliaShareTypography.badge(
-                    color: theme.badgeTextColor,
-                    fontSize: isCompact ? 10.5 : 12,
+                Flexible(
+                  child: Text(
+                    data.targetValue != null && data.currentValue != null
+                        ? '${data.achievementUnlocked == false ? copy.progress(data.currentValue!, data.targetValue!) : copy.completed} (${copy.progress(data.currentValue!, data.targetValue!)})'
+                        : copy.achievementComplete,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TaliaShareTypography.badge(
+                      color: theme.badgeTextColor,
+                      fontSize: isCompact ? 10.5 : 12,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
 
-          // ─── 5. Talia Celebratory Companion ───────────────────────────────
+          // ─── 5. Kids encouragement + Talia companion ──────────────────────
+          if (isKids) ...[
+            SizedBox(height: isCompact ? 6 : 10),
+            Text(
+              copy.kidsEncouragement,
+              textAlign: TextAlign.center,
+              style: TaliaShareTypography.badge(
+                color: theme.textSecondary,
+                fontSize: isCompact ? 10 : 11.5,
+              ),
+            ),
+          ],
           if (data.showCharacter) ...[
             SizedBox(height: isCompact ? 6 : (isStory ? 16 : 10)),
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.asset(
+                key: const ValueKey('share-character-image'),
                 data.effectiveCharacterAssetPath,
-                height: isCompact ? 52 : (isStory ? 84 : 64),
+                height: isCompact ? 52 : (isStory ? (isKids ? 96 : 84) : (isKids ? 74 : 64)),
                 fit: BoxFit.contain,
+                cacheWidth: 288,
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),
               ),
             ),

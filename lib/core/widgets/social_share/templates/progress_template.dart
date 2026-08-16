@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import '../share_card_content.dart';
 import '../social_share_model.dart';
 import '../social_share_copy.dart';
 import '../social_share_theme.dart';
 import '../talia_share_tokens.dart';
 
-/// Specialized Template for Multi-Stat Progress Harvest
+/// Specialized Template for Multi-Stat Progress Harvest.
 class ProgressTemplate extends StatelessWidget {
   final SocialShareData data;
   final SocialShareTheme theme;
@@ -22,14 +23,15 @@ class ProgressTemplate extends StatelessWidget {
     final copy = SocialShareCopy.of(context);
     final isCompact = format == SocialShareFormat.square;
     final isStory = format == SocialShareFormat.story;
+    final isKids = data.audience == SocialShareAudience.kids;
 
     final pages = data.readPagesCount ?? 0;
     final ayahs = data.memorizedAyahsCount ?? 0;
     final streak = data.streakDays ?? 0;
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
+    return ShareCardContent(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
@@ -66,54 +68,71 @@ class ProgressTemplate extends StatelessWidget {
           SizedBox(height: isCompact ? 8 : 12),
 
           // ─── 3. 3-Stat Metric Grid ────────────────────────────────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _StatPill(
-                icon: Icons.menu_book_rounded,
-                value: '$pages',
-                label: copy.isArabic ? 'صفحات مقروءة' : 'pages read',
-                color: theme.accentColor,
-                theme: theme,
-                isCompact: isCompact,
-              ),
-              SizedBox(width: isCompact ? 6 : 8),
-              _StatPill(
-                icon: Icons.psychology_rounded,
-                value: '$ayahs',
-                label: copy.isArabic ? 'آيات محفوظة' : 'ayahs memorized',
-                color: TaliaShareColors.royalTealLight,
-                theme: theme,
-                isCompact: isCompact,
-              ),
-              SizedBox(width: isCompact ? 6 : 8),
-              _StatPill(
-                icon: Icons.local_fire_department_rounded,
-                value: '$streak',
-                label: copy.isArabic ? 'أيام متتالية' : 'streak days',
-                color: const Color(0xFFFF8C42),
-                theme: theme,
-                isCompact: isCompact,
-              ),
-            ],
+          // Fixed-width pills can outgrow narrow content regions, so the row
+          // measures naturally and scales down instead of clipping.
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _StatPill(
+                  icon: Icons.menu_book_rounded,
+                  value: '$pages',
+                  label: copy.pagesReadLabel,
+                  color: theme.accentColor,
+                  theme: theme,
+                  isCompact: isCompact,
+                ),
+                SizedBox(width: isCompact ? 6 : 8),
+                _StatPill(
+                  icon: Icons.psychology_rounded,
+                  value: '$ayahs',
+                  label: copy.ayahsMemorizedLabel,
+                  color: TaliaShareColors.royalTealLight,
+                  theme: theme,
+                  isCompact: isCompact,
+                ),
+                SizedBox(width: isCompact ? 6 : 8),
+                _StatPill(
+                  icon: Icons.local_fire_department_rounded,
+                  value: '$streak',
+                  label: copy.streakDaysLabel,
+                  color: TaliaShareColors.streakEmber,
+                  theme: theme,
+                  isCompact: isCompact,
+                ),
+              ],
+            ),
           ),
 
           SizedBox(height: isCompact ? 8 : 12),
 
           // ─── 4. Motivational Message ──────────────────────────────────────
-          if (data.content.trim().isNotEmpty) Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(
-              data.content,
-              textAlign: TextAlign.center,
-              textDirection: copy.direction,
-              style: TaliaShareTypography.body(
-                color: theme.textPrimary,
-                fontSize: isCompact ? 12 : 13.5,
-                height: 1.45,
+          if (data.content.trim().isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                data.content,
+                textAlign: TextAlign.center,
+                style: TaliaShareTypography.body(
+                  color: theme.textPrimary,
+                  fontSize: isCompact ? 12 : 13.5,
+                  height: 1.45,
+                ),
               ),
             ),
-          ),
+
+          if (isKids) ...[
+            SizedBox(height: isCompact ? 4 : 6),
+            Text(
+              copy.kidsEncouragement,
+              textAlign: TextAlign.center,
+              style: TaliaShareTypography.badge(
+                color: theme.textSecondary,
+                fontSize: isCompact ? 10 : 11.5,
+              ),
+            ),
+          ],
 
           // ─── 5. Talia Celebratory Companion ───────────────────────────────
           if (data.showCharacter) ...[
@@ -121,9 +140,11 @@ class ProgressTemplate extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.asset(
+                key: const ValueKey('share-character-image'),
                 data.effectiveCharacterAssetPath,
-                height: isCompact ? 46 : (isStory ? 74 : 56),
+                height: isCompact ? 46 : (isStory ? (isKids ? 86 : 74) : (isKids ? 66 : 56)),
                 fit: BoxFit.contain,
+                cacheWidth: 288,
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),
               ),
             ),

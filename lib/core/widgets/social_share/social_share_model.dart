@@ -15,27 +15,6 @@ enum SocialShareCategory {
   progress,
   certificate;
 
-  String get defaultBadge {
-    switch (this) {
-      case SocialShareCategory.quranAyah:
-        return 'آية قرآنية';
-      case SocialShareCategory.azkar:
-        return 'ذِكْر مبارك';
-      case SocialShareCategory.dua:
-        return 'دعاء مستجاب';
-      case SocialShareCategory.achievement:
-        return 'إنجاز جديد';
-      case SocialShareCategory.memorization:
-        return 'إنجاز الحفظ';
-      case SocialShareCategory.streak:
-        return 'استمرارية متواصلة';
-      case SocialShareCategory.progress:
-        return 'حصاد التقدم';
-      case SocialShareCategory.certificate:
-        return 'شهادة إتمام ومواظبة';
-    }
-  }
-
   IconData get icon {
     switch (this) {
       case SocialShareCategory.quranAyah:
@@ -69,7 +48,7 @@ enum SocialShareFormat {
   square,   // 1080x1080 (1:1)
   story;    // 1080x1920 (9:16)
 
-  String get displayName {
+  String get nameAr {
     switch (this) {
       case SocialShareFormat.portrait:
         return 'بطاقة (4:5)';
@@ -77,6 +56,17 @@ enum SocialShareFormat {
         return 'مربع (1:1)';
       case SocialShareFormat.story:
         return 'ستوري (9:16)';
+    }
+  }
+
+  String get nameEn {
+    switch (this) {
+      case SocialShareFormat.portrait:
+        return 'Post (4:5)';
+      case SocialShareFormat.square:
+        return 'Square (1:1)';
+      case SocialShareFormat.story:
+        return 'Story (9:16)';
     }
   }
 
@@ -107,6 +97,11 @@ enum SocialShareFormat {
 
 /// Rich, content-driven domain representation for Social Share Cards
 class SocialShareData {
+  /// The only official character asset currently shipped with the app.
+  /// Contextual pose assets must not be referenced until they exist on disk.
+  static const String masterCharacterAsset =
+      'assets/images/character/Talia_Master_Character.png';
+
   final String content;
   final String? title;
   final String? subtitle;
@@ -125,6 +120,7 @@ class SocialShareData {
   final int? targetValue;
   final int? readPagesCount;
   final int? memorizedAyahsCount;
+  final int? memorizedSurahsCount;
   final int? streakDays;
   final String? verificationCode;
   final bool showCharacter;
@@ -149,6 +145,7 @@ class SocialShareData {
     this.targetValue,
     this.readPagesCount,
     this.memorizedAyahsCount,
+    this.memorizedSurahsCount,
     this.streakDays,
     this.verificationCode,
     this.showCharacter = false,
@@ -171,14 +168,13 @@ class SocialShareData {
       // Labels are supplied by the localized template.  Keep the trusted
       // Quran source text and reference as data rather than presentation copy.
       title: surahName,
-      subtitle: '${ayah.numberInSurah}',
       surahName: surahName,
       ayahNumber: ayah.numberInSurah,
       juzNumber: ayah.juz,
       translation: translation,
       userName: userName,
       showCharacter: showCharacter,
-      characterAssetPath: 'assets/images/character/Talia_Master_Character.png',
+      characterAssetPath: masterCharacterAsset,
     );
   }
 
@@ -188,7 +184,7 @@ class SocialShareData {
     String? userName,
     String? localizedTitle,
     String? localizedDesc,
-    bool showCharacter = true,
+    bool showCharacter = false,
   }) {
     return SocialShareData(
       content: localizedDesc ?? achievement.descriptionKey,
@@ -200,7 +196,7 @@ class SocialShareData {
       targetValue: achievement.targetValue,
       userName: userName,
       showCharacter: showCharacter,
-      characterAssetPath: 'assets/images/character/Talia_Master_Character.png',
+      characterAssetPath: masterCharacterAsset,
       achievementUnlocked: achievement.isUnlocked,
     );
   }
@@ -221,7 +217,7 @@ class SocialShareData {
       translation: zikr.translation.isNotEmpty ? zikr.translation : null,
       userName: userName,
       showCharacter: showCharacter,
-      characterAssetPath: 'assets/images/character/Talia_Master_Character.png',
+      characterAssetPath: masterCharacterAsset,
     );
   }
 
@@ -233,7 +229,7 @@ class SocialShareData {
     String? subtitle,
     String? userName,
     int? targetAyahs,
-    bool showCharacter = true,
+    bool showCharacter = false,
   }) {
     return SocialShareData(
       content: '',
@@ -241,11 +237,12 @@ class SocialShareData {
       subtitle: subtitle,
       category: SocialShareCategory.memorization,
       memorizedAyahsCount: ayahsCount,
+      memorizedSurahsCount: surahsCount,
       targetValue: targetAyahs,
       currentValue: ayahsCount,
       userName: userName,
       showCharacter: showCharacter,
-      characterAssetPath: 'assets/images/character/Talia_Master_Character.png',
+      characterAssetPath: masterCharacterAsset,
     );
   }
 
@@ -254,7 +251,7 @@ class SocialShareData {
     required int streakDays,
     int? longestStreak,
     String? userName,
-    bool showCharacter = true,
+    bool showCharacter = false,
   }) {
     return SocialShareData(
       content: '',
@@ -266,7 +263,7 @@ class SocialShareData {
       targetValue: longestStreak,
       userName: userName,
       showCharacter: showCharacter,
-      characterAssetPath: 'assets/images/character/Talia_Master_Character.png',
+      characterAssetPath: masterCharacterAsset,
     );
   }
 
@@ -274,7 +271,7 @@ class SocialShareData {
   factory SocialShareData.progress({
     required OverallProgress progress,
     String? userName,
-    bool showCharacter = true,
+    bool showCharacter = false,
   }) {
     return SocialShareData(
       content: '',
@@ -282,32 +279,34 @@ class SocialShareData {
       category: SocialShareCategory.progress,
       readPagesCount: progress.readPagesCount,
       memorizedAyahsCount: progress.memorizedAyahs,
+      memorizedSurahsCount: progress.memorizedSurahs,
       streakDays: progress.streakDays,
       userName: userName,
       showCharacter: showCharacter,
-      characterAssetPath: 'assets/images/character/Talia_Master_Character.png',
+      characterAssetPath: masterCharacterAsset,
     );
   }
 
-  /// Factory for Certificate share
+  /// Factory for Certificate share.  The award title itself is real Arabic
+  /// domain data; every surrounding label is localized by the template.
   factory SocialShareData.certificate({
     required CertificateAward award,
     String? userName,
     bool showCharacter = false,
   }) {
     return SocialShareData(
-      content: 'حصلت بحمد الله على ${award.titleAr} بتقدير ممتاز من منصة تالية للقرآن الكريم ✨',
-      title: 'شهادة إتمام ومواظبة',
-      subtitle: 'رقم التوثيق: ${award.verificationCode}',
+      content: award.titleAr,
       category: SocialShareCategory.certificate,
       verificationCode: award.verificationCode,
+      juzNumber: award.juzNumber,
+      surahName: award.surahNameAr,
       userName: userName,
       showCharacter: showCharacter,
-      characterAssetPath: 'assets/images/character/Talia_Master_Character.png',
+      characterAssetPath: masterCharacterAsset,
     );
   }
 
-  String get badgeText => customBadge ?? category.defaultBadge;
+  String get badgeText => customBadge ?? '';
 
   String get effectiveCharacterAssetPath {
     if (characterAssetPath != null && characterAssetPath!.isNotEmpty) {
@@ -316,25 +315,8 @@ class SocialShareData {
     return defaultCharacterAssetFor(category);
   }
 
-  static String defaultCharacterAssetFor(SocialShareCategory category) {
-    switch (category) {
-      case SocialShareCategory.quranAyah:
-        return 'assets/images/character/talia_reading.jpg';
-      case SocialShareCategory.dua:
-      case SocialShareCategory.azkar:
-        return 'assets/images/character/talia_praying.jpg';
-      case SocialShareCategory.achievement:
-        return 'assets/images/character/talia_celebrating.jpg';
-      case SocialShareCategory.memorization:
-        return 'assets/images/character/talia_memorizing.jpg';
-      case SocialShareCategory.streak:
-        return 'assets/images/character/talia_streak.jpg';
-      case SocialShareCategory.progress:
-        return 'assets/images/character/talia_celebrating.jpg';
-      case SocialShareCategory.certificate:
-        return 'assets/images/character/talia_memorizing.jpg';
-    }
-  }
+  static String defaultCharacterAssetFor(SocialShareCategory category) =>
+      masterCharacterAsset;
 
   SocialShareData copyWith({
     SocialShareAudience? audience,
@@ -356,6 +338,7 @@ class SocialShareData {
     targetValue: targetValue,
     readPagesCount: readPagesCount,
     memorizedAyahsCount: memorizedAyahsCount,
+    memorizedSurahsCount: memorizedSurahsCount,
     streakDays: streakDays,
     verificationCode: verificationCode,
     showCharacter: showCharacter ?? this.showCharacter,
@@ -364,7 +347,9 @@ class SocialShareData {
     achievementUnlocked: achievementUnlocked,
   );
 
-  String toPlainShareText() {
+  /// Plain-text fallback for channels without image support.  The footer is
+  /// parameterized so callers can localize it from presentation code.
+  String toPlainShareText({String? footer}) {
     final buffer = StringBuffer();
     if (title != null && title!.isNotEmpty) {
       buffer.writeln(title);
@@ -376,7 +361,7 @@ class SocialShareData {
       buffer.writeln(subtitle);
     }
     buffer.writeln();
-    buffer.write('— تمت المشاركة عبر تطبيق تالية للقرآن الكريم');
+    buffer.write(footer ?? '— تمت المشاركة عبر تطبيق تالية للقرآن الكريم');
     return buffer.toString();
   }
 }

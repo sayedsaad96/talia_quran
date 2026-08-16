@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 
+import 'social_share_model.dart';
+
 enum SocialShareThemeType {
   emeraldDark,
   midnightGold,
   dawnLight,
-  royalGradient,
+  tealTwilight,
   parchmentGold;
 
-  String get displayName {
+  String get nameAr {
     switch (this) {
       case SocialShareThemeType.emeraldDark:
         return 'الزمرد الملكي';
@@ -15,10 +17,58 @@ enum SocialShareThemeType {
         return 'الليل والذهب';
       case SocialShareThemeType.dawnLight:
         return 'الفجر الهادئ';
-      case SocialShareThemeType.royalGradient:
-        return 'الأرجوان الملكي';
+      case SocialShareThemeType.tealTwilight:
+        return 'شفق الفيروز';
       case SocialShareThemeType.parchmentGold:
         return 'الرق الدافئ';
+    }
+  }
+
+  String get nameEn {
+    switch (this) {
+      case SocialShareThemeType.emeraldDark:
+        return 'Royal Emerald';
+      case SocialShareThemeType.midnightGold:
+        return 'Midnight Gold';
+      case SocialShareThemeType.dawnLight:
+        return 'Quiet Dawn';
+      case SocialShareThemeType.tealTwilight:
+        return 'Turquoise Dusk';
+      case SocialShareThemeType.parchmentGold:
+        return 'Warm Parchment';
+    }
+  }
+
+  /// Content-driven default: each share type opens on a style that fits its
+  /// visual language (typography-first for Quran, celebratory for
+  /// achievements, calm for dua) and its audience (warmer for kids).  The
+  /// user can still override the choice in the sheet.
+  static SocialShareThemeType defaultFor(
+    SocialShareCategory category, {
+    SocialShareAudience audience = SocialShareAudience.adult,
+  }) {
+    final kids = audience == SocialShareAudience.kids;
+    switch (category) {
+      case SocialShareCategory.quranAyah:
+        return SocialShareThemeType.parchmentGold;
+      case SocialShareCategory.dua:
+      case SocialShareCategory.azkar:
+        return SocialShareThemeType.dawnLight;
+      case SocialShareCategory.achievement:
+      case SocialShareCategory.memorization:
+        return kids
+            ? SocialShareThemeType.parchmentGold
+            : SocialShareThemeType.emeraldDark;
+      case SocialShareCategory.streak:
+        return kids
+            ? SocialShareThemeType.dawnLight
+            : SocialShareThemeType.midnightGold;
+      case SocialShareCategory.progress:
+        return kids
+            ? SocialShareThemeType.parchmentGold
+            : SocialShareThemeType.dawnLight;
+      case SocialShareCategory.certificate:
+        return SocialShareThemeType.parchmentGold;
     }
   }
 }
@@ -97,18 +147,21 @@ class SocialShareTheme {
     isDark: false,
   );
 
-  static const SocialShareTheme royalGradient = SocialShareTheme(
-    type: SocialShareThemeType.royalGradient,
-    backgroundGradient: [Color(0xFF1F0E3D), Color(0xFF3B1B66), Color(0xFF14082B)],
-    cardBackground: Color(0xFF281447),
-    borderColor: Color(0xFFFFD700),
-    accentColor: Color(0xFFFFD700),
-    textPrimary: Color(0xFFFFFFFF),
-    textSecondary: Color(0xFFD6C8EF),
-    badgeBackground: Color(0x33FFD700),
-    badgeTextColor: Color(0xFFFFF3B0),
-    patternColor: Color(0x20FFFFFF),
-    glowColor: Color(0x33FFD700),
+  /// On-brand teal/turquoise palette replacing the former off-brand purple
+  /// gradient: deep royal teal drifting into luminous turquoise with warm
+  /// gold accents, staying inside the Talia visual identity.
+  static const SocialShareTheme tealTwilight = SocialShareTheme(
+    type: SocialShareThemeType.tealTwilight,
+    backgroundGradient: [Color(0xFF052E2B), Color(0xFF0F5550), Color(0xFF0A3B37)],
+    cardBackground: Color(0xFF0E4640),
+    borderColor: Color(0xFF7FCBBB),
+    accentColor: Color(0xFF7EE0C9),
+    textPrimary: Color(0xFFFAF7F0),
+    textSecondary: Color(0xFFBFD9D2),
+    badgeBackground: Color(0x2E7EE0C9),
+    badgeTextColor: Color(0xFFBFF2E5),
+    patternColor: Color(0x14FFFFFF),
+    glowColor: Color(0x332BD4C0),
     isDark: true,
   );
 
@@ -135,8 +188,8 @@ class SocialShareTheme {
         return midnightGold;
       case SocialShareThemeType.dawnLight:
         return dawnLight;
-      case SocialShareThemeType.royalGradient:
-        return royalGradient;
+      case SocialShareThemeType.tealTwilight:
+        return tealTwilight;
       case SocialShareThemeType.parchmentGold:
         return parchmentGold;
     }

@@ -46,191 +46,237 @@ class ShareCardShell extends StatelessWidget {
     }
   }
 
+  bool get _isKids => data.audience == SocialShareAudience.kids;
+
   @override
   Widget build(BuildContext context) {
-    return AspectRatio(
-      aspectRatio: _aspectRatio,
-      child: Container(
-        width: width,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: theme.backgroundGradient,
-          ),
-          borderRadius: BorderRadius.circular(26),
-          border: Border.all(
-            color: theme.borderColor,
-            width: 2.0,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.45),
-              blurRadius: 28,
-              offset: const Offset(0, 12),
+    // Cards are exported offscreen where ambient Directionality is not
+    // guaranteed; pinning it to the localized copy direction keeps the
+    // preview and the exported PNG identical for both locales.
+    return Directionality(
+      textDirection: copy.direction,
+      child: AspectRatio(
+        aspectRatio: _aspectRatio,
+        child: Container(
+          width: width,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: theme.backgroundGradient,
             ),
-            BoxShadow(
-              color: theme.accentColor.withValues(alpha: 0.15),
-              blurRadius: 18,
-              spreadRadius: -2,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(
+              color: theme.borderColor,
+              width: 1.25,
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
-            children: [
-              // ─── 1. Background Islamic Geometric Pattern ──────────────────
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: IslamicOctagramPainter(
-                    color: theme.patternColor,
-                  ),
-                ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.45),
+                blurRadius: 28,
+                offset: const Offset(0, 12),
               ),
-
-              // ─── 2. Top & Center Ambient Radial Glow ──────────────────────
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: const Alignment(0, -0.45),
-                      radius: 0.85,
-                      colors: [
-                        theme.glowColor,
-                        Colors.transparent,
-                      ],
+              BoxShadow(
+                color: theme.accentColor.withValues(alpha: 0.15),
+                blurRadius: 18,
+                spreadRadius: -2,
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: Stack(
+              children: [
+                // ─── 1. Background Islamic Geometric Pattern ──────────────────
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: IslamicOctagramPainter(
+                      color: theme.patternColor,
                     ),
                   ),
                 ),
-              ),
-              if (data.audience == SocialShareAudience.kids)
-                const Positioned(
-                  top: 78,
-                  left: 24,
-                  child: Icon(Icons.star_rounded, color: Color(0xFFFBBF24), size: 18),
-                ),
-              if (data.audience == SocialShareAudience.kids)
-                const Positioned(
-                  bottom: 64,
-                  right: 26,
-                  child: Icon(Icons.auto_awesome_rounded, color: Color(0xFF77D6C7), size: 18),
-                ),
 
-              // ─── 3. Islamic Mihrab Arch Silhouette Overlay ─────────────────
-              Positioned.fill(
-                child: CustomPaint(
-                  painter: MihrabArchPainter(
-                    color: theme.accentColor.withValues(alpha: 0.14),
-                  ),
-                ),
-              ),
-
-              // ─── 4. Golden Corner Arabesques (Top & Bottom) ───────────────
-              Positioned(
-                top: 10,
-                left: 10,
-                child: CustomPaint(
-                  size: const Size(28, 28),
-                  painter: GoldenCornerPainter(color: theme.accentColor),
-                ),
-              ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: Transform.scale(
-                  scaleX: -1,
-                  child: CustomPaint(
-                    size: const Size(28, 28),
-                    painter: GoldenCornerPainter(color: theme.accentColor),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 10,
-                left: 10,
-                child: Transform.scale(
-                  scaleY: -1,
-                  child: CustomPaint(
-                    size: const Size(28, 28),
-                    painter: GoldenCornerPainter(color: theme.accentColor),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 10,
-                right: 10,
-                child: Transform.scale(
-                  scaleX: -1,
-                  scaleY: -1,
-                  child: CustomPaint(
-                    size: const Size(28, 28),
-                    painter: GoldenCornerPainter(color: theme.accentColor),
-                  ),
-                ),
-              ),
-
-              // ─── 5. Main Card Content Body ────────────────────────────────
-              Padding(
-                padding: _contentPadding,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Official Top Brand Header
-                    _BrandHeader(
-                      theme: theme,
-                      badgeText: data.badgeText,
-                      categoryIcon: data.category.icon,
-                      category: data.category,
-                      copy: copy,
-                      isCompact: format == SocialShareFormat.square,
-                      isKids: data.audience == SocialShareAudience.kids,
+                // ─── 2. Top & Center Ambient Radial Glow ──────────────────────
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: const Alignment(0, -0.45),
+                        radius: 0.85,
+                        colors: [
+                          theme.glowColor,
+                          Colors.transparent,
+                        ],
+                      ),
                     ),
+                  ),
+                ),
 
-                    // Middle Dynamic Template Content Container
-                    Expanded(
-                      child: Container(
-                        width: double.infinity,
-                        margin: EdgeInsets.symmetric(
-                          vertical: format == SocialShareFormat.square ? 6 : 10,
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: format == SocialShareFormat.square ? 12 : 16,
-                          vertical: format == SocialShareFormat.square ? 8 : 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: theme.cardBackground.withValues(alpha: 0.84),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: theme.borderColor.withValues(alpha: 0.38),
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
+                // Kids cards get an extra warm halo so they read friendlier
+                // than the adult variants without leaving the brand palette.
+                if (_isKids)
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: const Alignment(0.2, 0.75),
+                          radius: 0.9,
+                          colors: [
+                            TaliaShareColors.glowGold.withValues(alpha: 0.5),
+                            Colors.transparent,
                           ],
-                        ),
-                        child: Center(
-                          child: child,
                         ),
                       ),
                     ),
+                  ),
 
-                    // Official Footer Brand Signature
-                    _BrandFooter(
-                      theme: theme,
-                      userName: data.userName,
-                      copy: copy,
-                      isCompact: format == SocialShareFormat.square,
+                // Kids sparkle accents, kept near the card corners so they
+                // decorate without competing with the content hierarchy.
+                if (_isKids)
+                  const Positioned(
+                    top: 34,
+                    left: 16,
+                    child: Icon(
+                      Icons.star_rounded,
+                      color: TaliaShareColors.kidsStarGold,
+                      size: 16,
                     ),
-                  ],
+                  ),
+                if (_isKids)
+                  const Positioned(
+                    top: 52,
+                    right: 20,
+                    child: Icon(
+                      Icons.auto_awesome_rounded,
+                      color: TaliaShareColors.kidsSparkleTeal,
+                      size: 13,
+                    ),
+                  ),
+                if (_isKids)
+                  const Positioned(
+                    bottom: 46,
+                    right: 18,
+                    child: Icon(
+                      Icons.star_rounded,
+                      color: TaliaShareColors.kidsSparkleTeal,
+                      size: 14,
+                    ),
+                  ),
+
+                // ─── 3. Islamic Mihrab Arch Silhouette Overlay ─────────────────
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: MihrabArchPainter(
+                      color: theme.accentColor.withValues(alpha: 0.14),
+                    ),
+                  ),
                 ),
-              ),
-            ],
+
+                // ─── 4. Golden Corner Arabesques (Top & Bottom) ───────────────
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  child: CustomPaint(
+                    size: const Size(28, 28),
+                    painter: GoldenCornerPainter(color: theme.accentColor),
+                  ),
+                ),
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Transform.scale(
+                    scaleX: -1,
+                    child: CustomPaint(
+                      size: const Size(28, 28),
+                      painter: GoldenCornerPainter(color: theme.accentColor),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 10,
+                  left: 10,
+                  child: Transform.scale(
+                    scaleY: -1,
+                    child: CustomPaint(
+                      size: const Size(28, 28),
+                      painter: GoldenCornerPainter(color: theme.accentColor),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 10,
+                  right: 10,
+                  child: Transform.scale(
+                    scaleX: -1,
+                    scaleY: -1,
+                    child: CustomPaint(
+                      size: const Size(28, 28),
+                      painter: GoldenCornerPainter(color: theme.accentColor),
+                    ),
+                  ),
+                ),
+
+                // ─── 5. Main Card Content Body ────────────────────────────────
+                Padding(
+                  padding: _contentPadding,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Official Top Brand Header
+                      _BrandHeader(
+                        theme: theme,
+                        badgeText: data.badgeText,
+                        category: data.category,
+                        copy: copy,
+                        isCompact: format == SocialShareFormat.square,
+                        isKids: _isKids,
+                      ),
+
+                      // Middle Dynamic Template Content Container
+                      Expanded(
+                        child: Container(
+                          width: double.infinity,
+                          margin: EdgeInsets.symmetric(
+                            vertical: format == SocialShareFormat.square ? 6 : 10,
+                          ),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: format == SocialShareFormat.square ? 12 : 16,
+                            vertical: format == SocialShareFormat.square ? 8 : 12,
+                          ),
+                          decoration: BoxDecoration(
+                            color: theme.cardBackground.withValues(alpha: 0.84),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: theme.borderColor.withValues(alpha: 0.38),
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.12),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: child,
+                          ),
+                        ),
+                      ),
+
+                      // Official Footer Brand Signature
+                      _BrandFooter(
+                        theme: theme,
+                        userName: data.userName,
+                        copy: copy,
+                        isCompact: format == SocialShareFormat.square,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -242,7 +288,6 @@ class ShareCardShell extends StatelessWidget {
 class _BrandHeader extends StatelessWidget {
   final SocialShareTheme theme;
   final String badgeText;
-  final IconData categoryIcon;
   final SocialShareCategory category;
   final bool isCompact;
   final SocialShareCopy copy;
@@ -251,7 +296,6 @@ class _BrandHeader extends StatelessWidget {
   const _BrandHeader({
     required this.theme,
     required this.badgeText,
-    required this.categoryIcon,
     required this.category,
     required this.copy,
     required this.isKids,
@@ -260,6 +304,8 @@ class _BrandHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localizedBadge =
+        badgeText.isNotEmpty ? badgeText : copy.localizedBadge(category);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -288,6 +334,9 @@ class _BrandHeader extends StatelessWidget {
                   width: isCompact ? 28 : 34,
                   height: isCompact ? 28 : 34,
                   fit: BoxFit.cover,
+                  // The bundled logo is 2090x2090; decode it near display
+                  // resolution instead of wasting memory per card render.
+                  cacheWidth: 108,
                   errorBuilder: (_, _, _) => Icon(
                     Icons.auto_awesome_rounded,
                     color: theme.accentColor,
@@ -338,16 +387,20 @@ class _BrandHeader extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
-                categoryIcon,
+                category.icon,
                 size: isCompact ? 12 : 13.5,
                 color: theme.badgeTextColor,
               ),
               const SizedBox(width: 5),
-              Text(
-                  _localizedBadge(copy),
-                style: TaliaShareTypography.badge(
-                  color: theme.badgeTextColor,
-                  fontSize: isCompact ? 10.5 : 11.5,
+              Flexible(
+                child: Text(
+                  localizedBadge,
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: TaliaShareTypography.badge(
+                    color: theme.badgeTextColor,
+                    fontSize: isCompact ? 10.5 : 11.5,
+                  ),
                 ),
               ),
             ],
@@ -355,19 +408,6 @@ class _BrandHeader extends StatelessWidget {
         ),
       ],
     );
-  }
-
-  String _localizedBadge(SocialShareCopy copy) {
-    switch (category) {
-      case SocialShareCategory.quranAyah: return copy.quranBadge;
-      case SocialShareCategory.azkar: return copy.dhikrBadge;
-      case SocialShareCategory.dua: return copy.duaBadge;
-      case SocialShareCategory.achievement: return copy.achievementBadge;
-      case SocialShareCategory.memorization: return copy.memorizationBadge;
-      case SocialShareCategory.streak: return copy.streakBadge;
-      case SocialShareCategory.progress: return copy.progressBadge;
-      default: return badgeText;
-    }
   }
 }
 
@@ -400,13 +440,17 @@ class _BrandFooter extends StatelessWidget {
                 color: theme.accentColor,
               ),
               const SizedBox(width: 4),
-              Text(
-                copy.journeyFor(userName!),
-                style: AppTypography.labelSmall.copyWith(
-                  color: theme.accentColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: isCompact ? 10 : 11,
-                  fontFamily: 'Amiri',
+              Flexible(
+                child: Text(
+                  copy.journeyFor(userName!),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: theme.accentColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: isCompact ? 10 : 11,
+                    fontFamily: 'Amiri',
+                  ),
                 ),
               ),
             ],
