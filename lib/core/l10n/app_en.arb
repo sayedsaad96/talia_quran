@@ -241,6 +241,8 @@
   },
   "saveProgress": "Save your progress",
   "syncProgressDesc": "Sign in to manage your account, recovery, and family features",
+  "restoringProgress": "Restoring your data…",
+  "retrySyncAfterError": "Retry",
   "later": "Later",
   "congratulations": "Congratulations!",
   "completedJuzAmma": "You have successfully memorized Juz Amma.",

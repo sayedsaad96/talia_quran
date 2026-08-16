@@ -25,6 +25,7 @@ import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/memorization/v2/session_state.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/services/audio_cache_service.dart';
+import '../../../../core/services/audio_lifecycle_manager.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
@@ -160,6 +161,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
        _appSessionService = appSessionService,
        super(const MSInitial()) {
     _initSpeech();
+    AudioLifecycleManager.instance.register(_player);
     _playerStateSub = _player.playerStateStream.listen((playerState) {
       if (playerState.processingState == ProcessingState.completed) {
         if (state is MSActive) {
@@ -479,10 +481,12 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   // ── Cleanup ─────────────────────────────────────────────────────────────
 
   @override
-  Future<void> close() {
-    _playerStateSub?.cancel();
-    _player.dispose();
-    _speechToText.cancel();
+  Future<void> close() async {
+    AudioLifecycleManager.instance.unregister(_player);
+    await _player.stop();
+    await _playerStateSub?.cancel();
+    await _player.dispose();
+    await _speechToText.cancel();
     return super.close();
   }
 

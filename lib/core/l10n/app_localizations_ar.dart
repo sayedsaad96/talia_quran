@@ -717,6 +717,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'سجّل دخولك لإدارة حسابك وخيارات الاستعادة وميزات العائلة';
 
   @override
+  String get restoringProgress => 'جارٍ استعادة بياناتك…';
+
+  @override
+  String get retrySyncAfterError => 'إعادة المحاولة';
+
+  @override
   String get later => 'لاحقاً';
 
   @override
@@ -3860,8 +3866,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2NoSpeechDetected => 'لم نسمع تلاوة. سجّل مرة أخرى.';
 
   @override
-  String get v2MicrophonePermissionDenied =>
-      'يلزم السماح بالميكروفون للتسجيل.';
+  String get v2MicrophonePermissionDenied => 'يلزم السماح بالميكروفون للتسجيل.';
 
   @override
   String get v2MicrophoneOpenSettings =>

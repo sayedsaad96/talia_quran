@@ -144,11 +144,10 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
   void _shareZikr(BuildContext context, ZikrSession session) {
     unawaited(HapticFeedback.lightImpact());
     final isDua = widget.state.category == AzkarCategory.duas;
-    final data = SocialShareData(
-      content: session.zikr.text.trim(),
-      subtitle: session.zikr.reference.trim(),
-      title: widget.title,
-      category: isDua ? SocialShareCategory.dua : SocialShareCategory.azkar,
+    final data = SocialShareData.dua(
+      zikr: session.zikr,
+      categoryTitle: widget.title,
+      isDua: isDua,
     );
     SocialShareSheet.show(context, data);
   }

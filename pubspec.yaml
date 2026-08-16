@@ -119,6 +119,7 @@ flutter:
     - assets/data/
     - assets/fonts/
     - assets/images/
+    - assets/images/character/
     - assets/images/kids/
     - assets/images/onboarding/
     

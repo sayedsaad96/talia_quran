@@ -217,7 +217,7 @@ class _AchievementTile extends StatelessWidget {
           top: Radius.circular(AppSpacing.radiusXl),
         ),
       ),
-      builder: (_) => SingleChildScrollView(
+      builder: (sheetContext) => SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
@@ -321,13 +321,13 @@ class _AchievementTile extends StatelessWidget {
                       final name = profileState is ProfileLoaded && profileState.profile.hasName
                           ? profileState.profile.displayName
                           : null;
-                      final data = SocialShareData(
-                        content: description,
-                        title: title,
-                        category: SocialShareCategory.achievement,
+                      final data = SocialShareData.achievement(
+                        achievement: achievement,
+                        localizedTitle: title,
+                        localizedDesc: description,
                         userName: name,
                       );
-                      Navigator.pop(context);
+                      Navigator.of(sheetContext).pop();
                       SocialShareSheet.show(context, data);
                     },
                     icon: const Icon(Icons.share_rounded, size: 20),

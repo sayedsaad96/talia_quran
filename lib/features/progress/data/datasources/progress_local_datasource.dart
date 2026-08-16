@@ -11,6 +11,10 @@ class ProgressLocalDatasourceImpl implements ProgressLocalDatasource {
   ProgressLocalDatasourceImpl(this._prefs);
   final SharedPreferences _prefs;
 
+  /// SharedPreferences key set to `true` after any [saveReadPage] call.
+  /// Cleared by [AuthRepositoryImpl.syncProgressToCloud] after a successful push.
+  static const kReadPagesCloudDirty = 'read_pages_cloud_dirty';
+
   @override
   List<int> getReadPages() {
     final raw = _prefs.getString(AppConstants.kReadPages);
@@ -44,6 +48,8 @@ class ProgressLocalDatasourceImpl implements ProgressLocalDatasource {
       if (!saved) {
         throw StateError('Failed to save read page');
       }
+      // Mark dirty so auth repository pushes this to cloud on next sync.
+      await _prefs.setBool(kReadPagesCloudDirty, true);
     }
   }
 }

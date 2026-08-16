@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../services/audio_cache_service.dart';
+import '../services/audio_lifecycle_manager.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
@@ -49,6 +50,7 @@ class _AyahListenButtonState extends State<AyahListenButton> {
   @override
   void initState() {
     super.initState();
+    AudioLifecycleManager.instance.register(_player);
     _stateSub = _player.playerStateStream.listen(_onPlayerState);
   }
 
@@ -116,6 +118,7 @@ class _AyahListenButtonState extends State<AyahListenButton> {
 
   @override
   void dispose() {
+    AudioLifecycleManager.instance.unregister(_player);
     _stateSub.cancel();
     _player.dispose();
     super.dispose();

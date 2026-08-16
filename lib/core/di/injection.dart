@@ -313,7 +313,7 @@ Future<void> configureDependencies() async {
     ),
   );
   getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(getIt<Isar>(), getIt<AccountDataReset>()),
+    () => AuthRepositoryImpl(getIt<Isar>(), getIt<AccountDataReset>(), getIt<SharedPreferences>()),
   );
 
   // ─── Usecases ───────────────────────────────────────────────────────────────

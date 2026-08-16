@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:dartz/dartz.dart';
 import 'package:isar/isar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/error/app_failure.dart';
@@ -11,6 +14,7 @@ import '../../../streak/data/models/streak_isar.dart';
 import '../../../streak/data/models/daily_activity_isar.dart';
 import '../../../xp/data/models/xp_isar.dart';
 import '../../domain/entities/auth_error_code.dart';
+import '../../../progress/data/datasources/progress_local_datasource.dart';
 
 class AuthFailure extends Failure {
   final AuthErrorCode code;
@@ -29,10 +33,11 @@ class ServerFailure extends Failure {
 }
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthRepositoryImpl(this._isar, this._accountDataReset);
+  AuthRepositoryImpl(this._isar, this._accountDataReset, [this._prefs]);
 
   final Isar _isar;
   final AccountDataReset _accountDataReset;
+  final SharedPreferences? _prefs;
 
   bool get _isSupabaseInitialized {
     try {
@@ -374,6 +379,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _syncStreakToCloud();
       await _syncXpToCloud();
       await _syncDailyActivitiesToCloud();
+      await _pushReadingProgressToCloud();
 
       TaliaLogger.i('Sync to cloud completed');
       return const Right(unit);
@@ -393,6 +399,7 @@ class AuthRepositoryImpl implements AuthRepository {
       await _pullStreakFromCloud(user.id);
       await _pullXpFromCloud(user.id);
       await _pullDailyActivitiesFromCloud(user.id);
+      await _pullReadingProgressFromCloud(user.id);
 
       TaliaLogger.i('Pull from cloud completed');
       return const Right(unit);
@@ -414,7 +421,14 @@ class AuthRepositoryImpl implements AuthRepository {
         .filter()
         .group((q) => q.cloudDirtyEqualTo(true).or().cloudDirtyIsNull())
         .findAll();
-    return dirtyActivities.isNotEmpty;
+    if (dirtyActivities.isNotEmpty) return true;
+
+    // Reading progress dirty flag.
+    if (_prefs?.getBool(ProgressLocalDatasourceImpl.kReadPagesCloudDirty) == true) {
+      return true;
+    }
+
+    return false;
   }
 
   // ─── Streak Sync ────────────────────────────────────────────────────────────
@@ -593,6 +607,71 @@ class AuthRepositoryImpl implements AuthRepository {
 
   String? _toDateOnlyString(DateTime? value) =>
       value?.toIso8601String().substring(0, 10);
+
+  // ─── Reading Progress Sync ────────────────────────────────────────────────────
+
+  Future<void> _pullReadingProgressFromCloud(String userId) async {
+    final prefs = _prefs;
+    if (prefs == null) return;
+
+    final rows = await _supabase
+        .from('reading_progress_cloud')
+        .select('pages')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+    if (rows == null) return;
+
+    final cloudPages = (rows['pages'] as List<dynamic>)
+        .whereType<int>()
+        .where((p) => p >= 1 && p <= 604)
+        .toSet();
+
+    if (cloudPages.isEmpty) return;
+
+    // Union merge: combine local + cloud (monotonic, no clobber)
+    final raw = prefs.getString('read_pages');
+    final localPages = <int>{};
+    if (raw != null) {
+      try {
+        final list = (jsonDecode(raw) as List<dynamic>).whereType<int>();
+        localPages.addAll(list);
+      } catch (_) {}
+    }
+
+    final merged = {...localPages, ...cloudPages}.toList()..sort();
+    await prefs.setString('read_pages', jsonEncode(merged));
+    // Not dirty after pull (cloud already has this data)
+    // but if local had more pages than cloud, keep dirty so push runs next
+    final hadExtra = localPages.any((p) => !cloudPages.contains(p));
+    if (!hadExtra) {
+      await prefs.remove(ProgressLocalDatasourceImpl.kReadPagesCloudDirty);
+    }
+
+    TaliaLogger.i('Reading progress pull: merged ${merged.length} pages');
+  }
+
+  Future<void> _pushReadingProgressToCloud() async {
+    final prefs = _prefs;
+    if (prefs == null) return;
+    if (prefs.getBool(ProgressLocalDatasourceImpl.kReadPagesCloudDirty) != true) return;
+
+    final raw = prefs.getString('read_pages');
+    if (raw == null) return;
+
+    final List<int> pages;
+    try {
+      pages = (jsonDecode(raw) as List<dynamic>).whereType<int>().toList();
+    } catch (_) {
+      return;
+    }
+
+    if (pages.isEmpty) return;
+
+    await _supabase.rpc('upsert_reading_progress', params: {'p_pages': pages});
+    await prefs.remove(ProgressLocalDatasourceImpl.kReadPagesCloudDirty);
+    TaliaLogger.i('Reading progress pushed: ${pages.length} pages');
+  }
 
   /// Maps Supabase auth error messages to strongly-typed error codes
   AuthErrorCode _mapAuthError(String message) {

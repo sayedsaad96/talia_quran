@@ -716,6 +716,12 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign in to manage your account, recovery, and family features';
 
   @override
+  String get restoringProgress => 'Restoring your data…';
+
+  @override
+  String get retrySyncAfterError => 'Retry';
+
+  @override
   String get later => 'Later';
 
   @override

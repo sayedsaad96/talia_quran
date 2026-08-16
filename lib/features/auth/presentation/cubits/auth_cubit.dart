@@ -150,6 +150,13 @@ class AuthCubit extends Cubit<AuthState> {
 
   }
 
+  /// Returns a Future that completes when the in-flight cloud sync finishes.
+  ///
+  /// On login the UI awaits this before routing, so the restored profile is
+  /// available by the time routing logic reads it. On cold start this is not
+  /// awaited (local data is still on-device).
+  Future<void> ensureCloudSyncComplete() => _syncInFlight ?? Future.value();
+
 
 
 
@@ -255,6 +262,13 @@ class AuthCubit extends Cubit<AuthState> {
 
     if (memPlusRepository != null) {
 
+      // Pull identity FIRST so routing sees the restored path before SRS data.
+      final identityPull = await memPlusRepository.pullIdentityFromCloud();
+      identityPull.fold(
+        (f) => TaliaLogger.w('Identity pull failed', f.message),
+        (_) => TaliaLogger.i('Identity pull completed'),
+      );
+
       final productionPull =
 
           await memPlusRepository.pullProductionDataFromCloud();
@@ -322,10 +336,15 @@ class AuthCubit extends Cubit<AuthState> {
         (failure) {
           TaliaLogger.w('Kids progress pull failed', failure.message);
           unawaited(
-            _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgress),
+            _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPull),
           );
         },
-        (_) => TaliaLogger.i('Kids progress pull completed'),
+        (_) {
+          TaliaLogger.i('Kids progress pull completed');
+          unawaited(
+            _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.kidsProgressPull),
+          );
+        },
       );
 
     }
@@ -411,15 +430,22 @@ class AuthCubit extends Cubit<AuthState> {
         (failure) {
           TaliaLogger.w('Kids progress push failed', failure.message);
           unawaited(
-            _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgress),
+            _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush),
           );
         },
         (_) {
           TaliaLogger.i('Kids progress push completed');
           unawaited(
-            _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.kidsProgress),
+            _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.kidsProgressPush),
           );
         },
+      );
+
+      // Push memorization identity when dirty flag is set.
+      final identityPush = await memPlusRepository.pushIdentityToCloud();
+      identityPush.fold(
+        (f) => TaliaLogger.w('Identity push failed', f.message),
+        (_) => TaliaLogger.i('Identity push completed'),
       );
 
       final achievementService = _achievementService;
@@ -590,14 +616,24 @@ class AuthCubit extends Cubit<AuthState> {
         return _retryCertificatePull();
 
       case CloudSyncQueueKind.kidsProgress:
+        // Legacy kind: drain by doing pull-then-push, then mark it done.
+        if (memPlusRepository == null) return true;
+        final legacyPullOk =
+            (await memPlusRepository.pullKidsProgressFromCloud()).isRight();
+        if (!legacyPullOk) return false;
+        final legacyPushOk =
+            (await memPlusRepository.syncKidsProgressToCloud()).isRight();
+        return legacyPushOk;
+
+      case CloudSyncQueueKind.kidsProgressPull:
 
         if (memPlusRepository == null) return true;
 
-        final kidsPullOk =
+        return (await memPlusRepository.pullKidsProgressFromCloud()).isRight();
 
-            (await memPlusRepository.pullKidsProgressFromCloud()).isRight();
+      case CloudSyncQueueKind.kidsProgressPush:
 
-        if (!kidsPullOk) return false;
+        if (memPlusRepository == null) return true;
 
         return (await memPlusRepository.syncKidsProgressToCloud()).isRight();
 

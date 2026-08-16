@@ -16,6 +16,7 @@ import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/memorization/v2/session_state.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/services/app_session_service.dart';
+import '../../../../core/services/audio_lifecycle_manager.dart';
 import '../../../../core/services/streak_service.dart'; // RISK-5 FIX
 import '../../../../core/services/xp_service.dart'; // RISK-5 FIX
 import '../../../quran/domain/entities/quran_entities.dart';
@@ -44,6 +45,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   ]) : _appSessionService = appSessionService,
        super(const KidsModeInitial()) {
     _recitationRecorder = recitationRecorder ?? KidsSpeechRecitationRecorder();
+    AudioLifecycleManager.instance.register(_player);
     _playerSub = _player.playerStateStream.listen((ps) {
       if (ps.processingState == ProcessingState.completed) {
         _onPlaybackCompleted();
@@ -477,7 +479,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   @override
   Future<void> close() async {
+    AudioLifecycleManager.instance.unregister(_player);
     _recordingTimer?.cancel();
+    await _player.stop();
     await _playerSub.cancel();
     await _bufferingSub.cancel();
     await _player.dispose();

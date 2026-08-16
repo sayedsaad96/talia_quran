@@ -365,10 +365,9 @@ class _ZikrCard extends StatelessWidget {
                       ),
                       onPressed: () {
                         HapticFeedback.lightImpact();
-                        final data = SocialShareData(
-                          content: zikr.text.trim(),
-                          subtitle: zikr.reference.trim(),
-                          category: SocialShareCategory.azkar,
+                        final data = SocialShareData.dua(
+                          zikr: zikr,
+                          isDua: false,
                         );
                         SocialShareSheet.show(context, data);
                       },

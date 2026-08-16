@@ -191,7 +191,7 @@ class MemorizationKidsLocalService {
       );
       await _datasource.saveKidsSessionLog(log);
       await _unlockWeeklyRewardIfNeeded();
-      await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgress);
+      await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush);
       _progressEvents.notify(ProgressChangedReason.kidsProgress);
       return Right(log);
     } catch (e) {

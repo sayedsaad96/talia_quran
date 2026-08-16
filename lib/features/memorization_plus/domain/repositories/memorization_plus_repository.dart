@@ -147,4 +147,15 @@ abstract class MemorizationPlusRepository {
   /// Builds a unified FamilyDashboard with all linked children
   /// (local + remote) and parent settings.
   Future<Either<Failure, FamilyDashboard>> getFamilyDashboard();
+
+  /// Pulls memorization identity (selected path, guardian status, etc.) from
+  /// the cloud profiles row and applies it to local state using last-write-wins
+  /// merge. Call this BEFORE production SRS/plans on login so routing sees
+  /// the restored path.
+  Future<Either<Failure, void>> pullIdentityFromCloud();
+
+  /// Pushes the current memorization identity to the cloud when the dirty flag
+  /// is set. Call after [selectMemorizationPath], [continueWithoutGuardian],
+  /// or identity reset.
+  Future<Either<Failure, void>> pushIdentityToCloud();
 }

@@ -96,25 +96,40 @@ class _ProgressView extends StatelessWidget {
       scrolledUnderElevation: 0,
       actions: [
         if (state is ProgressLoaded)
-          IconButton(
+          PopupMenuButton<SocialShareCategory>(
             icon: const Icon(Icons.share_rounded, color: Colors.white),
             tooltip: context.l10n.shareProgress,
-            onPressed: () {
+            onSelected: (type) {
               final profileState = context.read<ProfileCubit>().state;
               final name = profileState is ProfileLoaded && profileState.profile.hasName
                   ? profileState.profile.displayName
                   : null;
-              final data = SocialShareData(
-                content: 'ملخص تقدمي في رحلتي مع القرآن الكريم:\n'
-                    '• ${state.progress.readPagesCount} صفحة مقروءة\n'
-                    '• ${state.progress.memorizedAyahs} آية محفوظة\n'
-                    '• ${state.progress.streakDays} أيام استمرارية متواصلة',
-                title: 'حصاد الإنجاز والتقدم',
-                category: SocialShareCategory.progress,
-                userName: name,
-              );
+              final data = switch (type) {
+                SocialShareCategory.progress => SocialShareData.progress(progress: state.progress, userName: name),
+                SocialShareCategory.memorization => SocialShareData.memorization(
+                    ayahsCount: state.progress.memorizedAyahs,
+                    surahsCount: state.progress.memorizedSurahs,
+                    userName: name,
+                  ),
+                SocialShareCategory.streak => SocialShareData.streak(
+                    streakDays: state.progress.streakDays,
+                    userName: name,
+                  ),
+                _ => SocialShareData.progress(progress: state.progress, userName: name),
+              };
               SocialShareSheet.show(context, data);
             },
+            itemBuilder: (context) => [
+              PopupMenuItem(value: SocialShareCategory.progress, child: Text(context.l10n.shareProgress)),
+              PopupMenuItem(
+                value: SocialShareCategory.memorization,
+                child: Text(context.isArabic ? 'مشاركة إنجاز الحفظ' : 'Share memorization milestone'),
+              ),
+              PopupMenuItem(
+                value: SocialShareCategory.streak,
+                child: Text(context.isArabic ? 'مشاركة الاستمرارية' : 'Share consistency streak'),
+              ),
+            ],
           ),
       ],
       flexibleSpace: FlexibleSpaceBar(

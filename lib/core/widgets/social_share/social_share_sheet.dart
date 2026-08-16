@@ -9,24 +9,52 @@ import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../constants/app_spacing.dart';
+import '../../di/injection.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_typography.dart';
 import 'social_share_card.dart';
-import 'social_share_model.dart';
-import 'social_share_theme.dart';
+import '../../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
 class SocialShareSheet extends StatefulWidget {
   final SocialShareData data;
 
   const SocialShareSheet({super.key, required this.data});
 
-  static Future<void> show(BuildContext context, SocialShareData data) {
+  static Future<void> show(BuildContext context, SocialShareData data) async {
+    // Opening the sheet must never wait indefinitely for profile storage.
+    // The default presentation is safe while a slow/unavailable profile read
+    // falls back to the supplied data.
+    final resolvedData = await _resolveAudience(data).timeout(
+      const Duration(milliseconds: 300),
+      onTimeout: () => data,
+    );
+    if (!context.mounted) return;
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => SocialShareSheet(data: data),
+      builder: (ctx) => SocialShareSheet(data: resolvedData),
     );
+  }
+
+  static Future<SocialShareData> _resolveAudience(SocialShareData data) async {
+    try {
+      final result = await getIt<MemorizationPlusRepository>()
+          .getMemorizationProfile();
+      return result.fold(
+        (_) => data,
+        (profile) => data.copyWith(
+          audience: profile.isChild
+              ? SocialShareAudience.kids
+              : SocialShareAudience.adult,
+          // A character supports the playful kids track but does not dominate
+          // the refined adult variants.
+          showCharacter: profile.isChild && data.category != SocialShareCategory.quranAyah,
+        ),
+      );
+    } catch (_) {
+      return data;
+    }
   }
 
   @override
@@ -43,9 +71,22 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
 
   Future<Uint8List?> _captureCardImage() async {
     try {
-      return await _screenshotController.capture(
-        delay: const Duration(milliseconds: 60),
+      final size = _selectedFormat.exportLogicalSize;
+      return await _screenshotController.captureFromWidget(
+        SizedBox(
+          width: size.width,
+          height: size.height,
+          child: SocialShareCard(
+            data: widget.data,
+            theme: _currentTheme,
+            format: _selectedFormat,
+            width: size.width,
+          ),
+        ),
+        context: context,
+        delay: const Duration(milliseconds: 80),
         pixelRatio: 3.0,
+        targetSize: size,
       );
     } catch (e) {
       debugPrint('Error capturing social card image: $e');
@@ -157,7 +198,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final cardWidth = (screenWidth - AppSpacing.md * 2).clamp(280.0, 360.0);
+    final cardWidth = (screenWidth - AppSpacing.md * 2).clamp(0.0, 360.0);
 
     return Center(
       child: ConstrainedBox(

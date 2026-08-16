@@ -14,7 +14,9 @@ abstract final class CloudSyncQueueKind {
   static const productionPush = 'production_push';
   static const certificatePush = 'certificate_push';
   static const certificatePull = 'certificate_pull';
-  static const kidsProgress = 'kids_progress';
+  static const kidsProgress = 'kids_progress'; // legacy — kept to drain old Isar rows
+  static const kidsProgressPull = 'kids_progress_pull';
+  static const kidsProgressPush = 'kids_progress_push';
 }
 
 class CloudSyncQueue {

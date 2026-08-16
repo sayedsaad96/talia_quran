@@ -199,15 +199,15 @@ void main() {
 
   test('requeueDeadLetter resets attempts', () async {
 
-    await queue.enqueue(CloudSyncQueueKind.kidsProgress);
+    await queue.enqueue(CloudSyncQueueKind.kidsProgressPull);
 
     for (var i = 0; i < CloudSyncQueue.maxAttempts; i++) {
 
-      await queue.markFailure(CloudSyncQueueKind.kidsProgress);
+      await queue.markFailure(CloudSyncQueueKind.kidsProgressPull);
 
     }
 
-    await queue.requeueDeadLetter(CloudSyncQueueKind.kidsProgress);
+    await queue.requeueDeadLetter(CloudSyncQueueKind.kidsProgressPull);
 
 
 
@@ -223,6 +223,30 @@ void main() {
 
   });
 
+
+
+  test('kidsProgressPush success does not clear kidsProgressPull', () async {
+
+    await queue.enqueue(CloudSyncQueueKind.kidsProgressPull);
+
+    await queue.enqueue(CloudSyncQueueKind.kidsProgressPush);
+
+
+
+    // Simulate push succeeds
+
+    await queue.markSuccess(CloudSyncQueueKind.kidsProgressPush);
+
+
+
+    // Pull retry must still be pending
+
+    final due = await queue.dueItems();
+
+    expect(due, hasLength(1));
+
+    expect(due.single.kind, CloudSyncQueueKind.kidsProgressPull);
+
+  });
+
 }
-
-

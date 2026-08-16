@@ -12,10 +12,16 @@ import 'memorization_profile_store.dart';
 /// legacy track flag. Persists through [MemorizationProfileStore] and the
 /// local datasource.
 class MemorizationProfileService {
-  MemorizationProfileService(this._datasource, this._profileStore);
+  MemorizationProfileService(this._datasource, this._profileStore, [this._prefs]);
 
   final MemorizationPlusLocalDatasource _datasource;
   final MemorizationProfileStore _profileStore;
+  final SharedPreferences? _prefs;
+
+  /// SharedPreferences key set when the memorization path/guardian status
+  /// changes. Cleared by [MemorizationPlusRepositoryImpl.pushIdentityToCloud]
+  /// after a successful cloud push.
+  static const kIdentityCloudDirty = 'mem_plus_identity_cloud_dirty';
 
   Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() async {
     try {
@@ -47,6 +53,7 @@ class MemorizationProfileService {
       if (path == MemorizationPath.child) {
         await _datasource.setIsParentMode(false);
       }
+      await _prefs?.setBool(kIdentityCloudDirty, true);
       return Right(saved);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -69,6 +76,7 @@ class MemorizationProfileService {
         ),
       );
       await _datasource.clearPairingSession();
+      await _prefs?.setBool(kIdentityCloudDirty, true);
       return Right(saved);
     } catch (e) {
       return Left(CacheFailure(e.toString()));

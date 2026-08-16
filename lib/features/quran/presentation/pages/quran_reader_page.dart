@@ -13,6 +13,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/services/audio_cache_service.dart';
+import '../../../../core/services/audio_lifecycle_manager.dart';
 import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -709,7 +710,14 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
   bool _isPlaying = false;
 
   @override
+  void initState() {
+    super.initState();
+    AudioLifecycleManager.instance.register(_player);
+  }
+
+  @override
   void dispose() {
+    AudioLifecycleManager.instance.unregister(_player);
     _playerSub?.cancel();
     _player.dispose();
     super.dispose();
@@ -911,11 +919,9 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                     color: AppColors.primary,
                     onTap: () {
                       Navigator.pop(context);
-                      final data = SocialShareData(
-                        content: widget.ayah.text.trim(),
-                        title: 'سورة ${widget.surahName}',
-                        subtitle: 'الآية رقم ${widget.ayah.numberInSurah}',
-                        category: SocialShareCategory.quranAyah,
+                      final data = SocialShareData.quranAyah(
+                        ayah: widget.ayah,
+                        surahName: widget.surahName,
                       );
                       SocialShareSheet.show(context, data);
                     },

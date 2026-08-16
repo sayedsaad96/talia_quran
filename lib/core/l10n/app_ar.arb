@@ -244,6 +244,8 @@
   },
   "saveProgress": "احفظ تقدمك",
   "syncProgressDesc": "سجّل دخولك لإدارة حسابك وخيارات الاستعادة وميزات العائلة",
+  "restoringProgress": "جارٍ استعادة بياناتك…",
+  "retrySyncAfterError": "إعادة المحاولة",
   "later": "لاحقاً",
   "congratulations": "مبارك!",
   "completedJuzAmma": "لقد أتممت حفظ جزء عم بنجاح.",

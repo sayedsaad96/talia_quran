@@ -8,6 +8,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/progress/progress_changed_reason.dart';
+import '../../../../core/progress/progress_events_bus.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -28,11 +30,31 @@ class MemorizationHubPage extends StatefulWidget {
 
 class _MemorizationHubPageState extends State<MemorizationHubPage> {
   late Future<_HubLoadResult> _hubFuture;
+  StreamSubscription<ProgressChangedReason>? _busSub;
+  Timer? _debounce;
 
   @override
   void initState() {
     super.initState();
     _hubFuture = _loadHub();
+    // Subscribe to progress bus so the Hub reloads when cloud pull, plan, review,
+    // or kids progress changes — the IndexedStack keeps this page alive so
+    // initState does not re-run on tab switch.
+    _busSub = getIt<ProgressEventsBus>().changes.listen((reason) {
+      if (!mounted) return;
+      const refreshReasons = {
+        ProgressChangedReason.dailyPlan,
+        ProgressChangedReason.reviewRecord,
+        ProgressChangedReason.kidsProgress,
+        ProgressChangedReason.cloudPull,
+      };
+      if (refreshReasons.contains(reason)) {
+        _debounce?.cancel();
+        _debounce = Timer(const Duration(milliseconds: 300), () {
+          if (mounted) _retryTargets();
+        });
+      }
+    });
   }
 
   Future<_HubLoadResult> _loadHub() async {
@@ -47,6 +69,13 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
     setState(() {
       _hubFuture = _loadHub();
     });
+  }
+
+  @override
+  void dispose() {
+    _busSub?.cancel();
+    _debounce?.cancel();
+    super.dispose();
   }
 
   /// Resolves the adult destination fresh at tap-time so a newly saved plan is

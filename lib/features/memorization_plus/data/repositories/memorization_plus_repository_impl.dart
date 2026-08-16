@@ -45,7 +45,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   late final MemorizationProfileStore _profileStore =
       MemorizationProfileStore(_datasource, _prefs);
   late final MemorizationProfileService _profile =
-      MemorizationProfileService(_datasource, _profileStore);
+      MemorizationProfileService(_datasource, _profileStore, _prefs);
   late final MemorizationParentAccessService _parentAccess =
       MemorizationParentAccessService(_datasource, _profileStore, _gateway);
   late final MemorizationKidsLocalService _kidsLocal =
@@ -439,4 +439,97 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, FamilyDashboard>> getFamilyDashboard() =>
       _family.getFamilyDashboard();
+
+  // --- Identity Cloud Sync --------------------------------------------------
+
+  static const _kIdentityDirty = MemorizationProfileService.kIdentityCloudDirty;
+
+  @override
+  Future<Either<Failure, void>> pullIdentityFromCloud() async {
+    try {
+      if (!_gateway.isSupabaseReady) return const Right(null);
+      final uid = _gateway.supabase.auth.currentUser?.id;
+      if (uid == null) return const Right(null);
+
+      final row = await _gateway.supabase
+          .from('profiles')
+          .select(
+            'selected_path, guardian_onboarding_status, is_parent_guardian, age, updated_at',
+          )
+          .eq('id', uid)
+          .maybeSingle();
+
+      if (row == null) return const Right(null);
+      final rawPath = row['selected_path'] as String?;
+      if (rawPath == null) return const Right(null);
+
+      final cloudPath = rawPath == 'adult'
+          ? MemorizationPath.adult
+          : MemorizationPath.child;
+      final cloudOnboarding = _parseGuardianOnboarding(
+        row['guardian_onboarding_status'] as String?,
+      );
+      final isParentGuardian = (row['is_parent_guardian'] as bool?) ?? false;
+      final childAge = row['age'] as int?;
+      final cloudUpdatedAt = row['updated_at'] == null
+          ? null
+          : DateTime.tryParse(row['updated_at'] as String);
+
+      final current = await _profileStore.loadProfile();
+      final cloudIsNewer = cloudUpdatedAt != null &&
+          cloudUpdatedAt.isAfter(current.updatedAt);
+
+      if (!current.hasSelectedPath || cloudIsNewer) {
+        await _profileStore.saveProfile(
+          current.copyWith(
+            selectedPath: cloudPath,
+            guardianOnboardingStatus: cloudOnboarding,
+            isParentGuardian: isParentGuardian,
+            childAge: childAge,
+          ),
+        );
+      }
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('Failed to pull memorization identity: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, void>> pushIdentityToCloud() async {
+    try {
+      if (!_gateway.isSupabaseReady) return const Right(null);
+      if (_prefs.getBool(_kIdentityDirty) != true) return const Right(null);
+      if (_gateway.supabase.auth.currentUser == null) return const Right(null);
+
+      final profile = await _profileStore.loadProfile();
+      if (!profile.hasSelectedPath) return const Right(null);
+
+      await _gateway.supabase.rpc('upsert_memorization_identity', params: {
+        'p_selected_path': profile.selectedPath?.name,
+        'p_guardian_onboarding_status':
+            profile.guardianOnboardingStatus.name,
+        'p_is_parent_guardian': profile.isParentGuardian,
+        'p_child_age': profile.childAge,
+        'p_updated_at': profile.updatedAt.toIso8601String(),
+      });
+
+      await _prefs.remove(_kIdentityDirty);
+      return const Right(null);
+    } catch (e) {
+      return Left(CacheFailure('Failed to push memorization identity: $e'));
+    }
+  }
+
+  GuardianOnboardingStatus _parseGuardianOnboarding(String? raw) {
+    switch (raw) {
+      case 'required':
+        return GuardianOnboardingStatus.required;
+      case 'skipped':
+        return GuardianOnboardingStatus.skipped;
+      case 'completed':
+      default:
+        return GuardianOnboardingStatus.completed;
+    }
+  }
 }

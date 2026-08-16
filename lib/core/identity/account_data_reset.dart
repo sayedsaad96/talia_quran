@@ -31,6 +31,8 @@ class AccountDataReset {
     'user_profile',
     // Reading progress.
     'read_pages',
+    // Cloud dirty flag for reading progress (pushed on next login/resume).
+    'read_pages_cloud_dirty',
     // Delta-pull bookkeeping. Retaining these made the next account resume
     // from the previous account's cursor and restore an incomplete dataset.
     'ayah_review_pull_cursor',

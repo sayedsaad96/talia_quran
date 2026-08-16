@@ -1443,6 +1443,18 @@ abstract class AppLocalizations {
   /// **'سجّل دخولك لإدارة حسابك وخيارات الاستعادة وميزات العائلة'**
   String get syncProgressDesc;
 
+  /// No description provided for @restoringProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارٍ استعادة بياناتك…'**
+  String get restoringProgress;
+
+  /// No description provided for @retrySyncAfterError.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get retrySyncAfterError;
+
   /// No description provided for @later.
   ///
   /// In ar, this message translates to:
@@ -6913,12 +6925,28 @@ abstract class AppLocalizations {
   /// **'تعذر استخدام الميكروفون'**
   String get v2MicrophoneUnavailable;
 
+  /// No description provided for @v2NoSpeechDetected.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم نسمع تلاوة. سجّل مرة أخرى.'**
   String get v2NoSpeechDetected;
 
+  /// No description provided for @v2MicrophonePermissionDenied.
+  ///
+  /// In ar, this message translates to:
+  /// **'يلزم السماح بالميكروفون للتسجيل.'**
   String get v2MicrophonePermissionDenied;
 
+  /// No description provided for @v2MicrophoneOpenSettings.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوصول للميكروفون محظور. افتح الإعدادات للسماح به.'**
   String get v2MicrophoneOpenSettings;
 
+  /// No description provided for @v2AudioPlaybackFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تشغيل صوت الآية. حاول مرة أخرى.'**
   String get v2AudioPlaybackFailed;
 
   /// No description provided for @v2RemediationAttempts.
@@ -7005,6 +7033,10 @@ abstract class AppLocalizations {
   /// **'الآية لم تتطابق. استمع للآية مرة أخرى ثم سجّل تلاوتك.'**
   String get kidsRecitationMismatch;
 
+  /// No description provided for @kidsAyahAlreadyCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكملت هذه الآية من قبل. ارجع للخريطة للمتابعة.'**
   String get kidsAyahAlreadyCompleted;
 
   /// No description provided for @accountSwitchOfflineDataDiscarded.

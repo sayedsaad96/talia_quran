@@ -38,6 +38,8 @@ class _AuthFeedback {
 class _LoginPageState extends State<LoginPage> {
   bool _isSignUp = false;
   bool _obscurePassword = true;
+  bool _isSyncing = false;
+  bool _syncFailed = false;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
@@ -69,11 +71,29 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  /// After a successful sign-in, route child profiles into the guardian-linking
-  /// flow (which auto-forwards to the kids journey if already linked) so the
-  /// child + sign-in onboarding branch is not dropped at the adult home shell.
+  /// After a successful sign-in, wait for the first cloud sync to complete so
+  /// the restored profile is ready before routing. If sync fails, stay on the
+  /// login page with a retry button (prevents routing with blank profile).
   Future<void> _routeAfterLogin(BuildContext context) async {
     if (!context.mounted) return;
+    final cubit = context.read<AuthCubit>();
+    setState(() {
+      _isSyncing = true;
+      _syncFailed = false;
+    });
+    try {
+      await cubit.ensureCloudSyncComplete();
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isSyncing = false;
+          _syncFailed = true;
+        });
+      }
+      return;
+    }
+    if (!context.mounted) return;
+    setState(() => _isSyncing = false);
     context.go(await _resolvePostLoginDestination());
   }
 
@@ -108,7 +128,10 @@ class _LoginPageState extends State<LoginPage> {
         body: BlocConsumer<AuthCubit, AuthState>(
           listener: (context, state) {
             if (state is AuthAuthenticated) {
-              setState(() => _feedback = null);
+              setState(() {
+                _feedback = null;
+                _syncFailed = false;
+              });
               // Update local profile automatically with the user's display name
               context.read<ProfileCubit>().updateProfile(
                 name: state.user.displayName,
@@ -148,7 +171,60 @@ class _LoginPageState extends State<LoginPage> {
             }
           },
           builder: (context, state) {
-            final isLoading = state is AuthLoading;
+            final isLoading = state is AuthLoading || _isSyncing;
+
+            // Restoring overlay shown while awaiting sync after login
+            if (_isSyncing) {
+              return SafeArea(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const CircularProgressIndicator(),
+                      const SizedBox(height: 24),
+                      Text(
+                        context.l10n.restoringProgress,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Sync failed: stay on page, show retry
+            if (_syncFailed) {
+              return SafeArea(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.cloud_off_rounded,
+                          size: 56,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          context.l10n.authGenericError,
+                          style: Theme.of(context).textTheme.titleMedium,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        FilledButton(
+                          onPressed: () => unawaited(
+                            _routeAfterLogin(context),
+                          ),
+                          child: Text(context.l10n.retrySyncAfterError),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
 
             return SafeArea(
               child: Center(

@@ -117,11 +117,8 @@ class _CertificatePageState extends State<CertificatePage> {
   }
 
   void _shareToSocialMediaCard() {
-    final data = SocialShareData(
-      content: 'حصلت بحمد الله على ${widget.award.titleAr} بتقدير ممتاز من منصة تالية للقرآن الكريم ✨',
-      title: 'شهادة إتمام ومواظبة',
-      subtitle: 'رقم التوثيق: ${widget.award.verificationCode}',
-      category: SocialShareCategory.certificate,
+    final data = SocialShareData.certificate(
+      award: widget.award,
       userName: widget.userName,
     );
     SocialShareSheet.show(context, data);
