@@ -523,6 +523,71 @@ class _ProgressSection extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
+              const SizedBox(width: 4),
+              GestureDetector(
+                onTap: () {
+                  final l10n = context.l10n;
+                  showModalBottomSheet<void>(
+                    context: context,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
+                    ),
+                    builder: (ctx) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.insights_rounded),
+                            title: Text(l10n.shareProgress),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              SocialShareSheet.show(
+                                context,
+                                SocialShareData.progress(
+                                  progress: progress,
+                                ),
+                              );
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.psychology_rounded),
+                            title: Text(l10n.shareMemorizationMilestone),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              SocialShareSheet.show(
+                                context,
+                                SocialShareData.memorization(
+                                  ayahsCount: progress.memorizedAyahs,
+                                  surahsCount: progress.memorizedSurahs,
+                                ),
+                              );
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(
+                              Icons.local_fire_department_rounded,
+                            ),
+                            title: Text(l10n.shareConsistencyStreak),
+                            onTap: () {
+                              Navigator.pop(ctx);
+                              SocialShareSheet.show(
+                                context,
+                                SocialShareData.streak(
+                                  streakDays: progress.streakDays,
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+                child: Icon(Icons.share_rounded, size: 18, color: primary),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),

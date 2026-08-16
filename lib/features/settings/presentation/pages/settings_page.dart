@@ -218,7 +218,11 @@ class _SettingsView extends StatelessWidget {
                         title: context.l10n.settingsSectionAboutTalia,
                         accentColor: isDark ? AppColors.primaryLight : AppColors.primary,
                         icon: Icons.info_outline_rounded,
-                        children: [AboutTile(isDark: isDark)],
+                        children: [
+                          AboutTile(isDark: isDark),
+                          SettingsDivider(isDark: isDark),
+                          ShareAppTile(isDark: isDark),
+                        ],
                       ),
                     ]),
                   ),

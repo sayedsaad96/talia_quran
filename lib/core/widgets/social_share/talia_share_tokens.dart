@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'social_share_model.dart';
 
 /// Talia Share System — Design Tokens & Aesthetics
 abstract class TaliaShareColors {
@@ -59,11 +60,15 @@ abstract class TaliaShareDimensions {
   static const double squareRatio = 1.0; // 1:1 -> 1080x1080
   static const double storyRatio = 0.5625; // 9:16 -> 1080x1920
 
-  static double aspectRatioFor(dynamic format) {
-    final formatName = format.toString();
-    if (formatName.contains('square')) return squareRatio;
-    if (formatName.contains('story')) return storyRatio;
-    return portraitRatio;
+  static double aspectRatioFor(SocialShareFormat format) {
+    switch (format) {
+      case SocialShareFormat.square:
+        return squareRatio;
+      case SocialShareFormat.story:
+        return storyRatio;
+      case SocialShareFormat.portrait:
+        return portraitRatio;
+    }
   }
 }
 

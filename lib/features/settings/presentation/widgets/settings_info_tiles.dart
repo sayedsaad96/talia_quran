@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
@@ -226,6 +227,76 @@ class AboutTile extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// A settings tile that shares the Talia app with friends via share_plus.
+class ShareAppTile extends StatelessWidget {
+  const ShareAppTile({super.key, required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return InkWell(
+      onTap: () {
+        SharePlus.instance.share(
+          ShareParams(text: context.l10n.shareAppText),
+        );
+      },
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.share_rounded, color: primary, size: 22),
+            ),
+            const SizedBox(width: AppSpacing.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.l10n.shareApp,
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: textColor,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    context.isArabic
+                        ? 'شارك تجربة تالية مع أهلك وأصدقائك'
+                        : 'Share the Talia experience with friends',
+                    style: AppTypography.labelSmall.copyWith(
+                      color: subtextColor,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.open_in_new_rounded, size: 18, color: subtextColor),
+          ],
+        ),
+      ),
     );
   }
 }

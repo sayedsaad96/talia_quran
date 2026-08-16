@@ -75,6 +75,7 @@ class QuranVerseTemplate extends StatelessWidget {
               child: Text(
                 '“${data.translation}”',
                 textAlign: TextAlign.center,
+                textDirection: TextDirection.ltr,
                 style: TaliaShareTypography.body(
                   color: theme.textSecondary,
                   fontSize: isCompact ? 10.5 : 12,

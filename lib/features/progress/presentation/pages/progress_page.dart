@@ -123,11 +123,11 @@ class _ProgressView extends StatelessWidget {
               PopupMenuItem(value: SocialShareCategory.progress, child: Text(context.l10n.shareProgress)),
               PopupMenuItem(
                 value: SocialShareCategory.memorization,
-                child: Text(context.isArabic ? 'مشاركة إنجاز الحفظ' : 'Share memorization milestone'),
+                child: Text(context.l10n.shareMemorizationMilestone),
               ),
               PopupMenuItem(
                 value: SocialShareCategory.streak,
-                child: Text(context.isArabic ? 'مشاركة الاستمرارية' : 'Share consistency streak'),
+                child: Text(context.l10n.shareConsistencyStreak),
               ),
             ],
           ),

@@ -96,7 +96,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
           ),
         ),
         context: context,
-        delay: const Duration(milliseconds: 80),
+        delay: const Duration(milliseconds: 200),
         pixelRatio: 3.0,
         targetSize: size,
       );

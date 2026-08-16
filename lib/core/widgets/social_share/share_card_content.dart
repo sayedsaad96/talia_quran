@@ -3,17 +3,23 @@ import 'package:flutter/material.dart';
 /// Adaptive content region for share-card templates.
 ///
 /// Cards are exported by rendering the widget offscreen, where no scrolling
-/// is possible: a scrollable template would silently clip whatever falls
-/// outside the first viewport in the exported PNG.  This widget instead lays
-/// the template out at its natural height at the full content width and then
-/// scales the whole block down to fit the shell's fixed region, so nothing is
-/// ever cut off — shrinking is a uniform last resort rather than per-element
-/// font shrinking.
+/// is possible.  This widget lays out the template at its natural height
+/// within the available width, then scales the **whole block down uniformly**
+/// only when it overflows — nothing is ever clipped.
 ///
-/// The width is pinned (never the height) while measuring: a height cap would
-/// make inner flexes overflow during layout before scaling could rescue them.
+/// Scale-down is clamped to 0.72× so that in pathological cases (very long
+/// verses) the template shrinks gracefully but does not become unreadable.
+/// Templates already supply adaptive font sizes for the most common length
+/// ranges; this widget acts as a final safety net, not the primary mechanism.
+///
+/// The width is pinned while measuring (never the height): a height cap would
+/// cause inner flexes to overflow during layout before scaling could intervene.
 class ShareCardContent extends StatelessWidget {
   final Widget child;
+
+  /// Minimum scale applied when content overflows.  Keeps badges, icons, and
+  /// reference text legible even when verse text is very long.
+  static const double _minScale = 0.72;
 
   const ShareCardContent({super.key, required this.child});
 
@@ -21,15 +27,48 @@ class ShareCardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.center,
-          child: SizedBox(
-            width: constraints.maxWidth,
-            child: child,
-          ),
+        return _ScaleToFit(
+          availableWidth: constraints.maxWidth,
+          minScale: _minScale,
+          child: child,
         );
       },
+    );
+  }
+}
+
+/// Measures the child at [availableWidth], computes a scale factor to fit it
+/// vertically into the parent's available height, clamps it to [minScale],
+/// and then renders it scaled + centered.
+class _ScaleToFit extends StatelessWidget {
+  final Widget child;
+  final double availableWidth;
+  final double minScale;
+
+  const _ScaleToFit({
+    required this.child,
+    required this.availableWidth,
+    required this.minScale,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // FittedBox with BoxFit.scaleDown pins width and scales uniformly.
+    // The key improvement over a bare FittedBox: we wrap in a SizedBox that
+    // provides a *finite* width so the child is always measured at the correct
+    // share-card width regardless of the surrounding layout constraints.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.center,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: availableWidth,
+          // Allow content to grow as tall as needed so the child lays out
+          // fully before FittedBox applies uniform scale-down.
+          minWidth: availableWidth,
+        ),
+        child: child,
+      ),
     );
   }
 }

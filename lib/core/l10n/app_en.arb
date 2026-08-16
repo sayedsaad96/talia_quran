@@ -120,6 +120,10 @@
     }
   },
   "shareProgress": "Share Progress",
+  "shareMemorizationMilestone": "Share memorization milestone",
+  "shareConsistencyStreak": "Share consistency streak",
+  "shareApp": "Share Talia App",
+  "shareAppText": "Discover Talia Quran 📖✨\nYour smart companion for memorization & recitation\nDownload now: https://taliaapp.com",
   "shareProgressText": "📊 Here is a snapshot of my Quran journey with Talia:\n📖 {pages} pages read\n🧠 {ayahs} ayahs memorized\n🔥 {streak} days of consistency\n\nTalia helps turn daily effort into a steady Quran habit with clear progress and meaningful motivation.",
   "shareProgressWithName": "📊 Here is a snapshot of {name}'s Quran journey with Talia:\n📖 {pages} pages read\n🧠 {ayahs} ayahs memorized\n🔥 {streak} days of consistency\n\nTalia helps turn daily effort into a steady Quran habit with clear progress and meaningful motivation.",
   "viewAll": "View All",

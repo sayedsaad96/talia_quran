@@ -346,6 +346,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get shareProgress => 'مشاركة التقدم';
 
   @override
+  String get shareMemorizationMilestone => 'مشاركة إنجاز الحفظ';
+
+  @override
+  String get shareConsistencyStreak => 'مشاركة الاستمرارية';
+
+  @override
+  String get shareApp => 'شارك تطبيق تالية';
+
+  @override
+  String get shareAppText =>
+      'اكتشف تطبيق تالية للقرآن الكريم 📖✨\nرفيقك الذكي في رحلة الحفظ والتلاوة\nحمّله الآن: https://taliaapp.com';
+
+  @override
   String shareProgressText(Object ayahs, Object pages, Object streak) {
     return '📊 هذا ملخص تقدمي في رحلتي مع القرآن عبر تالية:\n📖 $pages صفحة مقروءة\n🧠 $ayahs آية محفوظة\n🔥 $streak أيام من الاستمرارية\n\nتالية يساعدني على بناء عادة قرآنية ثابتة بخطوات واضحة وتحفيز يومي.';
   }

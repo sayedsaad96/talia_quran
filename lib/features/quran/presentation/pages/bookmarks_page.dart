@@ -7,6 +7,8 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/social_share/social_share_model.dart';
+import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../data/datasources/bookmark_service.dart';
 import '../../domain/bookmark_reader_location.dart';
 
@@ -256,6 +258,23 @@ class _SurahBookmarkGroup extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: AppSpacing.xs),
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          visualDensity: VisualDensity.compact,
+                          icon: Icon(
+                            Icons.share_rounded,
+                            size: 18,
+                            color: primary.withValues(alpha: 0.7),
+                          ),
+                          onPressed: () {
+                            final data = SocialShareData.quranVerse(
+                              surahName: entry.surahName,
+                              ayahNumber: entry.ayahNumber,
+                              ayahText: entry.ayahText,
+                            );
+                            SocialShareSheet.show(context, data);
+                          },
+                        ),
                         Icon(
                           Icons.chevron_right_rounded,
                           size: 20,

@@ -178,6 +178,27 @@ class SocialShareData {
     );
   }
 
+  /// Factory for sharing a bookmarked Quran verse using raw string data
+  /// (e.g., from [BookmarkEntry] where only text, surah name, and number exist).
+  factory SocialShareData.quranVerse({
+    required String ayahText,
+    required String surahName,
+    required int ayahNumber,
+    String? translation,
+    String? userName,
+  }) {
+    return SocialShareData(
+      content: ayahText.trim(),
+      category: SocialShareCategory.quranAyah,
+      title: surahName,
+      surahName: surahName,
+      ayahNumber: ayahNumber,
+      translation: translation,
+      userName: userName,
+      characterAssetPath: masterCharacterAsset,
+    );
+  }
+
   /// Factory for Achievement share from actual domain model
   factory SocialShareData.achievement({
     required Achievement achievement,

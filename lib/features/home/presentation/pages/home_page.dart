@@ -37,6 +37,8 @@ import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../../streak/presentation/cubits/streak_cubit.dart';
 import '../cubits/home_cubit.dart';
+import '../../../../core/widgets/social_share/social_share_model.dart';
+import '../../../../core/widgets/social_share/social_share_sheet.dart';
 part 'home_page_widgets.dart';
 
 class HomePage extends StatefulWidget {

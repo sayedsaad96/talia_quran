@@ -748,6 +748,30 @@ abstract class AppLocalizations {
   /// **'مشاركة التقدم'**
   String get shareProgress;
 
+  /// No description provided for @shareMemorizationMilestone.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة إنجاز الحفظ'**
+  String get shareMemorizationMilestone;
+
+  /// No description provided for @shareConsistencyStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة الاستمرارية'**
+  String get shareConsistencyStreak;
+
+  /// No description provided for @shareApp.
+  ///
+  /// In ar, this message translates to:
+  /// **'شارك تطبيق تالية'**
+  String get shareApp;
+
+  /// No description provided for @shareAppText.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتشف تطبيق تالية للقرآن الكريم 📖✨\nرفيقك الذكي في رحلة الحفظ والتلاوة\nحمّله الآن: https://taliaapp.com'**
+  String get shareAppText;
+
   /// No description provided for @shareProgressText.
   ///
   /// In ar, this message translates to:

@@ -346,6 +346,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get shareProgress => 'Share Progress';
 
   @override
+  String get shareMemorizationMilestone => 'Share memorization milestone';
+
+  @override
+  String get shareConsistencyStreak => 'Share consistency streak';
+
+  @override
+  String get shareApp => 'Share Talia App';
+
+  @override
+  String get shareAppText =>
+      'Discover Talia Quran 📖✨\nYour smart companion for memorization & recitation\nDownload now: https://taliaapp.com';
+
+  @override
   String shareProgressText(Object ayahs, Object pages, Object streak) {
     return '📊 Here is a snapshot of my Quran journey with Talia:\n📖 $pages pages read\n🧠 $ayahs ayahs memorized\n🔥 $streak days of consistency\n\nTalia helps turn daily effort into a steady Quran habit with clear progress and meaningful motivation.';
   }
