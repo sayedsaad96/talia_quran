@@ -296,6 +296,55 @@ void main() {
       );
     }
 
+    testWidgets('premium shell exposes its arch and parchment sharing footer',
+        (tester) async {
+      const data = SocialShareData(
+        content: 'A real milestone from the user journey',
+        title: 'First Quran milestone',
+        category: SocialShareCategory.achievement,
+      );
+
+      await tester.pumpWidget(
+        buildTestHarness(
+          const SocialShareCard(
+            data: data,
+            theme: SocialShareTheme.emeraldDark,
+            format: SocialShareFormat.portrait,
+          ),
+          size: const Size(360, 450),
+        ),
+      );
+
+      expect(find.byKey(const ValueKey('islamic-hero-arch')), findsOneWidget);
+      expect(find.byKey(const ValueKey('share-parchment-footer')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('kids achievement composes the official character inside the hero arch',
+        (tester) async {
+      const data = SocialShareData(
+        content: 'A real milestone from the user journey',
+        title: 'First Quran milestone',
+        category: SocialShareCategory.achievement,
+        audience: SocialShareAudience.kids,
+        showCharacter: true,
+      );
+
+      await tester.pumpWidget(
+        buildTestHarness(
+          const SocialShareCard(
+            data: data,
+            theme: SocialShareTheme.emeraldDark,
+            format: SocialShareFormat.portrait,
+          ),
+          size: const Size(360, 450),
+        ),
+      );
+
+      expect(find.byKey(const ValueKey('share-hero-character')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('CASE 1: Achievement card (Arabic) renders real data', (tester) async {
       const achievement = Achievement(
         id: 'first_page',

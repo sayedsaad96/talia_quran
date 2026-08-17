@@ -48,6 +48,13 @@ class ShareCardShell extends StatelessWidget {
 
   bool get _isKids => data.audience == SocialShareAudience.kids;
 
+  bool get _usesCharacterHero =>
+      _isKids &&
+      data.showCharacter &&
+      data.category != SocialShareCategory.quranAyah &&
+      data.category != SocialShareCategory.dua &&
+      data.category != SocialShareCategory.azkar;
+
   @override
   Widget build(BuildContext context) {
     // Cards are exported offscreen where ambient Directionality is not
@@ -66,10 +73,7 @@ class ShareCardShell extends StatelessWidget {
               colors: theme.backgroundGradient,
             ),
             borderRadius: BorderRadius.circular(26),
-            border: Border.all(
-              color: theme.borderColor,
-              width: 1.25,
-            ),
+            border: Border.all(color: theme.borderColor, width: 1.25),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.45),
@@ -90,9 +94,7 @@ class ShareCardShell extends StatelessWidget {
                 // ─── 1. Background Islamic Geometric Pattern ──────────────────
                 Positioned.fill(
                   child: CustomPaint(
-                    painter: IslamicOctagramPainter(
-                      color: theme.patternColor,
-                    ),
+                    painter: IslamicOctagramPainter(color: theme.patternColor),
                   ),
                 ),
 
@@ -103,10 +105,7 @@ class ShareCardShell extends StatelessWidget {
                       gradient: RadialGradient(
                         center: const Alignment(0, -0.45),
                         radius: 0.85,
-                        colors: [
-                          theme.glowColor,
-                          Colors.transparent,
-                        ],
+                        colors: [theme.glowColor, Colors.transparent],
                       ),
                     ),
                   ),
@@ -233,40 +232,67 @@ class ShareCardShell extends StatelessWidget {
                         isKids: _isKids,
                       ),
 
-                      // Middle Dynamic Template Content Container
+                      // The arch is the single visual frame for dynamic content.
+                      // Unlike the former opaque panel, it leaves the layered
+                      // emerald atmosphere visible and lets each template keep
+                      // its own content-specific visual identity.
                       Expanded(
-                        child: Container(
-                          width: double.infinity,
-                          margin: EdgeInsets.symmetric(
-                            vertical: format == SocialShareFormat.square ? 6 : 10,
-                          ),
+                        child: Padding(
                           padding: EdgeInsets.symmetric(
-                            horizontal: format == SocialShareFormat.square ? 12 : 16,
-                            vertical: format == SocialShareFormat.square ? 8 : 12,
+                            vertical: format == SocialShareFormat.square
+                                ? 5
+                                : 9,
                           ),
-                          decoration: BoxDecoration(
-                            color: theme.cardBackground.withValues(alpha: 0.84),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: theme.borderColor.withValues(alpha: 0.38),
-                              width: 1.2,
+                          child: IslamicHeroArch(
+                            theme: theme,
+                            kidsMode: _isKids,
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                Padding(
+                                  padding: EdgeInsets.fromLTRB(
+                                    format == SocialShareFormat.square
+                                        ? 18
+                                        : 24,
+                                    format == SocialShareFormat.story ? 34 : 24,
+                                    _usesCharacterHero
+                                        ? (format == SocialShareFormat.story
+                                              ? 132
+                                              : 118)
+                                        : (format == SocialShareFormat.square
+                                              ? 18
+                                              : 24),
+                                    format == SocialShareFormat.story ? 24 : 18,
+                                  ),
+                                  child: Center(child: child),
+                                ),
+                                if (_usesCharacterHero)
+                                  Positioned(
+                                    right: format == SocialShareFormat.square
+                                        ? -2
+                                        : 2,
+                                    bottom: format == SocialShareFormat.story
+                                        ? 2
+                                        : -3,
+                                    child: TaliaCharacterHero(
+                                      assetPath:
+                                          data.effectiveCharacterAssetPath,
+                                      height: format == SocialShareFormat.story
+                                          ? 230
+                                          : format == SocialShareFormat.square
+                                          ? 128
+                                          : 174,
+                                    ),
+                                  ),
+                              ],
                             ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.12),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: child,
                           ),
                         ),
                       ),
 
-                      // Official Footer Brand Signature
-                      _BrandFooter(
+                      // The light parchment footer deliberately separates the
+                      // sharing statement from the dark hero composition.
+                      ParchmentShareFooter(
                         theme: theme,
                         userName: data.userName,
                         copy: copy,
@@ -304,13 +330,16 @@ class _BrandHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localizedBadge =
-        badgeText.isNotEmpty ? badgeText : copy.localizedBadge(category);
+    final localizedBadge = badgeText.isNotEmpty
+        ? badgeText
+        : copy.localizedBadge(category);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: isKids
+              ? MainAxisAlignment.start
+              : MainAxisAlignment.center,
           children: [
             // Official Talia App Logo Icon
             Container(
@@ -370,40 +399,45 @@ class _BrandHeader extends StatelessWidget {
         ),
         SizedBox(height: isCompact ? 4 : 6),
         // Category Badge Chip
-        Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: isCompact ? 10 : 14,
-            vertical: isCompact ? 2 : 3.5,
-          ),
-          decoration: BoxDecoration(
-            color: theme.badgeBackground,
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(
-              color: theme.accentColor.withValues(alpha: 0.45),
-              width: 1,
+        Align(
+          alignment: isKids
+              ? AlignmentDirectional.centerStart
+              : Alignment.center,
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: isCompact ? 10 : 14,
+              vertical: isCompact ? 2 : 3.5,
             ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                category.icon,
-                size: isCompact ? 12 : 13.5,
-                color: theme.badgeTextColor,
+            decoration: BoxDecoration(
+              color: theme.badgeBackground,
+              borderRadius: BorderRadius.circular(30),
+              border: Border.all(
+                color: theme.accentColor.withValues(alpha: 0.45),
+                width: 1,
               ),
-              const SizedBox(width: 5),
-              Flexible(
-                child: Text(
-                  localizedBadge,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  style: TaliaShareTypography.badge(
-                    color: theme.badgeTextColor,
-                    fontSize: isCompact ? 10.5 : 11.5,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  category.icon,
+                  size: isCompact ? 12 : 13.5,
+                  color: theme.badgeTextColor,
+                ),
+                const SizedBox(width: 5),
+                Flexible(
+                  child: Text(
+                    localizedBadge,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TaliaShareTypography.badge(
+                      color: theme.badgeTextColor,
+                      fontSize: isCompact ? 10.5 : 11.5,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ],
@@ -411,14 +445,15 @@ class _BrandHeader extends StatelessWidget {
   }
 }
 
-/// Official Card Footer Widget
-class _BrandFooter extends StatelessWidget {
+/// Premium parchment signature shared by every card format.
+class ParchmentShareFooter extends StatelessWidget {
   final SocialShareTheme theme;
   final String? userName;
   final bool isCompact;
   final SocialShareCopy copy;
 
-  const _BrandFooter({
+  const ParchmentShareFooter({
+    super.key,
     required this.theme,
     this.userName,
     required this.copy,
@@ -427,83 +462,287 @@ class _BrandFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (userName != null && userName!.isNotEmpty) ...[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.person_outline_rounded,
-                size: isCompact ? 11 : 13,
-                color: theme.accentColor,
+    const ink = Color(0xFF123D36);
+    return Container(
+      key: const ValueKey('share-parchment-footer'),
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(
+        horizontal: isCompact ? 10 : 14,
+        vertical: isCompact ? 5 : 7,
+      ),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFBF4E4),
+        borderRadius: BorderRadius.circular(isCompact ? 14 : 18),
+        border: Border.all(color: theme.borderColor.withValues(alpha: 0.72)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (userName != null && userName!.isNotEmpty) ...[
+            Text(
+              copy.journeyFor(userName!),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              textAlign: TextAlign.center,
+              style: AppTypography.labelSmall.copyWith(
+                color: ink,
+                fontWeight: FontWeight.bold,
+                fontSize: isCompact ? 9 : 10,
+                fontFamily: 'Amiri',
               ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  copy.journeyFor(userName!),
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  style: AppTypography.labelSmall.copyWith(
-                    color: theme.accentColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: isCompact ? 10 : 11,
-                    fontFamily: 'Amiri',
+            ),
+            SizedBox(height: isCompact ? 1 : 2),
+          ],
+          Row(
+            children: [
+              Expanded(
+                child: Divider(
+                  color: theme.borderColor.withValues(alpha: 0.65),
+                  height: 1,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 7),
+                child: Container(
+                  width: isCompact ? 18 : 22,
+                  height: isCompact ? 18 : 22,
+                  padding: const EdgeInsets.all(1.5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF0A3932),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: theme.borderColor),
                   ),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/logo_icon_padded.png',
+                      fit: BoxFit.cover,
+                      cacheWidth: 66,
+                      errorBuilder: (_, _, _) => Icon(
+                        Icons.auto_awesome_rounded,
+                        size: isCompact ? 10 : 12,
+                        color: theme.accentColor,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Divider(
+                  color: theme.borderColor.withValues(alpha: 0.65),
+                  height: 1,
                 ),
               ),
             ],
           ),
-          SizedBox(height: isCompact ? 2 : 4),
-        ],
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                height: 1,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      theme.borderColor.withValues(alpha: 0.5),
-                    ],
-                  ),
-                ),
-              ),
+          SizedBox(height: isCompact ? 2 : 3),
+          Text(
+            copy.sharedFrom,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: AppTypography.labelSmall.copyWith(
+              color: ink.withValues(alpha: 0.82),
+              fontSize: isCompact ? 8 : 9,
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Icon(
-                Icons.stars_rounded,
-                size: isCompact ? 10 : 12,
-                color: theme.accentColor,
-              ),
-            ),
-            Expanded(
-              child: Container(
-                height: 1,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.borderColor.withValues(alpha: 0.5),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: isCompact ? 2 : 4),
-        Text(
-          copy.sharedFrom,
-          style: AppTypography.labelSmall.copyWith(
-            color: theme.textSecondary.withValues(alpha: 0.78),
-            fontSize: isCompact ? 8.5 : 9.5,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
+}
+
+/// Reusable mihrab-like hero frame shared by every dynamic card template.
+class IslamicHeroArch extends StatelessWidget {
+  final SocialShareTheme theme;
+  final bool kidsMode;
+  final Widget child;
+
+  const IslamicHeroArch({
+    super.key,
+    required this.theme,
+    required this.kidsMode,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: CustomPaint(
+        key: const ValueKey('islamic-hero-arch'),
+        painter: _IslamicHeroArchPainter(
+          gold: theme.accentColor,
+          fill: theme.cardBackground,
+          glow: theme.glowColor,
+          playful: kidsMode,
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+/// The official companion asset, framed as part of the kids hero rather than
+/// a detached illustration.  It is deliberately absent from adult cards.
+class TaliaCharacterHero extends StatelessWidget {
+  final String assetPath;
+  final double height;
+
+  const TaliaCharacterHero({
+    super.key,
+    required this.assetPath,
+    required this.height,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFF9D67A).withValues(alpha: 0.28),
+            blurRadius: 28,
+            spreadRadius: 5,
+          ),
+        ],
+      ),
+      child: Image.asset(
+        key: const ValueKey('share-hero-character'),
+        assetPath,
+        height: height,
+        fit: BoxFit.contain,
+        cacheWidth: 540,
+        errorBuilder: (_, _, _) => const SizedBox.shrink(),
+      ),
+    );
+  }
+}
+
+class _IslamicHeroArchPainter extends CustomPainter {
+  final Color gold;
+  final Color fill;
+  final Color glow;
+  final bool playful;
+
+  const _IslamicHeroArchPainter({
+    required this.gold,
+    required this.fill,
+    required this.glow,
+    required this.playful,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final inset = size.width * 0.045;
+    final top = size.height * 0.045;
+    final bottom = size.height * 0.975;
+    final arch = Path()
+      ..moveTo(inset, bottom)
+      ..lineTo(inset, size.height * 0.28)
+      ..cubicTo(
+        inset,
+        top + size.height * 0.08,
+        size.width * 0.28,
+        top,
+        size.width / 2,
+        top,
+      )
+      ..cubicTo(
+        size.width * 0.72,
+        top,
+        size.width - inset,
+        top + size.height * 0.08,
+        size.width - inset,
+        size.height * 0.28,
+      )
+      ..lineTo(size.width - inset, bottom)
+      ..close();
+    final fillPaint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [glow.withValues(alpha: 0.74), fill.withValues(alpha: 0.48)],
+      ).createShader(Offset.zero & size);
+    canvas.drawPath(arch, fillPaint);
+
+    // A quiet mosque silhouette keeps the atmospheric reference language
+    // without introducing a raster background or competing with card data.
+    final silhouette = Paint()
+      ..color = gold.withValues(alpha: 0.09)
+      ..style = PaintingStyle.fill;
+    final ground = size.height * 0.83;
+    canvas.drawRect(
+      Rect.fromLTWH(
+        size.width * .19,
+        ground,
+        size.width * .62,
+        size.height * .05,
+      ),
+      silhouette,
+    );
+    canvas.drawCircle(
+      Offset(size.width * .67, ground),
+      size.width * .09,
+      silhouette,
+    );
+    canvas.drawRect(
+      Rect.fromLTWH(
+        size.width * .76,
+        size.height * .42,
+        size.width * .035,
+        ground - size.height * .42,
+      ),
+      silhouette,
+    );
+    canvas.drawCircle(
+      Offset(size.width * .778, size.height * .42),
+      size.width * .03,
+      silhouette,
+    );
+    final stroke = Paint()
+      ..color = gold.withValues(alpha: 0.82)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawPath(arch, stroke);
+    final leaves = Paint()
+      ..color = gold.withValues(alpha: playful ? 0.52 : 0.28);
+    for (final leaf in [
+      Offset(size.width * .15, size.height * .47),
+      Offset(size.width * .2, size.height * .54),
+      Offset(size.width * .17, size.height * .62),
+    ]) {
+      canvas.save();
+      canvas.translate(leaf.dx, leaf.dy);
+      canvas.rotate(-0.6);
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset.zero, width: 10, height: 4),
+        leaves,
+      );
+      canvas.restore();
+    }
+    if (playful) {
+      final sparkle = Paint()..color = gold.withValues(alpha: 0.72);
+      for (final point in [
+        Offset(size.width * .16, size.height * .22),
+        Offset(size.width * .82, size.height * .34),
+        Offset(size.width * .2, size.height * .72),
+      ]) {
+        canvas.drawCircle(point, 2.2, sparkle);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _IslamicHeroArchPainter old) =>
+      old.gold != gold ||
+      old.fill != fill ||
+      old.glow != glow ||
+      old.playful != playful;
 }

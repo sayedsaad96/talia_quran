@@ -135,7 +135,7 @@ class ProgressTemplate extends StatelessWidget {
           ],
 
           // ─── 5. Talia Celebratory Companion ───────────────────────────────
-          if (data.showCharacter) ...[
+          if (data.showCharacter && !isKids) ...[
             SizedBox(height: isCompact ? 6 : (isStory ? 14 : 8)),
             ClipRRect(
               borderRadius: BorderRadius.circular(12),

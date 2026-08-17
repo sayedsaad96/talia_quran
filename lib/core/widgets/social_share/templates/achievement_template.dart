@@ -180,7 +180,9 @@ class AchievementTemplate extends StatelessWidget {
               ),
             ),
           ],
-          if (data.showCharacter) ...[
+          // Kids characters are composed by the shared hero arch so they read
+          // as part of the illustration rather than a second, detached image.
+          if (data.showCharacter && !isKids) ...[
             SizedBox(height: isCompact ? 6 : (isStory ? 16 : 10)),
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
