@@ -25,7 +25,10 @@ class KidsStageDetails extends StatelessWidget {
     final startButton = FilledButton.icon(
       onPressed: onStartMission,
       icon: const Icon(Icons.play_arrow_rounded, size: 28),
-      label: Text(context.l10n.kidsGamifiedStartMission, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+      label: Text(
+        context.l10n.kidsGamifiedStartMission,
+        style: AppTypography.headlineSmall.copyWith(fontWeight: FontWeight.bold),
+      ),
       style: FilledButton.styleFrom(
         backgroundColor: KidsTheme.forestGreen,
         foregroundColor: Colors.white,

@@ -21,10 +21,21 @@ class _HeroHeaderState extends State<_HeroHeader>
     _floatController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
-    )..repeat(reverse: true);
+    );
     _floatAnimation = Tween<double>(begin: -4, end: 4).animate(
       CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
     );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!mounted) return;
+    if (MediaQuery.of(context).disableAnimations) {
+      _floatController.value = 0.0;
+    } else if (!_floatController.isAnimating) {
+      _floatController.repeat(reverse: true);
+    }
   }
 
   @override
@@ -622,7 +633,7 @@ class _ProgressSection extends StatelessWidget {
                         label: context.l10n.hifz,
                         value: '${progress.memorizedAyahs}',
                         icon: Icons.auto_stories_rounded,
-                        color: const Color(0xFF2D5A8E),
+                        color: AppColors.accentBlue,
                         isDark: isDark,
                       ),
                     ),
@@ -646,7 +657,7 @@ class _ProgressSection extends StatelessWidget {
                         label: 'XP',
                         value: '$totalXp',
                         icon: Icons.bolt_rounded,
-                        color: const Color(0xFFFF8C42),
+                        color: AppColors.streakOrange,
                         isDark: isDark,
                       ),
                     ),
@@ -671,14 +682,14 @@ class _ProgressSection extends StatelessWidget {
                     label: context.l10n.hifz,
                     value: '${progress.memorizedAyahs}/${progress.totalAyahs}',
                     icon: Icons.auto_stories_rounded,
-                    color: const Color(0xFF2D5A8E),
+                    color: AppColors.accentBlue,
                     isDark: isDark,
                   ),
                   _ProgressMetricPill(
                     label: 'XP',
                     value: '$totalXp',
                     icon: Icons.bolt_rounded,
-                    color: const Color(0xFFFF8C42),
+                    color: AppColors.streakOrange,
                     isDark: isDark,
                   ),
                 ];
@@ -801,7 +812,7 @@ class _QuickActionsGrid extends StatelessWidget {
           icon: Icons.psychology_alt_rounded,
           title: context.l10n.homeActionTodaysPlan,
           subtitle: context.l10n.homeActionContinuePlan,
-          color: const Color(0xFF2D5A8E),
+          color: AppColors.accentBlue,
           route: AppRoutes.memorizationHub,
           isDark: isDark,
         ),
@@ -809,7 +820,7 @@ class _QuickActionsGrid extends StatelessWidget {
           icon: Icons.insights_rounded,
           title: context.l10n.homeActionProgress,
           subtitle: context.l10n.homeActionReviewGains,
-          color: const Color(0xFFFF8C42),
+          color: AppColors.streakOrange,
           route: AppRoutes.progress,
           isDark: isDark,
         ),
@@ -817,7 +828,7 @@ class _QuickActionsGrid extends StatelessWidget {
           icon: Icons.settings_rounded,
           title: context.l10n.homeActionSettings,
           subtitle: context.l10n.homeActionTuneApp,
-          color: const Color(0xFF6C3483),
+          color: AppColors.accentPurple,
           route: AppRoutes.settings,
           isDark: isDark,
         ),
@@ -1607,7 +1618,7 @@ class _HomeEngagementSection extends StatelessWidget {
                           icon: Icons.local_fire_department_rounded,
                           label: context.l10n.streakTerm,
                           value: '$streak',
-                          color: const Color(0xFFFF8C42),
+                          color: AppColors.streakOrange,
                           isDark: isDark,
                         ),
                       ),
@@ -1617,7 +1628,7 @@ class _HomeEngagementSection extends StatelessWidget {
                           icon: Icons.military_tech_rounded,
                           label: context.l10n.homeXpLevelLabel,
                           value: '${level.icon} ${_levelLabel(context, level)}',
-                          color: const Color(0xFF8B5CF6),
+                          color: AppColors.accentPurple,
                           isDark: isDark,
                         ),
                       ),

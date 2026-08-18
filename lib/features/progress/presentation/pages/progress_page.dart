@@ -217,9 +217,18 @@ class _ProgressContentState extends State<_ProgressContent>
       begin: const Offset(0, 0.03),
       end: Offset.zero,
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+  }
 
-    // Start animation immediately
-    _controller.forward();
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!mounted) return;
+    final disable = MediaQuery.of(context).disableAnimations;
+    if (disable) {
+      _controller.value = 1.0;
+    } else if (!_controller.isAnimating && !_controller.isCompleted) {
+      _controller.forward();
+    }
   }
 
   @override
@@ -441,7 +450,7 @@ class _ProgressContentState extends State<_ProgressContent>
                       _InfoChip(
                         label: context.l10n.retentionRateLabel,
                         value: '${(p.retentionRate * 100).toStringAsFixed(0)}%',
-                        color: const Color(0xFF2D8E4C),
+                        color: AppColors.primary,
                         isDark: isDark,
                       ),
                     if (p.lastReviewedAt case final reviewedAt?)

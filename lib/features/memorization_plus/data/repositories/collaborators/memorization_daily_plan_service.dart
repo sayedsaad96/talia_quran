@@ -256,7 +256,7 @@ class MemorizationDailyPlanService {
   }) async {
     try {
       final cachedResult = await getCachedDailyPlan();
-      return cachedResult.fold<Future<Either<Failure, bool>>>(
+      final folded = await cachedResult.fold<Future<Either<Failure, bool>>>(
         (failure) async => Left(failure),
         (plan) async {
           if (plan == null || plan.surahId != surahId) {
@@ -281,6 +281,7 @@ class MemorizationDailyPlanService {
           });
         },
       );
+      return folded;
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }

@@ -86,10 +86,11 @@ class MemorizationProgressReaderImpl implements MemorizationProgressReader {
   }) async {
     try {
       final result = await read();
-      return result.fold((failure) {
+      final T value = result.fold((failure) {
         TaliaLogger.w('$label unavailable; using partial snapshot', failure);
         return fallback;
       }, (value) => value);
+      return value;
     } catch (error, stack) {
       TaliaLogger.w('$label threw; using partial snapshot', error, stack);
       return fallback;

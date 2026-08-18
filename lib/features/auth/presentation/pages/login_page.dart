@@ -4,9 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/error_info_banner.dart';
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../onboarding/presentation/cubits/onboarding_cubit.dart';
@@ -197,7 +199,9 @@ class _LoginPageState extends State<LoginPage> {
               return SafeArea(
                 child: Center(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                    ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -206,13 +210,13 @@ class _LoginPageState extends State<LoginPage> {
                           size: 56,
                           color: Theme.of(context).colorScheme.error,
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.md),
                         Text(
                           context.l10n.authGenericError,
                           style: Theme.of(context).textTheme.titleMedium,
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.pagePadding),
                         FilledButton(
                           onPressed: () => unawaited(
                             _routeAfterLogin(context),
@@ -231,7 +235,9 @@ class _LoginPageState extends State<LoginPage> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 480),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 32),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xl,
+                    ),
                     child: Form(
                   key: _formKey,
                   child: Column(
@@ -242,7 +248,7 @@ class _LoginPageState extends State<LoginPage> {
                         width: 120,
                         height: 120,
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: AppSpacing.md),
 
                       Text(
                         context.l10n.syncProgressDesc,
@@ -251,7 +257,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: AppSpacing.xl),
                       if (_feedback != null) ...[
                         ErrorInfoBanner(
                           type: _feedback!.type,
@@ -286,7 +292,7 @@ class _LoginPageState extends State<LoginPage> {
                             cs,
                             () => setState(() => _isSignUp = false),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: AppSpacing.sm),
                           _buildToggle(
                             context.l10n.signUp,
                             _isSignUp,
@@ -295,7 +301,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.lg),
 
                       // Name field (sign up only)
                       if (_isSignUp) ...[
@@ -397,12 +403,14 @@ class _LoginPageState extends State<LoginPage> {
                             },
                             child: Text(
                               context.l10n.forgotPassword,
-                              style: TextStyle(color: cs.primary, fontSize: 13),
+                              style: AppTypography.labelMedium.copyWith(
+                                color: cs.primary,
+                              ),
                             ),
                           ),
                         ),
                       ],
-                      const SizedBox(height: 24),
+                      const SizedBox(height: AppSpacing.lg),
 
                       // Submit
                       SizedBox(
@@ -428,22 +436,23 @@ class _LoginPageState extends State<LoginPage> {
                                   _isSignUp
                                       ? context.l10n.createAccount
                                       : context.l10n.signIn,
-                                  style: const TextStyle(
+                                  style: AppTypography.labelLarge.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 15,
                                   ),
                                 ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: AppSpacing.itemGap),
                       TextButton(
                         onPressed: () => context.go('/'),
                         child: Text(
                           context.l10n.skip,
-                          style: TextStyle(color: cs.onSurfaceVariant),
+                          style: AppTypography.labelLarge.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: AppSpacing.xl),
                     ],
                   ),
                 ),
@@ -466,7 +475,10 @@ class _LoginPageState extends State<LoginPage> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.pagePadding,
+          vertical: AppSpacing.sm,
+        ),
         decoration: BoxDecoration(
           color: isActive
               ? cs.primary.withValues(alpha: 0.12)
@@ -478,7 +490,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         child: Text(
           label,
-          style: TextStyle(
+          style: AppTypography.labelLarge.copyWith(
             color: isActive ? cs.primary : cs.onSurfaceVariant,
             fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
           ),

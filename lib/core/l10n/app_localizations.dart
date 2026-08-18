@@ -2703,6 +2703,12 @@ abstract class AppLocalizations {
   /// **'اقرأ، احفظ، راجع، وانمُ مع القرآن.'**
   String get splashSubtitle;
 
+  /// No description provided for @splashTagline.
+  ///
+  /// In ar, this message translates to:
+  /// **'رفيقك في رحاب القرآن'**
+  String get splashTagline;
+
   /// No description provided for @splashFeatureRead.
   ///
   /// In ar, this message translates to:
@@ -2736,8 +2742,116 @@ abstract class AppLocalizations {
   /// No description provided for @onboardingWelcomeSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'رحلة قرآنية متكاملة للقراءة اليومية والحفظ والمراجعة والأذكار والتقدم المستمر.'**
+  /// **'مساحة قرآنية هادئة ومتقنة تعينك على التلاوة والتدبر، والحفظ والمراجعة الذكية، وبناء ورد يومي مستدام.'**
   String get onboardingWelcomeSubtitle;
+
+  /// No description provided for @onboardingStartJourney.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ رحلتك'**
+  String get onboardingStartJourney;
+
+  /// No description provided for @onboardingPillarReadTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلاوة ومصحف أصيل'**
+  String get onboardingPillarReadTitle;
+
+  /// No description provided for @onboardingPillarReadDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة هادئة بصفحات المصحف المعتمدة ودقة الرسم العثماني.'**
+  String get onboardingPillarReadDesc;
+
+  /// No description provided for @onboardingPillarMemorizeTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ ومراجعة ذكية'**
+  String get onboardingPillarMemorizeTitle;
+
+  /// No description provided for @onboardingPillarMemorizeDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'خطط مرنة وتكرار ميسر وتثبيت منظم يعينك على الإتقان.'**
+  String get onboardingPillarMemorizeDesc;
+
+  /// No description provided for @onboardingPillarHabitTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد واستمرارية'**
+  String get onboardingPillarHabitTitle;
+
+  /// No description provided for @onboardingPillarHabitDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة التقدم اليومي والأذكار لتحقيق الاستمرارية بدون ضغط.'**
+  String get onboardingPillarHabitDesc;
+
+  /// No description provided for @onboardingChooseExpTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر التجربة المناسبة'**
+  String get onboardingChooseExpTitle;
+
+  /// No description provided for @onboardingChooseExpSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خصص تجربة تالية لتلائم احتياجك. يمكنك تبديل المسار دائماً من الإعدادات.'**
+  String get onboardingChooseExpSubtitle;
+
+  /// No description provided for @onboardingAdultPathTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسار الكبار واليافعين'**
+  String get onboardingAdultPathTitle;
+
+  /// No description provided for @onboardingAdultPathSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مساحة قرآنية مركزة للقراءة والحفظ والمراجعة ومتابعة التقدم.'**
+  String get onboardingAdultPathSubtitle;
+
+  /// No description provided for @onboardingKidsPathTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسار البراعم والأطفال'**
+  String get onboardingKidsPathTitle;
+
+  /// No description provided for @onboardingKidsPathSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'رحلة تفاعلية ممتعة بالمهام المبسطة والتكرار الإيجابي والمكافآت.'**
+  String get onboardingKidsPathSubtitle;
+
+  /// No description provided for @onboardingKidsFeatureMissions.
+  ///
+  /// In ar, this message translates to:
+  /// **'مهام قصيرة وميسرة'**
+  String get onboardingKidsFeatureMissions;
+
+  /// No description provided for @onboardingKidsFeatureAudio.
+  ///
+  /// In ar, this message translates to:
+  /// **'استماع وتكرار تفاعلي'**
+  String get onboardingKidsFeatureAudio;
+
+  /// No description provided for @onboardingKidsFeatureStars.
+  ///
+  /// In ar, this message translates to:
+  /// **'نجوم ومكافآت تشجيعية'**
+  String get onboardingKidsFeatureStars;
+
+  /// No description provided for @onboardingEnterAsGuest.
+  ///
+  /// In ar, this message translates to:
+  /// **'المتابعة كضيف'**
+  String get onboardingEnterAsGuest;
+
+  /// No description provided for @onboardingSignInAccount.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل الدخول / إنشاء حساب'**
+  String get onboardingSignInAccount;
 
   /// No description provided for @onboardingUserTypeTitle.
   ///
@@ -4039,6 +4153,120 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'افتح جلسة حفظ للآيات التي حفظتها مسبقًا.'**
   String get memorizationHubReviewCardDescription;
+
+  /// No description provided for @memorizationHubDailyPlanSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'وجهتك الأساسية للحفظ والمراجعة اليومية.'**
+  String get memorizationHubDailyPlanSubtitle;
+
+  /// No description provided for @memorizationHubContinuePlanDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح ورد الحفظ والمراجعة الحالي.'**
+  String get memorizationHubContinuePlanDescription;
+
+  /// No description provided for @memorizationHubViewPlanTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفاصيل خطة اليوم'**
+  String get memorizationHubViewPlanTitle;
+
+  /// No description provided for @memorizationHubPracticeSectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التدريب'**
+  String get memorizationHubPracticeSectionTitle;
+
+  /// No description provided for @memorizationHubPracticeSectionSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر سورة أو تدرب بالتسميع الصوتي.'**
+  String get memorizationHubPracticeSectionSubtitle;
+
+  /// No description provided for @memorizationHubPracticeBySurahTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تدرّب بالسورة'**
+  String get memorizationHubPracticeBySurahTitle;
+
+  /// No description provided for @memorizationHubPracticeBySurahDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسميع صوتي واضح: اختر سورة وابدأ جلسة الحفظ.'**
+  String get memorizationHubPracticeBySurahDescription;
+
+  /// No description provided for @memorizationHubSettingsSectionSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضبط خطة الحفظ بدون تغيير المسار.'**
+  String get memorizationHubSettingsSectionSubtitle;
+
+  /// No description provided for @memorizationHubPlanSettingsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعدادات الخطة'**
+  String get memorizationHubPlanSettingsTitle;
+
+  /// No description provided for @memorizationHubPlanSettingsDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'عدّل الخطة اليومية أو إعدادات مسار الحفظ.'**
+  String get memorizationHubPlanSettingsDescription;
+
+  /// No description provided for @memorizationHubKidsMissionSectionSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ من المهمة النشطة للطفل.'**
+  String get memorizationHubKidsMissionSectionSubtitle;
+
+  /// No description provided for @memorizationHubKidsMissionCardDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ مهمة الحفظ التالية في رحلة الأطفال.'**
+  String get memorizationHubKidsMissionCardDescription;
+
+  /// No description provided for @memorizationHubKidsJourneyTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرحلة'**
+  String get memorizationHubKidsJourneyTitle;
+
+  /// No description provided for @memorizationHubKidsJourneySubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'شاهد مراحل الطفل الحالية والقادمة.'**
+  String get memorizationHubKidsJourneySubtitle;
+
+  /// No description provided for @memorizationHubKidsJourneyDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'شاهد المراحل الحالية والقادمة.'**
+  String get memorizationHubKidsJourneyDescription;
+
+  /// No description provided for @memorizationHubKidsRewardsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'المكافآت / التقدم'**
+  String get memorizationHubKidsRewardsTitle;
+
+  /// No description provided for @memorizationHubKidsRewardsSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع نجوم الطفل ونقاطه من شاشة التقدم.'**
+  String get memorizationHubKidsRewardsSubtitle;
+
+  /// No description provided for @memorizationHubKidsRewardsDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع النقاط والنجوم من شاشة التقدم.'**
+  String get memorizationHubKidsRewardsDescription;
+
+  /// No description provided for @memorizationHubHeaderSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكان واحد لكل مسارات الحفظ'**
+  String get memorizationHubHeaderSubtitle;
 
   /// No description provided for @backAction.
   ///
@@ -7068,6 +7296,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعذر رفع التقدم غير المتزامن للحساب السابق، لذا تمت إزالته من هذا الجهاز.'**
   String get accountSwitchOfflineDataDiscarded;
+
+  /// No description provided for @startYourJourneyWithQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ رحلتك مع القرآن'**
+  String get startYourJourneyWithQuran;
+
+  /// No description provided for @startNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ الآن'**
+  String get startNow;
 }
 
 class _AppLocalizationsDelegate

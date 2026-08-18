@@ -42,7 +42,7 @@ class SocialShareSheet extends StatefulWidget {
     try {
       final result = await getIt<MemorizationPlusRepository>()
           .getMemorizationProfile();
-      return result.fold(
+      final resolved = result.fold(
         (_) => data,
         (profile) => data.copyWith(
           audience: profile.isChild
@@ -53,6 +53,7 @@ class SocialShareSheet extends StatefulWidget {
           showCharacter: profile.isChild && data.category != SocialShareCategory.quranAyah,
         ),
       );
+      return resolved;
     } catch (_) {
       return data;
     }

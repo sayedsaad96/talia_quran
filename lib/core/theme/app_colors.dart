@@ -14,8 +14,18 @@ abstract class AppColors {
   static const Color goldLight = Color(0xFFFBBF24);
   static const Color goldDark = Color(0xFFD97706);
 
-  /// Warm amber — secondary accent
-  static const Color amber = Color(0xFFF59E0B);
+  /// Warm amber — @deprecated: identical to [gold]; kept for backwards compatibility
+  static const Color amber = gold;
+
+  // ─── Feature Accent Colors ──────────────────────────────────────────────────
+  /// Streak / activity orange — used for streak counters and activity tiles
+  static const Color streakOrange = Color(0xFFFF8C42);
+
+  /// Accent blue — used for Quran reading stats and informational tiles
+  static const Color accentBlue = Color(0xFF2D5A8E);
+
+  /// Accent purple — used for XP / achievement gamification elements
+  static const Color accentPurple = Color(0xFF8B5CF6);
 
   // ─── Light Theme ─────────────────────────────────────────────────────────────
   static const Color lightBackground = Color(0xFFFDFCF8); // Snow warm white

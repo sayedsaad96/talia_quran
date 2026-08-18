@@ -293,8 +293,8 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
 
   Widget _buildMushafReader(BuildContext context) {
     final isDark = context.isDark;
-    final bg = isDark ? const Color(0xFF0D1117) : const Color(0xFFFDF5E6);
-    final gold = isDark ? const Color(0xFFC8A55B) : const Color(0xFFB08930);
+    final bg = isDark ? AppColors.parchmentDark : AppColors.parchmentLight;
+    final gold = isDark ? AppColors.goldLight : AppColors.goldDark;
 
     return BlocProvider.value(
       value: _quranPageCubit,
@@ -492,9 +492,8 @@ class _MushafTopBar extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 'الجزء ${MushafHizbHelper.getJuzName(juzNumber)}',
-                style: TextStyle(
+                style: AppTypography.bodyMedium.copyWith(
                   fontFamily: 'Amiri',
-                  fontSize: 14,
                   color: gold,
                   height: 1.5,
                 ),
@@ -506,11 +505,8 @@ class _MushafTopBar extends StatelessWidget {
             children: [
               Text(
                 surahName,
-                style: TextStyle(
-                  fontFamily: 'Amiri',
-                  fontSize: 16,
+                style: AppTypography.quranHeader.copyWith(
                   color: gold,
-                  fontWeight: FontWeight.bold,
                   height: 1.5,
                 ),
               ),
@@ -585,7 +581,7 @@ class _MushafFooter extends StatelessWidget {
         children: [
           Text(
             'الحزب ${MushafHizbHelper.toArabicNumber(hizbNumber)}',
-            style: TextStyle(
+            style: AppTypography.bodySmall.copyWith(
               fontFamily: 'Amiri',
               fontSize: 13,
               color: gold,
@@ -601,9 +597,8 @@ class _MushafFooter extends StatelessWidget {
             ),
             child: Text(
               MushafHizbHelper.toArabicNumber(pageNumber),
-              style: TextStyle(
+              style: AppTypography.titleMedium.copyWith(
                 fontFamily: 'Amiri',
-                fontSize: 14,
                 fontWeight: FontWeight.bold,
                 color: gold,
                 height: 1.4,
@@ -620,9 +615,8 @@ class _MushafFooter extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   context.l10n.readPageConfirmed,
-                  style: TextStyle(
+                  style: AppTypography.titleSmall.copyWith(
                     fontFamily: 'Amiri',
-                    fontSize: 12,
                     color: gold,
                     fontWeight: FontWeight.w700,
                     height: 1.5,
@@ -667,7 +661,7 @@ class _LongPressHintBanner extends StatelessWidget {
             Expanded(
               child: Text(
                 context.l10n.quranLongPressHint,
-                style: TextStyle(
+                style: AppTypography.bodySmall.copyWith(
                   fontFamily: 'Amiri',
                   color: gold,
                   fontSize: 13,
@@ -803,9 +797,7 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                 ),
                 child: Text(
                   widget.ayah.text.trim(),
-                  style: const TextStyle(
-                    fontFamily: 'Amiri',
-                    fontSize: 20,
+                  style: AppTypography.azkarText.copyWith(
                     height: 1.8,
                   ),
                   textAlign: TextAlign.center,
@@ -873,7 +865,7 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                   _OptionBtn(
                     icon: Icons.bookmark_rounded,
                     label: context.l10n.bookmark,
-                    color: Colors.orange,
+                    color: AppColors.warning,
                     onTap: () async {
                       final bookmarkService = getIt<BookmarkService>();
                       final entry = BookmarkEntry(

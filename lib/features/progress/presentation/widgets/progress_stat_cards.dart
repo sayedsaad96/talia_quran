@@ -1,4 +1,4 @@
-part of '../pages/progress_page.dart';
+﻿part of '../pages/progress_page.dart';
 
 class _StreakCard extends StatelessWidget {
   const _StreakCard({required this.streakDays, required this.isDark});
@@ -13,12 +13,12 @@ class _StreakCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFFF8C42), Color(0xFFFF5500)],
+          colors: [AppColors.streakOrange, Color(0xFFFF5500)],
         ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFFF8C42).withValues(alpha: 0.3),
+            color: AppColors.streakOrange.withValues(alpha: 0.3),
             blurRadius: 16,
             offset: const Offset(0, 6),
           ),

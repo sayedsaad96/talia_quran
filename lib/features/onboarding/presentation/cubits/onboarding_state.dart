@@ -41,7 +41,7 @@ class OnboardingState extends Equatable {
     this.errorMessage,
   });
 
-  static const stepCount = 5;
+  static const stepCount = 2;
 
   final OnboardingUserType selectedUserType;
   final OnboardingGoal selectedGoal;

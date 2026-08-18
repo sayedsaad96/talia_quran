@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -217,7 +218,10 @@ class _CertificatePageState extends State<CertificatePage> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+        padding: const EdgeInsets.symmetric(
+          vertical: AppSpacing.lg,
+          horizontal: AppSpacing.md,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -229,7 +233,7 @@ class _CertificatePageState extends State<CertificatePage> {
                 fontFamily: 'Amiri',
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.lg),
             ListTile(
               leading: const Icon(
                 Icons.image_rounded,
@@ -248,7 +252,7 @@ class _CertificatePageState extends State<CertificatePage> {
             ListTile(
               leading: const Icon(
                 Icons.picture_as_pdf_rounded,
-                color: Colors.red,
+                color: AppColors.error,
               ),
               title: Text(
                 context.l10n.saveAsPdf,
@@ -281,7 +285,12 @@ class _CertificatePageState extends State<CertificatePage> {
                   maxScale: 4.0,
                   child: Center(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 60),
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.md,
+                        AppSpacing.md,
+                        AppSpacing.md,
+                        60,
+                      ),
                       child: Screenshot(
                         controller: _screenshotController,
                         child: AnimatedSwitcher(
@@ -304,8 +313,8 @@ class _CertificatePageState extends State<CertificatePage> {
 
           // 2. Close button
           PositionedDirectional(
-            top: 16,
-            start: 16,
+            top: AppSpacing.md,
+            start: AppSpacing.md,
             child: SafeArea(
               child: Material(
                 color: Colors.black54,
@@ -321,7 +330,7 @@ class _CertificatePageState extends State<CertificatePage> {
 
           // 3. Style Switcher Bar (Bottom Center)
           Positioned(
-            bottom: 20,
+            bottom: AppSpacing.pagePadding,
             left: 0,
             right: 0,
             child: SafeArea(
@@ -344,13 +353,14 @@ class _CertificatePageState extends State<CertificatePage> {
                     children: CertificateStyleType.values.map((style) {
                       final isSelected = style == _selectedStyle;
                       return Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.xs,
+                        ),
                         child: ChoiceChip(
                           label: Text(
                             style.displayName,
-                            style: TextStyle(
+                            style: AppTypography.titleSmall.copyWith(
                               fontFamily: 'Amiri',
-                              fontSize: 12,
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                               color: isSelected ? Colors.black : Colors.white70,
                             ),
@@ -375,12 +385,12 @@ class _CertificatePageState extends State<CertificatePage> {
 
           // 4. Action Buttons (Bottom Left / Start)
           PositionedDirectional(
-            bottom: 20,
-            start: 24,
+            bottom: AppSpacing.pagePadding,
+            start: AppSpacing.lg,
             child: SafeArea(
               child: _isSaving
                   ? Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(AppSpacing.itemGap),
                       decoration: const BoxDecoration(
                         color: Colors.black54,
                         shape: BoxShape.circle,
@@ -396,11 +406,10 @@ class _CertificatePageState extends State<CertificatePage> {
                         ElevatedButton.icon(
                           onPressed: _share,
                           icon: const Icon(Icons.share_rounded, size: 18),
-                          label: const Text(
+                          label: Text(
                             'مشاركة الشهادة',
-                            style: TextStyle(
+                            style: AppTypography.titleMedium.copyWith(
                               fontFamily: 'Amiri',
-                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -416,7 +425,7 @@ class _CertificatePageState extends State<CertificatePage> {
                             ),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         IconButton.filledTonal(
                           onPressed: _shareToSocialMediaCard,
                           icon: const Icon(Icons.stars_rounded, size: 20),
@@ -424,10 +433,10 @@ class _CertificatePageState extends State<CertificatePage> {
                           style: IconButton.styleFrom(
                             backgroundColor: Colors.white24,
                             foregroundColor: const Color(0xFFE5C158),
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(AppSpacing.sm),
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: AppSpacing.sm),
                         IconButton.filledTonal(
                           onPressed: _showSaveOptions,
                           icon: const Icon(Icons.download_rounded, size: 20),
@@ -435,7 +444,7 @@ class _CertificatePageState extends State<CertificatePage> {
                           style: IconButton.styleFrom(
                             backgroundColor: Colors.white24,
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.all(10),
+                            padding: const EdgeInsets.all(AppSpacing.sm),
                           ),
                         ),
                       ],

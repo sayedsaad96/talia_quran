@@ -2,6 +2,8 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../theme/app_typography.dart';
+
 enum CelebrationType { ayah, page, juz }
 
 class CelebrationOverlay extends StatefulWidget {
@@ -103,10 +105,9 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
                     ),
                     child: Text(
                       _getMessage(),
-                      style: const TextStyle(
+                      style: AppTypography.headlineSmall.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 18,
                       ),
                     ),
                   )
@@ -129,9 +130,9 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text(
+                  Text(
                     '🏆',
-                    style: TextStyle(fontSize: 80),
+                    style: AppTypography.displayLarge.copyWith(fontSize: 80),
                   ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
                   const SizedBox(height: 16),
                   Text(
@@ -151,8 +152,8 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
                   const SizedBox(height: 24),
                   Text(
                     '+${widget.xpGained} XP 👑',
-                    style: const TextStyle(
-                      color: Color(0xFFF59E0B),
+                    style: AppTypography.headlineMedium.copyWith(
+                      color: const Color(0xFFF59E0B),
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),

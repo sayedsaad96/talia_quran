@@ -287,7 +287,6 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     style: AppTypography.bodyMedium.copyWith(
                       color: textColor,
                       fontWeight: FontWeight.bold,
-                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 4),
@@ -326,7 +325,6 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                             style: AppTypography.labelSmall.copyWith(
                               color: isEnabled ? primaryColor : subtextColor,
                               fontWeight: FontWeight.bold,
-                              fontSize: 11,
                             ),
                           ),
                           if (isEnabled) ...[
@@ -411,10 +409,9 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     context.isArabic
                         ? 'حالة التنبيهات: $_activeRemindersCount من 5 تذكيرات مفعلة'
                         : 'Notification status: $_activeRemindersCount of 5 reminders active',
-                    style: AppTypography.labelSmall.copyWith(
+                    style: AppTypography.labelMedium.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 12,
                     ),
                   ),
                 ),
@@ -550,9 +547,8 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                         context.isArabic
                             ? 'اختبار إشعارات الأذكار والمراجعة باللهجة المشجعة'
                             : 'Test customized Azkar and Review notifications',
-                        style: AppTypography.labelSmall.copyWith(
+                        style: AppTypography.bodySmall.copyWith(
                           color: subtextColor,
-                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -617,7 +613,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                   ),
                   title: Text(
                     context.isArabic ? 'صبحك الله بالخير ☀️' : 'Morning Azkar ☀️',
-                    style: TextStyle(
+                    style: AppTypography.bodyMedium.copyWith(
                       color: textColor,
                       fontWeight: FontWeight.bold,
                     ),
@@ -626,7 +622,9 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     context.isArabic
                         ? 'يلا ابدأ يومك بذكر الله وطمئن قلبك.. أذكار الصباح في انتظارك'
                         : 'Start your day with remembrance of Allah ✨',
-                    style: TextStyle(color: subtextColor, fontSize: 12),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: subtextColor,
+                    ),
                   ),
                   onTap: () async {
                     Navigator.pop(context);
@@ -652,7 +650,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     context.isArabic
                         ? 'جاهز نراجع سوا؟ 📖'
                         : 'Daily Review 📖',
-                    style: TextStyle(
+                    style: AppTypography.bodyMedium.copyWith(
                       color: textColor,
                       fontWeight: FontWeight.bold,
                     ),
@@ -661,7 +659,9 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     context.isArabic
                         ? 'عندك 5 آيات مستنية مراجعتك النهاردة.. يلا خطوة بخطوة! ✨'
                         : 'You have 5 ayahs due for review today ⚡',
-                    style: TextStyle(color: subtextColor, fontSize: 12),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: subtextColor,
+                    ),
                   ),
                   onTap: () async {
                     Navigator.pop(context);
@@ -687,7 +687,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     context.isArabic
                         ? '⚠️ متضيعش إنجاز 7 أيام!'
                         : 'Streak Protection 🔥',
-                    style: TextStyle(
+                    style: AppTypography.bodyMedium.copyWith(
                       color: textColor,
                       fontWeight: FontWeight.bold,
                     ),
@@ -696,7 +696,9 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     context.isArabic
                         ? 'فاضل تكة صغيرة وتكمل وردك النهاردة.. متكسلش، تقدر تعملها! 🔥'
                         : "You haven't reviewed today — protect your streak now 🔥",
-                    style: TextStyle(color: subtextColor, fontSize: 12),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: subtextColor,
+                    ),
                   ),
                   onTap: () async {
                     Navigator.pop(context);
@@ -720,7 +722,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                   ),
                   title: Text(
                     context.isArabic ? 'دعوة من القلب 🤲' : 'Daily Dua 🤲',
-                    style: TextStyle(
+                    style: AppTypography.bodyMedium.copyWith(
                       color: textColor,
                       fontWeight: FontWeight.bold,
                     ),
@@ -729,7 +731,9 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                     context.isArabic
                         ? 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.'
                         : "Actions: [ 🤲 Read Today's Duas ]",
-                    style: TextStyle(color: subtextColor, fontSize: 12),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: subtextColor,
+                    ),
                   ),
                   onTap: () async {
                     Navigator.pop(context);

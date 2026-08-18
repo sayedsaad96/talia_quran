@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
@@ -436,8 +437,19 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    if (!WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
-      _waveController.repeat(reverse: true);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!mounted) return;
+    final disable = MediaQuery.of(context).disableAnimations;
+    if (disable) {
+      _waveController.value = 1.0;
+    } else if (!_waveController.isAnimating) {
+      if (!WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
+        _waveController.repeat(reverse: true);
+      }
     }
   }
 
@@ -483,7 +495,7 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
                   height: 12,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.red.withValues(
+                    color: AppColors.error.withValues(
                       alpha: 0.5 + (_waveController.value * 0.5),
                     ),
                   ),

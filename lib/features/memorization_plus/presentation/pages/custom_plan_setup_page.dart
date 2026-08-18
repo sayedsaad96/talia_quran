@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -496,12 +496,12 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                               ),
                               decoration: BoxDecoration(
                                 color: const Color(
-                                  0xFF2D8E4C,
+                                  0xFF0D5C53,
                                 ).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: const Color(
-                                    0xFF2D8E4C,
+                                    0xFF0D5C53,
                                   ).withValues(alpha: 0.3),
                                 ),
                               ),
@@ -509,7 +509,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                                 children: [
                                   const Icon(
                                     Icons.info_outline_rounded,
-                                    color: Color(0xFF2D8E4C),
+                                    color: AppColors.primary,
                                     size: 18,
                                   ),
                                   const SizedBox(width: 8),
@@ -517,7 +517,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                                     child: Text(
                                       context.l10n.customPlanChildFeaturesNote,
                                       style: AppTypography.bodySmall.copyWith(
-                                        color: const Color(0xFF2D8E4C),
+                                        color: AppColors.primary,
                                         fontFamily: 'Amiri',
                                       ),
                                     ),
@@ -687,12 +687,12 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                                 _showDeletePlanConfirmation(context),
                             icon: const Icon(
                               Icons.delete_outline_rounded,
-                              color: Colors.redAccent,
+                              color: AppColors.error,
                             ),
                             label: Text(
                               context.l10n.customPlanDeleteCurrent,
                               style: AppTypography.bodyMedium.copyWith(
-                                color: Colors.redAccent,
+                                color: AppColors.error,
                               ),
                             ),
                           ),
@@ -987,7 +987,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
         PlanTargetUser.child,
         context.l10n.customPlanChild,
         Icons.child_care_rounded,
-        const Color(0xFF2D8E4C),
+        AppColors.primary,
       ),
     ];
 
@@ -1049,7 +1049,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
         MemorizationDifficulty.easy,
         context.l10n.customPlanDifficultyEasy,
         Icons.sentiment_satisfied_rounded,
-        Colors.green,
+        AppColors.success,
       ),
       (
         MemorizationDifficulty.moderate,
@@ -1061,7 +1061,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
         MemorizationDifficulty.challenging,
         context.l10n.customPlanDifficultyChallenging,
         Icons.sentiment_dissatisfied_rounded,
-        Colors.redAccent,
+        AppColors.error,
       ),
     ];
 
@@ -1398,7 +1398,7 @@ class _PresetSelector extends StatelessWidget {
         context.l10n.customPlanPresetLight,
         context.l10n.customPlanPresetLightDesc,
         Icons.spa_rounded,
-        Colors.green,
+        AppColors.success,
         () => onSelect(
           name: context.l10n.customPlanPresetLightName,
           newAyahs: 3,
@@ -1727,13 +1727,13 @@ class _DeletePlanDialogState extends State<_DeletePlanDialog> {
           children: [
             _ChecklistLine(
               icon: Icons.check_circle_rounded,
-              color: const Color(0xFF2D8E4C),
+              color: AppColors.primary,
               text: widget.keepsText,
             ),
             const SizedBox(height: 10),
             _ChecklistLine(
               icon: Icons.warning_amber_rounded,
-              color: Colors.orange,
+              color: AppColors.warning,
               text: widget.removesText,
             ),
             const SizedBox(height: AppSpacing.md),

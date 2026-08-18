@@ -103,7 +103,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
       showDragHandle: true,
       builder: (sheetContext) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -115,17 +115,17 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.itemGap),
               Text(
                 '$title\n$description',
                 style: AppTypography.bodyMedium.copyWith(height: 1.6),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.itemGap),
               Row(
                 children: [
                   const Icon(Icons.info_outline_rounded, size: 18),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
                       context.l10n.memorizationPathCanChangeLater,
@@ -134,7 +134,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: AppSpacing.pagePadding),
               FilledButton(
                 onPressed: () => Navigator.pop(sheetContext, true),
                 child: Text(context.l10n.confirm),
@@ -241,9 +241,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
       return [
         _HubSectionHeader(
           title: context.l10n.dailyPlanHeaderTitle,
-          subtitle: context.isArabic
-              ? 'وجهتك الأساسية للحفظ والمراجعة اليومية.'
-              : 'Your default place for daily memorization and review.',
+          subtitle: context.l10n.memorizationHubDailyPlanSubtitle,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -254,17 +252,15 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         if (dailyPlan?.isRequiredPlanCompleted != true)
           _HubActionCard.primary(
             icon: Icons.today_rounded,
-            title: context.isArabic ? 'أكمل خطة اليوم' : "Continue Today's Plan",
-            description: context.isArabic
-                ? 'افتح ورد الحفظ والمراجعة الحالي.'
-                : 'Open your current memorization and review plan.',
+            title: context.l10n.homeContinueTodaysPlan,
+            description: context.l10n.memorizationHubContinuePlanDescription,
             onTap: () => _openAdultTarget(isReview: false),
             isDark: isDark,
           ),
         const SizedBox(height: AppSpacing.sm),
         _HubActionCard(
           icon: Icons.checklist_rounded,
-          title: context.isArabic ? 'تفاصيل خطة اليوم' : "View Today's Plan",
+          title: context.l10n.memorizationHubViewPlanTitle,
           description: context.l10n.dailyPlanProgressCount(
             dailyPlan?.requiredCompletedCount ?? 0,
             dailyPlan?.totalItems ?? 0,
@@ -274,19 +270,15 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         ),
         const SizedBox(height: AppSpacing.lg),
         _HubSectionHeader(
-          title: context.isArabic ? 'التدريب' : 'Practice',
-          subtitle: context.isArabic
-              ? 'اختر سورة أو تدرب بالتسميع الصوتي.'
-              : 'Choose a surah or use recite practice.',
+          title: context.l10n.memorizationHubPracticeSectionTitle,
+          subtitle: context.l10n.memorizationHubPracticeSectionSubtitle,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
         _HubActionCard(
           icon: Icons.auto_stories_rounded,
-          title: context.isArabic ? 'تدرّب بالسورة' : 'Practice by Surah',
-          description: context.isArabic
-              ? 'تسميع صوتي واضح: اختر سورة وابدأ جلسة الحفظ.'
-              : 'Recite Practice: choose a surah and start a speech-to-text session.',
+          title: context.l10n.memorizationHubPracticeBySurahTitle,
+          description: context.l10n.memorizationHubPracticeBySurahDescription,
           route: AppRoutes.hifzPracticeSurah,
           isDark: isDark,
         ),
@@ -306,19 +298,15 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         ),
         const SizedBox(height: AppSpacing.lg),
         _HubSectionHeader(
-          title: context.isArabic ? 'الإعدادات' : 'Settings',
-          subtitle: context.isArabic
-              ? 'اضبط خطة الحفظ بدون تغيير المسار.'
-              : 'Adjust the plan without changing memorization systems.',
+          title: context.l10n.settings,
+          subtitle: context.l10n.memorizationHubSettingsSectionSubtitle,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
         _HubActionCard(
           icon: Icons.settings_suggest_rounded,
-          title: context.isArabic ? 'إعدادات الخطة' : 'Plan Settings',
-          description: context.isArabic
-              ? 'عدّل الخطة اليومية أو إعدادات مسار الحفظ.'
-              : 'Adjust your daily plan or memorization path settings.',
+          title: context.l10n.memorizationHubPlanSettingsTitle,
+          description: context.l10n.memorizationHubPlanSettingsDescription,
           route: AppRoutes.memorizationPlusCustomPlan,
           isDark: isDark,
         ),
@@ -328,55 +316,43 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
     if (profile?.isChild == true) {
       return [
         _HubSectionHeader(
-          title: context.isArabic ? 'المهمة الحالية' : 'Current Mission',
-          subtitle: context.isArabic
-              ? 'ابدأ من المهمة النشطة للطفل.'
-              : 'Start from the child’s active mission.',
+          title: context.l10n.homeCurrentMission,
+          subtitle: context.l10n.memorizationHubKidsMissionSectionSubtitle,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
         _KidsHubActionCard(
           icon: Icons.flag_rounded,
-          title: context.isArabic ? 'المهمة الحالية' : 'Current Mission',
-          description: context.isArabic
-              ? 'ابدأ مهمة الحفظ التالية في رحلة الأطفال.'
-              : 'Start the next memorization mission in the kids journey.',
+          title: context.l10n.homeCurrentMission,
+          description: context.l10n.memorizationHubKidsMissionCardDescription,
           route: AppRoutes.memorizationPlusKidsHome,
           variant: _KidsCardVariant.mission,
         ),
         const SizedBox(height: AppSpacing.lg),
         _HubSectionHeader(
-          title: context.isArabic ? 'الرحلة' : 'Journey',
-          subtitle: context.isArabic
-              ? 'شاهد مراحل الطفل الحالية والقادمة.'
-              : 'See current and upcoming journey stages.',
+          title: context.l10n.memorizationHubKidsJourneyTitle,
+          subtitle: context.l10n.memorizationHubKidsJourneySubtitle,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
         _KidsHubActionCard(
           icon: Icons.map_rounded,
-          title: context.isArabic ? 'الرحلة' : 'Journey',
-          description: context.isArabic
-              ? 'شاهد المراحل الحالية والقادمة.'
-              : 'See current and upcoming journey stages.',
+          title: context.l10n.memorizationHubKidsJourneyTitle,
+          description: context.l10n.memorizationHubKidsJourneyDescription,
           route: targets!.kidsJourneyLocation,
           variant: _KidsCardVariant.journey,
         ),
         const SizedBox(height: AppSpacing.lg),
         _HubSectionHeader(
-          title: context.isArabic ? 'المكافآت / التقدم' : 'Rewards / Progress',
-          subtitle: context.isArabic
-              ? 'راجع نجوم الطفل ونقاطه من شاشة التقدم.'
-              : 'Review stars and points from Progress.',
+          title: context.l10n.memorizationHubKidsRewardsTitle,
+          subtitle: context.l10n.memorizationHubKidsRewardsSubtitle,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.sm),
         _KidsHubActionCard(
           icon: Icons.stars_rounded,
-          title: context.isArabic ? 'المكافآت / التقدم' : 'Rewards / Progress',
-          description: context.isArabic
-              ? 'راجع النقاط والنجوم من شاشة التقدم.'
-              : 'Review points and stars from the Progress screen.',
+          title: context.l10n.memorizationHubKidsRewardsTitle,
+          description: context.l10n.memorizationHubKidsRewardsDescription,
           route: AppRoutes.progress,
           variant: _KidsCardVariant.rewards,
         ),
@@ -389,7 +365,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         style: AppTypography.headlineMedium,
         textAlign: TextAlign.center,
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: AppSpacing.md),
       Text(
         context.l10n.memorizationPathDescription,
         style: AppTypography.bodyMedium.copyWith(
@@ -397,7 +373,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         ),
         textAlign: TextAlign.center,
       ),
-      const SizedBox(height: 48),
+      const SizedBox(height: AppSpacing.xxl),
       _UnifiedPathChoiceCard(
         title: context.l10n.memorizationPathAdultsTitle,
         description: context.l10n.memorizationPathAdultsDesc,
@@ -413,7 +389,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           );
         },
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: AppSpacing.lg),
       _UnifiedPathChoiceCard(
         title: context.l10n.memorizationPathKidsTitle,
         description: context.l10n.memorizationPathKidsDesc,
@@ -461,7 +437,7 @@ class _HubAppBar extends StatelessWidget {
                 : const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF1A6B5A), Color(0xFF2D5A8E)],
+                    colors: [AppColors.primaryLight, AppColors.accentBlue],
                   ),
           ),
           child: SafeArea(
@@ -482,11 +458,9 @@ class _HubAppBar extends StatelessWidget {
                       fontFamily: 'Amiri',
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
-                    context.isArabic
-                        ? 'مكان واحد لكل مسارات الحفظ'
-                        : 'One place for every memorization path',
+                    context.l10n.memorizationHubHeaderSubtitle,
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white70,
                     ),
@@ -667,7 +641,7 @@ class _HubActionCard extends StatelessWidget {
                       fontWeight: primary ? FontWeight.w800 : FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     description,
                     style: AppTypography.bodySmall.copyWith(
@@ -719,7 +693,7 @@ class _UnifiedPathChoiceCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
           border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
           boxShadow: [
             BoxShadow(
@@ -729,18 +703,18 @@ class _UnifiedPathChoiceCard extends StatelessWidget {
             ),
           ],
         ),
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, size: 40, color: color),
             ),
-            const SizedBox(width: 24),
+            const SizedBox(width: AppSpacing.lg),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -749,7 +723,7 @@ class _UnifiedPathChoiceCard extends StatelessWidget {
                     title,
                     style: AppTypography.titleLarge.copyWith(color: textColor),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
                     description,
                     style: AppTypography.bodySmall.copyWith(
@@ -759,7 +733,7 @@ class _UnifiedPathChoiceCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: AppSpacing.sm),
             if (isLoading)
               SizedBox(
                 width: 20,
@@ -882,7 +856,7 @@ class _KidsHubActionCard extends StatelessWidget {
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.xs),
                   Text(
                     description,
                     style: AppTypography.bodySmall.copyWith(

@@ -1417,15 +1417,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guardianLinkingTemporarilyBlocked => 'Linking temporarily blocked';
 
   @override
-  String get guardianLinkingFailedTitle => 'Failed to link guardian';
+  String get guardianLinkingFailedTitle => 'تعذر ربط ولي الأمر';
 
   @override
   String get guardianLinkingTimeoutMessage =>
-      'Guardian linking took too long. Check your connection and try again, or continue without guardian for now.';
+      'استغرق ربط ولي الأمر وقتاً طويلاً. تحقق من الاتصال وحاول مجدداً، أو تابع بدون ولي أمر الآن.';
 
   @override
   String get splashSubtitle =>
       'Read, memorize, review, and grow with the Quran.';
+
+  @override
+  String get splashTagline => 'Your Companion in the Journey of the Quran';
 
   @override
   String get splashFeatureRead => 'Read';
@@ -1444,7 +1447,67 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get onboardingWelcomeSubtitle =>
-      'A complete Quran journey for daily reading, memorization, review, Azkar, and steady progress.';
+      'A calm, intelligent Quran sanctuary designed to help you read, memorize, review, and build a lasting daily habit.';
+
+  @override
+  String get onboardingStartJourney => 'Start Your Journey';
+
+  @override
+  String get onboardingPillarReadTitle => 'Authentic Mushaf Reading';
+
+  @override
+  String get onboardingPillarReadDesc =>
+      'A serene reading experience faithful to traditional Mushaf page layouts and crisp typography.';
+
+  @override
+  String get onboardingPillarMemorizeTitle => 'Smart Memorization & Review';
+
+  @override
+  String get onboardingPillarMemorizeDesc =>
+      'Flexible plans, repetition tools, and structured review to strengthen your retention.';
+
+  @override
+  String get onboardingPillarHabitTitle => 'Daily Portion & Continuity';
+
+  @override
+  String get onboardingPillarHabitDesc =>
+      'Track daily Wird, Azkar, and mindful progress without pressure or unnecessary complexity.';
+
+  @override
+  String get onboardingChooseExpTitle => 'Choose Your Experience';
+
+  @override
+  String get onboardingChooseExpSubtitle =>
+      'Select how you\'d like Talia configured. You can easily switch anytime in settings.';
+
+  @override
+  String get onboardingAdultPathTitle => 'Adult & General Journey';
+
+  @override
+  String get onboardingAdultPathSubtitle =>
+      'A focused workspace for reading, memorization, review, and personal progress.';
+
+  @override
+  String get onboardingKidsPathTitle => 'Kids & Buds Journey';
+
+  @override
+  String get onboardingKidsPathSubtitle =>
+      'A playful, interactive journey with bite-sized missions, positive repetition, and rewards.';
+
+  @override
+  String get onboardingKidsFeatureMissions => 'Bite-sized missions';
+
+  @override
+  String get onboardingKidsFeatureAudio => 'Interactive audio repetition';
+
+  @override
+  String get onboardingKidsFeatureStars => 'Encouraging stars & rewards';
+
+  @override
+  String get onboardingEnterAsGuest => 'Continue as guest';
+
+  @override
+  String get onboardingSignInAccount => 'Sign in / Create account';
 
   @override
   String get onboardingUserTypeTitle => 'Who is using Talia?';
@@ -2201,6 +2264,76 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get memorizationHubReviewCardDescription =>
       'Open a V2 recitation session for ayahs you have already memorized.';
+
+  @override
+  String get memorizationHubDailyPlanSubtitle =>
+      'Your default place for daily memorization and review.';
+
+  @override
+  String get memorizationHubContinuePlanDescription =>
+      'Open your current memorization and review plan.';
+
+  @override
+  String get memorizationHubViewPlanTitle => 'View Today\'s Plan';
+
+  @override
+  String get memorizationHubPracticeSectionTitle => 'Practice';
+
+  @override
+  String get memorizationHubPracticeSectionSubtitle =>
+      'Choose a surah or use recite practice.';
+
+  @override
+  String get memorizationHubPracticeBySurahTitle => 'Practice by Surah';
+
+  @override
+  String get memorizationHubPracticeBySurahDescription =>
+      'Recite Practice: choose a surah and start a speech-to-text session.';
+
+  @override
+  String get memorizationHubSettingsSectionSubtitle =>
+      'Adjust the plan without changing memorization systems.';
+
+  @override
+  String get memorizationHubPlanSettingsTitle => 'Plan Settings';
+
+  @override
+  String get memorizationHubPlanSettingsDescription =>
+      'Adjust your daily plan or memorization path settings.';
+
+  @override
+  String get memorizationHubKidsMissionSectionSubtitle =>
+      'Start from the child’s active mission.';
+
+  @override
+  String get memorizationHubKidsMissionCardDescription =>
+      'Start the next memorization mission in the kids journey.';
+
+  @override
+  String get memorizationHubKidsJourneyTitle => 'Journey';
+
+  @override
+  String get memorizationHubKidsJourneySubtitle =>
+      'See current and upcoming journey stages.';
+
+  @override
+  String get memorizationHubKidsJourneyDescription =>
+      'See current and upcoming journey stages.';
+
+  @override
+  String get memorizationHubKidsRewardsTitle => 'Rewards / Progress';
+
+  @override
+  String get memorizationHubKidsRewardsSubtitle =>
+      'Review stars and points from Progress.';
+
+  @override
+  String get memorizationHubKidsRewardsDescription =>
+      'Review points and stars from the Progress screen.';
+
+  @override
+  String get memorizationHubHeaderSubtitle =>
+      'One place for every memorization path';
 
   @override
   String get backAction => 'Back';
@@ -3885,4 +4018,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get accountSwitchOfflineDataDiscarded =>
       'Unsynced progress from the previous account was not uploaded and has been removed from this device.';
+
+  @override
+  String get startYourJourneyWithQuran => 'Start your journey with the Quran';
+
+  @override
+  String get startNow => 'Start now';
 }

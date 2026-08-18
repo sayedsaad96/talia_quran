@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/error_info_banner.dart';
 import '../cubits/auth_cubit.dart';
 
@@ -73,13 +75,13 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 480),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(AppSpacing.lg),
                     child: Form(
                       key: _formKey,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const SizedBox(height: 32),
+                          const SizedBox(height: AppSpacing.xl),
                           Icon(
                             Icons.lock_reset_rounded,
                             size: 72,
@@ -92,7 +94,7 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                                 ?.copyWith(fontWeight: FontWeight.bold),
                             textAlign: TextAlign.center,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: AppSpacing.sm),
                           Text(
                             context.l10n.updatePasswordSubtitle,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -108,7 +110,7 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                               message: _error!,
                               onDismissed: () => setState(() => _error = null),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.md),
                           ],
                           TextFormField(
                             controller: _passwordController,
@@ -161,7 +163,7 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                               return null;
                             },
                           ),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: AppSpacing.lg),
                           FilledButton(
                             onPressed: isLoading ? null : _submit,
                             style: FilledButton.styleFrom(
@@ -181,9 +183,8 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                                   )
                                 : Text(
                                     context.l10n.updatePasswordButton,
-                                    style: const TextStyle(
+                                    style: AppTypography.labelLarge.copyWith(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: 15,
                                     ),
                                   ),
                           ),

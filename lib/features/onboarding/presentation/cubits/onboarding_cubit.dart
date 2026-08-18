@@ -71,6 +71,8 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     emit(state.copyWith(status: OnboardingStatus.loading));
     try {
       await _persistBase(skipped: true);
+      await _prefs.setString(goalKey, OnboardingGoal.reading.storageValue);
+      await _prefs.setString(userTypeKey, OnboardingUserType.adult.storageValue);
       emit(
         state.copyWith(
           authIntent: OnboardingAuthIntent.guest,
@@ -94,10 +96,6 @@ class OnboardingCubit extends Cubit<OnboardingState> {
       await _persistBase(skipped: false);
       await _prefs.setString(goalKey, state.selectedGoal.storageValue);
       await _prefs.setString(userTypeKey, state.selectedUserType.storageValue);
-      await _prefs.setString(
-        completedAtKey,
-        DateTime.now().toUtc().toIso8601String(),
-      );
 
       final route = await _routeAfterOnboarding(intent);
       emit(
@@ -126,47 +124,22 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   }
 
   Future<String> _routeAfterOnboarding(OnboardingAuthIntent intent) async {
-    if (state.selectedUserType == OnboardingUserType.child) {
-      await _selectPath(MemorizationPath.child);
-      return intent == OnboardingAuthIntent.signIn
-          ? AppRoutes.login
-          : AppRoutes.childOnboarding;
-    }
-
     if (intent == OnboardingAuthIntent.signIn) {
-      if (state.selectedGoal == OnboardingGoal.memorization ||
-          state.selectedGoal == OnboardingGoal.smartReview) {
-        await _selectPath(MemorizationPath.adult);
+      if (state.selectedUserType == OnboardingUserType.child) {
+        await _selectPath(MemorizationPath.child);
       }
       return AppRoutes.login;
     }
 
-    return switch (state.selectedGoal) {
-      OnboardingGoal.reading => AppRoutes.quran,
-      OnboardingGoal.azkar => AppRoutes.azkar,
-      OnboardingGoal.memorization => _adultMemorizationEntry(),
-      OnboardingGoal.smartReview => _adultSmartReviewEntry(),
-      OnboardingGoal.childJourney => _childFromAdultFallback(intent),
-    };
-  }
+    if (state.selectedUserType == OnboardingUserType.child) {
+      await _selectPath(MemorizationPath.child);
+      return await MemorizationNavigationResolver(
+        _memorizationRepository,
+      ).childOnboardingLocation();
+    }
 
-  Future<String> _adultMemorizationEntry() async {
-    await _selectPath(MemorizationPath.adult);
-    return MemorizationNavigationResolver(
-      _memorizationRepository,
-    ).adultEntryLocation();
-  }
-
-  Future<String> _adultSmartReviewEntry() async {
-    await _selectPath(MemorizationPath.adult);
-    return AppRoutes.memorizationPlusCustomPlan;
-  }
-
-  Future<String> _childFromAdultFallback(OnboardingAuthIntent intent) async {
-    await _selectPath(MemorizationPath.child);
-    return intent == OnboardingAuthIntent.signIn
-        ? AppRoutes.login
-        : AppRoutes.childOnboarding;
+    // Adult guest flow: enter Talia Home directly
+    return AppRoutes.home;
   }
 
   Future<void> _selectPath(MemorizationPath path) async {

@@ -337,14 +337,14 @@ class _FamilySummaryBanner extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF2D8E4C), Color(0xFF1A6B38)],
+          colors: [AppColors.primary, Color(0xFF1A6B38)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF2D8E4C).withValues(alpha: 0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -408,7 +408,7 @@ class _ChildCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isActive
-                ? const Color(0xFF2D8E4C).withValues(alpha: 0.4)
+                ? AppColors.primary.withValues(alpha: 0.4)
                 : Colors.transparent,
             width: 1.5,
           ),
@@ -432,13 +432,13 @@ class _ChildCard extends StatelessWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2D8E4C).withValues(alpha: 0.12),
+                    color: AppColors.primary.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                   ),
                   alignment: Alignment.center,
                   child: Text(
                     child.avatarEmoji ?? (child.isLocal ? '👨‍👧' : '🧒'),
-                    style: const TextStyle(fontSize: 24),
+                    style: AppTypography.headlineLarge,
                   ),
                 ),
                 if (isActive)
@@ -446,7 +446,7 @@ class _ChildCard extends StatelessWidget {
                     width: 10,
                     height: 10,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF2D8E4C),
+                      color: AppColors.primary,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -468,13 +468,13 @@ class _ChildCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2D8E4C).withValues(alpha: 0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   context.l10n.familyDashboardLocalBadge,
                   style: AppTypography.labelSmall.copyWith(
-                    color: const Color(0xFF2D8E4C),
+                    color: AppColors.primary,
                     fontSize: 9,
                   ),
                 ),
@@ -493,7 +493,7 @@ class _ChildCard extends StatelessWidget {
                     Text(
                       'Lv.${child.currentLevel}',
                       style: AppTypography.labelSmall.copyWith(
-                        color: const Color(0xFF2D8E4C),
+                        color: AppColors.primary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -511,9 +511,9 @@ class _ChildCard extends StatelessWidget {
                     value: child.levelProgress.clamp(0.0, 1.0),
                     minHeight: 6,
                     backgroundColor: const Color(
-                      0xFF2D8E4C,
+                      0xFF0D5C53,
                     ).withValues(alpha: 0.12),
-                    valueColor: const AlwaysStoppedAnimation(Color(0xFF2D8E4C)),
+                    valueColor: const AlwaysStoppedAnimation(AppColors.primary),
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -525,7 +525,7 @@ class _ChildCard extends StatelessWidget {
                       : context.l10n.familyDashboardChildNoActivity,
                   style: AppTypography.labelSmall.copyWith(
                     color: isActive
-                        ? const Color(0xFF2D8E4C)
+                        ? AppColors.primary
                         : (isDark
                               ? AppColors.darkTextSecondary
                               : AppColors.lightTextSecondary),
@@ -555,7 +555,7 @@ class _AddChildCard extends StatelessWidget {
           color: isDark ? AppColors.darkCard : AppColors.lightCard,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: const Color(0xFF2D8E4C).withValues(alpha: 0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             width: 1.5,
             strokeAlign: BorderSide.strokeAlignInside,
           ),
@@ -567,12 +567,12 @@ class _AddChildCard extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: const Color(0xFF2D8E4C).withValues(alpha: 0.1),
+                color: AppColors.primary.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.add_rounded,
-                color: Color(0xFF2D8E4C),
+                color: AppColors.primary,
                 size: 28,
               ),
             ),
@@ -582,7 +582,7 @@ class _AddChildCard extends StatelessWidget {
               child: Text(
                 context.l10n.familyDashboardAddChild,
                 style: AppTypography.labelMedium.copyWith(
-                  color: const Color(0xFF2D8E4C),
+                  color: AppColors.primary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -608,7 +608,7 @@ class _EmptyFamilyPlaceholder extends StatelessWidget {
             const Icon(
               Icons.family_restroom_rounded,
               size: 80,
-              color: Color(0xFF2D8E4C),
+              color: AppColors.primary,
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
@@ -687,7 +687,7 @@ class _PinGateState extends State<_PinGate> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.lock_rounded, size: 54, color: Color(0xFF2D8E4C)),
+            const Icon(Icons.lock_rounded, size: 54, color: AppColors.primary),
             const SizedBox(height: AppSpacing.md),
             Text(widget.title, style: AppTypography.headlineSmall),
             const SizedBox(height: AppSpacing.sm),
@@ -723,7 +723,7 @@ class _PinGateState extends State<_PinGate> {
             ],
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.sm),
-              Text(_error!, style: const TextStyle(color: AppColors.error)),
+              Text(_error!, style: AppTypography.bodySmall.copyWith(color: AppColors.error)),
             ],
             const SizedBox(height: AppSpacing.md),
             SizedBox(
@@ -770,7 +770,7 @@ void _showAddChildOptions(BuildContext context) {
           ListTile(
             leading: const Icon(
               Icons.qr_code_scanner_rounded,
-              color: Color(0xFF2D8E4C),
+              color: AppColors.primary,
             ),
             title: Text(context.l10n.parentDashboardScanQr),
             onTap: () {
@@ -781,7 +781,7 @@ void _showAddChildOptions(BuildContext context) {
           ListTile(
             leading: const Icon(
               Icons.keyboard_rounded,
-              color: Color(0xFF2D8E4C),
+              color: AppColors.primary,
             ),
             title: Text(context.l10n.parentDashboardEnterLinkingCode),
             onTap: () {

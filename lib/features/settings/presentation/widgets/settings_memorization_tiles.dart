@@ -138,12 +138,12 @@ class ResetMemorizationPathTile extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.12),
+                color: AppColors.warning.withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.restart_alt_rounded,
-                color: Colors.orange,
+                color: AppColors.warning,
               ),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -208,7 +208,7 @@ class _ResetMemorizationPathDialogState
     return AlertDialog(
       title: Text(
         context.l10n.resetMemorizationPathQuestion,
-        style: const TextStyle(fontFamily: 'Amiri'),
+        style: AppTypography.titleLarge.copyWith(fontFamily: 'Amiri'),
       ),
       content: SingleChildScrollView(
         child: Column(
@@ -219,13 +219,13 @@ class _ResetMemorizationPathDialogState
             const SizedBox(height: AppSpacing.md),
             SettingsChecklistLine(
               icon: Icons.check_circle_rounded,
-              color: const Color(0xFF2D8E4C),
+              color: AppColors.primary,
               text: context.l10n.settingsResetPathKeeps,
             ),
             const SizedBox(height: AppSpacing.sm),
             SettingsChecklistLine(
               icon: Icons.warning_amber_rounded,
-              color: Colors.orange,
+              color: AppColors.warning,
               text: context.l10n.settingsResetPathChanges,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -323,7 +323,7 @@ class _AccuracySettingTileState extends State<AccuracySettingTile> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(errorMessage),
-          backgroundColor: Colors.red.shade700,
+          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -347,7 +347,7 @@ class _AccuracySettingTileState extends State<AccuracySettingTile> {
       context.l10n.accuracyHardDesc,
     ];
     final percents = [70, 85, 92];
-    final colors = [Colors.green, primary, Colors.deepOrange];
+    final colors = [AppColors.success, primary, AppColors.streakOrange];
 
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.md),

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
@@ -68,7 +68,7 @@ class _AzkarPageState extends State<AzkarPage> {
                           title: context.l10n.morningAzkar,
                           subtitle: counts == null ? '...' : context.l10n.zikrCount(counts[AzkarCategory.morning] ?? 0),
                           icon: Icons.wb_sunny_rounded,
-                          gradientColors: const [Color(0xFFFF8C42), Color(0xFFFF6B00)],
+                          gradientColors: const [AppColors.streakOrange, Color(0xFFFF6B00)],
                           route: 'morning',
                           delay: 0,
                           isDark: isDark,
@@ -78,7 +78,7 @@ class _AzkarPageState extends State<AzkarPage> {
                           title: context.l10n.eveningAzkar,
                           subtitle: counts == null ? '...' : context.l10n.zikrCount(counts[AzkarCategory.evening] ?? 0),
                           icon: Icons.nightlight_round,
-                          gradientColors: const [Color(0xFF2D5A8E), Color(0xFF1A3A5C)],
+                          gradientColors: const [AppColors.accentBlue, Color(0xFF1A3A5C)],
                           route: 'evening',
                           delay: 80,
                           isDark: isDark,
@@ -98,7 +98,7 @@ class _AzkarPageState extends State<AzkarPage> {
                           title: context.l10n.duas,
                           subtitle: counts == null ? '...' : context.l10n.duaCount(counts[AzkarCategory.duas] ?? 0),
                           icon: Icons.volunteer_activism_rounded,
-                          gradientColors: const [Color(0xFFE11D48), Color(0xFF881337)],
+                          gradientColors: const [AppColors.error, AppColors.error],
                           route: 'duas',
                           delay: 240,
                           isDark: isDark,

@@ -47,12 +47,12 @@ Future<void> showMemorizationPathSettingsSheet(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Colors.orange.withValues(alpha: 0.12),
+                  color: AppColors.warning.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.restart_alt_rounded,
-                  color: Colors.orange,
+                  color: AppColors.warning,
                 ),
               ),
               title: Text(
@@ -84,7 +84,9 @@ Future<void> showMemorizationPathSettingsSheet(
                   builder: (dialogContext) => AlertDialog(
                     title: Text(
                       resetQuestion,
-                      style: const TextStyle(fontFamily: 'Amiri'),
+                      style: AppTypography.headlineSmall.copyWith(
+                        fontFamily: 'Amiri',
+                      ),
                     ),
                     content: Text(resetDialog),
                     actions: [
@@ -94,7 +96,7 @@ Future<void> showMemorizationPathSettingsSheet(
                       ),
                       FilledButton(
                         style: FilledButton.styleFrom(
-                          backgroundColor: Colors.orange,
+                          backgroundColor: AppColors.warning,
                         ),
                         onPressed: () => Navigator.pop(dialogContext, true),
                         child: Text(resetLabel),

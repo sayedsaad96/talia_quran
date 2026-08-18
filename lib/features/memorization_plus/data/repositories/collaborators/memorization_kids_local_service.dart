@@ -211,7 +211,8 @@ class MemorizationKidsLocalService {
       final settings = await _datasource.getParentSettings();
       final rewards = await _datasource.getParentRewards();
       final journey = await getKidsJourney(surahId: surahId);
-      return journey.fold(
+      final Either<Failure, ParentDashboard> result =
+          journey.fold<Either<Failure, ParentDashboard>>(
         Left.new,
         (stages) => Right(
           ParentDashboard(
@@ -223,6 +224,7 @@ class MemorizationKidsLocalService {
           ),
         ),
       );
+      return result;
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }

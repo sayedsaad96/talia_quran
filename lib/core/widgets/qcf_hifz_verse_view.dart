@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 
 import '../utils/quran_text_display_formatter.dart';
@@ -332,7 +332,7 @@ class _MemorisedWrapper extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(2),
             decoration: const BoxDecoration(
-              color: Colors.green,
+              color: AppColors.success,
               shape: BoxShape.circle,
             ),
             child: const Icon(

@@ -14,7 +14,7 @@ import 'settings_section.dart';
 
 void _showSettingsError(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message), backgroundColor: Colors.red.shade700),
+    SnackBar(content: Text(message), backgroundColor: AppColors.error),
   );
 }
 
@@ -176,7 +176,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
           children: [
             TextField(
               controller: _nameController,
-              style: TextStyle(
+              style: AppTypography.bodyMedium.copyWith(
                 color: isDark
                     ? AppColors.darkTextPrimary
                     : AppColors.lightTextPrimary,
@@ -196,7 +196,6 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
                 context.l10n.arabicNameHint,
                 style: AppTypography.labelSmall.copyWith(
                   color: isDark ? AppColors.primaryLight : AppColors.primary,
-                  fontSize: 10,
                 ),
               ),
             ),
@@ -204,7 +203,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
             TextField(
               controller: _ageController,
               keyboardType: TextInputType.number,
-              style: TextStyle(
+              style: AppTypography.bodyMedium.copyWith(
                 color: isDark
                     ? AppColors.darkTextPrimary
                     : AppColors.lightTextPrimary,
@@ -222,7 +221,7 @@ class _EditProfileDialogState extends State<EditProfileDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
             context.l10n.cancel,
-            style: TextStyle(
+            style: AppTypography.labelLarge.copyWith(
               color: isDark
                   ? AppColors.darkTextSecondary
                   : AppColors.lightTextSecondary,
@@ -352,7 +351,7 @@ class _AccountSectionState extends State<AccountSection> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(state.message),
-              backgroundColor: Colors.red.shade700,
+              backgroundColor: AppColors.error,
             ),
           );
         } else if (state is AuthSignOutBlockedPendingData) {
@@ -361,7 +360,7 @@ class _AccountSectionState extends State<AccountSection> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(context.l10n.settingsAccountDeletedMessage),
-              backgroundColor: Colors.green.shade700,
+              backgroundColor: AppColors.primary,
             ),
           );
           context.go(AppRoutes.login);
@@ -423,25 +422,25 @@ class _AccountSectionState extends State<AccountSection> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.green.withValues(alpha: 0.12),
+                                color: AppColors.success.withValues(alpha: 0.12),
                                 borderRadius: BorderRadius.circular(999),
                                 border: Border.all(
-                                  color: Colors.green.withValues(alpha: 0.22),
+                                  color: AppColors.success.withValues(alpha: 0.22),
                                 ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.verified_user_rounded,
                                     size: 13,
-                                    color: Colors.green.shade600,
+                                    color: AppColors.primary,
                                   ),
                                   const SizedBox(width: 5),
                                   Text(
                                     context.l10n.settingsSignedInStatus,
                                     style: AppTypography.labelSmall.copyWith(
-                                      color: Colors.green.shade700,
+                                      color: AppColors.primary,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -518,14 +517,14 @@ class _AccountSectionState extends State<AccountSection> {
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: Colors.red.withValues(alpha: 0.1),
+                          color: AppColors.error.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(
                             AppSpacing.radiusSm,
                           ),
                         ),
                         child: const Icon(
                           Icons.logout_rounded,
-                          color: Colors.red,
+                          color: AppColors.error,
                           size: 18,
                         ),
                       ),
@@ -534,7 +533,7 @@ class _AccountSectionState extends State<AccountSection> {
                         child: Text(
                           context.l10n.signOut,
                           style: AppTypography.bodyMedium.copyWith(
-                            color: Colors.red,
+                            color: AppColors.error,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -606,9 +605,8 @@ class _AccountSectionState extends State<AccountSection> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                     ),
-                    textStyle: const TextStyle(
+                    textStyle: AppTypography.labelLarge.copyWith(
                       fontWeight: FontWeight.bold,
-                      fontSize: 15,
                     ),
                   ),
                 ),
@@ -651,7 +649,7 @@ class _AccountSectionState extends State<AccountSection> {
             child: Text(context.l10n.cancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () {
               Navigator.of(dialogCtx).pop();
               context.read<AuthCubit>().signOut(force: true);
@@ -694,7 +692,7 @@ class _AccountSectionState extends State<AccountSection> {
             child: Text(context.l10n.cancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () {
               Navigator.of(dialogCtx).pop();
               context.read<AuthCubit>().signOut();
@@ -745,7 +743,7 @@ class _AccountSectionState extends State<AccountSection> {
                 ? 'تم نقل $count من سجلات الحفظ.'
                 : 'Imported $count memorization records.',
           ),
-          backgroundColor: Colors.green.shade700,
+          backgroundColor: AppColors.primary,
         ),
       ),
     );
@@ -782,12 +780,12 @@ class DeleteAccountTile extends StatelessWidget {
               width: 48,
               height: 48,
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.1),
+                color: AppColors.error.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
                 Icons.delete_forever_rounded,
-                color: Colors.red,
+                color: AppColors.error,
                 size: 22,
               ),
             ),
@@ -799,7 +797,7 @@ class DeleteAccountTile extends StatelessWidget {
                   Text(
                     context.l10n.settingsDeleteAccountTitle,
                     style: AppTypography.bodyMedium.copyWith(
-                      color: Colors.red,
+                      color: AppColors.error,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -831,7 +829,7 @@ class DeleteAccountTile extends StatelessWidget {
             child: Text(context.l10n.cancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(dialogContext, true),
             child: Text(context.l10n.delete),
           ),

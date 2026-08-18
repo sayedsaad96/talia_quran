@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../constants/app_spacing.dart';
 import '../theme/app_colors.dart';
@@ -130,9 +130,9 @@ class _BannerColors {
         icon: Icons.error_outline_rounded,
       ),
       ErrorInfoBannerType.warning => _BannerColors(
-        background: Colors.orange.withValues(alpha: isDark ? 0.16 : 0.1),
-        border: Colors.orange.withValues(alpha: 0.35),
-        foreground: Colors.orange.shade700,
+        background: AppColors.warning.withValues(alpha: isDark ? 0.16 : 0.1),
+        border: AppColors.warning.withValues(alpha: 0.35),
+        foreground: AppColors.warning,
         text: text,
         icon: Icons.info_outline_rounded,
       ),

@@ -39,7 +39,6 @@ import '../../features/memorization_plus/presentation/pages/family_dashboard_pag
 import '../../features/memorization_plus/presentation/pages/child_detail_page.dart';
 import '../../features/memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
-import '../../features/onboarding/presentation/pages/child_onboarding_page.dart';
 import '../../features/onboarding/presentation/pages/onboarding_page.dart';
 import '../../features/certificate/presentation/pages/certificate_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
@@ -143,7 +142,8 @@ class MemorizationRouteGuard {
     try {
       final repo = getIt<MemorizationPlusRepository>();
       final profileResult = await repo.getMemorizationProfile();
-      return profileResult.fold((_) => null, (profile) => profile);
+      final profile = profileResult.fold((_) => null, (profile) => profile);
+      return profile;
     } catch (_) {
       return null;
     }
@@ -159,7 +159,7 @@ class MemorizationRouteGuard {
       if (profile.isChild) return AppRoutes.memorizationPlusKidsHome;
 
       if (profile.isAdult) {
-        return MemorizationNavigationResolver(repo).adultEntryLocation();
+        return await MemorizationNavigationResolver(repo).adultEntryLocation();
       }
       return null;
     } catch (_) {
@@ -266,7 +266,7 @@ class MemorizationRouteGuard {
       if (AppRouter._isValidSurahId(surahId)) {
         final repository = getIt<MemorizationPlusRepository>();
         final ayahCount = await _surahAyahCount(surahId!);
-        return MemorizationNavigationResolver(
+        return await MemorizationNavigationResolver(
           repository,
         ).practiceSurahSessionLocation(surahId, surahAyahCount: ayahCount);
       }
@@ -353,7 +353,7 @@ abstract class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.childOnboarding,
-        builder: (context, state) => const ChildOnboardingPage(),
+        redirect: (context, state) => AppRoutes.memorizationPlusKidsHome,
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
@@ -482,7 +482,7 @@ abstract class AppRouter {
           try {
             final repo = getIt<MemorizationPlusRepository>();
             final profileResult = await repo.getMemorizationProfile();
-            return profileResult.fold(
+            final redirectRoute = profileResult.fold(
               (_) => null, // on data error, show guardian page (offline-safe)
               (profile) {
                 // Allow only: child with onboarding still required
@@ -494,6 +494,7 @@ abstract class AppRouter {
                 return AppRoutes.memorizationPlus; // redirect all other states
               },
             );
+            return redirectRoute;
           } catch (_) {
             // Network unavailable — allow guardian-linking page to load;
             // it will show its own offline-aware UI.

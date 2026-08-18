@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
@@ -201,7 +201,7 @@ class _SurahBookmarkGroup extends StatelessWidget {
                         onPressed: () => Navigator.pop(ctx, true),
                         child: Text(
                           context.l10n.delete,
-                          style: const TextStyle(color: Colors.red),
+                          style: const TextStyle(color: AppColors.error),
                         ),
                       ),
                     ],

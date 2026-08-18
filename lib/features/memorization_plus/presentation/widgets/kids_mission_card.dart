@@ -88,7 +88,7 @@ class KidsMissionCard extends StatelessWidget {
         context.l10n.kidsGamifiedContinueNow,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
       ),
       style: FilledButton.styleFrom(
         backgroundColor: KidsTheme.forestGreen,

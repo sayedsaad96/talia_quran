@@ -1423,6 +1423,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get splashSubtitle => 'اقرأ، احفظ، راجع، وانمُ مع القرآن.';
 
   @override
+  String get splashTagline => 'رفيقك في رحاب القرآن';
+
+  @override
   String get splashFeatureRead => 'اقرأ';
 
   @override
@@ -1439,7 +1442,67 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get onboardingWelcomeSubtitle =>
-      'رحلة قرآنية متكاملة للقراءة اليومية والحفظ والمراجعة والأذكار والتقدم المستمر.';
+      'مساحة قرآنية هادئة ومتقنة تعينك على التلاوة والتدبر، والحفظ والمراجعة الذكية، وبناء ورد يومي مستدام.';
+
+  @override
+  String get onboardingStartJourney => 'ابدأ رحلتك';
+
+  @override
+  String get onboardingPillarReadTitle => 'تلاوة ومصحف أصيل';
+
+  @override
+  String get onboardingPillarReadDesc =>
+      'قراءة هادئة بصفحات المصحف المعتمدة ودقة الرسم العثماني.';
+
+  @override
+  String get onboardingPillarMemorizeTitle => 'حفظ ومراجعة ذكية';
+
+  @override
+  String get onboardingPillarMemorizeDesc =>
+      'خطط مرنة وتكرار ميسر وتثبيت منظم يعينك على الإتقان.';
+
+  @override
+  String get onboardingPillarHabitTitle => 'ورد واستمرارية';
+
+  @override
+  String get onboardingPillarHabitDesc =>
+      'متابعة التقدم اليومي والأذكار لتحقيق الاستمرارية بدون ضغط.';
+
+  @override
+  String get onboardingChooseExpTitle => 'اختر التجربة المناسبة';
+
+  @override
+  String get onboardingChooseExpSubtitle =>
+      'خصص تجربة تالية لتلائم احتياجك. يمكنك تبديل المسار دائماً من الإعدادات.';
+
+  @override
+  String get onboardingAdultPathTitle => 'مسار الكبار واليافعين';
+
+  @override
+  String get onboardingAdultPathSubtitle =>
+      'مساحة قرآنية مركزة للقراءة والحفظ والمراجعة ومتابعة التقدم.';
+
+  @override
+  String get onboardingKidsPathTitle => 'مسار البراعم والأطفال';
+
+  @override
+  String get onboardingKidsPathSubtitle =>
+      'رحلة تفاعلية ممتعة بالمهام المبسطة والتكرار الإيجابي والمكافآت.';
+
+  @override
+  String get onboardingKidsFeatureMissions => 'مهام قصيرة وميسرة';
+
+  @override
+  String get onboardingKidsFeatureAudio => 'استماع وتكرار تفاعلي';
+
+  @override
+  String get onboardingKidsFeatureStars => 'نجوم ومكافآت تشجيعية';
+
+  @override
+  String get onboardingEnterAsGuest => 'المتابعة كضيف';
+
+  @override
+  String get onboardingSignInAccount => 'تسجيل الدخول / إنشاء حساب';
 
   @override
   String get onboardingUserTypeTitle => 'من سيستخدم تالية؟';
@@ -2185,6 +2248,75 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get memorizationHubReviewCardDescription =>
       'افتح جلسة حفظ للآيات التي حفظتها مسبقًا.';
+
+  @override
+  String get memorizationHubDailyPlanSubtitle =>
+      'وجهتك الأساسية للحفظ والمراجعة اليومية.';
+
+  @override
+  String get memorizationHubContinuePlanDescription =>
+      'افتح ورد الحفظ والمراجعة الحالي.';
+
+  @override
+  String get memorizationHubViewPlanTitle => 'تفاصيل خطة اليوم';
+
+  @override
+  String get memorizationHubPracticeSectionTitle => 'التدريب';
+
+  @override
+  String get memorizationHubPracticeSectionSubtitle =>
+      'اختر سورة أو تدرب بالتسميع الصوتي.';
+
+  @override
+  String get memorizationHubPracticeBySurahTitle => 'تدرّب بالسورة';
+
+  @override
+  String get memorizationHubPracticeBySurahDescription =>
+      'تسميع صوتي واضح: اختر سورة وابدأ جلسة الحفظ.';
+
+  @override
+  String get memorizationHubSettingsSectionSubtitle =>
+      'اضبط خطة الحفظ بدون تغيير المسار.';
+
+  @override
+  String get memorizationHubPlanSettingsTitle => 'إعدادات الخطة';
+
+  @override
+  String get memorizationHubPlanSettingsDescription =>
+      'عدّل الخطة اليومية أو إعدادات مسار الحفظ.';
+
+  @override
+  String get memorizationHubKidsMissionSectionSubtitle =>
+      'ابدأ من المهمة النشطة للطفل.';
+
+  @override
+  String get memorizationHubKidsMissionCardDescription =>
+      'ابدأ مهمة الحفظ التالية في رحلة الأطفال.';
+
+  @override
+  String get memorizationHubKidsJourneyTitle => 'الرحلة';
+
+  @override
+  String get memorizationHubKidsJourneySubtitle =>
+      'شاهد مراحل الطفل الحالية والقادمة.';
+
+  @override
+  String get memorizationHubKidsJourneyDescription =>
+      'شاهد المراحل الحالية والقادمة.';
+
+  @override
+  String get memorizationHubKidsRewardsTitle => 'المكافآت / التقدم';
+
+  @override
+  String get memorizationHubKidsRewardsSubtitle =>
+      'راجع نجوم الطفل ونقاطه من شاشة التقدم.';
+
+  @override
+  String get memorizationHubKidsRewardsDescription =>
+      'راجع النقاط والنجوم من شاشة التقدم.';
+
+  @override
+  String get memorizationHubHeaderSubtitle => 'مكان واحد لكل مسارات الحفظ';
 
   @override
   String get backAction => 'العودة';
@@ -3946,4 +4078,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get accountSwitchOfflineDataDiscarded =>
       'تعذر رفع التقدم غير المتزامن للحساب السابق، لذا تمت إزالته من هذا الجهاز.';
+
+  @override
+  String get startYourJourneyWithQuran => 'ابدأ رحلتك مع القرآن';
+
+  @override
+  String get startNow => 'ابدأ الآن';
 }

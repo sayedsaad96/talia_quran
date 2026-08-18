@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
 /// Quick return to the Memorization hub from the practice-by-surah list.
@@ -31,7 +32,7 @@ class PracticeSurahHubBanner extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
-            colors: [Color(0xFF1A3A5C), Color(0xFF1A6B5A)],
+            colors: [AppColors.accentBlue, AppColors.primaryLight],
           ),
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         ),

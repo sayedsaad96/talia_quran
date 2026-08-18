@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -145,7 +145,7 @@ class _PracticeSurahAppBar extends StatelessWidget {
                 : const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [Color(0xFF1A6B5A), Color(0xFF2D5A8E)],
+                    colors: [AppColors.primaryLight, AppColors.accentBlue],
                   ),
           ),
           child: SafeArea(

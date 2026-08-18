@@ -183,7 +183,7 @@ class _CertificateCelebrationDialogState
                   onPressed: () => Navigator.of(context).pop(),
                   child: Text(
                     context.l10n.continueMemorizing,
-                    style: TextStyle(
+                    style: AppTypography.labelLarge.copyWith(
                       color: isDark
                           ? AppColors.darkTextSecondary
                           : AppColors.lightTextSecondary,

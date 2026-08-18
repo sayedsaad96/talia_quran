@@ -169,9 +169,8 @@ class _QuranViewState extends State<_QuranView>
                                   const SizedBox(width: 5),
                                   Text(
                                     context.isArabic ? reciter.nameAr : reciter.nameEn,
-                                    style: const TextStyle(
+                                    style: AppTypography.labelMedium.copyWith(
                                       color: Colors.white,
-                                      fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
                                     maxLines: 1,
@@ -268,7 +267,7 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           value,
-          style: const TextStyle(
+          style: AppTypography.titleMedium.copyWith(
             color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 15,
@@ -276,7 +275,7 @@ class _StatItem extends StatelessWidget {
         ),
         Text(
           label,
-          style: const TextStyle(
+          style: AppTypography.labelSmall.copyWith(
             color: Colors.white70,
             fontSize: 11,
           ),

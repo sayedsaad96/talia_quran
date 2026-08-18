@@ -8,6 +8,7 @@ import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
@@ -138,8 +139,8 @@ class KidsQuranReaderContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final bg = isDark ? const Color(0xFF0D1117) : const Color(0xFFFDF5E6);
-    final accent = isDark ? KidsQuranColors.goldDark : KidsQuranColors.gold;
+    final bg = isDark ? AppColors.parchmentDark : AppColors.parchmentLight;
+    final accent = isDark ? AppColors.goldLight : AppColors.goldDark;
 
     return Scaffold(
       backgroundColor: bg,
@@ -174,12 +175,6 @@ class KidsQuranReaderContent extends StatelessWidget {
   }
 }
 
-class KidsQuranColors {
-  const KidsQuranColors._();
-
-  static const gold = Color(0xFFB08930);
-  static const goldDark = Color(0xFFC8A55B);
-}
 
 class _KidsQuranHeader extends StatelessWidget {
   const _KidsQuranHeader({

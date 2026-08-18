@@ -37,8 +37,19 @@ class _TaliaSpinnerState extends State<_TaliaSpinner>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    if (!WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
-      _ctrl.repeat();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!mounted) return;
+    final disable = MediaQuery.of(context).disableAnimations;
+    if (disable) {
+      _ctrl.value = 1.0;
+    } else if (!_ctrl.isAnimating) {
+      if (!WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
+        _ctrl.repeat();
+      }
     }
   }
 
@@ -255,12 +266,12 @@ class EmptyJourneyWidget extends StatelessWidget {
                 ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              'ابدأ رحلتك مع القرآن',
+              context.l10n.startYourJourneyWithQuran,
               style: AppTypography.headlineSmall.copyWith(fontFamily: 'Amiri'),
             ),
             const SizedBox(height: AppSpacing.md),
             AppButton(
-              label: 'ابدأ الآن',
+              label: context.l10n.startNow,
               onPressed: onStart,
               variant: AppButtonVariant.primary,
               size: AppButtonSize.medium,
