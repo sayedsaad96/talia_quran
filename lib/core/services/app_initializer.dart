@@ -12,6 +12,7 @@ import '../services/notification_scheduler.dart';
 import '../services/notification_service.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../utils/talia_logger.dart';
+import '../../features/quran/data/services/quran_warmup_service.dart';
 
 /// Handles heavy app initialization that was previously blocking `runApp()`.
 ///
@@ -38,8 +39,9 @@ class AppInitializer {
   /// 3. Notification plugin initialization
   /// 4. First-launch notification scheduling
   ///
-  /// QCF fonts are NOT loaded here — they use lazy loading when the Quran
-  /// reader opens.
+  /// QCF fonts and Quran page data are warmed up in the background by
+  /// [QuranWarmupService] once initialization completes, so the reader opens
+  /// any page without the shimmer skeleton.
   ///
   /// Set [background] to true when running inside the Workmanager callback
   /// isolate: all notification setup is skipped because the plugin needs a
@@ -76,6 +78,11 @@ class AppInitializer {
 
         onProgress?.call('جارٍ ضبط المواعيد...', 0.8);
         await _scheduleFirstLaunchNotifications();
+
+        // Warm the Quran rendering pipeline (fonts + page data) in the
+        // background. The service delays itself so it never competes with
+        // the first frames of the home screen.
+        unawaited(getIt<QuranWarmupService>().warmUp());
       }
 
       // Step 5: Register the durable background task entrypoint before any

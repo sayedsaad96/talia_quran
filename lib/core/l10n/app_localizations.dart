@@ -2757,35 +2757,17 @@ abstract class AppLocalizations {
   /// **'تلاوة ومصحف أصيل'**
   String get onboardingPillarReadTitle;
 
-  /// No description provided for @onboardingPillarReadDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'قراءة هادئة بصفحات المصحف المعتمدة ودقة الرسم العثماني.'**
-  String get onboardingPillarReadDesc;
-
   /// No description provided for @onboardingPillarMemorizeTitle.
   ///
   /// In ar, this message translates to:
   /// **'حفظ ومراجعة ذكية'**
   String get onboardingPillarMemorizeTitle;
 
-  /// No description provided for @onboardingPillarMemorizeDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'خطط مرنة وتكرار ميسر وتثبيت منظم يعينك على الإتقان.'**
-  String get onboardingPillarMemorizeDesc;
-
   /// No description provided for @onboardingPillarHabitTitle.
   ///
   /// In ar, this message translates to:
   /// **'ورد واستمرارية'**
   String get onboardingPillarHabitTitle;
-
-  /// No description provided for @onboardingPillarHabitDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'متابعة التقدم اليومي والأذكار لتحقيق الاستمرارية بدون ضغط.'**
-  String get onboardingPillarHabitDesc;
 
   /// No description provided for @onboardingChooseExpTitle.
   ///
@@ -2853,311 +2835,29 @@ abstract class AppLocalizations {
   /// **'تسجيل الدخول / إنشاء حساب'**
   String get onboardingSignInAccount;
 
-  /// No description provided for @onboardingUserTypeTitle.
+  /// No description provided for @onboardingAyahReference.
   ///
   /// In ar, this message translates to:
-  /// **'من سيستخدم تالية؟'**
-  String get onboardingUserTypeTitle;
+  /// **'سورة المزمّل ٤'**
+  String get onboardingAyahReference;
 
-  /// No description provided for @onboardingUserTypeSubtitle.
+  /// No description provided for @onboardingOfflineTrustLine.
   ///
   /// In ar, this message translates to:
-  /// **'اختر التجربة المناسبة لهذا الجهاز. يمكنك تغيير مسار الحفظ لاحقاً من الإعدادات.'**
-  String get onboardingUserTypeSubtitle;
+  /// **'يعمل دون إنترنت · بياناتك محفوظة على جهازك'**
+  String get onboardingOfflineTrustLine;
 
-  /// No description provided for @onboardingUserTypeAdult.
+  /// No description provided for @onboardingErrorGeneric.
   ///
   /// In ar, this message translates to:
-  /// **'بالغ'**
-  String get onboardingUserTypeAdult;
-
-  /// No description provided for @onboardingUserTypeAdultDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'مساحة قرآنية مركزة للقراءة والحفظ والمراجعة ومتابعة التقدم.'**
-  String get onboardingUserTypeAdultDesc;
-
-  /// No description provided for @onboardingUserTypeChild.
-  ///
-  /// In ar, this message translates to:
-  /// **'طفل'**
-  String get onboardingUserTypeChild;
-
-  /// No description provided for @onboardingUserTypeChildDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'رحلة حفظ أبسط بالمهام والتكرار والنجوم والمكافآت.'**
-  String get onboardingUserTypeChildDesc;
-
-  /// No description provided for @onboardingMainGoalTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'اختر هدفك الرئيسي'**
-  String get onboardingMainGoalTitle;
-
-  /// No description provided for @onboardingMainGoalSubtitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'هذا يحدد أول وجهة بعد الإعداد، مع بقاء باقي تالية متاحاً.'**
-  String get onboardingMainGoalSubtitle;
-
-  /// No description provided for @onboardingGoalDailyReading.
-  ///
-  /// In ar, this message translates to:
-  /// **'قراءة يومية'**
-  String get onboardingGoalDailyReading;
-
-  /// No description provided for @onboardingGoalDailyReadingDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'ابدأ بقارئ القرآن وورد يومي واضح.'**
-  String get onboardingGoalDailyReadingDesc;
-
-  /// No description provided for @onboardingGoalMemorizationDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'جهّز نظام الحفظ لمسار بالغ منظم.'**
-  String get onboardingGoalMemorizationDesc;
-
-  /// No description provided for @onboardingGoalSmartReview.
-  ///
-  /// In ar, this message translates to:
-  /// **'مراجعة وتحسين التثبيت'**
-  String get onboardingGoalSmartReview;
-
-  /// No description provided for @onboardingGoalSmartReviewDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'سنحفظ المراجعة كهدف ونبدأ من إعداد الحفظ الحالي.'**
-  String get onboardingGoalSmartReviewDesc;
-
-  /// No description provided for @onboardingGoalAzkarDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'ابدأ بأذكار الصباح والمساء والأذكار العامة.'**
-  String get onboardingGoalAzkarDesc;
-
-  /// No description provided for @onboardingGoalKidsJourney.
-  ///
-  /// In ar, this message translates to:
-  /// **'رحلة القرآن للأطفال'**
-  String get onboardingGoalKidsJourney;
-
-  /// No description provided for @onboardingGoalKidsJourneyDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'ابدأ مسار الحفظ المناسب للأطفال.'**
-  String get onboardingGoalKidsJourneyDesc;
-
-  /// No description provided for @onboardingGoalKidsRewards.
-  ///
-  /// In ar, this message translates to:
-  /// **'حفظ مع المكافآت'**
-  String get onboardingGoalKidsRewards;
-
-  /// No description provided for @onboardingGoalKidsRewardsDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'استخدم الاستماع والتكرار والنقاط والنجوم لتشجيع الاستمرار.'**
-  String get onboardingGoalKidsRewardsDesc;
-
-  /// No description provided for @onboardingSmartReviewNoteTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'إعداد المراجعة'**
-  String get onboardingSmartReviewNoteTitle;
-
-  /// No description provided for @onboardingSmartReviewNoteDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'سيحفظ تالية المراجعة كهدف ويوجهك إلى إعداد الحفظ الحالي. لا يتم تفعيل مدرب ذكي مستقل في هذه الخطوة.'**
-  String get onboardingSmartReviewNoteDesc;
-
-  /// No description provided for @onboardingHighlightsTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'ماذا يقدم تالية؟'**
-  String get onboardingHighlightsTitle;
-
-  /// No description provided for @onboardingHighlightsAdultSubtitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'مجموعة أدوات مركزة لبناء عادة قرآنية ثابتة.'**
-  String get onboardingHighlightsAdultSubtitle;
-
-  /// No description provided for @onboardingHighlightsChildSubtitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'رحلة طفل محمية مع استمرار وضع الضيف المحلي.'**
-  String get onboardingHighlightsChildSubtitle;
-
-  /// No description provided for @onboardingFeatureQuranReader.
-  ///
-  /// In ar, this message translates to:
-  /// **'قارئ القرآن'**
-  String get onboardingFeatureQuranReader;
-
-  /// No description provided for @onboardingFeatureQuranReaderDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'اقرأ بتجربة قريبة من المصحف وبأسلوب هادئ.'**
-  String get onboardingFeatureQuranReaderDesc;
-
-  /// No description provided for @onboardingFeatureMemorizationPlus.
-  ///
-  /// In ar, this message translates to:
-  /// **'نظام الحفظ'**
-  String get onboardingFeatureMemorizationPlus;
-
-  /// No description provided for @onboardingFeatureMemorizationPlusDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'استخدم الخطط والتدريب اليومي وأدوات المراجعة الحالية.'**
-  String get onboardingFeatureMemorizationPlusDesc;
-
-  /// No description provided for @onboardingFeatureKidsJourney.
-  ///
-  /// In ar, this message translates to:
-  /// **'رحلة أطفال تفاعلية'**
-  String get onboardingFeatureKidsJourney;
-
-  /// No description provided for @onboardingFeatureKidsJourneyDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'وجّه الطفل عبر مهام صغيرة ومكافآت مشجعة.'**
-  String get onboardingFeatureKidsJourneyDesc;
-
-  /// No description provided for @onboardingFeatureProgressCertificates.
-  ///
-  /// In ar, this message translates to:
-  /// **'التقدم والشهادات'**
-  String get onboardingFeatureProgressCertificates;
-
-  /// No description provided for @onboardingFeatureProgressCertificatesDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'تابع التقدم بوضوح واحتفل بالإنجازات.'**
-  String get onboardingFeatureProgressCertificatesDesc;
-
-  /// No description provided for @onboardingFeatureAzkar.
-  ///
-  /// In ar, this message translates to:
-  /// **'الأذكار'**
-  String get onboardingFeatureAzkar;
-
-  /// No description provided for @onboardingFeatureAzkarDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'اجعل الذكر اليومي قريباً من روتينك القرآني.'**
-  String get onboardingFeatureAzkarDesc;
-
-  /// No description provided for @onboardingFeatureGuardian.
-  ///
-  /// In ar, this message translates to:
-  /// **'ربط ولي الأمر'**
-  String get onboardingFeatureGuardian;
-
-  /// No description provided for @onboardingFeatureGuardianDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'متابعة ولي الأمر تتطلب تسجيل الدخول، مع بقاء وضع الطفل الضيف متاحاً.'**
-  String get onboardingFeatureGuardianDesc;
-
-  /// No description provided for @onboardingFinalTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'الإعداد النهائي'**
-  String get onboardingFinalTitle;
-
-  /// No description provided for @onboardingFinalSubtitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'راجع المسار واختر المتابعة محلياً أو تسجيل الدخول.'**
-  String get onboardingFinalSubtitle;
-
-  /// No description provided for @onboardingSummaryUserType.
-  ///
-  /// In ar, this message translates to:
-  /// **'نوع المستخدم'**
-  String get onboardingSummaryUserType;
-
-  /// No description provided for @onboardingSummaryGoal.
-  ///
-  /// In ar, this message translates to:
-  /// **'الهدف الرئيسي'**
-  String get onboardingSummaryGoal;
-
-  /// No description provided for @onboardingGuardianNoteTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'متابعة ولي الأمر'**
-  String get onboardingGuardianNoteTitle;
-
-  /// No description provided for @onboardingGuardianNoteDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'ربط ولي الأمر يتطلب تسجيل الدخول. يستطيع الطفل المتابعة كضيف على هذا الجهاز.'**
-  String get onboardingGuardianNoteDesc;
-
-  /// No description provided for @onboardingContinueAsGuest.
-  ///
-  /// In ar, this message translates to:
-  /// **'المتابعة كضيف'**
-  String get onboardingContinueAsGuest;
-
-  /// No description provided for @onboardingSignInCreate.
-  ///
-  /// In ar, this message translates to:
-  /// **'تسجيل الدخول / إنشاء حساب'**
-  String get onboardingSignInCreate;
+  /// **'تعذّر إكمال الإعداد. تأكد من توفر مساحة على الجهاز ثم حاول مجدداً، أو تخطَّ الإعداد الآن.'**
+  String get onboardingErrorGeneric;
 
   /// No description provided for @onboardingSkip.
   ///
   /// In ar, this message translates to:
   /// **'تخطي'**
   String get onboardingSkip;
-
-  /// No description provided for @onboardingStartNow.
-  ///
-  /// In ar, this message translates to:
-  /// **'ابدأ الآن'**
-  String get onboardingStartNow;
-
-  /// No description provided for @onboardingQuranTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'تجربة المصحف الحقيقي'**
-  String get onboardingQuranTitle;
-
-  /// No description provided for @onboardingQuranDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'اقرأ القرآن الكريم بتجربة فريدة تحاكي المصحف الورقي بصفحاته وتصميمه الأصيل لتنعم بخشوع التلاوة.'**
-  String get onboardingQuranDesc;
-
-  /// No description provided for @onboardingSmartTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'حفظ ذكي ومراجعة مخصصة'**
-  String get onboardingSmartTitle;
-
-  /// No description provided for @onboardingSmartDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'خطط حفظ مرنة، ومراجعات ذكية، وتقييم ذاتي يساعدك على تثبيت الآيات بدون ضغط.'**
-  String get onboardingSmartDesc;
-
-  /// No description provided for @onboardingKidsTitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'رحلة ممتعة للأطفال'**
-  String get onboardingKidsTitle;
-
-  /// No description provided for @onboardingKidsDesc.
-  ///
-  /// In ar, this message translates to:
-  /// **'مسار مبسط للأطفال يجمع بين الاستماع والتكرار والنجوم، مع متابعة ولي الأمر.'**
-  String get onboardingKidsDesc;
 
   /// No description provided for @memorizationPathTitle.
   ///
@@ -3979,42 +3679,6 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.'**
   String get invalidPasswordRecoveryLink;
-
-  /// No description provided for @onboardingGoalQuestion.
-  ///
-  /// In ar, this message translates to:
-  /// **'ماذا تريد أن تفعل أولاً؟'**
-  String get onboardingGoalQuestion;
-
-  /// No description provided for @onboardingGoalSubtitle.
-  ///
-  /// In ar, this message translates to:
-  /// **'اختر بداية واضحة، ويمكنك استخدام باقي التطبيق لاحقاً.'**
-  String get onboardingGoalSubtitle;
-
-  /// No description provided for @onboardingGoalReading.
-  ///
-  /// In ar, this message translates to:
-  /// **'القراءة'**
-  String get onboardingGoalReading;
-
-  /// No description provided for @onboardingGoalMemorization.
-  ///
-  /// In ar, this message translates to:
-  /// **'الحفظ لنفسي'**
-  String get onboardingGoalMemorization;
-
-  /// No description provided for @onboardingGoalChild.
-  ///
-  /// In ar, this message translates to:
-  /// **'متابعة طفل'**
-  String get onboardingGoalChild;
-
-  /// No description provided for @onboardingGoalAzkar.
-  ///
-  /// In ar, this message translates to:
-  /// **'الأذكار'**
-  String get onboardingGoalAzkar;
 
   /// No description provided for @dailyPlanQuizAction.
   ///

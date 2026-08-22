@@ -36,31 +36,11 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     );
   }
 
-  void nextStep() {
-    if (state.currentStep < OnboardingState.stepCount - 1) {
-      goToStep(state.currentStep + 1);
-    }
-  }
-
-  void previousStep() {
-    if (state.currentStep > 0) {
-      goToStep(state.currentStep - 1);
-    }
-  }
-
   void selectUserType(OnboardingUserType userType) {
     final defaultGoal = userType == OnboardingUserType.child
         ? OnboardingGoal.childJourney
         : OnboardingGoal.reading;
     emit(state.copyWith(selectedUserType: userType, selectedGoal: defaultGoal));
-  }
-
-  void selectGoal(OnboardingGoal goal) {
-    emit(state.copyWith(selectedGoal: goal));
-  }
-
-  void selectDailyCommitment(int minutes) {
-    emit(state.copyWith(dailyCommitmentMinutes: minutes));
   }
 
   Future<void> continueAsGuest() => complete(OnboardingAuthIntent.guest);
@@ -93,11 +73,13 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   Future<void> complete(OnboardingAuthIntent intent) async {
     emit(state.copyWith(status: OnboardingStatus.loading, authIntent: intent));
     try {
+      // Resolve the (fallible) destination before persisting anything, so a
+      // failure leaves first-run flags untouched and the journey can retry.
+      final route = await _routeAfterOnboarding(intent);
+
       await _persistBase(skipped: false);
       await _prefs.setString(goalKey, state.selectedGoal.storageValue);
       await _prefs.setString(userTypeKey, state.selectedUserType.storageValue);
-
-      final route = await _routeAfterOnboarding(intent);
       emit(
         state.copyWith(
           status: OnboardingStatus.completed,

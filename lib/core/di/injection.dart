@@ -36,6 +36,7 @@ import '../security/parent_pin_secure_store.dart';
 import '../security/encrypted_account_preferences_store.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
+import '../../features/quran/data/services/quran_warmup_service.dart';
 import '../../features/quran/data/repositories/quran_repository_impl.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../../features/quran/domain/usecases/get_surahs_usecase.dart';
@@ -215,6 +216,13 @@ Future<void> configureDependencies() async {
   );
   getIt.registerLazySingleton<QuranLocalDatasource>(
     () => QuranLocalDatasourceImpl(),
+  );
+  getIt.registerLazySingleton<QuranWarmupService>(
+    () => QuranWarmupService(
+      datasource: getIt<QuranLocalDatasource>(),
+      sessionService: getIt<AppSessionService>(),
+      prefs: getIt<SharedPreferences>(),
+    ),
   );
   getIt.registerLazySingleton<SettingsRepository>(
     () => SettingsRepositoryImpl(getIt<SharedPreferences>()),

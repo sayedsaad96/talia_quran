@@ -1451,22 +1451,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingPillarReadTitle => 'تلاوة ومصحف أصيل';
 
   @override
-  String get onboardingPillarReadDesc =>
-      'قراءة هادئة بصفحات المصحف المعتمدة ودقة الرسم العثماني.';
-
-  @override
   String get onboardingPillarMemorizeTitle => 'حفظ ومراجعة ذكية';
 
   @override
-  String get onboardingPillarMemorizeDesc =>
-      'خطط مرنة وتكرار ميسر وتثبيت منظم يعينك على الإتقان.';
-
-  @override
   String get onboardingPillarHabitTitle => 'ورد واستمرارية';
-
-  @override
-  String get onboardingPillarHabitDesc =>
-      'متابعة التقدم اليومي والأذكار لتحقيق الاستمرارية بدون ضغط.';
 
   @override
   String get onboardingChooseExpTitle => 'اختر التجربة المناسبة';
@@ -1505,181 +1493,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingSignInAccount => 'تسجيل الدخول / إنشاء حساب';
 
   @override
-  String get onboardingUserTypeTitle => 'من سيستخدم تالية؟';
+  String get onboardingAyahReference => 'سورة المزمّل ٤';
 
   @override
-  String get onboardingUserTypeSubtitle =>
-      'اختر التجربة المناسبة لهذا الجهاز. يمكنك تغيير مسار الحفظ لاحقاً من الإعدادات.';
+  String get onboardingOfflineTrustLine =>
+      'يعمل دون إنترنت · بياناتك محفوظة على جهازك';
 
   @override
-  String get onboardingUserTypeAdult => 'بالغ';
-
-  @override
-  String get onboardingUserTypeAdultDesc =>
-      'مساحة قرآنية مركزة للقراءة والحفظ والمراجعة ومتابعة التقدم.';
-
-  @override
-  String get onboardingUserTypeChild => 'طفل';
-
-  @override
-  String get onboardingUserTypeChildDesc =>
-      'رحلة حفظ أبسط بالمهام والتكرار والنجوم والمكافآت.';
-
-  @override
-  String get onboardingMainGoalTitle => 'اختر هدفك الرئيسي';
-
-  @override
-  String get onboardingMainGoalSubtitle =>
-      'هذا يحدد أول وجهة بعد الإعداد، مع بقاء باقي تالية متاحاً.';
-
-  @override
-  String get onboardingGoalDailyReading => 'قراءة يومية';
-
-  @override
-  String get onboardingGoalDailyReadingDesc =>
-      'ابدأ بقارئ القرآن وورد يومي واضح.';
-
-  @override
-  String get onboardingGoalMemorizationDesc =>
-      'جهّز نظام الحفظ لمسار بالغ منظم.';
-
-  @override
-  String get onboardingGoalSmartReview => 'مراجعة وتحسين التثبيت';
-
-  @override
-  String get onboardingGoalSmartReviewDesc =>
-      'سنحفظ المراجعة كهدف ونبدأ من إعداد الحفظ الحالي.';
-
-  @override
-  String get onboardingGoalAzkarDesc =>
-      'ابدأ بأذكار الصباح والمساء والأذكار العامة.';
-
-  @override
-  String get onboardingGoalKidsJourney => 'رحلة القرآن للأطفال';
-
-  @override
-  String get onboardingGoalKidsJourneyDesc =>
-      'ابدأ مسار الحفظ المناسب للأطفال.';
-
-  @override
-  String get onboardingGoalKidsRewards => 'حفظ مع المكافآت';
-
-  @override
-  String get onboardingGoalKidsRewardsDesc =>
-      'استخدم الاستماع والتكرار والنقاط والنجوم لتشجيع الاستمرار.';
-
-  @override
-  String get onboardingSmartReviewNoteTitle => 'إعداد المراجعة';
-
-  @override
-  String get onboardingSmartReviewNoteDesc =>
-      'سيحفظ تالية المراجعة كهدف ويوجهك إلى إعداد الحفظ الحالي. لا يتم تفعيل مدرب ذكي مستقل في هذه الخطوة.';
-
-  @override
-  String get onboardingHighlightsTitle => 'ماذا يقدم تالية؟';
-
-  @override
-  String get onboardingHighlightsAdultSubtitle =>
-      'مجموعة أدوات مركزة لبناء عادة قرآنية ثابتة.';
-
-  @override
-  String get onboardingHighlightsChildSubtitle =>
-      'رحلة طفل محمية مع استمرار وضع الضيف المحلي.';
-
-  @override
-  String get onboardingFeatureQuranReader => 'قارئ القرآن';
-
-  @override
-  String get onboardingFeatureQuranReaderDesc =>
-      'اقرأ بتجربة قريبة من المصحف وبأسلوب هادئ.';
-
-  @override
-  String get onboardingFeatureMemorizationPlus => 'نظام الحفظ';
-
-  @override
-  String get onboardingFeatureMemorizationPlusDesc =>
-      'استخدم الخطط والتدريب اليومي وأدوات المراجعة الحالية.';
-
-  @override
-  String get onboardingFeatureKidsJourney => 'رحلة أطفال تفاعلية';
-
-  @override
-  String get onboardingFeatureKidsJourneyDesc =>
-      'وجّه الطفل عبر مهام صغيرة ومكافآت مشجعة.';
-
-  @override
-  String get onboardingFeatureProgressCertificates => 'التقدم والشهادات';
-
-  @override
-  String get onboardingFeatureProgressCertificatesDesc =>
-      'تابع التقدم بوضوح واحتفل بالإنجازات.';
-
-  @override
-  String get onboardingFeatureAzkar => 'الأذكار';
-
-  @override
-  String get onboardingFeatureAzkarDesc =>
-      'اجعل الذكر اليومي قريباً من روتينك القرآني.';
-
-  @override
-  String get onboardingFeatureGuardian => 'ربط ولي الأمر';
-
-  @override
-  String get onboardingFeatureGuardianDesc =>
-      'متابعة ولي الأمر تتطلب تسجيل الدخول، مع بقاء وضع الطفل الضيف متاحاً.';
-
-  @override
-  String get onboardingFinalTitle => 'الإعداد النهائي';
-
-  @override
-  String get onboardingFinalSubtitle =>
-      'راجع المسار واختر المتابعة محلياً أو تسجيل الدخول.';
-
-  @override
-  String get onboardingSummaryUserType => 'نوع المستخدم';
-
-  @override
-  String get onboardingSummaryGoal => 'الهدف الرئيسي';
-
-  @override
-  String get onboardingGuardianNoteTitle => 'متابعة ولي الأمر';
-
-  @override
-  String get onboardingGuardianNoteDesc =>
-      'ربط ولي الأمر يتطلب تسجيل الدخول. يستطيع الطفل المتابعة كضيف على هذا الجهاز.';
-
-  @override
-  String get onboardingContinueAsGuest => 'المتابعة كضيف';
-
-  @override
-  String get onboardingSignInCreate => 'تسجيل الدخول / إنشاء حساب';
+  String get onboardingErrorGeneric =>
+      'تعذّر إكمال الإعداد. تأكد من توفر مساحة على الجهاز ثم حاول مجدداً، أو تخطَّ الإعداد الآن.';
 
   @override
   String get onboardingSkip => 'تخطي';
-
-  @override
-  String get onboardingStartNow => 'ابدأ الآن';
-
-  @override
-  String get onboardingQuranTitle => 'تجربة المصحف الحقيقي';
-
-  @override
-  String get onboardingQuranDesc =>
-      'اقرأ القرآن الكريم بتجربة فريدة تحاكي المصحف الورقي بصفحاته وتصميمه الأصيل لتنعم بخشوع التلاوة.';
-
-  @override
-  String get onboardingSmartTitle => 'حفظ ذكي ومراجعة مخصصة';
-
-  @override
-  String get onboardingSmartDesc =>
-      'خطط حفظ مرنة، ومراجعات ذكية، وتقييم ذاتي يساعدك على تثبيت الآيات بدون ضغط.';
-
-  @override
-  String get onboardingKidsTitle => 'رحلة ممتعة للأطفال';
-
-  @override
-  String get onboardingKidsDesc =>
-      'مسار مبسط للأطفال يجمع بين الاستماع والتكرار والنجوم، مع متابعة ولي الأمر.';
 
   @override
   String get memorizationPathTitle => 'مسار الحفظ';
@@ -2150,25 +1975,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get invalidPasswordRecoveryLink =>
       'رابط إعادة التعيين غير صالح أو انتهت صلاحيته. اطلب رسالة إعادة تعيين جديدة.';
-
-  @override
-  String get onboardingGoalQuestion => 'ماذا تريد أن تفعل أولاً؟';
-
-  @override
-  String get onboardingGoalSubtitle =>
-      'اختر بداية واضحة، ويمكنك استخدام باقي التطبيق لاحقاً.';
-
-  @override
-  String get onboardingGoalReading => 'القراءة';
-
-  @override
-  String get onboardingGoalMemorization => 'الحفظ لنفسي';
-
-  @override
-  String get onboardingGoalChild => 'متابعة طفل';
-
-  @override
-  String get onboardingGoalAzkar => 'الأذكار';
 
   @override
   String get dailyPlanQuizAction => 'مراجعة بالتسميع';

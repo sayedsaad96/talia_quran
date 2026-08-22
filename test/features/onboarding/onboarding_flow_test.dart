@@ -154,6 +154,85 @@ void main() {
       await _pumpOnboarding(tester, themeMode: ThemeMode.light);
       expect(find.text('Welcome to Talia'), findsOneWidget);
     });
+
+    testWidgets('fork shows living previews, trust line, and two waypoints', (
+      tester,
+    ) async {
+      await _registerCore();
+      await _pumpOnboarding(tester);
+
+      await _tapVisible(tester, 'Start Your Journey');
+
+      // The mushaf window and the child night window prove both worlds.
+      expect(find.text('وَرَتِّلِ ٱلْقُرْآنَ تَرْتِيلًا'), findsOneWidget);
+      expect(find.byType(Image), findsAtLeast(2));
+      // Offline-first trust line under the guest CTA.
+      expect(
+        find.text('Works offline · your data stays on your device'),
+        findsOneWidget,
+      );
+      // Both destination titles are present at the fork.
+      expect(find.text('Adult & General Journey'), findsOneWidget);
+      expect(find.text('Kids & Buds Journey'), findsOneWidget);
+    });
+
+    testWidgets('back button returns from the fork to the horizon', (
+      tester,
+    ) async {
+      await _registerCore();
+      await _pumpOnboarding(tester);
+
+      await _tapVisible(tester, 'Start Your Journey');
+      expect(find.text('Welcome to Talia'), findsNothing);
+
+      await tester.tap(find.byTooltip('Previous'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Welcome to Talia'), findsOneWidget);
+    });
+
+    testWidgets('swiping the PageView keeps the cubit step in sync', (
+      tester,
+    ) async {
+      await _registerCore();
+      await _pumpOnboarding(tester);
+
+      await tester.fling(find.byType(PageView), const Offset(-400, 0), 800);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Choose Your Experience'), findsOneWidget);
+      // Step synced: the back affordance appeared with the fork.
+      expect(find.byTooltip('Previous'), findsOneWidget);
+    });
+
+    testWidgets('child-path failure shows a recovery error, skip still works', (
+      tester,
+    ) async {
+      final repo = await _registerCore();
+      await _pumpOnboarding(tester);
+
+      await _tapVisible(tester, 'Start Your Journey');
+      await _tapVisible(tester, 'Kids & Buds Journey');
+
+      repo.failNextSelect = StateError('disk full');
+      await _tapVisible(tester, 'Continue as guest');
+      await tester.pumpAndSettle();
+
+      // Localized recovery copy, not the raw exception string.
+      expect(find.textContaining('Setup could not finish'), findsOneWidget);
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      // Nothing was persisted through the failure — the journey can retry.
+      expect(
+        getIt<SharedPreferences>().getBool('isFirstTimeAppOpen'),
+        isNot(false),
+      );
+
+      // Skip is the recovery path out of the error state.
+      await _tapVisible(tester, 'Skip');
+      await tester.pumpAndSettle();
+      expect(find.text('home route'), findsOneWidget);
+      expect(getIt<SharedPreferences>().getBool('onboarding_skipped'), isTrue);
+    });
   });
 }
 
@@ -301,10 +380,18 @@ class _FakeMemorizationRepository implements MemorizationPlusRepository {
   MemorizationProfile? profile;
   final List<MemorizationPath> selectedPaths = [];
 
+  /// When set, the next [selectMemorizationPath] call throws instead.
+  Object? failNextSelect;
+
   @override
   Future<Either<Failure, MemorizationProfile>> selectMemorizationPath(
     MemorizationPath path,
   ) async {
+    final failure = failNextSelect;
+    if (failure != null) {
+      failNextSelect = null;
+      throw failure;
+    }
     selectedPaths.add(path);
     profile = _profile(path);
     return Right(profile!);

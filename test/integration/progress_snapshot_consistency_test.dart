@@ -365,6 +365,8 @@ class _HarnessMemPlusDatasource implements MemorizationPlusLocalDatasource {
 
 class _HarnessQuranDatasource implements QuranLocalDatasource {
   @override
+  Future<void> ensureLoaded() async {}
+  @override
   Future<List<AyahModel>> getAyahs(int surahId) async => const [];
   @override
   Future<List<AyahModel>> getAyahsByPage(int pageNumber) async {
@@ -414,6 +416,9 @@ class _AchievementMemPlusDatasource implements MemorizationPlusLocalDatasource {
 }
 
 class _AchievementQuranDatasource implements QuranLocalDatasource {
+  @override
+  Future<void> ensureLoaded() async {}
+
   _AchievementQuranDatasource({
     required this.surahs,
     required this.ayahsByJuz,

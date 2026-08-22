@@ -44,7 +44,7 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
     _quranPageCubit = getIt<QuranPageCubit>();
     unawaited(_quranPageCubit.loadPage(_currentPageNumber));
     // Lazy-load QCF fonts for the current page and nearby pages.
-    unawaited(qcf.QcfFontLoader.preloadPages(_currentPageNumber, radius: 3));
+    unawaited(qcf.QcfFontLoader.preloadPages(_currentPageNumber, radius: 8));
   }
 
   int _pageForSurah(int? surahId) {
@@ -63,7 +63,7 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
     _currentPageNumber = _normalizePageNumber(pageNumber);
     unawaited(_quranPageCubit.loadPage(_currentPageNumber));
     // Lazy-load QCF fonts for nearby pages.
-    unawaited(qcf.QcfFontLoader.preloadPages(_currentPageNumber, radius: 3));
+    unawaited(qcf.QcfFontLoader.preloadPages(_currentPageNumber, radius: 8));
   }
 
   void _goBackToKidsHome(BuildContext context) {

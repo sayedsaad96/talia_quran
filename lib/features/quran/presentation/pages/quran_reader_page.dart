@@ -117,7 +117,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     _saveCurrentPage(pageNumber);
     _loadPage(pageNumber);
     // Lazy-load QCF fonts for the current page and nearby pages.
-    unawaited(qcf.QcfFontLoader.preloadPages(pageNumber, radius: 3));
+    unawaited(qcf.QcfFontLoader.preloadPages(pageNumber, radius: 8));
   }
 
 
@@ -374,7 +374,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                         _registerPageInteraction(page, context);
                         _loadPage(page);
                         // Lazy-load QCF fonts for nearby pages.
-                        unawaited(qcf.QcfFontLoader.preloadPages(page, radius: 3));
+                        unawaited(qcf.QcfFontLoader.preloadPages(page, radius: 8));
                       },
                       onLongPress: (surahNumber, verseNumber, details) =>
                           _showAyahOptions(

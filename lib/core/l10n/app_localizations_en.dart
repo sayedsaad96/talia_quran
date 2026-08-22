@@ -1456,22 +1456,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingPillarReadTitle => 'Authentic Mushaf Reading';
 
   @override
-  String get onboardingPillarReadDesc =>
-      'A serene reading experience faithful to traditional Mushaf page layouts and crisp typography.';
-
-  @override
   String get onboardingPillarMemorizeTitle => 'Smart Memorization & Review';
 
   @override
-  String get onboardingPillarMemorizeDesc =>
-      'Flexible plans, repetition tools, and structured review to strengthen your retention.';
-
-  @override
   String get onboardingPillarHabitTitle => 'Daily Portion & Continuity';
-
-  @override
-  String get onboardingPillarHabitDesc =>
-      'Track daily Wird, Azkar, and mindful progress without pressure or unnecessary complexity.';
 
   @override
   String get onboardingChooseExpTitle => 'Choose Your Experience';
@@ -1510,182 +1498,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingSignInAccount => 'Sign in / Create account';
 
   @override
-  String get onboardingUserTypeTitle => 'Who is using Talia?';
+  String get onboardingAyahReference => 'Al-Muzzammil 73:4';
 
   @override
-  String get onboardingUserTypeSubtitle =>
-      'Choose the experience that fits this device. You can change memorization paths later from settings.';
+  String get onboardingOfflineTrustLine =>
+      'Works offline · your data stays on your device';
 
   @override
-  String get onboardingUserTypeAdult => 'Adult';
-
-  @override
-  String get onboardingUserTypeAdultDesc =>
-      'A focused Quran workspace for reading, memorization, review, and progress.';
-
-  @override
-  String get onboardingUserTypeChild => 'Child';
-
-  @override
-  String get onboardingUserTypeChildDesc =>
-      'A simpler memorization journey with missions, repetition, stars, and rewards.';
-
-  @override
-  String get onboardingMainGoalTitle => 'Choose your main goal';
-
-  @override
-  String get onboardingMainGoalSubtitle =>
-      'This sets the first destination after setup. The rest of Talia remains available.';
-
-  @override
-  String get onboardingGoalDailyReading => 'Daily Reading';
-
-  @override
-  String get onboardingGoalDailyReadingDesc =>
-      'Start with the Quran reader and a clear daily portion.';
-
-  @override
-  String get onboardingGoalMemorizationDesc =>
-      'Set up Memorization Plus for a structured adult path.';
-
-  @override
-  String get onboardingGoalSmartReview => 'Review / Improve retention';
-
-  @override
-  String get onboardingGoalSmartReviewDesc =>
-      'Save review as your goal and start from the existing memorization setup.';
-
-  @override
-  String get onboardingGoalAzkarDesc =>
-      'Begin with morning, evening, and general Azkar.';
-
-  @override
-  String get onboardingGoalKidsJourney => 'Kids Quran Journey';
-
-  @override
-  String get onboardingGoalKidsJourneyDesc =>
-      'Start the child-friendly Quran memorization path.';
-
-  @override
-  String get onboardingGoalKidsRewards => 'Memorization with rewards';
-
-  @override
-  String get onboardingGoalKidsRewardsDesc =>
-      'Use listening, repetition, points, and stars to encourage consistency.';
-
-  @override
-  String get onboardingSmartReviewNoteTitle => 'Review setup';
-
-  @override
-  String get onboardingSmartReviewNoteDesc =>
-      'Talia will save review as your goal and route you to the existing memorization setup. A separate Smart Coach is not enabled in this step.';
-
-  @override
-  String get onboardingHighlightsTitle => 'What Talia includes';
-
-  @override
-  String get onboardingHighlightsAdultSubtitle =>
-      'A focused set of tools for steady Quran habits.';
-
-  @override
-  String get onboardingHighlightsChildSubtitle =>
-      'A protected child journey with local guest access.';
-
-  @override
-  String get onboardingFeatureQuranReader => 'Quran reader';
-
-  @override
-  String get onboardingFeatureQuranReaderDesc =>
-      'Read from a respectful Mushaf-style experience.';
-
-  @override
-  String get onboardingFeatureMemorizationPlus => 'Memorization Plus';
-
-  @override
-  String get onboardingFeatureMemorizationPlusDesc =>
-      'Use plans, daily practice, and review-adjacent tools.';
-
-  @override
-  String get onboardingFeatureKidsJourney => 'Kids gamified journey';
-
-  @override
-  String get onboardingFeatureKidsJourneyDesc =>
-      'Guide children through small missions with rewards.';
-
-  @override
-  String get onboardingFeatureProgressCertificates =>
-      'Progress and certificates';
-
-  @override
-  String get onboardingFeatureProgressCertificatesDesc =>
-      'Track visible progress and celebrate milestones.';
-
-  @override
-  String get onboardingFeatureAzkar => 'Azkar';
-
-  @override
-  String get onboardingFeatureAzkarDesc =>
-      'Keep daily remembrance close to your Quran routine.';
-
-  @override
-  String get onboardingFeatureGuardian => 'Guardian linking';
-
-  @override
-  String get onboardingFeatureGuardianDesc =>
-      'Guardian follow-up requires sign-in, while child guest mode remains available.';
-
-  @override
-  String get onboardingFinalTitle => 'Final setup';
-
-  @override
-  String get onboardingFinalSubtitle =>
-      'Confirm your path and choose whether to continue locally or sign in.';
-
-  @override
-  String get onboardingSummaryUserType => 'User type';
-
-  @override
-  String get onboardingSummaryGoal => 'Main goal';
-
-  @override
-  String get onboardingGuardianNoteTitle => 'Guardian follow-up';
-
-  @override
-  String get onboardingGuardianNoteDesc =>
-      'Guardian linking requires sign-in. A child can still continue as a guest on this device.';
-
-  @override
-  String get onboardingContinueAsGuest => 'Continue as guest';
-
-  @override
-  String get onboardingSignInCreate => 'Sign in / Create account';
+  String get onboardingErrorGeneric =>
+      'Setup could not finish. Make sure the device has storage space and try again, or skip setup for now.';
 
   @override
   String get onboardingSkip => 'Skip';
-
-  @override
-  String get onboardingStartNow => 'Start now';
-
-  @override
-  String get onboardingQuranTitle => 'A real Mushaf experience';
-
-  @override
-  String get onboardingQuranDesc =>
-      'Read the Holy Quran in an experience that feels close to the printed Mushaf, with familiar pages and respectful visual design.';
-
-  @override
-  String get onboardingSmartTitle => 'Smart memorization and review';
-
-  @override
-  String get onboardingSmartDesc =>
-      'Flexible memorization plans, smart reviews, and self-rating help you strengthen ayahs without pressure.';
-
-  @override
-  String get onboardingKidsTitle => 'A joyful journey for kids';
-
-  @override
-  String get onboardingKidsDesc =>
-      'A simple kids path with listening, repetition, stars, and guardian follow-up.';
 
   @override
   String get memorizationPathTitle => 'Memorization path';
@@ -2165,25 +1989,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get invalidPasswordRecoveryLink =>
       'This reset link is invalid or expired. Request a new password reset email.';
-
-  @override
-  String get onboardingGoalQuestion => 'What would you like to do first?';
-
-  @override
-  String get onboardingGoalSubtitle =>
-      'Choose a clear starting point. You can still use the rest of the app later.';
-
-  @override
-  String get onboardingGoalReading => 'Reading';
-
-  @override
-  String get onboardingGoalMemorization => 'Memorization for me';
-
-  @override
-  String get onboardingGoalChild => 'Follow a child';
-
-  @override
-  String get onboardingGoalAzkar => 'Azkar';
 
   @override
   String get dailyPlanQuizAction => 'Review Session';

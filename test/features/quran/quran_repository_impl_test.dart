@@ -31,6 +31,9 @@ void main() {
 
 class _FakeQuranDatasource implements QuranLocalDatasource {
   @override
+  Future<void> ensureLoaded() async {}
+
+  @override
   Future<List<AyahModel>> getAyahs(int surahId) async => const [];
 
   @override

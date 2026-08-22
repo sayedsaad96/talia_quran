@@ -7,6 +7,7 @@ import '../models/surah_model.dart';
 import '../models/ayah_model.dart';
 
 abstract class QuranLocalDatasource {
+  Future<void> ensureLoaded();
   Future<List<SurahModel>> getSurahs();
   Future<List<AyahModel>> getAyahs(int surahId);
   Future<List<AyahModel>> getAyahsByPage(int pageNumber);
@@ -19,6 +20,14 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
   Map<int, List<AyahModel>>? _cachedAyahs;
   // BUG-007: Page index for O(1) lookup instead of O(n) iteration
   Map<int, List<AyahModel>>? _cachedByPage;
+
+  @override
+  Future<void> ensureLoaded() async {
+    await getSurahs();
+    if (_cachedAyahs == null) {
+      await _loadQuranData();
+    }
+  }
 
   @override
   Future<List<SurahModel>> getSurahs() async {

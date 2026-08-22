@@ -369,6 +369,9 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
 }
 
 class _FakeQuranDatasource implements QuranLocalDatasource {
+  @override
+  Future<void> ensureLoaded() async {}
+
   _FakeQuranDatasource({required this.surahs, required this.ayahsByJuz}) {
     for (final ayahs in ayahsByJuz.values) {
       for (final ayah in ayahs) {
