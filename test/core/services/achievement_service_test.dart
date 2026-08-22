@@ -297,6 +297,11 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   ) async {}
 
   @override
+  Future<void> markReviewRecordsCloudSyncedAtVersions(
+    Map<String, int> acknowledgedVersions,
+  ) async {}
+
+  @override
   Future<DailyPlanModel?> getCachedDailyPlan() async => null;
 
   @override
@@ -319,6 +324,8 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
 
   @override
   Future<void> saveKidsSessionLogs(List<KidsSessionLogModel> logs) async {}
+  @override
+  Future<void> markKidsSessionLogsCloudSynced(Iterable<String> localIds) async {}
 
   @override
   Future<ParentSettingsModel> getParentSettings() async =>

@@ -6,6 +6,7 @@ import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/progress_metrics.dart';
 import 'package:talia_quran/core/memorization/progress_metrics_service.dart';
 import 'package:talia_quran/core/services/streak_reader.dart';
+import 'package:talia_quran/core/security/parent_pin_secure_store.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
 import 'package:talia_quran/features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
@@ -21,18 +22,21 @@ void main() {
     late MemorizationPlusRepositoryImpl repository;
     late SharedPreferences prefs;
     late _FakeStreakReader streakReader;
+    late _MemoryParentPinStore parentPinStore;
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       prefs = await SharedPreferences.getInstance();
       datasource = MemorizationPlusLocalDatasourceImpl(prefs);
       streakReader = _FakeStreakReader(currentStreak: 5);
+      parentPinStore = _MemoryParentPinStore();
       repository = MemorizationPlusRepositoryImpl(
         datasource,
         _UnusedQuranRepository(),
         streakReader,
         ProgressEventsBus(),
         prefs,
+        parentPinStore: parentPinStore,
       );
     });
 
@@ -311,7 +315,8 @@ void main() {
 
       expect(verified.getOrElse(() => false), isTrue);
       expect(settings.pinHash, isNot('1234'));
-      expect(settings.pinHash, hasLength(64));
+      expect(settings.pinHash, 'secure-v2');
+      expect(await parentPinStore.readVerifier('local'), startsWith('pbkdf2-sha256\$'));
       expect(rewards.getOrElse(() => const []), hasLength(1));
     });
 
@@ -327,7 +332,7 @@ void main() {
 
         expect(verified.getOrElse(() => false), isTrue);
         expect(migrated.pinHash, isNot('1234'));
-        expect(migrated.pinHash, hasLength(64));
+        expect(migrated.pinHash, 'secure-v2');
         expect(
           (await repository.verifyParentPin('0000')).getOrElse(() => true),
           isFalse,
@@ -635,6 +640,45 @@ void main() {
       },
     );
   });
+}
+
+class _MemoryParentPinStore implements ParentPinSecureStore {
+  final Map<String, String> _verifiers = {};
+  final Map<String, DateTime> _blockedUntil = {};
+  final Map<String, int> _failures = {};
+
+  @override
+  Future<void> clearVerifier(String ownerId) async {
+    _verifiers.remove(ownerId);
+  }
+
+  @override
+  Future<DateTime?> readBlockedUntil(String ownerId) async => _blockedUntil[ownerId];
+
+  @override
+  Future<int> readFailureCount(String ownerId) async => _failures[ownerId] ?? 0;
+
+  @override
+  Future<String?> readVerifier(String ownerId) async => _verifiers[ownerId];
+
+  @override
+  Future<void> writeBlockedUntil(String ownerId, DateTime? blockedUntil) async {
+    if (blockedUntil == null) {
+      _blockedUntil.remove(ownerId);
+    } else {
+      _blockedUntil[ownerId] = blockedUntil;
+    }
+  }
+
+  @override
+  Future<void> writeFailureCount(String ownerId, int count) async {
+    _failures[ownerId] = count;
+  }
+
+  @override
+  Future<void> writeVerifier(String ownerId, String verifier) async {
+    _verifiers[ownerId] = verifier;
+  }
 }
 
 class _FakeStreakReader implements StreakReader {

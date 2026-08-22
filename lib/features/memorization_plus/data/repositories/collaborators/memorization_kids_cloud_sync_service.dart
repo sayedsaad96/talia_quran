@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/memorization/kids_session_log_acknowledgement.dart';
 import '../../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../../core/services/streak_reader.dart';
 import '../../../domain/entities/memorization_entities.dart';
@@ -53,6 +54,11 @@ class MemorizationKidsCloudSyncService {
           .select()
           .eq('child_user_id', user.id)
           .order('completed_at', ascending: true);
+      final rewardRows = await client
+          .from('parent_rewards')
+          .select()
+          .eq('child_user_id', user.id)
+          .order('created_at', ascending: false);
 
       final remote = _mappers.progressFromCloud(
         progressRows.isEmpty ? null : progressRows.first,
@@ -81,6 +87,15 @@ class MemorizationKidsCloudSyncService {
       );
       await _datasource.saveKidsSessionLogs(
         mergedLogs.map(KidsSessionLogModel.fromEntity).toList(),
+      );
+      await _datasource.saveParentRewards(
+        rewardRows
+            .map(
+              (row) => ParentRewardModel.fromEntity(
+                _mappers.rewardFromCloud(Map<String, dynamic>.from(row)),
+              ),
+            )
+            .toList(),
       );
       return const Right(null);
     } catch (e) {
@@ -122,19 +137,9 @@ class MemorizationKidsCloudSyncService {
       final logs = await _datasource.getKidsSessionLogs();
       final pendingLogs = logs.where((log) => !log.isSynced).toList();
       if (pendingLogs.isNotEmpty) {
-        await _pushKidsSessionLogs(client, pendingLogs);
+        final acceptedIds = await _pushKidsSessionLogs(client, pendingLogs);
+        await _datasource.markKidsSessionLogsCloudSynced(acceptedIds);
       }
-
-      final updatedLogs = logs
-          .map(
-            (log) => log.isSynced
-                ? log
-                : KidsSessionLogModel.fromEntity(
-                    log.copyWith(syncedAt: DateTime.now().toUtc()),
-                  ),
-          )
-          .toList();
-      await _datasource.saveKidsSessionLogs(updatedLogs);
       return const Right(null);
     } catch (e) {
       return Left(NetworkFailure(e.toString()));
@@ -288,11 +293,10 @@ class MemorizationKidsCloudSyncService {
       if (user == null) {
         return const Left(NetworkFailure('سجّل الدخول أولاً'));
       }
-      await client.from('parent_rewards').insert({
-        'parent_user_id': user.id,
-        'child_user_id': childUserId,
-        'title': trimmed,
-      });
+      await client.rpc(
+        'create_parent_reward',
+        params: {'p_child_user_id': childUserId, 'p_title': trimmed},
+      );
       final rows = await client
           .from('parent_rewards')
           .select()
@@ -304,11 +308,11 @@ class MemorizationKidsCloudSyncService {
     }
   }
 
-  Future<void> _pushKidsSessionLogs(
+  Future<Set<String>> _pushKidsSessionLogs(
     SupabaseClient client,
     List<KidsSessionLog> logs,
   ) async {
-    if (logs.isEmpty) return;
+    if (logs.isEmpty) return const <String>{};
 
     final payload = logs
         .map(
@@ -324,11 +328,16 @@ class MemorizationKidsCloudSyncService {
         .toList();
 
     try {
-      await client.rpc(
+      final response = await client.rpc(
         'insert_kids_session_logs_batch',
         params: {'p_data': payload},
       );
-      return;
+      return KidsSessionLogAcknowledgement.acceptedIds(
+        sentIds: logs.map((log) => log.id).toSet(),
+        acknowledgedRows: (response as List<dynamic>? ?? const [])
+            .whereType<Map>()
+            .map((row) => Map<String, dynamic>.from(row)),
+      );
     } on PostgrestException catch (e) {
       final message = e.message.toLowerCase();
       if (!message.contains('insert_kids_session_logs_batch') &&
@@ -349,6 +358,67 @@ class MemorizationKidsCloudSyncService {
           'p_completed_at': log.completedAt.toUtc().toIso8601String(),
         },
       );
+    }
+    // Legacy RPCs return void, so they cannot prove which mutations were
+    // accepted. Keep every row dirty until the acknowledgement-capable RPC is
+    // deployed rather than risking lost child history.
+    return const <String>{};
+  }
+
+  /// Claims a server-owned reward only when the authenticated child is allowed
+  /// to transition it from unlocked to claimed. The local cache changes only
+  /// after the RPC returns that exact row.
+  Future<Either<Failure, List<ParentReward>>> claimRemoteParentReward(
+    String rewardId,
+  ) => _transitionRemoteParentReward('claim_parent_reward', rewardId);
+
+  /// Parent-only counterpart to [claimRemoteParentReward]. The database RPC
+  /// enforces ownership and the locked-to-unlocked transition.
+  Future<Either<Failure, List<ParentReward>>> unlockRemoteParentReward(
+    String rewardId,
+  ) => _transitionRemoteParentReward('unlock_parent_reward', rewardId);
+
+  Future<Either<Failure, List<ParentReward>>> _transitionRemoteParentReward(
+    String rpcName,
+    String rewardId,
+  ) async {
+    try {
+      final parsedId = int.tryParse(rewardId);
+      if (parsedId == null) {
+        return const Left(CacheFailure('معرّف المكافأة غير صالح'));
+      }
+      final clientResult = _supabaseOrFailure;
+      final clientFailure = clientResult.fold((failure) => failure, (_) => null);
+      if (clientFailure != null) return Left(clientFailure);
+      final client = clientResult.getOrElse(() => throw StateError('unreachable'));
+      if (client.auth.currentUser == null) {
+        return const Left(NetworkFailure('سجّل الدخول أولاً'));
+      }
+
+      final response = await client.rpc(
+        rpcName,
+        params: {'p_reward_id': parsedId},
+      );
+      final acknowledged = (response as List<dynamic>)
+          .whereType<Map>()
+          .map((row) => _mappers.rewardFromCloud(Map<String, dynamic>.from(row)))
+          .toList();
+      if (acknowledged.isEmpty) {
+        return const Left(NetworkFailure('المكافأة ليست متاحة لهذا الإجراء'));
+      }
+
+      final local = await _datasource.getParentRewards();
+      final byId = {for (final reward in local) reward.id: reward};
+      for (final reward in acknowledged) {
+        byId[reward.id] = ParentRewardModel.fromEntity(reward);
+      }
+      final merged = byId.values.toList();
+      await _datasource.saveParentRewards(
+        merged.map(ParentRewardModel.fromEntity).toList(),
+      );
+      return Right(merged);
+    } catch (e) {
+      return Left(NetworkFailure(e.toString()));
     }
   }
 }

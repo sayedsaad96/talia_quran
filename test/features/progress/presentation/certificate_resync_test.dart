@@ -51,6 +51,12 @@ void main() {
       authRepository.pullProgressFromCloud(),
     ).thenAnswer((_) async => const Right(unit));
     when(
+      memPlusRepository.pullIdentityFromCloud(),
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      memPlusRepository.pushIdentityToCloud(),
+    ).thenAnswer((_) async => const Right(null));
+    when(
       authRepository.syncProgressToCloud(),
     ).thenAnswer((_) async => const Right(unit));
     when(
@@ -97,12 +103,14 @@ void main() {
 
     verifyInOrder([
       authRepository.pullProgressFromCloud(),
+      memPlusRepository.pullIdentityFromCloud(),
       memPlusRepository.pullProductionDataFromCloud(),
       memPlusRepository.pullCertificatesFromCloud(),
       memPlusRepository.pullKidsProgressFromCloud(),
       authRepository.syncProgressToCloud(),
       memPlusRepository.resyncProductionDataToCloud(),
       memPlusRepository.syncKidsProgressToCloud(),
+      memPlusRepository.pushIdentityToCloud(),
       achievementService.getAllEarnedCertificates(),
       memPlusRepository.pushCertificatesToCloud([certificate]),
     ]);

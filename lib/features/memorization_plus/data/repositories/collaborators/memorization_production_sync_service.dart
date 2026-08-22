@@ -12,7 +12,9 @@ import '../../../../../core/memorization/plan_cloud_dirty_keys.dart';
 import '../../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../../core/memorization/review_record_cloud_merge.dart';
 import '../../../../../core/memorization/review_record_cloud_push_acknowledgement.dart';
+import '../../../../../core/memorization/review_record_identity.dart';
 import '../../../../../core/memorization/review_record_pull_cursor.dart';
+import '../../../../../core/sync/sync_result.dart';
 import '../../../../certificate/domain/entities/certificate_award.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
@@ -46,6 +48,10 @@ class MemorizationProductionSyncService {
 
   static const _reviewPullCursorKey = 'ayah_review_pull_cursor';
   static const _syncedCertificateIdsKey = 'synced_certificate_ids';
+  static const _dailyPlanRevisionKey = 'daily_plan_cloud_revision';
+  static const _customPlanRevisionKey = 'custom_plan_cloud_revision';
+  static const _dailyPlanConflictKey = 'daily_plan_cloud_conflict';
+  static const _customPlanConflictKey = 'custom_plan_cloud_conflict';
   static const _pullCursorStaleAfter = Duration(hours: 24);
 
   bool get _isSupabaseReady => _gateway.isSupabaseReady;
@@ -211,6 +217,7 @@ class MemorizationProductionSyncService {
     if (rows.isEmpty) return false;
 
     final row = rows.first;
+    await _storeRevision(_dailyPlanRevisionKey, row['revision']);
     final cloudGeneratedAt = DateTime.parse(row['generated_at'] as String);
     final local = await _datasource.getCachedDailyPlan();
     if (!DailyPlanCloudMerge.shouldApplyRemote(
@@ -218,6 +225,9 @@ class MemorizationProductionSyncService {
       localGeneratedAt: local?.generatedAt,
       remoteGeneratedAt: cloudGeneratedAt,
     )) {
+      if (localDirty) {
+        await _prefs.setString(_dailyPlanConflictKey, jsonEncode(row));
+      }
       return false;
     }
 
@@ -246,6 +256,7 @@ class MemorizationProductionSyncService {
     if (rows.isEmpty) return false;
 
     final row = rows.first;
+    await _storeRevision(_customPlanRevisionKey, row['revision']);
     final updatedRaw = row['updated_at'];
     if (updatedRaw is! String) return false;
     final remoteUpdatedAt = DateTime.tryParse(updatedRaw);
@@ -255,6 +266,9 @@ class MemorizationProductionSyncService {
           localUpdatedAt: _readCustomPlanLocalUpdatedAt(),
           remoteUpdatedAt: remoteUpdatedAt,
         )) {
+      if (localDirty) {
+        await _prefs.setString(_customPlanConflictKey, jsonEncode(row));
+      }
       return false;
     }
     final deletedAt = row['deleted_at'];
@@ -293,26 +307,29 @@ class MemorizationProductionSyncService {
           .where(_isProductionReviewRecord)
           .toList();
       if (productionRecords.isNotEmpty) {
-        final acknowledgedKeys = await _pushReviewRecordsBatch(
+        final acknowledgedVersions = await _pushReviewRecordsBatch(
           client,
           productionRecords,
         );
-        await _datasource.markReviewRecordsCloudSynced(acknowledgedKeys);
+        await _datasource.markReviewRecordsCloudSyncedAtVersions(
+          acknowledgedVersions,
+        );
       }
 
       if (_prefs.getBool(dailyPlanCloudDirtyKey) ?? false) {
         final cachedPlan = await _datasource.getCachedDailyPlan();
         if (cachedPlan != null) {
-          await _upsertDailyPlanRow(client, user.id, cachedPlan);
+          if (await _upsertDailyPlanRow(client, cachedPlan)) {
+            await _prefs.setBool(dailyPlanCloudDirtyKey, false);
+          }
         }
-        // Clear dirty even when cache is empty (e.g. cleared after custom-plan save).
-        await _prefs.setBool(dailyPlanCloudDirtyKey, false);
       }
 
       if (_prefs.getBool(customPlanCloudDirtyKey) ?? false) {
-        final syncedAt = await _upsertCustomPlanRow(client, user.id);
-        await _writeCustomPlanLocalUpdatedAt(syncedAt);
-        await _prefs.setBool(customPlanCloudDirtyKey, false);
+        if (await _upsertCustomPlanRow(client)) {
+          await _writeCustomPlanLocalUpdatedAt(DateTime.now().toUtc());
+          await _prefs.setBool(customPlanCloudDirtyKey, false);
+        }
       }
 
       return const Right(null);
@@ -445,13 +462,13 @@ class MemorizationProductionSyncService {
     return false;
   }
 
-  Future<Set<String>> _pushReviewRecordsBatch(
+  Future<Map<String, int>> _pushReviewRecordsBatch(
     SupabaseClient client,
     List<AyahReviewRecord> records,
   ) async {
-    if (records.isEmpty) return <String>{};
+    if (records.isEmpty) return <String, int>{};
     const chunkSize = 500;
-    final acknowledgedKeys = <String>{};
+    final acknowledgedVersions = <String, int>{};
     for (var i = 0; i < records.length; i += chunkSize) {
       final end = min(i + chunkSize, records.length);
       final batch = records.sublist(i, end);
@@ -482,13 +499,27 @@ class MemorizationProductionSyncService {
           params: {'p_data': payload},
         );
         if (response is List) {
-          acknowledgedKeys.addAll(
-            ReviewRecordCloudPushAcknowledgement.storageKeys(
+          final acknowledgedKeys =
+              ReviewRecordCloudPushAcknowledgement.storageKeys(
               ownerUserId: _owner.currentOwnerId,
               sentRecords: batch,
               acknowledgedRows: response.whereType<Map<String, dynamic>>(),
-            ),
-          );
+            );
+          for (final record in batch) {
+            final scope = ReviewRecordAudienceScope.scopeForWriteMode(
+              record.createdByMode,
+            );
+            final storageKey = ReviewRecordIdentity(
+              ownerUserId: _owner.currentOwnerId,
+              audience: scope,
+              surahId: record.surahId,
+              ayahNumber: record.ayahNumber,
+            ).storageKey;
+            if (acknowledgedKeys.contains(storageKey)) {
+              acknowledgedVersions[storageKey] =
+                  record.lastReviewedAt.toUtc().millisecondsSinceEpoch;
+            }
+          }
         }
       } on PostgrestException catch (e) {
         if (!_gateway.isMissingRpc(e, 'upsert_ayah_review_records_v2')) {
@@ -502,47 +533,196 @@ class MemorizationProductionSyncService {
         );
       }
     }
-    return acknowledgedKeys;
+    return acknowledgedVersions;
   }
 
-  Future<void> _upsertDailyPlanRow(
+  Future<bool> _upsertDailyPlanRow(
     SupabaseClient client,
-    String userId,
     DailyPlan plan,
   ) async {
-    await client.from('daily_plans_cloud').upsert({
-      'user_id': userId,
-      'surah_id': plan.surahId,
-      'generated_at': plan.generatedAt.toUtc().toIso8601String(),
-      'total_items': plan.totalItems,
-      'completed_count': plan.requiredCompletedCount,
-      'payload': DailyPlanModel.fromEntity(plan).toJson(),
-      'updated_at': DateTime.now().toUtc().toIso8601String(),
-    }, onConflict: 'user_id');
+    final response = await client.rpc(
+      'compare_and_swap_daily_plan',
+      params: {
+        'p_expected_revision': _prefs.getInt(_dailyPlanRevisionKey) ?? 0,
+        'p_surah_id': plan.surahId,
+        'p_generated_at': plan.generatedAt.toUtc().toIso8601String(),
+        'p_total_items': plan.totalItems,
+        'p_completed_count': plan.requiredCompletedCount,
+        'p_payload': DailyPlanModel.fromEntity(plan).toJson(),
+      },
+    );
+    return _handlePlanMutationResponse(
+      response,
+      revisionKey: _dailyPlanRevisionKey,
+      conflictKey: _dailyPlanConflictKey,
+    );
   }
 
-  Future<DateTime> _upsertCustomPlanRow(
-    SupabaseClient client,
-    String userId,
-  ) async {
-    final plan = await _datasource.getCustomPlan();
-    final now = DateTime.now().toUtc();
-    if (plan == null) {
-      await client.from('custom_plans_cloud').upsert({
-        'user_id': userId,
-        'payload': <String, dynamic>{},
-        'deleted_at': now.toIso8601String(),
-        'updated_at': now.toIso8601String(),
-      }, onConflict: 'user_id');
-      return now;
+  Future<SyncConflict<DailyPlan>?> getDailyPlanConflict() async {
+    final row = _readConflictRow(_dailyPlanConflictKey);
+    if (row == null) return null;
+    final local = await _datasource.getCachedDailyPlan();
+    final payload = row['payload'];
+    DailyPlan? cloud;
+    if (payload is Map<String, dynamic>) {
+      try {
+        cloud = DailyPlanModel.fromJson(payload);
+      } catch (_) {
+        return null;
+      }
     }
-    await client.from('custom_plans_cloud').upsert({
-      'user_id': userId,
-      'payload': CustomMemorizationPlanModel.fromEntity(plan).toJson(),
-      'deleted_at': null,
-      'updated_at': now.toIso8601String(),
-    }, onConflict: 'user_id');
-    return now;
+    return SyncConflict(
+      local: local,
+      cloud: cloud,
+      cloudRevision: _revisionFromRow(row),
+    );
+  }
+
+  Future<Either<Failure, void>> resolveDailyPlanConflict(
+    SyncConflictResolution resolution,
+  ) async {
+    try {
+      final conflict = await getDailyPlanConflict();
+      if (conflict == null) {
+        return const Left(CacheFailure('لا يوجد تعارض في الخطة اليومية'));
+      }
+      if (resolution == SyncConflictResolution.keepLocal) {
+        if (conflict.local == null) {
+          return const Left(CacheFailure('لا توجد نسخة محلية للاحتفاظ بها'));
+        }
+        await _prefs.setInt(_dailyPlanRevisionKey, conflict.cloudRevision);
+        await _prefs.setBool(dailyPlanCloudDirtyKey, true);
+      } else {
+        if (conflict.cloud == null) {
+          return const Left(CacheFailure('نسخة السحابة غير صالحة'));
+        }
+        await _datasource.saveDailyPlan(
+          DailyPlanModel.fromEntity(conflict.cloud!),
+        );
+        await _prefs.setInt(_dailyPlanRevisionKey, conflict.cloudRevision);
+        await _prefs.setBool(dailyPlanCloudDirtyKey, false);
+      }
+      await _prefs.remove(_dailyPlanConflictKey);
+      return const Right(null);
+    } catch (error) {
+      return Left(CacheFailure(error.toString()));
+    }
+  }
+
+  Future<SyncConflict<CustomMemorizationPlan>?> getCustomPlanConflict() async {
+    final row = _readConflictRow(_customPlanConflictKey);
+    if (row == null) return null;
+    final local = await _datasource.getCustomPlan();
+    final payload = row['payload'];
+    CustomMemorizationPlan? cloud;
+    if (row['deleted_at'] == null && payload is Map<String, dynamic>) {
+      try {
+        cloud = CustomMemorizationPlanModel.fromJson(payload);
+      } catch (_) {
+        return null;
+      }
+    }
+    return SyncConflict(
+      local: local,
+      cloud: cloud,
+      cloudRevision: _revisionFromRow(row),
+    );
+  }
+
+  Future<Either<Failure, void>> resolveCustomPlanConflict(
+    SyncConflictResolution resolution,
+  ) async {
+    try {
+      final row = _readConflictRow(_customPlanConflictKey);
+      final conflict = await getCustomPlanConflict();
+      if (row == null || conflict == null) {
+        return const Left(CacheFailure('لا يوجد تعارض في الخطة المخصصة'));
+      }
+      if (resolution == SyncConflictResolution.keepLocal) {
+        await _prefs.setInt(_customPlanRevisionKey, conflict.cloudRevision);
+        await _prefs.setBool(customPlanCloudDirtyKey, true);
+      } else {
+        if (row['deleted_at'] != null) {
+          await _datasource.deleteCustomPlan();
+        } else if (conflict.cloud != null) {
+          await _datasource.saveCustomPlan(
+            CustomMemorizationPlanModel.fromEntity(conflict.cloud!),
+          );
+        } else {
+          return const Left(CacheFailure('نسخة السحابة غير صالحة'));
+        }
+        await _prefs.setInt(_customPlanRevisionKey, conflict.cloudRevision);
+        await _prefs.setBool(customPlanCloudDirtyKey, false);
+        await _writeCustomPlanLocalUpdatedAt(DateTime.now().toUtc());
+      }
+      await _prefs.remove(_customPlanConflictKey);
+      return const Right(null);
+    } catch (error) {
+      return Left(CacheFailure(error.toString()));
+    }
+  }
+
+  Map<String, dynamic>? _readConflictRow(String key) {
+    final raw = _prefs.getString(key);
+    if (raw == null) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return null;
+      final map = Map<String, dynamic>.from(decoded);
+      final row = map['row'];
+      return row is Map ? Map<String, dynamic>.from(row) : map;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  int _revisionFromRow(Map<String, dynamic> row) {
+    final revision = row['revision'];
+    return revision is num && revision >= 0 ? revision.toInt() : 0;
+  }
+
+  Future<bool> _upsertCustomPlanRow(SupabaseClient client) async {
+    final plan = await _datasource.getCustomPlan();
+    final response = await client.rpc(
+      'compare_and_swap_custom_plan',
+      params: {
+        'p_expected_revision': _prefs.getInt(_customPlanRevisionKey) ?? 0,
+        'p_payload': plan == null
+            ? <String, dynamic>{}
+            : CustomMemorizationPlanModel.fromEntity(plan).toJson(),
+        'p_is_deleted': plan == null,
+      },
+    );
+    return _handlePlanMutationResponse(
+      response,
+      revisionKey: _customPlanRevisionKey,
+      conflictKey: _customPlanConflictKey,
+    );
+  }
+
+  Future<bool> _handlePlanMutationResponse(
+    dynamic response, {
+    required String revisionKey,
+    required String conflictKey,
+  }) async {
+    if (response is! Map) return false;
+    final result = Map<String, dynamic>.from(response);
+    final row = result['row'];
+    if (result['status'] == 'acknowledged' && row is Map) {
+      await _storeRevision(revisionKey, row['revision']);
+      await _prefs.remove(conflictKey);
+      return true;
+    }
+    if (result['status'] == 'conflict') {
+      await _prefs.setString(conflictKey, jsonEncode(result));
+    }
+    return false;
+  }
+
+  Future<void> _storeRevision(String key, dynamic rawRevision) async {
+    if (rawRevision is num && rawRevision >= 0) {
+      await _prefs.setInt(key, rawRevision.toInt());
+    }
   }
 
   DateTime? _readCustomPlanLocalUpdatedAt() {

@@ -5,12 +5,15 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:dartz/dartz.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../../core/memorization/review_record_filters.dart';
 import '../../../../../core/progress/progress_changed_reason.dart';
 import '../../../../../core/progress/progress_events_bus.dart';
 import '../../../../../core/services/streak_reader.dart';
 import '../../../../../core/sync/cloud_sync_queue.dart';
+import '../../../../../core/security/parent_pin_secure_store.dart';
+import '../../../../../core/security/parent_pin_verifier.dart';
 import '../../../../quran/domain/repositories/quran_repository.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
@@ -26,14 +29,19 @@ class MemorizationKidsLocalService {
     this._quranRepository,
     this._streakReader,
     this._progressEvents,
-    this._cloudSyncQueue,
-  );
+    this._cloudSyncQueue, {
+    ParentPinSecureStore? parentPinStore,
+    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
+  }) : _parentPinStore = parentPinStore ?? FlutterParentPinSecureStore(),
+      _owner = owner;
 
   final MemorizationPlusLocalDatasource _datasource;
   final QuranRepository _quranRepository;
   final StreakReader _streakReader;
   final ProgressEventsBus _progressEvents;
   final CloudSyncQueue? _cloudSyncQueue;
+  final ParentPinSecureStore _parentPinStore;
+  final RecordOwnerProvider _owner;
 
   final Map<String, Future<void>> _kidsAwardLocks = {};
 
@@ -61,6 +69,7 @@ class MemorizationKidsLocalService {
       await _datasource.saveKidsProgress(
         KidsProgressModel.fromEntity(_kidsProgressForStorage(progress)),
       );
+      await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -255,19 +264,20 @@ class MemorizationKidsLocalService {
     try {
       final settings = await _datasource.getParentSettings();
       final stored = settings.pinHash;
-      if (stored == _hashPin(pin)) {
+      final ownerId = _owner.currentOwnerId;
+      final blockedUntil = await _parentPinStore.readBlockedUntil(ownerId);
+      if (blockedUntil != null && blockedUntil.isAfter(DateTime.now().toUtc())) {
+        return const Right(false);
+      }
+      final verifier = await _parentPinStore.readVerifier(ownerId);
+      if (verifier != null) {
+        return _verifySecurePin(ownerId, pin, verifier);
+      }
+      if (_matchesLegacyPin(stored, pin)) {
+        await _upgradeLegacyPin(ownerId, pin, settings);
         return const Right(true);
       }
-
-      if (_isLegacyPlaintextPin(stored) && stored == pin) {
-        await _datasource.saveParentSettings(
-          ParentSettingsModel.fromEntity(
-            settings.copyWith(pinHash: _hashPin(pin)),
-          ),
-        );
-        return const Right(true);
-      }
-
+      await _recordFailedPinAttempt(ownerId);
       return const Right(false);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -277,9 +287,12 @@ class MemorizationKidsLocalService {
   Future<Either<Failure, void>> setParentPin(String pin) async {
     try {
       final settings = await _datasource.getParentSettings();
+      final ownerId = _owner.currentOwnerId;
+      await _parentPinStore.writeVerifier(ownerId, ParentPinVerifier.create(pin));
+      await _clearPinThrottle(ownerId);
       await _datasource.saveParentSettings(
         ParentSettingsModel.fromEntity(
-          settings.copyWith(pinHash: _hashPin(pin)),
+          settings.copyWith(pinHash: _securePinMarker),
         ),
       );
       return const Right(null);
@@ -291,6 +304,9 @@ class MemorizationKidsLocalService {
   Future<Either<Failure, void>> resetParentAccess() async {
     try {
       final settings = await _datasource.getParentSettings();
+      final ownerId = _owner.currentOwnerId;
+      await _parentPinStore.clearVerifier(ownerId);
+      await _clearPinThrottle(ownerId);
       await _datasource.saveParentSettings(
         ParentSettingsModel.fromEntity(
           settings.copyWith(clearPin: true, remoteLinkEnabled: false),
@@ -433,6 +449,51 @@ class MemorizationKidsLocalService {
   }
 
   String _hashPin(String pin) => sha256.convert(utf8.encode(pin)).toString();
+
+  static const _securePinMarker = 'secure-v2';
+
+  Future<Either<Failure, bool>> _verifySecurePin(
+    String ownerId,
+    String pin,
+    String verifier,
+  ) async {
+    if (ParentPinVerifier.verify(pin, verifier)) {
+      await _clearPinThrottle(ownerId);
+      return const Right(true);
+    }
+    await _recordFailedPinAttempt(ownerId);
+    return const Right(false);
+  }
+
+  bool _matchesLegacyPin(String? stored, String pin) =>
+      stored == _hashPin(pin) || (_isLegacyPlaintextPin(stored) && stored == pin);
+
+  Future<void> _upgradeLegacyPin(
+    String ownerId,
+    String pin,
+    ParentSettings settings,
+  ) async {
+    await _parentPinStore.writeVerifier(ownerId, ParentPinVerifier.create(pin));
+    await _clearPinThrottle(ownerId);
+    await _datasource.saveParentSettings(
+      ParentSettingsModel.fromEntity(settings.copyWith(pinHash: _securePinMarker)),
+    );
+  }
+
+  Future<void> _recordFailedPinAttempt(String ownerId) async {
+    final failures = await _parentPinStore.readFailureCount(ownerId) + 1;
+    final delaySeconds = min(60, 1 << min(6, failures));
+    await _parentPinStore.writeFailureCount(ownerId, failures);
+    await _parentPinStore.writeBlockedUntil(
+      ownerId,
+      DateTime.now().toUtc().add(Duration(seconds: delaySeconds)),
+    );
+  }
+
+  Future<void> _clearPinThrottle(String ownerId) async {
+    await _parentPinStore.writeFailureCount(ownerId, 0);
+    await _parentPinStore.writeBlockedUntil(ownerId, null);
+  }
 
   bool _isLegacyPlaintextPin(String? value) {
     return value != null && value.length == 4 && int.tryParse(value) != null;

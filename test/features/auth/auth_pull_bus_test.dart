@@ -57,6 +57,9 @@ void main() {
       mockMemPlusRepository.pullProductionDataFromCloud(),
     ).thenAnswer((_) async => const Right(null));
     when(
+      mockMemPlusRepository.pullIdentityFromCloud(),
+    ).thenAnswer((_) async => const Right(null));
+    when(
       mockMemPlusRepository.pullCertificatesFromCloud(),
     ).thenAnswer((_) async => const Right([]));
     when(
@@ -73,6 +76,9 @@ void main() {
     ).thenAnswer((_) async => true);
     when(
       mockMemPlusRepository.syncKidsProgressToCloud(),
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      mockMemPlusRepository.pushIdentityToCloud(),
     ).thenAnswer((_) async => const Right(null));
     when(
       mockMemPlusRepository.pushCertificatesToCloud(any),
@@ -111,10 +117,12 @@ void main() {
       progressEvents,
       mockAchievementService,
     );
+    await cubit.ensureCloudSyncComplete();
     await Future<void>.delayed(Duration.zero);
 
     verifyInOrder([
       mockAuthRepository.pullProgressFromCloud(),
+      mockMemPlusRepository.pullIdentityFromCloud(),
       mockMemPlusRepository.pullProductionDataFromCloud(),
       mockMemPlusRepository.pullCertificatesFromCloud(),
       mockMemPlusRepository.pullKidsProgressFromCloud(),
@@ -212,45 +220,50 @@ void main() {
     await cubit.close();
   });
 
-  test('explicit sign-out flushes memorization work before invalidating auth', () async {
-    when(mockAuthRepository.signOut()).thenAnswer((_) async => const Right(unit));
-    when(mockAuthRepository.currentUser).thenReturn(null);
-    var memPending = true;
-    var authPending = true;
-    when(mockMemPlusRepository.hasPendingCloudWork()).thenAnswer((_) async {
-      return memPending;
-    });
-    when(mockMemPlusRepository.resyncProductionDataToCloud()).thenAnswer((
-      _,
-    ) async {
-      memPending = false;
-      return const Right(null);
-    });
-    when(mockAuthRepository.hasPendingCloudPush()).thenAnswer((_) async {
-      return authPending;
-    });
-    when(mockAuthRepository.syncProgressToCloud()).thenAnswer((_) async {
-      authPending = false;
-      return const Right(unit);
-    });
+  test(
+    'explicit sign-out flushes memorization work before invalidating auth',
+    () async {
+      when(
+        mockAuthRepository.signOut(),
+      ).thenAnswer((_) async => const Right(unit));
+      when(mockAuthRepository.currentUser).thenReturn(null);
+      var memPending = true;
+      var authPending = true;
+      when(mockMemPlusRepository.hasPendingCloudWork()).thenAnswer((_) async {
+        return memPending;
+      });
+      when(mockMemPlusRepository.resyncProductionDataToCloud()).thenAnswer((
+        _,
+      ) async {
+        memPending = false;
+        return const Right(null);
+      });
+      when(mockAuthRepository.hasPendingCloudPush()).thenAnswer((_) async {
+        return authPending;
+      });
+      when(mockAuthRepository.syncProgressToCloud()).thenAnswer((_) async {
+        authPending = false;
+        return const Right(unit);
+      });
 
-    final cubit = AuthCubit(
-      mockAuthRepository,
-      mockMemPlusRepository,
-      progressEvents,
-      mockAchievementService,
-    );
+      final cubit = AuthCubit(
+        mockAuthRepository,
+        mockMemPlusRepository,
+        progressEvents,
+        mockAchievementService,
+      );
 
-    await cubit.signOut();
+      await cubit.signOut();
 
-    verifyInOrder([
-      mockMemPlusRepository.hasPendingCloudWork(),
-      mockMemPlusRepository.resyncProductionDataToCloud(),
-      mockMemPlusRepository.syncKidsProgressToCloud(),
-      mockAuthRepository.signOut(),
-    ]);
-    await cubit.close();
-  });
+      verifyInOrder([
+        mockMemPlusRepository.hasPendingCloudWork(),
+        mockMemPlusRepository.resyncProductionDataToCloud(),
+        mockMemPlusRepository.syncKidsProgressToCloud(),
+        mockAuthRepository.signOut(),
+      ]);
+      await cubit.close();
+    },
+  );
 
   test('certificate pull retry restores awards from cloud', () async {
     when(mockAuthRepository.currentUser).thenReturn(testUser);

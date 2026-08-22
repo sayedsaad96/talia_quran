@@ -9,6 +9,8 @@ import 'package:dartz/dartz.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:talia_quran/core/error/app_failure.dart' as _i6;
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart' as _i5;
+import 'package:talia_quran/features/auth/domain/entities/auth_session_recovery.dart'
+    as _i7;
 import 'package:talia_quran/features/auth/domain/repositories/auth_repository.dart'
     as _i3;
 
@@ -243,4 +245,16 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
           ),
         )),
       ) as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);
+
+  @override
+  _i4.Future<_i7.AuthSessionRecovery> recoverSessionAfterAuthError(
+          Object? error) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #recoverSessionAfterAuthError,
+          [error],
+        ),
+        returnValue: _i4.Future<_i7.AuthSessionRecovery>.value(
+            _i7.AuthSessionRecovery.recovered),
+      ) as _i4.Future<_i7.AuthSessionRecovery>);
 }

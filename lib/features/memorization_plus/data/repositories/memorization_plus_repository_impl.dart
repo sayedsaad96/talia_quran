@@ -7,11 +7,15 @@ import '../../../../core/memorization/progress_metrics_service.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
 import '../../../../core/progress/progress_events_bus.dart';
+import '../../../../core/security/parent_pin_secure_store.dart';
+import '../../../../core/sync/sync_result.dart';
 import '../../../../core/services/streak_reader.dart';
 import '../../../../core/sync/cloud_sync_queue.dart';
 import '../../../../features/quran/domain/repositories/quran_repository.dart';
 import '../../../certificate/domain/entities/certificate_award.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/repositories/memorization_cloud_repository.dart';
+import '../../domain/repositories/memorization_identity_repository.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../datasources/memorization_plus_local_datasource.dart';
 import '../models/memorization_models.dart';
@@ -27,16 +31,25 @@ import 'collaborators/memorization_production_sync_service.dart';
 import 'collaborators/memorization_profile_service.dart';
 import 'collaborators/memorization_profile_store.dart';
 
-class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
+class MemorizationPlusRepositoryImpl
+    implements
+        MemorizationPlusRepository,
+        MemorizationIdentityRepository,
+        MemorizationCloudRepository {
   MemorizationPlusRepositoryImpl(
     this._datasource,
     this._quranRepository,
     this._streakReader,
     this._progressEvents,
-    this._prefs, [
-    this._metrics = const ProgressMetricsService(),
-    this._cloudSyncQueue,
-  ]);
+    this._prefs, {
+    ProgressMetricsService metrics = const ProgressMetricsService(),
+    CloudSyncQueue? cloudSyncQueue,
+    ParentPinSecureStore? parentPinStore,
+  }) : _metrics = metrics,
+       _cloudSyncQueue = cloudSyncQueue,
+       _parentPinStore = parentPinStore;
+
+  final ParentPinSecureStore? _parentPinStore;
 
   late final MemorizationCloudGateway _gateway =
       MemorizationCloudGateway(_prefs);
@@ -55,6 +68,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
         _streakReader,
         _progressEvents,
         _cloudSyncQueue,
+        parentPinStore: _parentPinStore,
       );
   late final MemorizationDailyPlanService _dailyPlan =
       MemorizationDailyPlanService(
@@ -185,7 +199,19 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
 
   @override
   Future<Either<Failure, void>> saveDailyPlan(DailyPlan plan) =>
-      _dailyPlan.saveDailyPlan(plan);
+      _saveProductionMutation(_dailyPlan.saveDailyPlan(plan));
+
+  @override
+  Future<SyncConflict<DailyPlan>?> getDailyPlanConflict() =>
+      _productionSync.getDailyPlanConflict();
+
+  @override
+  Future<Either<Failure, void>> resolveDailyPlanConflict(
+    SyncConflictResolution resolution,
+  ) =>
+      _resolveProductionConflict(
+        _productionSync.resolveDailyPlanConflict(resolution),
+      );
 
   @override
   Future<Either<Failure, bool>> markDailyPlanAyahCompleted({
@@ -236,6 +262,7 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       await _datasource.saveReviewRecord(
         AyahReviewRecordModel.fromEntity(record),
       );
+      await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.productionPush);
       // Delta sync: mark dirty locally; [resyncProductionDataToCloud] uploads.
       _progressEvents.notify(ProgressChangedReason.reviewRecord);
       return const Right(null);
@@ -324,8 +351,12 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, List<ParentReward>>> claimParentReward(
     String id,
-  ) =>
-      _kidsLocal.claimParentReward(id);
+  ) {
+    if (_gateway.isSupabaseReady && _gateway.supabase.auth.currentUser != null) {
+      return _kidsCloudSync.claimRemoteParentReward(id);
+    }
+    return _kidsLocal.claimParentReward(id);
+  }
 
   @override
   Future<Either<Failure, String>> createChildLinkToken() =>
@@ -358,6 +389,12 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       );
 
   @override
+  Future<Either<Failure, List<ParentReward>>> unlockRemoteParentReward(
+    String rewardId,
+  ) =>
+      _kidsCloudSync.unlockRemoteParentReward(rewardId);
+
+  @override
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
     required int surahId,
     required int ayahNumber,
@@ -379,11 +416,23 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
   Future<Either<Failure, void>> saveCustomPlan(
     CustomMemorizationPlan plan,
   ) =>
-      _customPlan.saveCustomPlan(plan);
+      _saveProductionMutation(_customPlan.saveCustomPlan(plan));
 
   @override
   Future<Either<Failure, void>> deleteCustomPlan() =>
-      _customPlan.deleteCustomPlan();
+      _saveProductionMutation(_customPlan.deleteCustomPlan());
+
+  @override
+  Future<SyncConflict<CustomMemorizationPlan>?> getCustomPlanConflict() =>
+      _productionSync.getCustomPlanConflict();
+
+  @override
+  Future<Either<Failure, void>> resolveCustomPlanConflict(
+    SyncConflictResolution resolution,
+  ) =>
+      _resolveProductionConflict(
+        _productionSync.resolveCustomPlanConflict(resolution),
+      );
 
   // ─── Parent mode toggle ──────────────────────────────────────────────────
   // T015: Read through MemorizationProfile so the value is always the single
@@ -531,5 +580,25 @@ class MemorizationPlusRepositoryImpl implements MemorizationPlusRepository {
       default:
         return GuardianOnboardingStatus.completed;
     }
+  }
+
+  Future<Either<Failure, void>> _saveProductionMutation(
+    Future<Either<Failure, void>> operation,
+  ) async {
+    final result = await operation;
+    if (result.isRight()) {
+      await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.productionPush);
+    }
+    return result;
+  }
+
+  Future<Either<Failure, void>> _resolveProductionConflict(
+    Future<Either<Failure, void>> operation,
+  ) async {
+    final result = await operation;
+    if (result.isRight()) {
+      await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.productionPush);
+    }
+    return result;
   }
 }

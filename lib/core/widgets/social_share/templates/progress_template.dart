@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+
 import '../share_card_content.dart';
-import '../social_share_model.dart';
 import '../social_share_copy.dart';
+import '../social_share_model.dart';
 import '../social_share_theme.dart';
+import '../share_card_widgets.dart';
 import '../talia_share_tokens.dart';
 
 /// Specialized Template for Multi-Stat Progress Harvest.
+///
+/// Three gold medallions — pages read, ayahs memorized, streak days — are
+/// joined by thin gold connectors into a single harmonious milestone strip.
 class ProgressTemplate extends StatelessWidget {
   final SocialShareData data;
   final SocialShareTheme theme;
@@ -35,7 +40,7 @@ class ProgressTemplate extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ─── 1. Header Emblem ─────────────────────────────────────────────
+          // ─── 1. Emblem ──────────────────────────────────────────────────
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
@@ -55,7 +60,7 @@ class ProgressTemplate extends StatelessWidget {
 
           SizedBox(height: isCompact ? 4 : 8),
 
-          // ─── 2. Title ─────────────────────────────────────────────────────
+          // ─── 2. Title ─────────────────────────────────────────────────
           Text(
             data.title ?? copy.progressTitle,
             textAlign: TextAlign.center,
@@ -67,39 +72,41 @@ class ProgressTemplate extends StatelessWidget {
 
           SizedBox(height: isCompact ? 8 : 12),
 
-          // ─── 3. 3-Stat Metric Grid ────────────────────────────────────────
-          // Fixed-width pills can outgrow narrow content regions, so the row
-          // measures naturally and scales down instead of clipping.
+          // ─── 3. Medallion milestone strip ─────────────────────────────
+          // Fixed-width medallions can outgrow narrow content regions, so
+          // the row measures naturally and scales down instead of clipping.
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _StatPill(
+                StatMedallion(
                   icon: Icons.menu_book_rounded,
                   value: '$pages',
                   label: copy.pagesReadLabel,
-                  color: theme.accentColor,
+                  valueColor: theme.textPrimary,
                   theme: theme,
                   isCompact: isCompact,
                 ),
-                SizedBox(width: isCompact ? 6 : 8),
-                _StatPill(
+                _connector(isCompact),
+                StatMedallion(
                   icon: Icons.psychology_rounded,
                   value: '$ayahs',
                   label: copy.ayahsMemorizedLabel,
-                  color: TaliaShareColors.royalTealLight,
+                  valueColor: theme.textPrimary,
                   theme: theme,
                   isCompact: isCompact,
+                  ringColor: TaliaShareColors.royalTealLight,
                 ),
-                SizedBox(width: isCompact ? 6 : 8),
-                _StatPill(
+                _connector(isCompact),
+                StatMedallion(
                   icon: Icons.local_fire_department_rounded,
                   value: '$streak',
                   label: copy.streakDaysLabel,
-                  color: TaliaShareColors.streakEmber,
+                  valueColor: theme.textPrimary,
                   theme: theme,
                   isCompact: isCompact,
+                  ringColor: TaliaShareColors.streakEmberLight,
                 ),
               ],
             ),
@@ -107,7 +114,7 @@ class ProgressTemplate extends StatelessWidget {
 
           SizedBox(height: isCompact ? 8 : 12),
 
-          // ─── 4. Motivational Message ──────────────────────────────────────
+          // ─── 4. Motivational Message ──────────────────────────────────
           if (data.content.trim().isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -134,82 +141,27 @@ class ProgressTemplate extends StatelessWidget {
             ),
           ],
 
-          // ─── 5. Talia Celebratory Companion ───────────────────────────────
+          // ─── 5. Talia companion (adult opt-in path) ────────────────────
           if (data.showCharacter && !isKids) ...[
             SizedBox(height: isCompact ? 6 : (isStory ? 14 : 8)),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                key: const ValueKey('share-character-image'),
-                data.effectiveCharacterAssetPath,
-                height: isCompact ? 46 : (isStory ? (isKids ? 86 : 74) : (isKids ? 66 : 56)),
-                fit: BoxFit.contain,
-                cacheWidth: 288,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
-              ),
+            TaliaCharacterInline(
+              assetPath: data.effectiveCharacterAssetPath,
+              height: isCompact ? 46 : (isStory ? 74 : 56),
             ),
           ],
         ],
       ),
     );
   }
-}
 
-class _StatPill extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
-  final Color color;
-  final SocialShareTheme theme;
-  final bool isCompact;
-
-  const _StatPill({
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-    required this.theme,
-    required this.isCompact,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: isCompact ? 84 : 96,
-      padding: EdgeInsets.symmetric(
-        vertical: isCompact ? 6 : 8,
-        horizontal: 4,
-      ),
-      decoration: BoxDecoration(
-        color: theme.cardBackground,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: color.withValues(alpha: 0.4),
-          width: 1,
+  Widget _connector(bool isCompact) {
+    return SizedBox(
+      width: isCompact ? 12 : 18,
+      child: Center(
+        child: Container(
+          height: 1,
+          color: theme.accentColor.withValues(alpha: 0.4),
         ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: isCompact ? 15 : 18, color: color),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: TaliaShareTypography.metricValue(
-              color: theme.textPrimary,
-              fontSize: isCompact ? 17 : 20,
-            ),
-          ),
-          const SizedBox(height: 1),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TaliaShareTypography.badge(
-              color: theme.textSecondary,
-              fontSize: isCompact ? 8.5 : 9.5,
-            ),
-          ),
-        ],
       ),
     );
   }

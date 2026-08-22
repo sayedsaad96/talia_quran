@@ -5,33 +5,34 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'dart:async' as _i10;
 
-import 'package:audio_session/audio_session.dart' as _i23;
+import 'package:audio_session/audio_session.dart' as _i24;
 import 'package:dartz/dartz.dart' as _i2;
 import 'package:just_audio/just_audio.dart' as _i8;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i22;
-import 'package:speech_to_text/speech_to_text.dart' as _i24;
+import 'package:mockito/src/dummies.dart' as _i23;
+import 'package:speech_to_text/speech_to_text.dart' as _i25;
 import 'package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart'
-    as _i25;
+    as _i26;
 import 'package:talia_quran/core/constants/xp_constants.dart' as _i5;
 import 'package:talia_quran/core/error/app_failure.dart' as _i11;
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart'
-    as _i14;
-import 'package:talia_quran/core/services/achievement_service.dart' as _i21;
-import 'package:talia_quran/core/services/streak_service.dart' as _i20;
-import 'package:talia_quran/core/services/xp_service.dart' as _i19;
-import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart'
     as _i15;
+import 'package:talia_quran/core/services/achievement_service.dart' as _i22;
+import 'package:talia_quran/core/services/streak_service.dart' as _i21;
+import 'package:talia_quran/core/services/xp_service.dart' as _i20;
+import 'package:talia_quran/core/sync/sync_result.dart' as _i14;
+import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart'
+    as _i16;
 import 'package:talia_quran/features/memorization_plus/data/datasources/v2_session_local_datasource.dart'
-    as _i17;
-import 'package:talia_quran/features/memorization_plus/data/models/isar_v2_session.dart'
     as _i18;
+import 'package:talia_quran/features/memorization_plus/data/models/isar_v2_session.dart'
+    as _i19;
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart'
     as _i3;
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart'
     as _i13;
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart'
-    as _i16;
+    as _i17;
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart'
     as _i12;
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart'
@@ -596,6 +597,34 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
+  _i10.Future<_i14.SyncConflict<_i3.DailyPlan>?> getDailyPlanConflict() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getDailyPlanConflict,
+          [],
+        ),
+        returnValue: _i10.Future<_i14.SyncConflict<_i3.DailyPlan>?>.value(),
+      ) as _i10.Future<_i14.SyncConflict<_i3.DailyPlan>?>);
+
+  @override
+  _i10.Future<_i2.Either<_i11.Failure, void>> resolveDailyPlanConflict(
+          _i14.SyncConflictResolution? resolution) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #resolveDailyPlanConflict,
+          [resolution],
+        ),
+        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+            _FakeEither_0<_i11.Failure, void>(
+          this,
+          Invocation.method(
+            #resolveDailyPlanConflict,
+            [resolution],
+          ),
+        )),
+      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+
+  @override
   _i10.Future<_i2.Either<_i11.Failure, bool>> markDailyPlanAyahCompleted({
     required int? surahId,
     required int? ayahNumber,
@@ -627,7 +656,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
   _i10.Future<_i2.Either<_i11.Failure, _i3.AyahReviewRecord?>> getReviewRecord(
     int? surahId,
     int? ayahNumber, {
-    _i14.ReviewRecordReadScope? scope = _i14.ReviewRecordReadScope.adult,
+    _i15.ReviewRecordReadScope? scope = _i15.ReviewRecordReadScope.adult,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -656,8 +685,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
   @override
   _i10.Future<
       _i2.Either<_i11.Failure, List<_i3.AyahReviewRecord>>> getAllReviewRecords(
-          {_i14.ReviewRecordReadScope? scope =
-              _i14.ReviewRecordReadScope.adult}) =>
+          {_i15.ReviewRecordReadScope? scope =
+              _i15.ReviewRecordReadScope.adult}) =>
       (super.noSuchMethod(
         Invocation.method(
           #getAllReviewRecords,
@@ -1095,6 +1124,24 @@ class MockMemorizationPlusRepository extends _i1.Mock
           ) as _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>);
 
   @override
+  _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>
+      unlockRemoteParentReward(String? rewardId) => (super.noSuchMethod(
+            Invocation.method(
+              #unlockRemoteParentReward,
+              [rewardId],
+            ),
+            returnValue: _i10
+                .Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>.value(
+                _FakeEither_0<_i11.Failure, List<_i3.ParentReward>>(
+              this,
+              Invocation.method(
+                #unlockRemoteParentReward,
+                [rewardId],
+              ),
+            )),
+          ) as _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>);
+
+  @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.KidsCompletionResult>>
       awardKidsPoints({
     required int? surahId,
@@ -1183,6 +1230,35 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
+  _i10.Future<_i14.SyncConflict<_i3.CustomMemorizationPlan>?>
+      getCustomPlanConflict() => (super.noSuchMethod(
+            Invocation.method(
+              #getCustomPlanConflict,
+              [],
+            ),
+            returnValue: _i10
+                .Future<_i14.SyncConflict<_i3.CustomMemorizationPlan>?>.value(),
+          ) as _i10.Future<_i14.SyncConflict<_i3.CustomMemorizationPlan>?>);
+
+  @override
+  _i10.Future<_i2.Either<_i11.Failure, void>> resolveCustomPlanConflict(
+          _i14.SyncConflictResolution? resolution) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #resolveCustomPlanConflict,
+          [resolution],
+        ),
+        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+            _FakeEither_0<_i11.Failure, void>(
+          this,
+          Invocation.method(
+            #resolveCustomPlanConflict,
+            [resolution],
+          ),
+        )),
+      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+
+  @override
   _i2.Either<_i11.Failure, bool> getIsParentMode() => (super.noSuchMethod(
         Invocation.method(
           #getIsParentMode,
@@ -1249,7 +1325,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
-  _i10.Future<_i2.Either<_i11.Failure, List<_i15.CertificateAward>>>
+  _i10.Future<_i2.Either<_i11.Failure, List<_i16.CertificateAward>>>
       pullCertificatesFromCloud() => (super.noSuchMethod(
             Invocation.method(
               #pullCertificatesFromCloud,
@@ -1257,8 +1333,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
             ),
             returnValue: _i10.Future<
                     _i2
-                    .Either<_i11.Failure, List<_i15.CertificateAward>>>.value(
-                _FakeEither_0<_i11.Failure, List<_i15.CertificateAward>>(
+                    .Either<_i11.Failure, List<_i16.CertificateAward>>>.value(
+                _FakeEither_0<_i11.Failure, List<_i16.CertificateAward>>(
               this,
               Invocation.method(
                 #pullCertificatesFromCloud,
@@ -1266,11 +1342,11 @@ class MockMemorizationPlusRepository extends _i1.Mock
               ),
             )),
           ) as _i10
-              .Future<_i2.Either<_i11.Failure, List<_i15.CertificateAward>>>);
+              .Future<_i2.Either<_i11.Failure, List<_i16.CertificateAward>>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> pushCertificatesToCloud(
-          List<_i15.CertificateAward>? certificates) =>
+          List<_i16.CertificateAward>? certificates) =>
       (super.noSuchMethod(
         Invocation.method(
           #pushCertificatesToCloud,
@@ -1339,13 +1415,47 @@ class MockMemorizationPlusRepository extends _i1.Mock
               ),
             )),
           ) as _i10.Future<_i2.Either<_i11.Failure, _i3.FamilyDashboard>>);
+
+  @override
+  _i10.Future<_i2.Either<_i11.Failure, void>> pullIdentityFromCloud() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #pullIdentityFromCloud,
+          [],
+        ),
+        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+            _FakeEither_0<_i11.Failure, void>(
+          this,
+          Invocation.method(
+            #pullIdentityFromCloud,
+            [],
+          ),
+        )),
+      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+
+  @override
+  _i10.Future<_i2.Either<_i11.Failure, void>> pushIdentityToCloud() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #pushIdentityToCloud,
+          [],
+        ),
+        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+            _FakeEither_0<_i11.Failure, void>(
+          this,
+          Invocation.method(
+            #pushIdentityToCloud,
+            [],
+          ),
+        )),
+      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
 }
 
 /// A class which mocks [ScheduleNextReviewUsecase].
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockScheduleNextReviewUsecase extends _i1.Mock
-    implements _i16.ScheduleNextReviewUsecase {
+    implements _i17.ScheduleNextReviewUsecase {
   MockScheduleNextReviewUsecase() {
     _i1.throwOnMissingStub(this);
   }
@@ -1383,23 +1493,23 @@ class MockScheduleNextReviewUsecase extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockV2SessionLocalDatasource extends _i1.Mock
-    implements _i17.V2SessionLocalDatasource {
+    implements _i18.V2SessionLocalDatasource {
   MockV2SessionLocalDatasource() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i10.Future<_i18.IsarV2Session?> getSession(int? surahId) =>
+  _i10.Future<_i19.IsarV2Session?> getSession(int? surahId) =>
       (super.noSuchMethod(
         Invocation.method(
           #getSession,
           [surahId],
         ),
-        returnValue: _i10.Future<_i18.IsarV2Session?>.value(),
-      ) as _i10.Future<_i18.IsarV2Session?>);
+        returnValue: _i10.Future<_i19.IsarV2Session?>.value(),
+      ) as _i10.Future<_i19.IsarV2Session?>);
 
   @override
-  _i10.Future<void> saveSession(_i18.IsarV2Session? session) =>
+  _i10.Future<void> saveSession(_i19.IsarV2Session? session) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveSession,
@@ -1423,7 +1533,7 @@ class MockV2SessionLocalDatasource extends _i1.Mock
 /// A class which mocks [XpService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockXpService extends _i1.Mock implements _i19.XpService {
+class MockXpService extends _i1.Mock implements _i20.XpService {
   MockXpService() {
     _i1.throwOnMissingStub(this);
   }
@@ -1471,7 +1581,7 @@ class MockXpService extends _i1.Mock implements _i19.XpService {
 /// A class which mocks [StreakService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockStreakService extends _i1.Mock implements _i20.StreakService {
+class MockStreakService extends _i1.Mock implements _i21.StreakService {
   MockStreakService() {
     _i1.throwOnMissingStub(this);
   }
@@ -1545,34 +1655,34 @@ class MockStreakService extends _i1.Mock implements _i20.StreakService {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockAchievementService extends _i1.Mock
-    implements _i21.AchievementService {
+    implements _i22.AchievementService {
   MockAchievementService() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  List<_i15.CertificateAward> getEarnedCertificates({required bool? isKids}) =>
+  List<_i16.CertificateAward> getEarnedCertificates({required bool? isKids}) =>
       (super.noSuchMethod(
         Invocation.method(
           #getEarnedCertificates,
           [],
           {#isKids: isKids},
         ),
-        returnValue: <_i15.CertificateAward>[],
-      ) as List<_i15.CertificateAward>);
+        returnValue: <_i16.CertificateAward>[],
+      ) as List<_i16.CertificateAward>);
 
   @override
-  List<_i15.CertificateAward> getAllEarnedCertificates() => (super.noSuchMethod(
+  List<_i16.CertificateAward> getAllEarnedCertificates() => (super.noSuchMethod(
         Invocation.method(
           #getAllEarnedCertificates,
           [],
         ),
-        returnValue: <_i15.CertificateAward>[],
-      ) as List<_i15.CertificateAward>);
+        returnValue: <_i16.CertificateAward>[],
+      ) as List<_i16.CertificateAward>);
 
   @override
   _i10.Future<int> mergeEarnedFromCloud(
-    List<_i15.CertificateAward>? remote, {
+    List<_i16.CertificateAward>? remote, {
     required bool? isKids,
   }) =>
       (super.noSuchMethod(
@@ -1605,7 +1715,7 @@ class MockAchievementService extends _i1.Mock
       );
 
   @override
-  _i10.Future<List<_i15.CertificateAward>> checkAndUnlockCertificates(
+  _i10.Future<List<_i16.CertificateAward>> checkAndUnlockCertificates(
           {required bool? isKids}) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -1613,9 +1723,9 @@ class MockAchievementService extends _i1.Mock
           [],
           {#isKids: isKids},
         ),
-        returnValue: _i10.Future<List<_i15.CertificateAward>>.value(
-            <_i15.CertificateAward>[]),
-      ) as _i10.Future<List<_i15.CertificateAward>>);
+        returnValue: _i10.Future<List<_i16.CertificateAward>>.value(
+            <_i16.CertificateAward>[]),
+      ) as _i10.Future<List<_i16.CertificateAward>>);
 }
 
 /// A class which mocks [AudioPlayer].
@@ -1906,7 +2016,7 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
   @override
   String get webSinkId => (super.noSuchMethod(
         Invocation.getter(#webSinkId),
-        returnValue: _i22.dummyValue<String>(
+        returnValue: _i23.dummyValue<String>(
           this,
           Invocation.getter(#webSinkId),
         ),
@@ -2379,7 +2489,7 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
 
   @override
   _i10.Future<void> setAndroidAudioAttributes(
-          _i23.AndroidAudioAttributes? audioAttributes) =>
+          _i24.AndroidAudioAttributes? audioAttributes) =>
       (super.noSuchMethod(
         Invocation.method(
           #setAndroidAudioAttributes,
@@ -2424,13 +2534,13 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
 /// A class which mocks [SpeechToText].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSpeechToText extends _i1.Mock implements _i24.SpeechToText {
+class MockSpeechToText extends _i1.Mock implements _i25.SpeechToText {
   MockSpeechToText() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  set errorListener(_i24.SpeechErrorListener? _errorListener) =>
+  set errorListener(_i25.SpeechErrorListener? _errorListener) =>
       super.noSuchMethod(
         Invocation.setter(
           #errorListener,
@@ -2440,7 +2550,7 @@ class MockSpeechToText extends _i1.Mock implements _i24.SpeechToText {
       );
 
   @override
-  set statusListener(_i24.SpeechStatusListener? _statusListener) =>
+  set statusListener(_i25.SpeechStatusListener? _statusListener) =>
       super.noSuchMethod(
         Invocation.setter(
           #statusListener,
@@ -2451,7 +2561,7 @@ class MockSpeechToText extends _i1.Mock implements _i24.SpeechToText {
 
   @override
   set unexpectedPhraseAggregator(
-          _i24.SpeechPhraseAggregator? _unexpectedPhraseAggregator) =>
+          _i25.SpeechPhraseAggregator? _unexpectedPhraseAggregator) =>
       super.noSuchMethod(
         Invocation.setter(
           #unexpectedPhraseAggregator,
@@ -2469,7 +2579,7 @@ class MockSpeechToText extends _i1.Mock implements _i24.SpeechToText {
   @override
   String get lastRecognizedWords => (super.noSuchMethod(
         Invocation.getter(#lastRecognizedWords),
-        returnValue: _i22.dummyValue<String>(
+        returnValue: _i23.dummyValue<String>(
           this,
           Invocation.getter(#lastRecognizedWords),
         ),
@@ -2478,7 +2588,7 @@ class MockSpeechToText extends _i1.Mock implements _i24.SpeechToText {
   @override
   String get lastStatus => (super.noSuchMethod(
         Invocation.getter(#lastStatus),
-        returnValue: _i22.dummyValue<String>(
+        returnValue: _i23.dummyValue<String>(
           this,
           Invocation.getter(#lastStatus),
         ),
@@ -2522,11 +2632,11 @@ class MockSpeechToText extends _i1.Mock implements _i24.SpeechToText {
 
   @override
   _i10.Future<bool> initialize({
-    _i24.SpeechErrorListener? onError,
-    _i24.SpeechStatusListener? onStatus,
+    _i25.SpeechErrorListener? onError,
+    _i25.SpeechStatusListener? onStatus,
     dynamic debugLogging = false,
     Duration? finalTimeout = const Duration(milliseconds: 2000),
-    List<_i25.SpeechConfigOption>? options,
+    List<_i26.SpeechConfigOption>? options,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -2565,17 +2675,17 @@ class MockSpeechToText extends _i1.Mock implements _i24.SpeechToText {
 
   @override
   _i10.Future<dynamic> listen({
-    _i24.SpeechResultListener? onResult,
+    _i25.SpeechResultListener? onResult,
     Duration? listenFor,
     Duration? pauseFor,
     String? localeId,
-    _i24.SpeechSoundLevelChange? onSoundLevelChange,
+    _i25.SpeechSoundLevelChange? onSoundLevelChange,
     dynamic cancelOnError = false,
     dynamic partialResults = true,
     dynamic onDevice = false,
-    _i25.ListenMode? listenMode = _i25.ListenMode.confirmation,
+    _i26.ListenMode? listenMode = _i26.ListenMode.confirmation,
     dynamic sampleRate = 0,
-    _i25.SpeechListenOptions? listenOptions,
+    _i26.SpeechListenOptions? listenOptions,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -2608,21 +2718,21 @@ class MockSpeechToText extends _i1.Mock implements _i24.SpeechToText {
       );
 
   @override
-  _i10.Future<List<_i24.LocaleName>> locales() => (super.noSuchMethod(
+  _i10.Future<List<_i25.LocaleName>> locales() => (super.noSuchMethod(
         Invocation.method(
           #locales,
           [],
         ),
         returnValue:
-            _i10.Future<List<_i24.LocaleName>>.value(<_i24.LocaleName>[]),
-      ) as _i10.Future<List<_i24.LocaleName>>);
+            _i10.Future<List<_i25.LocaleName>>.value(<_i25.LocaleName>[]),
+      ) as _i10.Future<List<_i25.LocaleName>>);
 
   @override
-  _i10.Future<_i24.LocaleName?> systemLocale() => (super.noSuchMethod(
+  _i10.Future<_i25.LocaleName?> systemLocale() => (super.noSuchMethod(
         Invocation.method(
           #systemLocale,
           [],
         ),
-        returnValue: _i10.Future<_i24.LocaleName?>.value(),
-      ) as _i10.Future<_i24.LocaleName?>);
+        returnValue: _i10.Future<_i25.LocaleName?>.value(),
+      ) as _i10.Future<_i25.LocaleName?>);
 }

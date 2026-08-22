@@ -1417,11 +1417,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guardianLinkingTemporarilyBlocked => 'Linking temporarily blocked';
 
   @override
-  String get guardianLinkingFailedTitle => 'تعذر ربط ولي الأمر';
+  String get guardianLinkingFailedTitle => 'Guardian linking failed';
 
   @override
   String get guardianLinkingTimeoutMessage =>
-      'استغرق ربط ولي الأمر وقتاً طويلاً. تحقق من الاتصال وحاول مجدداً، أو تابع بدون ولي أمر الآن.';
+      'Guardian linking is taking too long. Check your connection and try again, or continue without a guardian for now.';
 
   @override
   String get splashSubtitle =>

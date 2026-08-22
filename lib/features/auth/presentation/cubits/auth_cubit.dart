@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/app_user.dart';
+import '../../domain/entities/auth_session_recovery.dart';
 
 import '../../domain/repositories/auth_repository.dart';
 
@@ -30,41 +31,46 @@ import '../../../../core/utils/talia_logger.dart';
 
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
-
+import '../../application/cloud_sync_coordinator.dart';
 
 part 'auth_state.dart';
 
-
-
 class AuthCubit extends Cubit<AuthState> {
-
   AuthCubit(
-
     this._authRepository, [
 
     this._memPlusRepository,
 
     this._progressEvents,
 
-    this._achievementService,
+    AchievementService? achievementService,
 
-    this._cloudSyncQueue,
+    CloudSyncQueue? cloudSyncQueue,
 
     this._prefs,
 
     this._accountDataReset,
 
-  ]) : super(const AuthInitial()) {
-
+    CloudSyncCoordinator? cloudSyncCoordinator,
+  ]) : _cloudSyncCoordinator =
+           cloudSyncCoordinator ??
+           CloudSyncCoordinator(
+             authRepository: _authRepository,
+             memorizationCloudRepository: _memPlusRepository,
+             progressEvents: _progressEvents,
+             achievementService: achievementService,
+             cloudSyncQueue: cloudSyncQueue,
+           ),
+       super(const AuthInitial()) {
     // Listen to Supabase auth state changes.
 
     // Every time a session becomes active (new login OR session restored on
 
     // app restart), pull the user's cloud data so local Isar is up-to-date.
 
-    _authSub = _authRepository.authStateChanges.listen((user) {
-
-      if (isClosed) return;
+    _authSub = _authRepository.authStateChanges.listen(
+      (user) {
+        if (isClosed) return;
 
       // Skip auth state changes triggered during the password update flow;
 
@@ -74,39 +80,37 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (_isUpdatingPassword) return;
 
-      if (user != null) {
-
-        emit(AuthAuthenticated(user: user));
+        if (user != null) {
+          emit(AuthAuthenticated(user: user));
 
         // Cold start already synced from [currentUser]; skip duplicate auth event.
 
-        if (_skipNextAuthSync) {
+          if (_skipNextAuthSync) {
+            _skipNextAuthSync = false;
 
-          _skipNextAuthSync = false;
+            return;
+          }
 
-          return;
-
+          unawaited(_runCloudSync());
+        } else {
+          emit(const AuthUnauthenticated());
         }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        unawaited(_recoverFromAuthStreamError(error, stackTrace));
+      },
+    );
 
-        unawaited(_runCloudSync());
+    _passwordRecoverySub = _authRepository.passwordRecoveryChanges.listen(
+      (_) {
+        if (isClosed) return;
 
-      } else {
-
-        emit(const AuthUnauthenticated());
-
-      }
-
-    });
-
-    _passwordRecoverySub = _authRepository.passwordRecoveryChanges.listen((_) {
-
-      if (isClosed) return;
-
-      emit(const AuthPasswordRecoveryDetected());
-
-    });
-
-
+        emit(const AuthPasswordRecoveryDetected());
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        unawaited(_recoverFromAuthStreamError(error, stackTrace));
+      },
+    );
 
     // Set initial state immediately from cached Supabase session.
 
@@ -117,37 +121,25 @@ class AuthCubit extends Cubit<AuthState> {
     final currentUser = _authRepository.currentUser;
 
     if (currentUser != null) {
-
       emit(AuthAuthenticated(user: currentUser));
 
       _skipNextAuthSync = true;
 
       unawaited(_runCloudSync());
-
     } else {
-
       emit(const AuthUnauthenticated());
-
     }
-
   }
 
-
-
-  /// Pulls cloud progress, merges production SRS locally, then pushes local
-
-  /// state. Order matters: pull before push avoids stale-device clobber (B6/B9).
-
   Future<void> _runCloudSync() {
-
-    _syncInFlight ??= _performCloudSync().whenComplete(
-
-      () => _syncInFlight = null,
-
-    );
+    _syncInFlight ??= _handleAccountOwnerChange()
+        .then((_) => _cloudSyncCoordinator.run())
+        .catchError((Object error, StackTrace stackTrace) {
+          TaliaLogger.e('Unexpected cloud sync failure', error, stackTrace);
+        })
+        .whenComplete(() => _syncInFlight = null);
 
     return _syncInFlight!;
-
   }
 
   /// Returns a Future that completes when the in-flight cloud sync finishes.
@@ -156,10 +148,6 @@ class AuthCubit extends Cubit<AuthState> {
   /// available by the time routing logic reads it. On cold start this is not
   /// awaited (local data is still on-device).
   Future<void> ensureCloudSyncComplete() => _syncInFlight ?? Future.value();
-
-
-
-
 
   static const lastSignedInUserIdKey = 'auth_last_signed_in_user_id';
 
@@ -173,18 +161,22 @@ class AuthCubit extends Cubit<AuthState> {
     required SharedPreferences prefs,
     required String userId,
     required Future<void> Function() onDepartingAccount,
+    Future<void> Function(String departingOwnerId)? onDepartingOwner,
   }) async {
     final previous = prefs.getString(lastSignedInUserIdKey);
     final changed = previous != null && previous != userId;
     if (changed) {
-      await onDepartingAccount();
+      if (onDepartingOwner != null) {
+        await onDepartingOwner(previous);
+      } else {
+        await onDepartingAccount();
+      }
     }
     await prefs.setString(lastSignedInUserIdKey, userId);
     return changed;
   }
 
-  Future<void> _performCloudSync() async {
-
+  Future<void> _handleAccountOwnerChange() async {
     final prefs = _prefs;
 
     final reset = _accountDataReset;
@@ -192,519 +184,41 @@ class AuthCubit extends Cubit<AuthState> {
     final userId = _authRepository.currentUser?.id;
 
     if (prefs != null && reset != null && userId != null) {
-
       final switched = await resolveOwnerChange(
-
         prefs: prefs,
 
         userId: userId,
 
         onDepartingAccount: reset.clearAccountOwnedData,
-
+        onDepartingOwner: (departingOwnerId) =>
+            reset.clearAccountOwnedData(departingOwnerId: departingOwnerId),
       );
 
       if (switched) {
-
-        TaliaLogger.i('Account switch detected; cleared departing account data');
+        TaliaLogger.i(
+          'Account switch detected; cleared departing account data',
+        );
 
         _progressEvents?.notify(ProgressChangedReason.certificate);
         emit(AuthAccountDataDiscarded(user: _authRepository.currentUser!));
-
       }
-
     }
-
-
-
-    await _processSyncQueue();
-
-
-
-    final pullResult = await _authRepository.pullProgressFromCloud();
-
-    pullResult.fold(
-
-      (failure) {
-
-        TaliaLogger.w(
-
-          'Cloud pull failed after login',
-
-          failure.message,
-
-        );
-
-        unawaited(
-
-          _cloudSyncQueue?.enqueue(CloudSyncQueueKind.authPull),
-
-        );
-
-      },
-
-      (_) {
-
-        TaliaLogger.i('Streak/heatmap pull completed');
-
-        unawaited(
-
-          _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.authPull),
-
-        );
-
-      },
-
-    );
-
-
-
-    final memPlusRepository = _memPlusRepository;
-
-    if (memPlusRepository != null) {
-
-      // Pull identity FIRST so routing sees the restored path before SRS data.
-      final identityPull = await memPlusRepository.pullIdentityFromCloud();
-      identityPull.fold(
-        (f) => TaliaLogger.w('Identity pull failed', f.message),
-        (_) => TaliaLogger.i('Identity pull completed'),
-      );
-
-      final productionPull =
-
-          await memPlusRepository.pullProductionDataFromCloud();
-
-      productionPull.fold(
-
-        (failure) {
-
-          TaliaLogger.w(
-
-            'Production SRS pull failed',
-
-            failure.message,
-
-          );
-
-          unawaited(
-
-            _cloudSyncQueue?.enqueue(CloudSyncQueueKind.productionPull),
-
-          );
-
-        },
-
-        (_) {
-
-          TaliaLogger.i('Production SRS pull completed');
-
-          unawaited(
-
-            _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.productionPull),
-
-          );
-
-        },
-
-      );
-
-      // Restore certificates (cloud has no audience yet → adult list), then
-      // recompute kids awards from local kids review records.
-      final achievementService = _achievementService;
-      if (achievementService != null) {
-        final certPull = await memPlusRepository.pullCertificatesFromCloud();
-        await certPull.fold(
-          (failure) async {
-            TaliaLogger.w('Certificate pull failed', failure.message);
-            unawaited(
-              _cloudSyncQueue?.enqueue(CloudSyncQueueKind.certificatePull),
-            );
-          },
-          (awards) async {
-            if (awards.isNotEmpty) {
-              await achievementService.mergeEarnedFromCloud(
-                awards,
-                isKids: false,
-              );
-            }
-            await achievementService.checkAndUnlockCertificates(isKids: true);
-          },
-        );
-      }
-
-      final kidsPull = await memPlusRepository.pullKidsProgressFromCloud();
-      kidsPull.fold(
-        (failure) {
-          TaliaLogger.w('Kids progress pull failed', failure.message);
-          unawaited(
-            _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPull),
-          );
-        },
-        (_) {
-          TaliaLogger.i('Kids progress pull completed');
-          unawaited(
-            _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.kidsProgressPull),
-          );
-        },
-      );
-
-    }
-
-
-
-    final pushResult = await _authRepository.syncProgressToCloud();
-
-    pushResult.fold(
-
-      (failure) {
-
-        TaliaLogger.w('Streak/heatmap cloud sync failed', failure.message);
-
-        unawaited(
-
-          _cloudSyncQueue?.enqueue(CloudSyncQueueKind.authPush),
-
-        );
-
-      },
-
-      (_) {
-
-        TaliaLogger.i('Streak/heatmap cloud sync completed');
-
-        unawaited(
-
-          _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.authPush),
-
-        );
-
-      },
-
-    );
-
-
-
-    if (memPlusRepository != null) {
-
-      final resyncResult =
-
-          await memPlusRepository.resyncProductionDataToCloud();
-
-      resyncResult.fold(
-
-        (failure) {
-
-          TaliaLogger.w(
-
-            'Production data cloud resync failed',
-
-            failure.message,
-
-          );
-
-          unawaited(
-
-            _cloudSyncQueue?.enqueue(CloudSyncQueueKind.productionPush),
-
-          );
-
-        },
-
-        (_) {
-
-          TaliaLogger.i('Production data cloud resync completed');
-
-          unawaited(
-
-            _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.productionPush),
-
-          );
-
-        },
-
-      );
-
-
-
-      final kidsPush = await memPlusRepository.syncKidsProgressToCloud();
-      kidsPush.fold(
-        (failure) {
-          TaliaLogger.w('Kids progress push failed', failure.message);
-          unawaited(
-            _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush),
-          );
-        },
-        (_) {
-          TaliaLogger.i('Kids progress push completed');
-          unawaited(
-            _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.kidsProgressPush),
-          );
-        },
-      );
-
-      // Push memorization identity when dirty flag is set.
-      final identityPush = await memPlusRepository.pushIdentityToCloud();
-      identityPush.fold(
-        (f) => TaliaLogger.w('Identity push failed', f.message),
-        (_) => TaliaLogger.i('Identity push completed'),
-      );
-
-      final achievementService = _achievementService;
-
-      if (achievementService != null) {
-
-        final certificates = achievementService.getAllEarnedCertificates();
-
-        if (certificates.isNotEmpty) {
-
-          final certResult = await memPlusRepository.pushCertificatesToCloud(
-
-            certificates,
-
-          );
-
-          certResult.fold(
-
-            (failure) {
-
-              TaliaLogger.w(
-
-                'Certificate cloud push failed',
-
-                failure.message,
-
-              );
-
-              unawaited(
-
-                _cloudSyncQueue?.enqueue(CloudSyncQueueKind.certificatePush),
-
-              );
-
-            },
-
-            (_) {
-
-              TaliaLogger.i('Certificate cloud push completed');
-
-              unawaited(
-
-                _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.certificatePush),
-
-              );
-
-            },
-
-          );
-
-        }
-
-      }
-
-    }
-
-
-
-    _progressEvents?.notify(ProgressChangedReason.cloudPull);
-
-  }
-
-
-
-  Future<void> _processSyncQueue() async {
-
-    final queue = _cloudSyncQueue;
-
-    if (queue == null) return;
-
-
-
-    final dueItems = await queue.dueItems();
-
-    for (final item in dueItems) {
-
-      final success = await _retryQueueKind(item.kind);
-
-      if (success) {
-
-        await queue.markSuccess(item.kind);
-
-      } else {
-
-        await queue.markFailure(item.kind);
-
-      }
-
-    }
-
   }
 
   Future<bool> _flushBeforeExplicitSignOut() async {
-    try {
-      final memPlusRepository = _memPlusRepository;
-      if (memPlusRepository != null &&
-          await memPlusRepository.hasPendingCloudWork()) {
-        await memPlusRepository.resyncProductionDataToCloud();
-        await memPlusRepository.syncKidsProgressToCloud();
-      }
-      if (await _authRepository.hasPendingCloudPush()) {
-        await _authRepository.syncProgressToCloud();
-      }
-      await _processSyncQueue();
-      final memStillPending =
-          memPlusRepository != null &&
-          await memPlusRepository.hasPendingCloudWork();
-      final authStillPending = await _authRepository.hasPendingCloudPush();
-      return !memStillPending && !authStillPending;
-    } catch (error, stackTrace) {
-      TaliaLogger.w(
-        'Best-effort cloud flush before sign-out failed; local data will be cleared',
-        error,
-        stackTrace,
-      );
-      return false;
-    }
-  }
-
-
-
-  Future<bool> _retryQueueKind(String kind) async {
-
-    final memPlusRepository = _memPlusRepository;
-
-    switch (kind) {
-
-      case CloudSyncQueueKind.authPull:
-
-        return (await _authRepository.pullProgressFromCloud()).isRight();
-
-      case CloudSyncQueueKind.authPush:
-
-        return (await _authRepository.syncProgressToCloud()).isRight();
-
-      case CloudSyncQueueKind.productionPull:
-
-        if (memPlusRepository == null) return true;
-
-        return (await memPlusRepository.pullProductionDataFromCloud()).isRight();
-
-      case CloudSyncQueueKind.productionPush:
-
-        if (memPlusRepository == null) return true;
-
-        return (await memPlusRepository.resyncProductionDataToCloud()).isRight();
-
-      case CloudSyncQueueKind.certificatePush:
-
-        final achievementService = _achievementService;
-
-        if (memPlusRepository == null || achievementService == null) {
-
-          return true;
-
-        }
-
-        final certificates = achievementService.getAllEarnedCertificates();
-
-        if (certificates.isEmpty) return true;
-
-        return (await memPlusRepository.pushCertificatesToCloud(certificates))
-
-            .isRight();
-
-      case CloudSyncQueueKind.certificatePull:
-
-        return _retryCertificatePull();
-
-      case CloudSyncQueueKind.kidsProgress:
-        // Legacy kind: drain by doing pull-then-push, then mark it done.
-        if (memPlusRepository == null) return true;
-        final legacyPullOk =
-            (await memPlusRepository.pullKidsProgressFromCloud()).isRight();
-        if (!legacyPullOk) return false;
-        final legacyPushOk =
-            (await memPlusRepository.syncKidsProgressToCloud()).isRight();
-        return legacyPushOk;
-
-      case CloudSyncQueueKind.kidsProgressPull:
-
-        if (memPlusRepository == null) return true;
-
-        return (await memPlusRepository.pullKidsProgressFromCloud()).isRight();
-
-      case CloudSyncQueueKind.kidsProgressPush:
-
-        if (memPlusRepository == null) return true;
-
-        return (await memPlusRepository.syncKidsProgressToCloud()).isRight();
-
-      default:
-
-        return true;
-
-    }
-
-  }
-
-  Future<bool> _retryCertificatePull() async {
-    final memPlusRepository = _memPlusRepository;
-    final achievementService = _achievementService;
-    if (memPlusRepository == null || achievementService == null) {
-      return true;
-    }
-    final certPull = await memPlusRepository.pullCertificatesFromCloud();
-    return await certPull.fold<Future<bool>>(
-      (failure) async {
-        TaliaLogger.w('Certificate pull retry failed', failure.message);
-        return false;
-      },
-      (awards) async {
-        if (awards.isNotEmpty) {
-          await achievementService.mergeEarnedFromCloud(
-            awards,
-            isKids: false,
-          );
-        }
-        await achievementService.checkAndUnlockCertificates(isKids: true);
-        return true;
-      },
-    );
+    return _cloudSyncCoordinator.flushBeforeSignOut();
   }
 
   @visibleForTesting
-  Future<bool> retryQueueKindForTesting(String kind) => _retryQueueKind(kind);
+  Future<bool> retryQueueKindForTesting(String kind) =>
+      _cloudSyncCoordinator.retryQueueKindForTesting(kind);
 
   /// Public entry point for app-lifecycle-triggered resync (e.g. on app
   /// resume). Runs only when the outbox has pending work or a pull cursor
   /// is stale; debounced to avoid resume storms.
   void resyncOnResume({bool force = false}) {
     if (state is! AuthAuthenticated) return;
-
-    final now = DateTime.now();
-    if (!force &&
-        _lastResumeSyncAt != null &&
-        now.difference(_lastResumeSyncAt!) < _resumeDebounce) {
-      return;
-    }
-
-    unawaited(_runCloudSyncIfNeeded(force: force));
-  }
-
-  Future<void> _runCloudSyncIfNeeded({bool force = false}) async {
-    if (!force && !await _hasPendingSyncWork()) {
-      TaliaLogger.i('Skipping resume sync — no pending outbox/cursor work');
-      return;
-    }
-    _lastResumeSyncAt = DateTime.now();
-    await _runCloudSync();
-  }
-
-  Future<bool> _hasPendingSyncWork() async {
-    final queue = _cloudSyncQueue;
-    if (queue != null && await queue.hasPending()) return true;
-    if (await _authRepository.hasPendingCloudPush()) return true;
-    final memPlus = _memPlusRepository;
-    if (memPlus != null && await memPlus.hasPendingCloudWork()) return true;
-    return false;
+    unawaited(_cloudSyncCoordinator.resumeIfNeeded(force: force));
   }
 
   final AuthRepository _authRepository;
@@ -713,13 +227,11 @@ class AuthCubit extends Cubit<AuthState> {
 
   final ProgressEventsBus? _progressEvents;
 
-  final AchievementService? _achievementService;
-
-  final CloudSyncQueue? _cloudSyncQueue;
-
   final SharedPreferences? _prefs;
 
   final AccountDataReset? _accountDataReset;
+
+  final CloudSyncCoordinator _cloudSyncCoordinator;
 
   StreamSubscription<AppUser?>? _authSub;
 
@@ -743,69 +255,84 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void>? _syncInFlight;
 
-  DateTime? _lastResumeSyncAt;
+  Future<void>? _authRecoveryInFlight;
 
-  static const _resumeDebounce = Duration(minutes: 5);
+  Future<void> _recoverFromAuthStreamError(
+    Object error,
+    StackTrace stackTrace,
+  ) {
+    _authRecoveryInFlight ??= _performAuthRecovery(error, stackTrace)
+        .whenComplete(() => _authRecoveryInFlight = null);
+    return _authRecoveryInFlight!;
+  }
 
+  Future<void> _performAuthRecovery(
+    Object error,
+    StackTrace stackTrace,
+  ) async {
+    TaliaLogger.w('Auth lifecycle stream error', error, stackTrace);
+    final result = await _authRepository.recoverSessionAfterAuthError(error);
+    if (isClosed) return;
 
+    switch (result) {
+      case AuthSessionRecovery.recovered:
+        final user = _authRepository.currentUser;
+        if (user != null) {
+          emit(AuthAuthenticated(user: user));
+          unawaited(_runCloudSync());
+        } else {
+          emit(const AuthUnauthenticated());
+        }
+        return;
+      case AuthSessionRecovery.terminalFailure:
+        emit(const AuthUnauthenticated());
+        return;
+      case AuthSessionRecovery.transientFailure:
+        // Keep the current authenticated UI and pending local data. A lifecycle
+        // event or the next data request will make one bounded recovery attempt.
+        return;
+    }
+  }
 
   Future<void> signUp({
-
     required String email,
 
     required String password,
 
     required String displayName,
-
   }) async {
-
     emit(const AuthLoading());
 
     final result = await _authRepository.signUp(
-
       email: email,
 
       password: password,
 
       displayName: displayName,
-
     );
 
     if (isClosed) return;
 
     result.fold((failure) => emit(AuthError(failure.toString())), (_) {
-
       // Auth state stream emits AuthAuthenticated when Supabase session updates.
-
     });
-
   }
 
-
-
   Future<void> signIn({required String email, required String password}) async {
-
     emit(const AuthLoading());
 
     final result = await _authRepository.signIn(
-
       email: email,
 
       password: password,
-
     );
 
     if (isClosed) return;
 
     result.fold((failure) => emit(AuthError(failure.toString())), (_) {
-
       // Auth state stream emits AuthAuthenticated when Supabase session updates.
-
     });
-
   }
-
-
 
   Future<void> signOut({bool force = false}) async {
     emit(const AuthLoading());
@@ -841,10 +368,7 @@ class AuthCubit extends Cubit<AuthState> {
     return repository.claimLocalReviewRecords();
   }
 
-
-
   Future<void> deleteAccount() async {
-
     emit(const AuthLoading());
 
     final result = await _authRepository.deleteAccount();
@@ -852,41 +376,29 @@ class AuthCubit extends Cubit<AuthState> {
     if (isClosed) return;
 
     result.fold(
-
       (failure) => emit(AuthError(failure.toString())),
 
       (_) => emit(const AuthAccountDeleted()),
-
     );
-
   }
-
-
 
   /// Resend confirmation email for unconfirmed accounts
 
   Future<void> resendConfirmation(String email) async {
-
     final result = await _authRepository.resendConfirmation(email);
 
     if (isClosed) return;
 
     result.fold(
-
       (failure) => emit(AuthError(failure.toString())),
 
       (_) => emit(const AuthResendConfirmationSuccess()),
-
     );
-
   }
-
-
 
   /// Send a password reset email
 
   Future<void> resetPassword(String email) async {
-
     emit(const AuthLoading());
 
     final result = await _authRepository.resetPassword(email);
@@ -894,60 +406,40 @@ class AuthCubit extends Cubit<AuthState> {
     if (isClosed) return;
 
     result.fold(
-
       (failure) => emit(AuthError(failure.toString())),
 
       (_) => emit(const AuthPasswordResetSent()),
-
     );
-
   }
-
-
 
   /// Update password after Supabase opens the recovery link in the app.
 
   Future<void> updatePassword(String newPassword) async {
-
     emit(const AuthLoading());
 
     _isUpdatingPassword = true;
 
     try {
-
       final result = await _authRepository.updatePassword(newPassword);
 
       if (isClosed) return;
 
       result.fold(
-
         (failure) => emit(AuthError(failure.toString())),
 
         (_) => emit(const AuthPasswordUpdated()),
-
       );
-
     } finally {
-
       _isUpdatingPassword = false;
-
     }
-
   }
 
-
-
   @override
-
   Future<void> close() {
-
     _authSub?.cancel();
 
     _passwordRecoverySub?.cancel();
 
     return super.close();
-
   }
-
 }
-

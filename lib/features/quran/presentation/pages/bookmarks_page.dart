@@ -10,6 +10,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../data/datasources/bookmark_service.dart';
+import '../../domain/entities/bookmark_entry.dart';
 import '../../domain/bookmark_reader_location.dart';
 
 /// Dedicated bookmarks browser showing all saved ayahs grouped by Surah.

@@ -197,7 +197,7 @@ void main() {
 
 
 
-  test('requeueDeadLetter resets attempts', () async {
+  test('recoverDeadLetter resets attempts', () async {
 
     await queue.enqueue(CloudSyncQueueKind.kidsProgressPull);
 
@@ -207,11 +207,15 @@ void main() {
 
     }
 
-    await queue.requeueDeadLetter(CloudSyncQueueKind.kidsProgressPull);
+    final result = await queue.recoverDeadLetter(
+      CloudSyncQueueKind.kidsProgressPull,
+    );
 
 
 
     expect(await queue.dueItems(), hasLength(1));
+
+    expect(result.rearmed, isTrue);
 
     expect(
 
@@ -221,6 +225,61 @@ void main() {
 
     );
 
+  });
+
+  test('enqueue schedules owner-scoped background delivery', () async {
+    String? scheduledOwner;
+    queue = CloudSyncQueue(
+      isar,
+      const FixedRecordOwnerProvider('user-test'),
+      scheduleBackgroundDelivery: (ownerId) async {
+        scheduledOwner = ownerId;
+      },
+    );
+
+    await queue.enqueue(CloudSyncQueueKind.bookmarkPush);
+
+    expect(scheduledOwner, 'user-test');
+  });
+
+  test('signed-out local records do not schedule background delivery', () async {
+    var scheduled = false;
+    queue = CloudSyncQueue(
+      isar,
+      const FixedRecordOwnerProvider('local'),
+      scheduleBackgroundDelivery: (_) async => scheduled = true,
+    );
+
+    await queue.enqueue(CloudSyncQueueKind.authPush);
+
+    expect(scheduled, isFalse);
+    expect(await queue.dueItems(), isEmpty);
+  });
+
+  test('explicit dead-letter recovery re-arms only the selected kind', () async {
+    await queue.enqueue(CloudSyncQueueKind.authPull);
+    await queue.enqueue(CloudSyncQueueKind.productionPull);
+    for (var i = 0; i < CloudSyncQueue.maxAttempts; i++) {
+      await queue.markFailure(CloudSyncQueueKind.authPull);
+      await queue.markFailure(CloudSyncQueueKind.productionPull);
+    }
+
+    final result = await queue.recoverDeadLetter(CloudSyncQueueKind.authPull);
+
+    final items = await isar.cloudSyncQueueItems.where().findAll();
+    expect(items, hasLength(2));
+    expect(result.rearmed, isTrue);
+    expect(
+      items.singleWhere((item) => item.kind == CloudSyncQueueKind.authPull)
+          .attemptCount,
+      0,
+    );
+    expect(
+      items
+          .singleWhere((item) => item.kind == CloudSyncQueueKind.productionPull)
+          .attemptCount,
+      CloudSyncQueue.maxAttempts,
+    );
   });
 
 

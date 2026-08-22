@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+
 import '../share_card_content.dart';
-import '../social_share_model.dart';
 import '../social_share_copy.dart';
+import '../social_share_model.dart';
 import '../social_share_theme.dart';
+import '../share_card_widgets.dart';
 import '../talia_share_tokens.dart';
 
 /// Specialized Template for Unlocked Achievements.
 ///
-/// Adults get a refined, typography-forward variant; kids get a playful
-/// variant with the Talia companion cheering next to the medal.
+/// Celebratory and badge-led: a gold medal with soft rays crowns the real
+/// achievement title. Adults get a refined variant; kids get extra sparkle
+/// and the Talia companion cheering inside the shared hero arch.
 class AchievementTemplate extends StatelessWidget {
   final SocialShareData data;
   final SocialShareTheme theme;
@@ -28,37 +31,47 @@ class AchievementTemplate extends StatelessWidget {
     final isStory = format == SocialShareFormat.story;
     final isKids = data.audience == SocialShareAudience.kids;
 
+    final medalSize = isCompact ? 52.0 : (isStory ? 66.0 : 62.0);
+
     return ShareCardContent(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ─── 1. Glowing 3D Golden Medal Emblem ────────────────────────────
+          // ─── 1. Gold medal with celebration rays ────────────────────────
           Stack(
             alignment: Alignment.center,
             children: [
-              // Radial Glow Aura
+              SizedBox(
+                width: medalSize * 1.9,
+                height: medalSize * 1.9,
+                child: CustomPaint(
+                  painter: RadialRaysPainter(
+                    color: theme.accentColor,
+                    opacity: isKids ? 0.26 : 0.15,
+                    rayCount: isKids ? 16 : 12,
+                  ),
+                ),
+              ),
               Container(
-                width: isCompact ? 58 : 72,
-                height: isCompact ? 58 : 72,
+                width: medalSize * 1.2,
+                height: medalSize * 1.2,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: theme.accentColor.withValues(alpha: 0.2),
+                  color: theme.accentColor.withValues(alpha: 0.18),
                   boxShadow: [
                     BoxShadow(
                       color: theme.accentColor.withValues(alpha: 0.35),
-                      blurRadius: 20,
-                      spreadRadius: 4,
+                      blurRadius: 22,
+                      spreadRadius: 5,
                     ),
                   ],
                 ),
               ),
-
-              // Golden Medal
               Container(
-                width: isCompact ? 50 : 62,
-                height: isCompact ? 50 : 62,
+                width: medalSize,
+                height: medalSize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
@@ -83,24 +96,40 @@ class AchievementTemplate extends StatelessWidget {
                   ],
                 ),
                 child: Center(
-                  child: data.achievementIcon != null && data.achievementIcon!.isNotEmpty
+                  child:
+                      data.achievementIcon != null &&
+                          data.achievementIcon!.isNotEmpty
                       ? Text(
                           data.achievementIcon!,
-                          style: TextStyle(fontSize: isCompact ? 22 : 28),
+                          style: TextStyle(
+                            fontSize: medalSize * 0.45,
+                            fontFamilyFallback:
+                                TaliaShareTypography.emojiFallback,
+                          ),
                         )
                       : Icon(
                           Icons.emoji_events_rounded,
                           color: TaliaShareColors.medalInk,
-                          size: isCompact ? 28 : 34,
+                          size: medalSize * 0.55,
                         ),
                 ),
               ),
+              // Kids medal gets a star crown.
+              if (isKids)
+                Positioned(
+                  top: 0,
+                  child: Icon(
+                    Icons.star_rounded,
+                    color: TaliaShareColors.kidsStarGold,
+                    size: medalSize * 0.34,
+                  ),
+                ),
             ],
           ),
 
           SizedBox(height: isCompact ? 8 : 12),
 
-          // ─── 2. Achievement Title ─────────────────────────────────────────
+          // ─── 2. Achievement Title ─────────────────────────────────────
           if (data.title != null && data.title!.isNotEmpty)
             Text(
               data.title!,
@@ -114,7 +143,7 @@ class AchievementTemplate extends StatelessWidget {
 
           SizedBox(height: isCompact ? 4 : 8),
 
-          // ─── 3. Description Content ───────────────────────────────────────
+          // ─── 3. Description Content ───────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Text(
@@ -131,7 +160,7 @@ class AchievementTemplate extends StatelessWidget {
 
           SizedBox(height: isCompact ? 8 : 12),
 
-          // ─── 4. Progress / Status Chip ────────────────────────────────────
+          // ─── 4. Progress / Status Chip ────────────────────────────────
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             decoration: BoxDecoration(
@@ -168,7 +197,7 @@ class AchievementTemplate extends StatelessWidget {
             ),
           ),
 
-          // ─── 5. Kids encouragement + Talia companion ──────────────────────
+          // ─── 5. Kids encouragement + Talia companion ──────────────────
           if (isKids) ...[
             SizedBox(height: isCompact ? 6 : 10),
             Text(
@@ -184,16 +213,9 @@ class AchievementTemplate extends StatelessWidget {
           // as part of the illustration rather than a second, detached image.
           if (data.showCharacter && !isKids) ...[
             SizedBox(height: isCompact ? 6 : (isStory ? 16 : 10)),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                key: const ValueKey('share-character-image'),
-                data.effectiveCharacterAssetPath,
-                height: isCompact ? 52 : (isStory ? (isKids ? 96 : 84) : (isKids ? 74 : 64)),
-                fit: BoxFit.contain,
-                cacheWidth: 288,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
-              ),
+            TaliaCharacterInline(
+              assetPath: data.effectiveCharacterAssetPath,
+              height: isCompact ? 52 : (isStory ? 84 : 64),
             ),
           ],
         ],

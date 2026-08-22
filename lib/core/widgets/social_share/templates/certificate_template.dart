@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
+
 import '../share_card_content.dart';
-import '../social_share_model.dart';
 import '../social_share_copy.dart';
+import '../social_share_model.dart';
 import '../social_share_theme.dart';
+import '../share_card_widgets.dart';
 import '../talia_share_tokens.dart';
 
 /// Specialized share-card Template for Official Memorization Certificates.
-/// (The certificate system itself is out of scope — this only renders share
-/// data; every label around the Arabic award title is localized copy.)
+///
+/// More ceremonial than everyday cards: a double gold frame with corner
+/// star ornaments and a rayed verified seal. (The certificate system itself
+/// is out of scope — this only renders share data; every label around the
+/// Arabic award title is localized copy.)
 class CertificateTemplate extends StatelessWidget {
   final SocialShareData data;
   final SocialShareTheme theme;
@@ -25,127 +30,172 @@ class CertificateTemplate extends StatelessWidget {
     final copy = SocialShareCopy.of(context);
     final isCompact = format == SocialShareFormat.square;
 
+    final gold = theme.accentColor;
+    final sealSize = isCompact ? 48.0 : 58.0;
+
     return ShareCardContent(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
+      child: Stack(
         children: [
-          // ─── 1. Golden Certified Seal Badge ───────────────────────────────
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: isCompact ? 54 : 66,
-                height: isCompact ? 54 : 66,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: theme.accentColor.withValues(alpha: 0.2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.accentColor.withValues(alpha: 0.35),
-                      blurRadius: 16,
-                    ),
-                  ],
+          // Double ceremonial gold frame.
+          Container(
+            padding: const EdgeInsets.all(5),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: gold.withValues(alpha: 0.85),
+                width: 1.3,
+              ),
+            ),
+            child: Container(
+              padding: EdgeInsets.all(isCompact ? 8 : 12),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: gold.withValues(alpha: 0.38),
+                  width: 0.8,
                 ),
               ),
-              Container(
-                width: isCompact ? 46 : 56,
-                height: isCompact ? 46 : 56,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      theme.accentColor,
-                      TaliaShareColors.medalGold,
-                      TaliaShareColors.deepGold,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // ─── 1. Rayed verified seal ────────────────────────────
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: sealSize * 1.8,
+                        height: sealSize * 1.8,
+                        child: CustomPaint(
+                          painter: RadialRaysPainter(
+                            color: gold,
+                            opacity: 0.18,
+                            rayCount: 14,
+                          ),
+                        ),
+                      ),
+                      Container(
+                        width: sealSize * 1.16,
+                        height: sealSize * 1.16,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: gold.withValues(alpha: 0.18),
+                          boxShadow: [
+                            BoxShadow(
+                              color: gold.withValues(alpha: 0.35),
+                              blurRadius: 16,
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: sealSize,
+                        height: sealSize,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              gold,
+                              TaliaShareColors.medalGold,
+                              TaliaShareColors.deepGold,
+                            ],
+                          ),
+                          border: Border.all(
+                            color: TaliaShareColors.champagneGold,
+                            width: 2,
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.verified_rounded,
+                          color: TaliaShareColors.medalInk,
+                          size: 30,
+                        ),
+                      ),
                     ],
                   ),
-                  border: Border.all(
-                    color: TaliaShareColors.champagneGold,
-                    width: 2,
-                  ),
-                ),
-                child: const Icon(
-                  Icons.verified_rounded,
-                  color: TaliaShareColors.medalInk,
-                  size: 30,
-                ),
-              ),
-            ],
-          ),
 
-          SizedBox(height: isCompact ? 6 : 10),
+                  SizedBox(height: isCompact ? 6 : 10),
 
-          // ─── 2. Certificate Title ─────────────────────────────────────────
-          Text(
-            data.title ?? copy.certificateTitle,
-            textAlign: TextAlign.center,
-            style: TaliaShareTypography.title(
-              color: theme.accentColor,
-              fontSize: isCompact ? 18 : 22,
-            ),
-          ),
-
-          SizedBox(height: isCompact ? 4 : 8),
-
-          // ─── 3. Award sentence (real award title embedded) ───────────────
-          if (data.content.trim().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Text(
-                copy.certificateSentence(data.content),
-                textAlign: TextAlign.center,
-                style: TaliaShareTypography.body(
-                  color: theme.textPrimary,
-                  fontSize: isCompact ? 13 : 14.5,
-                  fontWeight: FontWeight.w600,
-                  height: 1.5,
-                ),
-              ),
-            ),
-
-          SizedBox(height: isCompact ? 8 : 12),
-
-          // ─── 4. Verification Code Pill ────────────────────────────────────
-          if (data.subtitle != null || data.verificationCode != null) ...[
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              decoration: BoxDecoration(
-                color: theme.badgeBackground,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: theme.accentColor.withValues(alpha: 0.5),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.security_rounded,
-                    size: 13,
-                    color: theme.accentColor,
-                  ),
-                  const SizedBox(width: 5),
-                  Flexible(
-                    child: Text(
-                      data.subtitle ??
-                          copy.verificationCode(data.verificationCode ?? ''),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: TaliaShareTypography.badge(
-                        color: theme.badgeTextColor,
-                        fontSize: isCompact ? 10.5 : 12,
-                      ),
+                  // ─── 2. Certificate Title ─────────────────────────────
+                  Text(
+                    data.title ?? copy.certificateTitle,
+                    textAlign: TextAlign.center,
+                    style: TaliaShareTypography.title(
+                      color: gold,
+                      fontSize: isCompact ? 18 : 22,
                     ),
                   ),
+
+                  SizedBox(height: isCompact ? 4 : 8),
+
+                  // ─── 3. Award sentence (real award title embedded) ────
+                  if (data.content.trim().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      child: Text(
+                        copy.certificateSentence(data.content),
+                        textAlign: TextAlign.center,
+                        style: TaliaShareTypography.body(
+                          color: theme.textPrimary,
+                          fontSize: isCompact ? 13 : 14.5,
+                          fontWeight: FontWeight.w600,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+
+                  SizedBox(height: isCompact ? 8 : 12),
+
+                  // ─── 4. Verification code seal chip ───────────────────
+                  if (data.subtitle != null || data.verificationCode != null)
+                    ShareLabelChip(
+                      icon: Icons.security_rounded,
+                      accent: theme.accentColor,
+                      background: theme.badgeBackground,
+                      border: theme.borderColor,
+                      isCompact: isCompact,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            data.subtitle ??
+                                copy.verificationCode(
+                                  data.verificationCode ?? '',
+                                ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: TaliaShareTypography.badge(
+                              color: theme.badgeTextColor,
+                              fontSize: isCompact ? 10.5 : 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
-          ],
+          ),
+
+          // Corner star ornaments on the ceremonial frame.
+          Positioned(
+            top: 0,
+            left: 0,
+            child: ShareStarOrnament(
+              color: gold.withValues(alpha: 0.85),
+              size: isCompact ? 11 : 13,
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: ShareStarOrnament(
+              color: gold.withValues(alpha: 0.85),
+              size: isCompact ? 11 : 13,
+            ),
+          ),
         ],
       ),
     );

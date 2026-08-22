@@ -40,8 +40,9 @@ AyahReviewRecordModel _record({
   required ReviewRecordCreatedByMode mode,
   int strengthLevel = 3,
   int totalReviews = 2,
+  DateTime? reviewedAt,
 }) {
-  final now = DateTime.utc(2026, 8, 8);
+  final now = reviewedAt ?? DateTime.utc(2026, 8, 8);
   return AyahReviewRecordModel(
     surahId: surahId,
     ayahNumber: ayahNumber,
@@ -240,6 +241,39 @@ void main() {
       );
       await datasource.markReviewRecordsCloudSynced([identity.storageKey]);
       expect(await datasource.getCloudDirtyReviewRecords(), isEmpty);
+    });
+
+    test('stale acknowledgement does not clear a newer local review', () async {
+      final datasource = datasourceFor('user-a');
+      const identity = ReviewRecordIdentity(
+        ownerUserId: 'user-a',
+        audience: ReviewRecordReadScope.adult,
+        surahId: 9,
+        ayahNumber: 9,
+      );
+      final sentAt = DateTime.utc(2026, 8, 8, 10);
+      await datasource.saveReviewRecord(
+        _record(
+          surahId: 9,
+          ayahNumber: 9,
+          mode: ReviewRecordCreatedByMode.v2Session,
+          reviewedAt: sentAt,
+        ),
+      );
+      await datasource.saveReviewRecord(
+        _record(
+          surahId: 9,
+          ayahNumber: 9,
+          mode: ReviewRecordCreatedByMode.v2Session,
+          reviewedAt: sentAt.add(const Duration(minutes: 1)),
+        ),
+      );
+
+      await datasource.markReviewRecordsCloudSyncedAtVersions({
+        identity.storageKey: sentAt.millisecondsSinceEpoch,
+      });
+
+      expect(await datasource.getCloudDirtyReviewRecords(), hasLength(1));
     });
 
     test(

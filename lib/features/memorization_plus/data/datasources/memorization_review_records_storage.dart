@@ -3,6 +3,8 @@ part of 'memorization_plus_local_datasource.dart';
 /// Review-record storage: Isar/SharedPreferences CRUD, identity migrations and
 /// cloud dirty tracking.
 mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
+  static const _reviewMigrationQuarantinePrefix =
+      'mem_plus_migration_quarantine_review_';
   String _reviewKey(int surahId, int ayahNumber) =>
       '${MemorizationPlusLocalDatasourceImpl._kReviewPrefix}_${surahId}_$ayahNumber';
 
@@ -69,44 +71,59 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
       return;
     }
 
-    final records = legacyKeys
-        .map((key) {
-          final raw = _prefs.getString(key);
-          return raw == null
-              ? null
-              : _tryParse(raw, AyahReviewRecordModel.fromJson);
-        })
-        .whereType<AyahReviewRecordModel>()
-        // Migrated records enter the V2 source of truth.
-        .map(
-          (m) => AyahReviewRecordModel.fromEntity(
-            m.copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session),
-          ),
-        )
-        .toList();
-
-    await isar.writeTxn(() async {
-      await isar.isarAyahReviewRecords.putAll(
-        records.map(IsarAyahReviewRecord.fromModel).toList(),
-      );
-    });
-
+    var allRecordsHandled = true;
     for (final key in legacyKeys) {
-      await _removeOrThrow(key);
+      final raw = _prefs.getString(key);
+      if (raw == null) {
+        allRecordsHandled = false;
+        continue;
+      }
+      final legacy = _tryParse(raw, AyahReviewRecordModel.fromJson);
+      if (legacy == null) {
+        allRecordsHandled = false;
+        await _prefs.setString('$_reviewMigrationQuarantinePrefix$key', raw);
+        continue;
+      }
+
+      try {
+        // Persist and remove one key at a time. If the app is interrupted after
+        // the transaction, retrying is an idempotent Isar upsert and the source
+        // key is still present.
+        final record = AyahReviewRecordModel.fromEntity(
+          legacy.copyWith(createdByMode: ReviewRecordCreatedByMode.v2Session),
+        );
+        await isar.writeTxn(() async {
+          await isar.isarAyahReviewRecords.put(
+            IsarAyahReviewRecord.fromModel(record),
+          );
+        });
+        await _removeOrThrow(key);
+      } catch (_) {
+        allRecordsHandled = false;
+        await _prefs.setString('$_reviewMigrationQuarantinePrefix$key', raw);
+      }
     }
-    await _prefs.setBool(
-      MemorizationPlusLocalDatasourceImpl._kReviewIsarMigration,
-      true,
-    );
+    if (allRecordsHandled) {
+      await _prefs.setBool(
+        MemorizationPlusLocalDatasourceImpl._kReviewIsarMigration,
+        true,
+      );
+    }
   }
 
   List<String> _legacyReviewKeys() {
+    // Metadata such as `mem_plus_review_identity_keys_v1` shares the textual
+    // prefix with legacy records but is a boolean. Keep every string-valued
+    // legacy key—including malformed JSON, so it can be quarantined—but never
+    // pass non-string metadata to `getString`.
     return _prefs
         .getKeys()
         .where(
-          (key) => key.startsWith(
-            '${MemorizationPlusLocalDatasourceImpl._kReviewPrefix}_',
-          ),
+          (key) =>
+              key.startsWith(
+                '${MemorizationPlusLocalDatasourceImpl._kReviewPrefix}_',
+              ) &&
+              _prefs.get(key) is String,
         )
         .toList();
   }
@@ -448,6 +465,30 @@ mixin MemorizationReviewRecordsStorageMixin on MemorizationLocalStorageMixin {
           compositeKey,
         );
         if (record == null) continue;
+        record.cloudDirty = false;
+        record.lastSyncedAt = syncedAt;
+        await isar.isarAyahReviewRecords.put(record);
+      }
+    });
+  }
+
+  Future<void> markReviewRecordsCloudSyncedAtVersions(
+    Map<String, int> acknowledgedVersions,
+  ) async {
+    final isar = _isar;
+    if (isar == null) return;
+
+    final syncedAt = DateTime.now().toUtc();
+    await isar.writeTxn(() async {
+      for (final entry in acknowledgedVersions.entries) {
+        final record = await isar.isarAyahReviewRecords.getByCompositeKey(
+          entry.key,
+        );
+        if (record == null ||
+            record.lastReviewedAt.toUtc().millisecondsSinceEpoch !=
+                entry.value) {
+          continue;
+        }
         record.cloudDirty = false;
         record.lastSyncedAt = syncedAt;
         await isar.isarAyahReviewRecords.put(record);

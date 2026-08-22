@@ -1,0 +1,64 @@
+lib\features\auth\data\repositories\auth_repository_impl.dart:340:      await client.rpc('delete_current_user');
+lib\features\auth\data\repositories\auth_repository_impl.dart:442:    await _supabase.rpc(
+lib\features\auth\data\repositories\auth_repository_impl.dart:462:    final rows = await _supabase.from('streaks').select().eq('user_id', userId);
+lib\features\auth\data\repositories\auth_repository_impl.dart:506:    await _supabase.rpc('upsert_xp', params: {'p_total_xp': xp.totalXp});
+lib\features\auth\data\repositories\auth_repository_impl.dart:518:    final rows = await _supabase.from('xp').select().eq('user_id', userId);
+lib\features\auth\data\repositories\auth_repository_impl.dart:551:    await _supabase.rpc(
+lib\features\auth\data\repositories\auth_repository_impl.dart:568:        .from('daily_activities')
+lib\features\auth\data\repositories\auth_repository_impl.dart:618:        .from('reading_progress_cloud')
+lib\features\auth\data\repositories\auth_repository_impl.dart:671:    await _supabase.rpc('upsert_reading_progress', params: {'p_pages': pages});
+lib\features\azkar\presentation\cubits\azkar_cubit.dart:59:    final sessions = List<ZikrSession>.from(state.sessions);
+lib\features\azkar\presentation\cubits\azkar_cubit.dart:114:    final sessions = List<ZikrSession>.from(state.sessions);
+lib\core\router\app_router.dart:275:      final params = Map<String, String>.from(state.uri.queryParameters)
+lib\core\services\audio_lifecycle_manager.dart:32:    for (final p in List<AudioPlayer>.from(_players)) {
+lib\core\memorization\surah_path_ordering.dart:11:  final sortedSurahs = List<Surah>.from(surahs);
+lib\features\memorization_plus\data\repositories\memorization_plus_repository_impl.dart:461:          .from('profiles')
+lib\features\memorization_plus\data\repositories\memorization_plus_repository_impl.dart:514:      await _gateway.supabase.rpc('upsert_memorization_identity', params: {
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_gateway.dart:51:        .from('parent_child_links')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_gateway.dart:63:        .from('parent_child_links')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_production_sync_service.dart:82:              await client.rpc(
+lib\features\memorization_plus\data\repositories\collaborators\memorization_production_sync_service.dart:100:              await client.rpc('pull_ayah_review_records') as List<dynamic>? ??
+lib\features\memorization_plus\data\repositories\collaborators\memorization_production_sync_service.dart:208:        .from('daily_plans_cloud')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_production_sync_service.dart:243:        .from('custom_plans_cloud')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_production_sync_service.dart:340:          .from('certificate_awards_cloud')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_production_sync_service.dart:385:          .from('certificate_awards_cloud')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_production_sync_service.dart:480:        final response = await client.rpc(
+lib\features\memorization_plus\data\repositories\collaborators\memorization_production_sync_service.dart:499:        await client.rpc(
+lib\features\memorization_plus\data\repositories\collaborators\memorization_production_sync_service.dart:513:    await client.from('daily_plans_cloud').upsert({
+lib\features\memorization_plus\data\repositories\collaborators\memorization_production_sync_service.dart:531:      await client.from('custom_plans_cloud').upsert({
+lib\features\memorization_plus\data\repositories\collaborators\memorization_production_sync_service.dart:539:    await client.from('custom_plans_cloud').upsert({
+lib\features\memorization_plus\data\repositories\collaborators\memorization_parent_access_service.dart:305:      await client.rpc(
+lib\features\memorization_plus\data\repositories\collaborators\memorization_parent_access_service.dart:336:      await client.rpc(
+lib\features\memorization_plus\data\repositories\collaborators\memorization_parent_access_service.dart:364:      await client.rpc(
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:47:          .from('kids_progress_cloud')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:52:          .from('kids_session_logs')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:63:          .map((row) => _mappers.logFromCloud(Map<String, dynamic>.from(row)))
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:108:      await client.rpc(
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:162:        final payload = await client.rpc('get_remote_children_dashboard');
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:181:        .from('parent_child_links')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:190:          .from('profiles')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:195:          .from('kids_progress_cloud')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:200:          .from('kids_session_logs')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:206:          .from('parent_rewards')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:214:            .from('ayah_review_records_cloud')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:218:            .from('daily_plans_cloud')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:223:            .from('certificate_awards_cloud')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:228:            .from('streaks')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:233:            .from('daily_activities')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:240:          reviewRows: List<Map<String, dynamic>>.from(reviewRows),
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:242:          certRows: List<Map<String, dynamic>>.from(certRows),
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:244:          activityRows: List<Map<String, dynamic>>.from(activityRows),
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:291:      await client.from('parent_rewards').insert({
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:297:          .from('parent_rewards')
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:327:      await client.rpc(
+lib\features\memorization_plus\data\repositories\collaborators\memorization_kids_cloud_sync_service.dart:341:      await client.rpc(
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_mappers.dart:61:            Map<String, dynamic>.from(item as Map),
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_mappers.dart:79:          .map((item) => Map<String, dynamic>.from(item as Map))
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_mappers.dart:84:          : Map<String, dynamic>.from(dailyPlanRaw as Map);
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_mappers.dart:86:          .map((item) => Map<String, dynamic>.from(item as Map))
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_mappers.dart:91:          : Map<String, dynamic>.from(streakRaw as Map);
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_mappers.dart:93:          .map((item) => Map<String, dynamic>.from(item as Map))
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_mappers.dart:98:          reviewSummary: Map<String, dynamic>.from(reviewSummaryRaw),
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_mappers.dart:121:        progressRaw == null ? null : Map<String, dynamic>.from(progressRaw as Map),
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_mappers.dart:124:          .map((item) => logFromCloud(Map<String, dynamic>.from(item as Map)))
+lib\features\memorization_plus\data\repositories\collaborators\memorization_cloud_mappers.dart:128:            (item) => rewardFromCloud(Map<String, dynamic>.from(item as Map)),

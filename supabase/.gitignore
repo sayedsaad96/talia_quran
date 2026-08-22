@@ -1,0 +1,10 @@
+# Supabase
+.branches
+.temp
+schema.reference.sql
+schema.drift.sql
+
+# dotenvx
+.env.keys
+.env.local
+.env.*.local

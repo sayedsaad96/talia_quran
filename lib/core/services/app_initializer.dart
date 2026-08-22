@@ -10,6 +10,7 @@ import '../l10n/locale_cubit.dart';
 import '../services/hifz_migration_service.dart';
 import '../services/notification_scheduler.dart';
 import '../services/notification_service.dart';
+import '../sync/background_sync_scheduler.dart';
 import '../utils/talia_logger.dart';
 
 /// Handles heavy app initialization that was previously blocking `runApp()`.
@@ -39,8 +40,13 @@ class AppInitializer {
   ///
   /// QCF fonts are NOT loaded here — they use lazy loading when the Quran
   /// reader opens.
+  ///
+  /// Set [background] to true when running inside the Workmanager callback
+  /// isolate: all notification setup is skipped because the plugin needs a
+  /// foreground Activity and crashes the headless engine without one.
   static Future<void> initialize({
     void Function(String step, double progress)? onProgress,
+    bool background = false,
   }) async {
     if (_initialized) return;
 
@@ -56,16 +62,25 @@ class AppInitializer {
       }
       await configureDependencies();
 
-      // Step 3: Notifications
-      onProgress?.call('جارٍ إعداد التنبيهات...', 0.6);
-      await _initNotifications();
+      // Load the persisted locale before scheduling notifications so their
+      // initial content matches the language shown when the app opens.
+      getIt<LocaleCubit>().loadLocale();
 
-      // Step 4: First-launch notification scheduling
-      onProgress?.call('جارٍ ضبط المواعيد...', 0.8);
-      await _scheduleFirstLaunchNotifications();
+      // Steps 3 & 4: Notifications — foreground only. The notification
+      // plugin needs an Activity context that headless Workmanager engines
+      // don't have; calling it there throws NullPointerException, which
+      // makes the background task report failure and get retried forever.
+      if (!background) {
+        onProgress?.call('جارٍ إعداد التنبيهات...', 0.6);
+        await _initNotifications();
 
-      // Step 5: Background tasks (fire-and-forget)
-      _startBackgroundTasks();
+        onProgress?.call('جارٍ ضبط المواعيد...', 0.8);
+        await _scheduleFirstLaunchNotifications();
+      }
+
+      // Step 5: Register the durable background task entrypoint before any
+      // repository is able to enqueue an owner-scoped retry.
+      await _startBackgroundTasks();
 
       onProgress?.call('جاهز!', 1.0);
       _initialized = true;
@@ -156,7 +171,8 @@ class AppInitializer {
     await notificationService.cancelStreakAlert();
   }
 
-  static void _startBackgroundTasks() {
+  static Future<void> _startBackgroundTasks() async {
+    await getIt<BackgroundSyncScheduler>().initialize();
     // One-time data migration: Hifz → MemorizationPlus V2.
     unawaited(getIt<HifzMigrationService>().runIfNeeded());
   }

@@ -42,6 +42,10 @@ import 'memorization_session_cubit_test.mocks.dart';
   AudioCacheService,
 ])
 void main() {
+  // The cubit constructor touches AudioLifecycleManager, whose
+  // AppLifecycleListener requires an initialized binding.
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   late MockQuranRepository mockQuranRepo;
   late MockMemorizationPlusRepository mockMemRepo;
   late V2SessionEngine realEngine;

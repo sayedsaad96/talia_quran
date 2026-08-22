@@ -9,6 +9,7 @@ import 'talia_share_tokens.dart';
 export 'share_card_content.dart';
 export 'share_card_shell.dart';
 export 'share_card_template_resolver.dart';
+export 'share_card_widgets.dart';
 export 'social_share_model.dart';
 export 'social_share_theme.dart';
 export 'talia_share_tokens.dart';

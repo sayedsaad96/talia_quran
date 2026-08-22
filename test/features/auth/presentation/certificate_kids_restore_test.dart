@@ -41,6 +41,8 @@ void main() {
     when(mockAuth.hasPendingCloudPush()).thenAnswer((_) async => true);
     when(mockMem.pullProductionDataFromCloud())
         .thenAnswer((_) async => const Right(null));
+    when(mockMem.pullIdentityFromCloud())
+        .thenAnswer((_) async => const Right(null));
     when(mockMem.pullCertificatesFromCloud()).thenAnswer(
       (_) async => Right([
         CertificateAward(
@@ -70,10 +72,11 @@ void main() {
         .thenAnswer((_) async => const []);
 
     final cubit = AuthCubit(mockAuth, mockMem, bus, mockAchievements);
-    await Future<void>.delayed(Duration.zero);
+    await cubit.ensureCloudSyncComplete();
 
     verifyInOrder([
       mockAuth.pullProgressFromCloud(),
+      mockMem.pullIdentityFromCloud(),
       mockMem.pullProductionDataFromCloud(),
       mockMem.pullCertificatesFromCloud(),
       mockMem.pullKidsProgressFromCloud(),

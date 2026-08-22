@@ -63,7 +63,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       final currentLocale = getIt<LocaleCubit>().state;
       final l10n = lookupAppLocalizations(currentLocale);
-      getIt<NotificationScheduler>().refreshNotifications(l10n);
+      unawaited(getIt<NotificationScheduler>().refreshNotifications(l10n));
       getIt<AuthCubit>().resyncOnResume();
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden ||
@@ -106,6 +106,13 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       final notificationService = getIt<TaliaNotificationService>();
       notificationService.onPayloadReceived = _openNotification;
 
+      // Load persisted theme/locale/profile once. The cubits below are
+      // shared getIt singletons exposed via BlocProvider.value so the
+      // widget tree never closes them.
+      getIt<ThemeCubit>().loadTheme();
+      getIt<LocaleCubit>().loadLocale();
+      getIt<ProfileCubit>().loadProfile();
+
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _applyLaunchNavigation(notificationService);
       });
@@ -113,9 +120,9 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
 
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (_) => getIt<ThemeCubit>()..loadTheme()),
-        BlocProvider(create: (_) => getIt<LocaleCubit>()..loadLocale()),
-        BlocProvider(create: (_) => getIt<ProfileCubit>()..loadProfile()),
+        BlocProvider.value(value: getIt<ThemeCubit>()),
+        BlocProvider.value(value: getIt<LocaleCubit>()),
+        BlocProvider.value(value: getIt<ProfileCubit>()),
         BlocProvider.value(value: getIt<AuthCubit>()),
       ],
       child: BlocListener<AuthCubit, AuthState>(
@@ -134,30 +141,39 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
             );
           }
         },
-        child: BlocBuilder<LocaleCubit, Locale>(
-          builder: (context, locale) {
-            return BlocBuilder<ThemeCubit, ThemeMode>(
-              builder: (context, themeMode) {
-                return MaterialApp.router(
-                  title: 'تالية',
-                  debugShowCheckedModeBanner: false,
-                  scaffoldMessengerKey: rootScaffoldMessengerKey,
-                  themeMode: themeMode,
-                  theme: AppTheme.light,
-                  darkTheme: AppTheme.dark,
-                  locale: locale,
-                  supportedLocales: AppLocalizations.supportedLocales,
-                  localizationsDelegates: const [
-                    AppLocalizations.delegate,
-                    GlobalMaterialLocalizations.delegate,
-                    GlobalWidgetsLocalizations.delegate,
-                    GlobalCupertinoLocalizations.delegate,
-                  ],
-                  routerConfig: AppRouter.router,
-                );
-              },
+        child: BlocListener<LocaleCubit, Locale>(
+          listener: (_, locale) {
+            unawaited(
+              getIt<NotificationScheduler>().refreshNotifications(
+                lookupAppLocalizations(locale),
+              ),
             );
           },
+          child: BlocBuilder<LocaleCubit, Locale>(
+            builder: (context, locale) {
+              return BlocBuilder<ThemeCubit, ThemeMode>(
+                builder: (context, themeMode) {
+                  return MaterialApp.router(
+                    title: 'تالية',
+                    debugShowCheckedModeBanner: false,
+                    scaffoldMessengerKey: rootScaffoldMessengerKey,
+                    themeMode: themeMode,
+                    theme: AppTheme.light,
+                    darkTheme: AppTheme.dark,
+                    locale: locale,
+                    supportedLocales: AppLocalizations.supportedLocales,
+                    localizationsDelegates: const [
+                      AppLocalizations.delegate,
+                      GlobalMaterialLocalizations.delegate,
+                      GlobalWidgetsLocalizations.delegate,
+                      GlobalCupertinoLocalizations.delegate,
+                    ],
+                    routerConfig: AppRouter.router,
+                  );
+                },
+              );
+            },
+          ),
         ),
       ),
     );

@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import '../../../../core/error/app_failure.dart';
 import '../entities/app_user.dart';
+import '../entities/auth_session_recovery.dart';
 
 abstract class AuthRepository {
   /// Sign up with email & password
@@ -50,4 +51,8 @@ abstract class AuthRepository {
 
   /// Emits when Supabase opens the app from a password recovery link.
   Stream<void> get passwordRecoveryChanges;
+
+  /// Performs at most one refresh attempt for an auth-stream or 401 failure.
+  /// Terminal failures clear only local credentials; local progress survives.
+  Future<AuthSessionRecovery> recoverSessionAfterAuthError(Object error);
 }

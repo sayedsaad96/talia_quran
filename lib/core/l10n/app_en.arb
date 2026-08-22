@@ -487,6 +487,8 @@
   "guardianSignInAction": "Sign in or create account",
   "guardianGuestContinueKids": "Continue Kids memorization",
   "guardianLinkingTemporarilyBlocked": "Linking temporarily blocked",
+  "guardianLinkingFailedTitle": "Guardian linking failed",
+  "guardianLinkingTimeoutMessage": "Guardian linking is taking too long. Check your connection and try again, or continue without a guardian for now.",
   "splashSubtitle": "Read, memorize, review, and grow with the Quran.",
   "splashTagline": "Your Companion in the Journey of the Quran",
   "splashFeatureRead": "Read",

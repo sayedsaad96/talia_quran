@@ -25,6 +25,13 @@ Future<void> main() async {
         }
       };
 
+      // Catch errors from platform channels, timers and microtasks that
+      // runZonedGuarded no longer receives since Flutter 3.1.
+      PlatformDispatcher.instance.onError = (error, stack) {
+        TaliaLogger.e('Uncaught platform error', error, stack);
+        return true;
+      };
+
       // M01 FIX: Friendly error widget for production
       if (!kDebugMode) {
         ErrorWidget.builder = (details) => const Directionality(

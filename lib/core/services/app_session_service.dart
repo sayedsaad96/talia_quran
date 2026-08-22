@@ -40,8 +40,9 @@ class AppSessionService {
       case '/memorization-v2/session':
         return _isValidSurahId(_readInt(uri, 'surahId'));
       case '/memorization-plus/kids-journey':
-      case '/memorization-plus/parent-dashboard':
         return _isValidSurahId(_readInt(uri, 'surahId'));
+      case '/family-dashboard':
+        return true;
 
     }
 

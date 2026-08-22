@@ -47,6 +47,21 @@ mixin MemorizationKidsStorageMixin on MemorizationLocalStorageMixin {
         jsonEncode(logs.map((log) => log.toJson()).toList()),
       );
 
+  Future<void> markKidsSessionLogsCloudSynced(Iterable<String> localIds) async {
+    final acceptedIds = localIds.toSet();
+    if (acceptedIds.isEmpty) return;
+    final current = await getKidsSessionLogs();
+    final now = DateTime.now().toUtc();
+    final updated = current
+        .map(
+          (log) => acceptedIds.contains(log.id) && !log.isSynced
+              ? KidsSessionLogModel.fromEntity(log.copyWith(syncedAt: now))
+              : log,
+        )
+        .toList();
+    await saveKidsSessionLogs(updated);
+  }
+
   Future<ParentSettingsModel> getParentSettings() async {
     final raw = _prefs.getString(
       MemorizationPlusLocalDatasourceImpl._kParentSettings,

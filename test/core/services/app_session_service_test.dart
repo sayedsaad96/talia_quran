@@ -20,6 +20,12 @@ void main() {
     expect(service.getLastRestorableLocation(), '/quran/page/42');
   });
 
+  test('saves and restores the active family dashboard route', () async {
+    await service.saveLocation('/family-dashboard');
+
+    expect(service.getLastRestorableLocation(), '/family-dashboard');
+  });
+
   test('does not save startup or onboarding routes', () async {
     await service.saveLocation('/quran/page/42');
     await service.saveLocation('/splash');

@@ -41,6 +41,15 @@ abstract class TaliaShareColors {
   static const Color kidsStarGold = Color(0xFFFBBF24);
   static const Color kidsSparkleTeal = Color(0xFF77D6C7);
 
+  // ─── Night Sky & Illumination (reference visual language) ────────────────
+  static const Color starlight = Color(0xFFEAF4EF);
+  static const Color starlightWarm = Color(0xFFF6D989);
+  static const Color moonCream = Color(0xFFF2E8C9);
+  static const Color lanternGlow = Color(0xFFF2C94C);
+  static const Color lanternAmber = Color(0xFFE0A93E);
+  static const Color parchmentInk = Color(0xFF123D36);
+  static const Color parchmentInkSoft = Color(0xFF3E5A53);
+
   // ─── Text & Ink ───────────────────────────────────────────────────────────
   static const Color inkDeep = Color(0xFF1C2B2F);
   static const Color textPrimaryLight = Color(0xFFFAF7F0);
@@ -88,6 +97,16 @@ abstract class TaliaShareTypography {
   static const String quranFontFamily = 'Amiri';
   static const String bodyFontFamily = 'Noto_Naskh_Arabic';
 
+  /// Emoji inside localized copy (📖 🌟 🎉 ✨) live outside the Arabic fonts.
+  /// Real devices resolve them via platform fallback; declaring the common
+  /// emoji families keeps offscreen exports and QA renders faithful too.
+  /// Never applied to the Quran style — its shaping must stay pure Amiri.
+  static const List<String> emojiFallback = [
+    'Noto Color Emoji',
+    'Segoe UI Emoji',
+    'Apple Color Emoji',
+  ];
+
   /// Quran verse style with authentic Arabic calligraphy presentation
   static TextStyle quranVerse({
     required Color color,
@@ -130,6 +149,7 @@ abstract class TaliaShareTypography {
   }) {
     return TextStyle(
       fontFamily: bodyFontFamily,
+      fontFamilyFallback: emojiFallback,
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -145,6 +165,7 @@ abstract class TaliaShareTypography {
   }) {
     return TextStyle(
       fontFamily: bodyFontFamily,
+      fontFamilyFallback: emojiFallback,
       fontSize: fontSize,
       fontWeight: fontWeight,
       color: color,
@@ -288,14 +309,334 @@ class GoldenCornerPainter extends CustomPainter {
 
     canvas.drawPath(path, paint);
 
+    // Inner parallel arc echoes the outer corner for a layered arabesque.
+    final inner = Paint()
+      ..color = color.withValues(alpha: opacity * 0.55)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    final innerPath = Path()
+      ..moveTo(0, size.height * 0.62)
+      ..lineTo(0, 7)
+      ..arcToPoint(
+        const Offset(7, 0),
+        radius: const Radius.circular(7),
+      )
+      ..lineTo(size.width * 0.62, 0);
+    canvas.drawPath(innerPath, inner);
+
     // Inner decorative corner dot
     final dotPaint = Paint()
       ..color = color.withValues(alpha: opacity)
       ..style = PaintingStyle.fill;
     canvas.drawCircle(const Offset(5, 5), 2.2, dotPaint);
+    canvas.drawCircle(Offset(size.width * 0.34, size.height * 0.34), 1.2,
+        dotPaint..color = color.withValues(alpha: opacity * 0.7));
   }
 
   @override
   bool shouldRepaint(covariant GoldenCornerPainter oldDelegate) =>
       oldDelegate.color != color || oldDelegate.opacity != opacity;
+}
+
+/// Deterministic night-sky star field, seeded so preview and export match.
+///
+/// Stars are laid out on a jittered grid: mostly small dots with occasional
+/// four-point sparkles. The same [seed] always produces the same sky.
+class StarFieldPainter extends CustomPainter {
+  final Color color;
+  final Color sparkleColor;
+  final double cellSize;
+  final double opacity;
+  final int seed;
+
+  const StarFieldPainter({
+    required this.color,
+    required this.sparkleColor,
+    this.cellSize = 46,
+    this.opacity = 1,
+    this.seed = 7,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rng = _SeededRandom(seed);
+    for (double x = 0; x < size.width; x += cellSize) {
+      for (double y = 0; y < size.height; y += cellSize) {
+        final px = x + rng.next() * cellSize;
+        final py = y + rng.next() * cellSize;
+        if (px > size.width || py > size.height) continue;
+        final roll = rng.next();
+        if (roll < 0.2) continue; // breathing room between stars
+        final r = 0.5 + rng.next() * 1.1;
+        if (roll > 0.84) {
+          final arm = r * 3.4;
+          final sparkle = Paint()
+            ..color = sparkleColor
+                .withValues(alpha: (0.3 + rng.next() * 0.4) * opacity)
+            ..strokeWidth = 0.8
+            ..strokeCap = StrokeCap.round;
+          canvas.drawLine(Offset(px - arm, py), Offset(px + arm, py), sparkle);
+          canvas.drawLine(Offset(px, py - arm), Offset(px, py + arm), sparkle);
+        } else {
+          canvas.drawCircle(
+            Offset(px, py),
+            r,
+            Paint()
+              ..color =
+                  color.withValues(alpha: (0.16 + rng.next() * 0.4) * opacity),
+          );
+        }
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant StarFieldPainter oldDelegate) =>
+      oldDelegate.color != color ||
+      oldDelegate.sparkleColor != sparkleColor ||
+      oldDelegate.cellSize != cellSize ||
+      oldDelegate.opacity != opacity ||
+      oldDelegate.seed != seed;
+}
+
+class _SeededRandom {
+  int _v;
+
+  _SeededRandom(int seed) : _v = (seed * 2654435761) % 2147483647 + 1;
+
+  double next() {
+    _v = (_v * 48271) % 2147483647;
+    return _v / 2147483647;
+  }
+}
+
+/// Soft glowing crescent moon for the upper atmosphere of dark cards.
+class CrescentMoonPainter extends CustomPainter {
+  final Color color;
+  final double glowOpacity;
+
+  const CrescentMoonPainter({
+    required this.color,
+    this.glowOpacity = 0.14,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.shortestSide / 2;
+
+    // Layered halo reads as atmospheric glow without a blur filter.
+    canvas.drawCircle(c, r * 1.85,
+        Paint()..color = color.withValues(alpha: glowOpacity * 0.4));
+    canvas.drawCircle(c, r * 1.4,
+        Paint()..color = color.withValues(alpha: glowOpacity * 0.8));
+    canvas.drawCircle(
+        c, r * 1.12, Paint()..color = color.withValues(alpha: glowOpacity));
+
+    final moon = Path.combine(
+      PathOperation.difference,
+      Path()..addOval(Rect.fromCircle(center: c, radius: r * 0.66)),
+      Path()
+        ..addOval(Rect.fromCircle(
+          center: Offset(c.dx - r * 0.3, c.dy - r * 0.12),
+          radius: r * 0.58,
+        )),
+    );
+    canvas.drawPath(moon, Paint()..color = color.withValues(alpha: 0.92));
+  }
+
+  @override
+  bool shouldRepaint(covariant CrescentMoonPainter oldDelegate) =>
+      oldDelegate.color != color ||
+      oldDelegate.glowOpacity != glowOpacity;
+}
+
+/// A single hanging lantern: thin gold string, ring, domed body, warm glow.
+///
+/// Compose several instances at different [lineFraction] values to recreate
+/// the reference's hanging-lantern strings.
+class HangingLanternPainter extends CustomPainter {
+  final Color gold;
+  final Color glow;
+  final double lineFraction;
+
+  const HangingLanternPainter({
+    required this.gold,
+    required this.glow,
+    this.lineFraction = 0.45,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final stringEnd = size.height * lineFraction;
+
+    final line = Paint()
+      ..color = gold.withValues(alpha: 0.5)
+      ..strokeWidth = 0.9;
+    canvas.drawLine(Offset(cx, 0), Offset(cx, stringEnd), line);
+
+    final bodyCenter = Offset(cx, stringEnd + size.height * 0.34);
+    final bodyRadius = size.width * 0.22;
+
+    // Warm halo behind the lamp body.
+    canvas.drawCircle(bodyCenter, bodyRadius * 2.4,
+        Paint()..color = glow.withValues(alpha: 0.12));
+    canvas.drawCircle(bodyCenter, bodyRadius * 1.6,
+        Paint()..color = glow.withValues(alpha: 0.2));
+
+    final stroke = Paint()
+      ..color = gold.withValues(alpha: 0.85)
+      ..strokeWidth = 1.1
+      ..style = PaintingStyle.stroke;
+    final fill = Paint()..color = glow.withValues(alpha: 0.3);
+
+    // Hanging ring.
+    canvas.drawCircle(Offset(cx, stringEnd + 3), 1.6, stroke..style = PaintingStyle.fill);
+
+    // Domed top.
+    final dome = Path()
+      ..moveTo(cx - bodyRadius * 0.8, stringEnd + size.height * 0.14)
+      ..quadraticBezierTo(cx, stringEnd + size.height * 0.02,
+          cx + bodyRadius * 0.8, stringEnd + size.height * 0.14);
+    canvas.drawPath(dome, stroke..style = PaintingStyle.stroke);
+
+    // Body with a soft warm interior.
+    final body = Rect.fromCenter(
+      center: bodyCenter,
+      width: bodyRadius * 2,
+      height: size.height * 0.4,
+    );
+    final rrect =
+        RRect.fromRectAndRadius(body, Radius.circular(body.width * 0.3));
+    canvas.drawRRect(rrect, fill);
+    canvas.drawRRect(rrect, stroke);
+
+    // Base finial.
+    canvas.drawLine(
+      Offset(cx, body.bottom),
+      Offset(cx, body.bottom + 3),
+      stroke,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant HangingLanternPainter oldDelegate) =>
+      oldDelegate.gold != gold ||
+      oldDelegate.glow != glow ||
+      oldDelegate.lineFraction != lineFraction;
+}
+
+/// Gold botanical sprig — a curved stem with leaves, for arch bases and
+/// parchment footer corners.
+class BotanicalSprigPainter extends CustomPainter {
+  final Color color;
+  final bool mirror;
+
+  const BotanicalSprigPainter({
+    required this.color,
+    this.mirror = false,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (mirror) {
+      canvas.save();
+      canvas.translate(size.width, 0);
+      canvas.scale(-1, 1);
+    }
+
+    final stem = Paint()
+      ..color = color.withValues(alpha: 0.75)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    final path = Path()
+      ..moveTo(size.width * 0.5, size.height)
+      ..quadraticBezierTo(
+        size.width * 0.28,
+        size.height * 0.55,
+        size.width * 0.55,
+        0,
+      );
+    canvas.drawPath(path, stem);
+
+    final leaf = Paint()..color = color.withValues(alpha: 0.85);
+    // Leaves alternate along the stem, shrinking toward the tip.
+    final stops = [
+      (0.18, 1.0),
+      (0.34, -1.0),
+      (0.5, 1.0),
+      (0.66, -1.0),
+      (0.82, 1.0),
+    ];
+    for (final (t, side) in stops) {
+      final lx = _lerp(size.width * 0.36, size.width * 0.5, t);
+      final ly = size.height * (1 - t * 0.95);
+      canvas.save();
+      canvas.translate(lx, ly);
+      canvas.rotate(side * 0.9 - 0.4);
+      final w = size.width * 0.34 * (1 - t * 0.45);
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(w * 0.4 * side, 0),
+          width: w,
+          height: w * 0.38,
+        ),
+        leaf,
+      );
+      canvas.restore();
+    }
+
+    if (mirror) canvas.restore();
+  }
+
+  double _lerp(double a, double b, double t) => a + (b - a) * t;
+
+  @override
+  bool shouldRepaint(covariant BotanicalSprigPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.mirror != mirror;
+}
+
+/// Subtle radial celebration rays behind medals and seals.
+class RadialRaysPainter extends CustomPainter {
+  final Color color;
+  final int rayCount;
+  final double opacity;
+
+  const RadialRaysPainter({
+    required this.color,
+    this.rayCount = 12,
+    this.opacity = 0.2,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final inner = size.shortestSide * 0.18;
+    final outer = size.shortestSide * 0.52;
+    final paint = Paint()
+      ..color = color.withValues(alpha: opacity)
+      ..style = PaintingStyle.fill;
+
+    for (var i = 0; i < rayCount; i++) {
+      final angle = (i / rayCount) * 2 * math.pi - math.pi / 2;
+      final spread = math.pi / rayCount * 0.42;
+      final reach = i.isEven ? outer : outer * 0.78;
+      final ray = Path()
+        ..moveTo(center.dx + math.cos(angle - spread) * inner,
+            center.dy + math.sin(angle - spread) * inner)
+        ..lineTo(center.dx + math.cos(angle) * reach,
+            center.dy + math.sin(angle) * reach)
+        ..lineTo(center.dx + math.cos(angle + spread) * inner,
+            center.dy + math.sin(angle + spread) * inner)
+        ..close();
+      canvas.drawPath(ray, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant RadialRaysPainter oldDelegate) =>
+      oldDelegate.color != color ||
+      oldDelegate.rayCount != rayCount ||
+      oldDelegate.opacity != opacity;
 }

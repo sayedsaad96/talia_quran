@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/widgets/social_share/social_share_card.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
+import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
 import 'package:talia_quran/features/progress/domain/entities/progress_entities.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
@@ -94,6 +95,15 @@ void main() {
     ));
     // Bounded pumps: a settle loop can hang forever if an image stream
     // never completes in the test environment.
+    await tester.pump();
+    // Real image codecs (official logo + Talia character) only decode
+    // inside a real-async window; without it every Image.asset lays out
+    // and paints empty, which is exactly what production never does.
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+    });
+    // Pump so the completed image streams repaint their render objects
+    // before the boundary is rasterized.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 250));
     expect(tester.takeException(), isNull, reason: '$caseName layout error');
@@ -422,6 +432,133 @@ void main() {
       theme: SocialShareTheme.tealTwilight,
       format: SocialShareFormat.story,
     );
+
+    // CASE 17 — Certificate, Arabic, portrait (ceremonial parchment).
+    await captureAndVerify(
+      tester,
+      caseName: '17_certificate_ar',
+      data: SocialShareData.certificate(
+        award: CertificateAward(
+          id: 'cert_juz_30',
+          titleAr: 'شهادة إتمام حفظ جزء عم',
+          type: CertificateType.juz,
+          earnedAt: DateTime.utc(2026, 8, 16),
+          juzNumber: 30,
+        ),
+        userName: 'سيد سعد',
+      ),
+      theme: SocialShareTheme.parchmentGold,
+      format: SocialShareFormat.portrait,
+    );
+
+    // CASE 18 — Certificate, English, portrait.
+    await captureAndVerify(
+      tester,
+      caseName: '18_certificate_en',
+      locale: const Locale('en'),
+      data: SocialShareData.certificate(
+        award: CertificateAward(
+          id: 'cert_surah_1',
+          titleAr: 'شهادة إتمام حفظ سورة الفاتحة',
+          type: CertificateType.surah,
+          earnedAt: DateTime.utc(2026, 8, 10),
+        ),
+        userName: 'Sayed',
+      ),
+      theme: SocialShareTheme.parchmentGold,
+      format: SocialShareFormat.portrait,
+    );
+
+    // CASE 19 — Memorization, kids, portrait (character hero in arch).
+    await captureAndVerify(
+      tester,
+      caseName: '19_memorization_kids',
+      data: SocialShareData.memorization(
+        ayahsCount: 40,
+        surahsCount: 2,
+        userName: 'أحمد',
+      ).copyWith(audience: SocialShareAudience.kids, showCharacter: true),
+      theme: SocialShareTheme.parchmentGold,
+      format: SocialShareFormat.portrait,
+    );
+
+    // CASE 20 — Streak, English, story.
+    await captureAndVerify(
+      tester,
+      caseName: '20_streak_en_story',
+      locale: const Locale('en'),
+      data: SocialShareData.streak(
+        streakDays: 30,
+        longestStreak: 30,
+        userName: 'Sayed',
+      ),
+      theme: SocialShareTheme.midnightGold,
+      format: SocialShareFormat.story,
+    );
+
+    // CASE 21 — Quran verse, Arabic, story.
+    await captureAndVerify(
+      tester,
+      caseName: '21_quran_story',
+      data: SocialShareData.quranAyah(
+        ayah: const Ayah(
+          number: 286,
+          surahId: 2,
+          text:
+              'لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ',
+          numberInSurah: 286,
+        ),
+        surahName: 'البقرة',
+      ),
+      theme: SocialShareTheme.emeraldDark,
+      format: SocialShareFormat.story,
+    );
+
+    // CASE 22 — Achievement, Arabic, square.
+    await captureAndVerify(
+      tester,
+      caseName: '22_achievement_square',
+      data: SocialShareData.achievement(
+        achievement: achievementAr,
+        userName: 'سيد سعد',
+      ),
+      theme: SocialShareTheme.emeraldDark,
+      format: SocialShareFormat.square,
+    );
+
+    // CASE 23 — Dua, English, portrait with translation.
+    await captureAndVerify(
+      tester,
+      caseName: '23_dua_en',
+      locale: const Locale('en'),
+      data: SocialShareData.dua(
+        zikr: const Zikr(
+          id: 'd2',
+          text: 'رَبِّ زِدْنِي عِلْمًا',
+          transliteration: '',
+          translation: 'My Lord, increase me in knowledge',
+          totalCount: 1,
+          category: AzkarCategory.duas,
+          reference: 'Surah Ta-Ha: 114',
+        ),
+        categoryTitle: 'Quranic dua',
+        isDua: true,
+      ),
+      theme: SocialShareTheme.dawnLight,
+      format: SocialShareFormat.portrait,
+    );
+
+    // CASE 24 — Progress, kids, portrait (character hero + stats template).
+    await captureAndVerify(
+      tester,
+      caseName: '24_progress_kids',
+      data: SocialShareData.progress(
+        progress: progressStats,
+        userName: 'أحمد',
+      ).copyWith(audience: SocialShareAudience.kids, showCharacter: true),
+      theme: SocialShareTheme.parchmentGold,
+      format: SocialShareFormat.portrait,
+    );
   });
 }
 
@@ -444,4 +581,36 @@ Future<void> _loadRealFonts() async {  Future<void> load(String family, List<Str
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Regular.ttf',
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Bold.ttf',
   ]);
+
+  // Icon glyphs (badge icons, medallion icons, footer glyphs) come from the
+  // framework's MaterialIcons font. Without it the rasterized PNGs show
+  // empty tofu squares even though real devices render icons fine.
+  final flutterRoot = Platform.environment['FLUTTER_ROOT'];
+  if (flutterRoot != null) {
+    final materialFonts = '$flutterRoot/bin/cache/artifacts/material_fonts';
+    for (final candidate in [
+      '$materialFonts/materialicons-regular.otf',
+      '$materialFonts/MaterialIcons-Regular.otf',
+    ]) {
+      final file = File(candidate);
+      if (await file.exists()) {
+        await load('MaterialIcons', [candidate]);
+        break;
+      }
+    }
+  }
+
+  // Emoji inside localized copy (📖 🌟 🎉 ✨) render via the platform emoji
+  // font on real devices. Load the desktop one so QA PNGs are faithful.
+  final emojiCandidates = [
+    'C:/Windows/Fonts/seguisym.ttf',
+    'C:/Windows/Fonts/seguiemj.ttf',
+  ];
+  for (final candidate in emojiCandidates) {
+    final file = File(candidate);
+    if (await file.exists()) {
+      final family = candidate.contains('seguiemj') ? 'Segoe UI Emoji' : 'Segoe UI Symbol';
+      await load(family, [candidate]);
+    }
+  }
 }

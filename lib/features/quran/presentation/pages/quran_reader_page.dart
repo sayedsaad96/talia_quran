@@ -19,10 +19,12 @@ import '../../../../core/services/quran_reciter_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
+import '../../../../core/utils/talia_logger.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../data/datasources/bookmark_service.dart';
+import '../../domain/entities/bookmark_entry.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../cubits/quran_page_cubit.dart';
 import '../cubits/surah_detail_cubit.dart';
@@ -713,14 +715,22 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
   void dispose() {
     AudioLifecycleManager.instance.unregister(_player);
     _playerSub?.cancel();
-    _player.dispose();
+    unawaited(
+      _player.dispose().catchError((Object error, StackTrace stack) {
+        TaliaLogger.w('Ayah options player dispose failed', error, stack);
+      }),
+    );
     super.dispose();
   }
 
   Future<void> _playAyah() async {
     if (_isPlaying) {
-      await _player.pause();
-      setState(() => _isPlaying = false);
+      try {
+        await _player.pause();
+      } catch (error, stack) {
+        TaliaLogger.w('Ayah audio pause failed', error, stack);
+      }
+      if (mounted) setState(() => _isPlaying = false);
       return;
     }
 

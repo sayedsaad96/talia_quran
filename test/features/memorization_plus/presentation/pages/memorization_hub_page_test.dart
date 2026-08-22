@@ -6,6 +6,7 @@ import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/memorization_hub_page.dart';
@@ -13,11 +14,17 @@ import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/memorization_identity_cubit.dart';
 
 void main() {
+  // The hub page listens to the progress bus from initState.
+  ProgressEventsBus progressEvents = ProgressEventsBus();
+
   setUp(() async {
     await getIt.reset();
+    progressEvents = ProgressEventsBus();
+    getIt.registerSingleton<ProgressEventsBus>(progressEvents);
   });
 
   tearDown(() async {
+    progressEvents.dispose();
     await getIt.reset();
   });
 

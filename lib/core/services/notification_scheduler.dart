@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../di/injection.dart';
 import '../l10n/app_localizations.dart';
 import '../services/streak_reader.dart';
+import '../utils/talia_logger.dart';
 import '../../features/progress/domain/repositories/progress_repository.dart';
 
 import 'notification_service.dart';
@@ -11,7 +12,18 @@ class NotificationScheduler {
 
   NotificationScheduler(this._service);
 
+  /// Reschedules every enabled reminder. Called from app resume, locale
+  /// changes and first launch — none of which may surface plugin errors,
+  /// so any failure is logged and contained.
   Future<void> refreshNotifications(AppLocalizations l10n) async {
+    try {
+      await _refreshNotifications(l10n);
+    } catch (error, stack) {
+      TaliaLogger.w('Notification refresh failed', error, stack);
+    }
+  }
+
+  Future<void> _refreshNotifications(AppLocalizations l10n) async {
     final prefs = await SharedPreferences.getInstance();
 
     // First, sync timezone

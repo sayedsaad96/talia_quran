@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+
 import '../share_card_content.dart';
-import '../social_share_model.dart';
 import '../social_share_copy.dart';
+import '../social_share_model.dart';
 import '../social_share_theme.dart';
+import '../share_card_widgets.dart';
 import '../talia_share_tokens.dart';
 
 /// Specialized Template for Duas & Azkar — calm, reflective composition.
+///
+/// A quiet hanging lantern sets the mood; the supplication itself stays the
+/// hero with generous line height and minimal ornamentation.
 class DuaZikrTemplate extends StatelessWidget {
   final SocialShareData data;
   final SocialShareTheme theme;
@@ -43,29 +48,12 @@ class DuaZikrTemplate extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ─── 1. Decorative Lantern / Spiritual Icon ───────────────────────
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: theme.accentColor.withValues(alpha: 0.12),
-              border: Border.all(
-                color: theme.accentColor.withValues(alpha: 0.4),
-                width: 1,
-              ),
-            ),
-            child: Icon(
-              data.category == SocialShareCategory.dua
-                  ? Icons.favorite_rounded
-                  : Icons.auto_awesome_rounded,
-              color: theme.accentColor,
-              size: isCompact ? 20 : 24,
-            ),
-          ),
+          // ─── 1. Hanging lantern emblem ──────────────────────────────────
+          LanternEmblem(theme: theme, size: isCompact ? 38 : 46),
 
-          SizedBox(height: isCompact ? 6 : 10),
+          SizedBox(height: isCompact ? 5 : 8),
 
-          // ─── 2. Title ─────────────────────────────────────────────────────
+          // ─── 2. Title ─────────────────────────────────────────────────
           if (data.title != null && data.title!.isNotEmpty) ...[
             Text(
               data.title!,
@@ -75,10 +63,10 @@ class DuaZikrTemplate extends StatelessWidget {
                 fontSize: isCompact ? 16 : 19,
               ),
             ),
-            SizedBox(height: isCompact ? 6 : 10),
+            SizedBox(height: isCompact ? 5 : 8),
           ],
 
-          // ─── 3. Dua / Zikr Arabic Text ────────────────────────────────────
+          // ─── 3. Dua / Zikr Arabic Text ────────────────────────────────
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text(
@@ -115,41 +103,28 @@ class DuaZikrTemplate extends StatelessWidget {
 
           SizedBox(height: isCompact ? 8 : 12),
 
-          // ─── 4. Reference / Source Chip ───────────────────────────────────
+          // ─── 4. Reference / Source chip ───────────────────────────────
           if (data.subtitle != null && data.subtitle!.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3.5),
-              decoration: BoxDecoration(
-                color: theme.cardBackground,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: theme.borderColor.withValues(alpha: 0.35),
-                  width: 1,
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.bookmark_outline_rounded,
-                    size: isCompact ? 11 : 13,
-                    color: theme.accentColor,
-                  ),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      data.subtitle!,
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                      textAlign: TextAlign.center,
-                      style: TaliaShareTypography.badge(
-                        color: theme.accentColor,
-                        fontSize: isCompact ? 10.5 : 11.5,
-                      ),
+            ShareLabelChip(
+              icon: Icons.bookmark_outline_rounded,
+              accent: theme.accentColor,
+              background: theme.cardBackground,
+              border: theme.borderColor,
+              isCompact: isCompact,
+              children: [
+                Flexible(
+                  child: Text(
+                    data.subtitle!,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    style: TaliaShareTypography.badge(
+                      color: theme.accentColor,
+                      fontSize: isCompact ? 10.5 : 11.5,
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
         ],
       ),

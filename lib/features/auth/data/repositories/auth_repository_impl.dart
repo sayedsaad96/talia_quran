@@ -4,9 +4,11 @@ import 'package:dartz/dartz.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/auth/auth_session_recovery_policy.dart';
 import '../../../../core/config/supabase_config.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../../../core/identity/account_data_reset.dart';
+import '../../../../core/sync/sync_acknowledgement.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
@@ -14,6 +16,7 @@ import '../../../streak/data/models/streak_isar.dart';
 import '../../../streak/data/models/daily_activity_isar.dart';
 import '../../../xp/data/models/xp_isar.dart';
 import '../../domain/entities/auth_error_code.dart';
+import '../../domain/entities/auth_session_recovery.dart';
 import '../../../progress/data/datasources/progress_local_datasource.dart';
 
 class AuthFailure extends Failure {
@@ -97,6 +100,38 @@ class AuthRepositoryImpl implements AuthRepository {
     return _supabase.auth.onAuthStateChange
         .where((event) => event.event == AuthChangeEvent.passwordRecovery)
         .map<void>((_) {});
+  }
+
+  @override
+  Future<AuthSessionRecovery> recoverSessionAfterAuthError(
+    Object error,
+  ) async {
+    if (!_isSupabaseInitialized) {
+      return AuthSessionRecovery.transientFailure;
+    }
+
+    Object? refreshError;
+    try {
+      final response = await _supabase.auth.refreshSession();
+      if (response.session != null && response.user != null) {
+        return AuthSessionRecovery.recovered;
+      }
+    } catch (caught) {
+      refreshError = caught;
+      TaliaLogger.w('Session refresh recovery failed', caught);
+    }
+
+    if (AuthSessionRecoveryPolicy.isTerminal(error) ||
+        (refreshError != null &&
+            AuthSessionRecoveryPolicy.isTerminal(refreshError))) {
+      try {
+        await _supabase.auth.signOut(scope: SignOutScope.local);
+      } catch (signOutError) {
+        TaliaLogger.e('Failed to clear terminal local session', signOutError);
+      }
+      return AuthSessionRecovery.terminalFailure;
+    }
+    return AuthSessionRecovery.transientFailure;
   }
 
   // ─── Sign Up ──────────────────────────────────────────────────────────────
@@ -281,8 +316,9 @@ class AuthRepositoryImpl implements AuthRepository {
       // cause login failures when the user tries to sign in with the new
       // password.
       try {
+        final departingOwnerId = client.auth.currentUser?.id;
         await client.auth.signOut();
-        await _clearLocalUserData();
+        await _clearLocalUserData(departingOwnerId: departingOwnerId);
       } catch (signOutError) {
         TaliaLogger.w(
           'Post-password-update sign-out failed (non-fatal)',
@@ -311,8 +347,9 @@ class AuthRepositoryImpl implements AuthRepository {
         await _clearLocalUserData();
         return const Right(unit);
       }
+      final departingOwnerId = _supabase.auth.currentUser?.id;
       await _supabase.auth.signOut();
-      await _clearLocalUserData();
+      await _clearLocalUserData(departingOwnerId: departingOwnerId);
       return const Right(unit);
     } catch (e) {
       TaliaLogger.w('Sign-out error', e);
@@ -337,13 +374,22 @@ class AuthRepositoryImpl implements AuthRepository {
         return Left(AuthFailure(AuthErrorCode.userNotFound));
       }
 
+      final departingOwnerId = client.auth.currentUser?.id;
       await client.rpc('delete_current_user');
-      try {
-        await client.auth.signOut();
-      } catch (e) {
-        TaliaLogger.w('Post-delete sign-out cleanup failed', e);
+      // `auth.users` deletion revokes refresh credentials server-side, but an
+      // already issued access token remains valid until expiry. Clear the
+      // device session locally and fail closed if that cannot be confirmed.
+      await client.auth.signOut(scope: SignOutScope.local);
+      if (client.auth.currentSession != null || client.auth.currentUser != null) {
+        return const Left(
+          ServerFailure('تم حذف الحساب، لكن تعذر إنهاء الجلسة على هذا الجهاز.'),
+        );
       }
-      await _clearLocalUserData();
+      if (departingOwnerId != null) {
+        await _accountDataReset.preserveDeletedAccountLocally(
+          departingOwnerId: departingOwnerId,
+        );
+      }
       return const Right(unit);
     } on PostgrestException catch (e) {
       TaliaLogger.w('Account deletion RPC error', e);
@@ -370,7 +416,12 @@ class AuthRepositoryImpl implements AuthRepository {
   // ─── Cloud Sync ─────────────────────────────────────────────────────────────
 
   @override
-  Future<Either<Failure, Unit>> syncProgressToCloud() async {
+  Future<Either<Failure, Unit>> syncProgressToCloud() =>
+      _syncProgressToCloud(allowAuthRecovery: true);
+
+  Future<Either<Failure, Unit>> _syncProgressToCloud({
+    required bool allowAuthRecovery,
+  }) async {
     try {
       if (!_isSupabaseInitialized) return const Right(unit);
       final user = _supabase.auth.currentUser;
@@ -385,12 +436,26 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Right(unit);
     } catch (e) {
       TaliaLogger.w('Sync to cloud failed', e);
+      if (allowAuthRecovery && _isAuthenticationFailure(e)) {
+        final recovery = await recoverSessionAfterAuthError(e);
+        if (recovery == AuthSessionRecovery.recovered) {
+          return _syncProgressToCloud(allowAuthRecovery: false);
+        }
+        if (recovery == AuthSessionRecovery.terminalFailure) {
+          return Left(AuthFailure(AuthErrorCode.sessionExpired));
+        }
+      }
       return const Left(ServerFailure('فشل المزامنة مع السحابة'));
     }
   }
 
   @override
-  Future<Either<Failure, Unit>> pullProgressFromCloud() async {
+  Future<Either<Failure, Unit>> pullProgressFromCloud() =>
+      _pullProgressFromCloud(allowAuthRecovery: true);
+
+  Future<Either<Failure, Unit>> _pullProgressFromCloud({
+    required bool allowAuthRecovery,
+  }) async {
     try {
       if (!_isSupabaseInitialized) return const Right(unit);
       final user = _supabase.auth.currentUser;
@@ -405,9 +470,21 @@ class AuthRepositoryImpl implements AuthRepository {
       return const Right(unit);
     } catch (e) {
       TaliaLogger.w('Pull from cloud failed', e);
+      if (allowAuthRecovery && _isAuthenticationFailure(e)) {
+        final recovery = await recoverSessionAfterAuthError(e);
+        if (recovery == AuthSessionRecovery.recovered) {
+          return _pullProgressFromCloud(allowAuthRecovery: false);
+        }
+        if (recovery == AuthSessionRecovery.terminalFailure) {
+          return Left(AuthFailure(AuthErrorCode.sessionExpired));
+        }
+      }
       return const Left(ServerFailure('فشل استرجاع البيانات من السحابة'));
     }
   }
+
+  bool _isAuthenticationFailure(Object error) =>
+      error is AuthException || AuthSessionRecoveryPolicy.isTerminal(error);
 
   @override
   Future<bool> hasPendingCloudPush() async {
@@ -439,19 +516,35 @@ class AuthRepositoryImpl implements AuthRepository {
     final streak = await _isar.streakIsars.get(1);
     if (streak == null || !_needsCloudPush(streak.cloudDirty)) return;
 
+    final outbound = <String, Object?>{
+      'current_streak': streak.currentStreak,
+      'longest_streak': streak.longestStreak,
+      'last_activity_date': _toDateOnlyString(streak.lastActivityDate),
+      'freezes_available': streak.freezesAvailable,
+    };
+
     await _supabase.rpc(
       'upsert_streak',
       params: {
-        'p_current_streak': streak.currentStreak,
-        'p_longest_streak': streak.longestStreak,
-        'p_last_activity_date': _toDateOnlyString(streak.lastActivityDate),
-        'p_freezes_available': streak.freezesAvailable,
+        'p_current_streak': outbound['current_streak'],
+        'p_longest_streak': outbound['longest_streak'],
+        'p_last_activity_date': outbound['last_activity_date'],
+        'p_freezes_available': outbound['freezes_available'],
       },
     );
 
     await _isar.writeTxn(() async {
       final latest = await _isar.streakIsars.get(1);
       if (latest == null) return;
+      final current = <String, Object?>{
+        'current_streak': latest.currentStreak,
+        'longest_streak': latest.longestStreak,
+        'last_activity_date': _toDateOnlyString(latest.lastActivityDate),
+        'freezes_available': latest.freezesAvailable,
+      };
+      if (!SyncAcknowledgement.matches(outbound: outbound, current: current)) {
+        return;
+      }
       latest.cloudDirty = false;
       latest.lastSyncedAt = DateTime.now().toUtc();
       await _isar.streakIsars.put(latest);
@@ -503,11 +596,22 @@ class AuthRepositoryImpl implements AuthRepository {
     final xp = await _isar.xpIsars.get(1);
     if (xp == null || !_needsCloudPush(xp.cloudDirty)) return;
 
-    await _supabase.rpc('upsert_xp', params: {'p_total_xp': xp.totalXp});
+    final outbound = <String, Object?>{'total_xp': xp.totalXp};
+
+    await _supabase.rpc(
+      'upsert_xp',
+      params: {'p_total_xp': outbound['total_xp']},
+    );
 
     await _isar.writeTxn(() async {
       final latest = await _isar.xpIsars.get(1);
       if (latest == null) return;
+      if (!SyncAcknowledgement.matches(
+        outbound: outbound,
+        current: {'total_xp': latest.totalXp},
+      )) {
+        return;
+      }
       latest.cloudDirty = false;
       latest.lastSyncedAt = DateTime.now().toUtc();
       await _isar.xpIsars.put(latest);
@@ -544,21 +648,41 @@ class AuthRepositoryImpl implements AuthRepository {
         .findAll();
     if (activities.isEmpty) return;
 
-    final data = activities
-        .map((a) => {'day_key': a.dayKey, 'activity_count': a.activityCount})
+    final outbound = activities
+        .map(
+          (a) => <String, Object?>{
+            'day_key': a.dayKey,
+            'activity_count': a.activityCount,
+          },
+        )
         .toList();
 
     await _supabase.rpc(
       'upsert_daily_activities_batch',
-      params: {'p_data': data},
+      params: {'p_data': outbound},
     );
 
     final syncedAt = DateTime.now().toUtc();
     await _isar.writeTxn(() async {
-      for (final activity in activities) {
-        activity.cloudDirty = false;
-        activity.lastSyncedAt = syncedAt;
-        await _isar.dailyActivityIsars.put(activity);
+      for (final sent in outbound) {
+        final dayKey = sent['day_key']! as int;
+        final latest = await _isar.dailyActivityIsars
+            .where()
+            .dayKeyEqualTo(dayKey)
+            .findFirst();
+        if (latest == null ||
+            !SyncAcknowledgement.matches(
+              outbound: sent,
+              current: {
+                'day_key': latest.dayKey,
+                'activity_count': latest.activityCount,
+              },
+            )) {
+          continue;
+        }
+        latest.cloudDirty = false;
+        latest.lastSyncedAt = syncedAt;
+        await _isar.dailyActivityIsars.put(latest);
       }
     });
   }
@@ -602,8 +726,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
-  Future<void> _clearLocalUserData() =>
-      _accountDataReset.clearAccountOwnedData();
+  Future<void> _clearLocalUserData({String? departingOwnerId}) =>
+      _accountDataReset.clearAccountOwnedData(
+        departingOwnerId: departingOwnerId,
+      );
 
   String? _toDateOnlyString(DateTime? value) =>
       value?.toIso8601String().substring(0, 10);
@@ -668,9 +794,33 @@ class AuthRepositoryImpl implements AuthRepository {
 
     if (pages.isEmpty) return;
 
-    await _supabase.rpc('upsert_reading_progress', params: {'p_pages': pages});
-    await prefs.remove(ProgressLocalDatasourceImpl.kReadPagesCloudDirty);
+    final outbound = <String, Object?>{'pages': _canonicalPages(pages)};
+
+    await _supabase.rpc(
+      'upsert_reading_progress',
+      params: {'p_pages': outbound['pages']},
+    );
+    final latestRaw = prefs.getString('read_pages');
+    final latestPages = _readCanonicalPages(latestRaw);
+    if (SyncAcknowledgement.matches(
+      outbound: outbound,
+      current: {'pages': latestPages},
+    )) {
+      await prefs.remove(ProgressLocalDatasourceImpl.kReadPagesCloudDirty);
+    }
     TaliaLogger.i('Reading progress pushed: ${pages.length} pages');
+  }
+
+  List<int> _canonicalPages(Iterable<int> pages) =>
+      pages.where((page) => page >= 1 && page <= 604).toSet().toList()..sort();
+
+  List<int> _readCanonicalPages(String? raw) {
+    if (raw == null) return const [];
+    try {
+      return _canonicalPages((jsonDecode(raw) as List<dynamic>).whereType<int>());
+    } catch (_) {
+      return const [];
+    }
   }
 
   /// Maps Supabase auth error messages to strongly-typed error codes

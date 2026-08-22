@@ -92,6 +92,8 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   @override
   Future<void> saveKidsSessionLogs(List<KidsSessionLogModel> logs) async {}
   @override
+  Future<void> markKidsSessionLogsCloudSynced(Iterable<String> localIds) async {}
+  @override
   Future<ParentSettingsModel> getParentSettings() async =>
       const ParentSettingsModel.defaults();
   @override
@@ -114,6 +116,10 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   @override
   Future<void> markReviewRecordsCloudSynced(
     Iterable<String> compositeKeys,
+  ) async {}
+  @override
+  Future<void> markReviewRecordsCloudSyncedAtVersions(
+    Map<String, int> acknowledgedVersions,
   ) async {}
   @override
   Future<void> saveSelectedTrack(String track) async {}

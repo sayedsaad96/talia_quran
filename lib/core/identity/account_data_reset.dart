@@ -1,7 +1,12 @@
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../security/parent_pin_secure_store.dart';
+import '../security/encrypted_account_preferences_store.dart';
 import '../sync/cloud_sync_queue_item.dart';
+import '../sync/background_sync_scheduler.dart';
+import '../memorization/review_record_identity.dart';
+import 'record_owner_provider.dart';
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import '../../features/memorization_plus/data/models/isar_v2_session.dart';
@@ -20,10 +25,24 @@ import '../../features/xp/data/models/xp_isar.dart';
 /// [clearedPreferenceKeys]. When adding a device preference, add it to
 /// [retainedPreferenceKeys]. A test asserts the two sets never overlap.
 class AccountDataReset {
-  AccountDataReset(this._isar, this._prefs);
+  AccountDataReset(
+    this._isar,
+    this._prefs, {
+    ParentPinSecureStore? parentPinStore,
+    EncryptedAccountPreferencesStore? encryptedAccountPreferences,
+    RecordOwnerProvider? owner,
+    BackgroundSyncScheduler? backgroundSyncScheduler,
+  }) : _parentPinStore = parentPinStore,
+       _encryptedAccountPreferences = encryptedAccountPreferences,
+       _owner = owner,
+       _backgroundSyncScheduler = backgroundSyncScheduler;
 
   final Isar _isar;
   final SharedPreferences _prefs;
+  final ParentPinSecureStore? _parentPinStore;
+  final EncryptedAccountPreferencesStore? _encryptedAccountPreferences;
+  final RecordOwnerProvider? _owner;
+  final BackgroundSyncScheduler? _backgroundSyncScheduler;
 
   /// Individual account-owned preference keys.
   static const Set<String> clearedPreferenceKeys = {
@@ -46,13 +65,23 @@ class AccountDataReset {
     // Plan dirty flags.
     'daily_plan_cloud_dirty',
     'custom_plan_cloud_dirty',
+    'daily_plan_cloud_revision',
+    'custom_plan_cloud_revision',
+    'daily_plan_cloud_conflict',
+    'custom_plan_cloud_conflict',
+    // Account-owned bookmark records and their durable tombstones.
+    'quran_bookmarks',
     // Resume location may contain account-specific memorization state.
     'last_restorable_location',
   };
 
   /// Prefixes covering the memorization and legacy Hifz key namespaces. This
   /// also removes `mem_plus_local_records_claimed_by` and every migration flag.
-  static const Set<String> clearedPreferencePrefixes = {'mem_plus_', 'hifz_'};
+  static const Set<String> clearedPreferencePrefixes = {
+    'mem_plus_',
+    'hifz_',
+    'quran_bookmarks_owner_',
+  };
 
   /// Device-level preferences that must survive a logout.
   static const Set<String> retainedPreferenceKeys = {
@@ -64,9 +93,137 @@ class AccountDataReset {
     'use_cloud_production_pull',
   };
 
-  Future<void> clearAccountOwnedData() async {
+  Future<void> clearAccountOwnedData({String? departingOwnerId}) async {
+    final ownerId = departingOwnerId ?? _owner?.currentOwnerId;
+    if (ownerId != null) {
+      await _backgroundSyncScheduler?.cancelAccountSync(ownerId);
+    }
     await _clearPreferences();
     await _clearCollections();
+    await _clearParentPin(ownerId);
+    await _clearEncryptedAccountPreferences(ownerId);
+  }
+
+  /// Converts the departing account's usable local progress into guest data.
+  ///
+  /// This is intentionally different from [clearAccountOwnedData]: cloud
+  /// account deletion must remove credentials but must not erase Quran or
+  /// memorization progress from this device. Cloud-specific cursors and dirty
+  /// markers are cleared so a later, unrelated account cannot upload the
+  /// deleted account's work without an explicit claim/import flow.
+  Future<void> preserveDeletedAccountLocally({
+    required String departingOwnerId,
+  }) async {
+    if (departingOwnerId.isEmpty ||
+        departingOwnerId == ReviewRecordIdentity.localOwnerId) {
+      return;
+    }
+
+    await _backgroundSyncScheduler?.cancelAccountSync(departingOwnerId);
+    await _rehomeReviewRecordsAsGuest(departingOwnerId);
+    await _copyBookmarksToGuest(departingOwnerId);
+
+    await _isar.writeTxn(() async {
+      final streak = await _isar.streakIsars.get(1);
+      if (streak != null) {
+        streak.cloudDirty = false;
+        streak.lastSyncedAt = null;
+        await _isar.streakIsars.put(streak);
+      }
+      final xp = await _isar.xpIsars.get(1);
+      if (xp != null) {
+        xp.cloudDirty = false;
+        xp.lastSyncedAt = null;
+        await _isar.xpIsars.put(xp);
+      }
+      final activities = await _isar.dailyActivityIsars.where().findAll();
+      for (final activity in activities) {
+        activity.cloudDirty = false;
+        activity.lastSyncedAt = null;
+        await _isar.dailyActivityIsars.put(activity);
+      }
+      // Queue records deliberately remain under the deleted owner. They are
+      // preserved for recovery/export, but can never be delivered by a later
+      // account because queue ownership is scoped to the active user id.
+    });
+
+    const cloudMetadata = <String>{
+      'auth_last_signed_in_user_id',
+      'ayah_review_pull_cursor',
+      'ayah_review_pull_cursor_pulled_at',
+      'synced_certificate_ids',
+      'daily_plan_cloud_dirty',
+      'custom_plan_cloud_dirty',
+      'daily_plan_cloud_revision',
+      'custom_plan_cloud_revision',
+      'daily_plan_cloud_conflict',
+      'custom_plan_cloud_conflict',
+      'read_pages_cloud_dirty',
+      'mem_plus_local_records_claimed_by',
+    };
+    for (final key in cloudMetadata) {
+      await _prefs.remove(key);
+    }
+  }
+
+  Future<void> _rehomeReviewRecordsAsGuest(String departingOwnerId) async {
+    await _isar.writeTxn(() async {
+      final rows = await _isar.isarAyahReviewRecords
+          .filter()
+          .ownerUserIdEqualTo(departingOwnerId)
+          .findAll();
+      for (final row in rows) {
+        final audience = row.audience ?? 'adult';
+        final guestKey =
+            '${ReviewRecordIdentity.localOwnerId}|$audience|${row.surahId}|${row.ayahNumber}';
+        final existing = await _isar.isarAyahReviewRecords.getByCompositeKey(
+          guestKey,
+        );
+        if (existing != null && existing.id != row.id) {
+          if (!row.lastReviewedAt.isAfter(existing.lastReviewedAt)) {
+            await _isar.isarAyahReviewRecords.delete(row.id);
+            continue;
+          }
+          await _isar.isarAyahReviewRecords.delete(existing.id);
+        }
+        row.compositeKey = guestKey;
+        row.ownerUserId = ReviewRecordIdentity.localOwnerId;
+        row.cloudDirty = false;
+        row.lastSyncedAt = null;
+        await _isar.isarAyahReviewRecords.put(row);
+      }
+    });
+  }
+
+  Future<void> _copyBookmarksToGuest(String departingOwnerId) async {
+    const key = 'quran_bookmarks';
+    final legacyKey = 'quran_bookmarks_owner_$departingOwnerId';
+    const guestKey = 'quran_bookmarks_owner_${ReviewRecordIdentity.localOwnerId}';
+    final legacyValue = _prefs.getString(legacyKey);
+    if (legacyValue != null) {
+      await _prefs.setString(guestKey, legacyValue);
+      await _prefs.remove(legacyKey);
+    }
+
+    final encrypted = _encryptedAccountPreferences;
+    if (encrypted == null) return;
+    final secureValue = await encrypted.read(departingOwnerId, key);
+    if (secureValue == null) return;
+    await encrypted.write(ReviewRecordIdentity.localOwnerId, key, secureValue);
+    await encrypted.delete(departingOwnerId, key);
+  }
+
+  Future<void> _clearParentPin(String? ownerId) async {
+    final secureStore = _parentPinStore;
+    if (secureStore == null || ownerId == null) return;
+    await secureStore.clearVerifier(ownerId);
+    await secureStore.writeBlockedUntil(ownerId, null);
+    await secureStore.writeFailureCount(ownerId, 0);
+  }
+
+  Future<void> _clearEncryptedAccountPreferences(String? ownerId) async {
+    if (ownerId == null) return;
+    await _encryptedAccountPreferences?.delete(ownerId, 'quran_bookmarks');
   }
 
   Future<void> _clearPreferences() async {

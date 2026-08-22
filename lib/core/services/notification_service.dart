@@ -8,6 +8,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
 import '../router/launch_destination.dart';
+import '../utils/talia_logger.dart';
 
 /// Smart notification service for Talia Quran.
 ///
@@ -439,29 +440,52 @@ class TaliaNotificationService {
   String? takePendingLaunchPayload() => takePendingLaunch()?.payload;
 
   Future<void> configureLocalTimezone() async {
+    // Some Android OEMs return identifiers ("GMT+03:00") that don't exist in
+    // the tz database; swallowing that silently leaves tz.local on UTC and
+    // every daily reminder fires hours off. Fall back to the app's primary
+    // audience timezone before giving up.
     try {
       final localTimezone = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(localTimezone.identifier));
-    } catch (_) {
-      // Fallback
+      return;
+    } catch (error, stack) {
+      TaliaLogger.w('Device timezone lookup failed', error, stack);
+    }
+    try {
+      tz.setLocalLocation(tz.getLocation('Asia/Riyadh'));
+      TaliaLogger.w('Timezone fallback: using Asia/Riyadh');
+    } catch (error, stack) {
+      TaliaLogger.w('Timezone fallback failed; staying on UTC', error, stack);
     }
   }
 
   /// Request permissions for local notifications (iOS and Android 13+)
   Future<void> requestPermissions() async {
     if (Platform.isIOS) {
-      await _plugin
-          .resolvePlatformSpecificImplementation<
-            IOSFlutterLocalNotificationsPlugin
-          >()
-          ?.requestPermissions(alert: true, badge: true, sound: true);
+      try {
+        await _plugin
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >()
+            ?.requestPermissions(alert: true, badge: true, sound: true);
+      } catch (error, stack) {
+        // Mirrors the Android branch: a plugin failure here must never
+        // escape — this runs unawaited during startup.
+        TaliaLogger.w('iOS notification permission request failed', error, stack);
+      }
     } else if (Platform.isAndroid) {
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
           _plugin
               .resolvePlatformSpecificImplementation<
                 AndroidFlutterLocalNotificationsPlugin
               >();
-      await androidImplementation?.requestNotificationsPermission();
+      // The Android permission call needs a foreground Activity; it throws
+      // when invoked from a background isolate, so never let it escape.
+      try {
+        await androidImplementation?.requestNotificationsPermission();
+      } catch (_) {
+        // Permission can still be requested later from the settings screen.
+      }
     }
   }
 

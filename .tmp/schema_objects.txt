@@ -1,0 +1,51 @@
+supabase_schema.sql:21:CREATE TABLE IF NOT EXISTS public.child_link_requests (
+supabase_schema.sql:37:CREATE TABLE IF NOT EXISTS public.parent_child_links (
+supabase_schema.sql:55:CREATE TABLE IF NOT EXISTS public.kids_progress_cloud (
+supabase_schema.sql:66:CREATE TABLE IF NOT EXISTS public.kids_session_logs (
+supabase_schema.sql:83:CREATE TABLE IF NOT EXISTS public.parent_rewards (
+supabase_schema.sql:182:CREATE OR REPLACE FUNCTION public.create_child_link_request_with_hash(p_token_hash TEXT)
+supabase_schema.sql:208:CREATE OR REPLACE FUNCTION public.accept_child_link_token_with_hash(p_token_hash TEXT)
+supabase_schema.sql:249:CREATE OR REPLACE FUNCTION public.upsert_kids_progress_cloud(
+supabase_schema.sql:285:CREATE OR REPLACE FUNCTION public.insert_kids_session_log(
+supabase_schema.sql:317:CREATE OR REPLACE FUNCTION public.insert_kids_session_logs_batch(
+supabase_schema.sql:370:CREATE TABLE IF NOT EXISTS public.profiles (
+supabase_schema.sql:383:CREATE OR REPLACE FUNCTION public.handle_new_user()
+supabase_schema.sql:417:CREATE TABLE IF NOT EXISTS public.streaks (
+supabase_schema.sql:432:CREATE TABLE IF NOT EXISTS public.xp (
+supabase_schema.sql:442:CREATE TABLE IF NOT EXISTS public.xp_history (
+supabase_schema.sql:467:CREATE OR REPLACE FUNCTION public.update_updated_at()
+supabase_schema.sql:557:CREATE OR REPLACE FUNCTION public.upsert_streak(
+supabase_schema.sql:596:CREATE OR REPLACE FUNCTION public.upsert_xp(p_total_xp INTEGER)
+supabase_schema.sql:667:CREATE TABLE IF NOT EXISTS public.daily_activities (
+supabase_schema.sql:690:CREATE OR REPLACE FUNCTION public.upsert_daily_activities_batch(
+supabase_schema.sql:938:CREATE TABLE IF NOT EXISTS public.ayah_review_records_cloud (
+supabase_schema.sql:975:CREATE TABLE IF NOT EXISTS public.daily_plans_cloud (
+supabase_schema.sql:986:CREATE TABLE IF NOT EXISTS public.custom_plans_cloud (
+supabase_schema.sql:994:CREATE TABLE IF NOT EXISTS public.certificate_awards_cloud (
+supabase_schema.sql:1117:CREATE OR REPLACE FUNCTION public.upsert_ayah_review_records(
+supabase_schema.sql:1191:CREATE OR REPLACE FUNCTION public.upsert_ayah_review_records_v2(
+supabase_schema.sql:1286:CREATE OR REPLACE FUNCTION public.pull_ayah_review_records_since(
+supabase_schema.sql:1321:CREATE OR REPLACE FUNCTION public.pull_ayah_review_records()
+supabase_schema.sql:1340:CREATE OR REPLACE FUNCTION public.revoke_guardian_link(p_counterpart_user_id UUID)
+supabase_schema.sql:1369:CREATE OR REPLACE FUNCTION public.get_remote_children_dashboard()
+supabase\migrations\0002_audit_patches.sql:11:CREATE OR REPLACE FUNCTION public.insert_kids_session_logs_batch(
+supabase\migrations\0002_audit_patches.sql:47:CREATE OR REPLACE FUNCTION public.get_remote_children_dashboard()
+supabase\migrations\0003_delete_current_user.sql:4:CREATE OR REPLACE FUNCTION public.delete_current_user()
+supabase\migrations\0004_cost_audit_fixes.sql:24:CREATE OR REPLACE FUNCTION public.accept_child_link_token_with_hash(p_token_hash TEXT)
+supabase\migrations\0004_cost_audit_fixes.sql:76:CREATE OR REPLACE FUNCTION public.upsert_ayah_review_records(
+supabase\migrations\0004_cost_audit_fixes.sql:144:CREATE OR REPLACE FUNCTION public.pull_ayah_review_records_since(
+supabase\migrations\0004_cost_audit_fixes.sql:172:CREATE OR REPLACE FUNCTION public.pull_ayah_review_records()
+supabase\migrations\0004_cost_audit_fixes.sql:191:CREATE OR REPLACE FUNCTION public.get_remote_children_dashboard()
+supabase\migrations\0004_cost_audit_fixes.sql:319:CREATE OR REPLACE FUNCTION public.pull_child_review_records_page(
+supabase\migrations\0004_cost_audit_fixes.sql:361:CREATE OR REPLACE FUNCTION public.prune_kids_session_logs(
+supabase\migrations\0006_fsrs_and_audit_fixes.sql:11:CREATE OR REPLACE FUNCTION public.upsert_ayah_review_records(
+supabase\migrations\0006_fsrs_and_audit_fixes.sql:81:CREATE OR REPLACE FUNCTION public.get_remote_children_dashboard()
+supabase\migrations\0006_fsrs_and_audit_fixes.sql:207:CREATE OR REPLACE FUNCTION public.prune_audit_logs()
+supabase\migrations\0007_review_record_audience_identity.sql:32:CREATE OR REPLACE FUNCTION public.upsert_ayah_review_records(
+supabase\migrations\0008_custom_plans_cloud.sql:6:CREATE TABLE IF NOT EXISTS public.custom_plans_cloud (
+supabase\migrations\0011_restore_and_revoke.sql:9:CREATE TABLE IF NOT EXISTS public.reading_progress_cloud (
+supabase\migrations\0011_restore_and_revoke.sql:49:CREATE OR REPLACE FUNCTION public.upsert_reading_progress(p_pages INTEGER[])
+supabase\migrations\0009_review_sync_acknowledgement_and_composite_cursor.sql:8:CREATE OR REPLACE FUNCTION public.upsert_ayah_review_records_v2(
+supabase\migrations\0009_review_sync_acknowledgement_and_composite_cursor.sql:102:CREATE OR REPLACE FUNCTION public.pull_ayah_review_records_since(
+supabase\migrations\0010_kids_session_log_ayah_dedup.sql:26:CREATE OR REPLACE FUNCTION public.insert_kids_session_log(
+supabase\migrations\0010_kids_session_log_ayah_dedup.sql:54:CREATE OR REPLACE FUNCTION public.insert_kids_session_logs_batch(

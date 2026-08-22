@@ -13,6 +13,7 @@ class IsarHifzLocalDatasourceImpl implements HifzLocalDatasource {
   final SharedPreferences _prefs;
 
   static const _migrationKey = 'hifz_isar_migrated';
+  static const _quarantinePrefix = 'hifz_isar_migration_quarantine_';
 
   /// Performs a one-time migration from SharedPreferences to Isar
   Future<void> migrateFromSharedPreferencesIfNeeded() async {
@@ -29,34 +30,37 @@ class IsarHifzLocalDatasourceImpl implements HifzLocalDatasource {
       return;
     }
 
-    final modelsToMigrate = <AyahProgressModel>[];
+    var allRecordsHandled = true;
     for (final k in keys) {
       final raw = _prefs.getString(k);
-      if (raw != null) {
-        try {
-          modelsToMigrate.add(
-            AyahProgressModel.fromJson(jsonDecode(raw) as Map<String, dynamic>),
-          );
-        } catch (_) {}
+      if (raw == null) {
+        allRecordsHandled = false;
+        continue;
+      }
+      try {
+        final model = AyahProgressModel.fromJson(
+          jsonDecode(raw) as Map<String, dynamic>,
+        );
+        await _isar.writeTxn(() async {
+          // The unique composite key makes a retry an upsert, not a duplicate.
+          await _isar.isarAyahProgress.put(IsarAyahProgress.fromModel(model));
+        });
+        if (!await _prefs.remove(k)) {
+          allRecordsHandled = false;
+        }
+      } catch (_) {
+        allRecordsHandled = false;
+        // Preserve the original payload for repair/support. The source key is
+        // intentionally retained, so retrying this migration cannot lose it.
+        await _prefs.setString('$_quarantinePrefix$k', raw);
       }
     }
 
-    if (modelsToMigrate.isNotEmpty) {
-      final isarModels = modelsToMigrate
-          .map(IsarAyahProgress.fromModel)
-          .toList();
-      await _isar.writeTxn(() async {
-        await _isar.isarAyahProgress.putAll(isarModels);
-      });
+    // Completion is durable only after every source record was persisted and
+    // removed. A malformed or interrupted record keeps migration retryable.
+    if (allRecordsHandled) {
+      await _prefs.setBool(_migrationKey, true);
     }
-
-    // Remove legacy keys to free space and prevent accidental re-migration
-    for (final k in keys) {
-      await _prefs.remove(k);
-    }
-
-    // Mark as migrated
-    await _prefs.setBool(_migrationKey, true);
   }
 
   @override

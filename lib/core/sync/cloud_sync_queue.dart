@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:isar/isar.dart';
@@ -5,6 +6,7 @@ import 'package:isar/isar.dart';
 import '../identity/record_owner_provider.dart';
 import '../memorization/review_record_identity.dart';
 import 'cloud_sync_queue_item.dart';
+import 'sync_result.dart';
 
 /// Retry kinds for deferred cloud sync work.
 abstract final class CloudSyncQueueKind {
@@ -17,16 +19,26 @@ abstract final class CloudSyncQueueKind {
   static const kidsProgress = 'kids_progress'; // legacy — kept to drain old Isar rows
   static const kidsProgressPull = 'kids_progress_pull';
   static const kidsProgressPush = 'kids_progress_push';
+  static const bookmarkPull = 'bookmark_pull';
+  static const bookmarkPush = 'bookmark_push';
 }
 
 class CloudSyncQueue {
-  CloudSyncQueue(this._isar, this._owner);
+  CloudSyncQueue(
+    this._isar,
+    this._owner, {
+    Future<void> Function(String ownerId)? scheduleBackgroundDelivery,
+    Future<void> Function()? requestForegroundSync,
+  }) : _scheduleBackgroundDelivery = scheduleBackgroundDelivery,
+       _requestForegroundSync = requestForegroundSync;
 
   static const maxAttempts = 8;
   static const baseBackoffSeconds = 30;
 
   final Isar _isar;
   final RecordOwnerProvider _owner;
+  final Future<void> Function(String ownerId)? _scheduleBackgroundDelivery;
+  final Future<void> Function()? _requestForegroundSync;
   final _random = Random();
 
   String get _ownerUserId => _owner.currentOwnerId;
@@ -74,6 +86,11 @@ class CloudSyncQueue {
         ..createdAt = now;
       await _isar.cloudSyncQueueItems.put(item);
     });
+    await _scheduleBackgroundDelivery?.call(ownerUserId);
+    final requestForegroundSync = _requestForegroundSync;
+    if (requestForegroundSync != null) {
+      unawaited(requestForegroundSync());
+    }
   }
 
   Future<bool> hasPending() async {
@@ -109,7 +126,7 @@ class CloudSyncQueue {
 
   /// Re-arms a dead letter for another retry cycle (preserves history via
   /// resetting attempt count only when the user explicitly recovers).
-  Future<void> requeueDeadLetter(String kind) async {
+  Future<void> _requeueDeadLetter(String kind) async {
     final now = DateTime.now().toUtc();
     await _isar.writeTxn(() async {
       final existing = await _find(kind);
@@ -118,6 +135,17 @@ class CloudSyncQueue {
       existing.nextRetryAt = now;
       await _isar.cloudSyncQueueItems.put(existing);
     });
+  }
+
+  /// Explicit recovery API for UI or support tooling. Lifecycle callbacks must
+  /// not call this; exhausted work remains a dead letter until requested.
+  Future<DeadLetterRecoveryResult> recoverDeadLetter(String kind) async {
+    final before = await _find(kind);
+    if (before == null || before.attemptCount < maxAttempts) {
+      return DeadLetterRecoveryResult(kind: kind, rearmed: false);
+    }
+    await _requeueDeadLetter(kind);
+    return DeadLetterRecoveryResult(kind: kind, rearmed: true);
   }
 
   Future<void> markSuccess(String kind) async {

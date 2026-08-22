@@ -483,10 +483,25 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   @override
   Future<void> close() async {
     AudioLifecycleManager.instance.unregister(_player);
-    await _player.stop();
+    // Cleanup must never throw: speech_to_text.cancel() fails on platforms
+    // without speech support or when initialize() never completed, and a
+    // throwing close() surfaces as an unhandled error on session exit.
+    try {
+      await _player.stop();
+    } catch (error, stack) {
+      TaliaLogger.w('Session player stop failed', error, stack);
+    }
     await _playerStateSub?.cancel();
-    await _player.dispose();
-    await _speechToText.cancel();
+    try {
+      await _player.dispose();
+    } catch (error, stack) {
+      TaliaLogger.w('Session player dispose failed', error, stack);
+    }
+    try {
+      await _speechToText.cancel();
+    } catch (error, stack) {
+      TaliaLogger.w('Speech cancellation failed', error, stack);
+    }
     return super.close();
   }
 

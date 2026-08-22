@@ -5,8 +5,8 @@
 -- ayah. Keep the latest completion per (child, surah, ayah) and reject
 -- subsequent inserts of the same ayah.
 --
--- Deploy after supabase_schema.sql (new projects) or numbered migrations
--- 0002–0009 (existing projects). Production must be at this migration.
+-- Apply after the preceding numbered migrations. Production must be at this
+-- migration or later before a client relies on ayah-level log deduplication.
 
 -- Keep the latest row per ayah; drop older duplicates.
 DELETE FROM public.kids_session_logs a

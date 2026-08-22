@@ -484,6 +484,10 @@ class _FakeMemPlusRepository implements MemorizationPlusRepository {
   }
 
   @override
+  Future<Either<Failure, void>> pullIdentityFromCloud() async =>
+      const Right(null);
+
+  @override
   Future<Either<Failure, List<CertificateAward>>> pullCertificatesFromCloud() async =>
       const Right([]);
 

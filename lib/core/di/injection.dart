@@ -31,6 +31,9 @@ import '../progress/progress_events_bus.dart';
 import '../identity/record_owner_provider.dart';
 import '../sync/cloud_sync_queue.dart';
 import '../sync/cloud_sync_queue_item.dart';
+import '../sync/background_sync_scheduler.dart';
+import '../security/parent_pin_secure_store.dart';
+import '../security/encrypted_account_preferences_store.dart';
 import '../../features/quran/data/datasources/quran_local_datasource.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
 import '../../features/quran/data/repositories/quran_repository_impl.dart';
@@ -67,6 +70,8 @@ import '../../features/memorization_plus/data/models/isar_ayah_review_record.dar
 import '../../features/memorization_plus/data/models/isar_v2_session.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
+import '../../features/memorization_plus/domain/repositories/memorization_cloud_repository.dart';
+import '../../features/memorization_plus/domain/repositories/memorization_identity_repository.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import '../../features/memorization_plus/presentation/cubits/guardian_linking_cubit.dart';
@@ -87,6 +92,7 @@ import '../../features/streak/presentation/cubits/streak_cubit.dart';
 import '../../features/xp/data/models/xp_isar.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/application/cloud_sync_coordinator.dart';
 import '../identity/account_data_reset.dart';
 import '../../features/auth/presentation/cubits/auth_cubit.dart';
 
@@ -98,9 +104,7 @@ Future<void> configureDependencies() async {
   getIt.registerSingleton<SharedPreferences>(sharedPrefs);
 
   final dir = await getApplicationDocumentsDirectory();
-  final isar =
-      Isar.getInstance() ??
-      await Isar.open([
+  final schemas = [
         IsarAyahProgressSchema,
         IsarAyahReviewRecordSchema,
         IsarV2SessionSchema, // V2 session persistence
@@ -108,7 +112,13 @@ Future<void> configureDependencies() async {
         XpIsarSchema,
         DailyActivityIsarSchema, // For yearly activity heatmap
         CloudSyncQueueItemSchema,
-      ], directory: dir.path);
+      ];
+  final isar =
+      Isar.getInstance() ??
+      await Isar.open(
+        schemas,
+        directory: dir.path,
+      );
   getIt.registerSingleton<Isar>(isar);
   getIt.registerLazySingleton<V2SessionLocalDatasource>(
     () => V2SessionLocalDatasource(getIt<Isar>()),
@@ -122,11 +132,33 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<RecordOwnerProvider>(
     () => const SupabaseRecordOwnerProvider(),
   );
+  getIt.registerLazySingleton<ParentPinSecureStore>(
+    () => FlutterParentPinSecureStore(),
+  );
+  getIt.registerLazySingleton<EncryptedAccountPreferencesStore>(
+    () => FlutterEncryptedAccountPreferencesStore(),
+  );
+  getIt.registerLazySingleton<BackgroundSyncScheduler>(
+    BackgroundSyncScheduler.new,
+  );
   getIt.registerLazySingleton<CloudSyncQueue>(
-    () => CloudSyncQueue(getIt<Isar>(), getIt<RecordOwnerProvider>()),
+    () => CloudSyncQueue(
+      getIt<Isar>(),
+      getIt<RecordOwnerProvider>(),
+      scheduleBackgroundDelivery:
+          getIt<BackgroundSyncScheduler>().scheduleAccountSync,
+      requestForegroundSync: () => getIt<CloudSyncCoordinator>().run(),
+    ),
   );
   getIt.registerLazySingleton<AccountDataReset>(
-    () => AccountDataReset(getIt<Isar>(), getIt<SharedPreferences>()),
+    () => AccountDataReset(
+      getIt<Isar>(),
+      getIt<SharedPreferences>(),
+      parentPinStore: getIt<ParentPinSecureStore>(),
+      encryptedAccountPreferences: getIt<EncryptedAccountPreferencesStore>(),
+      owner: getIt<RecordOwnerProvider>(),
+      backgroundSyncScheduler: getIt<BackgroundSyncScheduler>(),
+    ),
   );
 
   final memorizationPlusDatasource = MemorizationPlusLocalDatasourceImpl(
@@ -188,7 +220,12 @@ Future<void> configureDependencies() async {
     () => SettingsRepositoryImpl(getIt<SharedPreferences>()),
   );
   getIt.registerLazySingleton<BookmarkService>(
-    () => BookmarkService(getIt<SharedPreferences>()),
+    () => BookmarkService(
+      getIt<SharedPreferences>(),
+      owner: getIt<RecordOwnerProvider>(),
+      cloudSyncQueue: getIt<CloudSyncQueue>(),
+      encryptedAccountPreferences: getIt<EncryptedAccountPreferencesStore>(),
+    ),
   );
   getIt.registerLazySingleton<AzkarLocalDatasource>(
     () => AzkarLocalDatasourceImpl(),
@@ -259,9 +296,16 @@ Future<void> configureDependencies() async {
       getIt<StreakReader>(),
       getIt<ProgressEventsBus>(),
       getIt<SharedPreferences>(),
-      const ProgressMetricsService(),
-      getIt<CloudSyncQueue>(),
+      metrics: const ProgressMetricsService(),
+      cloudSyncQueue: getIt<CloudSyncQueue>(),
+      parentPinStore: getIt<ParentPinSecureStore>(),
     ),
+  );
+  getIt.registerLazySingleton<MemorizationIdentityRepository>(
+    () => getIt<MemorizationPlusRepository>() as MemorizationIdentityRepository,
+  );
+  getIt.registerLazySingleton<MemorizationCloudRepository>(
+    () => getIt<MemorizationPlusRepository>() as MemorizationCloudRepository,
   );
   getIt.registerLazySingleton<MemorizationPathResolver>(
     () => MemorizationPathResolver(getIt<MemorizationPlusRepository>()),
@@ -313,7 +357,22 @@ Future<void> configureDependencies() async {
     ),
   );
   getIt.registerLazySingleton<AuthRepository>(
-    () => AuthRepositoryImpl(getIt<Isar>(), getIt<AccountDataReset>(), getIt<SharedPreferences>()),
+    () => AuthRepositoryImpl(
+      getIt<Isar>(),
+      getIt<AccountDataReset>(),
+      getIt<SharedPreferences>(),
+    ),
+  );
+  getIt.registerLazySingleton<CloudSyncCoordinator>(
+    () => CloudSyncCoordinator(
+      authRepository: getIt<AuthRepository>(),
+      memorizationCloudRepository: getIt<MemorizationCloudRepository>(),
+      progressEvents: getIt<ProgressEventsBus>(),
+      achievementService: getIt<AchievementService>(),
+      cloudSyncQueue: getIt<CloudSyncQueue>(),
+      bookmarkService: getIt<BookmarkService>(),
+    ),
+    dispose: (coordinator) => coordinator.dispose(),
   );
 
   // ─── Usecases ───────────────────────────────────────────────────────────────
@@ -487,6 +546,7 @@ Future<void> configureDependencies() async {
       getIt<CloudSyncQueue>(),
       getIt<SharedPreferences>(),
       getIt<AccountDataReset>(),
+      getIt<CloudSyncCoordinator>(),
     ),
   );
 }

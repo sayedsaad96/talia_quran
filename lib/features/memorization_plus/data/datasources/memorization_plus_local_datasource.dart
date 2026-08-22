@@ -63,6 +63,13 @@ abstract class MemorizationPlusLocalDatasource {
   /// Clears cloud dirty flags after a successful cloud upsert.
   Future<void> markReviewRecordsCloudSynced(Iterable<String> compositeKeys);
 
+  /// Clears a dirty flag only when the row still has the mutation version that
+  /// the server acknowledged. This prevents a delayed acknowledgement from
+  /// erasing a newer local review written while the request was in flight.
+  Future<void> markReviewRecordsCloudSyncedAtVersions(
+    Map<String, int> acknowledgedVersions,
+  );
+
   // Daily plan cache
   Future<DailyPlanModel?> getCachedDailyPlan();
   Future<void> saveDailyPlan(DailyPlanModel plan);
@@ -74,6 +81,7 @@ abstract class MemorizationPlusLocalDatasource {
   Future<List<KidsSessionLogModel>> getKidsSessionLogs();
   Future<void> saveKidsSessionLog(KidsSessionLogModel log);
   Future<void> saveKidsSessionLogs(List<KidsSessionLogModel> logs);
+  Future<void> markKidsSessionLogsCloudSynced(Iterable<String> localIds);
 
   // Parent dashboard
   Future<ParentSettingsModel> getParentSettings();

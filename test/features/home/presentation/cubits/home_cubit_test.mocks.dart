@@ -7,19 +7,20 @@ import 'dart:async' as _i5;
 
 import 'package:dartz/dartz.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:shared_preferences/shared_preferences.dart' as _i19;
+import 'package:shared_preferences/shared_preferences.dart' as _i20;
 import 'package:talia_quran/core/error/app_failure.dart' as _i6;
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart'
-    as _i16;
-import 'package:talia_quran/core/memorization/review_record_audience_scope.dart'
-    as _i13;
-import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart'
-    as _i18;
-import 'package:talia_quran/core/memorization/usecases/get_smart_coach_recommendation_usecase.dart'
     as _i17;
-import 'package:talia_quran/core/services/app_session_service.dart' as _i15;
-import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart'
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart'
     as _i14;
+import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart'
+    as _i19;
+import 'package:talia_quran/core/memorization/usecases/get_smart_coach_recommendation_usecase.dart'
+    as _i18;
+import 'package:talia_quran/core/services/app_session_service.dart' as _i16;
+import 'package:talia_quran/core/sync/sync_result.dart' as _i13;
+import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart'
+    as _i15;
 import 'package:talia_quran/features/home/domain/usecases/get_activity_heatmap_usecase.dart'
     as _i3;
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart'
@@ -488,6 +489,34 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
+  _i5.Future<_i13.SyncConflict<_i11.DailyPlan>?> getDailyPlanConflict() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getDailyPlanConflict,
+          [],
+        ),
+        returnValue: _i5.Future<_i13.SyncConflict<_i11.DailyPlan>?>.value(),
+      ) as _i5.Future<_i13.SyncConflict<_i11.DailyPlan>?>);
+
+  @override
+  _i5.Future<_i2.Either<_i6.Failure, void>> resolveDailyPlanConflict(
+          _i13.SyncConflictResolution? resolution) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #resolveDailyPlanConflict,
+          [resolution],
+        ),
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #resolveDailyPlanConflict,
+            [resolution],
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
   _i5.Future<_i2.Either<_i6.Failure, bool>> markDailyPlanAyahCompleted({
     required int? surahId,
     required int? ayahNumber,
@@ -519,7 +548,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
   _i5.Future<_i2.Either<_i6.Failure, _i11.AyahReviewRecord?>> getReviewRecord(
     int? surahId,
     int? ayahNumber, {
-    _i13.ReviewRecordReadScope? scope = _i13.ReviewRecordReadScope.adult,
+    _i14.ReviewRecordReadScope? scope = _i14.ReviewRecordReadScope.adult,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
@@ -548,8 +577,8 @@ class MockMemorizationPlusRepository extends _i1.Mock
   @override
   _i5.Future<
       _i2.Either<_i6.Failure, List<_i11.AyahReviewRecord>>> getAllReviewRecords(
-          {_i13.ReviewRecordReadScope? scope =
-              _i13.ReviewRecordReadScope.adult}) =>
+          {_i14.ReviewRecordReadScope? scope =
+              _i14.ReviewRecordReadScope.adult}) =>
       (super.noSuchMethod(
         Invocation.method(
           #getAllReviewRecords,
@@ -988,6 +1017,24 @@ class MockMemorizationPlusRepository extends _i1.Mock
           ) as _i5.Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>);
 
   @override
+  _i5.Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>
+      unlockRemoteParentReward(String? rewardId) => (super.noSuchMethod(
+            Invocation.method(
+              #unlockRemoteParentReward,
+              [rewardId],
+            ),
+            returnValue: _i5
+                .Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>.value(
+                _FakeEither_0<_i6.Failure, List<_i11.ParentReward>>(
+              this,
+              Invocation.method(
+                #unlockRemoteParentReward,
+                [rewardId],
+              ),
+            )),
+          ) as _i5.Future<_i2.Either<_i6.Failure, List<_i11.ParentReward>>>);
+
+  @override
   _i5.Future<_i2.Either<_i6.Failure, _i11.KidsCompletionResult>>
       awardKidsPoints({
     required int? surahId,
@@ -1076,6 +1123,35 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
+  _i5.Future<_i13.SyncConflict<_i11.CustomMemorizationPlan>?>
+      getCustomPlanConflict() => (super.noSuchMethod(
+            Invocation.method(
+              #getCustomPlanConflict,
+              [],
+            ),
+            returnValue: _i5.Future<
+                _i13.SyncConflict<_i11.CustomMemorizationPlan>?>.value(),
+          ) as _i5.Future<_i13.SyncConflict<_i11.CustomMemorizationPlan>?>);
+
+  @override
+  _i5.Future<_i2.Either<_i6.Failure, void>> resolveCustomPlanConflict(
+          _i13.SyncConflictResolution? resolution) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #resolveCustomPlanConflict,
+          [resolution],
+        ),
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #resolveCustomPlanConflict,
+            [resolution],
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
   _i2.Either<_i6.Failure, bool> getIsParentMode() => (super.noSuchMethod(
         Invocation.method(
           #getIsParentMode,
@@ -1142,15 +1218,15 @@ class MockMemorizationPlusRepository extends _i1.Mock
       ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, List<_i14.CertificateAward>>>
+  _i5.Future<_i2.Either<_i6.Failure, List<_i15.CertificateAward>>>
       pullCertificatesFromCloud() => (super.noSuchMethod(
             Invocation.method(
               #pullCertificatesFromCloud,
               [],
             ),
             returnValue: _i5.Future<
-                    _i2.Either<_i6.Failure, List<_i14.CertificateAward>>>.value(
-                _FakeEither_0<_i6.Failure, List<_i14.CertificateAward>>(
+                    _i2.Either<_i6.Failure, List<_i15.CertificateAward>>>.value(
+                _FakeEither_0<_i6.Failure, List<_i15.CertificateAward>>(
               this,
               Invocation.method(
                 #pullCertificatesFromCloud,
@@ -1158,11 +1234,11 @@ class MockMemorizationPlusRepository extends _i1.Mock
               ),
             )),
           ) as _i5
-              .Future<_i2.Either<_i6.Failure, List<_i14.CertificateAward>>>);
+              .Future<_i2.Either<_i6.Failure, List<_i15.CertificateAward>>>);
 
   @override
   _i5.Future<_i2.Either<_i6.Failure, void>> pushCertificatesToCloud(
-          List<_i14.CertificateAward>? certificates) =>
+          List<_i15.CertificateAward>? certificates) =>
       (super.noSuchMethod(
         Invocation.method(
           #pushCertificatesToCloud,
@@ -1230,12 +1306,46 @@ class MockMemorizationPlusRepository extends _i1.Mock
               ),
             )),
           ) as _i5.Future<_i2.Either<_i6.Failure, _i11.FamilyDashboard>>);
+
+  @override
+  _i5.Future<_i2.Either<_i6.Failure, void>> pullIdentityFromCloud() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #pullIdentityFromCloud,
+          [],
+        ),
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #pullIdentityFromCloud,
+            [],
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
+
+  @override
+  _i5.Future<_i2.Either<_i6.Failure, void>> pushIdentityToCloud() =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #pushIdentityToCloud,
+          [],
+        ),
+        returnValue: _i5.Future<_i2.Either<_i6.Failure, void>>.value(
+            _FakeEither_0<_i6.Failure, void>(
+          this,
+          Invocation.method(
+            #pushIdentityToCloud,
+            [],
+          ),
+        )),
+      ) as _i5.Future<_i2.Either<_i6.Failure, void>>);
 }
 
 /// A class which mocks [AppSessionService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockAppSessionService extends _i1.Mock implements _i15.AppSessionService {
+class MockAppSessionService extends _i1.Mock implements _i16.AppSessionService {
   MockAppSessionService() {
     _i1.throwOnMissingStub(this);
   }
@@ -1291,7 +1401,7 @@ class MockGetActivityHeatmapUsecase extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockMemorizationPathResolver extends _i1.Mock
-    implements _i16.MemorizationPathResolver {
+    implements _i17.MemorizationPathResolver {
   MockMemorizationPathResolver() {
     _i1.throwOnMissingStub(this);
   }
@@ -1353,34 +1463,34 @@ class MockMemorizationPathResolver extends _i1.Mock
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockGetSmartCoachRecommendationUsecase extends _i1.Mock
-    implements _i17.GetSmartCoachRecommendationUsecase {
+    implements _i18.GetSmartCoachRecommendationUsecase {
   MockGetSmartCoachRecommendationUsecase() {
     _i1.throwOnMissingStub(this);
   }
 
   @override
-  _i5.Future<_i2.Either<_i6.Failure, _i18.SmartCoachRecommendation?>> call() =>
+  _i5.Future<_i2.Either<_i6.Failure, _i19.SmartCoachRecommendation?>> call() =>
       (super.noSuchMethod(
         Invocation.method(
           #call,
           [],
         ),
         returnValue: _i5.Future<
-                _i2.Either<_i6.Failure, _i18.SmartCoachRecommendation?>>.value(
-            _FakeEither_0<_i6.Failure, _i18.SmartCoachRecommendation?>(
+                _i2.Either<_i6.Failure, _i19.SmartCoachRecommendation?>>.value(
+            _FakeEither_0<_i6.Failure, _i19.SmartCoachRecommendation?>(
           this,
           Invocation.method(
             #call,
             [],
           ),
         )),
-      ) as _i5.Future<_i2.Either<_i6.Failure, _i18.SmartCoachRecommendation?>>);
+      ) as _i5.Future<_i2.Either<_i6.Failure, _i19.SmartCoachRecommendation?>>);
 }
 
 /// A class which mocks [SharedPreferences].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockSharedPreferences extends _i1.Mock implements _i19.SharedPreferences {
+class MockSharedPreferences extends _i1.Mock implements _i20.SharedPreferences {
   MockSharedPreferences() {
     _i1.throwOnMissingStub(this);
   }

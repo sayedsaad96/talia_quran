@@ -112,7 +112,7 @@ void main() {
     );
 
     test(
-      'migrates legacy review records to Isar and removes legacy keys after write',
+      'migrates valid legacy review records without deleting malformed data',
       () async {
         await _initializeIsarCoreForTests();
         final dir = await Directory.systemTemp.createTemp(
@@ -154,7 +154,15 @@ void main() {
         await isarDatasource.migrateReviewRecordsToIsarIfNeeded();
 
         expect(prefs.getString('mem_plus_review_2_3'), isNull);
-        expect(prefs.getString('mem_plus_review_corrupted'), isNull);
+        expect(prefs.getString('mem_plus_review_corrupted'), '{bad json');
+        expect(
+          prefs.getString('mem_plus_migration_quarantine_review_mem_plus_review_corrupted'),
+          '{bad json',
+        );
+        expect(
+          prefs.getBool('mem_plus_reviews_migrated_to_isar_v1'),
+          isNot(true),
+        );
 
         final migrated = await isarDatasource.getReviewRecord(2, 3);
         final records = await isarDatasource.getAllReviewRecords();

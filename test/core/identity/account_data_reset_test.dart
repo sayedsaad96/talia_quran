@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/account_data_reset.dart';
+import 'package:talia_quran/core/memorization/review_record_identity.dart';
 import 'package:talia_quran/core/sync/cloud_sync_queue_item.dart';
 import 'package:talia_quran/features/hifz/data/models/isar_ayah_progress.dart';
 import 'package:talia_quran/features/hifz/domain/entities/hifz_entities.dart';
@@ -55,6 +56,11 @@ void main() {
         'has_new_certificate_kids': true,
         'daily_plan_cloud_dirty': true,
         'custom_plan_cloud_dirty': true,
+        'daily_plan_cloud_revision': 3,
+        'custom_plan_cloud_revision': 2,
+        'daily_plan_cloud_conflict': '{}',
+        'custom_plan_cloud_conflict': '{}',
+        'quran_bookmarks': '[{}]',
         'last_restorable_location': '/memorization-v2/session?surahId=67',
         'mem_plus_profile': '{}',
         'mem_plus_local_records_claimed_by': 'user-a',
@@ -146,6 +152,11 @@ void main() {
       expect(prefs.getBool('has_new_certificate_kids'), isNull);
       expect(prefs.getBool('daily_plan_cloud_dirty'), isNull);
       expect(prefs.getBool('custom_plan_cloud_dirty'), isNull);
+      expect(prefs.getInt('daily_plan_cloud_revision'), isNull);
+      expect(prefs.getInt('custom_plan_cloud_revision'), isNull);
+      expect(prefs.getString('daily_plan_cloud_conflict'), isNull);
+      expect(prefs.getString('custom_plan_cloud_conflict'), isNull);
+      expect(prefs.getString('quran_bookmarks'), isNull);
       expect(prefs.getString('last_restorable_location'), isNull);
       expect(prefs.getString('mem_plus_local_records_claimed_by'), isNull);
     });
@@ -190,6 +201,25 @@ void main() {
       await reset.clearAccountOwnedData();
       await reset.clearAccountOwnedData();
       expect(await isar.isarAyahReviewRecords.where().count(), 0);
+    });
+
+    test('re-homes deleted-account progress as guest data without clearing it',
+        () async {
+      await seedAllCollections();
+
+      await AccountDataReset(isar, prefs).preserveDeletedAccountLocally(
+        departingOwnerId: 'user-a',
+      );
+
+      final review = await isar.isarAyahReviewRecords.where().findFirst();
+      expect(review, isNotNull);
+      expect(review!.ownerUserId, ReviewRecordIdentity.localOwnerId);
+      expect(review.compositeKey, 'local|adult|1|1');
+      expect(review.cloudDirty, isFalse);
+      expect(await isar.isarAyahProgress.where().count(), 1);
+      expect(await isar.cloudSyncQueueItems.where().count(), 1);
+      expect(prefs.getString('read_pages'), '[1,2]');
+      expect(prefs.getString('auth_last_signed_in_user_id'), isNull);
     });
   });
 }

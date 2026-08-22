@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:talia_quran/features/quran/data/datasources/bookmark_service.dart';
 import 'package:talia_quran/features/quran/domain/bookmark_reader_location.dart';
+import 'package:talia_quran/features/quran/domain/entities/bookmark_entry.dart';
 
 void main() {
   test('opens the mushaf page of the bookmarked ayah, not the surah start', () {

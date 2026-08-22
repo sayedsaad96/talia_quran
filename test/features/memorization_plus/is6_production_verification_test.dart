@@ -35,8 +35,8 @@ void main() {
     expect(migration.contains('unique_user_audience_ayah_review'), isTrue);
     expect(migration.contains('user_id, audience, surah_id, ayah_number'), isTrue);
 
-    final schema = read('supabase_schema.sql');
-    expect(schema.contains('unique_user_audience_ayah_review'), isTrue);
+    final baseline = read('supabase/migrations/0001_baseline.sql');
+    expect(baseline.contains('public.ayah_review_records_cloud'), isTrue);
   });
 
   test('account safety + sync integrity artifacts exist', () {
@@ -46,13 +46,17 @@ void main() {
     expect(exists('supabase/migrations/0008_custom_plans_cloud.sql'), isTrue);
     expect(exists('supabase/migrations/0010_kids_session_log_ayah_dedup.sql'), isTrue);
 
-    final auth = read('lib/features/auth/presentation/cubits/auth_cubit.dart');
-    expect(auth.contains('pullCertificatesFromCloud'), isTrue);
-    expect(auth.contains('pullKidsProgressFromCloud'), isTrue);
-    expect(auth.contains('mergeEarnedFromCloud'), isTrue);
-    expect(auth.contains('resolveOwnerChange'), isTrue);
-    expect(auth.contains('CloudSyncQueueKind.certificatePull'), isTrue);
-    expect(auth.contains('enqueue(CloudSyncQueueKind.certificatePull)'), isTrue);
+    final coordinator = read(
+      'lib/features/auth/application/cloud_sync_coordinator.dart',
+    );
+    expect(coordinator.contains('pullCertificatesFromCloud'), isTrue);
+    expect(coordinator.contains('pullKidsProgressFromCloud'), isTrue);
+    expect(coordinator.contains('mergeEarnedFromCloud'), isTrue);
+    expect(coordinator.contains('CloudSyncQueueKind.certificatePull'), isTrue);
+    expect(
+      coordinator.contains('enqueue(CloudSyncQueueKind.certificatePull)'),
+      isTrue,
+    );
   });
 
   test('legacy Hifz writes are retired while migration scaffolding remains', () {

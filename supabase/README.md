@@ -1,25 +1,16 @@
-# Supabase schema
+# Supabase migrations
 
-## New project
+The checked-in `migrations/` directory is the complete database source of
+truth. Apply every file in lexical order to a fresh Supabase database; do not
+depend on a root schema dump or a deployed database.
 
-1. Run `supabase_schema.sql` in the Supabase SQL Editor (full baseline).
-2. Run migrations in order (only if not already included in baseline):
-   - `migrations/0002_audit_patches.sql`
-   - `migrations/0003_delete_current_user.sql`
-   - `migrations/0004_cost_audit_fixes.sql`
+For a real reconstruction and contract check, run:
 
-## Existing project (production/staging)
+```powershell
+$env:TALIA_SUPABASE_FRESH_DB_URL = '<empty local/staging Supabase database URL>'
+./scripts/verify_supabase_migrations.ps1
+```
 
-Apply **incremental** migrations only:
-
-| Order | File | Purpose |
-|-------|------|---------|
-| 1 | `migrations/0002_audit_patches.sql` | Parent dashboard RPC, kids batch insert, indexes, legacy table hardening |
-| 2 | `migrations/0003_delete_current_user.sql` | In-app account deletion |
-| 3 | `migrations/0004_cost_audit_fixes.sql` | Atomic guardian pairing, delta pulls, SRS version conflicts, dashboard summaries |
-
-Do **not** re-run the full `supabase_schema.sql` on a live database.
-
-## Canonical source
-
-`supabase_schema.sql` at the repo root remains the single-file reference for the complete schema. Numbered migrations capture **delta** changes after initial deploy.
+For an already migrated target, run `verify_supabase_contract.ps1` with
+`SUPABASE_DB_URL`. Both scripts fail non-zero for incompatible tables, columns,
+RLS, grants, policies, or critical RPC signatures.

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+
 import '../share_card_content.dart';
-import '../social_share_model.dart';
 import '../social_share_copy.dart';
+import '../social_share_model.dart';
 import '../social_share_theme.dart';
+import '../share_card_widgets.dart';
 import '../talia_share_tokens.dart';
 
 /// Specialized Template for Streak & Daily Consistency — continuity & fire.
+///
+/// The real streak number is the hero: a giant ember-warmed numeral between
+/// two fading gold rules, with the record context beneath.
 class StreakTemplate extends StatelessWidget {
   final SocialShareData data;
   final SocialShareTheme theme;
@@ -33,7 +38,7 @@ class StreakTemplate extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // ─── 1. Radiant Fire / Sun Consistency Emblem ─────────────────────
+          // ─── 1. Radiant ember emblem ───────────────────────────────────
           Stack(
             alignment: Alignment.center,
             children: [
@@ -53,8 +58,8 @@ class StreakTemplate extends StatelessWidget {
                 ),
               ),
               Container(
-                width: isCompact ? 48 : 58,
-                height: isCompact ? 48 : 58,
+                width: isCompact ? 46 : 56,
+                height: isCompact ? 46 : 56,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: const LinearGradient(
@@ -80,7 +85,7 @@ class StreakTemplate extends StatelessWidget {
                 child: const Icon(
                   Icons.local_fire_department_rounded,
                   color: Colors.white,
-                  size: 32,
+                  size: 30,
                 ),
               ),
             ],
@@ -88,7 +93,7 @@ class StreakTemplate extends StatelessWidget {
 
           SizedBox(height: isCompact ? 6 : 10),
 
-          // ─── 2. Title ─────────────────────────────────────────────────────
+          // ─── 2. Title ─────────────────────────────────────────────────
           Text(
             data.title ?? copy.streakTitle,
             textAlign: TextAlign.center,
@@ -100,65 +105,73 @@ class StreakTemplate extends StatelessWidget {
 
           SizedBox(height: isCompact ? 4 : 8),
 
-          // ─── 3. Giant Streak Counter Banner ───────────────────────────────
-          Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: isCompact ? 18 : 24,
-              vertical: isCompact ? 6 : 10,
-            ),
-            decoration: BoxDecoration(
-              color: theme.cardBackground,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(
-                color: TaliaShareColors.streakEmber.withValues(alpha: 0.6),
-                width: 1.2,
+          // ─── 3. Hero streak counter between fading gold rules ─────────
+          Row(
+            children: [
+              Expanded(
+                child: Container(
+                  height: 1,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.accentColor.withValues(alpha: 0),
+                        theme.accentColor.withValues(alpha: 0.65),
+                      ],
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '$days',
-                  style: TaliaShareTypography.metricValue(
-                    color: TaliaShareColors.streakEmber,
-                    fontSize: isCompact ? 28 : 36,
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '$days',
+                    style: TaliaShareTypography.metricValue(
+                      color: TaliaShareColors.streakEmber,
+                      fontSize: isCompact ? 40 : (isStory ? 54 : 48),
+                    ),
+                  ),
+                  Text(
+                    copy.consecutiveDays,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TaliaShareTypography.title(
+                      color: theme.textPrimary,
+                      fontSize: isCompact ? 12.5 : 14,
+                    ),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: Container(
+                  height: 1,
+                  margin: const EdgeInsets.only(left: 8),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.accentColor.withValues(alpha: 0.65),
+                        theme.accentColor.withValues(alpha: 0),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        copy.consecutiveDays,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 1,
-                        style: TaliaShareTypography.title(
-                          color: theme.textPrimary,
-                          fontSize: isCompact ? 13 : 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        copy.quranCommitment,
-                        overflow: TextOverflow.ellipsis,
-                        maxLines: 2,
-                        style: TaliaShareTypography.badge(
-                          color: theme.textSecondary,
-                          fontSize: isCompact ? 9.5 : 10.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+
+          SizedBox(height: isCompact ? 3 : 5),
+          Text(
+            copy.quranCommitment,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: TaliaShareTypography.badge(
+              color: theme.textSecondary,
+              fontSize: isCompact ? 9.5 : 10.5,
             ),
           ),
 
-          SizedBox(height: isCompact ? 6 : 10),
-
-          // ─── 4. Context line: record or longest streak ───────────────────
+          // ─── 4. Context line: record or longest streak ───────────────
           if (data.subtitle != null && data.subtitle!.isNotEmpty) ...[
             SizedBox(height: isCompact ? 4 : 6),
             Text(
@@ -188,7 +201,7 @@ class StreakTemplate extends StatelessWidget {
             ),
           ],
 
-          // ─── 5. Motivational Message ──────────────────────────────────────
+          // ─── 5. Motivational Message ──────────────────────────────────
           if (data.content.trim().isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -215,19 +228,12 @@ class StreakTemplate extends StatelessWidget {
             ),
           ],
 
-          // ─── 6. Talia Celebratory Companion ───────────────────────────────
+          // ─── 6. Talia companion (adult opt-in path) ────────────────────
           if (data.showCharacter && !isKids) ...[
             SizedBox(height: isCompact ? 6 : (isStory ? 14 : 8)),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                key: const ValueKey('share-character-image'),
-                data.effectiveCharacterAssetPath,
-                height: isCompact ? 48 : (isStory ? (isKids ? 88 : 76) : (isKids ? 68 : 58)),
-                fit: BoxFit.contain,
-                cacheWidth: 288,
-                errorBuilder: (_, _, _) => const SizedBox.shrink(),
-              ),
+            TaliaCharacterInline(
+              assetPath: data.effectiveCharacterAssetPath,
+              height: isCompact ? 48 : (isStory ? 76 : 58),
             ),
           ],
         ],
