@@ -640,3 +640,204 @@ class RadialRaysPainter extends CustomPainter {
       oldDelegate.rayCount != rayCount ||
       oldDelegate.opacity != opacity;
 }
+
+// ─── NEW: Category-specific background pattern painters ───────────────────────
+
+/// Hexagonal tessellation — interlocking honeycomb cells.
+///
+/// Used for achievement and memorization cards: the geometry evokes
+/// structure, persistence, and mastery. Each cell is a lightly stroked
+/// hexagon; the overall opacity keeps them as a whisper behind content.
+class HexagonalTessellationPainter extends CustomPainter {
+  final Color color;
+  final double opacity;
+
+  const HexagonalTessellationPainter({
+    required this.color,
+    this.opacity = 0.07,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: opacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.7;
+
+    const r = 18.0; // hex circumradius
+    final w = r * math.sqrt(3);
+    const h = r * 2;
+
+    for (double row = -h; row < size.height + h; row += h * 0.75) {
+      final isOdd = ((row / (h * 0.75)).round() % 2) != 0;
+      final xOffset = isOdd ? w / 2 : 0.0;
+      for (double col = -w + xOffset; col < size.width + w; col += w) {
+        _drawHex(canvas, Offset(col, row), r, paint);
+      }
+    }
+  }
+
+  void _drawHex(Canvas canvas, Offset center, double r, Paint paint) {
+    final path = Path();
+    for (int i = 0; i < 6; i++) {
+      final angle = (math.pi / 180) * (60 * i - 30);
+      final x = center.dx + r * math.cos(angle);
+      final y = center.dy + r * math.sin(angle);
+      i == 0 ? path.moveTo(x, y) : path.lineTo(x, y);
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant HexagonalTessellationPainter old) =>
+      old.color != color || old.opacity != opacity;
+}
+
+/// Geometric rosette — a 12-petal flower built from overlapping circles,
+/// classic in Islamic architecture and illuminated manuscripts.
+///
+/// Used for certificate cards to convey formality and distinction.
+/// Drawn from the card center with a slow fade toward edges.
+class GeometricRosettePainter extends CustomPainter {
+  final Color color;
+  final double opacity;
+
+  const GeometricRosettePainter({
+    required this.color,
+    this.opacity = 0.09,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    final r = math.min(size.width, size.height) * 0.38;
+
+    final paint = Paint()
+      ..color = color.withValues(alpha: opacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8;
+
+    // 12 circles arranged radially, each offset from center by r/2.
+    const petals = 12;
+    for (int i = 0; i < petals; i++) {
+      final angle = (2 * math.pi / petals) * i;
+      final ox = cx + (r / 2) * math.cos(angle);
+      final oy = cy + (r / 2) * math.sin(angle);
+      canvas.drawCircle(Offset(ox, oy), r / 2, paint);
+    }
+
+    // Outer bounding circle.
+    canvas.drawCircle(
+      Offset(cx, cy),
+      r,
+      paint..color = color.withValues(alpha: opacity * 0.6),
+    );
+    // Inner ring.
+    canvas.drawCircle(
+      Offset(cx, cy),
+      r * 0.5,
+      paint..color = color.withValues(alpha: opacity * 0.4),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant GeometricRosettePainter old) =>
+      old.color != color || old.opacity != opacity;
+}
+
+/// Calligraphy border — a delicate repeating arch motif along all four edges,
+/// reminiscent of the decorative borders in classical Arabic manuscripts.
+///
+/// Used for Quran verse and dua/dhikr cards where a typographic, contemplative
+/// aesthetic is required. The arches stay very faint to never compete with text.
+class CalligraphyBorderPainter extends CustomPainter {
+  final Color color;
+  final double opacity;
+
+  const CalligraphyBorderPainter({
+    required this.color,
+    this.opacity = 0.08,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color.withValues(alpha: opacity)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.9
+      ..strokeCap = StrokeCap.round;
+
+    const archWidth = 22.0;
+    const archHeight = 10.0;
+    const margin = 8.0;
+
+    // Top edge arches.
+    _drawEdgeArches(canvas, paint, size, archWidth, archHeight, margin, _Edge.top);
+    // Bottom edge arches (mirrored).
+    _drawEdgeArches(canvas, paint, size, archWidth, archHeight, margin, _Edge.bottom);
+    // Left edge arches.
+    _drawEdgeArches(canvas, paint, size, archWidth, archHeight, margin, _Edge.left);
+    // Right edge arches.
+    _drawEdgeArches(canvas, paint, size, archWidth, archHeight, margin, _Edge.right);
+
+    // Corner diamonds.
+    const ds = 6.0;
+    for (final corner in [
+      const Offset(margin + ds, margin + ds),
+      Offset(size.width - margin - ds, margin + ds),
+      Offset(margin + ds, size.height - margin - ds),
+      Offset(size.width - margin - ds, size.height - margin - ds),
+    ]) {
+      _drawDiamond(canvas, corner, ds, paint);
+    }
+  }
+
+  void _drawEdgeArches(Canvas canvas, Paint paint, Size size,
+      double archWidth, double archHeight, double margin, _Edge edge) {
+    final isHorizontal = edge == _Edge.top || edge == _Edge.bottom;
+    final length = isHorizontal ? size.width : size.height;
+    final count = ((length - margin * 2) / archWidth).floor();
+    final startOffset = (length - count * archWidth) / 2;
+
+    for (int i = 0; i < count; i++) {
+      final t = startOffset + i * archWidth;
+      final path = Path();
+
+      switch (edge) {
+        case _Edge.top:
+          path.moveTo(t, margin);
+          path.quadraticBezierTo(t + archWidth / 2, margin + archHeight, t + archWidth, margin);
+        case _Edge.bottom:
+          path.moveTo(t, size.height - margin);
+          path.quadraticBezierTo(
+              t + archWidth / 2, size.height - margin - archHeight, t + archWidth, size.height - margin);
+        case _Edge.left:
+          path.moveTo(margin, t);
+          path.quadraticBezierTo(margin + archHeight, t + archWidth / 2, margin, t + archWidth);
+        case _Edge.right:
+          path.moveTo(size.width - margin, t);
+          path.quadraticBezierTo(
+              size.width - margin - archHeight, t + archWidth / 2, size.width - margin, t + archWidth);
+      }
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  void _drawDiamond(Canvas canvas, Offset center, double size, Paint paint) {
+    final path = Path()
+      ..moveTo(center.dx, center.dy - size)
+      ..lineTo(center.dx + size, center.dy)
+      ..lineTo(center.dx, center.dy + size)
+      ..lineTo(center.dx - size, center.dy)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CalligraphyBorderPainter old) =>
+      old.color != color || old.opacity != opacity;
+}
+
+enum _Edge { top, bottom, left, right }

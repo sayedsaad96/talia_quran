@@ -27,7 +27,7 @@ void main() {
 
   Future<void> primeAssets() async {
     for (final path in [
-      'assets/images/logo_icon_padded.png',
+      'assets/images/logo_new.png',
       'assets/images/character/Talia_Master_Character.png',
     ]) {
       final file = File(path);

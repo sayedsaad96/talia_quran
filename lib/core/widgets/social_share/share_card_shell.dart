@@ -115,6 +115,15 @@ class ShareCardShell extends StatelessWidget {
                   ),
                 ),
 
+                // ─── 1b. Category-specific secondary pattern overlay ───────
+                // Each content category gets its own subtle geometric
+                // language so every card feels visually distinct.
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _categoryPattern(data.category, theme),
+                  ),
+                ),
+
                 // ─── 2. Ambient radial glow behind the arch ────────────────
                 Positioned.fill(
                   child: DecoratedBox(
@@ -370,6 +379,53 @@ class ShareCardShell extends StatelessWidget {
       ),
     ];
   }
+
+  /// Routes each content category to its own characteristic secondary pattern.
+  ///
+  /// These faint overlays live between the base atmosphere layer and the main
+  /// card content so they contribute texture without ever competing with text.
+  static CustomPainter _categoryPattern(
+    SocialShareCategory category,
+    SocialShareTheme theme,
+  ) {
+    switch (category) {
+      // Quran, dua, and dhikr: calligraphic border arches along all edges —
+      // contemplative, manuscript-inspired, keeps the typographic focus.
+      case SocialShareCategory.quranAyah:
+      case SocialShareCategory.dua:
+      case SocialShareCategory.azkar:
+        return CalligraphyBorderPainter(
+          color: theme.accentColor,
+          opacity: theme.isDark ? 0.09 : 0.07,
+        );
+
+      // Achievement and memorization: hexagonal honeycomb —
+      // evokes structure, persistence, and the reward of mastery.
+      case SocialShareCategory.achievement:
+      case SocialShareCategory.memorization:
+        return HexagonalTessellationPainter(
+          color: theme.accentColor,
+          opacity: theme.isDark ? 0.08 : 0.06,
+        );
+
+      // Certificates: geometric rosette — formal, distinguished,
+      // classic in Islamic illuminated manuscripts.
+      case SocialShareCategory.certificate:
+        return GeometricRosettePainter(
+          color: theme.accentColor,
+          opacity: theme.isDark ? 0.1 : 0.08,
+        );
+
+      // Streak and progress: the base octagram/star field is already
+      // energetic — use the calligraphy border for a subtle accent.
+      case SocialShareCategory.streak:
+      case SocialShareCategory.progress:
+        return CalligraphyBorderPainter(
+          color: theme.accentColor,
+          opacity: theme.isDark ? 0.07 : 0.05,
+        );
+    }
+  }
 }
 
 /// Official top brand block: logo in a gold ring, wordmark + tagline, and
@@ -429,7 +485,7 @@ class TaliaShareBrandHeader extends StatelessWidget {
               ),
               child: ClipOval(
                 child: Image.asset(
-                  'assets/images/logo_icon_padded.png',
+                  'assets/images/logo_new.png',
                   width: isCompact ? 28 : 34,
                   height: isCompact ? 28 : 34,
                   fit: BoxFit.cover,
@@ -522,8 +578,9 @@ class TaliaShareBrandHeader extends StatelessWidget {
 ///
 /// The panel's top edge arcs upward like the reference's cream section and
 /// carries a gold keyline; the apex is crowned by an eight-point star
-/// medallion holding the official logo. All text stays fully dynamic via
-/// [SocialShareCopy].
+/// medallion holding the official logo. The lower lines turn every exported
+/// image into a quiet product invitation: the memorization loop and a stable
+/// landing-page address remain readable even after social-media compression.
 class ParchmentShareFooter extends StatelessWidget {
   final SocialShareTheme theme;
   final String? userName;
@@ -576,32 +633,73 @@ class ParchmentShareFooter extends StatelessWidget {
                   SizedBox(height: isCompact ? 1 : 2),
                 ],
                 Text(
-                  copy.sharedFrom,
+                  isCompact ? copy.compactBrandPromise : copy.brandPromise,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: TaliaShareTypography.badge(
-                    color: TaliaShareColors.parchmentInkSoft,
-                    fontSize: isCompact ? 8 : 9,
+                    color: TaliaShareColors.parchmentInk,
+                    fontSize: isCompact ? 7.5 : 9.5,
                   ),
                 ),
                 SizedBox(height: isCompact ? 3 : 4),
-                // Purely decorative glyph row — no platform is implied.
-                IconTheme(
-                  data: IconThemeData(
-                    color: TaliaShareColors.parchmentInk.withValues(
-                      alpha: 0.38,
-                    ),
-                    size: isCompact ? 9.5 : 11,
+                // ─── Marketing CTA pill — replaces plain domain text ────────
+                // This converts every shared card into an app install driver.
+                Container(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isCompact ? 9 : 12,
+                    vertical: isCompact ? 2.5 : 3.5,
                   ),
-                  child: const Row(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        TaliaShareColors.royalTeal.withValues(alpha: 0.25),
+                        TaliaShareColors.royalTealLight.withValues(alpha: 0.18),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(
+                      color: TaliaShareColors.parchmentInk.withValues(alpha: 0.18),
+                      width: 0.8,
+                    ),
+                  ),
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.favorite_rounded),
-                      SizedBox(width: 13),
-                      Icon(Icons.chat_bubble_rounded),
-                      SizedBox(width: 13),
-                      Icon(Icons.photo_camera_rounded),
+                      Icon(
+                        Icons.download_rounded,
+                        color: TaliaShareColors.parchmentInk,
+                        size: isCompact ? 8 : 10,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        isCompact ? copy.downloadCTAShort : copy.downloadCTA,
+                        textDirection: TextDirection.ltr,
+                        style: TaliaShareTypography.badge(
+                          color: TaliaShareColors.parchmentInk,
+                          fontSize: isCompact ? 7 : 8.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      // Subtle separator dot.
+                      Container(
+                        width: 2.5,
+                        height: 2.5,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: TaliaShareColors.parchmentInk.withValues(alpha: 0.4),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        copy.appDomain,
+                        textDirection: TextDirection.ltr,
+                        style: TaliaShareTypography.badge(
+                          color: TaliaShareColors.parchmentInkSoft,
+                          fontSize: isCompact ? 6.5 : 8,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -628,7 +726,7 @@ class ParchmentShareFooter extends StatelessWidget {
                   ),
                   child: ClipOval(
                     child: Image.asset(
-                      'assets/images/logo_icon_padded.png',
+                      'assets/images/logo_new.png',
                       fit: BoxFit.cover,
                       cacheWidth: 66,
                       errorBuilder: (_, _, _) => Icon(

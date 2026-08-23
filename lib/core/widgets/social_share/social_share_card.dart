@@ -21,6 +21,9 @@ class SocialShareCard extends StatelessWidget {
   final SocialShareTheme theme;
   final double width;
   final SocialShareFormat format;
+  /// When true, the user's name is hidden from the parchment footer.
+  /// Useful for privacy-conscious sharing or when the user opts out.
+  final bool hideUserName;
 
   const SocialShareCard({
     super.key,
@@ -28,19 +31,25 @@ class SocialShareCard extends StatelessWidget {
     required this.theme,
     this.width = TaliaShareDimensions.baseWidth,
     this.format = SocialShareFormat.portrait,
+    this.hideUserName = false,
   });
 
   @override
   Widget build(BuildContext context) {
     final copy = SocialShareCopy.of(context);
+    // Apply the name toggle: when hidden, pass null to suppress the
+    // "رحلة [الاسم] مع القرآن" line without mutating the source data object.
+    final effectiveData = hideUserName
+        ? data.copyWith(userName: null)
+        : data;
     return ShareCardShell(
-      data: data,
+      data: effectiveData,
       theme: theme,
       format: format,
       width: width,
       copy: copy,
       child: ShareCardTemplateResolver.resolve(
-        data: data,
+        data: effectiveData,
         theme: theme,
         format: format,
       ),

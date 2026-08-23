@@ -68,6 +68,9 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
   late SocialShareThemeType _selectedThemeType;
   SocialShareFormat _selectedFormat = SocialShareFormat.portrait;
   bool _isExporting = false;
+  // Name toggle: shown by default since personalization is a core marketing
+  // hook — "رحلة [اسم المستخدم] مع القرآن" differentiates each share.
+  bool _showUserName = true;
 
   @override
   void initState() {
@@ -94,6 +97,8 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
             theme: _currentTheme,
             format: _selectedFormat,
             width: size.width,
+            // Export must mirror the preview — honor the name-hide toggle.
+            hideUserName: !_showUserName,
           ),
         ),
         context: context,
@@ -295,11 +300,12 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: SocialShareCard(
-                        key: ValueKey('$_selectedThemeType-$_selectedFormat'),
+                        key: ValueKey('$_selectedThemeType-$_selectedFormat-$_showUserName'),
                         data: widget.data,
                         theme: _currentTheme,
                         format: _selectedFormat,
                         width: cardWidth,
+                        hideUserName: !_showUserName,
                       ),
                     ),
                   ),
@@ -401,7 +407,39 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
             ),
           ),
 
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: AppSpacing.sm),
+
+          // ─── Name visibility toggle (only if a name was provided) ─────────
+          if (widget.data.userName != null && widget.data.userName!.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    copy.showNameLabel,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                  Transform.scale(
+                    scale: 0.8,
+                    child: Switch(
+                      value: _showUserName,
+                      activeThumbColor: AppColors.primary,
+                      onChanged: (v) {
+                        unawaited(HapticFeedback.selectionClick());
+                        setState(() => _showUserName = v);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          const SizedBox(height: AppSpacing.sm),
 
           // Action Buttons
           Padding(

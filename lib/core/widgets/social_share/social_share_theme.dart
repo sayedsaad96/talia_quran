@@ -7,7 +7,11 @@ enum SocialShareThemeType {
   midnightGold,
   dawnLight,
   tealTwilight,
-  parchmentGold;
+  parchmentGold,
+  // ── New marketing-forward themes ──────────────────────────────────────────
+  roseDawn,
+  desertSand,
+  midnightNavy;
 
   String get nameAr {
     switch (this) {
@@ -21,6 +25,12 @@ enum SocialShareThemeType {
         return 'شفق الفيروز';
       case SocialShareThemeType.parchmentGold:
         return 'الرق الدافئ';
+      case SocialShareThemeType.roseDawn:
+        return 'فجر الورد';
+      case SocialShareThemeType.desertSand:
+        return 'رمال الصحراء';
+      case SocialShareThemeType.midnightNavy:
+        return 'سماء الليل';
     }
   }
 
@@ -36,6 +46,12 @@ enum SocialShareThemeType {
         return 'Turquoise Dusk';
       case SocialShareThemeType.parchmentGold:
         return 'Warm Parchment';
+      case SocialShareThemeType.roseDawn:
+        return 'Rose Dawn';
+      case SocialShareThemeType.desertSand:
+        return 'Desert Sand';
+      case SocialShareThemeType.midnightNavy:
+        return 'Midnight Navy';
     }
   }
 
@@ -180,6 +196,59 @@ class SocialShareTheme {
     isDark: false,
   );
 
+  /// Rose Dawn — warm blush rose with antique gold. Feminine, spiritual,
+  /// evokes early morning light. Perfect for dua and personal milestone shares.
+  static const SocialShareTheme roseDawn = SocialShareTheme(
+    type: SocialShareThemeType.roseDawn,
+    backgroundGradient: [Color(0xFF2E1018), Color(0xFF4A1E2B), Color(0xFF1F0B12)],
+    cardBackground: Color(0xFF3A1622),
+    borderColor: Color(0xFFE8C4A0),
+    accentColor: Color(0xFFF2C4A4),
+    textPrimary: Color(0xFFFDF0E8),
+    textSecondary: Color(0xFFD4B0A0),
+    badgeBackground: Color(0x33F2C4A4),
+    badgeTextColor: Color(0xFFFDE8D8),
+    patternColor: Color(0x18F2C4A4),
+    glowColor: Color(0x40C8607A),
+    isDark: true,
+  );
+
+  /// Desert Sand — warm terracotta and sand inspired by Islamic manuscript
+  /// tradition. Earthy, authentic, and timeless. Perfect for Quran verses
+  /// and certificate shares.
+  static const SocialShareTheme desertSand = SocialShareTheme(
+    type: SocialShareThemeType.desertSand,
+    backgroundGradient: [Color(0xFFF2E4C4), Color(0xFFE8D4A8), Color(0xFFF5EAD0)],
+    cardBackground: Color(0xFFFAF0DC),
+    borderColor: Color(0xFFB87A38),
+    accentColor: Color(0xFF9C5E1A),
+    textPrimary: Color(0xFF2A1A08),
+    textSecondary: Color(0xFF7A5830),
+    badgeBackground: Color(0x26B87A38),
+    badgeTextColor: Color(0xFF7A4E10),
+    patternColor: Color(0x20B87A38),
+    glowColor: Color(0x30D4943A),
+    isDark: false,
+  );
+
+  /// Midnight Navy — deep cosmic blue-indigo, evoking the night sky at prayer
+  /// time. Stars and gold gleam in the darkness. Best for streak and
+  /// achievement shares.
+  static const SocialShareTheme midnightNavy = SocialShareTheme(
+    type: SocialShareThemeType.midnightNavy,
+    backgroundGradient: [Color(0xFF060B18), Color(0xFF0D1530), Color(0xFF080E22)],
+    cardBackground: Color(0xFF0E1838),
+    borderColor: Color(0xFF6B80C8),
+    accentColor: Color(0xFF8CA0E8),
+    textPrimary: Color(0xFFF0F2FF),
+    textSecondary: Color(0xFFB0B8D8),
+    badgeBackground: Color(0x338CA0E8),
+    badgeTextColor: Color(0xFFD0D8FF),
+    patternColor: Color(0x18FFFFFF),
+    glowColor: Color(0x354060C8),
+    isDark: true,
+  );
+
   static SocialShareTheme get(SocialShareThemeType type) {
     switch (type) {
       case SocialShareThemeType.emeraldDark:
@@ -192,6 +261,12 @@ class SocialShareTheme {
         return tealTwilight;
       case SocialShareThemeType.parchmentGold:
         return parchmentGold;
+      case SocialShareThemeType.roseDawn:
+        return roseDawn;
+      case SocialShareThemeType.desertSand:
+        return desertSand;
+      case SocialShareThemeType.midnightNavy:
+        return midnightNavy;
     }
   }
 }

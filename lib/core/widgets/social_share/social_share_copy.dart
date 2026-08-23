@@ -21,12 +21,33 @@ class SocialShareCopy {
   // ─── Brand identity ──────────────────────────────────────────────────────
   String get appName => isArabic ? 'تالية' : 'Talia';
   String get tagline => isArabic ? 'رفيقك في رحلة القرآن' : 'Your Quran companion';
-  String get sharedFrom => isArabic
-      ? 'تمت المشاركة عبر تطبيق تالية للقرآن الكريم'
-      : 'Shared from Talia Quran';
+  String get brandPromise => isArabic
+      ? 'خطّط  •  احفظ  •  راجع  •  أتقن'
+      : 'Plan  •  Memorize  •  Review  •  Retain';
+  String get compactBrandPromise => isArabic
+      ? 'احفظ  •  راجع  •  أتقن'
+      : 'Memorize  •  Review  •  Retain';
+  String get appDomain => Uri.parse(SocialShareData.landingPageUrl).host;
+
+  // ─── Marketing & CTA copy ─────────────────────────────────────────────────
+  /// Strong CTA label shown inside the footer download pill.
+  String get downloadCTA => isArabic ? 'حمّل تالية مجاناً' : 'Get Talia Free';
+
+  /// Short CTA variant for compact square format.
+  String get downloadCTAShort => isArabic ? 'حمّل تالية' : 'Get Talia';
+
+  /// Motivational sub-label under the CTA in the footer.
+  String get startJourney => isArabic ? 'ابدأ رحلتك مع القرآن' : 'Start your Quran journey';
+
+  /// Plain share text footer — stronger marketing copy with app download invite.
   String get plainShareFooter => isArabic
-      ? '— تمت المشاركة عبر تطبيق تالية للقرآن الكريم'
-      : '— Shared from Talia Quran';
+      ? '✨ شاركني في رحلة حفظ القرآن مع تالية\n'
+        '🌙 خطّط • احفظ • راجع • أتقن\n'
+        '📲 حمّل التطبيق: ${SocialShareData.landingPageUrl}'
+      : '✨ Join me on my Quran memorization journey with Talia\n'
+        '🌙 Plan • Memorize • Review • Retain\n'
+        '📲 Download: ${SocialShareData.landingPageUrl}';
+
   String journeyFor(String name) => isArabic ? 'رحلة $name مع القرآن' : "$name's Quran journey";
   String get kidsLabel => isArabic ? 'رحلة الأبطال الصغار' : 'Little champions journey';
   String get kidsEncouragement => isArabic
@@ -109,6 +130,7 @@ class SocialShareCopy {
   String get preparing => isArabic ? 'جاري التجهيز...' : 'Preparing...';
   String get saveToGalleryTooltip => isArabic ? 'حفظ المعرض' : 'Save to gallery';
   String get shareAsTextTooltip => isArabic ? 'مشاركة كنص' : 'Share as text';
+  String get showNameLabel => isArabic ? 'إظهار اسمي' : 'Show my name';
   String get errorCapture => isArabic
       ? 'تعذر إنشاء صورة البطاقة، يرجى المحاولة مرة أخرى.'
       : 'Could not create the card image, please try again.';

@@ -127,9 +127,15 @@ class QuranVerseTemplate extends StatelessWidget {
                 ),
               ),
               if (data.ayahNumber != null) ...[
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 6),
-                  child: Text('•'),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: theme.accentColor.withValues(alpha: 0.65),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const SizedBox(width: 3.5, height: 3.5),
+                  ),
                 ),
                 Flexible(
                   child: Text(

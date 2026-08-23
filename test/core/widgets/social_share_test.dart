@@ -201,7 +201,8 @@ void main() {
       expect(text, contains('سورة الإسراء'));
       expect(text, contains('إِنَّ هَٰذَا الْقُرْآنَ'));
       expect(text, contains('الآية رقم 9'));
-      expect(text, contains('تمت المشاركة عبر تطبيق تالية للقرآن الكريم'));
+      expect(text, contains('ابدأ رحلة حفظك مع تالية'));
+      expect(text, contains('https://taliaapp.com'));
     });
 
     test('toPlainShareText accepts a localized footer', () {
@@ -411,7 +412,8 @@ void main() {
       expect(find.text('Talia'), findsOneWidget);
       expect(find.text('New achievement'), findsOneWidget);
       expect(find.text("Sayed's Quran journey"), findsOneWidget);
-      expect(find.text('Shared from Talia Quran'), findsOneWidget);
+      expect(find.text('Plan  •  Memorize  •  Review  •  Retain'), findsOneWidget);
+      expect(find.text('taliaapp.com'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 

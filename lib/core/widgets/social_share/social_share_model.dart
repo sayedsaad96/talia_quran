@@ -97,6 +97,11 @@ enum SocialShareFormat {
 
 /// Rich, content-driven domain representation for Social Share Cards
 class SocialShareData {
+  /// Public landing page used by image and text shares. Keeping the campaign
+  /// destination beside the share data prevents the visual footer and the
+  /// native share caption from drifting apart.
+  static const String landingPageUrl = 'https://taliaapp.com';
+
   /// The only official character asset currently shipped with the app.
   /// Contextual pose assets must not be referenced until they exist on disk.
   static const String masterCharacterAsset =
@@ -339,15 +344,20 @@ class SocialShareData {
   static String defaultCharacterAssetFor(SocialShareCategory category) =>
       masterCharacterAsset;
 
+  // Sentinel value for copyWith to distinguish "not provided" from null.
+  static const Object _unset = Object();
+
   SocialShareData copyWith({
     SocialShareAudience? audience,
     bool? showCharacter,
+    /// Pass `null` explicitly to clear the user name from the footer.
+    Object? userName = _unset,
   }) => SocialShareData(
     content: content,
     category: category,
     title: title,
     subtitle: subtitle,
-    userName: userName,
+    userName: userName == _unset ? this.userName : userName as String?,
     customBadge: customBadge,
     surahName: surahName,
     ayahNumber: ayahNumber,
@@ -382,7 +392,7 @@ class SocialShareData {
       buffer.writeln(subtitle);
     }
     buffer.writeln();
-    buffer.write(footer ?? '— تمت المشاركة عبر تطبيق تالية للقرآن الكريم');
+    buffer.write(footer ?? '— ابدأ رحلة حفظك مع تالية\n$landingPageUrl');
     return buffer.toString();
   }
 }
