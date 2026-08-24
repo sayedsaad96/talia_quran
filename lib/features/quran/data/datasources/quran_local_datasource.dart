@@ -72,7 +72,7 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
       final jsonStr = await rootBundle.loadString('assets/data/quran.json');
       final surahs = await getSurahs();
 
-      final result = await compute(_parseQuranData, {
+      final result = await compute(QuranLocalDatasourceImpl.parseQuranData, {
         'jsonStr': jsonStr,
         'surahs': surahs,
       });
@@ -80,18 +80,23 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
       _cachedAyahs = result.ayahs;
       _cachedByPage = result.byPage;
     } catch (e) {
-      throw const CacheFailure('Failed to load Quran text data');
+      throw const CacheFailure(
+        'Failed to load Quran text data (missing or invalid structural '
+        'metadata fails closed)',
+      );
     }
   }
 
-  static _QuranParseResult _parseQuranData(Map<String, dynamic> params) {
+  /// Parses the bundled corpus deterministically and FAILS CLOSED when any
+  /// ayah record is missing required structural metadata (`global`, `page`,
+  /// or `juz`). Guessed/fabricated metadata is never produced (V1-M1 gate).
+  static QuranParseResult parseQuranData(Map<String, dynamic> params) {
     final String jsonStr = params['jsonStr'];
     final List<SurahModel> surahs = params['surahs'];
 
     final Map<String, dynamic> data = jsonDecode(jsonStr);
     final cachedAyahs = <int, List<AyahModel>>{};
     final cachedByPage = <int, List<AyahModel>>{};
-    int globalOffset = 0;
 
     for (final surah in surahs) {
       final surahIdStr = surah.id.toString();
@@ -101,25 +106,35 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
       for (int i = 0; i < verseList.length; i++) {
         final verseObj = verseList[i];
         final rawText = verseObj['text'].toString().replaceAll('\uFEFF', '');
+        final global = verseObj['global'];
+        final juz = verseObj['juz'];
+        final page = verseObj['page'];
+        if (rawText.isEmpty ||
+            global is! int ||
+            juz is! int ||
+            page is! int) {
+          throw StateError(
+            'Surah ${surah.id} verse ${verseObj['verse']}: missing required '
+            'structural metadata (text/global/page/juz)',
+          );
+        }
         final ayah = AyahModel(
-          number: verseObj['global'] ?? (globalOffset + i + 1),
+          number: global,
           surahId: surah.id,
           text: rawText,
           numberInSurah: verseObj['verse'] as int,
-          juz: verseObj['juz'] as int? ?? surah.juz,
-          page: verseObj['page'] as int? ?? (surah.page + (i ~/ 15)),
+          juz: juz,
+          page: page,
         );
         parsedAyahs.add(ayah);
 
-        final pageNum = ayah.page ?? 1;
-        cachedByPage.putIfAbsent(pageNum, () => []).add(ayah);
+        cachedByPage.putIfAbsent(page, () => []).add(ayah);
       }
 
       cachedAyahs[surah.id] = parsedAyahs;
-      globalOffset += surah.ayahCount;
     }
 
-    return _QuranParseResult(cachedAyahs, cachedByPage);
+    return QuranParseResult(cachedAyahs, cachedByPage);
   }
 
   @override
@@ -158,8 +173,8 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
   }
 }
 
-class _QuranParseResult {
+class QuranParseResult {
   final Map<int, List<AyahModel>> ayahs;
   final Map<int, List<AyahModel>> byPage;
-  _QuranParseResult(this.ayahs, this.byPage);
+  const QuranParseResult(this.ayahs, this.byPage);
 }

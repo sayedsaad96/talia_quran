@@ -1902,6 +1902,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'الصوت غير متاح الآن، حاول مرة أخرى بعد قليل.';
 
   @override
+  String get kidsManualCompleteAction => 'أتممت الحفظ بنفسي';
+
+  @override
+  String get kidsManualCompleteHint =>
+      'لا يتوفر الصوت أو الميكروفون؟ يمكن لولي الأمر تأكيد إتمام الحفظ.';
+
+  @override
   String kidsGamifiedListenFirst(int count) {
     return 'استمع للآية $count مرات قبل تسجيل تلاوتك.';
   }
@@ -3757,6 +3764,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get v2StopRecording => 'إيقاف التسجيل';
+
+  @override
+  String get v2ManualRecallAction => 'أتممت التسميع من حفظي (تقييم ذاتي)';
+
+  @override
+  String get v2ManualRecallHint =>
+      'لا يتوفر الميكروفون؟ أكّد أنك تسمّعت من حفظك وسيُسجَّل التقدم.';
+
+  @override
+  String get v2ManualBlockReviewAction =>
+      'أتممت مراجعة الكتلة من حفظي (تقييم ذاتي)';
 
   @override
   String get v2RemediationTitle => 'مراجعة قصيرة';

@@ -149,6 +149,8 @@ class _KidsGamifiedListenView extends StatelessWidget {
                 context.read<KidsModeCubit>().startRecording(),
             onStopRecording: () =>
                 context.read<KidsModeCubit>().stopRecording(),
+            onManualComplete: () =>
+                context.read<KidsModeCubit>().submitManualCompletion(),
           );
         },
       ),
@@ -165,6 +167,7 @@ class KidsGamifiedListenContent extends StatelessWidget {
     required this.onPlayPause,
     required this.onRecordRecitation,
     required this.onStopRecording,
+    this.onManualComplete,
   });
 
   final KidsModeLoaded state;
@@ -172,6 +175,9 @@ class KidsGamifiedListenContent extends StatelessWidget {
   final VoidCallback onPlayPause;
   final VoidCallback onRecordRecitation;
   final VoidCallback onStopRecording;
+
+  /// V1-M8 — manual/self-grade completion route (null hides the action).
+  final VoidCallback? onManualComplete;
 
   @override
   Widget build(BuildContext context) {
@@ -217,6 +223,7 @@ class KidsGamifiedListenContent extends StatelessWidget {
                             onPlayPause: onPlayPause,
                             onRecordRecitation: onRecordRecitation,
                             onStopRecording: onStopRecording,
+                            onManualComplete: onManualComplete,
                           ),
                           const SizedBox(height: 96),
                         ],
@@ -337,6 +344,7 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
     required this.onPlayPause,
     required this.onRecordRecitation,
     required this.onStopRecording,
+    this.onManualComplete,
   });
 
   final KidsModeLoaded state;
@@ -344,11 +352,19 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
   final VoidCallback onRecordRecitation;
   final VoidCallback onStopRecording;
 
+  /// V1-M8 — manual/self-grade completion route (null hides the action).
+  final VoidCallback? onManualComplete;
+
   @override
   Widget build(BuildContext context) {
     final isRecording = state.isRecording;
     final loopsComplete = state.currentLoop >= state.maxLoops;
     final micDisabled = state.isCompleted || isRecording || !loopsComplete;
+    final showManualComplete =
+        !state.isCompleted &&
+        !isRecording &&
+        onManualComplete != null &&
+        (state.audioError != null || state.recordingError != null);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -405,6 +421,32 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
                   ),
                 ),
         ),
+        if (showManualComplete) ...[
+          const SizedBox(height: AppSpacing.md),
+          Text(
+            context.l10n.kidsManualCompleteHint,
+            textAlign: TextAlign.center,
+            style: AppTypography.bodySmall.copyWith(
+              color: Colors.white.withValues(alpha: 0.75),
+              letterSpacing: 0,
+            ),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          OutlinedButton.icon(
+            key: const ValueKey('kids-gamified-manual-complete'),
+            onPressed: onManualComplete,
+            icon: const Icon(Icons.verified_rounded),
+            label: Text(context.l10n.kidsManualCompleteAction),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: Colors.white,
+              side: BorderSide(color: Colors.white.withValues(alpha: 0.4)),
+              minimumSize: const Size.fromHeight(52),
+              shape: const RoundedRectangleBorder(
+                borderRadius: KidsTheme.buttonRadius,
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

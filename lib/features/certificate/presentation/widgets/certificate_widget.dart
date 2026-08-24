@@ -433,37 +433,6 @@ class CertificateWidget extends StatelessWidget {
 
                               const SizedBox(height: 14),
 
-                              // ─── آية قرآنية ───────────────────────
-                              Text(
-                                '﴿ إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ ﴾',
-                                style: TextStyle(
-                                  fontFamily: 'Amiri',
-                                  fontSize: 24,
-                                  color: theme.primaryText,
-                                ),
-                              ),
-                              Text(
-                                '(الإسراء: 9)',
-                                style: TextStyle(
-                                  fontFamily: 'Amiri',
-                                  fontSize: 13,
-                                  color: theme.secondaryText.withValues(alpha: 0.7),
-                                ),
-                              ),
-
-                              const SizedBox(height: 10),
-
-                              Text(
-                                'نسأل الله تعالى أن يجعل القرآن الكريم ربيع قلبه\nونور صدره ورفيق دربه في الدنيا والآخرة.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: 'Amiri',
-                                  fontSize: 17,
-                                  color: theme.secondaryText,
-                                  height: 1.5,
-                                ),
-                              ),
-
                               const SizedBox(height: 20),
 
                               // ─── التاريخ والختم ─────────────────

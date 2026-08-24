@@ -1,0 +1,42 @@
+{
+  "datasetVersion": "v1-rc1",
+  "freezeDate": "2026-08-24",
+  "reviewStatus": "pendingReview",
+  "notes": "quran.json ayah-1 basmalah prefixes for the 112 surahs other than Al-Fatihah and At-Tawbah were removed on 2026-08-24 by scripts/correct_quran_ayah1_basmalah.dart (structural boundary correction; the basmalah is rendered structurally by the Mushaf). Any further change to these files invalidates Islamic review approval.",
+  "items": [
+    {
+      "path": "assets/data/quran.json",
+      "role": "quran_text",
+      "sourceProvider": "alquran.cloud",
+      "sourceEdition": "quran-uthmani",
+      "sourceUrl": "https://api.alquran.cloud/v1/quran/quran-uthmani",
+      "riwayah": "hafs_an_asim_uthmani_script",
+      "licenseStatus": "openly_available_attribution_required_tanzil_terms",
+      "sha256": "050df81ce2cb4011f77410978850ff641589a4091489e9da0fdd31018dd26f31",
+      "importDate": "2025 (fetch script), boundary correction 2026-08-24",
+      "reviewStatus": "pendingReview"
+    },
+    {
+      "path": "assets/data/surahs.json",
+      "role": "quran_structure",
+      "sourceProvider": "bundled structural index",
+      "sourceEdition": "n/a",
+      "riwayah": "hafs_an_asim_uthmani_script",
+      "licenseStatus": "project_owned",
+      "sha256": "125fcff463dce28148ac4c035b77caf3093213535c88b6e67585e09b23fc9ca0",
+      "importDate": "2025",
+      "reviewStatus": "pendingReview"
+    },
+    {
+      "path": "assets/data/azkar.json",
+      "role": "adhkar_dua",
+      "sourceProvider": "unrecorded_legacy_import",
+      "sourceEdition": "n/a",
+      "riwayah": "n/a",
+      "licenseStatus": "unknown_pending_reviewer_disposition",
+      "sha256": "b7a4dc8593969b898a52196f154bbde850fbb0054cf4215fb070e5923adb8ff5",
+      "importDate": "2025; provenance fields added 2026-08-24 (all pendingReview)",
+      "reviewStatus": "pendingReview"
+    }
+  ]
+}

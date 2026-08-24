@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 import 'package:talia_quran/core/widgets/qcf_hifz_verse_view.dart';
 
 // ─── Test Helpers ─────────────────────────────────────────────────────────────
@@ -212,10 +213,9 @@ void main() {
     );
 
     testWidgets(
-      'cleans trailing ayah markers from fallback text on memorization screens',
-      (tester) async {
-        const rawFallback = 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ ١';
-        const cleanedFallback = 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ';
+      'renders fallback text exactly as provided — no marker removal '
+      '(sacred-text exactness gate)', (tester) async {
+        const rawFallback = 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ ١';
         await tester.pumpWidget(
           _wrap(
             const QcfHifzVerseView(
@@ -228,28 +228,47 @@ void main() {
           ),
         );
 
-        expect(find.text(cleanedFallback), findsOneWidget);
-        expect(find.text(rawFallback), findsNothing);
+        expect(find.text(rawFallback), findsOneWidget);
       },
     );
 
-    testWidgets('normalizes safe Quran spacing in fallback text', (
+    testWidgets('never rewrites Quran spacing in fallback text', (
       tester,
     ) async {
-      const cleanedFallback = 'مِن شَرِّ الْوَسْوَاسِ';
+      const provided = 'مِن شَرِّالْوَسْوَاسِ';
       await tester.pumpWidget(
         _wrap(
           const QcfHifzVerseView(
             surahNumber: 0,
             verseNumber: 1,
-            fallbackText: 'مِن شَرِّالْوَسْوَاسِ',
+            fallbackText: provided,
             isUnlocked: true,
             isMemorized: false,
           ),
         ),
       );
 
-      expect(find.text(cleanedFallback), findsOneWidget);
+      expect(find.text(provided), findsOneWidget);
+    });
+
+    testWidgets('renders QCF verse text verbatim without cleaning', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(
+          const QcfHifzVerseView(
+            surahNumber: 112,
+            verseNumber: 1,
+            fallbackText: 'fallback',
+            isUnlocked: true,
+            isMemorized: false,
+          ),
+        ),
+      );
+
+      final expectedRaw = qcf.getVerse(112, 1);
+      final richText = tester.widget<RichText>(find.byType(RichText));
+      expect(richText.text.toPlainText(), '$expectedRaw ');
     });
 
     // ── T004: Locked state ─────────────────────────────────────────────────────

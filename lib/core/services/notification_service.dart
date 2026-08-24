@@ -46,12 +46,6 @@ class TaliaNotificationService {
   static const int _dailyDuaScheduleDays = 16;
   static const String _notificationIcon = '@mipmap/launcher_icon';
 
-  static const List<String> _fallbackDailyDuas = [
-    'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.',
-    'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى.',
-    'اللَّهُمَّ إِنَّكَ عَفُوٌّ تُحِبُّ الْعَفْوَ فَاعْفُ عَنِّي.',
-  ];
-
   // ─── Notification Channel & Interactive Actions ──────────────────────────────
   // 1. Daily Review Actions & Category
   static final List<AndroidNotificationAction> _reviewActions = [
@@ -653,6 +647,9 @@ class TaliaNotificationService {
     await cancelDailyDuaReminder();
 
     final duas = await _loadDailyDuas();
+    // Fail safe: no corpus → no religious notification content at all.
+    if (duas.isEmpty) return;
+
     final firstDate = _nextInstanceOfTime(hour, minute);
 
     for (var dayOffset = 0; dayOffset < _dailyDuaScheduleDays; dayOffset++) {
@@ -805,8 +802,14 @@ class TaliaNotificationService {
 
   List<String>? _cachedDuas;
 
+  /// Loads daily dua bodies from the bundled approved corpus only.
+  ///
+  /// There is deliberately NO hand-typed fallback: if the corpus is
+  /// unavailable, the caller skips scheduling instead of emitting unapproved
+  /// religious text (V1-M4). Text is passed through verbatim — never
+  /// truncated or rewritten.
   Future<List<String>> _loadDailyDuas() async {
-    if (_cachedDuas != null && _cachedDuas!.isNotEmpty) return _cachedDuas!;
+    if (_cachedDuas != null) return _cachedDuas!;
     try {
       final jsonStr = await rootBundle.loadString('assets/data/azkar.json');
       final data = await compute(
@@ -817,28 +820,18 @@ class TaliaNotificationService {
           .map((item) => item as Map<String, dynamic>)
           .map((item) => item['text'] as String? ?? '')
           .where((text) => text.trim().isNotEmpty)
-          .map(_compactNotificationText)
           .toList();
-      if (duas.isNotEmpty) {
-        _cachedDuas = duas;
-        return duas;
-      }
+      _cachedDuas = duas;
+      return duas;
     } catch (_) {
       // Keep notification scheduling resilient if assets are unavailable.
+      return const [];
     }
-
-    return _fallbackDailyDuas;
   }
 
   int _duaIndexForDate(tz.TZDateTime date, int duaCount) {
     final day = DateTime(date.year, date.month, date.day);
     final base = DateTime(2024);
     return day.difference(base).inDays % duaCount;
-  }
-
-  String _compactNotificationText(String text) {
-    final compact = text.replaceAll(RegExp(r'\s+'), ' ').trim();
-    if (compact.length <= 180) return compact;
-    return '${compact.substring(0, 177)}...';
   }
 }

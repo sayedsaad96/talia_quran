@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/progress/progress_changed_reason.dart';
@@ -15,6 +16,8 @@ import 'package:talia_quran/features/auth/application/cloud_sync_coordinator.dar
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
 import 'package:talia_quran/features/auth/domain/repositories/auth_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_cloud_repository.dart';
+import 'package:talia_quran/features/quran/data/datasources/bookmark_service.dart';
+import 'package:talia_quran/features/quran/domain/entities/bookmark_entry.dart';
 
 class _FakeAuthRepository implements AuthRepository {
   final events = <String>[];
@@ -174,6 +177,85 @@ void main() {
       completes,
     );
     expect(authRepository.syncCalls, 0);
+  });
+
+  group('flushBeforeSignOut (V1-M5 bookmark safety)', () {
+    Future<BookmarkService> createBookmarkService(String ownerId) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      return BookmarkService(
+        prefs,
+        owner: FixedRecordOwnerProvider(ownerId),
+      );
+    }
+
+    test(
+      'an offline pending bookmark blocks the normal sign-out flush',
+      () async {
+        final bookmarks = await createBookmarkService('signout-user');
+        // A locally-created bookmark is unsynced; cloud push cannot succeed
+        // in this offline test environment.
+        await bookmarks.toggle(
+          BookmarkEntry(
+            surahId: 2,
+            surahName: 'البقرة',
+            ayahNumber: 255,
+            ayahText: 'آية',
+            savedAt: DateTime.now(),
+          ),
+        );
+        expect(bookmarks.hasPendingCloudWork, isTrue);
+
+        final flushed = await CloudSyncCoordinator(
+          authRepository: authRepository,
+          memorizationCloudRepository: memorizationRepository,
+          bookmarkService: bookmarks,
+        ).flushBeforeSignOut();
+
+        expect(flushed, isFalse,
+            reason: 'sign-out must be blocked while a bookmark push failed');
+        // Durable state must remain recoverable for reconnect/re-login.
+        expect(bookmarks.isBookmarked(2, 255), isTrue);
+        expect(bookmarks.hasPendingCloudWork, isTrue);
+      },
+    );
+
+    test(
+      'the flush gate treats bookmarks as authoritative pending work',
+      () async {
+        final bookmarks = await createBookmarkService('signout-user-2');
+        await bookmarks.toggle(
+          BookmarkEntry(
+            surahId: 18,
+            surahName: 'الكهف',
+            ayahNumber: 1,
+            ayahText: 'آية',
+            savedAt: DateTime.now(),
+          ),
+        );
+
+        // Simulate a successful push by clearing the dirty flag through the
+        // same code path the coordinator uses after pushing.
+        await bookmarks.pushToCloud();
+        // Push fails offline → still pending → flush must stay false.
+        final flushed = await CloudSyncCoordinator(
+          authRepository: authRepository,
+          memorizationCloudRepository: memorizationRepository,
+          bookmarkService: bookmarks,
+        ).flushBeforeSignOut();
+
+        expect(flushed, isFalse);
+      },
+    );
+
+    test('a fully synced account flushes cleanly', () async {
+      final flushed = await CloudSyncCoordinator(
+        authRepository: authRepository,
+        memorizationCloudRepository: memorizationRepository,
+      ).flushBeforeSignOut();
+
+      expect(flushed, isTrue);
+    });
   });
 
   test(

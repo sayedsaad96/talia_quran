@@ -581,6 +581,17 @@ class _ZikrReaderPage extends StatelessWidget {
                               textAlign: TextAlign.center,
                             ),
                           ],
+                          if (session
+                              .zikr.authenticityGrade.isApprovedValue) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              session.zikr.authenticityGrade!.displayName,
+                              style: AppTypography.labelMedium.copyWith(
+                                color: AppColors.gold.withValues(alpha: 0.85),
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
                         ],
                       ),
                     ),

@@ -134,8 +134,16 @@ class CloudSyncCoordinator {
 
   /// Best-effort pre-sign-out flush. Its result tells the caller whether it is
   /// safe to discard account-owned local data.
+  ///
+  /// This is the single authoritative all-domain pending-work decision: it
+  /// covers bookmarks, memorization, and auth progress (V1-M5). Omitting any
+  /// dirty domain here would let sign-out destroy unsynced user data.
   Future<bool> flushBeforeSignOut() async {
     try {
+      final bookmarks = _bookmarkService;
+      if (bookmarks != null && bookmarks.hasPendingCloudWork) {
+        await bookmarks.pushToCloud();
+      }
       final memorization = _memorizationCloudRepository;
       if (memorization != null && await memorization.hasPendingCloudWork()) {
         await memorization.resyncProductionDataToCloud();
@@ -148,6 +156,7 @@ class CloudSyncCoordinator {
       final memorizationPending =
           memorization != null && await memorization.hasPendingCloudWork();
       return !memorizationPending &&
+          !(_bookmarkService?.hasPendingCloudWork ?? false) &&
           !await _authRepository.hasPendingCloudPush();
     } catch (error, stackTrace) {
       TaliaLogger.w(

@@ -763,6 +763,8 @@
   "kidsGamifiedRecordingInProgress": "جاري التسجيل...",
   "kidsGamifiedDoneRecording": "انتهيت من التسجيل",
   "kidsGamifiedAudioUnavailable": "الصوت غير متاح الآن، حاول مرة أخرى بعد قليل.",
+  "kidsManualCompleteAction": "أتممت الحفظ بنفسي",
+  "kidsManualCompleteHint": "لا يتوفر الصوت أو الميكروفون؟ يمكن لولي الأمر تأكيد إتمام الحفظ.",
   "kidsGamifiedListenFirst": "استمع للآية {count} مرات قبل تسجيل تلاوتك.",
   "@kidsGamifiedListenFirst": {
     "placeholders": {
@@ -1666,6 +1668,9 @@
   "v2RecitationSubtitle": "النص مخفي الآن. سجّل تسميعك بدون تلميحات.",
   "v2StartRecording": "بدء التسجيل",
   "v2StopRecording": "إيقاف التسجيل",
+  "v2ManualRecallAction": "أتممت التسميع من حفظي (تقييم ذاتي)",
+  "v2ManualRecallHint": "لا يتوفر الميكروفون؟ أكّد أنك تسمّعت من حفظك وسيُسجَّل التقدم.",
+  "v2ManualBlockReviewAction": "أتممت مراجعة الكتلة من حفظي (تقييم ذاتي)",
   "v2RemediationTitle": "مراجعة قصيرة",
   "v2RemediationSubtitle": "استمع واقرأ الآية مرة أخرى، ثم ارجع لمحاولة التسميع.",
   "v2TryAgain": "أحاول مرة أخرى",

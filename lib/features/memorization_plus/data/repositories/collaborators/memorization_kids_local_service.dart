@@ -271,7 +271,7 @@ class MemorizationKidsLocalService {
       }
       final verifier = await _parentPinStore.readVerifier(ownerId);
       if (verifier != null) {
-        return _verifySecurePin(ownerId, pin, verifier);
+        return await _verifySecurePin(ownerId, pin, verifier);
       }
       if (_matchesLegacyPin(stored, pin)) {
         await _upgradeLegacyPin(ownerId, pin, settings);

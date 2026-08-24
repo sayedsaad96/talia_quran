@@ -35,7 +35,7 @@ abstract class PrivacyPolicyContent {
           'ج. صلاحيات الجهاز المطلوبة:',
         ],
         bullets: [
-          'الميكروفون: يطلب التطبيق الوصول للميكروفون حصرياً لميزة "دقة التسميع" لتقييم قراءتك. وتتم معالجة الصوت فورياً داخل جهازك ولا يتم تسجيله أو نقله لخوادمنا إطلاقاً.',
+          'الميكروفون: يطلب التطبيق الوصول للميكروفون حصرياً لميزة "دقة التسميع" لتقييم قراءتك. يتم التعرف على الكلام عبر خدمة التعرف الصوتي المدمجة في نظام تشغيل جهازك، وقد تتم معالجة الصوت من قِبل مزوّد نظام التشغيل وفق سياساته الخاصة. لا يحتفظ تطبيق تالية بالصوت الخام ولا يرسله إلى خوادمنا، وإذا تعذّر استخدام الميكروفون يتوفر خيار التقييم الذاتي اليدوي داخل جلسة الحفظ.',
           'الإشعارات: تُستخدم لإرسال تنبيهات المراجعة اليومية، والأذكار، وورد القراءة محلياً على جهازك.',
           'معرض الصور/التخزين: يُطلب فقط عندما تختار حفظ شهادة إنجاز على جهازك.',
           'الكاميرا: تُستخدم حصرياً لمسح رمز QR لربط حساب ولي الأمر. لا يتم التقاط أو تخزين أي صور.',
@@ -51,7 +51,7 @@ abstract class PrivacyPolicyContent {
           'عدم التنقيب عن البيانات: نحن لا نجمع أي بيانات شخصية حساسة من الأطفال إطلاقاً.',
           'إشراف ولي الأمر: تم تصميم ملف الطفل ليكون تحت إشراف كامل من ولي الأمر من خلال نظام ربط محلي آمن ومباشر (QR Code).',
           'خالٍ من الإعلانات والتتبع: لا يحتوي التطبيق على أي إعلانات موجهة لطرف ثالث، أو أدوات تتبع، أو إضافات لوسائل التواصل الاجتماعي تقوم بجمع بيانات الأطفال.',
-          'المعالجة المحلية: أي استخدام للميكروفون من قبل الطفل للتسميع تتم معالجته فوراً وتجاهله بمجرد الانتهاء دون تخزين.',
+          'المعالجة المحلية: عند استخدام الطفل للميكروفون للتسميع، يتم التعرف على الكلام عبر خدمة نظام التشغيل المدمجة وقد يعالجها مزوّد النظام وفق شروطه. لا يحتفظ تطبيق تالية بالصوت الخام ولا يرسله إلى خوادمنا، مع توفر بديل التقييم الذاتي اليدوي بإشراف ولي الأمر.',
         ],
       ),
       PrivacySection(
@@ -101,7 +101,7 @@ abstract class PrivacyPolicyContent {
           'C. Device Permissions:',
         ],
         bullets: [
-          'Microphone: The app requests microphone access strictly for the Recitation Accuracy feature (evaluating your recitation). Audio data is processed in real-time and is never stored, recorded, or transmitted to our servers.',
+          'Microphone: The app requests microphone access strictly for the Recitation Accuracy feature (evaluating your recitation). Speech recognition is performed by your device operating system\'s built-in speech service, and the platform provider may process audio under its own terms. Talia does not retain raw audio and does not send it to Talia servers; if the microphone is unavailable, a clearly labelled manual self-grade option is available inside the memorization session.',
           'Notifications: Used for daily reviews, Azkar, and reading reminders locally on your device.',
           'Storage/Gallery: Requested only when you choose to save an achievement certificate to your device.',
           'Camera: Used strictly for scanning a local QR code to link a Guardian (Parent) account. No images are captured or stored.',
@@ -117,7 +117,7 @@ abstract class PrivacyPolicyContent {
           'No Data Mining: We do not collect sensitive personal information (PII) from children.',
           'Guardian Link: The kids\' profile is designed to be monitored by a parent/guardian using a secure, local QR-code pairing system.',
           'No Tracking or Ads: The app does not contain third-party behavioral advertising, trackers, or social media plugins that profile children.',
-          'Local Processing: Any microphone use by a child for recitation is processed instantly on the device and is instantly discarded.',
+          'Speech Recognition: When a child uses the microphone for recitation, speech recognition runs through the device operating system\'s built-in speech service and may be processed by the platform provider under its terms. Talia does not retain raw audio or send it to Talia servers; a guardian-supervised manual self-grade option is also available.',
         ],
       ),
       PrivacySection(

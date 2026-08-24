@@ -169,7 +169,7 @@ class _HeroHeaderState extends State<_HeroHeader>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+                    context.l10n.bismillah,
                     style: AppTypography.bodySmall.copyWith(
                       color: Colors.white.withValues(alpha: 0.68),
                       fontFamily: 'Amiri',

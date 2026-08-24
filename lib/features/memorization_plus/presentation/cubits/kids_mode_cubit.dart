@@ -360,13 +360,34 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     );
   }
 
-  Future<void> markCompleted() async {
+  /// V1-M8 — manual/self-grade completion route.
+  ///
+  /// Used when audio playback or STT is unavailable (airplane mode, empty
+  /// cache, denied microphone). A parent/guardian confirms the child
+  /// completed the listening and recitation without device verification.
+  Future<void> submitManualCompletion() async {
+    if (state is! KidsModeLoaded) return;
+    final st = state as KidsModeLoaded;
+    if (st.isCompleted) return;
+    if (st.isRecording) {
+      await _recitationRecorder.stop();
+      _recordingTimer?.cancel();
+      _recordingTimer = null;
+      _recordingCompleter = null;
+      emit(st.copyWith(isRecording: false, recordingSeconds: 0));
+    }
+    await markCompleted(manualGrade: true);
+  }
+
+  Future<void> markCompleted({bool manualGrade = false}) async {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
     if (st.isCompleted) return;
 
-    // BUG-4 FIX: prevent completing without listening the required times
-    if (_loopCount < _maxLoops) {
+    // BUG-4 FIX: prevent completing without listening the required times.
+    // The manual/self-grade route (V1-M8) bypasses this gate so a first-use
+    // offline journey can still complete safely.
+    if (!manualGrade && _loopCount < _maxLoops) {
       // Emit a warning state so the UI can show a message
       emit(st.copyWith(mustListenFirst: true));
       // Clear the flag after 2 seconds

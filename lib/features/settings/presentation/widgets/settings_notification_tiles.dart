@@ -729,8 +729,8 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                   ),
                   subtitle: Text(
                     context.isArabic
-                        ? 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.'
-                        : "Actions: [ 🤲 Read Today's Duas ]",
+                        ? 'هنا يظهر نص تذكير الدعاء اليومي من المصحف المعتمد'
+                        : "Today's dua reminder text from the approved corpus appears here",
                     style: AppTypography.bodySmall.copyWith(
                       color: subtextColor,
                     ),
@@ -742,8 +742,9 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                           title: context.isArabic
                               ? 'دعوة من القلب 🤲'
                               : 'Daily Dua 🤲',
-                          body:
-                              'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ.',
+                          body: context.isArabic
+                              ? 'هذا مثال لشكل تذكير الدعاء اليومي'
+                              : 'This is a preview of the daily dua reminder',
                           type: 'dua',
                         );
                     _showTestSuccessSnackBar();

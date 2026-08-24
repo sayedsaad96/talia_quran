@@ -446,6 +446,21 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     await _evaluateCurrentRecitation();
   }
 
+  /// V1-M8 — manual/self-grade route.
+  ///
+  /// The learner explicitly confirms they recited the current ayah (or block)
+  /// from memory. Used when the microphone is denied, the recognizer is
+  /// unavailable, or recognition keeps failing. No automatic score is
+  /// fabricated; review scheduling behaves exactly like a normal pass.
+  Future<void> submitManualRecall() async {
+    _assertActive();
+    final st = state as MSActive;
+    if (st.isRecording || st.isEvaluating) return;
+
+    emit(st.copyWith(isEvaluating: true));
+    await _evaluateCurrentRecitation(manualGrade: true);
+  }
+
   // ── Audio playback ────────────────────────────────────────────────────────
 
   /// Plays audio for the current ayah.
@@ -526,13 +541,24 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   }
 
   /// Evaluates the current recitation based on session phase.
-  Future<void> _evaluateCurrentRecitation() async {
+  Future<void> _evaluateCurrentRecitation({bool manualGrade = false}) async {
     if (_sessionState == null || state is! MSActive) return;
     final spokenText = (state as MSActive).recognizedText;
     final previousState = _sessionState!;
 
     V2SessionState newState;
-    if (previousState.phase == V2SessionPhase.reciting) {
+    if (manualGrade) {
+      switch (previousState.phase) {
+        case V2SessionPhase.reciting:
+          newState = _engine.submitManualRecall(previousState);
+        case V2SessionPhase.blockReview:
+          newState = _engine.submitManualBlockReview(previousState);
+        default:
+          // Not a recitation phase — ignore.
+          emit((state as MSActive).copyWith(isEvaluating: false));
+          return;
+      }
+    } else if (previousState.phase == V2SessionPhase.reciting) {
       newState = _engine.evaluateRecitation(previousState, spokenText);
     } else if (previousState.phase == V2SessionPhase.blockReview) {
       newState = _engine.evaluateBlockReview(previousState, spokenText);
@@ -544,6 +570,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
 
     _sessionState = newState;
     final noSpeech =
+        !manualGrade &&
         spokenText.trim().isEmpty &&
         newState.phase == previousState.phase &&
         newState.lastRecitationResult == previousState.lastRecitationResult;
@@ -552,7 +579,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         sessionState: newState,
         isEvaluating: false,
         speechIssue: noSpeech ? V2SpeechIssue.noSpeech : null,
-        clearSpeechIssue: !noSpeech,
+        clearSpeechIssue: manualGrade || !noSpeech,
       ),
     );
 

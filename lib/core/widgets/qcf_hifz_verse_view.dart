@@ -1,7 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 
-import '../utils/quran_text_display_formatter.dart';
 import '../theme/app_colors.dart';
 
 // ─── Display Mode ─────────────────────────────────────────────────────────────
@@ -147,21 +146,6 @@ class QcfHifzVerseView extends StatelessWidget {
       Theme.of(context).brightness == Brightness.dark;
 }
 
-// ─── Formatting Helpers ───────────────────────────────────────────────────────
-
-String _cleanVerseText(String verseText, int surahNumber, int verseNumber) {
-  var trailingMarker = '';
-  try {
-    trailingMarker = qcf.getAyaNoQCFLite(surahNumber, verseNumber);
-  } catch (_) {
-    // Fall back to regex-only cleanup when the end marker cannot be resolved.
-  }
-  return QuranTextDisplayFormatter.cleanAyahForMemorization(
-    verseText,
-    trailingMarker: trailingMarker,
-  );
-}
-
 // ─── QCF Content ──────────────────────────────────────────────────────────────
 
 /// Renders one or more verses using qcf_quran_plus helpers inside a try/catch.
@@ -194,6 +178,8 @@ class _QcfContent extends StatelessWidget {
           : AppColors.lightTextPrimary;
 
       // Build inline span for single verse or same-surah range.
+      // Sacred text is rendered verbatim — never cleaned, rewritten, or
+      // truncated (V1-M1 exactness gate).
       final spans = <TextSpan>[];
       for (var verse = startVerse; verse <= endVerse; verse++) {
         final rawVerseText = qcf.getVerse(surahNumber, verse);
@@ -208,12 +194,7 @@ class _QcfContent extends StatelessWidget {
           );
         }
 
-        final cleanedVerseText = _cleanVerseText(
-          rawVerseText,
-          surahNumber,
-          verse,
-        );
-        spans.add(TextSpan(text: '$cleanedVerseText '));
+        spans.add(TextSpan(text: '$rawVerseText '));
       }
 
       final qcfStyle = qcf.QuranTextStyles.qcfStyle(
@@ -260,13 +241,10 @@ class _FallbackText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cleanedText = QuranTextDisplayFormatter.cleanAyahForMemorization(
-      text,
-    );
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Text(
-        cleanedText,
+        text,
         style: TextStyle(
           fontFamily: 'Amiri',
           fontSize: fontSize,

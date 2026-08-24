@@ -2,6 +2,29 @@ import 'package:equatable/equatable.dart';
 
 enum AzkarCategory { morning, evening, general, duas }
 
+/// Reviewer-controlled authenticity grades (V1-M3).
+/// Values are assigned exclusively by the qualified Islamic reviewer.
+enum AuthenticityGrade { sahih, hasan, daif, mawquf }
+
+/// Product prominence tiers for retained duas (V1-M3).
+enum DuaTier { essential, recommended, supplementary }
+
+/// Content governance states (V1-M3).
+enum ContentReviewStatus { pendingReview, approved, rejected }
+
+extension ZikrGradePresentation on AuthenticityGrade? {
+  /// Grade is only shown once the record itself has been reviewer-approved.
+  bool get isApprovedValue => this != null;
+
+  String get displayName => switch (this) {
+        AuthenticityGrade.sahih => 'صحيح',
+        AuthenticityGrade.hasan => 'حسن',
+        AuthenticityGrade.daif => 'ضعيف',
+        AuthenticityGrade.mawquf => 'موقوف',
+        null => '',
+      };
+}
+
 class Zikr extends Equatable {
   const Zikr({
     required this.id,
@@ -12,6 +35,12 @@ class Zikr extends Equatable {
     required this.category,
     this.reference = '',
     this.subcategory = '',
+    this.citation,
+    this.sourceType,
+    this.authenticityGrade,
+    this.tier,
+    this.reviewStatus = ContentReviewStatus.pendingReview,
+    this.datasetVersion = 'unversioned',
   });
 
   final String id;
@@ -23,8 +52,35 @@ class Zikr extends Equatable {
   final String reference;
   final String subcategory;
 
+  /// Resolvable numbered citation (e.g. "Muslim 2689", "Quran 2:201").
+  /// Null until verified by the qualified reviewer.
+  final String? citation;
+
+  /// Coarse origin type: 'quran' | 'hadith' | 'dhikr' | 'dua'.
+  /// Null until assigned during review.
+  final String? sourceType;
+
+  final AuthenticityGrade? authenticityGrade;
+
+  final DuaTier? tier;
+
+  final ContentReviewStatus reviewStatus;
+
+  /// Frozen dataset version this record was reviewed under.
+  final String datasetVersion;
+
   @override
-  List<Object?> get props => [id, text, totalCount, category, subcategory];
+  List<Object?> get props => [
+        id,
+        text,
+        totalCount,
+        category,
+        subcategory,
+        citation,
+        authenticityGrade,
+        tier,
+        reviewStatus,
+      ];
 }
 
 class ZikrSession extends Equatable {

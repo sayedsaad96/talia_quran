@@ -1915,6 +1915,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Audio is unavailable right now. Please try again soon.';
 
   @override
+  String get kidsManualCompleteAction => 'I finished memorizing';
+
+  @override
+  String get kidsManualCompleteHint =>
+      'Audio or microphone unavailable? A guardian can confirm completion.';
+
+  @override
   String kidsGamifiedListenFirst(int count) {
     return 'Listen to the ayah $count times before recording your voice.';
   }
@@ -3691,6 +3698,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get v2StopRecording => 'Stop recording';
+
+  @override
+  String get v2ManualRecallAction => 'I recited it from memory (self-grade)';
+
+  @override
+  String get v2ManualRecallHint =>
+      'No microphone? Confirm you recited from memory and your progress will be saved.';
+
+  @override
+  String get v2ManualBlockReviewAction =>
+      'I recited the block from memory (self-grade)';
 
   @override
   String get v2RemediationTitle => 'Short remediation';

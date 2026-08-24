@@ -45,7 +45,10 @@ function Check([string] $label, [string] $query) {
   'unlock_parent_reward' = "SELECT pg_get_function_result('public.unlock_parent_reward(bigint)'::regprocedure)='SETOF public.parent_rewards' AND has_function_privilege('authenticated','public.unlock_parent_reward(bigint)','EXECUTE')"
   'claim_parent_reward' = "SELECT pg_get_function_result('public.claim_parent_reward(bigint)'::regprocedure)='SETOF public.parent_rewards' AND has_function_privilege('authenticated','public.claim_parent_reward(bigint)','EXECUTE')"
   'insert_kids_session_logs_batch' = "SELECT pg_get_function_result('public.insert_kids_session_logs_batch(jsonb)'::regprocedure) LIKE 'TABLE(local_id text, surah_id integer, ayah_number integer)' AND has_function_privilege('authenticated','public.insert_kids_session_logs_batch(jsonb)','EXECUTE')"
+  'revoke_guardian_link' = "SELECT pg_get_function_result('public.revoke_guardian_link(uuid)'::regprocedure)='void' AND has_function_privilege('authenticated','public.revoke_guardian_link(uuid)','EXECUTE')"
 }.GetEnumerator() | ForEach-Object { Check "RPC $($_.Key)" $_.Value }
+
+Check 'prune_audit_logs denied to authenticated' "SELECT NOT has_function_privilege('authenticated','public.prune_audit_logs()','EXECUTE')"
 
 Check 'parent_rewards direct DML revoked' "SELECT NOT has_table_privilege('authenticated','public.parent_rewards','INSERT,UPDATE,DELETE')"
 Check 'daily plans direct DML revoked' "SELECT NOT has_table_privilege('authenticated','public.daily_plans_cloud','INSERT,UPDATE,DELETE')"

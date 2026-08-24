@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
@@ -104,7 +104,6 @@ class _AzkarPageState extends State<AzkarPage> {
                           isDark: isDark,
                         ),
                         const SizedBox(height: AppSpacing.xl),
-                        _DailyTip(isDark: isDark),
                       ]),
                     ),
                   ),
@@ -352,110 +351,5 @@ class _AzkarCategoryCardState extends State<_AzkarCategoryCard> {
             duration: 400.ms,
           ),
     );
-  }
-}
-
-class _DailyTip extends StatefulWidget {
-  const _DailyTip({required this.isDark});
-  final bool isDark;
-
-  @override
-  State<_DailyTip> createState() => _DailyTipState();
-}
-
-class _DailyTipState extends State<_DailyTip> {
-  static const List<String> _tips = [
-    // أذكار وفضائل
-    'قُلْ هُوَ اللَّهُ أَحَدٌ — قراءة المعوذتين ثلاثًا تكفيك من كل شيء',
-    'من قرأ آية الكرسي دبر كل صلاة مكتوبة لم يمنعه من دخول الجنة إلا أن يموت',
-    'أحب الكلام إلى الله أربع: سبحان الله، والحمد لله، ولا إله إلا الله، والله أكبر',
-    'كلمتان خفيفتان على اللسان ثقيلتان في الميزان: سبحان الله وبحمده، سبحان الله العظيم',
-    'من قال: سبحان الله وبحمده في يوم مائة مرة حطت خطاياه وإن كانت مثل زبد البحر',
-    'من لزم الاستغفار جعل الله له من كل هم فرجا ومن كل ضيق مخرجا',
-    'من صلى علي صلاة واحدة صلى الله عليه بها عشراً',
-    'أقرب ما يكون العبد من ربه وهو ساجد فأكثروا الدعاء',
-    'يا مقلب القلوب ثبت قلبي على دينك',
-
-    // آيات قرآنية
-    '﴿وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ أُجِيبُ دَعْوَةَ الدَّاعِ إِذَا دَعَانِ﴾',
-    '﴿فَاذْكُرُونِي أَذْكُرْكُمْ وَاشْكُرُوا لِي وَلَا تَكْفُرُونِ﴾',
-    '﴿وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا ۝ وَيَرْزُقْهُ مِنْ حَيْثُ لَا يَحْتَسِبُ﴾',
-    '﴿لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا﴾',
-    '﴿إِنَّ مَعَ الْعُسْرِ يُسْرًا﴾',
-    '﴿وَاسْتَعِينُوا بِالصَّبْرِ وَالصَّلَاةِ ۚ وَإِنَّهَا لَكَبِيرَةٌ إِلَّا عَلَى الْخَاشِعِينَ﴾',
-    '﴿رَبَّنَا لَا تُزِغْ قُلُوبَنَا بَعْدَ إِذْ هَدَيْتَنَا وَهَبْ لَنَا مِن لَّدُنكَ رَحْمَةً﴾',
-    '﴿وَالذَّاكِرِينَ اللَّهَ كَثِيرًا وَالذَّاكِرَاتِ أَعَدَّ اللَّهُ لَهُم مَّغْفِرَةً وَأَجْرًا عَظِيمًا﴾',
-    '﴿وَلَسَوْفَ يُعْطِيكَ رَبُّكَ فَتَرْضَى﴾',
-
-    // أدعية
-    'اللهم إني أسألك الهدى والتقى والعفاف والغنى',
-    'اللهم إنك عفو تحب العفو فاعف عني',
-    'اللهم أعني على ذكرك وشكرك وحسن عبادتك',
-    'ربنا آتنا في الدنيا حسنة وفي الآخرة حسنة وقنا عذاب النار',
-    'اللهم إني أعوذ بك من الهم والحزن، والعجز والكسل، والبخل والجبن',
-    'اللهم أصلح لي ديني الذي هو عصمة أمري، وأصلح لي دنياي التي فيها معاشي',
-    'اللهم إني أسألك الجنة وما قرب إليها من قول أو عمل',
-    'رب اشرح لي صدري ويسر لي أمري',
-
-    // حكم ونصائح
-    'الصدقة تطفئ الخطيئة كما يطفئ الماء النار',
-    'الدعاء هو العبادة',
-    'تبسمك في وجه أخيك لك صدقة',
-    'لا تحقرن من المعروف شيئاً، ولو أن تلقى أخاك بوجه طلق',
-    'اقرأوا القرآن فإنه يأتي يوم القيامة شفيعاً لأصحابه',
-    'خيركم من تعلم القرآن وعلمه',
-    'الطهور شطر الإيمان، والحمد لله تملأ الميزان',
-    'اتق الله حيثما كنت، وأتبع السيئة الحسنة تمحها',
-    'احفظ الله يحفظك، احفظ الله تجده تجاهك',
-    'ما نقصت صدقة من مال، وما زاد الله عبداً بعفوٍ إلا عزاً',
-    'من حسن إسلام المرء تركه ما لا يعنيه',
-    'الكلمة الطيبة صدقة',
-  ];
-
-  late String _currentTip;
-
-  @override
-  void initState() {
-    super.initState();
-    // Use the current day of the year as a seed so it changes daily
-    final now = DateTime.now();
-    final seed = now.year * 1000 + now.month * 100 + now.day;
-    // We cannot import dart:math easily without adding it to the top.
-    // Instead, we can do a simple hash or just use the seed directly since we just need an index.
-    final index = seed % _tips.length;
-    _currentTip = _tips[index];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = widget.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: primary.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: primary.withValues(alpha: 0.15)),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.lightbulb_rounded, color: AppColors.gold, size: 22),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              _currentTip,
-              style: AppTypography.bodySmall.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
-                fontFamily: 'Amiri',
-                height: 1.7,
-              ),
-              textDirection: TextDirection.rtl,
-            ),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 250.ms);
   }
 }

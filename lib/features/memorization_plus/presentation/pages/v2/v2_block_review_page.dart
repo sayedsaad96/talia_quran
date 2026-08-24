@@ -73,6 +73,18 @@ class V2BlockReviewPage extends StatelessWidget {
           isEvaluating: state.isEvaluating,
           speechIssue: state.speechIssue,
         ),
+        // V1-M8 — clearly labelled manual/self-grade route for when STT or
+        // the network is unavailable.
+        TextButton.icon(
+          key: const ValueKey('v2-manual-block-review'),
+          onPressed: isEvaluating || isRecording
+              ? null
+              : () => context
+                    .read<MemorizationSessionCubit>()
+                    .submitManualRecall(),
+          icon: const Icon(Icons.record_voice_over_rounded, size: 18),
+          label: Text(context.l10n.v2ManualBlockReviewAction),
+        ),
       ],
     );
   }

@@ -3554,6 +3554,18 @@ abstract class AppLocalizations {
   /// **'الصوت غير متاح الآن، حاول مرة أخرى بعد قليل.'**
   String get kidsGamifiedAudioUnavailable;
 
+  /// No description provided for @kidsManualCompleteAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت الحفظ بنفسي'**
+  String get kidsManualCompleteAction;
+
+  /// No description provided for @kidsManualCompleteHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يتوفر الصوت أو الميكروفون؟ يمكن لولي الأمر تأكيد إتمام الحفظ.'**
+  String get kidsManualCompleteHint;
+
   /// No description provided for @kidsGamifiedListenFirst.
   ///
   /// In ar, this message translates to:
@@ -6738,6 +6750,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إيقاف التسجيل'**
   String get v2StopRecording;
+
+  /// No description provided for @v2ManualRecallAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت التسميع من حفظي (تقييم ذاتي)'**
+  String get v2ManualRecallAction;
+
+  /// No description provided for @v2ManualRecallHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا يتوفر الميكروفون؟ أكّد أنك تسمّعت من حفظك وسيُسجَّل التقدم.'**
+  String get v2ManualRecallHint;
+
+  /// No description provided for @v2ManualBlockReviewAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت مراجعة الكتلة من حفظي (تقييم ذاتي)'**
+  String get v2ManualBlockReviewAction;
 
   /// No description provided for @v2RemediationTitle.
   ///

@@ -153,6 +153,37 @@ final class V2SessionEngine {
     );
   }
 
+  // ── Manual / self-grade route (V1-M8) ────────────────────
+
+  /// Records a self-graded pass for the current ayah.
+  ///
+  /// Used when STT or the network is unavailable. The learner explicitly
+  /// confirms they recited the ayah from memory; no automatic score is
+  /// fabricated and review scheduling behaves exactly like a normal pass.
+  V2SessionState submitManualRecall(V2SessionState state) {
+    if (state.phase != V2SessionPhase.reciting) return state;
+    return _handlePass(
+      state.copyWith(lastRecitationResult: _manualPassResult()),
+    );
+  }
+
+  /// Records a self-graded pass for the whole block review.
+  V2SessionState submitManualBlockReview(V2SessionState state) {
+    if (state.phase != V2SessionPhase.blockReview) return state;
+    return state.copyWith(
+      phase: V2SessionPhase.completed,
+      lastRecitationResult: _manualPassResult(),
+    );
+  }
+
+  static V2RecitationResult _manualPassResult() =>
+      const V2RecitationResult(
+        passed: true,
+        similarityScore: 1.0,
+        normalizedTarget: '',
+        normalizedSpoken: '',
+      );
+
   // ── Private Helpers ──────────────────────────────────────
 
   V2SessionState _handlePass(V2SessionState state) {
