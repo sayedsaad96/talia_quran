@@ -1,7 +1,7 @@
 -- 0012 — V1-M6 / V1-M7 release corrections.
 --
--- 1. Guardian unlink contract: define `revoke_guardian_link(uuid)` so the
---    client action exposed at parent/child settings actually works.
+-- 1. Guardian unlink contract: define `revoke_guardian_link(uuid)` for the
+--    existing client boundary while V1 keeps its UI hidden pending hosted proof.
 --    Least privilege: SECURITY DEFINER is required because `authenticated`
 --    holds no direct DML on parent_child_links; membership in the ACTIVE
 --    link being revoked is enforced inside the function, so a user can never
@@ -17,7 +17,7 @@ CREATE OR REPLACE FUNCTION public.revoke_guardian_link(p_counterpart_user_id UUI
 RETURNS VOID
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
 DECLARE
   v_caller UUID := auth.uid();
@@ -48,9 +48,12 @@ BEGIN
 END;
 $$;
 
-REVOKE ALL ON FUNCTION public.revoke_guardian_link(UUID) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.revoke_guardian_link(UUID)
+  FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.revoke_guardian_link(UUID) TO authenticated;
 
 -- ── 2. Revoke global audit-pruning authority from end users ────────────────
 
-REVOKE ALL ON FUNCTION public.prune_audit_logs() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.prune_audit_logs()
+  FROM PUBLIC, anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION public.prune_audit_logs() TO service_role;
