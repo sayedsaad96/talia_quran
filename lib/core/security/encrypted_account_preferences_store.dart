@@ -20,14 +20,24 @@ class FlutterEncryptedAccountPreferencesStore
   final FlutterSecureStorage _storage;
 
   @override
-  Future<String?> read(String ownerId, String key) =>
-      _guard<String?>('read', () => _storage.read(key: _storageKey(ownerId, key)));
+  Future<String?> read(String ownerId, String key) async {
+    try {
+      return await _storage.read(key: _storageKey(ownerId, key));
+    } on Exception catch (error, stack) {
+      TaliaLogger.w('Account secure store read failed', error, stack);
+      rethrow;
+    }
+  }
 
   @override
-  Future<void> write(String ownerId, String key, String value) => _guard(
-    'write',
-    () => _storage.write(key: _storageKey(ownerId, key), value: value),
-  );
+  Future<void> write(String ownerId, String key, String value) async {
+    try {
+      await _storage.write(key: _storageKey(ownerId, key), value: value);
+    } on Exception catch (error, stack) {
+      TaliaLogger.w('Account secure store write failed', error, stack);
+      rethrow;
+    }
+  }
 
   @override
   Future<void> delete(String ownerId, String key) =>
@@ -36,9 +46,9 @@ class FlutterEncryptedAccountPreferencesStore
   String _storageKey(String ownerId, String key) =>
       'talia.account_preferences.v1.$ownerId.$key';
 
-  // Android KeyStore throws PlatformException after reinstall or backup
-  // restore; account switching and sign-out must keep working, so failures
-  // degrade to "no stored value".
+  // Deletes remain best-effort so cleanup can proceed after a platform
+  // keystore reset. Reads and writes surface failures: callers must not
+  // confuse unreadable/unwritten account data with a safe durable state.
   Future<T?> _guard<T>(String operation, Future<T> Function() action) async {
     try {
       return await action();

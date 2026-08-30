@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/journey/journey_presentation_data.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -21,15 +20,19 @@ class UnifiedHeroActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final subTextColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subTextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-        splashColor: AppColors.gold.withValues(alpha: 0.1),
+        splashColor: primary.withValues(alpha: 0.1),
         highlightColor: AppColors.primary.withValues(alpha: 0.05),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
@@ -49,26 +52,12 @@ class UnifiedHeroActionCard extends StatelessWidget {
                     ],
             ),
             borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-            border: Border.all(
-              color: isDark
-                  ? AppColors.gold.withValues(alpha: 0.3)
-                  : AppColors.primary.withValues(alpha: 0.2),
-              width: 1.2,
-            ),
             boxShadow: [
               BoxShadow(
-                color: isDark
-                    ? AppColors.primaryDark.withValues(alpha: 0.6)
-                    : AppColors.primary.withValues(alpha: 0.1),
-                blurRadius: 20,
-                offset: const Offset(0, 8),
+                color: primary.withValues(alpha: isDark ? 0.14 : 0.09),
+                blurRadius: 8,
+                offset: const Offset(0, 4),
               ),
-              if (isDark)
-                BoxShadow(
-                  color: AppColors.gold.withValues(alpha: 0.08),
-                  blurRadius: 10,
-                  spreadRadius: -2,
-                ),
             ],
           ),
           child: Row(
@@ -77,22 +66,17 @@ class UnifiedHeroActionCard extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  gradient: isDark ? AppColors.goldGradient : AppColors.primaryGradient,
+                  gradient: AppColors.primaryGradient,
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: (isDark ? AppColors.goldDark : AppColors.primary)
-                          .withValues(alpha: 0.3),
+                      color: AppColors.primary.withValues(alpha: 0.28),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
                   ],
                 ),
-                child: Icon(
-                  data.icon,
-                  color: isDark ? AppColors.darkBackground : Colors.white,
-                  size: 26,
-                ),
+                child: Icon(data.icon, color: Colors.white, size: 26),
               ),
               const SizedBox(width: AppSpacing.md),
               Expanded(
@@ -121,14 +105,14 @@ class UnifiedHeroActionCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.xs + 2),
                 decoration: BoxDecoration(
-                  color: (isDark ? AppColors.gold : primary).withValues(alpha: 0.12),
+                  color: primary.withValues(alpha: 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   context.isArabic
                       ? Icons.arrow_back_ios_new_rounded
                       : Icons.arrow_forward_ios_rounded,
-                  color: isDark ? AppColors.goldLight : primary,
+                  color: primary,
                   size: 14,
                 ),
               ),
@@ -136,6 +120,6 @@ class UnifiedHeroActionCard extends StatelessWidget {
           ),
         ),
       ),
-    ).animate().fadeIn(duration: 350.ms).slideY(begin: 0.05, curve: Curves.easeOutCubic);
+    );
   }
 }

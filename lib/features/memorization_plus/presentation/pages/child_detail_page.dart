@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -27,7 +27,8 @@ class ChildDetailPage extends StatelessWidget {
           style: AppTypography.titleLarge,
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: const BackButtonIcon(),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => context.canPop()
               ? context.pop()
               : context.go('/family-dashboard'),
@@ -100,35 +101,35 @@ class _ChildDetailBody extends StatelessWidget {
         120,
       ),
       children: [
-        // ─── Header avatar + name ──────────────────────────────────────────
+        // â”€â”€â”€ Header avatar + name â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         _ChildHeaderCard(child: child),
         const SizedBox(height: AppSpacing.md),
 
-        // ─── Today summary ─────────────────────────────────────────────────
+        // â”€â”€â”€ Today summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         _TodayCard(child: child),
         const SizedBox(height: AppSpacing.md),
 
-        // ─── Metrics row ───────────────────────────────────────────────────
+        // â”€â”€â”€ Metrics row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         _MetricsRow(child: child),
         const SizedBox(height: AppSpacing.md),
 
-        // ─── Memorization progress (remote only, if production available) ──
+        // â”€â”€â”€ Memorization progress (remote only, if production available) â”€â”€
         if (production != null) ...[
           _MemorizationProgressCard(production: production),
           const SizedBox(height: AppSpacing.md),
         ],
 
-        // ─── Recent sessions ───────────────────────────────────────────────
+        // â”€â”€â”€ Recent sessions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         _RecentSessionsCard(logs: logs),
         const SizedBox(height: AppSpacing.md),
 
-        // ─── Rewards ───────────────────────────────────────────────────────
+        // â”€â”€â”€ Rewards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if (rewards.isNotEmpty) ...[
           _RewardsCard(rewards: rewards),
           const SizedBox(height: AppSpacing.md),
         ],
 
-        // ─── Open full dashboard (local child only) ────────────────────────
+        // â”€â”€â”€ Open full dashboard (local child only) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         if (child.isLocal) ...[
           OutlinedButton.icon(
             onPressed: () {
@@ -179,7 +180,7 @@ class _ChildDetailBody extends StatelessWidget {
   }
 }
 
-// ─── Header card ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Header card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _ChildHeaderCard extends StatelessWidget {
   const _ChildHeaderCard({required this.child});
@@ -208,7 +209,7 @@ class _ChildHeaderCard extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              child.avatarEmoji ?? (child.isLocal ? '👨‍👧' : '🧒'),
+              child.avatarEmoji ?? (child.isLocal ? 'ðŸ‘¨â€ðŸ‘§' : 'ðŸ§’'),
               style: AppTypography.displayMedium.copyWith(fontSize: 32),
             ),
           ),
@@ -251,7 +252,7 @@ class _ChildHeaderCard extends StatelessWidget {
   }
 }
 
-// ─── Today card ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Today card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _TodayCard extends StatelessWidget {
   const _TodayCard({required this.child});
@@ -282,7 +283,7 @@ class _TodayCard extends StatelessWidget {
   }
 }
 
-// ─── Metrics row ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Metrics row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _MetricsRow extends StatelessWidget {
   const _MetricsRow({required this.child});
@@ -293,15 +294,15 @@ class _MetricsRow extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _MetricChip(icon: '⭐', label: 'Lv.${child.currentLevel}'),
+          child: _MetricChip(icon: 'â­', label: 'Lv.${child.currentLevel}'),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: _MetricChip(icon: '🌟', label: '${child.starsEarned}'),
+          child: _MetricChip(icon: 'ðŸŒŸ', label: '${child.starsEarned}'),
         ),
         const SizedBox(width: AppSpacing.sm),
         Expanded(
-          child: _MetricChip(icon: '🔥', label: '${child.currentStreak}'),
+          child: _MetricChip(icon: 'ðŸ”¥', label: '${child.currentStreak}'),
         ),
       ],
     );
@@ -333,7 +334,7 @@ class _MetricChip extends StatelessWidget {
   }
 }
 
-// ─── Memorization progress card ───────────────────────────────────────────────
+// â”€â”€â”€ Memorization progress card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _MemorizationProgressCard extends StatelessWidget {
   const _MemorizationProgressCard({required this.production});
@@ -388,7 +389,7 @@ class _MemorizationProgressCard extends StatelessWidget {
   }
 }
 
-// ─── Recent sessions card ─────────────────────────────────────────────────────
+// â”€â”€â”€ Recent sessions card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _RecentSessionsCard extends StatelessWidget {
   const _RecentSessionsCard({required this.logs});
@@ -436,7 +437,7 @@ class _RecentSessionsCard extends StatelessWidget {
   }
 }
 
-// ─── Rewards card ─────────────────────────────────────────────────────────────
+// â”€â”€â”€ Rewards card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _RewardsCard extends StatelessWidget {
   const _RewardsCard({required this.rewards});
@@ -472,7 +473,7 @@ class _RewardsCard extends StatelessWidget {
   }
 }
 
-// ─── Shared panel widget ──────────────────────────────────────────────────────
+// â”€â”€â”€ Shared panel widget â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _Panel extends StatelessWidget {
   const _Panel({required this.title, required this.child});

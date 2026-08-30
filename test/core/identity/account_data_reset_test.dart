@@ -5,7 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/account_data_reset.dart';
+import 'package:talia_quran/core/identity/pending_bookmark_recovery_marker.dart';
 import 'package:talia_quran/core/memorization/review_record_identity.dart';
+import 'package:talia_quran/core/security/encrypted_account_preferences_store.dart';
 import 'package:talia_quran/core/sync/cloud_sync_queue_item.dart';
 import 'package:talia_quran/features/hifz/data/models/isar_ayah_progress.dart';
 import 'package:talia_quran/features/hifz/domain/entities/hifz_entities.dart';
@@ -203,23 +205,73 @@ void main() {
       expect(await isar.isarAyahReviewRecords.where().count(), 0);
     });
 
-    test('re-homes deleted-account progress as guest data without clearing it',
-        () async {
-      await seedAllCollections();
+    test(
+      're-homes deleted-account progress as guest data without clearing it',
+      () async {
+        await seedAllCollections();
 
-      await AccountDataReset(isar, prefs).preserveDeletedAccountLocally(
-        departingOwnerId: 'user-a',
-      );
+        await AccountDataReset(
+          isar,
+          prefs,
+        ).preserveDeletedAccountLocally(departingOwnerId: 'user-a');
 
-      final review = await isar.isarAyahReviewRecords.where().findFirst();
-      expect(review, isNotNull);
-      expect(review!.ownerUserId, ReviewRecordIdentity.localOwnerId);
-      expect(review.compositeKey, 'local|adult|1|1');
-      expect(review.cloudDirty, isFalse);
-      expect(await isar.isarAyahProgress.where().count(), 1);
-      expect(await isar.cloudSyncQueueItems.where().count(), 1);
-      expect(prefs.getString('read_pages'), '[1,2]');
-      expect(prefs.getString('auth_last_signed_in_user_id'), isNull);
-    });
+        final review = await isar.isarAyahReviewRecords.where().findFirst();
+        expect(review, isNotNull);
+        expect(review!.ownerUserId, ReviewRecordIdentity.localOwnerId);
+        expect(review.compositeKey, 'local|adult|1|1');
+        expect(review.cloudDirty, isFalse);
+        expect(await isar.isarAyahProgress.where().count(), 1);
+        expect(await isar.cloudSyncQueueItems.where().count(), 1);
+        expect(prefs.getString('read_pages'), '[1,2]');
+        expect(prefs.getString('auth_last_signed_in_user_id'), isNull);
+      },
+    );
+
+    test(
+      'failed deleted-account guest copy preserves owner blob and marker',
+      () async {
+        final encrypted = _GuestWriteFailingEncryptedStore();
+        await encrypted.write('user-a', 'quran_bookmarks', '[{"revision":1}]');
+        encrypted.failGuestWrite = true;
+
+        await expectLater(
+          AccountDataReset(
+            isar,
+            prefs,
+            encryptedAccountPreferences: encrypted,
+          ).preserveDeletedAccountLocally(departingOwnerId: 'user-a'),
+          throwsException,
+        );
+
+        expect(
+          await encrypted.read('user-a', 'quran_bookmarks'),
+          '[{"revision":1}]',
+        );
+        expect(PendingBookmarkRecoveryMarker.contains(prefs, 'user-a'), isTrue);
+      },
+    );
   });
+}
+
+class _GuestWriteFailingEncryptedStore
+    implements EncryptedAccountPreferencesStore {
+  final Map<String, String> _values = {};
+  bool failGuestWrite = false;
+
+  @override
+  Future<void> delete(String ownerId, String key) async {
+    _values.remove('$ownerId/$key');
+  }
+
+  @override
+  Future<String?> read(String ownerId, String key) async =>
+      _values['$ownerId/$key'];
+
+  @override
+  Future<void> write(String ownerId, String key, String value) async {
+    if (failGuestWrite && ownerId == ReviewRecordIdentity.localOwnerId) {
+      throw Exception('guest secure write failed');
+    }
+    _values['$ownerId/$key'] = value;
+  }
 }

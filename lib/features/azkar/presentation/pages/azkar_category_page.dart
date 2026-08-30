@@ -71,6 +71,12 @@ class _AzkarCategoryView extends StatelessWidget {
             );
           }
           if (state is AzkarLoaded) {
+            if (state.sessions.isEmpty) {
+              return _AzkarUnderReviewScreen(
+                title: _title(context),
+                isDark: isDark,
+              );
+            }
             if (state.allDone) {
               return _CompletionScreen(
                 isDark: isDark,
@@ -85,6 +91,63 @@ class _AzkarCategoryView extends StatelessWidget {
           }
           return const SizedBox.shrink();
         },
+      ),
+    );
+  }
+}
+
+class _AzkarUnderReviewScreen extends StatelessWidget {
+  const _AzkarUnderReviewScreen({required this.title, required this.isDark});
+
+  final String title;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    return SafeArea(
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+            child: Row(
+              children: [
+                IconButton(
+                  tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+                  icon: const BackButtonIcon(),
+                  color: foreground,
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/');
+                    }
+                  },
+                ),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: AppTypography.titleLarge.copyWith(
+                      color: foreground,
+                      fontFamily: 'Amiri',
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(width: 48),
+              ],
+            ),
+          ),
+          Expanded(
+            child: EmptyStateWidget(
+              key: const ValueKey('azkar-content-under-review'),
+              message: context.l10n.azkarContentUnderReview,
+              icon: Icons.pending_actions_rounded,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -193,9 +256,9 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
   }
 
   String _shareableText(BuildContext context, ZikrSession session) {
-    final reference = session.zikr.reference.trim();
+    final reference = session.zikr.reference;
     return [
-      session.zikr.text.trim(),
+      session.zikr.text,
       if (reference.isNotEmpty) reference,
       context.l10n.sharedFromTalia,
     ].join('\n\n');
@@ -271,7 +334,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                         ),
                         leading: CircleAvatar(
                           backgroundColor: selected
-                              ? AppColors.gold
+                              ? AppColors.primary
                               : (isDark
                                     ? AppColors.darkSurfaceVariant
                                     : AppColors.lightSurfaceVariant),
@@ -350,13 +413,16 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
       child: SafeArea(
         child: Column(
           children: [
-            // ─── Header ──────────────────────────────────────────────
+            // â”€â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                    tooltip: MaterialLocalizations.of(
+                      context,
+                    ).backButtonTooltip,
+                    icon: const BackButtonIcon(),
                     color: widget.isDark
                         ? AppColors.darkTextPrimary
                         : AppColors.lightTextPrimary,
@@ -398,6 +464,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                     ),
                   ),
                   IconButton(
+                    tooltip: context.l10n.fontSize,
                     icon: const Icon(Icons.format_size_rounded),
                     color: widget.isDark
                         ? AppColors.darkTextPrimary
@@ -405,6 +472,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                     onPressed: _cycleFontSize,
                   ),
                   IconButton(
+                    tooltip: context.l10n.azkarIndex,
                     icon: const Icon(Icons.format_list_bulleted_rounded),
                     color: widget.isDark
                         ? AppColors.darkTextPrimary
@@ -415,7 +483,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
               ),
             ),
 
-            // ─── Progress Bar ────────────────────────────────────────
+            // â”€â”€â”€ Progress Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: ClipRRect(
@@ -433,7 +501,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
               ),
             ),
 
-            // ─── PageView (Zikr Content) ─────────────────────────────
+            // â”€â”€â”€ PageView (Zikr Content) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
             Expanded(
               child: Directionality(
                 textDirection: TextDirection.rtl,
@@ -501,12 +569,13 @@ class _ZikrReaderPage extends StatelessWidget {
         : AppColors.lightTextSecondary;
     final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
     final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     return Padding(
       padding: const EdgeInsets.all(20.0),
       child: Column(
         children: [
-          // ─── Reading Area ────────────────────────────────────────
+          // â”€â”€â”€ Reading Area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           Expanded(
             child: Container(
               width: double.infinity,
@@ -514,13 +583,6 @@ class _ZikrReaderPage extends StatelessWidget {
                 color: cardColor,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: borderColor),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
               ),
               child: Column(
                 children: [
@@ -531,6 +593,7 @@ class _ZikrReaderPage extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         IconButton(
+                          tooltip: context.l10n.copy,
                           icon: Icon(
                             Icons.copy_rounded,
                             size: 20,
@@ -539,6 +602,7 @@ class _ZikrReaderPage extends StatelessWidget {
                           onPressed: onCopy,
                         ),
                         IconButton(
+                          tooltip: context.l10n.share,
                           icon: Icon(
                             Icons.share_rounded,
                             size: 20,
@@ -574,20 +638,19 @@ class _ZikrReaderPage extends StatelessWidget {
                             Text(
                               session.zikr.reference,
                               style: AppTypography.titleMedium.copyWith(
-                                color: AppColors.gold,
+                                color: secondaryColor,
                                 fontFamily: 'Amiri',
                                 fontSize: 16,
                               ),
                               textAlign: TextAlign.center,
                             ),
                           ],
-                          if (session
-                              .zikr.authenticityGrade.isApprovedValue) ...[
+                          if (session.zikr.shouldShowAuthenticityGrade) ...[
                             const SizedBox(height: 8),
                             Text(
                               session.zikr.authenticityGrade!.displayName,
                               style: AppTypography.labelMedium.copyWith(
-                                color: AppColors.gold.withValues(alpha: 0.85),
+                                color: secondaryColor,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -599,111 +662,123 @@ class _ZikrReaderPage extends StatelessWidget {
                 ],
               ),
             ),
-          ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.05, end: 0),
+          ),
 
           const SizedBox(height: 24),
 
-          // ─── Tap Target (Circular Counter) ──────────────────────
-          GestureDetector(
-            onTap: onTap,
-            onLongPress: onLongPress,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Circular Progress
-                SizedBox(
-                  width: 160,
-                  height: 160,
-                  child: TweenAnimationBuilder<double>(
-                    tween: Tween<double>(
-                      begin: 0,
-                      end: session.zikr.totalCount == 0 ? 1.0 : session.currentCount / session.zikr.totalCount,
+          // â”€â”€â”€ Tap Target (Circular Counter) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          Semantics(
+            button: true,
+            label: context.l10n.tapToTasbeeh(session.zikr.totalCount),
+            value: '${session.currentCount} / ${session.zikr.totalCount}',
+            child: GestureDetector(
+              onTap: onTap,
+              onLongPress: onLongPress,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Circular Progress
+                  SizedBox(
+                    width: 160,
+                    height: 160,
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween<double>(
+                        begin: 0,
+                        end: session.zikr.totalCount == 0
+                            ? 1.0
+                            : session.currentCount / session.zikr.totalCount,
+                      ),
+                      duration: disableAnimations
+                          ? Duration.zero
+                          : const Duration(milliseconds: 300),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, value, _) {
+                        return CircularProgressIndicator(
+                          value: value,
+                          strokeWidth: 8,
+                          backgroundColor: isDark
+                              ? AppColors.darkDivider
+                              : AppColors.lightDivider,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            session.isDone
+                                ? AppColors.success
+                                : AppColors.primary,
+                          ),
+                        );
+                      },
                     ),
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOutCubic,
-                    builder: (context, value, _) {
-                      return CircularProgressIndicator(
-                        value: value,
-                        strokeWidth: 8,
-                        backgroundColor: isDark
-                            ? AppColors.darkDivider
-                            : AppColors.lightDivider,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          session.isDone ? AppColors.success : AppColors.gold,
+                  ),
+
+                  // The Button itself
+                  AnimatedContainer(
+                    duration: disableAnimations
+                        ? Duration.zero
+                        : const Duration(milliseconds: 200),
+                    width: 130,
+                    height: 130,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: session.isDone
+                          ? const LinearGradient(
+                              colors: [AppColors.success, Color(0xFF1E5D46)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : LinearGradient(
+                              colors: isDark
+                                  ? [AppColors.primary, AppColors.primaryDark]
+                                  : [AppColors.primaryLight, AppColors.primary],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: session.isDone
+                              ? AppColors.success.withValues(alpha: 0.3)
+                              : AppColors.primary.withValues(alpha: 0.3),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
                         ),
-                      );
-                    },
-                  ),
-                ),
-                
-                // The Button itself
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  width: 130,
-                  height: 130,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: session.isDone
-                        ? const LinearGradient(
-                            colors: [AppColors.success, Color(0xFF1E5D46)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : LinearGradient(
-                            colors: isDark
-                                ? [AppColors.primary, AppColors.primaryDark]
-                                : [AppColors.primaryLight, AppColors.primary],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: session.isDone
-                            ? AppColors.success.withValues(alpha: 0.3)
-                            : AppColors.primary.withValues(alpha: 0.3),
-                        blurRadius: 16,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
-                  ),
-                  alignment: Alignment.center,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (session.isDone)
-                        const Icon(
-                          Icons.check_circle_rounded,
-                          color: Colors.white,
-                          size: 40,
-                        ).animate().scale(
-                          duration: 300.ms,
-                          curve: Curves.easeOutBack,
-                        )
-                      else
-                        Text(
-                          '${session.currentCount}',
-                          style: AppTypography.displayMedium.copyWith(
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (session.isDone)
+                          const Icon(
+                            Icons.check_circle_rounded,
                             color: Colors.white,
-                            fontWeight: FontWeight.w800,
-                            height: 1.1,
+                            size: 40,
+                          )
+                        else
+                          Text(
+                            '${session.currentCount}',
+                            style: AppTypography.displayMedium.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              height: 1.1,
+                            ),
+                          ),
+
+                        Text(
+                          context.l10n.azkarCountOfTotal(
+                            session.zikr.totalCount,
+                          ),
+                          style: AppTypography.titleMedium.copyWith(
+                            color: Colors.white.withValues(alpha: 0.8),
+                            fontFamily: 'Amiri',
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                      
-                      Text(
-                        'من ${session.zikr.totalCount}',
-                        style: AppTypography.titleMedium.copyWith(
-                          color: Colors.white.withValues(alpha: 0.8),
-                          fontFamily: 'Amiri',
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
-          
+
           // Undo Hint
           const SizedBox(height: 16),
           SizedBox(
@@ -715,8 +790,12 @@ class _ZikrReaderPage extends StatelessWidget {
                       key: const ValueKey('undo'),
                       onPressed: onUndo,
                       style: TextButton.styleFrom(
-                        foregroundColor: isDark ? Colors.white : AppColors.primary,
-                        backgroundColor: (isDark ? Colors.white : AppColors.primary).withValues(alpha: 0.1),
+                        foregroundColor: isDark
+                            ? Colors.white
+                            : AppColors.primary,
+                        backgroundColor:
+                            (isDark ? Colors.white : AppColors.primary)
+                                .withValues(alpha: 0.1),
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
                           vertical: 8,
@@ -751,6 +830,8 @@ class _CompletionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final motionValue = disableAnimations ? 1.0 : null;
     final textColor = isDark
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
@@ -765,90 +846,100 @@ class _CompletionScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [AppColors.primaryLight, AppColors.primaryDark],
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 32,
-                    offset: const Offset(0, 12),
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [AppColors.primaryLight, AppColors.primaryDark],
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        blurRadius: 32,
+                        offset: const Offset(0, 12),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: const Icon(
-                Icons.check_rounded,
-                color: Colors.white,
-                size: 56,
-              ),
-            ).animate().scale(duration: 600.ms, curve: Curves.elasticOut),
+                  child: const Icon(
+                    Icons.check_rounded,
+                    color: Colors.white,
+                    size: 56,
+                  ),
+                )
+                .animate(autoPlay: !disableAnimations, value: motionValue)
+                .scale(duration: 600.ms, curve: Curves.elasticOut),
             const SizedBox(height: AppSpacing.xl),
             Text(
-              context.l10n.azkarCompletedTitle,
-              style: AppTypography.displaySmall.copyWith(
-                fontFamily: 'Amiri',
-                color: textColor,
-              ),
-            ).animate().fadeIn(delay: 300.ms),
+                  context.l10n.azkarCompletedTitle,
+                  style: AppTypography.displaySmall.copyWith(
+                    fontFamily: 'Amiri',
+                    color: textColor,
+                  ),
+                )
+                .animate(autoPlay: !disableAnimations, value: motionValue)
+                .fadeIn(delay: 300.ms),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              context.l10n.azkarCompletedDesc,
-              style: AppTypography.bodyLarge.copyWith(color: secondaryColor),
-              textAlign: TextAlign.center,
-            ).animate().fadeIn(delay: 400.ms),
+                  context.l10n.azkarCompletedDesc,
+                  style: AppTypography.bodyLarge.copyWith(
+                    color: secondaryColor,
+                  ),
+                  textAlign: TextAlign.center,
+                )
+                .animate(autoPlay: !disableAnimations, value: motionValue)
+                .fadeIn(delay: 400.ms),
             const SizedBox(height: AppSpacing.xxl),
             Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onReset,
-                    icon: const Icon(Icons.refresh_rounded, size: 18),
-                    label: Text(context.l10n.reset),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                      side: const BorderSide(color: AppColors.primary),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusMd,
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: onReset,
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: Text(context.l10n.reset),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primary,
+                          side: const BorderSide(color: AppColors.primary),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusMd,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.sm),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      if (context.canPop()) {
-                        context.pop();
-                      } else {
-                        context.go('/');
-                      }
-                    },
-                    icon: const Icon(Icons.home_rounded, size: 18),
-                    label: Text(context.l10n.home),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.radiusMd,
+                    const SizedBox(width: AppSpacing.sm),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/');
+                          }
+                        },
+                        icon: const Icon(Icons.home_rounded, size: 18),
+                        label: Text(context.l10n.home),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusMd,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ],
-            ).animate().fadeIn(delay: 500.ms),
+                  ],
+                )
+                .animate(autoPlay: !disableAnimations, value: motionValue)
+                .fadeIn(delay: 500.ms),
           ],
         ),
       ),

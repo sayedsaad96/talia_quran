@@ -121,7 +121,8 @@ class _CertificatesSectionState extends State<_CertificatesSection> {
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             itemCount: _certificates.length,
-            separatorBuilder: (context, index) => const SizedBox(width: AppSpacing.md),
+            separatorBuilder: (context, index) =>
+                const SizedBox(width: AppSpacing.md),
             itemBuilder: (context, index) {
               final cert = _certificates[index];
               return SizedBox(
@@ -154,7 +155,8 @@ class _CertificateCard extends StatelessWidget {
       ],
     );
 
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       onTap: () {
         context.push(
           '/certificate',

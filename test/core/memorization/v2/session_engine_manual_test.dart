@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/memorization/v2/session_engine.dart';
+import 'package:talia_quran/core/memorization/v2/recitation_evaluator.dart';
 import 'package:talia_quran/core/memorization/v2/session_phase.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -47,6 +48,15 @@ void main() {
 
       expect(state.passedAyahNumbers, containsAll(<int>[1, 2]));
       expect(state.phase, V2SessionPhase.blockReviewPending);
+      expect(
+        state.lastRecitationResult?.assessmentMethod,
+        V2AssessmentMethod.manual,
+      );
+      expect(
+        state.lastRecitationResult?.similarityScore,
+        isNull,
+        reason: 'manual outcomes must not masquerade as a perfect STT score',
+      );
     });
 
     test('is ignored outside the reciting phase', () {
@@ -63,6 +73,11 @@ void main() {
       state = engine.submitManualBlockReview(state);
 
       expect(state.phase, V2SessionPhase.completed);
+      expect(
+        state.lastRecitationResult?.assessmentMethod,
+        V2AssessmentMethod.manual,
+      );
+      expect(state.lastRecitationResult?.similarityScore, isNull);
       expect(state.lastRecitationResult?.passed, isTrue);
     });
 

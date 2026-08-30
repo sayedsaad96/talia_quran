@@ -177,8 +177,6 @@ void main() {
       );
       when(mockLocalDatasource.getSession(1)).thenAnswer((_) async => null);
 
-
-
       when(mockLocalDatasource.saveSession(any)).thenAnswer((_) async {});
       when(
         mockAudioCache.prefetchSession(
@@ -206,8 +204,6 @@ void main() {
             Right(SurahDetail(surah: defaultSurah, ayahs: defaultAyahs)),
       );
       when(mockLocalDatasource.getSession(1)).thenAnswer((_) async => null);
-
-
 
       when(mockLocalDatasource.saveSession(any)).thenAnswer((_) async {});
       when(
@@ -284,26 +280,95 @@ void main() {
       expect(events, ['save:1', 'recordPass']);
     });
 
-    test('skips recordPass when the ayah already passed in this session', () async {
-      await _startSession(cubit);
+    test(
+      'skips recordPass when the ayah already passed in this session',
+      () async {
+        await _startSession(cubit);
+        stubReviewWrite();
+
+        final previous = (cubit.state as MSActive).sessionState.copyWith(
+          phase: V2SessionPhase.reciting,
+          passedAyahNumbers: {1},
+        );
+        final next = previous.copyWith(
+          lastRecitationResult: const V2RecitationResult(
+            passed: true,
+            similarityScore: 1,
+            normalizedTarget: 'ayah 1',
+            normalizedSpoken: 'ayah 1',
+          ),
+        );
+
+        await cubit.handlePostEvaluationForTesting(previous, next);
+
+        verifyNever(mockMemRepo.saveReviewRecord(any));
+      },
+    );
+  });
+
+  group('V1-M8 honest assessment outcomes', () {
+    Future<void> moveToReciting() async {
+      await cubit.startSession(surahId: 1, startAyah: 1, blockSize: 1);
+      expect(cubit.state, isA<MSActive>());
+      await cubit.advanceToMemorizing();
+      await cubit.advanceToReciting();
+      expect(
+        (cubit.state as MSActive).sessionState.phase,
+        V2SessionPhase.reciting,
+      );
+    }
+
+    test('automatic STT keeps its score and automatic method', () async {
       stubReviewWrite();
+      await moveToReciting();
 
-      final previous = (cubit.state as MSActive).sessionState.copyWith(
-        phase: V2SessionPhase.reciting,
-        passedAyahNumbers: {1},
-      );
-      final next = previous.copyWith(
-        lastRecitationResult: const V2RecitationResult(
-          passed: true,
-          similarityScore: 1,
-          normalizedTarget: 'ayah 1',
-          normalizedSpoken: 'ayah 1',
-        ),
-      );
+      await cubit.evaluateCurrentRecitationForTesting('Ayah 1');
 
-      await cubit.handlePostEvaluationForTesting(previous, next);
+      final result =
+          (cubit.state as MSActive).sessionState.lastRecitationResult;
+      expect(result?.assessmentMethod, V2AssessmentMethod.automatic);
+      expect(result?.similarityScore, 1.0);
+      expect(result?.normalizedSpoken, isNotEmpty);
+      verify(mockMemRepo.saveReviewRecord(any)).called(1);
+    });
 
-      verifyNever(mockMemRepo.saveReviewRecord(any));
+    test(
+      'no-speech fallback records a manual result without a fake score',
+      () async {
+        stubReviewWrite();
+        await moveToReciting();
+
+        await cubit.evaluateCurrentRecitationForTesting('');
+
+        final noSpeech = cubit.state as MSActive;
+        expect(noSpeech.speechIssue, V2SpeechIssue.noSpeech);
+        expect(noSpeech.sessionState.lastRecitationResult, isNull);
+        verifyNever(mockMemRepo.saveReviewRecord(any));
+
+        await cubit.submitManualRecall();
+
+        final result =
+            (cubit.state as MSActive).sessionState.lastRecitationResult;
+        expect(result?.assessmentMethod, V2AssessmentMethod.manual);
+        expect(result?.similarityScore, isNull);
+        expect(result?.normalizedSpoken, isEmpty);
+        expect((cubit.state as MSActive).speechIssue, isNull);
+        verify(mockMemRepo.saveReviewRecord(any)).called(1);
+      },
+    );
+
+    test('rapid duplicate manual callbacks persist one review only', () async {
+      stubReviewWrite();
+      await moveToReciting();
+
+      final first = cubit.submitManualRecall();
+      final duplicate = cubit.submitManualRecall();
+      await Future.wait([first, duplicate]);
+
+      final result =
+          (cubit.state as MSActive).sessionState.lastRecitationResult;
+      expect(result?.assessmentMethod, V2AssessmentMethod.manual);
+      verify(mockMemRepo.saveReviewRecord(any)).called(1);
     });
   });
 }

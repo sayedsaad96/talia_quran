@@ -62,7 +62,7 @@ class AppInitializer {
       if (getIt.isRegistered<SharedPreferences>()) {
         await getIt.reset();
       }
-      await configureDependencies();
+      await configureDependencies(background: background);
 
       // Load the persisted locale before scheduling notifications so their
       // initial content matches the language shown when the app opens.
@@ -145,10 +145,10 @@ class AppInitializer {
     if (!notificationsInitialized) {
       final morningAzkarEnabled =
           prefs.getBool(TaliaNotificationService.morningAzkarPreferenceKey) ??
-              true;
+          true;
       final eveningAzkarEnabled =
           prefs.getBool(TaliaNotificationService.eveningAzkarPreferenceKey) ??
-              true;
+          true;
       final dailyDuaEnabled =
           prefs.getBool(TaliaNotificationService.dailyDuaPreferenceKey) ?? true;
 

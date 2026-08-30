@@ -45,8 +45,8 @@ enum SocialShareAudience { adult, kids }
 /// Formats for social media export
 enum SocialShareFormat {
   portrait, // 1080x1350 (4:5)
-  square,   // 1080x1080 (1:1)
-  story;    // 1080x1920 (9:16)
+  square, // 1080x1080 (1:1)
+  story; // 1080x1920 (9:16)
 
   String get nameAr {
     switch (this) {
@@ -168,7 +168,7 @@ class SocialShareData {
     bool showCharacter = false,
   }) {
     return SocialShareData(
-      content: ayah.text.trim(),
+      content: ayah.text,
       category: SocialShareCategory.quranAyah,
       // Labels are supplied by the localized template.  Keep the trusted
       // Quran source text and reference as data rather than presentation copy.
@@ -193,7 +193,7 @@ class SocialShareData {
     String? userName,
   }) {
     return SocialShareData(
-      content: ayahText.trim(),
+      content: ayahText,
       category: SocialShareCategory.quranAyah,
       title: surahName,
       surahName: surahName,
@@ -236,9 +236,9 @@ class SocialShareData {
     bool showCharacter = false,
   }) {
     return SocialShareData(
-      content: zikr.text.trim(),
+      content: zikr.text,
       title: categoryTitle,
-      subtitle: zikr.reference.isNotEmpty ? zikr.reference.trim() : null,
+      subtitle: zikr.reference.isNotEmpty ? zikr.reference : null,
       category: isDua ? SocialShareCategory.dua : SocialShareCategory.azkar,
       translation: zikr.translation.isNotEmpty ? zikr.translation : null,
       userName: userName,
@@ -350,6 +350,7 @@ class SocialShareData {
   SocialShareData copyWith({
     SocialShareAudience? audience,
     bool? showCharacter,
+
     /// Pass `null` explicitly to clear the user name from the footer.
     Object? userName = _unset,
   }) => SocialShareData(

@@ -1,11 +1,14 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
+import 'package:talia_quran/core/memorization/v2/recitation_evaluator.dart';
 import 'package:talia_quran/core/memorization/v2/session_engine.dart';
 import 'package:talia_quran/core/services/achievement_service.dart';
 import 'package:talia_quran/core/services/streak_service.dart';
@@ -17,6 +20,8 @@ import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 import 'package:talia_quran/features/streak/domain/entities/streak_result.dart';
 import 'package:talia_quran/features/xp/domain/entities/xp_gain_result.dart';
+
+import 'memorization_session_cubit_test.mocks.dart' show MockSpeechToText;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -61,18 +66,16 @@ void main() {
     });
 
     test(
-      'rapid duplicate markCompleted calls award side effects once',
+      'rapid duplicate manual completion calls award side effects once',
       () async {
         final awardCompleter =
             Completer<Either<Failure, KidsCompletionResult>>();
         repository.awardCompleter = awardCompleter;
 
         await cubit.load(114, 1, 'ayah text');
-        cubit.debugSetLoopCount(3);
-
-        final firstCompletion = cubit.markCompleted();
+        final firstCompletion = cubit.submitManualCompletion();
         await Future<void>.delayed(Duration.zero);
-        final duplicateCompletion = cubit.markCompleted();
+        final duplicateCompletion = cubit.submitManualCompletion();
         await Future<void>.delayed(Duration.zero);
 
         expect(repository.awardCalls, 1);
@@ -91,6 +94,7 @@ void main() {
         await Future.wait([firstCompletion, duplicateCompletion]);
 
         expect(repository.awardCalls, 1);
+        expect(repository.repeatsCompletedCalls, [0]);
         expect(repository.markCalls, 1);
         expect(streakService.recordCalls, 1);
         expect(xpService.addCalls, 1);
@@ -100,34 +104,39 @@ void main() {
       },
     );
 
-    test('review record failure still awards points then emits error', () async {
-      repository.reviewWriteFailure = const CacheFailure('review write failed');
-      repository.awardCompleter = Completer()
-        ..complete(
-          const Right(
-            KidsCompletionResult(
-              progress: KidsProgress.initial(),
-              pointsEarned: 14,
-              starsEarned: 1,
-              alreadyCompleted: false,
-            ),
-          ),
+    test(
+      'review record failure still awards points then emits error',
+      () async {
+        repository.reviewWriteFailure = const CacheFailure(
+          'review write failed',
         );
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress.initial(),
+                pointsEarned: 14,
+                starsEarned: 1,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
 
-      await cubit.load(114, 1, 'ayah text');
-      cubit.debugSetLoopCount(3);
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
 
-      await cubit.markCompleted();
+        await cubit.submitManualCompletion();
 
-      expect(cubit.state, isA<KidsModeLoaded>());
-      final loaded = cubit.state as KidsModeLoaded;
-      expect(loaded.isCompleted, isTrue);
-      expect(loaded.recordingError, CubitMessageCodes.hifzReviewSaveFailed);
-      expect(repository.markCalls, 1);
-      expect(repository.awardCalls, 1);
-      expect(repository.awardLogWrites, 1);
-      expect(repository.saveLogCalls, 0);
-    });
+        expect(cubit.state, isA<KidsModeLoaded>());
+        final loaded = cubit.state as KidsModeLoaded;
+        expect(loaded.isCompleted, isTrue);
+        expect(loaded.recordingError, CubitMessageCodes.hifzReviewSaveFailed);
+        expect(repository.markCalls, 1);
+        expect(repository.awardCalls, 1);
+        expect(repository.awardLogWrites, 1);
+        expect(repository.saveLogCalls, 0);
+      },
+    );
 
     test('load rejects an ayah in a locked journey stage', () async {
       repository.journey = const [
@@ -183,6 +192,40 @@ void main() {
       },
     );
 
+    test(
+      'stopRecording ignores a capture signal that already completed',
+      () async {
+        await cubit.close();
+        final recorder = _PrecompletedKidsRecitationRecorder();
+        cubit = buildCubit(recorder: recorder);
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+
+        final recording = cubit.startRecording();
+        await recorder.captureStarted.future;
+
+        Object? stopError;
+        try {
+          await cubit.stopRecording();
+        } catch (error) {
+          stopError = error;
+        }
+        recorder.finishCapture.complete(
+          const KidsRecitationCaptureResult.unavailable(),
+        );
+        await recording;
+
+        expect(stopError, isNull);
+        final state = cubit.state as KidsModeLoaded;
+        expect(state.isRecording, isFalse);
+        expect(
+          state.recordingError,
+          CubitMessageCodes.kidsRecordingUnavailable,
+        );
+      },
+    );
+
     test('startRecording completes after recitation is captured', () async {
       repository.awardCompleter = Completer()
         ..complete(
@@ -211,11 +254,79 @@ void main() {
 
       final state = cubit.state as KidsModeLoaded;
       expect(state.isCompleted, isTrue);
+      expect(
+        state.sessionState.lastRecitationResult?.assessmentMethod,
+        V2AssessmentMethod.automatic,
+      );
+      expect(state.sessionState.lastRecitationResult?.similarityScore, 1.0);
+      expect(
+        state.sessionState.lastRecitationResult?.normalizedSpoken,
+        isNotEmpty,
+      );
       expect(repository.awardCalls, 1);
       expect(repository.markCalls, 1);
       expect(repository.awardLogWrites, 1);
       expect(repository.saveLogCalls, 0);
     });
+
+    test(
+      'automatic completion with missing transcript does not award or complete',
+      () async {
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+
+        await cubit.markCompleted();
+        await cubit.markCompleted(automaticSpokenText: '   ');
+
+        final state = cubit.state as KidsModeLoaded;
+        expect(state.isCompleted, isFalse);
+        expect(
+          state.recordingError,
+          CubitMessageCodes.kidsRecordingNotCaptured,
+        );
+        expect(state.sessionState.lastRecitationResult, isNull);
+        expect(repository.awardCalls, 0);
+        expect(repository.markCalls, 0);
+        expect(repository.awardLogWrites, 0);
+        expect(streakService.recordCalls, 0);
+        expect(xpService.addCalls, 0);
+      },
+    );
+    test(
+      'manual completion records manual outcome without fake transcript',
+      () async {
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress.initial(),
+                pointsEarned: 14,
+                starsEarned: 1,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+
+        await cubit.load(114, 1, 'canonical ayah text');
+        await cubit.submitManualCompletion();
+
+        final loaded = cubit.state as KidsModeLoaded;
+        expect(loaded.isCompleted, isTrue);
+        expect(
+          loaded.sessionState.lastRecitationResult?.assessmentMethod,
+          V2AssessmentMethod.manual,
+        );
+        expect(
+          loaded.sessionState.lastRecitationResult?.similarityScore,
+          isNull,
+        );
+        expect(
+          loaded.sessionState.lastRecitationResult?.normalizedSpoken,
+          isEmpty,
+        );
+        expect(repository.repeatsCompletedCalls, [0]);
+      },
+    );
 
     test(
       'replay of an already-completed ayah does not record SRS pass',
@@ -235,7 +346,7 @@ void main() {
         await cubit.load(114, 1, 'ayah text');
         cubit.debugSetLoopCount(3);
 
-        await cubit.markCompleted();
+        await cubit.submitManualCompletion();
 
         expect(cubit.state, isA<KidsModeLoaded>());
         final loaded = cubit.state as KidsModeLoaded;
@@ -277,13 +388,62 @@ void main() {
             ),
           );
 
-        await cubit.markCompleted();
+        await cubit.submitManualCompletion();
 
         expect(streakService.recordCalls, 1);
         final state = cubit.state as KidsModeLoaded;
         expect(state.progress.currentStreak, 5);
       },
     );
+  });
+
+  group('KidsSpeechRecitationRecorder', () {
+    const permissionChannel = MethodChannel(
+      'flutter.baseflow.com/permissions/methods',
+    );
+
+    setUp(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(permissionChannel, (call) async {
+            if (call.method == 'checkPermissionStatus') return 1;
+            return null;
+          });
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(permissionChannel, null);
+    });
+
+    test('returns unavailable when speech initialization throws', () async {
+      final speechToText = MockSpeechToText();
+      when(
+        speechToText.initialize(
+          onError: anyNamed('onError'),
+          onStatus: anyNamed('onStatus'),
+        ),
+      ).thenThrow(
+        PlatformException(
+          code: 'recognizerNotAvailable',
+          message: 'Speech recognition not available on this device',
+        ),
+      );
+      final recorder = KidsSpeechRecitationRecorder(speechToText: speechToText);
+      final externalCompleter = Completer<KidsRecitationCaptureResult>();
+
+      final result = await recorder.capture(
+        externalCompleter: externalCompleter,
+      );
+
+      expect(result.isError, isTrue);
+      expect(result.messageCode, CubitMessageCodes.kidsRecordingUnavailable);
+      final signaledResult = await externalCompleter.future;
+      expect(signaledResult.isError, isTrue);
+      expect(
+        signaledResult.messageCode,
+        CubitMessageCodes.kidsRecordingUnavailable,
+      );
+    });
   });
 }
 
@@ -313,6 +473,7 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
   int markCalls = 0;
   int awardLogWrites = 0;
   int saveLogCalls = 0;
+  final repeatsCompletedCalls = <int>[];
   Failure? reviewWriteFailure;
 
   @override
@@ -336,7 +497,7 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
   }) async {
     expect(surahId, 114);
     expect(ayahNumber, 1);
-    expect(repeatsCompleted, 3);
+    repeatsCompletedCalls.add(repeatsCompleted);
     awardCalls++;
     final result = await awardCompleter!.future;
     result.fold((_) {}, (completion) {
@@ -450,6 +611,28 @@ class _FakeKidsRecitationRecorder implements KidsRecitationRecorder {
   Future<KidsRecitationCaptureResult> capture({
     Completer<KidsRecitationCaptureResult>? externalCompleter,
   }) async => result;
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> dispose() async {}
+}
+
+class _PrecompletedKidsRecitationRecorder implements KidsRecitationRecorder {
+  final captureStarted = Completer<void>();
+  final finishCapture = Completer<KidsRecitationCaptureResult>();
+
+  @override
+  Future<KidsRecitationCaptureResult> capture({
+    Completer<KidsRecitationCaptureResult>? externalCompleter,
+  }) {
+    externalCompleter!.complete(
+      const KidsRecitationCaptureResult.unavailable(),
+    );
+    captureStarted.complete();
+    return finishCapture.future;
+  }
 
   @override
   Future<void> stop() async {}

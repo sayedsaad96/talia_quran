@@ -339,7 +339,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       ),
     );
 
-    await markCompleted();
+    await markCompleted(automaticSpokenText: capture.recognizedWords);
   }
 
   /// Stops an in-progress recording manually (user pressed "Done").
@@ -350,14 +350,18 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   Future<void> stopRecording() async {
     if (state is! KidsModeLoaded) return;
     if (!(state as KidsModeLoaded).isRecording) return;
+    final recordingCompleter = _recordingCompleter;
+    if (recordingCompleter == null || recordingCompleter.isCompleted) return;
 
     // Tell the recorder to stop listening and return whatever it has.
     await _recitationRecorder.stop();
     // Signal the completer with whatever words were recognized so far;
     // the evaluator in startRecording() will decide pass/fail.
-    _recordingCompleter?.complete(
-      const KidsRecitationCaptureResult.stoppedByUser(),
-    );
+    if (!recordingCompleter.isCompleted) {
+      recordingCompleter.complete(
+        const KidsRecitationCaptureResult.stoppedByUser(),
+      );
+    }
   }
 
   /// V1-M8 — manual/self-grade completion route.
@@ -379,10 +383,23 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     await markCompleted(manualGrade: true);
   }
 
-  Future<void> markCompleted({bool manualGrade = false}) async {
+  Future<void> markCompleted({
+    bool manualGrade = false,
+    String? automaticSpokenText,
+  }) async {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
     if (st.isCompleted) return;
+
+    // Automatic completion is only valid when STT supplied actual words.
+    // Reject invalid public calls before awards, reviews, streak, or XP.
+    if (!manualGrade &&
+        (automaticSpokenText == null || automaticSpokenText.trim().isEmpty)) {
+      emit(
+        st.copyWith(recordingError: CubitMessageCodes.kidsRecordingNotCaptured),
+      );
+      return;
+    }
 
     // BUG-4 FIX: prevent completing without listening the required times.
     // The manual/self-grade route (V1-M8) bypasses this gate so a first-use
@@ -452,7 +469,11 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         return;
       }
 
-      final completedSession = _completeV2Session(st.sessionState);
+      final completedSession = _completeV2Session(
+        st.sessionState,
+        manualGrade: manualGrade,
+        automaticSpokenText: automaticSpokenText,
+      );
 
       // RISK-5 FIX: record streak & XP from Kids Mode — same as Hifz & Adults
       try {
@@ -480,7 +501,11 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
   }
 
-  V2SessionState _completeV2Session(V2SessionState session) {
+  V2SessionState _completeV2Session(
+    V2SessionState session, {
+    required bool manualGrade,
+    String? automaticSpokenText,
+  }) {
     var current = session;
     if (current.phase == V2SessionPhase.learning) {
       current = _sessionEngine.startMemorizing(current);
@@ -490,10 +515,12 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       current = _sessionEngine.startReciting(current);
     }
     if (current.phase == V2SessionPhase.reciting) {
-      return _sessionEngine.evaluateRecitation(
-        current,
-        current.currentAyah.text,
-      );
+      return manualGrade
+          ? _sessionEngine.submitManualRecall(current)
+          : _sessionEngine.evaluateRecitation(
+              current,
+              automaticSpokenText ?? '',
+            );
     }
     return current;
   }
@@ -691,15 +718,19 @@ class KidsSpeechRecitationRecorder implements KidsRecitationRecorder {
     return status.isGranted;
   }
 
-  Future<bool> _initializeSpeech() {
-    return _speechToText.initialize(
-      onError: (SpeechRecognitionError error) {
-        _onCaptureFailure?.call(
-          const KidsRecitationCaptureResult.unavailable(),
-        );
-      },
-      onStatus: (status) {},
-    );
+  Future<bool> _initializeSpeech() async {
+    try {
+      return await _speechToText.initialize(
+        onError: (SpeechRecognitionError error) {
+          _onCaptureFailure?.call(
+            const KidsRecitationCaptureResult.unavailable(),
+          );
+        },
+        onStatus: (status) {},
+      );
+    } catch (_) {
+      return false;
+    }
   }
 
   @override

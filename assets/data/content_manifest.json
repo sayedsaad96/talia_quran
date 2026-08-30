@@ -3,6 +3,18 @@
   "freezeDate": "2026-08-24",
   "reviewStatus": "pendingReview",
   "notes": "quran.json ayah-1 basmalah prefixes for the 112 surahs other than Al-Fatihah and At-Tawbah were removed on 2026-08-24 by scripts/correct_quran_ayah1_basmalah.dart (structural boundary correction; the basmalah is rendered structurally by the Mushaf). Any further change to these files invalidates Islamic review approval.",
+  "runtimeQuranRenderingCorpus": {
+    "role": "quran_runtime_rendering_corpus",
+    "package": "qcf_quran_plus",
+    "dependencyVersion": "0.0.8",
+    "lockedSha256": "a1a3dbe3ce0cdd9298dfc59cc00bb1c0f6405d19fce9cf1bf222588b9555b9ce",
+    "sourceProvider": "qcf_quran_plus",
+    "sourceUrl": "https://github.com/hussein12347/qcf_quran_plus",
+    "riwayah": "hafs",
+    "licenseStatus": "MIT",
+    "freezeDate": "2026-08-24",
+    "reviewStatus": "pendingReview"
+  },
   "items": [
     {
       "path": "assets/data/quran.json",
@@ -19,8 +31,14 @@
     {
       "path": "assets/data/surahs.json",
       "role": "quran_structure",
-      "sourceProvider": "bundled structural index",
-      "sourceEdition": "n/a",
+      "sourceProvider": "project_derived_from_frozen_quran_corpus",
+      "sourceEdition": "derived_structural_index",
+      "derivedFrom": "assets/data/quran.json",
+      "crossCheckedFields": [
+        "surah_boundaries",
+        "page",
+        "juz"
+      ],
       "riwayah": "hafs_an_asim_uthmani_script",
       "licenseStatus": "project_owned",
       "sha256": "125fcff463dce28148ac4c035b77caf3093213535c88b6e67585e09b23fc9ca0",
@@ -28,15 +46,15 @@
       "reviewStatus": "pendingReview"
     },
     {
-      "path": "assets/data/azkar.json",
-      "role": "adhkar_dua",
-      "sourceProvider": "unrecorded_legacy_import",
-      "sourceEdition": "n/a",
+      "path": "assets/data/azkar_release.json",
+      "role": "adhkar_dua_release_allowlist",
+      "sourceProvider": "qualified_reviewer_allowlist",
+      "sourceEdition": "all_109_records_qualified_review_approved",
       "riwayah": "n/a",
-      "licenseStatus": "unknown_pending_reviewer_disposition",
-      "sha256": "b7a4dc8593969b898a52196f154bbde850fbb0054cf4215fb070e5923adb8ff5",
-      "importDate": "2025; provenance fields added 2026-08-24 (all pendingReview)",
-      "reviewStatus": "pendingReview"
+      "licenseStatus": "unknown_not_part_of_islamic_review",
+      "sha256": "0fcb04b7217835fdc1e79711f6174ed8e7df3c6bcc9c8f0798cc66112fec9bd2",
+      "importDate": "2026-08-30; all 109 candidate records approved by the qualified reviewer as reported by the project owner",
+      "reviewStatus": "approved"
     }
   ]
 }

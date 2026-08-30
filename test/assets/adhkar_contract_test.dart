@@ -5,21 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/azkar/data/models/zikr_model.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
 
-/// V1-M3 — adhkar/dua provenance contract.
-///
-/// Engineering gate: every shipped record carries the required governance
-/// fields and a valid review state. Record-level religious dispositions
-/// (grade, citation, tier values) are assigned exclusively by the qualified
-/// Islamic reviewer and remain null / pendingReview until then.
 void main() {
-  late final Map<String, dynamic> data;
-
-  setUpAll(() {
-    data =
-        jsonDecode(File('assets/data/azkar.json').readAsStringSync())
-            as Map<String, dynamic>;
-  });
-
+  const releaseAssetPath = 'assets/data/azkar_release.json';
   const categories = {
     'morning': AzkarCategory.morning,
     'evening': AzkarCategory.evening,
@@ -27,72 +14,101 @@ void main() {
     'duas': AzkarCategory.duas,
   };
 
-  group('adhkar corpus contract', () {
-    test('all four categories exist and every record parses', () {
-      for (final entry in categories.entries) {
-        final records = data[entry.key] as List;
-        expect(records, isNotEmpty, reason: '${entry.key} is empty');
-        for (final record in records) {
+  group('adhkar release corpus contract', () {
+    test('releases all 109 reviewed records without altering their text', () {
+      final candidate =
+          jsonDecode(File('assets/data/azkar.json').readAsStringSync())
+              as Map<String, dynamic>;
+      final release =
+          jsonDecode(File(releaseAssetPath).readAsStringSync())
+              as Map<String, dynamic>;
+      const expectedCounts = {
+        'morning': 22,
+        'evening': 22,
+        'general': 31,
+        'duas': 34,
+      };
+
+      for (final entry in expectedCounts.entries) {
+        final candidateRecords = (candidate[entry.key] as List<dynamic>)
+            .cast<Map<String, dynamic>>();
+        final releaseRecords = (release[entry.key] as List<dynamic>)
+            .cast<Map<String, dynamic>>();
+
+        expect(releaseRecords, hasLength(entry.value));
+        final candidatesById = {
+          for (final record in candidateRecords) record['id']: record,
+        };
+        for (final releaseRecord in releaseRecords) {
+          final candidateRecord = candidatesById[releaseRecord['id']];
           expect(
-            () => ZikrModel.fromJson(
-              record as Map<String, dynamic>,
-              entry.value,
-              datasetVersion: 'v1-rc1',
-            ),
-            returnsNormally,
+            candidateRecord,
+            isNotNull,
+            reason: 'missing candidate ${releaseRecord['id']}',
+          );
+          expect(
+            releaseRecord['text'],
+            candidateRecord!['text'],
+            reason: 'altered text ${releaseRecord['id']}',
           );
         }
       }
     });
 
-    test('every retained record satisfies schema rules', () {
+    test(
+      'the release allowlist is bundled instead of the candidate corpus',
+      () {
+        final pubspec = File('pubspec.yaml').readAsStringSync();
+
+        expect(pubspec, contains('- assets/data/azkar_release.json'));
+        expect(
+          RegExp(
+            r'^\s*-\s+assets/data/\s*$',
+            multiLine: true,
+          ).hasMatch(pubspec),
+          isFalse,
+        );
+        expect(File(releaseAssetPath).existsSync(), isTrue);
+        expect(File('assets/data/azkar.json').existsSync(), isTrue);
+      },
+    );
+
+    test('manifest tracks the release allowlist, not the candidate corpus', () {
+      final manifest =
+          jsonDecode(
+                File('assets/data/content_manifest.json').readAsStringSync(),
+              )
+              as Map<String, dynamic>;
+      final paths = (manifest['items'] as List<dynamic>)
+          .cast<Map<String, dynamic>>()
+          .map((item) => item['path'])
+          .toList();
+
+      expect(paths, contains(releaseAssetPath));
+      expect(paths, isNot(contains('assets/data/azkar.json')));
+    });
+
+    test('all release records are approved and satisfy the strict schema', () {
+      final releaseFile = File(releaseAssetPath);
+      expect(releaseFile.existsSync(), isTrue);
+      final data =
+          jsonDecode(releaseFile.readAsStringSync()) as Map<String, dynamic>;
       final ids = <String>{};
-      var total = 0;
+
       for (final entry in categories.entries) {
-        for (final record in data[entry.key] as List) {
-          total++;
-          final zikr = ZikrModel.fromJson(
-            record as Map<String, dynamic>,
-            entry.value,
-            datasetVersion: 'v1-rc1',
-          );
+        expect(data[entry.key], isA<List<dynamic>>());
+        final records = data[entry.key] as List<dynamic>;
+        for (final rawRecord in records) {
+          final record = rawRecord as Map<String, dynamic>;
+          final zikr = ZikrModel.fromJson(record, entry.value);
 
-          // Identity + content.
-          expect(zikr.id, isNotEmpty);
-          expect(ids.add(zikr.id), isTrue,
-              reason: 'duplicate record id ${zikr.id}');
-          expect(zikr.text.trim(), isNotEmpty);
-          expect(zikr.totalCount, greaterThanOrEqualTo(1));
-
-          // Governance fields must exist on the record.
-          expect(record.keys, containsAll([
-            'citation',
-            'sourceType',
-            'authenticityGrade',
-            'tier',
-            'datasetVersion',
-            'reviewStatus',
-          ]), reason: 'record ${zikr.id} missing governance fields');
-
-          // Dataset version pinned to the frozen release candidate.
-          expect(zikr.datasetVersion, 'v1-rc1');
-
-          // Review state is a valid enum value.
-          expect(zikr.reviewStatus, isA<ContentReviewStatus>());
-
-          // Optional religious metadata is null or a valid value.
-          if (zikr.sourceType != null) {
-            expect(
-              zikr.sourceType,
-              anyOf('quran', 'hadith', 'dhikr', 'dua'),
-            );
-          }
-          if (zikr.tier != null) {
-            expect(DuaTier.values.map((t) => t.name), contains(zikr.tier!.name));
-          }
+          expect(ids.add(zikr.id), isTrue, reason: 'duplicate id ${zikr.id}');
+          expect(zikr.reviewStatus, ContentReviewStatus.approved);
+          expect(zikr.citation, isNotEmpty);
+          expect(zikr.sourceType, isNotNull);
+          expect(zikr.datasetVersion, isNot('unversioned'));
         }
       }
-      expect(total, 85);
     });
   });
 }

@@ -179,9 +179,10 @@ final class V2SessionEngine {
   static V2RecitationResult _manualPassResult() =>
       const V2RecitationResult(
         passed: true,
-        similarityScore: 1.0,
+        similarityScore: null,
         normalizedTarget: '',
         normalizedSpoken: '',
+        assessmentMethod: V2AssessmentMethod.manual,
       );
 
   // ── Private Helpers ──────────────────────────────────────

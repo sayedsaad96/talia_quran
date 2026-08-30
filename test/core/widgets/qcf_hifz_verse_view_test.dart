@@ -212,25 +212,23 @@ void main() {
       },
     );
 
-    testWidgets(
-      'renders fallback text exactly as provided — no marker removal '
-      '(sacred-text exactness gate)', (tester) async {
-        const rawFallback = 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ ١';
-        await tester.pumpWidget(
-          _wrap(
-            const QcfHifzVerseView(
-              surahNumber: 0,
-              verseNumber: 1,
-              fallbackText: rawFallback,
-              isUnlocked: true,
-              isMemorized: false,
-            ),
+    testWidgets('renders fallback text exactly as provided — no marker removal '
+        '(sacred-text exactness gate)', (tester) async {
+      const rawFallback = 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ ١';
+      await tester.pumpWidget(
+        _wrap(
+          const QcfHifzVerseView(
+            surahNumber: 0,
+            verseNumber: 1,
+            fallbackText: rawFallback,
+            isUnlocked: true,
+            isMemorized: false,
           ),
-        );
+        ),
+      );
 
-        expect(find.text(rawFallback), findsOneWidget);
-      },
-    );
+      expect(find.text(rawFallback), findsOneWidget);
+    });
 
     testWidgets('never rewrites Quran spacing in fallback text', (
       tester,
@@ -268,7 +266,85 @@ void main() {
 
       final expectedRaw = qcf.getVerse(112, 1);
       final richText = tester.widget<RichText>(find.byType(RichText));
-      expect(richText.text.toPlainText(), '$expectedRaw ');
+      expect(richText.text.toPlainText(), expectedRaw);
+    });
+
+    testWidgets('renders literal QCF fixtures for surahs 2, 9, 95 and 97', (
+      tester,
+    ) async {
+      const fixtures = <({int surah, String qcfText})>[
+        (surah: 2, qcfText: 'الٓمٓ\u00A0١'),
+        (
+          surah: 9,
+          qcfText:
+              '۞بَرَآءَةٞ مِّنَ ٱللَّهِ وَرَسُولِهِۦٓ إِلَى ٱلَّذِينَ عَٰهَدتُّم مِّنَ ٱلۡمُشۡرِكِينَ\u00A0١\n',
+        ),
+        (surah: 95, qcfText: 'وَٱلتِّينِ وَٱلزَّيۡتُونِ\u00A0١'),
+        (
+          surah: 97,
+          qcfText: 'إِنَّآ أَنزَلۡنَٰهُ فِي لَيۡلَةِ ٱلۡقَدۡرِ\u00A0١',
+        ),
+      ];
+
+      for (final fixture in fixtures) {
+        await tester.pumpWidget(
+          _wrap(
+            QcfHifzVerseView(
+              surahNumber: fixture.surah,
+              verseNumber: 1,
+              fallbackText: 'fallback must not render',
+              isUnlocked: true,
+              isMemorized: false,
+            ),
+          ),
+        );
+
+        final richText = tester.widget<RichText>(find.byType(RichText));
+        expect(
+          richText.text.toPlainText(),
+          fixture.qcfText,
+          reason: 'QCF corpus drifted at Surah ${fixture.surah}, ayah 1',
+        );
+      }
+    });
+
+    testWidgets('renders literal fallback fixtures for surahs 2, 9, 95 and 97', (
+      tester,
+    ) async {
+      const fixtures = <({int surah, String fallbackText})>[
+        (surah: 2, fallbackText: 'الٓمٓ'),
+        (
+          surah: 9,
+          fallbackText:
+              'بَرَآءَةٌۭ مِّنَ ٱللَّهِ وَرَسُولِهِۦٓ إِلَى ٱلَّذِينَ عَٰهَدتُّم مِّنَ ٱلْمُشْرِكِينَ',
+        ),
+        (surah: 95, fallbackText: 'وَٱلتِّينِ وَٱلزَّيْتُونِ'),
+        (
+          surah: 97,
+          fallbackText: 'إِنَّآ أَنزَلْنَٰهُ فِى لَيْلَةِ ٱلْقَدْرِ',
+        ),
+      ];
+
+      for (final fixture in fixtures) {
+        await tester.pumpWidget(
+          _wrap(
+            QcfHifzVerseView(
+              surahNumber: fixture.surah,
+              verseNumber: 1,
+              endVerseNumber: 0,
+              fallbackText: fixture.fallbackText,
+              isUnlocked: true,
+              isMemorized: false,
+            ),
+          ),
+        );
+
+        expect(
+          find.text(fixture.fallbackText),
+          findsOneWidget,
+          reason: 'Fallback corpus drifted at Surah ${fixture.surah}, ayah 1',
+        );
+      }
     });
 
     // ── T004: Locked state ─────────────────────────────────────────────────────

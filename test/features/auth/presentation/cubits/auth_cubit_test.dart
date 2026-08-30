@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/features/auth/application/cloud_sync_coordinator.dart';
+import 'package:talia_quran/features/auth/domain/entities/auth_session_recovery.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
 import 'package:talia_quran/features/auth/domain/repositories/auth_repository.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
@@ -26,7 +28,10 @@ void main() {
   );
 
   /// Helper: creates a cubit with no current user (typical unauthenticated state).
-  AuthCubit buildCubit({AppUser? currentUser}) {
+  AuthCubit buildCubit({
+    AppUser? currentUser,
+    CloudSyncCoordinator? cloudSyncCoordinator,
+  }) {
     when(
       mockAuthRepository.authStateChanges,
     ).thenAnswer((_) => authStreamController.stream);
@@ -34,13 +39,25 @@ void main() {
       mockAuthRepository.passwordRecoveryChanges,
     ).thenAnswer((_) => passwordRecoveryStreamController.stream);
     when(mockAuthRepository.currentUser).thenReturn(currentUser);
-    when(mockAuthRepository.pullProgressFromCloud())
-        .thenAnswer((_) async => const Right(unit));
-    when(mockAuthRepository.syncProgressToCloud())
-        .thenAnswer((_) async => const Right(unit));
-    when(mockAuthRepository.hasPendingCloudPush())
-        .thenAnswer((_) async => false);
-    return AuthCubit(mockAuthRepository);
+    when(
+      mockAuthRepository.pullProgressFromCloud(),
+    ).thenAnswer((_) async => const Right(unit));
+    when(
+      mockAuthRepository.syncProgressToCloud(),
+    ).thenAnswer((_) async => const Right(unit));
+    when(
+      mockAuthRepository.hasPendingCloudPush(),
+    ).thenAnswer((_) async => false);
+    return AuthCubit(
+      mockAuthRepository,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      cloudSyncCoordinator,
+    );
   }
 
   setUp(() {
@@ -112,7 +129,208 @@ void main() {
       await expectation;
       await cubit.close();
     });
+
+    test(
+      'terminal auth recovery opens a new session generation for the same owner',
+      () async {
+        AppUser? currentUser = testUser;
+        when(mockAuthRepository.currentUser).thenAnswer((_) => currentUser);
+        when(
+          mockAuthRepository.authStateChanges,
+        ).thenAnswer((_) => authStreamController.stream);
+        when(
+          mockAuthRepository.passwordRecoveryChanges,
+        ).thenAnswer((_) => passwordRecoveryStreamController.stream);
+        when(
+          mockAuthRepository.pullProgressFromCloud(),
+        ).thenAnswer((_) async => const Right(unit));
+        when(
+          mockAuthRepository.syncProgressToCloud(),
+        ).thenAnswer((_) async => const Right(unit));
+        final recoveryFinished = Completer<void>();
+        when(mockAuthRepository.recoverSessionAfterAuthError(any)).thenAnswer((
+          _,
+        ) async {
+          currentUser = null;
+          recoveryFinished.complete();
+          return AuthSessionRecovery.terminalFailure;
+        });
+        final cubit = AuthCubit(mockAuthRepository);
+        addTearDown(cubit.close);
+        await cubit.ensureCloudSyncComplete();
+
+        authStreamController.addError(StateError('expired session'));
+        await recoveryFinished.future;
+        await Future<void>.delayed(Duration.zero);
+        expect(cubit.state, isA<AuthUnauthenticated>());
+
+        currentUser = testUser;
+        authStreamController.add(testUser);
+        await Future<void>.delayed(Duration.zero);
+        await cubit.ensureCloudSyncComplete();
+
+        verify(mockAuthRepository.pullProgressFromCloud()).called(2);
+      },
+    );
   });
+
+  test(
+    'credential-changing auth paths raise the identity gate before repository calls',
+    () async {
+      AppUser? currentUser;
+      when(mockAuthRepository.currentUser).thenAnswer((_) => currentUser);
+      when(
+        mockAuthRepository.authStateChanges,
+      ).thenAnswer((_) => authStreamController.stream);
+      when(
+        mockAuthRepository.passwordRecoveryChanges,
+      ).thenAnswer((_) => passwordRecoveryStreamController.stream);
+      when(
+        mockAuthRepository.hasPendingCloudPush(),
+      ).thenAnswer((_) async => false);
+      late final _GateTrackingCloudSyncCoordinator coordinator;
+      void expectGate(String operation) {
+        expect(coordinator.isGated, isTrue, reason: operation);
+      }
+
+      when(
+        mockAuthRepository.signIn(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        ),
+      ).thenAnswer((_) async {
+        expectGate('signIn');
+        currentUser = testUser;
+        return const Right(testUser);
+      });
+      when(
+        mockAuthRepository.signUp(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+          displayName: anyNamed('displayName'),
+        ),
+      ).thenAnswer((_) async {
+        expectGate('signUp');
+        currentUser = testUser;
+        return const Right(testUser);
+      });
+      when(mockAuthRepository.updatePassword(any)).thenAnswer((_) async {
+        expectGate('updatePassword');
+        return const Right(unit);
+      });
+      when(mockAuthRepository.deleteAccount()).thenAnswer((_) async {
+        expectGate('deleteAccount');
+        return const Right(unit);
+      });
+      when(mockAuthRepository.signOut()).thenAnswer((_) async {
+        expectGate('signOut');
+        return const Right(unit);
+      });
+      final recoveryCalled = Completer<void>();
+      when(mockAuthRepository.recoverSessionAfterAuthError(any)).thenAnswer((
+        _,
+      ) async {
+        expectGate('auth recovery');
+        recoveryCalled.complete();
+        return AuthSessionRecovery.transientFailure;
+      });
+      coordinator = _GateTrackingCloudSyncCoordinator(mockAuthRepository);
+      final cubit = AuthCubit(
+        mockAuthRepository,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        coordinator,
+      );
+      addTearDown(cubit.close);
+
+      await cubit.signIn(email: 'test@talia.app', password: 'password123');
+      await cubit.ensureCloudSyncComplete();
+      await cubit.signUp(
+        email: 'test@talia.app',
+        password: 'password123',
+        displayName: 'اختبار',
+      );
+      await cubit.ensureCloudSyncComplete();
+      await cubit.updatePassword('new-password');
+      await cubit.deleteAccount();
+      await cubit.signOut();
+      authStreamController.addError(StateError('auth stream failed'));
+      await recoveryCalled.future;
+    },
+  );
+
+  test(
+    'login routing wait started during auth transition waits for the new owner restore',
+    () async {
+      AppUser? currentUser;
+      when(mockAuthRepository.currentUser).thenAnswer((_) => currentUser);
+      when(
+        mockAuthRepository.authStateChanges,
+      ).thenAnswer((_) => authStreamController.stream);
+      when(
+        mockAuthRepository.passwordRecoveryChanges,
+      ).thenAnswer((_) => passwordRecoveryStreamController.stream);
+      when(
+        mockAuthRepository.signIn(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        ),
+      ).thenAnswer((_) async {
+        currentUser = testUser;
+        authStreamController.add(testUser);
+        await Future<void>.delayed(Duration.zero);
+        return const Right(testUser);
+      });
+      final restoreRelease = Completer<void>();
+      final coordinator = _BlockingRunCloudSyncCoordinator(
+        mockAuthRepository,
+        restoreRelease.future,
+      );
+      final cubit = AuthCubit(
+        mockAuthRepository,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        coordinator,
+      );
+      addTearDown(cubit.close);
+      final authenticated = Completer<void>();
+      Future<void>? routeWait;
+      var routeWaitCompleted = false;
+      final subscription = cubit.stream.listen((state) {
+        if (state is! AuthAuthenticated || routeWait != null) return;
+        routeWait = cubit.ensureCloudSyncComplete()
+          ..then((_) {
+            routeWaitCompleted = true;
+          });
+        authenticated.complete();
+      });
+      addTearDown(subscription.cancel);
+
+      final signIn = cubit.signIn(
+        email: 'test@talia.app',
+        password: 'password123',
+      );
+      await authenticated.future;
+      await Future<void>.delayed(Duration.zero);
+
+      expect(routeWaitCompleted, isFalse);
+      await signIn;
+      expect(coordinator.runCallCount, 1);
+      expect(routeWaitCompleted, isFalse);
+
+      restoreRelease.complete();
+      await routeWait;
+      expect(routeWaitCompleted, isTrue);
+    },
+  );
 
   // ─── Sign In ────────────────────────────────────────────────────────────────
 
@@ -140,6 +358,118 @@ void main() {
 
       await cubit.signIn(email: 'test@talia.app', password: 'password123');
       await expectation;
+    });
+
+    test(
+      'delayed auth listener event does not duplicate the controlled owner sync',
+      () async {
+        AppUser? currentUser;
+        when(mockAuthRepository.currentUser).thenAnswer((_) => currentUser);
+        when(
+          mockAuthRepository.signIn(
+            email: anyNamed('email'),
+            password: anyNamed('password'),
+          ),
+        ).thenAnswer((_) async {
+          currentUser = testUser;
+          return const Right(testUser);
+        });
+
+        await cubit.signIn(email: 'test@talia.app', password: 'password123');
+        await cubit.ensureCloudSyncComplete();
+        authStreamController.add(testUser);
+        await Future<void>.delayed(Duration.zero);
+        await cubit.ensureCloudSyncComplete();
+
+        verify(mockAuthRepository.pullProgressFromCloud()).called(1);
+      },
+    );
+
+    test(
+      'missing delayed event does not suppress same-owner reauth after null',
+      () async {
+        AppUser? currentUser;
+        when(mockAuthRepository.currentUser).thenAnswer((_) => currentUser);
+        when(
+          mockAuthRepository.signIn(
+            email: anyNamed('email'),
+            password: anyNamed('password'),
+          ),
+        ).thenAnswer((_) async {
+          currentUser = testUser;
+          return const Right(testUser);
+        });
+
+        await cubit.signIn(email: 'test@talia.app', password: 'password123');
+        await cubit.ensureCloudSyncComplete();
+
+        currentUser = null;
+        authStreamController.add(null);
+        await Future<void>.delayed(Duration.zero);
+        currentUser = testUser;
+        authStreamController.add(testUser);
+        await Future<void>.delayed(Duration.zero);
+        await cubit.ensureCloudSyncComplete();
+
+        verify(mockAuthRepository.pullProgressFromCloud()).called(2);
+      },
+    );
+
+    test('same active owner token refresh does not repeat full sync', () async {
+      AppUser? currentUser;
+      when(mockAuthRepository.currentUser).thenAnswer((_) => currentUser);
+      when(
+        mockAuthRepository.signIn(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        ),
+      ).thenAnswer((_) async {
+        currentUser = testUser;
+        return const Right(testUser);
+      });
+
+      await cubit.signIn(email: 'test@talia.app', password: 'password123');
+      await cubit.ensureCloudSyncComplete();
+      authStreamController.add(testUser); // Expected delayed sign-in event.
+      await Future<void>.delayed(Duration.zero);
+      await cubit.ensureCloudSyncComplete();
+      authStreamController.add(testUser); // Later token refresh, same session.
+      await Future<void>.delayed(Duration.zero);
+      await cubit.ensureCloudSyncComplete();
+
+      verify(mockAuthRepository.pullProgressFromCloud()).called(1);
+    });
+
+    test('owner switches reset the active auth session owner', () async {
+      const otherUser = AppUser(
+        id: 'test-uid-2',
+        email: 'other@talia.app',
+        displayName: 'آخر',
+      );
+      AppUser? currentUser;
+      when(mockAuthRepository.currentUser).thenAnswer((_) => currentUser);
+      when(
+        mockAuthRepository.signIn(
+          email: anyNamed('email'),
+          password: anyNamed('password'),
+        ),
+      ).thenAnswer((_) async {
+        currentUser = testUser;
+        return const Right(testUser);
+      });
+
+      await cubit.signIn(email: 'test@talia.app', password: 'password123');
+      await cubit.ensureCloudSyncComplete();
+      currentUser = otherUser;
+      authStreamController.add(otherUser);
+      await Future<void>.delayed(Duration.zero);
+      await cubit.ensureCloudSyncComplete();
+      currentUser = testUser;
+      authStreamController.add(testUser);
+      await Future<void>.delayed(Duration.zero);
+      await cubit.ensureCloudSyncComplete();
+
+      verify(mockAuthRepository.pullProgressFromCloud()).called(3);
     });
 
     test('emits Loading then Error on failure', () async {
@@ -259,9 +589,9 @@ void main() {
         when(
           mockAuthRepository.hasPendingCloudPush(),
         ).thenAnswer((_) async => true);
-        when(mockAuthRepository.syncProgressToCloud()).thenAnswer(
-          (_) async => const Left(NetworkFailure('offline')),
-        );
+        when(
+          mockAuthRepository.syncProgressToCloud(),
+        ).thenAnswer((_) async => const Left(NetworkFailure('offline')));
 
         await cubit.signOut();
 
@@ -274,7 +604,9 @@ void main() {
       when(
         mockAuthRepository.hasPendingCloudPush(),
       ).thenAnswer((_) async => true);
-      when(mockAuthRepository.signOut()).thenAnswer((_) async {
+      when(mockAuthRepository.signOut(preserveAccountData: true)).thenAnswer((
+        _,
+      ) async {
         authStreamController.add(null);
         return const Right(unit);
       });
@@ -286,7 +618,7 @@ void main() {
 
       await cubit.signOut(force: true);
       await expectation;
-      verify(mockAuthRepository.signOut()).called(1);
+      verify(mockAuthRepository.signOut(preserveAccountData: true)).called(1);
     });
   });
 
@@ -362,6 +694,29 @@ void main() {
       await cubit.updatePassword('new-password');
       await expectation;
     });
+
+    test(
+      'pending cloud work blocks password update before destructive sign-out',
+      () async {
+        final protectedCubit = buildCubit(
+          currentUser: testUser,
+          cloudSyncCoordinator: _PendingWorkCloudSyncCoordinator(
+            mockAuthRepository,
+          ),
+        );
+        addTearDown(protectedCubit.close);
+
+        final expectation = expectLater(
+          protectedCubit.stream,
+          emitsInOrder([isA<AuthLoading>(), isA<AuthError>()]),
+        );
+
+        await protectedCubit.updatePassword('new-password');
+        await expectation;
+
+        verifyNever(mockAuthRepository.updatePassword(any));
+      },
+    );
   });
 
   group('deleteAccount', () {
@@ -405,10 +760,12 @@ void main() {
     test(
       'pushes streak/heatmap and production data on session restore',
       () async {
-        when(mockAuthRepository.pullProgressFromCloud())
-            .thenAnswer((_) async => const Right(unit));
-        when(mockAuthRepository.syncProgressToCloud())
-            .thenAnswer((_) async => const Right(unit));
+        when(
+          mockAuthRepository.pullProgressFromCloud(),
+        ).thenAnswer((_) async => const Right(unit));
+        when(
+          mockAuthRepository.syncProgressToCloud(),
+        ).thenAnswer((_) async => const Right(unit));
         when(mockAuthRepository.currentUser).thenReturn(testUser);
         when(
           mockAuthRepository.authStateChanges,
@@ -430,12 +787,15 @@ void main() {
     );
 
     test('resyncOnResume re-syncs while authenticated', () async {
-      when(mockAuthRepository.pullProgressFromCloud())
-          .thenAnswer((_) async => const Right(unit));
-      when(mockAuthRepository.syncProgressToCloud())
-          .thenAnswer((_) async => const Right(unit));
-      when(mockAuthRepository.hasPendingCloudPush())
-          .thenAnswer((_) async => true);
+      when(
+        mockAuthRepository.pullProgressFromCloud(),
+      ).thenAnswer((_) async => const Right(unit));
+      when(
+        mockAuthRepository.syncProgressToCloud(),
+      ).thenAnswer((_) async => const Right(unit));
+      when(
+        mockAuthRepository.hasPendingCloudPush(),
+      ).thenAnswer((_) async => true);
       when(mockAuthRepository.currentUser).thenReturn(testUser);
       when(
         mockAuthRepository.authStateChanges,
@@ -488,8 +848,8 @@ class _FakeMemPlusRepository implements MemorizationPlusRepository {
       const Right(null);
 
   @override
-  Future<Either<Failure, List<CertificateAward>>> pullCertificatesFromCloud() async =>
-      const Right([]);
+  Future<Either<Failure, List<CertificateAward>>>
+  pullCertificatesFromCloud() async => const Right([]);
 
   @override
   Future<Either<Failure, void>> pullKidsProgressFromCloud() async =>
@@ -502,8 +862,7 @@ class _FakeMemPlusRepository implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, void>> pushCertificatesToCloud(
     List<CertificateAward> certificates,
-  ) async =>
-      const Right(null);
+  ) async => const Right(null);
 
   @override
   Future<bool> hasPendingCloudWork() async => true;
@@ -520,4 +879,54 @@ class _FakeMemPlusRepository implements MemorizationPlusRepository {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _GateTrackingCloudSyncCoordinator extends CloudSyncCoordinator {
+  _GateTrackingCloudSyncCoordinator(AuthRepository authRepository)
+    : super(authRepository: authRepository);
+
+  var _depth = 0;
+
+  bool get isGated => _depth > 0;
+
+  @override
+  Future<void> beginIdentityTransition() async {
+    _depth += 1;
+  }
+
+  @override
+  void endIdentityTransition() {
+    if (_depth == 0) throw StateError('Unbalanced test identity gate');
+    _depth -= 1;
+  }
+
+  @override
+  Future<bool> flushBeforeSignOut() async => true;
+
+  @override
+  Future<void> run() async {}
+}
+
+class _PendingWorkCloudSyncCoordinator extends CloudSyncCoordinator {
+  _PendingWorkCloudSyncCoordinator(AuthRepository authRepository)
+    : super(authRepository: authRepository);
+
+  @override
+  Future<bool> flushBeforeSignOut() async => false;
+}
+
+class _BlockingRunCloudSyncCoordinator extends CloudSyncCoordinator {
+  _BlockingRunCloudSyncCoordinator(
+    AuthRepository authRepository,
+    this._runRelease,
+  ) : super(authRepository: authRepository);
+
+  final Future<void> _runRelease;
+  var runCallCount = 0;
+
+  @override
+  Future<void> run() {
+    runCallCount += 1;
+    return _runRelease;
+  }
 }

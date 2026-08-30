@@ -2,7 +2,10 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
+import '../l10n/app_localizations.dart';
+import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../constants/app_spacing.dart';
 
 enum CelebrationType { ayah, page, juz }
 
@@ -24,6 +27,7 @@ class CelebrationOverlay extends StatefulWidget {
 
 class _CelebrationOverlayState extends State<CelebrationOverlay> {
   late final ConfettiController _confetti;
+  bool _started = false;
 
   @override
   void initState() {
@@ -31,10 +35,20 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
     final duration = widget.type == CelebrationType.juz
         ? const Duration(seconds: 5)
         : const Duration(seconds: 2);
-    _confetti = ConfettiController(duration: duration)..play();
+    _confetti = ConfettiController(duration: duration);
+  }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    if (!disableAnimations) _confetti.play();
     Future.delayed(
-      widget.type == CelebrationType.juz
+      disableAnimations
+          ? const Duration(milliseconds: 400)
+          : widget.type == CelebrationType.juz
           ? const Duration(milliseconds: 4500)
           : const Duration(milliseconds: 2200),
       () {
@@ -49,14 +63,19 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
     super.dispose();
   }
 
-  String _getMessage() => switch (widget.type) {
-    CelebrationType.ayah => 'أحسنت! +${widget.xpGained} XP ⭐',
-    CelebrationType.page => 'اكتملت الصفحة! +${widget.xpGained} XP 🎯',
-    CelebrationType.juz => 'مبارك! أتممت الجزء 🏆',
+  String _getMessage(AppLocalizations l10n) => switch (widget.type) {
+    CelebrationType.ayah => l10n.celebrationAyah(widget.xpGained),
+    CelebrationType.page => l10n.celebrationPage(widget.xpGained),
+    CelebrationType.juz => l10n.congratulations,
   };
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final topInset = MediaQuery.paddingOf(context).top;
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final motionValue = disableAnimations ? 1.0 : null;
+
     return Stack(
       alignment: Alignment.topCenter,
       children: [
@@ -64,37 +83,40 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
         const ModalBarrier(color: Colors.transparent),
 
         // Confetti from top
-        Align(
-          alignment: Alignment.topCenter,
-          child: ConfettiWidget(
-            confettiController: _confetti,
-            blastDirectionality: BlastDirectionality.explosive,
-            shouldLoop: false,
-            colors: const [
-              Color(0xFFF59E0B),
-              Color(0xFF8B5CF6),
-              Color(0xFF10B981),
-              Color(0xFFEF4444),
-              Color(0xFF3B82F6),
-            ],
-            numberOfParticles: widget.type == CelebrationType.juz ? 50 : 25,
-            maxBlastForce: 20,
-            minBlastForce: 8,
+        if (!disableAnimations)
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confetti,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+              colors: const [
+                AppColors.gold,
+                AppColors.primary,
+                AppColors.primaryLight,
+                AppColors.success,
+                AppColors.info,
+              ],
+              numberOfParticles: widget.type == CelebrationType.juz ? 50 : 25,
+              maxBlastForce: 20,
+              minBlastForce: 8,
+            ),
           ),
-        ),
 
         // XP Badge appears and slides up
         Positioned(
-          top: 100,
+          top: topInset + AppSpacing.xl + AppSpacing.md,
           child:
               Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 24,
-                      vertical: 14,
+                      horizontal: AppSpacing.lg,
+                      vertical: AppSpacing.itemGap + 2,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B),
-                      borderRadius: BorderRadius.circular(30),
+                      color: AppColors.gold,
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
                       boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
@@ -104,14 +126,14 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
                       ],
                     ),
                     child: Text(
-                      _getMessage(),
+                      _getMessage(l10n),
                       style: AppTypography.headlineSmall.copyWith(
-                        color: Colors.white,
+                        color: AppColors.lightTextPrimary,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   )
-                  .animate()
+                  .animate(autoPlay: !disableAnimations, value: motionValue)
                   .fadeIn(duration: 300.ms)
                   .slideY(
                     begin: 0.5,
@@ -131,33 +153,43 @@ class _CelebrationOverlayState extends State<CelebrationOverlay> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    '🏆',
-                    style: AppTypography.displayLarge.copyWith(fontSize: 80),
-                  ).animate().scale(duration: 500.ms, curve: Curves.elasticOut),
-                  const SizedBox(height: 16),
+                        '🏆',
+                        style: AppTypography.displayLarge.copyWith(
+                          fontSize: 80,
+                        ),
+                      )
+                      .animate(autoPlay: !disableAnimations, value: motionValue)
+                      .scale(duration: 500.ms, curve: Curves.elasticOut),
+                  const SizedBox(height: AppSpacing.md),
                   Text(
-                    'مبارك!',
-                    style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ).animate().fadeIn(delay: 300.ms),
-                  const SizedBox(height: 8),
+                        l10n.congratulations,
+                        style: Theme.of(context).textTheme.headlineLarge
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                      )
+                      .animate(autoPlay: !disableAnimations, value: motionValue)
+                      .fadeIn(delay: 300.ms),
+                  const SizedBox(height: AppSpacing.sm),
                   Text(
-                    'أتممت الجزء كاملاً بإذن الله',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(color: Colors.white70),
-                  ).animate().fadeIn(delay: 500.ms),
-                  const SizedBox(height: 24),
+                        l10n.celebrationJuzDone,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(color: Colors.white70),
+                      )
+                      .animate(autoPlay: !disableAnimations, value: motionValue)
+                      .fadeIn(delay: 500.ms),
+                  const SizedBox(height: AppSpacing.lg),
                   Text(
-                    '+${widget.xpGained} XP 👑',
-                    style: AppTypography.headlineMedium.copyWith(
-                      color: const Color(0xFFF59E0B),
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ).animate().fadeIn(delay: 700.ms),
+                        '+${widget.xpGained} XP 👑',
+                        style: AppTypography.headlineMedium.copyWith(
+                          color: AppColors.goldLight,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      )
+                      .animate(autoPlay: !disableAnimations, value: motionValue)
+                      .fadeIn(delay: 700.ms),
                 ],
               ),
             ),

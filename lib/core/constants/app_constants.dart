@@ -21,7 +21,7 @@ abstract class AppConstants {
 
   // ARCH-001 FIX: Was pointing to 'quran_simple.json' (non-existent). Actual file is 'quran.json'.
   static const String quranDataAsset = 'assets/data/quran.json';
-  static const String azkarDataAsset = 'assets/data/azkar.json';
+  static const String azkarDataAsset = 'assets/data/azkar_release.json';
 
   // Font sizes
   static const double fontSizeSmall = 18.0;

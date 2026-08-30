@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -15,14 +14,17 @@ class KidsLoadingWidget extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.star_rounded, size: 48, color: KidsTheme.goldStar)
-              .animate(onPlay: (c) => c.repeat())
-              .rotate(duration: 2000.ms)
-              .scale(
-                begin: const Offset(1, 1),
-                end: const Offset(1.2, 1.2),
-                duration: 1000.ms,
-              ),
+          const SizedBox(
+            width: 48,
+            height: 48,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircularProgressIndicator(color: KidsTheme.goldStar),
+                Icon(Icons.star_rounded, size: 24, color: KidsTheme.goldStar),
+              ],
+            ),
+          ),
           const SizedBox(height: AppSpacing.md),
           Text(
             context.l10n.kidsPreparing,

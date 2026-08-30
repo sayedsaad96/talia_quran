@@ -13,7 +13,6 @@ class _SmartMemorizationCard extends StatelessWidget {
         : AppColors.lightTextPrimary;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppSpacing.pagePadding),
       padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: surface,

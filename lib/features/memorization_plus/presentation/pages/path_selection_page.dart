@@ -14,6 +14,7 @@ import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../cubits/memorization_identity_cubit.dart';
+import '../widgets/memorization_path_choice_card.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../../../core/extensions/context_extensions.dart';
 
@@ -91,7 +92,8 @@ class _PathSelectionView extends StatelessWidget {
                       const SizedBox(height: 20),
                       ErrorInfoBanner(
                         type: ErrorInfoBannerType.error,
-                        title: context.l10n.memorizationPathSelectionFailedTitle,
+                        title:
+                            context.l10n.memorizationPathSelectionFailedTitle,
                         message: state.message,
                       ),
                     ],
@@ -119,12 +121,11 @@ class _PathSelectionView extends StatelessWidget {
   }
 
   List<Widget> _pathCards(BuildContext context, bool isLoading) {
-    final adultsCard = _buildPathCard(
-      context: context,
+    final adultsCard = MemorizationPathChoiceCard(
       title: context.l10n.memorizationPathAdultsTitle,
       description: context.l10n.memorizationPathAdultsDesc,
       icon: Icons.person_outline,
-      color: AppColors.primary,
+      accentColor: AppColors.primary,
       isLoading: isLoading,
       onTap: () {
         _confirmPathSelection(
@@ -135,12 +136,11 @@ class _PathSelectionView extends StatelessWidget {
         );
       },
     );
-    final kidsCard = _buildPathCard(
-      context: context,
+    final kidsCard = MemorizationPathChoiceCard(
       title: context.l10n.memorizationPathKidsTitle,
       description: context.l10n.memorizationPathKidsDesc,
       icon: Icons.child_care,
-      color: AppColors.gold,
+      accentColor: AppColors.primaryLight,
       isLoading: isLoading,
       onTap: () {
         _confirmPathSelection(
@@ -218,81 +218,5 @@ class _PathSelectionView extends StatelessWidget {
     if (confirmed == true && context.mounted) {
       unawaited(context.read<MemorizationIdentityCubit>().selectPath(path));
     }
-  }
-
-  Widget _buildPathCard({
-    required BuildContext context,
-    required String title,
-    required String description,
-    required IconData icon,
-    required Color color,
-    required bool isLoading,
-    required VoidCallback onTap,
-  }) {
-    final isDark = context.isDark;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final secondaryTextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
-
-    return GestureDetector(
-      onTap: isLoading ? null : onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.1),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(24),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 40, color: color),
-            ),
-            const SizedBox(width: 24),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTypography.titleLarge.copyWith(color: textColor),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    description,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              context.isArabic
-                  ? Icons.arrow_back_ios_new
-                  : Icons.arrow_forward_ios,
-              color: secondaryTextColor,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
   }
 }

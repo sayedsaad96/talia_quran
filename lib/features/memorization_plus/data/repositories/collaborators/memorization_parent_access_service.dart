@@ -76,7 +76,7 @@ class MemorizationParentAccessService {
         return Right(session);
       });
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -132,7 +132,7 @@ class MemorizationParentAccessService {
         return Right(saved);
       });
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -159,7 +159,7 @@ class MemorizationParentAccessService {
       }
       return Right(session);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -169,6 +169,11 @@ class MemorizationParentAccessService {
       // Server-side revocation must succeed first: the DB must never disagree
       // with what the child device believes about the link (Phase 5).
       final guardianId = profile.guardianId;
+      if (profile.isGuardianLinked && guardianId == null) {
+        return const Left(
+          NetworkFailure('Guardian link counterpart is unavailable'),
+        );
+      }
       if (guardianId != null) {
         final revokeResult = await revokeGuardianLink(guardianId);
         final revokeFailure = revokeResult.fold(
@@ -188,7 +193,7 @@ class MemorizationParentAccessService {
       await _datasource.clearPairingSession();
       return Right(saved);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -211,7 +216,7 @@ class MemorizationParentAccessService {
       }
       return Right(saved);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -309,7 +314,7 @@ class MemorizationParentAccessService {
 
       return Right(token);
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -339,7 +344,7 @@ class MemorizationParentAccessService {
       );
       return const Right(null);
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -367,7 +372,7 @@ class MemorizationParentAccessService {
       );
       return const Right(null);
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -381,7 +386,7 @@ class MemorizationParentAccessService {
       // flag in sync, so this is safe and avoids an async round-trip.
       return Right(_datasource.getIsParentMode());
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -392,7 +397,7 @@ class MemorizationParentAccessService {
       final profile = await _loadProfile();
       return Right(profile.isParentGuardian);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -403,7 +408,7 @@ class MemorizationParentAccessService {
           result.fold<Either<Failure, void>>(Left.new, (_) => const Right(null));
       return folded;
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 

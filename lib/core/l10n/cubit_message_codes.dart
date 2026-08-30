@@ -14,4 +14,11 @@ abstract final class CubitMessageCodes {
   static const kidsRecitationMismatch = '@kids/recitation_mismatch';
   static const kidsJourneyStageLocked = '@kids/journey_stage_locked';
   static const kidsAyahAlreadyCompleted = '@kids/ayah_already_completed';
+
+  // Generic data-layer failures (emitted by core Failure types).
+  static const errorCache = '@error/cache';
+  static const errorNetwork = '@error/network';
+  static const errorNotFound = '@error/not_found';
+  static const errorParse = '@error/parse';
+  static const errorUnknown = '@error/unknown';
 }

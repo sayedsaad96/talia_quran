@@ -13,16 +13,13 @@ enum DuaTier { essential, recommended, supplementary }
 enum ContentReviewStatus { pendingReview, approved, rejected }
 
 extension ZikrGradePresentation on AuthenticityGrade? {
-  /// Grade is only shown once the record itself has been reviewer-approved.
-  bool get isApprovedValue => this != null;
-
   String get displayName => switch (this) {
-        AuthenticityGrade.sahih => 'صحيح',
-        AuthenticityGrade.hasan => 'حسن',
-        AuthenticityGrade.daif => 'ضعيف',
-        AuthenticityGrade.mawquf => 'موقوف',
-        null => '',
-      };
+    AuthenticityGrade.sahih => 'صحيح',
+    AuthenticityGrade.hasan => 'حسن',
+    AuthenticityGrade.daif => 'ضعيف',
+    AuthenticityGrade.mawquf => 'موقوف',
+    null => '',
+  };
 }
 
 class Zikr extends Equatable {
@@ -71,16 +68,21 @@ class Zikr extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        text,
-        totalCount,
-        category,
-        subcategory,
-        citation,
-        authenticityGrade,
-        tier,
-        reviewStatus,
-      ];
+    id,
+    text,
+    totalCount,
+    category,
+    subcategory,
+    citation,
+    authenticityGrade,
+    tier,
+    reviewStatus,
+  ];
+}
+
+extension ZikrReviewPresentation on Zikr {
+  bool get shouldShowAuthenticityGrade =>
+      reviewStatus == ContentReviewStatus.approved && authenticityGrade != null;
 }
 
 class ZikrSession extends Equatable {

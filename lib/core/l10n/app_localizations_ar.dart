@@ -186,6 +186,92 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tryAgain => 'حاول مجدداً';
 
   @override
+  String get errorCacheMessage =>
+      'تعذّر الوصول إلى البيانات المحفوظة. حاول مجدداً.';
+
+  @override
+  String get errorNetworkMessage => 'تحقّق من اتصالك بالإنترنت وحاول مجدداً.';
+
+  @override
+  String get errorNotFoundMessage => 'لم يتم العثور على المحتوى المطلوب.';
+
+  @override
+  String get errorParseMessage =>
+      'حدثت مشكلة أثناء قراءة المحتوى. حاول مجدداً.';
+
+  @override
+  String get errorUnknownMessage => 'حدث خطأ غير متوقع. حاول مجدداً.';
+
+  @override
+  String celebrationAyah(int xp) {
+    return 'أحسنت! +$xp XP ⭐';
+  }
+
+  @override
+  String celebrationPage(int xp) {
+    return 'اكتملت الصفحة! +$xp XP 🎯';
+  }
+
+  @override
+  String get celebrationJuzDone => 'أتممت الجزء كاملاً بإذن الله';
+
+  @override
+  String get tutorialQuickStartTitle => 'خريطة تالية السريعة';
+
+  @override
+  String get tutorialQuickStartSubtitle =>
+      'أهم خمسة أقسام لاستخدام التطبيق يومياً';
+
+  @override
+  String get tutorialQuickStartHint =>
+      'استخدم البحث أو التصفية للوصول إلى أي شرح تفصيلي.';
+
+  @override
+  String get tutorialShortcutHomeLabel => 'الرئيسية';
+
+  @override
+  String get tutorialShortcutHomeDesc => 'الورد والتقدم اليومي';
+
+  @override
+  String get tutorialShortcutQuranLabel => 'القرآن';
+
+  @override
+  String get tutorialShortcutQuranDesc => 'المصحف والقراءة';
+
+  @override
+  String get tutorialShortcutHifzLabel => 'الحفظ';
+
+  @override
+  String get tutorialShortcutHifzDesc => 'الخطة والجلسات';
+
+  @override
+  String get tutorialShortcutAzkarLabel => 'الأذكار';
+
+  @override
+  String get tutorialShortcutAzkarDesc => 'الورد والعداد';
+
+  @override
+  String get tutorialShortcutProgressLabel => 'التقدم';
+
+  @override
+  String get tutorialShortcutProgressDesc => 'الشهادات والإنجازات';
+
+  @override
+  String get splashTagline => 'رفيقك في رحاب القرآن';
+
+  @override
+  String get splashInitError => 'تعذّر إكمال التحميل، يرجى المحاولة مرة أخرى';
+
+  @override
+  String get retryLabel => 'إعادة المحاولة';
+
+  @override
+  String get showPassword => 'إظهار كلمة المرور';
+
+  @override
+  String get hidePassword => 'إخفاء كلمة المرور';
+
+  @override
   String get noData => 'لا توجد بيانات';
 
   @override
@@ -259,6 +345,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get close => 'إغلاق';
+
+  @override
+  String get clearSearch => 'مسح البحث';
+
+  @override
+  String get selectReciter => 'اختيار القارئ';
+
+  @override
+  String get enterFocusMode => 'الدخول إلى وضع التركيز';
+
+  @override
+  String get exitFocusMode => 'الخروج من وضع التركيز';
+
+  @override
+  String get closeReader => 'إغلاق القارئ';
+
+  @override
+  String hizbNumberLabel(Object number) {
+    return 'الحزب $number';
+  }
+
+  @override
+  String azkarCountOfTotal(int total) {
+    return 'من $total';
+  }
 
   @override
   String get cancel => 'إلغاء';
@@ -850,6 +961,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get azkarSubtitle => 'اذكر الله كثيراً';
 
   @override
+  String get azkarContentUnderReview =>
+      'محتوى الأذكار قيد المراجعة والاعتماد، وسيظهر هنا فور اعتماده.';
+
+  @override
   String zikrCount(Object count) {
     return '$count ذكر';
   }
@@ -1421,9 +1536,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get splashSubtitle => 'اقرأ، احفظ، راجع، وانمُ مع القرآن.';
-
-  @override
-  String get splashTagline => 'رفيقك في رحاب القرآن';
 
   @override
   String get splashFeatureRead => 'اقرأ';

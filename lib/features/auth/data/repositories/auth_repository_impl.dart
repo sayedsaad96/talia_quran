@@ -103,9 +103,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthSessionRecovery> recoverSessionAfterAuthError(
-    Object error,
-  ) async {
+  Future<AuthSessionRecovery> recoverSessionAfterAuthError(Object error) async {
     if (!_isSupabaseInitialized) {
       return AuthSessionRecovery.transientFailure;
     }
@@ -167,17 +165,13 @@ class AuthRepositoryImpl implements AuthRepository {
       // If identities is empty it means the email is already registered.
       if (response.user!.identities != null &&
           response.user!.identities!.isEmpty) {
-        return Left(
-          AuthFailure(AuthErrorCode.emailAlreadyRegistered),
-        );
+        return Left(AuthFailure(AuthErrorCode.emailAlreadyRegistered));
       }
 
       // If email confirmation is required, the session will be null.
       // Inform the user they need to confirm their email.
       if (response.session == null) {
-        return Left(
-          AuthFailure(AuthErrorCode.emailNotConfirmed),
-        );
+        return Left(AuthFailure(AuthErrorCode.emailNotConfirmed));
       }
 
       final user = AppUser(
@@ -339,17 +333,26 @@ class AuthRepositoryImpl implements AuthRepository {
   // ─── Sign Out ─────────────────────────────────────────────────────────────
 
   @override
-  Future<Either<Failure, Unit>> signOut() async {
+  Future<Either<Failure, Unit>> signOut({
+    bool preserveAccountData = false,
+  }) async {
     try {
       if (!_isSupabaseInitialized) {
-        // Still a real logout from the user's point of view: local
-        // account-owned data must not survive it.
-        await _clearLocalUserData();
+        // A normal offline logout still clears account data. Forced logout
+        // after a failed flush retains it under its existing owner scope.
+        if (!preserveAccountData) {
+          await _clearLocalUserData(preservePendingBookmarkRecovery: false);
+        }
         return const Right(unit);
       }
       final departingOwnerId = _supabase.auth.currentUser?.id;
       await _supabase.auth.signOut();
-      await _clearLocalUserData(departingOwnerId: departingOwnerId);
+      if (!preserveAccountData) {
+        await _clearLocalUserData(
+          departingOwnerId: departingOwnerId,
+          preservePendingBookmarkRecovery: false,
+        );
+      }
       return const Right(unit);
     } catch (e) {
       TaliaLogger.w('Sign-out error', e);
@@ -380,14 +383,15 @@ class AuthRepositoryImpl implements AuthRepository {
       // already issued access token remains valid until expiry. Clear the
       // device session locally and fail closed if that cannot be confirmed.
       await client.auth.signOut(scope: SignOutScope.local);
-      if (client.auth.currentSession != null || client.auth.currentUser != null) {
+      if (client.auth.currentSession != null ||
+          client.auth.currentUser != null) {
         return const Left(
           ServerFailure('تم حذف الحساب، لكن تعذر إنهاء الجلسة على هذا الجهاز.'),
         );
       }
       if (departingOwnerId != null) {
-        await _accountDataReset.preserveDeletedAccountLocally(
-          departingOwnerId: departingOwnerId,
+        return await finalizeDeletedAccountLocallyAfterRemoteDeletion(
+          departingOwnerId,
         );
       }
       return const Right(unit);
@@ -411,6 +415,25 @@ class AuthRepositoryImpl implements AuthRepository {
       TaliaLogger.w('Unexpected account deletion error', e);
       return const Left(ServerFailure('تعذر حذف الحساب. حاول لاحقاً.'));
     }
+  }
+
+  /// Runs only after remote deletion and local session invalidation are both
+  /// confirmed. Failure to create the optional guest copy must not claim that
+  /// the already-deleted remote account can be deleted again.
+  Future<Either<Failure, Unit>>
+  finalizeDeletedAccountLocallyAfterRemoteDeletion(String ownerId) async {
+    try {
+      await _accountDataReset.preserveDeletedAccountLocally(
+        departingOwnerId: ownerId,
+      );
+    } catch (error, stackTrace) {
+      TaliaLogger.w(
+        'Remote account deletion succeeded, but local guest preservation was incomplete; owner-scoped recovery data was retained',
+        error,
+        stackTrace,
+      );
+    }
+    return const Right(unit);
   }
 
   // ─── Cloud Sync ─────────────────────────────────────────────────────────────
@@ -501,7 +524,8 @@ class AuthRepositoryImpl implements AuthRepository {
     if (dirtyActivities.isNotEmpty) return true;
 
     // Reading progress dirty flag.
-    if (_prefs?.getBool(ProgressLocalDatasourceImpl.kReadPagesCloudDirty) == true) {
+    if (_prefs?.getBool(ProgressLocalDatasourceImpl.kReadPagesCloudDirty) ==
+        true) {
       return true;
     }
 
@@ -563,16 +587,15 @@ class AuthRepositoryImpl implements AuthRepository {
       final cloudCurrent = cloud['current_streak'] as int;
       final cloudLongest = cloud['longest_streak'] as int;
       final localHigher =
-          local.currentStreak > cloudCurrent || local.longestStreak > cloudLongest;
+          local.currentStreak > cloudCurrent ||
+          local.longestStreak > cloudLongest;
 
-      local.currentStreak =
-          local.currentStreak > cloudCurrent
-              ? local.currentStreak
-              : cloudCurrent;
-      local.longestStreak =
-          local.longestStreak > cloudLongest
-              ? local.longestStreak
-              : cloudLongest;
+      local.currentStreak = local.currentStreak > cloudCurrent
+          ? local.currentStreak
+          : cloudCurrent;
+      local.longestStreak = local.longestStreak > cloudLongest
+          ? local.longestStreak
+          : cloudLongest;
       local.freezesAvailable = cloud['freezes_available'] as int;
 
       if (cloud['last_activity_date'] != null) {
@@ -642,9 +665,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> _syncDailyActivitiesToCloud() async {
     final activities = await _isar.dailyActivityIsars
         .filter()
-        .group(
-          (q) => q.cloudDirtyEqualTo(true).or().cloudDirtyIsNull(),
-        )
+        .group((q) => q.cloudDirtyEqualTo(true).or().cloudDirtyIsNull())
         .findAll();
     if (activities.isEmpty) return;
 
@@ -726,10 +747,13 @@ class AuthRepositoryImpl implements AuthRepository {
 
   // ─── Helpers ────────────────────────────────────────────────────────────────
 
-  Future<void> _clearLocalUserData({String? departingOwnerId}) =>
-      _accountDataReset.clearAccountOwnedData(
-        departingOwnerId: departingOwnerId,
-      );
+  Future<void> _clearLocalUserData({
+    String? departingOwnerId,
+    bool preservePendingBookmarkRecovery = true,
+  }) => _accountDataReset.clearAccountOwnedData(
+    departingOwnerId: departingOwnerId,
+    preservePendingBookmarkRecovery: preservePendingBookmarkRecovery,
+  );
 
   String? _toDateOnlyString(DateTime? value) =>
       value?.toIso8601String().substring(0, 10);
@@ -780,7 +804,10 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> _pushReadingProgressToCloud() async {
     final prefs = _prefs;
     if (prefs == null) return;
-    if (prefs.getBool(ProgressLocalDatasourceImpl.kReadPagesCloudDirty) != true) return;
+    if (prefs.getBool(ProgressLocalDatasourceImpl.kReadPagesCloudDirty) !=
+        true) {
+      return;
+    }
 
     final raw = prefs.getString('read_pages');
     if (raw == null) return;
@@ -817,7 +844,9 @@ class AuthRepositoryImpl implements AuthRepository {
   List<int> _readCanonicalPages(String? raw) {
     if (raw == null) return const [];
     try {
-      return _canonicalPages((jsonDecode(raw) as List<dynamic>).whereType<int>());
+      return _canonicalPages(
+        (jsonDecode(raw) as List<dynamic>).whereType<int>(),
+      );
     } catch (_) {
       return const [];
     }

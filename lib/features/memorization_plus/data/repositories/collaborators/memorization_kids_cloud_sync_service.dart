@@ -99,7 +99,7 @@ class MemorizationKidsCloudSyncService {
       );
       return const Right(null);
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -142,7 +142,7 @@ class MemorizationKidsCloudSyncService {
       }
       return const Right(null);
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -174,7 +174,7 @@ class MemorizationKidsCloudSyncService {
 
       return Right(await _fetchRemoteChildrenLegacy(client, user.id));
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -304,7 +304,7 @@ class MemorizationKidsCloudSyncService {
           .order('created_at', ascending: false);
       return Right(rows.map(_mappers.rewardFromCloud).toList());
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -418,7 +418,7 @@ class MemorizationKidsCloudSyncService {
       );
       return Right(merged);
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 }

@@ -171,6 +171,11 @@ extension TaliaLocalizationHelpers on BuildContext {
       CubitMessageCodes.kidsJourneyStageLocked => l10n.kidsGamifiedLockedStage,
       CubitMessageCodes.kidsAyahAlreadyCompleted =>
         l10n.kidsAyahAlreadyCompleted,
+      CubitMessageCodes.errorCache => l10n.errorCacheMessage,
+      CubitMessageCodes.errorNetwork => l10n.errorNetworkMessage,
+      CubitMessageCodes.errorNotFound => l10n.errorNotFoundMessage,
+      CubitMessageCodes.errorParse => l10n.errorParseMessage,
+      CubitMessageCodes.errorUnknown => l10n.errorUnknownMessage,
       _ => message,
     };
   }

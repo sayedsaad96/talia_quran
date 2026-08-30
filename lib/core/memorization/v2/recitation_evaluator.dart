@@ -16,9 +16,16 @@ import '../../../core/utils/arabic_normalizer.dart';
 ///   This implements the spirit of "100% match" from the product rules.
 const double kV2PassThreshold = 0.92;
 
+/// Identifies how a recitation outcome was assessed.
+///
+/// Manual/self-grade outcomes deliberately have no automatic similarity
+/// score. Keeping this marker on the result prevents callers from treating a
+/// learner confirmation as speech-recognition evidence.
+enum V2AssessmentMethod { automatic, manual }
+
 final class V2RecitationEvaluator {
   const V2RecitationEvaluator({double passThreshold = kV2PassThreshold})
-      : _threshold = passThreshold;
+    : _threshold = passThreshold;
 
   final double _threshold;
 
@@ -81,23 +88,31 @@ final class V2RecitationResult {
     required this.similarityScore,
     required this.normalizedTarget,
     required this.normalizedSpoken,
-  }) : isNoAttempt = false;
+    this.assessmentMethod = V2AssessmentMethod.automatic,
+  }) : assert(
+         assessmentMethod != V2AssessmentMethod.manual ||
+             similarityScore == null,
+       ),
+       isNoAttempt = false;
 
   const V2RecitationResult._noAttempt()
-      : passed = false,
-        similarityScore = 0.0,
-        normalizedTarget = '',
-        normalizedSpoken = '',
-        isNoAttempt = true;
+    : passed = false,
+      similarityScore = 0.0,
+      normalizedTarget = '',
+      normalizedSpoken = '',
+      assessmentMethod = V2AssessmentMethod.automatic,
+      isNoAttempt = true;
 
   static const noAttempt = V2RecitationResult._noAttempt();
 
   final bool passed;
-  final double similarityScore;
+
+  /// Automatic similarity, or `null` for manual/self-grade outcomes.
+  final double? similarityScore;
   final String normalizedTarget;
   final String normalizedSpoken;
+  final V2AssessmentMethod assessmentMethod;
 
   /// True if STT returned empty — not counted as a failure.
   final bool isNoAttempt;
 }
-

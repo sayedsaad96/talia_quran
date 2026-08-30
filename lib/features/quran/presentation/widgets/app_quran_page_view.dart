@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 // ignore: implementation_imports
 import 'package:qcf_quran_plus/src/services/get_page.dart';
+// ignore: implementation_imports
+import 'package:qcf_quran_plus/src/widgets/bsmallah_widget.dart' as qcf_widgets;
 
 import 'quran_page_font_guard.dart';
 
@@ -22,8 +24,7 @@ class AppQuranPageView extends StatelessWidget {
   final int quranPagesCount;
   final Widget Function(BuildContext context, int surahNumber)?
   surahHeaderBuilder;
-  final Widget Function(BuildContext context, int surahNumber)?
-  basmallahBuilder;
+  final Widget Function(BuildContext context, int surahNumber) basmallahBuilder;
   final bool isDarkMode;
   final TextStyle? ayahStyle;
   final Color? pageBackgroundColor;
@@ -41,14 +42,32 @@ class AppQuranPageView extends StatelessWidget {
     this.topBar,
     this.bottomBar,
     this.surahHeaderBuilder,
-    this.basmallahBuilder,
+    Widget Function(BuildContext context, int surahNumber)? basmallahBuilder,
     this.ayahStyle,
     this.pageBackgroundColor,
     this.isTajweed = true,
     required this.isDarkMode,
-  }) : pages = _loadQuranData(quranPagesCount);
+  }) : basmallahBuilder = _structuralBasmallahBuilder(basmallahBuilder),
+       pages = _loadQuranData(quranPagesCount);
 
   static List<qcf.QuranPage>? _cachedPages;
+
+  static Widget Function(BuildContext, int) _structuralBasmallahBuilder(
+    Widget Function(BuildContext context, int surahNumber)? customBuilder,
+  ) {
+    return (context, surahNumber) {
+      if (surahNumber == 1 || surahNumber == 9) {
+        return const SizedBox.shrink();
+      }
+
+      return KeyedSubtree(
+        key: ValueKey('app_structural_basmallah_$surahNumber'),
+        child:
+            customBuilder?.call(context, surahNumber) ??
+            qcf_widgets.BasmallahWidget(surahNumber),
+      );
+    };
+  }
 
   static List<qcf.QuranPage> _loadQuranData(int count) {
     if (_cachedPages != null && _cachedPages!.length == count) {
@@ -82,7 +101,9 @@ class AppQuranPageView extends StatelessWidget {
 
             return Column(
               children: [
-                ?topBar,
+                // Pinned build_runner analyzer cannot parse null-aware elements.
+                // ignore: use_null_aware_elements
+                if (topBar != null) topBar!,
                 Expanded(
                   child: QuranPageFontGuard(
                     pageNumber: pageNum,
@@ -104,7 +125,9 @@ class AppQuranPageView extends StatelessWidget {
                     ),
                   ),
                 ),
-                ?bottomBar,
+                // Pinned build_runner analyzer cannot parse null-aware elements.
+                // ignore: use_null_aware_elements
+                if (bottomBar != null) bottomBar!,
               ],
             );
           },

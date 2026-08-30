@@ -56,12 +56,26 @@ class SectionHeader extends StatelessWidget {
           // ignore: use_null_aware_elements
           if (action != null) action!,
           if (actionLabel != null && onActionTap != null)
-            GestureDetector(
-              onTap: onActionTap,
-              child: Text(
-                actionLabel!,
-                style: AppTypography.labelMedium.copyWith(
-                  color: context.colorScheme.primary,
+            Semantics(
+              button: true,
+              child: InkWell(
+                onTap: onActionTap,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minHeight: 48,
+                    minWidth: 48,
+                  ),
+                  alignment: Alignment.center,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.sm,
+                  ),
+                  child: Text(
+                    actionLabel!,
+                    style: AppTypography.labelMedium.copyWith(
+                      color: context.colorScheme.primary,
+                    ),
+                  ),
                 ),
               ),
             ),

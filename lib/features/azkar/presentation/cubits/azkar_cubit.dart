@@ -40,7 +40,7 @@ class AzkarCubit extends Cubit<AzkarState> {
         _prefs.setString('$_datePrefix${category.name}', todayStr);
       }
 
-      final allDone = sessions.every((s) => s.isDone);
+      final allDone = sessions.isNotEmpty && sessions.every((s) => s.isDone);
       emit(
         AzkarLoaded(
           category: category,
@@ -55,6 +55,7 @@ class AzkarCubit extends Cubit<AzkarState> {
   void increment() async {
     final state = this.state;
     if (state is! AzkarLoaded) return;
+    if (state.sessions.isEmpty) return;
 
     final sessions = List<ZikrSession>.from(state.sessions);
     final idx = state.currentIndex;
@@ -110,6 +111,7 @@ class AzkarCubit extends Cubit<AzkarState> {
   Future<void> decrementCurrent() async {
     final state = this.state;
     if (state is! AzkarLoaded) return;
+    if (state.sessions.isEmpty) return;
 
     final sessions = List<ZikrSession>.from(state.sessions);
     final idx = state.currentIndex;
@@ -129,6 +131,7 @@ class AzkarCubit extends Cubit<AzkarState> {
   void goTo(int index) {
     final state = this.state;
     if (state is! AzkarLoaded) return;
+    if (index < 0 || index >= state.sessions.length) return;
     emit(state.copyWith(currentIndex: index));
   }
 

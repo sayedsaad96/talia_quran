@@ -168,7 +168,6 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         progress: state.progress,
                         childName: childName,
                         onSettingsTap: onPathSettingsTap,
-                        onAvatarTap: () {},
                       ),
                       const SizedBox(height: AppSpacing.xl),
                       KidsMissionCard(
@@ -212,7 +211,7 @@ class _KidsHomeBottomNav extends StatelessWidget {
 
     return NavigationBar(
       key: const ValueKey('kids-home-bottom-nav'),
-      selectedIndex: 3,
+      selectedIndex: 0,
       backgroundColor: KidsTheme.nightSkyMid,
       indicatorColor: KidsTheme.goldStar.withValues(alpha: 0.18),
       labelBehavior: isCompact

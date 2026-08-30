@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -20,6 +19,7 @@ import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../cubits/memorization_identity_cubit.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../theme/kids_theme.dart';
+import '../widgets/memorization_path_choice_card.dart';
 
 class MemorizationHubPage extends StatefulWidget {
   const MemorizationHubPage({super.key});
@@ -162,69 +162,70 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         backgroundColor: isDark
             ? AppColors.darkBackground
             : AppColors.lightBackground,
-        body: BlocConsumer<MemorizationIdentityCubit, MemorizationIdentityState>(
-          listener: (context, state) {
-            if (state is MemorizationIdentitySuccess) {
-              final profile = state.profile;
-              if (profile.isAdult) {
-                _retryTargets();
-              } else if (profile.isChild) {
-                _retryTargets();
-                final authState = context.read<AuthCubit>().state;
-                context.push(
-                  authState is AuthAuthenticated
-                      ? AppRoutes.memorizationPlusGuardianLinking
-                      : AppRoutes.memorizationPlusKidsHome,
-                );
-              }
-            } else if (state is MemorizationIdentityError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
-              );
-            }
-          },
-          builder: (context, state) {
-            final isSelectingPath = state is MemorizationIdentityLoading;
-            return FutureBuilder<_HubLoadResult>(
-              future: _hubFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: LoadingWidget());
+        body:
+            BlocConsumer<MemorizationIdentityCubit, MemorizationIdentityState>(
+              listener: (context, state) {
+                if (state is MemorizationIdentitySuccess) {
+                  final profile = state.profile;
+                  if (profile.isAdult) {
+                    _retryTargets();
+                  } else if (profile.isChild) {
+                    _retryTargets();
+                    final authState = context.read<AuthCubit>().state;
+                    context.push(
+                      authState is AuthAuthenticated
+                          ? AppRoutes.memorizationPlusGuardianLinking
+                          : AppRoutes.memorizationPlusKidsHome,
+                    );
+                  }
+                } else if (state is MemorizationIdentityError) {
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(state.message)));
                 }
-                if (snapshot.hasError) {
-                  return ErrorStateWidget(
-                    message: context.l10n.errorOccurred,
-                    onRetry: _retryTargets,
-                  );
-                }
-                return CustomScrollView(
-                  slivers: [
-                    _HubAppBar(isDark: isDark),
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.pagePadding,
-                        AppSpacing.lg,
-                        AppSpacing.pagePadding,
-                        120,
-                      ),
-                      sliver: SliverList(
-                        delegate: SliverChildListDelegate(
-                          _sectionsFor(
-                            context,
-                            snapshot.data?.targets,
-                            snapshot.data?.dailyPlan,
-                            isDark,
-                            isSelectingPath,
+              },
+              builder: (context, state) {
+                final isSelectingPath = state is MemorizationIdentityLoading;
+                return FutureBuilder<_HubLoadResult>(
+                  future: _hubFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: LoadingWidget());
+                    }
+                    if (snapshot.hasError) {
+                      return ErrorStateWidget(
+                        message: context.l10n.errorOccurred,
+                        onRetry: _retryTargets,
+                      );
+                    }
+                    return CustomScrollView(
+                      slivers: [
+                        _HubAppBar(isDark: isDark),
+                        SliverPadding(
+                          padding: const EdgeInsets.fromLTRB(
+                            AppSpacing.pagePadding,
+                            AppSpacing.lg,
+                            AppSpacing.pagePadding,
+                            120,
+                          ),
+                          sliver: SliverList(
+                            delegate: SliverChildListDelegate(
+                              _sectionsFor(
+                                context,
+                                snapshot.data?.targets,
+                                snapshot.data?.dailyPlan,
+                                isDark,
+                                isSelectingPath,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
+                      ],
+                    );
+                  },
                 );
               },
-            );
-          },
-        ),
+            ),
       ),
     );
   }
@@ -369,16 +370,18 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
       Text(
         context.l10n.memorizationPathDescription,
         style: AppTypography.bodyMedium.copyWith(
-          color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+          color: isDark
+              ? AppColors.darkTextSecondary
+              : AppColors.lightTextSecondary,
         ),
         textAlign: TextAlign.center,
       ),
       const SizedBox(height: AppSpacing.xxl),
-      _UnifiedPathChoiceCard(
+      MemorizationPathChoiceCard(
         title: context.l10n.memorizationPathAdultsTitle,
         description: context.l10n.memorizationPathAdultsDesc,
         icon: Icons.person_outline,
-        color: AppColors.primary,
+        accentColor: AppColors.primary,
         isLoading: isSelectingPath,
         onTap: () {
           _confirmPathSelection(
@@ -390,11 +393,11 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
         },
       ),
       const SizedBox(height: AppSpacing.lg),
-      _UnifiedPathChoiceCard(
+      MemorizationPathChoiceCard(
         title: context.l10n.memorizationPathKidsTitle,
         description: context.l10n.memorizationPathKidsDesc,
         icon: Icons.child_care,
-        color: AppColors.gold,
+        accentColor: AppColors.primaryLight,
         isLoading: isSelectingPath,
         onTap: () {
           _confirmPathSelection(
@@ -661,97 +664,6 @@ class _HubActionCard extends StatelessWidget {
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 220.ms).slideY(begin: 0.03);
-  }
-}
-
-class _UnifiedPathChoiceCard extends StatelessWidget {
-  const _UnifiedPathChoiceCard({
-    required this.title,
-    required this.description,
-    required this.icon,
-    required this.color,
-    required this.isLoading,
-    required this.onTap,
-  });
-
-  final String title;
-  final String description;
-  final IconData icon;
-  final Color color;
-  final bool isLoading;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final textColor = isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final secondaryTextColor = isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-
-    return GestureDetector(
-      onTap: isLoading ? null : onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-          border: Border.all(color: color.withValues(alpha: 0.3), width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: color.withValues(alpha: 0.1),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, size: 40, color: color),
-            ),
-            const SizedBox(width: AppSpacing.lg),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTypography.titleLarge.copyWith(color: textColor),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    description,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: secondaryTextColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: AppSpacing.sm),
-            if (isLoading)
-              SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: secondaryTextColor,
-                ),
-              )
-            else
-              Icon(
-                context.isArabic ? Icons.arrow_back_ios_new : Icons.arrow_forward_ios,
-                color: secondaryTextColor,
-                size: 20,
-              ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -837,10 +749,7 @@ class _KidsHubActionCard extends StatelessWidget {
             Container(
               width: 48,
               height: 48,
-              decoration: BoxDecoration(
-                color: iconBg,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: iconBg, shape: BoxShape.circle),
               child: Icon(icon, color: iconColor, size: 26),
             ),
             const SizedBox(width: AppSpacing.md),
@@ -876,6 +785,6 @@ class _KidsHubActionCard extends StatelessWidget {
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 220.ms).slideY(begin: 0.03);
+    );
   }
 }

@@ -58,7 +58,11 @@ class ReciterSelectorSheet extends StatelessWidget {
                     color: primary.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.record_voice_over_rounded, color: primary, size: 20),
+                  child: Icon(
+                    Icons.record_voice_over_rounded,
+                    color: primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
                 Text(
@@ -76,67 +80,85 @@ class ReciterSelectorSheet extends StatelessWidget {
                 return Column(
                   children: QuranReciter.values.map((reciter) {
                     final isSelected = reciter == current;
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      decoration: BoxDecoration(
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: Material(
                         color: isSelected
                             ? primary.withValues(alpha: 0.08)
-                            : (isDark ? AppColors.darkCard : AppColors.lightCard),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                        border: Border.all(
-                          color: isSelected
-                              ? primary
-                              : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
-                          width: isSelected ? 1.5 : 0.5,
-                        ),
-                      ),
-                      child: ListTile(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          reciterService.setReciter(reciter);
-                          Navigator.pop(context);
-                        },
-                        leading: Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
+                            : (isDark
+                                  ? AppColors.darkCard
+                                  : AppColors.lightCard),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
+                          side: BorderSide(
                             color: isSelected
                                 ? primary
-                                : primary.withValues(alpha: 0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            isSelected ? Icons.check_rounded : Icons.mic_rounded,
-                            color: isSelected ? Colors.white : primary,
-                            size: 18,
+                                : (isDark
+                                      ? AppColors.darkDivider
+                                      : AppColors.lightDivider),
+                            width: isSelected ? 1.5 : 0.5,
                           ),
                         ),
-                        title: Text(
-                          context.isArabic ? reciter.nameAr : reciter.nameEn,
-                          style: AppTypography.titleMedium.copyWith(
-                            fontSize: 15,
-                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                            color: isSelected
-                                ? primary
-                                : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                        clipBehavior: Clip.antiAlias,
+                        child: ListTile(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            reciterService.setReciter(reciter);
+                            Navigator.pop(context);
+                          },
+                          leading: Container(
+                            width: 36,
+                            height: 36,
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? primary
+                                  : primary.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isSelected
+                                  ? Icons.check_rounded
+                                  : Icons.mic_rounded,
+                              color: isSelected ? Colors.white : primary,
+                              size: 18,
+                            ),
                           ),
-                        ),
-                        trailing: isSelected
-                            ? Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: primary.withValues(alpha: 0.15),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Text(
-                                  context.isArabic ? 'المحدد' : 'Active',
-                                  style: AppTypography.labelSmall.copyWith(
-                                    color: primary,
-                                    fontWeight: FontWeight.bold,
+                          title: Text(
+                            context.isArabic ? reciter.nameAr : reciter.nameEn,
+                            style: AppTypography.titleMedium.copyWith(
+                              fontSize: 15,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? primary
+                                  : (isDark
+                                        ? AppColors.darkTextPrimary
+                                        : AppColors.lightTextPrimary),
+                            ),
+                          ),
+                          trailing: isSelected
+                              ? Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
                                   ),
-                                ),
-                              )
-                            : null,
+                                  decoration: BoxDecoration(
+                                    color: primary.withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    context.isArabic ? 'المحدد' : 'Active',
+                                    style: AppTypography.labelSmall.copyWith(
+                                      color: primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                )
+                              : null,
+                        ),
                       ),
                     );
                   }).toList(),

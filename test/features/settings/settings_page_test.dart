@@ -523,7 +523,9 @@ class _FakeAuthRepository implements AuthRepository {
       _passwordRecoveryController.stream;
 
   @override
-  Future<Either<Failure, Unit>> signOut() async {
+  Future<Either<Failure, Unit>> signOut({
+    bool preserveAccountData = false,
+  }) async {
     _user = null;
     _authController.add(null);
     return const Right(unit);

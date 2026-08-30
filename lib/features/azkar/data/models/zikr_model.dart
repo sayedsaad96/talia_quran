@@ -20,32 +20,70 @@ class ZikrModel extends Zikr {
 
   factory ZikrModel.fromJson(
     Map<String, dynamic> json,
-    AzkarCategory category, {
-    String datasetVersion = 'unversioned',
-  }) {
+    AzkarCategory category,
+  ) {
+    final id = _requiredString(json, 'id');
+    final text = _requiredString(json, 'text');
+    final citation = _requiredString(json, 'citation');
+    final sourceType = _requiredString(json, 'sourceType');
+    final datasetVersion = _requiredString(json, 'datasetVersion');
+    final count = json['count'];
+    if (count is! int || count < 1) {
+      throw const FormatException('count must be an integer of at least 1');
+    }
+    if (!const {'quran', 'hadith', 'dhikr', 'dua'}.contains(sourceType)) {
+      throw FormatException('Unsupported sourceType: $sourceType');
+    }
+    if (datasetVersion == 'unversioned') {
+      throw const FormatException('datasetVersion must identify a review set');
+    }
+
+    final reviewStatus = ContentReviewStatus.values.firstWhereOrNull(
+      (status) => status.name == json['reviewStatus'],
+    );
+    if (reviewStatus != ContentReviewStatus.approved) {
+      throw const FormatException('Only approved records may be released');
+    }
+
+    final tier = DuaTier.values.firstWhereOrNull(
+      (value) => value.name == json['tier'],
+    );
+    if (json['tier'] != null && tier == null) {
+      throw const FormatException('Unsupported tier');
+    }
+
+    final authenticityGrade = AuthenticityGrade.values.firstWhereOrNull(
+      (grade) => grade.name == json['authenticityGrade'],
+    );
+    if (json['authenticityGrade'] != null && authenticityGrade == null) {
+      throw const FormatException('Unsupported authenticityGrade');
+    }
+
     return ZikrModel(
-      id: json['id'] as String,
-      text: json['text'] as String,
+      id: id,
+      text: text,
       transliteration: json['transliteration'] as String? ?? '',
       translation: json['translation'] as String? ?? '',
-      totalCount: json['count'] as int? ?? 1,
+      totalCount: count,
       category: category,
       reference: json['reference'] as String? ?? '',
       subcategory: json['subcategory'] as String? ?? '',
-      citation: json['citation'] as String?,
-      sourceType: json['sourceType'] as String?,
-      authenticityGrade: AuthenticityGrade.values.firstWhereOrNull(
-        (g) => g.name == json['authenticityGrade'],
-      ),
-      tier: DuaTier.values.firstWhereOrNull((t) => t.name == json['tier']),
-      datasetVersion:
-          json['datasetVersion'] as String? ?? datasetVersion,
-      reviewStatus: ContentReviewStatus.values.firstWhereOrNull(
-            (s) => s.name == json['reviewStatus'],
-          ) ??
-          ContentReviewStatus.pendingReview,
+      citation: citation,
+      sourceType: sourceType,
+      authenticityGrade: authenticityGrade,
+      tier: tier,
+      datasetVersion: datasetVersion,
+      reviewStatus: ContentReviewStatus.approved,
     );
   }
+}
+
+String _requiredString(Map<String, dynamic> json, String field) {
+  final value = json[field];
+  if (value is! String || value.trim().isEmpty) {
+    throw FormatException('$field must be a non-empty string');
+  }
+  return value;
 }
 
 extension _FirstWhereOrNull<T> on Iterable<T> {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -70,6 +69,22 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
   }
 
   Widget _buildContent(BuildContext context, AzkarLoaded state, bool isDark) {
+    if (state.sessions.isEmpty) {
+      return CustomScrollView(
+        slivers: [
+          _buildAppBar(context, isDark),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: EmptyStateWidget(
+              key: const ValueKey('azkar-content-under-review'),
+              message: context.l10n.azkarContentUnderReview,
+              icon: Icons.pending_actions_rounded,
+            ),
+          ),
+        ],
+      );
+    }
+
     // Extract unique subcategories
     final allSubcategories = state.sessions
         .map((s) => s.zikr.subcategory)
@@ -103,10 +118,7 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
               final session = filteredSessions[index];
               return Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.md),
-                child: _ZikrCard(zikr: session.zikr, isDark: isDark)
-                    .animate()
-                    .fadeIn(duration: 300.ms, delay: (index * 50).ms)
-                    .slideY(begin: 0.1, end: 0),
+                child: _ZikrCard(zikr: session.zikr, isDark: isDark),
               );
             }, childCount: filteredSessions.length),
           ),
@@ -130,52 +142,26 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
         itemBuilder: (context, i) {
           final tab = tabs[i];
           final selected = _selectedSubcategory == tab;
-          return GestureDetector(
-            onTap: () => setState(() => _selectedSubcategory = tab),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.lg,
-                vertical: AppSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                  color: selected
-                      ? primary
-                      : (isDark
-                            ? AppColors.darkCard
-                            : Colors.white),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-                  border: Border.all(
-                    color: selected
-                        ? primary
-                        : (isDark
-                              ? AppColors.darkDivider
-                              : AppColors.lightDivider),
-                    width: selected ? 0 : 1,
-                  ),
-                  boxShadow: selected
-                      ? [
-                          BoxShadow(
-                            color: primary.withValues(alpha: 0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 4),
-                          ),
-                        ]
-                      : null,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  tab.isEmpty ? context.l10n.all : tab,
-                  style: AppTypography.labelMedium.copyWith(
-                    color: selected
-                        ? Colors.white
-                        : (isDark
-                              ? AppColors.darkTextSecondary
-                              : AppColors.lightTextSecondary),
-                    fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-                  ),
-                ),
-              ),
+          return ChoiceChip(
+            label: Text(tab.isEmpty ? context.l10n.all : tab),
+            selected: selected,
+            showCheckmark: false,
+            onSelected: (_) => setState(() => _selectedSubcategory = tab),
+            selectedColor: primary,
+            backgroundColor: isDark ? AppColors.darkCard : Colors.white,
+            side: BorderSide(
+              color: selected
+                  ? primary
+                  : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
+            ),
+            labelStyle: AppTypography.labelMedium.copyWith(
+              color: selected
+                  ? Colors.white
+                  : (isDark
+                        ? AppColors.darkTextSecondary
+                        : AppColors.lightTextSecondary),
+              fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+            ),
           );
         },
       ),
@@ -189,11 +175,8 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
       expandedHeight: 140,
       pinned: true,
       leading: IconButton(
-        icon: const Icon(
-          Icons.arrow_back_ios_rounded,
-          color: Colors.white,
-          size: 20,
-        ),
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        icon: const BackButtonIcon(),
         onPressed: () {
           if (context.canPop()) {
             context.pop();
@@ -212,19 +195,15 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
         background: Container(
           decoration: BoxDecoration(
             gradient: isDark
-                ? LinearGradient(
+                ? const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: isDuas
-                        ? const [Color(0xFF881337), Color(0xFF3F0717)]
-                        : const [Color(0xFF1A6B5A), Color(0xFF0D362D)],
+                    colors: [AppColors.primary, AppColors.primaryDark],
                   )
-                : LinearGradient(
+                : const LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: isDuas
-                        ? const [Color(0xFFE11D48), Color(0xFF881337)]
-                        : const [Color(0xFF1A6B5A), Color(0xFF0F4A3E)],
+                    colors: [AppColors.primaryLight, AppColors.primaryDark],
                   ),
           ),
           child: SafeArea(
@@ -344,6 +323,7 @@ class _ZikrCard extends StatelessWidget {
                     else
                       const Spacer(),
                     IconButton(
+                      tooltip: context.l10n.copy,
                       icon: Icon(
                         Icons.copy_rounded,
                         color: textSecondary.withValues(alpha: 0.7),
@@ -358,11 +338,8 @@ class _ZikrCard extends StatelessWidget {
                       },
                     ),
                     IconButton(
-                      icon: Icon(
-                        Icons.share_rounded,
-                        color: primary,
-                        size: 20,
-                      ),
+                      tooltip: context.l10n.share,
+                      icon: Icon(Icons.share_rounded, color: primary, size: 20),
                       onPressed: () {
                         HapticFeedback.lightImpact();
                         final data = SocialShareData.dua(

@@ -238,7 +238,7 @@ class MemorizationPlusRepositoryImpl
       );
       return Right(record);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -250,7 +250,7 @@ class MemorizationPlusRepositoryImpl
       final records = await _datasource.getAllReviewRecords(scope: scope);
       return Right(records);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -267,7 +267,7 @@ class MemorizationPlusRepositoryImpl
       _progressEvents.notify(ProgressChangedReason.reviewRecord);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -276,7 +276,7 @@ class MemorizationPlusRepositoryImpl
     try {
       return Right(await _datasource.claimLocalReviewRecords());
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 

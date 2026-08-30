@@ -51,10 +51,13 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
             children: List.generate(tabLabels.length, (i) {
               final selected = _selectedTab == i;
               return Padding(
-                padding: EdgeInsets.only(
-                  right: i < tabLabels.length - 1 ? 8.0 : 0,
+                padding: EdgeInsetsDirectional.only(
+                  end: i < tabLabels.length - 1 ? 8.0 : 0,
                 ),
-                child: GestureDetector(
+                child: Semantics(
+                  button: true,
+                  selected: selected,
+                  child: GestureDetector(
                   onTap: () => setState(() => _selectedTab = i),
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
@@ -80,6 +83,7 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
                       ),
                     ),
                   ),
+                  ),
                 ),
               );
             }),
@@ -89,19 +93,28 @@ class _AchievementsCategorizedState extends State<_AchievementsCategorized> {
         const SizedBox(height: AppSpacing.md),
 
         // Achievement grid
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-            maxCrossAxisExtent: 140,
-            crossAxisSpacing: AppSpacing.sm,
-            mainAxisSpacing: AppSpacing.sm,
-            childAspectRatio: 0.72,
+        if (_filtered.isEmpty)
+          SizedBox(
+            height: 220,
+            child: EmptyStateWidget(
+              message: context.l10n.emptyState,
+              icon: Icons.emoji_events_outlined,
+            ),
+          )
+        else
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 140,
+              crossAxisSpacing: AppSpacing.sm,
+              mainAxisSpacing: AppSpacing.sm,
+              childAspectRatio: 0.72,
+            ),
+            itemCount: _filtered.length,
+            itemBuilder: (context, i) =>
+                _AchievementTile(achievement: _filtered[i], isDark: isDark),
           ),
-          itemCount: _filtered.length,
-          itemBuilder: (context, i) =>
-              _AchievementTile(achievement: _filtered[i], isDark: isDark),
-        ),
       ],
     );
   }
@@ -123,8 +136,11 @@ class _AchievementTile extends StatelessWidget {
     final hintColor = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
     final title = context.localizedAchievementTitle(achievement);
 
-    return GestureDetector(
-      onTap: () => _showAchievementDetail(context),
+    return Semantics(
+      button: true,
+      label: title,
+      child: GestureDetector(
+        onTap: () => _showAchievementDetail(context),
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.sm),
         decoration: BoxDecoration(
@@ -153,7 +169,7 @@ class _AchievementTile extends StatelessWidget {
               style: AppTypography.labelSmall.copyWith(
                 color: unlocked ? primary : hintColor,
                 fontWeight: unlocked ? FontWeight.w600 : FontWeight.w400,
-                fontSize: 9,
+                fontSize: 10,
               ),
               textAlign: TextAlign.center,
               maxLines: 2,
@@ -185,12 +201,12 @@ class _AchievementTile extends StatelessWidget {
                 '${achievement.currentValue}/${achievement.targetValue}',
                 style: AppTypography.labelSmall.copyWith(
                   color: hintColor,
-                  fontSize: 8,
                 ),
               ),
             ],
           ],
         ),
+      ),
       ),
     );
   }
@@ -264,13 +280,6 @@ class _AchievementTile extends StatelessWidget {
                     : primary,
                 backgroundColor: primary.withValues(alpha: 0.1),
                 barRadius: const Radius.circular(4),
-                center: Text(
-                  '${(achievement.progressPercent * 100).toStringAsFixed(0)}%',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: Colors.white,
-                    fontSize: 7,
-                  ),
-                ),
                 animation: true,
                 animationDuration: 500,
               ),

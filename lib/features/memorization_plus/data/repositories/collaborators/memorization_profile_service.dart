@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/error/app_failure.dart';
@@ -27,7 +27,7 @@ class MemorizationProfileService {
     try {
       return Right(await _loadProfile());
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -56,7 +56,7 @@ class MemorizationProfileService {
       await _prefs?.setBool(kIdentityCloudDirty, true);
       return Right(saved);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -79,7 +79,7 @@ class MemorizationProfileService {
       await _prefs?.setBool(kIdentityCloudDirty, true);
       return Right(saved);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -94,7 +94,7 @@ class MemorizationProfileService {
       await prefs.remove(AppConstants.kHifzPathMode);
       return Right(await _loadProfile());
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -102,7 +102,7 @@ class MemorizationProfileService {
     try {
       return Right(await _datasource.getSmartSettings());
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -115,7 +115,7 @@ class MemorizationProfileService {
       );
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -129,7 +129,7 @@ class MemorizationProfileService {
       );
       return Right(track);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -145,7 +145,7 @@ class MemorizationProfileService {
       if (failure != null) return Left(failure);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 

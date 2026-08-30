@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
@@ -71,10 +70,7 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
               ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  const TutorialGuideQuickStartCard()
-                      .animate()
-                      .fadeIn(duration: 300.ms)
-                      .slideY(begin: 0.05),
+                  const TutorialGuideQuickStartCard(),
                   const SizedBox(height: AppSpacing.md),
                   _SearchField(
                     controller: _searchController,
@@ -83,7 +79,7 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
                       _searchController.clear();
                       setState(() => _query = '');
                     },
-                  ).animate().fadeIn(duration: 320.ms, delay: 50.ms),
+                  ),
                   const SizedBox(height: AppSpacing.sm),
                   _CategoryChips(
                     categories: _categories,
@@ -91,7 +87,7 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
                     onSelected: (category) {
                       setState(() => _selectedCategory = category);
                     },
-                  ).animate().fadeIn(duration: 350.ms, delay: 100.ms),
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   if (sections.isEmpty)
                     const _EmptyGuideSearch()
@@ -101,15 +97,11 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
                         padding: const EdgeInsetsDirectional.only(
                           bottom: AppSpacing.sm,
                         ),
-                        child:
-                            TutorialGuideSectionCard(
-                              section: sections[index],
-                              initiallyExpanded:
-                                  _query.trim().isNotEmpty && index == 0,
-                            ).animate().fadeIn(
-                              duration: 280.ms,
-                              delay: (100 + index * 40).ms,
-                            ),
+                        child: TutorialGuideSectionCard(
+                          section: sections[index],
+                          initiallyExpanded:
+                              _query.trim().isNotEmpty && index == 0,
+                        ),
                       );
                     }),
                 ]),
@@ -133,6 +125,7 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
       elevation: 0,
       scrolledUnderElevation: 0.5,
       leading: IconButton(
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
         icon: Icon(
           Directionality.of(context) == TextDirection.rtl
               ? Icons.arrow_forward_rounded
@@ -233,7 +226,7 @@ class _AppBarBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 12, color: AppColors.goldLight),
+          Icon(icon, size: 12, color: Colors.white),
           const SizedBox(width: 4),
           Text(
             label,
@@ -279,6 +272,7 @@ class _SearchField extends StatelessWidget {
         suffixIcon: controller.text.isEmpty
             ? null
             : IconButton(
+                tooltip: context.l10n.clearSearch,
                 icon: const Icon(Icons.close_rounded, size: 18),
                 onPressed: onClear,
               ),

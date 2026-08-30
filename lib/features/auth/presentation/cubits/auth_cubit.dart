@@ -9,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
 import '../../domain/entities/app_user.dart';
+import '../../domain/entities/auth_error_code.dart';
 import '../../domain/entities/auth_session_recovery.dart';
 
 import '../../domain/repositories/auth_repository.dart';
@@ -72,27 +73,34 @@ class AuthCubit extends Cubit<AuthState> {
       (user) {
         if (isClosed) return;
 
-      // Skip auth state changes triggered during the password update flow;
+        // Skip auth state changes triggered during the password update flow;
 
-      // the cubit emits AuthPasswordUpdated explicitly after the repository
+        // the cubit emits AuthPasswordUpdated explicitly after the repository
 
-      // completes its combined updateUser + signOut operation.
+        // completes its combined updateUser + signOut operation.
 
-      if (_isUpdatingPassword) return;
+        if (_isUpdatingPassword) return;
 
         if (user != null) {
           emit(AuthAuthenticated(user: user));
 
-        // Cold start already synced from [currentUser]; skip duplicate auth event.
+          final isSameActiveSession = _activeAuthSessionOwnerId == user.id;
+          _activeAuthSessionOwnerId = user.id;
 
-          if (_skipNextAuthSync) {
-            _skipNextAuthSync = false;
-
+          if (_controlledIdentityTransitionDepth > 0) {
+            if (!isSameActiveSession) {
+              _controlledAuthSyncRequested = true;
+            }
             return;
           }
 
+          // Token refreshes can emit the same owner repeatedly. Only a new
+          // authenticated session boundary needs a full restore.
+          if (isSameActiveSession) return;
+
           unawaited(_runCloudSync());
         } else {
+          _activeAuthSessionOwnerId = null;
           emit(const AuthUnauthenticated());
         }
       },
@@ -121,9 +129,8 @@ class AuthCubit extends Cubit<AuthState> {
     final currentUser = _authRepository.currentUser;
 
     if (currentUser != null) {
+      _activeAuthSessionOwnerId = currentUser.id;
       emit(AuthAuthenticated(user: currentUser));
-
-      _skipNextAuthSync = true;
 
       unawaited(_runCloudSync());
     } else {
@@ -132,22 +139,50 @@ class AuthCubit extends Cubit<AuthState> {
   }
 
   Future<void> _runCloudSync() {
-    _syncInFlight ??= _handleAccountOwnerChange()
-        .then((_) => _cloudSyncCoordinator.run())
+    final requestedOwnerId = _authRepository.currentUser?.id;
+    final active = _syncInFlight;
+    if (active != null && requestedOwnerId == _syncTailOwnerId) {
+      return active;
+    }
+    final previous = active ?? Future<void>.value();
+    _syncTailOwnerId = requestedOwnerId;
+    late final Future<void> tail;
+    tail = previous
+        .then((_) async {
+          if (_authRepository.currentUser?.id != requestedOwnerId) return;
+          await _handleAccountOwnerChange(userId: requestedOwnerId);
+          await _cloudSyncCoordinator.run();
+        })
         .catchError((Object error, StackTrace stackTrace) {
           TaliaLogger.e('Unexpected cloud sync failure', error, stackTrace);
         })
-        .whenComplete(() => _syncInFlight = null);
-
-    return _syncInFlight!;
+        .whenComplete(() {
+          if (identical(_syncInFlight, tail)) {
+            _syncInFlight = null;
+            _syncTailOwnerId = null;
+          }
+        });
+    _syncInFlight = tail;
+    return tail;
   }
 
-  /// Returns a Future that completes when the in-flight cloud sync finishes.
+  /// Waits for the controlled auth transition and every sync tail it creates.
   ///
   /// On login the UI awaits this before routing, so the restored profile is
   /// available by the time routing logic reads it. On cold start this is not
   /// awaited (local data is still on-device).
-  Future<void> ensureCloudSyncComplete() => _syncInFlight ?? Future.value();
+  Future<void> ensureCloudSyncComplete() async {
+    while (true) {
+      final transition = _controlledIdentityTransitionCompleter?.future;
+      if (transition != null) {
+        await transition;
+        continue;
+      }
+      final syncTail = _syncInFlight;
+      if (syncTail == null) return;
+      await syncTail;
+    }
+  }
 
   static const lastSignedInUserIdKey = 'auth_last_signed_in_user_id';
 
@@ -176,31 +211,34 @@ class AuthCubit extends Cubit<AuthState> {
     return changed;
   }
 
-  Future<void> _handleAccountOwnerChange() async {
-    final prefs = _prefs;
-
-    final reset = _accountDataReset;
-
-    final userId = _authRepository.currentUser?.id;
-
-    if (prefs != null && reset != null && userId != null) {
-      final switched = await resolveOwnerChange(
-        prefs: prefs,
-
-        userId: userId,
-
-        onDepartingAccount: reset.clearAccountOwnedData,
-        onDepartingOwner: (departingOwnerId) =>
-            reset.clearAccountOwnedData(departingOwnerId: departingOwnerId),
+  Future<void> _handleAccountOwnerChange({String? userId}) async {
+    await _cloudSyncCoordinator.beginIdentityTransition();
+    try {
+      await _resolveAccountOwnerChange(
+        userId ?? _authRepository.currentUser?.id,
       );
+    } finally {
+      _cloudSyncCoordinator.endIdentityTransition();
+    }
+  }
 
-      if (switched) {
-        TaliaLogger.i(
-          'Account switch detected; cleared departing account data',
-        );
-
-        _progressEvents?.notify(ProgressChangedReason.certificate);
-        emit(AuthAccountDataDiscarded(user: _authRepository.currentUser!));
+  Future<void> _resolveAccountOwnerChange(String? userId) async {
+    final prefs = _prefs;
+    final reset = _accountDataReset;
+    if (prefs == null || reset == null || userId == null) return;
+    final switched = await resolveOwnerChange(
+      prefs: prefs,
+      userId: userId,
+      onDepartingAccount: reset.clearAccountOwnedData,
+      onDepartingOwner: (departingOwnerId) =>
+          reset.clearAccountOwnedData(departingOwnerId: departingOwnerId),
+    );
+    if (switched) {
+      TaliaLogger.i('Account switch detected; cleared departing account data');
+      _progressEvents?.notify(ProgressChangedReason.certificate);
+      final user = _authRepository.currentUser;
+      if (user != null && !isClosed) {
+        emit(AuthAccountDataDiscarded(user: user));
       }
     }
   }
@@ -247,50 +285,99 @@ class AuthCubit extends Cubit<AuthState> {
 
   bool _isUpdatingPassword = false;
 
-  /// Prevents duplicate sync when [currentUser] and the initial auth stream
-
-  /// event both fire on cold start.
-
-  bool _skipNextAuthSync = false;
-
   Future<void>? _syncInFlight;
 
+  String? _syncTailOwnerId;
+
+  int _controlledIdentityTransitionDepth = 0;
+
+  bool _controlledAuthSyncRequested = false;
+
+  String? _activeAuthSessionOwnerId;
+
+  Completer<void>? _controlledIdentityTransitionCompleter;
+
   Future<void>? _authRecoveryInFlight;
+
+  Future<void> _beginControlledIdentityTransition() async {
+    if (_controlledIdentityTransitionDepth == 0) {
+      _controlledIdentityTransitionCompleter = Completer<void>();
+    }
+    _controlledIdentityTransitionDepth += 1;
+    final activeSync = _syncInFlight;
+    try {
+      await _cloudSyncCoordinator.beginIdentityTransition();
+      await activeSync;
+    } catch (_) {
+      _cloudSyncCoordinator.endIdentityTransition();
+      _controlledIdentityTransitionDepth -= 1;
+      if (_controlledIdentityTransitionDepth == 0) {
+        final transition = _controlledIdentityTransitionCompleter;
+        _controlledIdentityTransitionCompleter = null;
+        transition?.complete();
+      }
+      rethrow;
+    }
+  }
+
+  void _endControlledIdentityTransition({bool syncCurrentOwner = false}) {
+    _cloudSyncCoordinator.endIdentityTransition();
+    _controlledIdentityTransitionDepth -= 1;
+    if (_controlledIdentityTransitionDepth != 0) return;
+    final shouldSync =
+        (syncCurrentOwner || _controlledAuthSyncRequested) &&
+        _authRepository.currentUser != null;
+    _controlledAuthSyncRequested = false;
+    if (shouldSync) {
+      _activeAuthSessionOwnerId = _authRepository.currentUser!.id;
+      unawaited(_runCloudSync());
+    }
+    final transition = _controlledIdentityTransitionCompleter;
+    _controlledIdentityTransitionCompleter = null;
+    transition?.complete();
+  }
 
   Future<void> _recoverFromAuthStreamError(
     Object error,
     StackTrace stackTrace,
   ) {
-    _authRecoveryInFlight ??= _performAuthRecovery(error, stackTrace)
-        .whenComplete(() => _authRecoveryInFlight = null);
+    _authRecoveryInFlight ??= _performAuthRecovery(
+      error,
+      stackTrace,
+    ).whenComplete(() => _authRecoveryInFlight = null);
     return _authRecoveryInFlight!;
   }
 
-  Future<void> _performAuthRecovery(
-    Object error,
-    StackTrace stackTrace,
-  ) async {
+  Future<void> _performAuthRecovery(Object error, StackTrace stackTrace) async {
     TaliaLogger.w('Auth lifecycle stream error', error, stackTrace);
-    final result = await _authRepository.recoverSessionAfterAuthError(error);
-    if (isClosed) return;
+    await _beginControlledIdentityTransition();
+    var syncCurrentOwner = false;
+    try {
+      final result = await _authRepository.recoverSessionAfterAuthError(error);
+      if (isClosed) return;
 
-    switch (result) {
-      case AuthSessionRecovery.recovered:
-        final user = _authRepository.currentUser;
-        if (user != null) {
-          emit(AuthAuthenticated(user: user));
-          unawaited(_runCloudSync());
-        } else {
+      switch (result) {
+        case AuthSessionRecovery.recovered:
+          final user = _authRepository.currentUser;
+          if (user != null) {
+            await _resolveAccountOwnerChange(user.id);
+            emit(AuthAuthenticated(user: user));
+            syncCurrentOwner = true;
+          } else {
+            emit(const AuthUnauthenticated());
+          }
+          return;
+        case AuthSessionRecovery.terminalFailure:
+          _activeAuthSessionOwnerId = null;
           emit(const AuthUnauthenticated());
-        }
-        return;
-      case AuthSessionRecovery.terminalFailure:
-        emit(const AuthUnauthenticated());
-        return;
-      case AuthSessionRecovery.transientFailure:
-        // Keep the current authenticated UI and pending local data. A lifecycle
-        // event or the next data request will make one bounded recovery attempt.
-        return;
+          return;
+        case AuthSessionRecovery.transientFailure:
+          // Keep the current authenticated UI and pending local data. A lifecycle
+          // event or the next data request will make one bounded recovery attempt.
+          return;
+      }
+    } finally {
+      _endControlledIdentityTransition(syncCurrentOwner: syncCurrentOwner);
     }
   }
 
@@ -302,59 +389,81 @@ class AuthCubit extends Cubit<AuthState> {
     required String displayName,
   }) async {
     emit(const AuthLoading());
-
-    final result = await _authRepository.signUp(
-      email: email,
-
-      password: password,
-
-      displayName: displayName,
-    );
-
-    if (isClosed) return;
-
-    result.fold((failure) => emit(AuthError(failure.toString())), (_) {
-      // Auth state stream emits AuthAuthenticated when Supabase session updates.
-    });
+    await _beginControlledIdentityTransition();
+    var syncCurrentOwner = false;
+    try {
+      final result = await _authRepository.signUp(
+        email: email,
+        password: password,
+        displayName: displayName,
+      );
+      if (isClosed) return;
+      await result.fold(
+        (failure) async => emit(AuthError(failure.toString())),
+        (user) async {
+          await _resolveAccountOwnerChange(user.id);
+          syncCurrentOwner = true;
+        },
+      );
+    } finally {
+      _endControlledIdentityTransition(syncCurrentOwner: syncCurrentOwner);
+    }
   }
 
   Future<void> signIn({required String email, required String password}) async {
     emit(const AuthLoading());
-
-    final result = await _authRepository.signIn(
-      email: email,
-
-      password: password,
-    );
-
-    if (isClosed) return;
-
-    result.fold((failure) => emit(AuthError(failure.toString())), (_) {
-      // Auth state stream emits AuthAuthenticated when Supabase session updates.
-    });
+    await _beginControlledIdentityTransition();
+    var syncCurrentOwner = false;
+    try {
+      final result = await _authRepository.signIn(
+        email: email,
+        password: password,
+      );
+      if (isClosed) return;
+      await result.fold(
+        (failure) async => emit(AuthError(failure.toString())),
+        (user) async {
+          await _resolveAccountOwnerChange(user.id);
+          syncCurrentOwner = true;
+        },
+      );
+    } finally {
+      _endControlledIdentityTransition(syncCurrentOwner: syncCurrentOwner);
+    }
   }
 
   Future<void> signOut({bool force = false}) async {
     emit(const AuthLoading());
-    final flushed = await _flushBeforeExplicitSignOut();
-    if (!force && !flushed) {
-      if (isClosed) return;
-      final user = _authRepository.currentUser;
-      if (user != null) {
-        emit(AuthSignOutBlockedPendingData(user: user));
-      } else {
-        emit(const AuthUnauthenticated());
+    await _beginControlledIdentityTransition();
+    try {
+      final flushed = await _flushBeforeExplicitSignOut();
+      if (!force && !flushed) {
+        if (isClosed) return;
+        final user = _authRepository.currentUser;
+        if (user != null) {
+          emit(AuthSignOutBlockedPendingData(user: user));
+        } else {
+          emit(const AuthUnauthenticated());
+        }
+        return;
       }
-      return;
+
+      if (force && !flushed) {
+        await _cloudSyncCoordinator.preservePendingSignOutWork();
+      }
+
+      final result = await _authRepository.signOut(
+        preserveAccountData: force && !flushed,
+      );
+
+      if (isClosed) return;
+
+      result.fold((failure) => emit(AuthError(failure.toString())), (_) {
+        // Auth state stream emits AuthUnauthenticated when Supabase session clears.
+      });
+    } finally {
+      _endControlledIdentityTransition();
     }
-
-    final result = await _authRepository.signOut();
-
-    if (isClosed) return;
-
-    result.fold((failure) => emit(AuthError(failure.toString())), (_) {
-      // Auth state stream emits AuthUnauthenticated when Supabase session clears.
-    });
   }
 
   /// Imports guest review records only after the signed-in user confirms it.
@@ -370,16 +479,17 @@ class AuthCubit extends Cubit<AuthState> {
 
   Future<void> deleteAccount() async {
     emit(const AuthLoading());
-
-    final result = await _authRepository.deleteAccount();
-
-    if (isClosed) return;
-
-    result.fold(
-      (failure) => emit(AuthError(failure.toString())),
-
-      (_) => emit(const AuthAccountDeleted()),
-    );
+    await _beginControlledIdentityTransition();
+    try {
+      final result = await _authRepository.deleteAccount();
+      if (isClosed) return;
+      result.fold(
+        (failure) => emit(AuthError(failure.toString())),
+        (_) => emit(const AuthAccountDeleted()),
+      );
+    } finally {
+      _endControlledIdentityTransition();
+    }
   }
 
   /// Resend confirmation email for unconfirmed accounts
@@ -418,8 +528,16 @@ class AuthCubit extends Cubit<AuthState> {
     emit(const AuthLoading());
 
     _isUpdatingPassword = true;
-
+    await _beginControlledIdentityTransition();
     try {
+      final flushed = await _flushBeforeExplicitSignOut();
+      if (!flushed) {
+        if (!isClosed) {
+          emit(AuthError(AuthErrorCode.networkError.name));
+        }
+        return;
+      }
+
       final result = await _authRepository.updatePassword(newPassword);
 
       if (isClosed) return;
@@ -431,6 +549,7 @@ class AuthCubit extends Cubit<AuthState> {
       );
     } finally {
       _isUpdatingPassword = false;
+      _endControlledIdentityTransition();
     }
   }
 

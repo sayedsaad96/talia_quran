@@ -5,6 +5,7 @@ import 'package:just_audio/just_audio.dart';
 
 import '../services/audio_cache_service.dart';
 import '../services/audio_lifecycle_manager.dart';
+import '../extensions/context_extensions.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
@@ -95,7 +96,7 @@ class _AyahListenButtonState extends State<AyahListenButton> {
         setState(() {
           _isPlaying = false;
           _isLoading = false;
-          _error = 'تعذّر تشغيل الصوت';
+          _error = context.l10n.audioPlayError;
         });
         // Auto-clear error after 3s
         Future.delayed(const Duration(seconds: 3), () {
@@ -132,7 +133,7 @@ class _AyahListenButtonState extends State<AyahListenButton> {
     final buttonColor = _error != null
         ? AppColors.error
         : _isPlaying
-        ? AppColors.gold
+        ? (isDark ? AppColors.primaryLight : AppColors.primary)
         : (isDark ? AppColors.primaryLight : AppColors.primary);
 
     final containerSize = isSmall ? 36.0 : 48.0;
@@ -140,10 +141,10 @@ class _AyahListenButtonState extends State<AyahListenButton> {
 
     return Semantics(
       button: true,
-      label: _isPlaying ? 'إيقاف تلاوة الآية' : 'استماع للآية',
-      child: GestureDetector(
-        onTap: _toggle,
-        behavior: HitTestBehavior.opaque,
+      label: _isPlaying ? context.l10n.stop : context.l10n.v2ListenToAyah,
+      child: InkWell(
+        onTap: _isLoading ? null : _toggle,
+        borderRadius: BorderRadius.circular(24),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           child: Center(
@@ -157,16 +158,18 @@ class _AyahListenButtonState extends State<AyahListenButton> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: _isPlaying
-                        ? AppColors.gold.withValues(alpha: 0.15)
+                        ? buttonColor.withValues(alpha: 0.15)
                         : (isDark ? AppColors.darkCard : AppColors.lightCard),
                     border: Border.all(
-                      color: buttonColor.withValues(alpha: _isPlaying ? 1.0 : 0.6),
+                      color: buttonColor.withValues(
+                        alpha: _isPlaying ? 1.0 : 0.6,
+                      ),
                       width: 2,
                     ),
                     boxShadow: _isPlaying
                         ? [
                             BoxShadow(
-                              color: AppColors.gold.withValues(alpha: 0.3),
+                              color: buttonColor.withValues(alpha: 0.24),
                               blurRadius: 10,
                               spreadRadius: 2,
                             ),
@@ -187,7 +190,7 @@ class _AyahListenButtonState extends State<AyahListenButton> {
                               : _isPlaying
                               ? Icons.pause_rounded
                               : Icons.headphones_rounded,
-                          color: _isPlaying ? AppColors.gold : buttonColor,
+                          color: buttonColor,
                           size: iconSize,
                         ),
                 ),
@@ -196,15 +199,19 @@ class _AyahListenButtonState extends State<AyahListenButton> {
                   Text(
                     widget.label ??
                         (_error != null
-                            ? 'خطأ'
+                            ? context.l10n.errorOccurred
                             : _isPlaying
-                            ? 'إيقاف'
-                            : 'استمع'),
+                            ? context.l10n.stop
+                            : context.l10n.listen),
                     style: AppTypography.labelSmall.copyWith(
                       color: _isPlaying
-                          ? AppColors.gold
-                          : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
-                      fontWeight: _isPlaying ? FontWeight.bold : FontWeight.normal,
+                          ? buttonColor
+                          : (isDark
+                                ? AppColors.darkTextSecondary
+                                : AppColors.lightTextSecondary),
+                      fontWeight: _isPlaying
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
                 ],

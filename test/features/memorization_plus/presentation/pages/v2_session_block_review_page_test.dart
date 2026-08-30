@@ -13,6 +13,36 @@ import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
 void main() {
   group('V2 block review UI', () {
+    for (final issue in <V2SpeechIssue>[
+      V2SpeechIssue.permissionDenied,
+      V2SpeechIssue.permissionPermanentlyDenied,
+      V2SpeechIssue.unavailable,
+      V2SpeechIssue.noSpeech,
+    ]) {
+      testWidgets(
+        'recitation exposes manual self-grade when speech issue is ${issue.name}',
+        (tester) async {
+          final cubit = _FakeMemorizationSessionCubit(
+            _activeState(phase: V2SessionPhase.reciting, speechIssue: issue),
+          );
+
+          await tester.pumpWidget(
+            _TestApp(
+              cubit: cubit,
+              child: V2RecitationPage(state: cubit.state as MSActive),
+            ),
+          );
+
+          final action = find.byKey(const ValueKey('v2-manual-recall'));
+          expect(action, findsOneWidget);
+          await tester.tap(action);
+          await tester.pump();
+
+          expect(cubit.manualRecallCalls, 1);
+        },
+      );
+    }
+
     testWidgets('pending screen starts block review through the cubit', (
       tester,
     ) async {
@@ -60,6 +90,14 @@ void main() {
         await tester.pump();
 
         expect(cubit.startRecordingCalls, 1);
+
+        final manualAction = find.byKey(
+          const ValueKey('v2-manual-block-review'),
+        );
+        expect(manualAction, findsOneWidget);
+        await tester.tap(manualAction);
+        await tester.pump();
+        expect(cubit.manualRecallCalls, 1);
       },
     );
   });
@@ -97,6 +135,7 @@ class _FakeMemorizationSessionCubit extends Cubit<MemorizationSessionState>
   int startBlockReviewCalls = 0;
   int startRecordingCalls = 0;
   int stopRecordingCalls = 0;
+  int manualRecallCalls = 0;
 
   @override
   Future<void> startBlockReview() async {
@@ -114,10 +153,18 @@ class _FakeMemorizationSessionCubit extends Cubit<MemorizationSessionState>
   }
 
   @override
+  Future<void> submitManualRecall() async {
+    manualRecallCalls += 1;
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-MSActive _activeState({required V2SessionPhase phase}) {
+MSActive _activeState({
+  required V2SessionPhase phase,
+  V2SpeechIssue? speechIssue,
+}) {
   return MSActive(
     sessionState: V2SessionState(
       surahId: 1,
@@ -146,5 +193,6 @@ MSActive _activeState({required V2SessionPhase phase}) {
     isPlaying: false,
     recognizedText: '',
     isEvaluating: false,
+    speechIssue: speechIssue,
   );
 }

@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -8,6 +6,7 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
 import '../router/launch_destination.dart';
+import '../content/approved_azkar_content.dart';
 import '../utils/talia_logger.dart';
 
 /// Smart notification service for Talia Quran.
@@ -465,7 +464,11 @@ class TaliaNotificationService {
       } catch (error, stack) {
         // Mirrors the Android branch: a plugin failure here must never
         // escape — this runs unawaited during startup.
-        TaliaLogger.w('iOS notification permission request failed', error, stack);
+        TaliaLogger.w(
+          'iOS notification permission request failed',
+          error,
+          stack,
+        );
       }
     } else if (Platform.isAndroid) {
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
@@ -587,11 +590,13 @@ class TaliaNotificationService {
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _morningAzkarId);
+    final approvedTexts = await _loadApprovedAzkarTexts('morning');
+    if (approvedTexts.isEmpty) return;
 
     await _plugin.zonedSchedule(
       id: _morningAzkarId,
       title: title,
-      body: body,
+      body: approvedTexts.first,
       scheduledDate: _nextInstanceOfTime(hour, minute),
       notificationDetails: _morningAzkarNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -615,11 +620,13 @@ class TaliaNotificationService {
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _eveningAzkarId);
+    final approvedTexts = await _loadApprovedAzkarTexts('evening');
+    if (approvedTexts.isEmpty) return;
 
     await _plugin.zonedSchedule(
       id: _eveningAzkarId,
       title: title,
-      body: body,
+      body: approvedTexts.first,
       scheduledDate: _nextInstanceOfTime(hour, minute),
       notificationDetails: _eveningAzkarNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
@@ -646,7 +653,7 @@ class TaliaNotificationService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await cancelDailyDuaReminder();
 
-    final duas = await _loadDailyDuas();
+    final duas = await _loadApprovedAzkarTexts('duas');
     // Fail safe: no corpus → no religious notification content at all.
     if (duas.isEmpty) return;
 
@@ -747,6 +754,18 @@ class TaliaNotificationService {
     String type = 'azkar',
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
+    final azkarCategory = switch (type) {
+      'azkar' => 'morning',
+      'evening_azkar' => 'evening',
+      'dua' => 'duas',
+      _ => null,
+    };
+    var notificationBody = body;
+    if (azkarCategory != null) {
+      final approvedTexts = await _loadApprovedAzkarTexts(azkarCategory);
+      if (approvedTexts.isEmpty) return;
+      notificationBody = approvedTexts.first;
+    }
     await requestPermissions();
 
     final testDetails = switch (type) {
@@ -770,7 +789,7 @@ class TaliaNotificationService {
     await _plugin.show(
       id: 9999,
       title: title,
-      body: body,
+      body: notificationBody,
       notificationDetails: testDetails,
       payload: payload,
     );
@@ -800,7 +819,7 @@ class TaliaNotificationService {
     return scheduled;
   }
 
-  List<String>? _cachedDuas;
+  final Map<String, List<String>> _cachedAzkarTexts = {};
 
   /// Loads daily dua bodies from the bundled approved corpus only.
   ///
@@ -808,21 +827,17 @@ class TaliaNotificationService {
   /// unavailable, the caller skips scheduling instead of emitting unapproved
   /// religious text (V1-M4). Text is passed through verbatim — never
   /// truncated or rewritten.
-  Future<List<String>> _loadDailyDuas() async {
-    if (_cachedDuas != null) return _cachedDuas!;
+  Future<List<String>> _loadApprovedAzkarTexts(String category) async {
+    if (_cachedAzkarTexts.containsKey(category)) {
+      return _cachedAzkarTexts[category]!;
+    }
     try {
-      final jsonStr = await rootBundle.loadString('assets/data/azkar.json');
-      final data = await compute(
-        (String str) => jsonDecode(str) as Map<String, dynamic>,
-        jsonStr,
+      final source = await rootBundle.loadString(
+        'assets/data/azkar_release.json',
       );
-      final duas = (data['duas'] as List<dynamic>? ?? const [])
-          .map((item) => item as Map<String, dynamic>)
-          .map((item) => item['text'] as String? ?? '')
-          .where((text) => text.trim().isNotEmpty)
-          .toList();
-      _cachedDuas = duas;
-      return duas;
+      final texts = extractApprovedAzkarTexts(source, category: category);
+      _cachedAzkarTexts[category] = texts;
+      return texts;
     } catch (_) {
       // Keep notification scheduling resilient if assets are unavailable.
       return const [];

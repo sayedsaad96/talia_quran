@@ -18,6 +18,10 @@ abstract class PrivacyPolicyContent {
       'مرحباً بك في تطبيق تالية. تم إعداد سياسة الخصوصية هذه لمساعدتك في فهم كيفية جمع المعلومات واستخدامها وحمايتها عند استخدام تطبيقنا، مع قسم خاص مخصص لخصوصية الأطفال.';
   static const String enIntroSubtitle =
       'Welcome to Talia. This Privacy Policy is designed to help you understand how we collect, use, and safeguard the information you provide to us when using our app, with a special section dedicated to children\'s privacy.';
+  static const String arManualOptionAction =
+      'افتح الحفظ لاستخدام التقييم الذاتي';
+  static const String enManualOptionAction =
+      'Open memorization to use manual self-grade';
 
   static List<PrivacySection> getArabicContent() {
     return const [

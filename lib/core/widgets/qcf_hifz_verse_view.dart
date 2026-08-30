@@ -194,7 +194,7 @@ class _QcfContent extends StatelessWidget {
           );
         }
 
-        spans.add(TextSpan(text: '$rawVerseText '));
+        spans.add(TextSpan(text: rawVerseText));
       }
 
       final qcfStyle = qcf.QuranTextStyles.qcfStyle(

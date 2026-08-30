@@ -1,14 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
 import '../extensions/context_extensions.dart';
 import '../router/app_router.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_decorations.dart';
-import '../constants/app_spacing.dart';
 import '../theme/app_typography.dart';
 
 class AppShell extends StatelessWidget {
@@ -67,7 +63,6 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       body: navigationShell,
-      extendBody: true,
       bottomNavigationBar: _TaliaBottomNav(
         currentIndex: navigationShell.currentIndex,
         isDark: isDark,
@@ -102,8 +97,10 @@ class _TaliaNavRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final labels = _labels(context);
-    final selectedColor = isDark ? AppColors.goldLight : AppColors.primary;
-    final unselectedColor = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
+    final selectedColor = isDark ? AppColors.primaryLight : AppColors.primary;
+    final unselectedColor = isDark
+        ? AppColors.darkTextHint
+        : AppColors.lightTextHint;
 
     return NavigationRail(
       selectedIndex: currentIndex,
@@ -119,9 +116,7 @@ class _TaliaNavRail extends StatelessWidget {
       unselectedLabelTextStyle: AppTypography.labelMedium.copyWith(
         color: unselectedColor,
       ),
-      indicatorColor: isDark
-          ? AppColors.gold.withValues(alpha: 0.18)
-          : AppColors.primary.withValues(alpha: 0.12),
+      indicatorColor: selectedColor.withValues(alpha: isDark ? 0.2 : 0.12),
       destinations: List.generate(
         tabs.length,
         (i) => NavigationRailDestination(
@@ -158,123 +153,47 @@ class _TaliaBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final labels = _labels(context);
+    final selectedColor = isDark ? AppColors.primaryLight : AppColors.primary;
+    final unselectedColor = isDark
+        ? AppColors.darkTextHint
+        : AppColors.lightTextHint;
 
     return SafeArea(
       top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              decoration: AppDecorations.floatingGlass(
-                isDark: isDark,
-                radius: AppSpacing.radiusFull,
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-              child: Row(
-                children: [
-                  ...List.generate(tabs.length, (i) {
-                    final isSelected = i == currentIndex;
-                    return Expanded(
-                      child: _NavItem(
-                        icon: tabs[i].icon,
-                        label: labels[i],
-                        isSelected: isSelected,
-                        isDark: isDark,
-                        onTap: () => onTap(i),
-                      ),
-                    );
-                  }),
-                ],
-              ),
+      child: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          backgroundColor: isDark
+              ? AppColors.darkSurface
+              : AppColors.lightSurface,
+          indicatorColor: selectedColor.withValues(alpha: isDark ? 0.2 : 0.12),
+          iconTheme: WidgetStateProperty.resolveWith((states) {
+            final selected = states.contains(WidgetState.selected);
+            return IconThemeData(
+              color: selected ? selectedColor : unselectedColor,
+              size: 24,
+            );
+          }),
+          labelTextStyle: WidgetStateProperty.resolveWith((states) {
+            final selected = states.contains(WidgetState.selected);
+            return AppTypography.labelSmall.copyWith(
+              color: selected ? selectedColor : unselectedColor,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+            );
+          }),
+        ),
+        child: NavigationBar(
+          selectedIndex: currentIndex,
+          onDestinationSelected: onTap,
+          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+          destinations: List.generate(
+            tabs.length,
+            (i) => NavigationDestination(
+              icon: Icon(tabs[i].icon),
+              selectedIcon: Icon(tabs[i].icon),
+              label: labels[i],
+              tooltip: labels[i],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon,
-    required this.label,
-    required this.isSelected,
-    required this.isDark,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool isSelected;
-  final bool isDark;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = isDark ? AppColors.goldLight : AppColors.primary;
-    final inactive = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
-    final color = isSelected ? primary : inactive;
-
-    return Semantics(
-      label: label,
-      selected: isSelected,
-      button: true,
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? (isDark
-                          ? AppColors.gold.withValues(alpha: 0.18)
-                          : AppColors.primary.withValues(alpha: 0.12))
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(
-                    AppSpacing.radiusFull,
-                  ),
-                ),
-                child: Icon(icon, color: color, size: 22),
-              ),
-              const SizedBox(height: 2),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: AppTypography.labelSmall.copyWith(
-                  color: color,
-                  fontWeight: isSelected
-                      ? FontWeight.w700
-                      : FontWeight.w400,
-                  fontSize: 10.5,
-                ),
-                child: Text(label),
-              ),
-              const SizedBox(height: 2),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 220),
-                curve: Curves.easeOutCubic,
-                width: isSelected ? 4 : 0,
-                height: isSelected ? 4 : 0,
-                decoration: BoxDecoration(
-                  color: primary,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ],
-          ).animate(target: isSelected ? 1 : 0).scaleXY(begin: 1, end: 1.05, duration: 150.ms),
         ),
       ),
     );

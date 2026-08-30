@@ -16,6 +16,14 @@ import 'social_share_card.dart';
 import 'social_share_copy.dart';
 import '../../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 
+/// Preserves the active locale when [child] is rendered outside the app tree.
+Widget buildSocialShareCaptureTree({
+  required BuildContext context,
+  required Widget child,
+}) {
+  return Localizations.override(context: context, child: child);
+}
+
 class SocialShareSheet extends StatefulWidget {
   final SocialShareData data;
 
@@ -25,10 +33,9 @@ class SocialShareSheet extends StatefulWidget {
     // Opening the sheet must never wait indefinitely for profile storage.
     // The default presentation is safe while a slow/unavailable profile read
     // falls back to the supplied data.
-    final resolvedData = await _resolveAudience(data).timeout(
-      const Duration(milliseconds: 300),
-      onTimeout: () => data,
-    );
+    final resolvedData = await _resolveAudience(
+      data,
+    ).timeout(const Duration(milliseconds: 300), onTimeout: () => data);
     if (!context.mounted) return;
     return showModalBottomSheet(
       context: context,
@@ -50,7 +57,8 @@ class SocialShareSheet extends StatefulWidget {
               : SocialShareAudience.adult,
           // A character supports the playful kids track but does not dominate
           // the refined adult variants.
-          showCharacter: profile.isChild && data.category != SocialShareCategory.quranAyah,
+          showCharacter:
+              profile.isChild && data.category != SocialShareCategory.quranAyah,
         ),
       );
       return resolved;
@@ -83,13 +91,15 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
     );
   }
 
-  SocialShareTheme get _currentTheme => SocialShareTheme.get(_selectedThemeType);
+  SocialShareTheme get _currentTheme =>
+      SocialShareTheme.get(_selectedThemeType);
 
   Future<Uint8List?> _captureCardImage() async {
     try {
       final size = _selectedFormat.exportLogicalSize;
-      return await _screenshotController.captureFromWidget(
-        SizedBox(
+      final captureTree = buildSocialShareCaptureTree(
+        context: context,
+        child: SizedBox(
           width: size.width,
           height: size.height,
           child: SocialShareCard(
@@ -101,6 +111,9 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
             hideUserName: !_showUserName,
           ),
         ),
+      );
+      return await _screenshotController.captureFromWidget(
+        captureTree,
         context: context,
         delay: const Duration(milliseconds: 200),
         pixelRatio: 3.0,
@@ -210,10 +223,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
 
   void _showSnackBar(String text) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(text),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(text), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -248,7 +258,9 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                    color: isDark
+                        ? AppColors.darkDivider
+                        : AppColors.lightDivider,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -281,6 +293,9 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                       ],
                     ),
                     IconButton(
+                      tooltip: MaterialLocalizations.of(
+                        context,
+                      ).closeButtonTooltip,
                       icon: const Icon(Icons.close_rounded),
                       onPressed: () => Navigator.pop(context),
                     ),
@@ -295,12 +310,16 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
               // no capture boundary is needed around the preview itself.
               Flexible(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
                   child: Center(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
                       child: SocialShareCard(
-                        key: ValueKey('$_selectedThemeType-$_selectedFormat-$_showUserName'),
+                        key: ValueKey(
+                          '$_selectedThemeType-$_selectedFormat-$_showUserName',
+                        ),
                         data: widget.data,
                         theme: _currentTheme,
                         format: _selectedFormat,
@@ -330,7 +349,9 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                           size: 14,
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
+                              : (isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary),
                         ),
                         label: Text(copy.formatName(fmt)),
                         selected: isSelected,
@@ -340,19 +361,27 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                             setState(() => _selectedFormat = fmt);
                           }
                         },
-                        selectedColor: AppColors.primary.withValues(alpha: 0.18),
+                        selectedColor: AppColors.primary.withValues(
+                          alpha: 0.18,
+                        ),
                         backgroundColor: isDark
                             ? AppColors.darkSurfaceVariant
                             : AppColors.lightSurfaceVariant,
                         labelStyle: TextStyle(
                           color: isSelected
                               ? AppColors.primary
-                              : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+                              : (isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary),
                           fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                         side: BorderSide(
-                          color: isSelected ? AppColors.primary : Colors.transparent,
+                          color: isSelected
+                              ? AppColors.primary
+                              : Colors.transparent,
                         ),
                       ),
                     );
@@ -360,183 +389,189 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                 ),
               ),
 
-          const SizedBox(height: AppSpacing.xs),
+              const SizedBox(height: AppSpacing.xs),
 
-          // Theme Selector Section
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Text(
-                copy.chooseStyle,
-                style: AppTypography.labelSmall.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextSecondary
-                      : AppColors.lightTextSecondary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.xs),
-
-          SizedBox(
-            height: 48,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              itemCount: SocialShareThemeType.values.length,
-              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.xs),
-              itemBuilder: (context, index) {
-                final themeType = SocialShareThemeType.values[index];
-                final isSelected = themeType == _selectedThemeType;
-                final themeObj = SocialShareTheme.get(themeType);
-
-                return _ThemePreviewTile(
-                  theme: themeObj,
-                  displayName: copy.themeName(themeType),
-                  isSelected: isSelected,
-                  isDark: isDark,
-                  onTap: () {
-                    unawaited(HapticFeedback.selectionClick());
-                    setState(() => _selectedThemeType = themeType);
-                  },
-                );
-              },
-            ),
-          ),
-
-          const SizedBox(height: AppSpacing.sm),
-
-          // ─── Name visibility toggle (only if a name was provided) ─────────
-          if (widget.data.userName != null && widget.data.userName!.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    copy.showNameLabel,
+              // Theme Selector Section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    copy.chooseStyle,
                     style: AppTypography.labelSmall.copyWith(
                       color: isDark
                           ? AppColors.darkTextSecondary
                           : AppColors.lightTextSecondary,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  Transform.scale(
-                    scale: 0.8,
-                    child: Switch(
-                      value: _showUserName,
-                      activeThumbColor: AppColors.primary,
-                      onChanged: (v) {
-                        unawaited(HapticFeedback.selectionClick());
-                        setState(() => _showUserName = v);
-                      },
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
 
-          const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: AppSpacing.xs),
 
-          // Action Buttons
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
-            child: Row(
-              children: [
-                // Primary Share Image Button
-                Expanded(
-                  flex: 3,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 3),
+              SizedBox(
+                height: 48,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  itemCount: SocialShareThemeType.values.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: AppSpacing.xs),
+                  itemBuilder: (context, index) {
+                    final themeType = SocialShareThemeType.values[index];
+                    final isSelected = themeType == _selectedThemeType;
+                    final themeObj = SocialShareTheme.get(themeType);
+
+                    return _ThemePreviewTile(
+                      theme: themeObj,
+                      displayName: copy.themeName(themeType),
+                      isSelected: isSelected,
+                      isDark: isDark,
+                      onTap: () {
+                        unawaited(HapticFeedback.selectionClick());
+                        setState(() => _selectedThemeType = themeType);
+                      },
+                    );
+                  },
+                ),
+              ),
+
+              const SizedBox(height: AppSpacing.sm),
+
+              // ─── Name visibility toggle (only if a name was provided) ─────────
+              if (widget.data.userName != null &&
+                  widget.data.userName!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.md,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        copy.showNameLabel,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
                         ),
-                      ],
-                    ),
-                    child: ElevatedButton.icon(
-                      onPressed: _isExporting ? null : _shareAsImage,
-                      icon: _isExporting
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Icon(Icons.send_rounded, size: 18),
-                      label: Text(
-                        _isExporting ? copy.preparing : copy.shareAsImage,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
+                      Transform.scale(
+                        scale: 0.8,
+                        child: Switch(
+                          value: _showUserName,
+                          activeThumbColor: AppColors.primary,
+                          onChanged: (v) {
+                            unawaited(HapticFeedback.selectionClick());
+                            setState(() => _showUserName = v);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              const SizedBox(height: AppSpacing.sm),
+
+              // Action Buttons
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Row(
+                  children: [
+                    // Primary Share Image Button
+                    Expanded(
+                      flex: 3,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: AppColors.primaryGradient,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.primary.withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: _isExporting ? null : _shareAsImage,
+                          icon: _isExporting
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Icon(Icons.send_rounded, size: 18),
+                          label: Text(
+                            _isExporting ? copy.preparing : copy.shareAsImage,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(width: AppSpacing.xs),
+
+                    // Save to Gallery
+                    IconButton.filledTonal(
+                      onPressed: _isExporting ? null : _saveToGallery,
+                      icon: const Icon(Icons.download_rounded, size: 20),
+                      tooltip: copy.saveToGalleryTooltip,
+                      style: IconButton.styleFrom(
+                        backgroundColor: isDark
+                            ? AppColors.darkSurfaceVariant
+                            : AppColors.lightSurfaceVariant,
+                        foregroundColor: AppColors.primary,
+                        padding: const EdgeInsets.all(14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                     ),
-                  ),
-                ),
 
-                const SizedBox(width: AppSpacing.xs),
+                    const SizedBox(width: AppSpacing.xs),
 
-                // Save to Gallery
-                IconButton.filledTonal(
-                  onPressed: _isExporting ? null : _saveToGallery,
-                  icon: const Icon(Icons.download_rounded, size: 20),
-                  tooltip: copy.saveToGalleryTooltip,
-                  style: IconButton.styleFrom(
-                    backgroundColor: isDark
-                        ? AppColors.darkSurfaceVariant
-                        : AppColors.lightSurfaceVariant,
-                    foregroundColor: AppColors.primary,
-                    padding: const EdgeInsets.all(14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                    // Share as Text
+                    IconButton.filledTonal(
+                      onPressed: _isExporting ? null : _shareAsText,
+                      icon: const Icon(Icons.short_text_rounded, size: 20),
+                      tooltip: copy.shareAsTextTooltip,
+                      style: IconButton.styleFrom(
+                        backgroundColor: isDark
+                            ? AppColors.darkSurfaceVariant
+                            : AppColors.lightSurfaceVariant,
+                        foregroundColor: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                        padding: const EdgeInsets.all(14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-
-                const SizedBox(width: AppSpacing.xs),
-
-                // Share as Text
-                IconButton.filledTonal(
-                  onPressed: _isExporting ? null : _shareAsText,
-                  icon: const Icon(Icons.short_text_rounded, size: 20),
-                  tooltip: copy.shareAsTextTooltip,
-                  style: IconButton.styleFrom(
-                    backgroundColor: isDark
-                        ? AppColors.darkSurfaceVariant
-                        : AppColors.lightSurfaceVariant,
-                    foregroundColor: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                    padding: const EdgeInsets.all(14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
-    ),
-  );
+    );
   }
 }
 
@@ -558,15 +593,14 @@ class _ThemePreviewTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: theme.backgroundGradient,
-          ),
+          gradient: LinearGradient(colors: theme.backgroundGradient),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected

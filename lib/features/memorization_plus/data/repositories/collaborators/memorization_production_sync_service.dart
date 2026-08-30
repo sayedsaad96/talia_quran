@@ -146,7 +146,7 @@ class MemorizationProductionSyncService {
       await _markReviewPullCompleted();
       return const Right(null);
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -336,7 +336,7 @@ class MemorizationProductionSyncService {
     } catch (e) {
       // Best-effort resync: local state remains authoritative. The next
       // resume/login retry will pick up anything that failed here.
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -367,7 +367,7 @@ class MemorizationProductionSyncService {
       }
       return Right(awards);
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -404,7 +404,7 @@ class MemorizationProductionSyncService {
       await _markCertificatesSynced(unsynced.map((c) => c.id));
       return const Right(null);
     } catch (e) {
-      return Left(NetworkFailure(e.toString()));
+      return Left(NetworkFailure.from(e));
     }
   }
 
@@ -605,7 +605,7 @@ class MemorizationProductionSyncService {
       await _prefs.remove(_dailyPlanConflictKey);
       return const Right(null);
     } catch (error) {
-      return Left(CacheFailure(error.toString()));
+      return Left(CacheFailure.from(error));
     }
   }
 
@@ -658,7 +658,7 @@ class MemorizationProductionSyncService {
       await _prefs.remove(_customPlanConflictKey);
       return const Right(null);
     } catch (error) {
-      return Left(CacheFailure(error.toString()));
+      return Left(CacheFailure.from(error));
     }
   }
 

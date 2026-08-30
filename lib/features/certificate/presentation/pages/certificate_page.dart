@@ -321,6 +321,7 @@ class _CertificatePageState extends State<CertificatePage> {
                 shape: const CircleBorder(),
                 clipBehavior: Clip.antiAlias,
                 child: IconButton(
+                  tooltip: context.l10n.close,
                   icon: const Icon(Icons.close_rounded, color: Colors.white),
                   onPressed: () => Navigator.pop(context),
                 ),
@@ -336,7 +337,10 @@ class _CertificatePageState extends State<CertificatePage> {
             child: SafeArea(
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black87,
                     borderRadius: BorderRadius.circular(30),
@@ -361,7 +365,9 @@ class _CertificatePageState extends State<CertificatePage> {
                             style.displayName,
                             style: AppTypography.titleSmall.copyWith(
                               fontFamily: 'Amiri',
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                               color: isSelected ? Colors.black : Colors.white70,
                             ),
                           ),

@@ -56,7 +56,8 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
           style: AppTypography.titleLarge,
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded),
+          icon: const BackButtonIcon(),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => context.canPop() ? context.pop() : context.go('/'),
         ),
         actions: [
@@ -65,6 +66,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
               if (state is FamilyDashboardLoaded) {
                 return IconButton(
                   icon: const Icon(Icons.settings_rounded),
+                  tooltip: context.l10n.settings,
                   onPressed: () =>
                       _showSettingsSheet(context, state.dashboard.settings),
                 );
@@ -247,7 +249,7 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
   }
 }
 
-// ─── Loaded body ──────────────────────────────────────────────────────────────
+// â”€â”€â”€ Loaded body â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _FamilyLoadedBody extends StatelessWidget {
   const _FamilyLoadedBody({required this.dashboard});
@@ -259,13 +261,13 @@ class _FamilyLoadedBody extends StatelessWidget {
       onRefresh: () => context.read<FamilyDashboardCubit>().refresh(),
       child: CustomScrollView(
         slivers: [
-          // ─── Family summary banner ───────────────────────────────────────
+          // â”€â”€â”€ Family summary banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           if (dashboard.hasAnyChild)
             SliverToBoxAdapter(
               child: _FamilySummaryBanner(dashboard: dashboard),
             ),
 
-          // ─── Section label ───────────────────────────────────────────────
+          // â”€â”€â”€ Section label â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -281,7 +283,7 @@ class _FamilyLoadedBody extends StatelessWidget {
             ),
           ),
 
-          // ─── Children grid ───────────────────────────────────────────────
+          // â”€â”€â”€ Children grid â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
           if (!dashboard.hasAnyChild)
             SliverFillRemaining(
               hasScrollBody: false,
@@ -316,7 +318,7 @@ class _FamilyLoadedBody extends StatelessWidget {
   }
 }
 
-// ─── Family summary banner ────────────────────────────────────────────────────
+// â”€â”€â”€ Family summary banner â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _FamilySummaryBanner extends StatelessWidget {
   const _FamilySummaryBanner({required this.dashboard});
@@ -388,7 +390,7 @@ class _FamilySummaryBanner extends StatelessWidget {
   }
 }
 
-// ─── Child card ───────────────────────────────────────────────────────────────
+// â”€â”€â”€ Child card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _ChildCard extends StatelessWidget {
   const _ChildCard({required this.child});
@@ -400,7 +402,8 @@ class _ChildCard extends StatelessWidget {
     final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
     final isActive = child.isActiveToday;
 
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
       onTap: () => context.push('/family-dashboard/child', extra: child),
       child: Container(
         decoration: BoxDecoration(
@@ -437,7 +440,8 @@ class _ChildCard extends StatelessWidget {
                   ),
                   alignment: Alignment.center,
                   child: Text(
-                    child.avatarEmoji ?? (child.isLocal ? '👨‍👧' : '🧒'),
+                    child.avatarEmoji ??
+                        (child.isLocal ? 'ðŸ‘¨â€ðŸ‘§' : 'ðŸ§’'),
                     style: AppTypography.headlineLarge,
                   ),
                 ),
@@ -475,7 +479,6 @@ class _ChildCard extends StatelessWidget {
                   context.l10n.familyDashboardLocalBadge,
                   style: AppTypography.labelSmall.copyWith(
                     color: AppColors.primary,
-                    fontSize: 9,
                   ),
                 ),
               ),
@@ -499,7 +502,7 @@ class _ChildCard extends StatelessWidget {
                     ),
                     if (child.currentStreak > 0)
                       Text(
-                        '🔥 ${child.currentStreak}',
+                        'ðŸ”¥ ${child.currentStreak}',
                         style: AppTypography.labelSmall,
                       ),
                   ],
@@ -542,13 +545,14 @@ class _ChildCard extends StatelessWidget {
   }
 }
 
-// ─── Add child card ───────────────────────────────────────────────────────────
+// â”€â”€â”€ Add child card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _AddChildCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
       onTap: () => _showAddChildOptions(context),
       child: Container(
         decoration: BoxDecoration(
@@ -594,7 +598,7 @@ class _AddChildCard extends StatelessWidget {
   }
 }
 
-// ─── Empty placeholder ────────────────────────────────────────────────────────
+// â”€â”€â”€ Empty placeholder â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _EmptyFamilyPlaceholder extends StatelessWidget {
   @override
@@ -635,7 +639,7 @@ class _EmptyFamilyPlaceholder extends StatelessWidget {
   }
 }
 
-// ─── PIN Gate (reused from parent dashboard) ──────────────────────────────────
+// â”€â”€â”€ PIN Gate (reused from parent dashboard) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 class _PinGate extends StatefulWidget {
   const _PinGate({
@@ -723,7 +727,10 @@ class _PinGateState extends State<_PinGate> {
             ],
             if (_error != null) ...[
               const SizedBox(height: AppSpacing.sm),
-              Text(_error!, style: AppTypography.bodySmall.copyWith(color: AppColors.error)),
+              Text(
+                _error!,
+                style: AppTypography.bodySmall.copyWith(color: AppColors.error),
+              ),
             ],
             const SizedBox(height: AppSpacing.md),
             SizedBox(
@@ -745,7 +752,7 @@ class _PinGateState extends State<_PinGate> {
   }
 }
 
-// ─── Add Child Logic ──────────────────────────────────────────────────────────
+// â”€â”€â”€ Add Child Logic â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 void _showAddChildOptions(BuildContext context) {
   showModalBottomSheet(

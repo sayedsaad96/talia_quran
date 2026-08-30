@@ -156,6 +156,32 @@ void main() {
       );
     });
 
+    testWidgets('audioError exposes the labelled manual completion action', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      var manuallyCompleted = false;
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedListenContent(
+            state: _baseState.copyWith(audioError: 'network'),
+            onBack: () {},
+            onPlayPause: () {},
+            onRecordRecitation: () {},
+            onStopRecording: () {},
+            onManualComplete: () => manuallyCompleted = true,
+          ),
+        ),
+      );
+
+      expect(find.text('I finished memorizing'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('kids-gamified-manual-complete')));
+      expect(manuallyCompleted, isTrue);
+    });
+
     testWidgets('isRecording=true shows recording indicator and disables play', (
       tester,
     ) async {
@@ -247,7 +273,7 @@ void main() {
         ),
       );
 
-      await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
+      await tester.tap(find.byTooltip('Back'));
       await tester.pump();
       expect(backCalled, isTrue);
     });

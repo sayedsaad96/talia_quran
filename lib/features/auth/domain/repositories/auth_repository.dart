@@ -17,8 +17,9 @@ abstract class AuthRepository {
     required String password,
   });
 
-  /// Sign out
-  Future<Either<Failure, Unit>> signOut();
+  /// Signs out, optionally retaining owner-scoped local data after a failed
+  /// pre-sign-out flush so the same account can recover it later.
+  Future<Either<Failure, Unit>> signOut({bool preserveAccountData = false});
 
   /// Delete the currently signed-in Supabase account.
   ///

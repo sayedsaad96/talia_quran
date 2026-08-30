@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -103,121 +102,61 @@ class _QuranViewState extends State<_QuranView>
   SliverAppBar _buildAppBar(BuildContext context, bool isDark) {
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final reciterService = getIt<QuranReciterService>();
+    final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.5);
+    final bottomHeight = 104 + ((textScale - 1) * 32);
 
     return SliverAppBar(
-      expandedHeight: 200,
-      floating: false,
       pinned: true,
-      snap: false,
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      automaticallyImplyLeading: false,
+      toolbarHeight: 72,
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
       elevation: 0,
       scrolledUnderElevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        collapseMode: CollapseMode.pin,
-        background: Container(
-          decoration: BoxDecoration(
-            gradient: isDark
-                ? AppColors.heroGradientDark
-                : AppColors.heroGradientLight,
-          ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.md,
-                AppSpacing.pagePadding,
-                AppSpacing.sm,
-              ),
-              child: Column(
-                children: [
-                  // Top Row: Reciter selector button
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        context.l10n.quran,
-                        style: AppTypography.displaySmall.copyWith(
-                          color: Colors.white,
-                          fontFamily: 'Amiri',
-                          fontSize: 26,
-                        ),
-                      ),
-                      ValueListenableBuilder<QuranReciter>(
-                        valueListenable: reciterService.currentReciter,
-                        builder: (context, reciter, _) {
-                          return GestureDetector(
-                            onTap: () => ReciterSelectorSheet.show(context),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.25),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const Icon(
-                                    Icons.record_voice_over_rounded,
-                                    color: Colors.white,
-                                    size: 14,
-                                  ),
-                                  const SizedBox(width: 5),
-                                  Text(
-                                    context.isArabic ? reciter.nameAr : reciter.nameEn,
-                                    style: AppTypography.labelMedium.copyWith(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(width: 3),
-                                  const Icon(
-                                    Icons.keyboard_arrow_down_rounded,
-                                    color: Colors.white70,
-                                    size: 16,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ],
-                  ).animate().fadeIn(duration: 200.ms),
-                  const Spacer(),
-                  // Stats pill
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _StatItem(label: context.isArabic ? 'سورة' : 'Surah', value: '114'),
-                        const _StatDivider(),
-                        _StatItem(label: context.isArabic ? 'آية' : 'Ayah', value: '6,236'),
-                        const _StatDivider(),
-                        _StatItem(label: context.isArabic ? 'جزء' : 'Juz', value: '30'),
-                      ],
-                    ),
-                  ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.1),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-          ),
+      flexibleSpace: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: isDark
+              ? AppColors.heroGradientDark
+              : AppColors.heroGradientLight,
         ),
       ),
+      title: Text(
+        context.l10n.quran,
+        style: AppTypography.displaySmall.copyWith(
+          color: Colors.white,
+          fontSize: 26,
+        ),
+      ),
+      actions: [
+        ValueListenableBuilder<QuranReciter>(
+          valueListenable: reciterService.currentReciter,
+          builder: (context, reciter, _) {
+            final name = context.isArabic ? reciter.nameAr : reciter.nameEn;
+            return Padding(
+              padding: const EdgeInsetsDirectional.only(end: AppSpacing.sm),
+              child: TextButton.icon(
+                onPressed: () => ReciterSelectorSheet.show(context),
+                icon: const Icon(Icons.record_voice_over_rounded, size: 18),
+                label: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 132),
+                  child: Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(48, 48),
+                  textStyle: AppTypography.labelMedium,
+                ),
+              ),
+            );
+          },
+        ),
+      ],
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(104),
+        preferredSize: Size.fromHeight(bottomHeight),
         child: Container(
           color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
           child: Column(
@@ -237,7 +176,9 @@ class _QuranViewState extends State<_QuranView>
                 unselectedLabelColor: isDark
                     ? AppColors.darkTextHint
                     : AppColors.lightTextHint,
-                labelStyle: AppTypography.labelLarge.copyWith(fontWeight: FontWeight.bold),
+                labelStyle: AppTypography.labelLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
                 indicatorColor: primary,
                 indicatorSize: TabBarIndicatorSize.label,
                 indicatorWeight: 2.5,
@@ -251,50 +192,6 @@ class _QuranViewState extends State<_QuranView>
           ),
         ),
       ),
-    );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  const _StatItem({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: AppTypography.titleMedium.copyWith(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 15,
-          ),
-        ),
-        Text(
-          label,
-          style: AppTypography.labelSmall.copyWith(
-            color: Colors.white70,
-            fontSize: 11,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatDivider extends StatelessWidget {
-  const _StatDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 20,
-      width: 1,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      color: Colors.white24,
     );
   }
 }
@@ -366,9 +263,12 @@ class _SearchBarState extends State<_SearchBar> {
             ),
             suffixIcon: _hasText
                 ? IconButton(
+                    tooltip: context.l10n.clearSearch,
                     icon: Icon(
                       Icons.close_rounded,
-                      color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+                      color: isDark
+                          ? AppColors.darkTextHint
+                          : AppColors.lightTextHint,
                       size: 18,
                     ),
                     onPressed: () {
@@ -510,15 +410,19 @@ class _SurahTile extends StatelessWidget {
                 ),
               ),
               Icon(
-                Icons.arrow_forward_ios_rounded,
+                context.isArabic
+                    ? Icons.arrow_back_ios_new_rounded
+                    : Icons.arrow_forward_ios_rounded,
                 size: 14,
-                color: isDark ? AppColors.darkTextHint : AppColors.lightTextHint,
+                color: isDark
+                    ? AppColors.darkTextHint
+                    : AppColors.lightTextHint,
               ),
             ],
           ),
         ),
       ),
-    ).animate().fadeIn(duration: 200.ms).slideY(begin: 0.02, end: 0);
+    );
   }
 }
 
@@ -536,8 +440,8 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chipColor = isMeccan
-        ? (isDark ? const Color(0xFFC8A55B) : const Color(0xFFB08930))
-        : (isDark ? const Color(0xFF2E7D32) : const Color(0xFF1B5E20));
+        ? (isDark ? AppColors.primaryLight : AppColors.primary)
+        : (isDark ? AppColors.success : AppColors.primaryDark);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
@@ -563,12 +467,36 @@ class _JuzGridView extends StatelessWidget {
   final List<Surah> surahs;
 
   static const List<int> _juzStartPages = [
-    1, 22, 42, 62, 82, 102,
+    1,
+    22,
+    42,
+    62,
+    82,
+    102,
     121,
-    142, 162, 182,
+    142,
+    162,
+    182,
     201,
-    222, 242, 262, 282, 302, 322, 342, 362, 382,
-    402, 422, 442, 462, 482, 502, 522, 542, 562, 582,
+    222,
+    242,
+    262,
+    282,
+    302,
+    322,
+    342,
+    362,
+    382,
+    402,
+    422,
+    442,
+    462,
+    482,
+    502,
+    522,
+    542,
+    562,
+    582,
   ];
 
   @override
@@ -593,91 +521,88 @@ class _JuzGridView extends StatelessWidget {
       itemBuilder: (context, i) {
         final initialPage = _juzStartPages[i];
 
-        return GestureDetector(
-          onTap: () => context.push('/quran/page/$initialPage'),
-          child: Container(
-            decoration: BoxDecoration(
-              color: isDark
-                  ? AppColors.darkSurfaceVariant
-                  : AppColors.lightSurfaceVariant,
+        final juzName = context.localizedJuzName(i + 1);
+        return Semantics(
+          button: true,
+          label: '${context.l10n.juz} $juzName',
+          child: Material(
+            color: isDark
+                ? AppColors.darkSurfaceVariant
+                : AppColors.lightSurfaceVariant,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            child: InkWell(
+              onTap: () => context.push('/quran/page/$initialPage'),
               borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.03),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  border: Border.all(color: primary.withValues(alpha: 0.12)),
                 ),
-              ],
-              border: Border.all(
-                color: primary.withValues(alpha: 0.12),
-                width: 1,
+                child: Row(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        start: AppSpacing.md,
+                      ),
+                      child: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: primary.withValues(alpha: 0.1),
+                        foregroundColor: primary,
+                        child: Text(
+                          '${i + 1}',
+                          style: AppTypography.labelMedium.copyWith(
+                            color: primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.l10n.juz,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                              ),
+                            ),
+                            Text(
+                              juzName,
+                              style: AppTypography.titleMedium.copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Icon(
+                        Icons.menu_book_rounded,
+                        size: 20,
+                        color: primary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            child: Row(
-              children: [
-                Container(
-                  width: 5,
-                  decoration: BoxDecoration(
-                    color: primary,
-                    borderRadius: const BorderRadius.horizontal(
-                      right: Radius.circular(AppSpacing.radiusLg),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.md,
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.l10n.juz,
-                          style: AppTypography.labelSmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          context.localizedJuzName(i + 1),
-                          style: AppTypography.titleMedium.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Amiri',
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: primary.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.menu_book_rounded,
-                      size: 16,
-                      color: primary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
-        ).animate().fadeIn(duration: 200.ms, delay: (i * 15).ms).slideX(begin: 0.05, end: 0);
+        );
       },
     );
   }

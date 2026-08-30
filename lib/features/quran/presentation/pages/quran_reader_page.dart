@@ -81,7 +81,8 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   @override
   void didUpdateWidget(QuranReaderPage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.pageNumber != null && widget.pageNumber != oldWidget.pageNumber) {
+    if (widget.pageNumber != null &&
+        widget.pageNumber != oldWidget.pageNumber) {
       _openAtPage(_normalizePageNumber(widget.pageNumber!));
     }
   }
@@ -119,7 +120,6 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     // Lazy-load QCF fonts for the current page and nearby pages.
     unawaited(qcf.QcfFontLoader.preloadPages(pageNumber, radius: 8));
   }
-
 
   void _saveCurrentPage(int pageNumber) {
     unawaited(
@@ -296,7 +296,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   Widget _buildMushafReader(BuildContext context) {
     final isDark = context.isDark;
     final bg = isDark ? AppColors.parchmentDark : AppColors.parchmentLight;
-    final gold = isDark ? AppColors.goldLight : AppColors.goldDark;
+    final gold = isDark ? AppColors.primaryLight : AppColors.primary;
 
     return BlocProvider.value(
       value: _quranPageCubit,
@@ -374,7 +374,9 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                         _registerPageInteraction(page, context);
                         _loadPage(page);
                         // Lazy-load QCF fonts for nearby pages.
-                        unawaited(qcf.QcfFontLoader.preloadPages(page, radius: 8));
+                        unawaited(
+                          qcf.QcfFontLoader.preloadPages(page, radius: 8),
+                        );
                       },
                       onLongPress: (surahNumber, verseNumber, details) =>
                           _showAyahOptions(
@@ -417,19 +419,18 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                     PositionedDirectional(
                       top: 16,
                       end: 16,
-                      child: GestureDetector(
-                        onTap: () {
+                      child: IconButton(
+                        tooltip: context.l10n.exitFocusMode,
+                        onPressed: () {
                           HapticFeedback.selectionClick();
                           setState(() => _isFocusMode = false);
                         },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: bg.withValues(alpha: 0.8),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: gold.withValues(alpha: 0.5)),
-                          ),
-                          child: Icon(Icons.fullscreen_exit_rounded, color: gold, size: 22),
+                        icon: const Icon(Icons.fullscreen_exit_rounded),
+                        style: IconButton.styleFrom(
+                          foregroundColor: gold,
+                          backgroundColor: bg.withValues(alpha: 0.92),
+                          minimumSize: const Size(48, 48),
+                          side: BorderSide(color: gold.withValues(alpha: 0.35)),
                         ),
                       ),
                     ),
@@ -477,10 +478,7 @@ class _MushafTopBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         border: Border(
-          bottom: BorderSide(
-            color: gold.withValues(alpha: 0.15),
-            width: 0.8,
-          ),
+          bottom: BorderSide(color: gold.withValues(alpha: 0.15), width: 0.8),
         ),
       ),
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
@@ -513,41 +511,36 @@ class _MushafTopBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              GestureDetector(
-                onTap: () => ReciterSelectorSheet.show(context),
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: gold.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.record_voice_over_rounded, color: gold, size: 16),
+              IconButton(
+                onPressed: () => ReciterSelectorSheet.show(context),
+                tooltip: context.l10n.selectReciter,
+                icon: const Icon(Icons.record_voice_over_rounded),
+                color: gold,
+                style: IconButton.styleFrom(
+                  backgroundColor: gold.withValues(alpha: 0.1),
+                  minimumSize: const Size(48, 48),
                 ),
               ),
               if (onToggleFocus != null) ...[
-                const SizedBox(width: 6),
-                GestureDetector(
-                  onTap: onToggleFocus,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: gold.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(Icons.fullscreen_rounded, color: gold, size: 16),
+                IconButton(
+                  onPressed: onToggleFocus,
+                  tooltip: context.l10n.enterFocusMode,
+                  icon: const Icon(Icons.fullscreen_rounded),
+                  color: gold,
+                  style: IconButton.styleFrom(
+                    backgroundColor: gold.withValues(alpha: 0.1),
+                    minimumSize: const Size(48, 48),
                   ),
                 ),
               ],
-              const SizedBox(width: 6),
-              GestureDetector(
-                onTap: onClose,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: gold.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.close_rounded, color: gold, size: 15),
+              IconButton(
+                onPressed: onClose,
+                tooltip: context.l10n.closeReader,
+                icon: const Icon(Icons.close_rounded),
+                color: gold,
+                style: IconButton.styleFrom(
+                  backgroundColor: gold.withValues(alpha: 0.1),
+                  minimumSize: const Size(48, 48),
                 ),
               ),
             ],
@@ -575,56 +568,80 @@ class _MushafFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
     return Container(
       color: bg,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            'الحزب ${MushafHizbHelper.toArabicNumber(hizbNumber)}',
-            style: AppTypography.bodySmall.copyWith(
-              fontFamily: 'Amiri',
-              fontSize: 13,
-              color: gold,
-              height: 1.5,
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-            decoration: BoxDecoration(
-              color: gold.withValues(alpha: 0.1),
-              border: Border.all(color: gold.withValues(alpha: 0.6), width: 1),
-              borderRadius: BorderRadius.circular(20),
-            ),
+          Expanded(
             child: Text(
-              MushafHizbHelper.toArabicNumber(pageNumber),
-              style: AppTypography.titleMedium.copyWith(
+              context.l10n.hizbNumberLabel(
+                MushafHizbHelper.toArabicNumber(hizbNumber),
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.bodySmall.copyWith(
                 fontFamily: 'Amiri',
-                fontWeight: FontWeight.bold,
+                fontSize: 13,
                 color: gold,
-                height: 1.4,
+                height: 1.5,
               ),
             ),
           ),
-          AnimatedOpacity(
-            opacity: showReadConfirmed ? 1 : 0,
-            duration: const Duration(milliseconds: 220),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.check_circle_rounded, color: gold, size: 16),
-                const SizedBox(width: 4),
-                Text(
-                  context.l10n.readPageConfirmed,
-                  style: AppTypography.titleSmall.copyWith(
-                    fontFamily: 'Amiri',
-                    color: gold,
-                    fontWeight: FontWeight.w700,
-                    height: 1.5,
-                  ),
+          Semantics(
+            label: '${context.l10n.page} $pageNumber',
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.itemGap,
+                vertical: AppSpacing.xs,
+              ),
+              decoration: BoxDecoration(
+                color: gold.withValues(alpha: 0.1),
+                border: Border.all(color: gold.withValues(alpha: 0.45)),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              ),
+              child: Text(
+                MushafHizbHelper.toArabicNumber(pageNumber),
+                style: AppTypography.titleMedium.copyWith(
+                  fontFamily: 'Amiri',
+                  fontWeight: FontWeight.bold,
+                  color: gold,
+                  height: 1.4,
                 ),
-              ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: AnimatedOpacity(
+              opacity: showReadConfirmed ? 1 : 0,
+              duration: disableAnimations
+                  ? Duration.zero
+                  : const Duration(milliseconds: 220),
+              child: Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.check_circle_rounded, color: gold, size: 16),
+                    const SizedBox(width: AppSpacing.xs),
+                    Flexible(
+                      child: Text(
+                        context.l10n.readPageConfirmed,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTypography.titleSmall.copyWith(
+                          fontFamily: 'Amiri',
+                          color: gold,
+                          fontWeight: FontWeight.w700,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         ],
@@ -787,7 +804,10 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                 ),
               ),
               Text(
-                'سورة ${widget.surahName} • الآية ${widget.ayah.numberInSurah}',
+                context.l10n.surahAyahFormat(
+                  widget.surahName,
+                  widget.ayah.numberInSurah,
+                ),
                 style: AppTypography.titleMedium.copyWith(
                   color: primary,
                   fontWeight: FontWeight.bold,
@@ -801,15 +821,11 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                 decoration: BoxDecoration(
                   color: primary.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(
-                    color: primary.withValues(alpha: 0.15),
-                  ),
+                  border: Border.all(color: primary.withValues(alpha: 0.15)),
                 ),
                 child: Text(
-                  widget.ayah.text.trim(),
-                  style: AppTypography.azkarText.copyWith(
-                    height: 1.8,
-                  ),
+                  widget.ayah.text,
+                  style: AppTypography.quranMedium,
                   textAlign: TextAlign.center,
                   textDirection: TextDirection.rtl,
                 ),
@@ -822,31 +838,45 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                   return InkWell(
                     onTap: () => ReciterSelectorSheet.show(context),
                     borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.mic_rounded, size: 14, color: primary),
-                          const SizedBox(width: 4),
-                          Text(
-                            context.isArabic ? reciter.nameAr : reciter.nameEn,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: primary,
-                              fontWeight: FontWeight.bold,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: 48),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.md,
+                          vertical: AppSpacing.sm,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.mic_rounded, size: 14, color: primary),
+                            const SizedBox(width: 4),
+                            Text(
+                              context.isArabic
+                                  ? reciter.nameAr
+                                  : reciter.nameEn,
+                              style: AppTypography.bodySmall.copyWith(
+                                color: primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(width: 4),
-                          Icon(Icons.swap_horiz_rounded, size: 14, color: primary),
-                        ],
+                            const SizedBox(width: 4),
+                            Icon(
+                              Icons.swap_horiz_rounded,
+                              size: 14,
+                              color: primary,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   );
                 },
               ),
               const SizedBox(height: AppSpacing.lg),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: AppSpacing.md,
+                runSpacing: AppSpacing.md,
                 children: [
                   _OptionBtn(
                     icon: _isPlaying
@@ -859,7 +889,7 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                   _OptionBtn(
                     icon: Icons.copy_rounded,
                     label: context.l10n.copy,
-                    color: Colors.blue,
+                    color: primary,
                     onTap: () async {
                       await Clipboard.setData(
                         ClipboardData(text: widget.ayah.text),
@@ -875,7 +905,7 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                   _OptionBtn(
                     icon: Icons.bookmark_rounded,
                     label: context.l10n.bookmark,
-                    color: AppColors.warning,
+                    color: primary,
                     onTap: () async {
                       final bookmarkService = getIt<BookmarkService>();
                       final entry = BookmarkEntry(
@@ -918,7 +948,7 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                   _OptionBtn(
                     icon: Icons.share_rounded,
                     label: context.l10n.share,
-                    color: AppColors.primary,
+                    color: primary,
                     onTap: () {
                       Navigator.pop(context);
                       final data = SocialShareData.quranAyah(
@@ -954,22 +984,43 @@ class _OptionBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+    return Semantics(
+      button: true,
+      label: label,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          child: SizedBox(
+            width: 72,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, color: color, size: 26),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.labelMedium.copyWith(color: color),
+                  ),
+                ],
+              ),
             ),
-            child: Icon(icon, color: color, size: 28),
           ),
-          const SizedBox(height: 8),
-          Text(label, style: AppTypography.labelMedium.copyWith(color: color)),
-        ],
+        ),
       ),
     );
   }

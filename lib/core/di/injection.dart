@@ -99,27 +99,23 @@ import '../../features/auth/presentation/cubits/auth_cubit.dart';
 
 final GetIt getIt = GetIt.instance;
 
-Future<void> configureDependencies() async {
+Future<void> configureDependencies({bool background = false}) async {
   // ─── External ───────────────────────────────────────────────────────────────
   final sharedPrefs = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPrefs);
 
   final dir = await getApplicationDocumentsDirectory();
   final schemas = [
-        IsarAyahProgressSchema,
-        IsarAyahReviewRecordSchema,
-        IsarV2SessionSchema, // V2 session persistence
-        StreakIsarSchema,
-        XpIsarSchema,
-        DailyActivityIsarSchema, // For yearly activity heatmap
-        CloudSyncQueueItemSchema,
-      ];
+    IsarAyahProgressSchema,
+    IsarAyahReviewRecordSchema,
+    IsarV2SessionSchema, // V2 session persistence
+    StreakIsarSchema,
+    XpIsarSchema,
+    DailyActivityIsarSchema, // For yearly activity heatmap
+    CloudSyncQueueItemSchema,
+  ];
   final isar =
-      Isar.getInstance() ??
-      await Isar.open(
-        schemas,
-        directory: dir.path,
-      );
+      Isar.getInstance() ?? await Isar.open(schemas, directory: dir.path);
   getIt.registerSingleton<Isar>(isar);
   getIt.registerLazySingleton<V2SessionLocalDatasource>(
     () => V2SessionLocalDatasource(getIt<Isar>()),
@@ -379,6 +375,7 @@ Future<void> configureDependencies() async {
       achievementService: getIt<AchievementService>(),
       cloudSyncQueue: getIt<CloudSyncQueue>(),
       bookmarkService: getIt<BookmarkService>(),
+      syncBookmarks: !background,
     ),
     dispose: (coordinator) => coordinator.dispose(),
   );

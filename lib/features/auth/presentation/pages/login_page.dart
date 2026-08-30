@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -42,6 +42,7 @@ class _LoginPageState extends State<LoginPage> {
   bool _obscurePassword = true;
   bool _isSyncing = false;
   bool _syncFailed = false;
+  bool _postLoginRouteInFlight = false;
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
@@ -77,7 +78,16 @@ class _LoginPageState extends State<LoginPage> {
   /// the restored profile is ready before routing. If sync fails, stay on the
   /// login page with a retry button (prevents routing with blank profile).
   Future<void> _routeAfterLogin(BuildContext context) async {
-    if (!context.mounted) return;
+    if (_postLoginRouteInFlight || !context.mounted) return;
+    _postLoginRouteInFlight = true;
+    try {
+      await _performPostLoginRoute(context);
+    } finally {
+      _postLoginRouteInFlight = false;
+    }
+  }
+
+  Future<void> _performPostLoginRoute(BuildContext context) async {
     final cubit = context.read<AuthCubit>();
     setState(() {
       _isSyncing = true;
@@ -86,17 +96,22 @@ class _LoginPageState extends State<LoginPage> {
     try {
       await cubit.ensureCloudSyncComplete();
     } catch (_) {
-      if (mounted) {
-        setState(() {
-          _isSyncing = false;
-          _syncFailed = true;
-        });
-      }
+      _showSyncFailure();
       return;
     }
     if (!context.mounted) return;
     setState(() => _isSyncing = false);
-    context.go(await _resolvePostLoginDestination());
+    final destination = await _resolvePostLoginDestination();
+    if (!context.mounted) return;
+    context.go(destination);
+  }
+
+  void _showSyncFailure() {
+    if (!mounted) return;
+    setState(() {
+      _isSyncing = false;
+      _syncFailed = true;
+    });
   }
 
   Future<String> _resolvePostLoginDestination() async {
@@ -158,16 +173,16 @@ class _LoginPageState extends State<LoginPage> {
               );
             }
             if (state is AuthError) {
-              // Email not confirmed — offer resend button
-              final isNotConfirmed =
-                  state.message.contains('تأكيد') ||
-                  state.message.contains('تفقّد') ||
-                  state.message.contains('confirmed');
+              // Resolve the stable error code; unknown/legacy messages fall
+              // back to a generic localized error â€” never raw backend text.
+              final code = _authCodeFromMessage(state.message);
               setState(
                 () => _feedback = _AuthFeedback(
-                  message: _localizedAuthMessage(context, state.message),
+                  message: code != null
+                      ? _localizedAuthMessage(context, state.message)
+                      : context.l10n.authGenericError,
                   type: ErrorInfoBannerType.error,
-                  showResend: isNotConfirmed,
+                  showResend: code == AuthErrorCode.emailNotConfirmed,
                 ),
               );
             }
@@ -290,14 +305,18 @@ class _LoginPageState extends State<LoginPage> {
                             context.l10n.signIn,
                             !_isSignUp,
                             cs,
-                            () => setState(() => _isSignUp = false),
+                            isLoading
+                                ? null
+                                : () => setState(() => _isSignUp = false),
                           ),
                           const SizedBox(width: AppSpacing.sm),
                           _buildToggle(
                             context.l10n.signUp,
                             _isSignUp,
                             cs,
-                            () => setState(() => _isSignUp = true),
+                            isLoading
+                                ? null
+                                : () => setState(() => _isSignUp = true),
                           ),
                         ],
                       ),
@@ -363,6 +382,9 @@ class _LoginPageState extends State<LoginPage> {
                                   ? Icons.visibility_off_rounded
                                   : Icons.visibility_rounded,
                             ),
+                            tooltip: _obscurePassword
+                                ? context.l10n.showPassword
+                                : context.l10n.hidePassword,
                             onPressed: () => setState(
                               () => _obscurePassword = !_obscurePassword,
                             ),
@@ -470,29 +492,35 @@ class _LoginPageState extends State<LoginPage> {
     String label,
     bool isActive,
     ColorScheme cs,
-    VoidCallback onTap,
+    VoidCallback? onTap,
   ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.pagePadding,
-          vertical: AppSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: isActive
-              ? cs.primary.withValues(alpha: 0.12)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isActive ? cs.primary : cs.outline.withValues(alpha: 0.3),
+    return Semantics(
+      button: true,
+      selected: isActive,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 48),
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.pagePadding,
+            vertical: AppSpacing.sm,
           ),
-        ),
-        child: Text(
-          label,
-          style: AppTypography.labelLarge.copyWith(
-            color: isActive ? cs.primary : cs.onSurfaceVariant,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          decoration: BoxDecoration(
+            color: isActive
+                ? cs.primary.withValues(alpha: 0.12)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusSm + 2),
+            border: Border.all(
+              color: isActive ? cs.primary : cs.outline.withValues(alpha: 0.3),
+            ),
+          ),
+          child: Text(
+            label,
+            style: AppTypography.labelLarge.copyWith(
+              color: isActive ? cs.primary : cs.onSurfaceVariant,
+              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
         ),
       ),
@@ -501,47 +529,29 @@ class _LoginPageState extends State<LoginPage> {
 
   String _localizedAuthMessage(BuildContext context, String message) {
     final l10n = context.l10n;
-    if (message == AuthErrorCode.emailAlreadyRegistered.name) {
-      return l10n.authEmailAlreadyRegistered;
-    }
-    if (message == AuthErrorCode.emailNotConfirmed.name) {
-      return l10n.authConfirmEmailFirst;
-    }
-    if (message == AuthErrorCode.invalidCredentials.name) {
-      return l10n.authInvalidCredentials;
-    }
-    if (message == AuthErrorCode.passwordTooShort.name) {
-      return l10n.passwordTooShort;
-    }
-    if (message == AuthErrorCode.invalidEmailFormat.name) {
-      return l10n.invalidEmail;
-    }
-    if (message == AuthErrorCode.tooManyRequests.name) {
-      return l10n.authTooManyRequests;
-    }
-    if (message == AuthErrorCode.networkError.name) return l10n.authNoInternet;
-    if (message == AuthErrorCode.userNotFound.name) {
-      return l10n.authAccountNotFound;
-    }
-    if (message == AuthErrorCode.samePasswordAsOld.name) {
-      return l10n.authPasswordSameAsOld;
-    }
-    if (message == AuthErrorCode.sessionExpired.name) {
-      return l10n.authSessionExpired;
-    }
-    if (message == AuthErrorCode.unknown.name) return l10n.authGenericError;
+    final code = _authCodeFromMessage(message);
+    if (code == null) return l10n.authGenericError;
 
-    // Fallbacks for legacy/unmapped errors
-    if (message.contains('فشل إنشاء الحساب') ||
-        message.contains('أثناء إنشاء الحساب')) {
-      return l10n.authSignupFailed;
+    return switch (code) {
+      AuthErrorCode.emailAlreadyRegistered => l10n.authEmailAlreadyRegistered,
+      AuthErrorCode.emailNotConfirmed => l10n.authConfirmEmailFirst,
+      AuthErrorCode.invalidCredentials => l10n.authInvalidCredentials,
+      AuthErrorCode.passwordTooShort => l10n.passwordTooShort,
+      AuthErrorCode.invalidEmailFormat => l10n.invalidEmail,
+      AuthErrorCode.tooManyRequests => l10n.authTooManyRequests,
+      AuthErrorCode.networkError => l10n.authNoInternet,
+      AuthErrorCode.userNotFound => l10n.authAccountNotFound,
+      AuthErrorCode.samePasswordAsOld => l10n.authPasswordSameAsOld,
+      AuthErrorCode.sessionExpired => l10n.authSessionExpired,
+      AuthErrorCode.unknown => l10n.authGenericError,
+    };
+  }
+
+  /// Parses a stable [AuthErrorCode] name out of an auth failure message.
+  static AuthErrorCode? _authCodeFromMessage(String message) {
+    for (final code in AuthErrorCode.values) {
+      if (message == code.name) return code;
     }
-    if (message.contains('فشل تسجيل الدخول') ||
-        message.contains('أثناء تسجيل الدخول')) {
-      return l10n.authSigninFailed;
-    }
-    if (message.contains('تسجيل الخروج')) return l10n.authSignoutFailed;
-    if (message.contains('حدث خطأ')) return l10n.authGenericError;
-    return message;
+    return null;
   }
 }

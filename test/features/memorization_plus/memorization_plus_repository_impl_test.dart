@@ -577,6 +577,31 @@ void main() {
     );
 
     test(
+      'unlinkGuardian preserves a linked profile when counterpart id is missing',
+      () async {
+        final now = DateTime.now();
+        await datasource.saveMemorizationProfile(
+          MemorizationProfileModel(
+            schemaVersion: 1,
+            selectedPath: MemorizationPath.child,
+            guardianLinkStatus: GuardianLinkStatus.linked,
+            guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+            isParentGuardian: false,
+            createdAt: now,
+            updatedAt: now,
+          ),
+        );
+
+        final result = await repository.unlinkGuardian();
+        final profile = await datasource.getMemorizationProfile();
+
+        expect(result.isLeft(), isTrue);
+        expect(profile.guardianLinkStatus, GuardianLinkStatus.linked);
+        expect(profile.guardianId, isNull);
+      },
+    );
+
+    test(
       'unlinkGuardian clears the local profile when there is no guardian to revoke',
       () async {
         final now = DateTime.now();

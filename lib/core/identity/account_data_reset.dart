@@ -7,6 +7,7 @@ import '../sync/cloud_sync_queue_item.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../memorization/review_record_identity.dart';
 import 'record_owner_provider.dart';
+import 'pending_bookmark_recovery_marker.dart';
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import '../../features/memorization_plus/data/models/isar_v2_session.dart';
@@ -93,15 +94,27 @@ class AccountDataReset {
     'use_cloud_production_pull',
   };
 
-  Future<void> clearAccountOwnedData({String? departingOwnerId}) async {
+  Future<void> clearAccountOwnedData({
+    String? departingOwnerId,
+    bool preservePendingBookmarkRecovery = true,
+  }) async {
     final ownerId = departingOwnerId ?? _owner?.currentOwnerId;
+    if (!preservePendingBookmarkRecovery && ownerId != null) {
+      await PendingBookmarkRecoveryMarker.clear(_prefs, ownerId);
+    }
+    final protectedOwners = preservePendingBookmarkRecovery
+        ? PendingBookmarkRecoveryMarker.ownerIds(_prefs)
+        : const <String>{};
     if (ownerId != null) {
       await _backgroundSyncScheduler?.cancelAccountSync(ownerId);
     }
-    await _clearPreferences();
-    await _clearCollections();
+    await _clearPreferences(protectedOwners);
+    await _clearCollections(protectedOwners);
     await _clearParentPin(ownerId);
-    await _clearEncryptedAccountPreferences(ownerId);
+    await _clearEncryptedAccountPreferences(
+      ownerId,
+      preserve: ownerId != null && protectedOwners.contains(ownerId),
+    );
   }
 
   /// Converts the departing account's usable local progress into guest data.
@@ -198,7 +211,8 @@ class AccountDataReset {
   Future<void> _copyBookmarksToGuest(String departingOwnerId) async {
     const key = 'quran_bookmarks';
     final legacyKey = 'quran_bookmarks_owner_$departingOwnerId';
-    const guestKey = 'quran_bookmarks_owner_${ReviewRecordIdentity.localOwnerId}';
+    const guestKey =
+        'quran_bookmarks_owner_${ReviewRecordIdentity.localOwnerId}';
     final legacyValue = _prefs.getString(legacyKey);
     if (legacyValue != null) {
       await _prefs.setString(guestKey, legacyValue);
@@ -209,7 +223,16 @@ class AccountDataReset {
     if (encrypted == null) return;
     final secureValue = await encrypted.read(departingOwnerId, key);
     if (secureValue == null) return;
-    await encrypted.write(ReviewRecordIdentity.localOwnerId, key, secureValue);
+    try {
+      await encrypted.write(
+        ReviewRecordIdentity.localOwnerId,
+        key,
+        secureValue,
+      );
+    } catch (_) {
+      await PendingBookmarkRecoveryMarker.mark(_prefs, departingOwnerId);
+      rethrow;
+    }
     await encrypted.delete(departingOwnerId, key);
   }
 
@@ -221,12 +244,17 @@ class AccountDataReset {
     await secureStore.writeFailureCount(ownerId, 0);
   }
 
-  Future<void> _clearEncryptedAccountPreferences(String? ownerId) async {
-    if (ownerId == null) return;
-    await _encryptedAccountPreferences?.delete(ownerId, 'quran_bookmarks');
+  Future<void> _clearEncryptedAccountPreferences(
+    String? ownerId, {
+    required bool preserve,
+  }) async {
+    if (ownerId == null || preserve) return;
+    final encrypted = _encryptedAccountPreferences;
+    await encrypted?.delete(ownerId, 'quran_bookmarks');
+    await encrypted?.delete(ownerId, 'quran_bookmarks_owner_$ownerId');
   }
 
-  Future<void> _clearPreferences() async {
+  Future<void> _clearPreferences(Set<String> protectedOwners) async {
     final keys = _prefs
         .getKeys()
         .where(
@@ -234,13 +262,18 @@ class AccountDataReset {
               clearedPreferenceKeys.contains(key) ||
               clearedPreferencePrefixes.any(key.startsWith),
         )
+        .where(
+          (key) => !protectedOwners.any(
+            (ownerId) => key.startsWith('quran_bookmarks_owner_$ownerId'),
+          ),
+        )
         .toList();
     for (final key in keys) {
       await _prefs.remove(key);
     }
   }
 
-  Future<void> _clearCollections() async {
+  Future<void> _clearCollections(Set<String> protectedOwners) async {
     await _isar.writeTxn(() async {
       await _isar.isarAyahReviewRecords.clear();
       await _isar.isarAyahProgress.clear();
@@ -248,7 +281,16 @@ class AccountDataReset {
       await _isar.streakIsars.clear();
       await _isar.xpIsars.clear();
       await _isar.dailyActivityIsars.clear();
-      await _isar.cloudSyncQueueItems.clear();
+      if (protectedOwners.isEmpty) {
+        await _isar.cloudSyncQueueItems.clear();
+      } else {
+        final queueItems = await _isar.cloudSyncQueueItems.where().findAll();
+        final removableIds = queueItems
+            .where((item) => !protectedOwners.contains(item.ownerUserId))
+            .map((item) => item.id)
+            .toList();
+        await _isar.cloudSyncQueueItems.deleteAll(removableIds);
+      }
     });
   }
 }

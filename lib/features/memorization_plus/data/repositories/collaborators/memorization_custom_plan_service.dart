@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../../core/error/app_failure.dart';
@@ -21,7 +21,7 @@ class MemorizationCustomPlanService {
       final plan = await _datasource.getCustomPlan();
       return Right(plan);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -47,7 +47,7 @@ class MemorizationCustomPlanService {
       }
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -61,7 +61,7 @@ class MemorizationCustomPlanService {
       );
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 }

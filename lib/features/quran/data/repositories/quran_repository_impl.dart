@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../../domain/repositories/quran_repository.dart';
@@ -16,7 +16,7 @@ class QuranRepositoryImpl implements QuranRepository {
     } on Failure catch (f) {
       return Left(f);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -33,7 +33,7 @@ class QuranRepositoryImpl implements QuranRepository {
     } on Failure catch (f) {
       return Left(f);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -52,7 +52,7 @@ class QuranRepositoryImpl implements QuranRepository {
     } on Failure catch (f) {
       return Left(f);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -81,7 +81,7 @@ class QuranRepositoryImpl implements QuranRepository {
     } on Failure catch (f) {
       return Left(f);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -93,7 +93,7 @@ class QuranRepositoryImpl implements QuranRepository {
     } on Failure catch (f) {
       return Left(f);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 }

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_animate/flutter_animate.dart';
-
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -40,7 +38,7 @@ class KidsHouseCard extends StatelessWidget {
       KidsJourneyStageStatus.needsReview => l10n.kidsGamifiedNeedsReview,
     };
 
-    Widget cardContent = AnimatedContainer(
+    final cardContent = AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -141,20 +139,6 @@ class KidsHouseCard extends StatelessWidget {
         ],
       ),
     );
-
-    // Add animations based on status (bypassed in test environment)
-    if (!WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
-      if (stage.status == KidsJourneyStageStatus.current) {
-        cardContent = cardContent
-            .animate(onPlay: (c) => c.repeat(reverse: true))
-            .scaleXY(begin: 1.0, end: 1.04, duration: 2.seconds, curve: Curves.easeInOut)
-            .shimmer(duration: 3.seconds, color: Colors.white.withValues(alpha: 0.15));
-      } else if (stage.status == KidsJourneyStageStatus.completed) {
-        cardContent = cardContent
-            .animate(onPlay: (c) => c.repeat())
-            .shimmer(duration: 4.seconds, color: Colors.white.withValues(alpha: 0.3), delay: 2.seconds);
-      }
-    }
 
     return SizedBox(
       width: width,

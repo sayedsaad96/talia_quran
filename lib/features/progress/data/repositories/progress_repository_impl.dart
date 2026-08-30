@@ -127,7 +127,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
         ),
       );
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -138,7 +138,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
       _progressEvents.notify(ProgressChangedReason.readPage);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 

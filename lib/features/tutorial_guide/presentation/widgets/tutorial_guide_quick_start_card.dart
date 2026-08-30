@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_card.dart';
@@ -8,51 +9,48 @@ import '../../../../core/widgets/app_card.dart';
 class TutorialGuideQuickStartCard extends StatelessWidget {
   const TutorialGuideQuickStartCard({super.key});
 
-  static const _shortcuts = [
-    _ShortcutItem(
-      icon: Icons.home_rounded,
-      label: 'الرئيسية',
-      desc: 'الورد والتقدم اليومي',
-      color: AppColors.primaryLight,
-    ),
-    _ShortcutItem(
-      icon: Icons.menu_book_rounded,
-      label: 'القرآن',
-      desc: 'المصحف والقراءة',
-      color: AppColors.info,
-    ),
-    _ShortcutItem(
-      icon: Icons.psychology_alt_rounded,
-      label: 'الحفظ',
-      desc: 'الخطة والتحسين',
-      color: AppColors.gold,
-    ),
-    _ShortcutItem(
-      icon: Icons.spa_rounded,
-      label: 'الأذكار',
-      desc: 'الورد والعداد',
-      color: AppColors.success,
-    ),
-    _ShortcutItem(
-      icon: Icons.bar_chart_rounded,
-      label: 'التقدم',
-      desc: 'الشهادات والـ XP',
-      color: AppColors.amber,
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final primary = isDark ? AppColors.goldLight : AppColors.gold;
+    final l10n = context.l10n;
+    final shortcuts = [
+      (
+        icon: Icons.home_rounded,
+        label: l10n.tutorialShortcutHomeLabel,
+        desc: l10n.tutorialShortcutHomeDesc,
+        color: AppColors.primaryLight,
+      ),
+      (
+        icon: Icons.menu_book_rounded,
+        label: l10n.tutorialShortcutQuranLabel,
+        desc: l10n.tutorialShortcutQuranDesc,
+        color: AppColors.accentBlue,
+      ),
+      (
+        icon: Icons.psychology_alt_rounded,
+        label: l10n.tutorialShortcutHifzLabel,
+        desc: l10n.tutorialShortcutHifzDesc,
+        color: AppColors.ambientGold,
+      ),
+      (
+        icon: Icons.spa_rounded,
+        label: l10n.tutorialShortcutAzkarLabel,
+        desc: l10n.tutorialShortcutAzkarDesc,
+        color: AppColors.success,
+      ),
+      (
+        icon: Icons.bar_chart_rounded,
+        label: l10n.tutorialShortcutProgressLabel,
+        desc: l10n.tutorialShortcutProgressDesc,
+        color: AppColors.desertSand,
+      ),
+    ];
 
     return AppCard(
-      gradient: isDark
+      gradient: Theme.of(context).brightness == Brightness.dark
           ? AppColors.heroGradientDark
           : AppColors.heroGradientLight,
       borderRadius: BorderRadiusDirectional.circular(AppSpacing.radiusXl),
       padding: const EdgeInsetsDirectional.all(AppSpacing.lg),
-      border: Border.all(color: primary.withValues(alpha: 0.3)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -64,7 +62,9 @@ class TutorialGuideQuickStartCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2),
+                  ),
                 ),
                 child: const Icon(
                   Icons.explore_rounded,
@@ -78,18 +78,16 @@ class TutorialGuideQuickStartCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'خريطة تالية السريعة',
+                      l10n.tutorialQuickStartTitle,
                       style: AppTypography.titleMedium.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
                       ),
                     ),
                     Text(
-                      'أهم 5 أقسام رئيسية لاستخدام التطبيق يومياً',
+                      l10n.tutorialQuickStartSubtitle,
                       style: AppTypography.bodySmall.copyWith(
-                        color: Colors.white.withValues(alpha: 0.78),
-                        fontSize: 12,
+                        color: Colors.white.withValues(alpha: 0.85),
                       ),
                     ),
                   ],
@@ -102,52 +100,59 @@ class TutorialGuideQuickStartCard extends StatelessWidget {
             height: 94,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: _shortcuts.length,
-              separatorBuilder: (_, _) => const SizedBox(width: AppSpacing.xs),
+              itemCount: shortcuts.length,
+              separatorBuilder: (_, _) =>
+                  const SizedBox(width: AppSpacing.xs),
               itemBuilder: (context, index) {
-                final item = _shortcuts[index];
-                return Container(
-                  width: 90,
-                  padding: const EdgeInsets.all(AppSpacing.xs),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.18),
+                final item = shortcuts[index];
+                return Semantics(
+                  label: '${item.label}, ${item.desc}',
+                  child: Container(
+                    width: 90,
+                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.12),
+                      borderRadius:
+                          BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.18),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: item.color.withValues(alpha: 0.25),
-                          shape: BoxShape.circle,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: item.color.withValues(alpha: 0.3),
+                            shape: BoxShape.circle,
+                          ),
+                          child:
+                              Icon(item.icon, color: Colors.white, size: 18),
                         ),
-                        child: Icon(item.icon, color: Colors.white, size: 18),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        item.label,
-                        style: AppTypography.labelMedium.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 11,
+                        const SizedBox(height: 4),
+                        Text(
+                          item.label,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      Text(
-                        item.desc,
-                        style: AppTypography.labelSmall.copyWith(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          fontSize: 9,
+                        Text(
+                          item.desc,
+                          style: AppTypography.labelSmall.copyWith(
+                            color: Colors.white.withValues(alpha: 0.8),
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
@@ -156,14 +161,17 @@ class TutorialGuideQuickStartCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              const Icon(Icons.info_outline_rounded, size: 14, color: Colors.white70),
-              const SizedBox(width: 4),
+              const Icon(
+                Icons.info_outline_rounded,
+                size: 14,
+                color: Colors.white70,
+              ),
+              const SizedBox(width: AppSpacing.xs),
               Expanded(
                 child: Text(
-                  'استخدم خانة البحث أو التصفية بالأسفل للوصول لأي شرح تفصيلي.',
+                  l10n.tutorialQuickStartHint,
                   style: AppTypography.labelSmall.copyWith(
-                    color: Colors.white.withValues(alpha: 0.75),
-                    fontSize: 11,
+                    color: Colors.white.withValues(alpha: 0.8),
                   ),
                 ),
               ),
@@ -173,18 +181,4 @@ class TutorialGuideQuickStartCard extends StatelessWidget {
       ),
     );
   }
-}
-
-class _ShortcutItem {
-  const _ShortcutItem({
-    required this.icon,
-    required this.label,
-    required this.desc,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final String desc;
-  final Color color;
 }

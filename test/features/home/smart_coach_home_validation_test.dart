@@ -47,6 +47,23 @@ void main() {
   });
 
   group('Smart Coach Home validation', () {
+    testWidgets(
+      'home header keeps its greeting and product identity without a basmalah',
+      (tester) async {
+        await _registerHome(_homeLoaded());
+
+        await _pumpHome(tester);
+        await _pumpHomeInitialFrames(tester);
+
+        expect(find.text('Good Morning'), findsOneWidget);
+        expect(find.text('تاليــة'), findsOneWidget);
+        expect(
+          find.text('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'),
+          findsNothing,
+        );
+      },
+    );
+
     testWidgets('resume session takes precedence over Smart Coach card', (
       tester,
     ) async {

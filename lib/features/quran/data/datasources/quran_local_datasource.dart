@@ -105,14 +105,11 @@ class QuranLocalDatasourceImpl implements QuranLocalDatasource {
       final parsedAyahs = <AyahModel>[];
       for (int i = 0; i < verseList.length; i++) {
         final verseObj = verseList[i];
-        final rawText = verseObj['text'].toString().replaceAll('\uFEFF', '');
+        final rawText = verseObj['text'].toString();
         final global = verseObj['global'];
         final juz = verseObj['juz'];
         final page = verseObj['page'];
-        if (rawText.isEmpty ||
-            global is! int ||
-            juz is! int ||
-            page is! int) {
+        if (rawText.isEmpty || global is! int || juz is! int || page is! int) {
           throw StateError(
             'Surah ${surah.id} verse ${verseObj['verse']}: missing required '
             'structural metadata (text/global/page/juz)',

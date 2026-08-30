@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import 'privacy_policy_content.dart';
@@ -25,6 +27,9 @@ class PrivacyPolicyPage extends StatelessWidget {
     final introSubtitle = isAr
         ? PrivacyPolicyContent.arIntroSubtitle
         : PrivacyPolicyContent.enIntroSubtitle;
+    final manualOptionAction = isAr
+        ? PrivacyPolicyContent.arManualOptionAction
+        : PrivacyPolicyContent.enManualOptionAction;
 
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final textColor = isDark
@@ -170,6 +175,22 @@ class PrivacyPolicyPage extends StatelessWidget {
                       ),
                     );
                   }),
+                  const SizedBox(height: AppSpacing.sm),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      key: const ValueKey('privacy-manual-option-action'),
+                      onPressed: () => context.go(AppRoutes.memorizationHub),
+                      icon: const Icon(Icons.fact_check_outlined),
+                      label: Text(
+                        manualOptionAction,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: isAr ? 'Noto_Naskh_Arabic' : null,
+                        ),
+                      ),
+                    ),
+                  ),
                 ]),
               ),
             ),
@@ -188,13 +209,8 @@ class PrivacyPolicyPage extends StatelessWidget {
       elevation: 0,
       scrolledUnderElevation: 0.5,
       leading: IconButton(
-        icon: Icon(
-          Icons.arrow_back_ios_rounded,
-          color: isDark
-              ? AppColors.darkTextPrimary
-              : AppColors.lightTextPrimary,
-          size: 20,
-        ),
+        tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+        icon: const BackButtonIcon(),
         onPressed: () => Navigator.of(context).maybePop(),
       ),
       title: Text(

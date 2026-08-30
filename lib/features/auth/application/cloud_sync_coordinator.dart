@@ -22,6 +22,7 @@ class CloudSyncCoordinator {
     AchievementService? achievementService,
     CloudSyncQueue? cloudSyncQueue,
     BookmarkService? bookmarkService,
+    bool syncBookmarks = true,
     Duration localChangeDebounce = const Duration(seconds: 2),
   }) : _authRepository = authRepository,
        _memorizationCloudRepository = memorizationCloudRepository,
@@ -29,6 +30,7 @@ class CloudSyncCoordinator {
        _achievementService = achievementService,
        _cloudSyncQueue = cloudSyncQueue,
        _bookmarkService = bookmarkService,
+       _syncBookmarks = syncBookmarks,
        _localChangeDebounce = localChangeDebounce {
     _progressSubscription = _progressEvents?.changes
         .where((reason) => reason != ProgressChangedReason.cloudPull)
@@ -41,6 +43,7 @@ class CloudSyncCoordinator {
   final AchievementService? _achievementService;
   final CloudSyncQueue? _cloudSyncQueue;
   final BookmarkService? _bookmarkService;
+  final bool _syncBookmarks;
   final Duration _localChangeDebounce;
 
   Future<void>? _syncInFlight;
@@ -49,6 +52,7 @@ class CloudSyncCoordinator {
   Timer? _localChangeTimer;
   var _pendingPushRequested = false;
   var _pushKidsProgressAfterLocalChange = false;
+  var _identityTransitionDepth = 0;
   DateTime? _lastResumeSyncAt;
   static const _resumeDebounce = Duration(minutes: 5);
 
@@ -61,11 +65,13 @@ class CloudSyncCoordinator {
   /// Unexpected exceptions are logged and contained so authentication UI and
   /// lifecycle observers remain responsive while offline services recover.
   Future<void> run() {
+    if (_identityTransitionDepth > 0) return Future.value();
     final pendingPush = _pendingPushInFlight;
     if (pendingPush != null) {
       return pendingPush.then((_) => run());
     }
-    _syncInFlight ??= _perform()
+    final ownerId = _authRepository.currentUser?.id;
+    _syncInFlight ??= _perform(ownerId)
         .catchError((Object error, StackTrace stackTrace) {
           TaliaLogger.e('Unexpected cloud sync failure', error, stackTrace);
         })
@@ -77,7 +83,9 @@ class CloudSyncCoordinator {
   /// must not trigger another full remote pull: the next login/resume still
   /// performs reconciliation, while this path uploads only outstanding work.
   void _schedulePendingPush(ProgressChangedReason reason) {
-    if (_authRepository.currentUser == null) return;
+    if (_identityTransitionDepth > 0 || _authRepository.currentUser == null) {
+      return;
+    }
     if (reason == ProgressChangedReason.kidsProgress) {
       _pushKidsProgressAfterLocalChange = true;
     }
@@ -89,6 +97,7 @@ class CloudSyncCoordinator {
   }
 
   Future<void> _pushPendingChanges() async {
+    if (_identityTransitionDepth > 0) return;
     _pendingPushRequested = true;
     _pendingPushInFlight ??= _drainPendingPushes()
         .catchError((Object error, StackTrace stackTrace) {
@@ -141,7 +150,7 @@ class CloudSyncCoordinator {
   Future<bool> flushBeforeSignOut() async {
     try {
       final bookmarks = _bookmarkService;
-      if (bookmarks != null && bookmarks.hasPendingCloudWork) {
+      if (bookmarks != null && await bookmarks.hasPendingCloudWorkDurably()) {
         await bookmarks.pushToCloud();
       }
       final memorization = _memorizationCloudRepository;
@@ -156,11 +165,12 @@ class CloudSyncCoordinator {
       final memorizationPending =
           memorization != null && await memorization.hasPendingCloudWork();
       return !memorizationPending &&
-          !(_bookmarkService?.hasPendingCloudWork ?? false) &&
+          !(bookmarks != null &&
+              await bookmarks.hasPendingCloudWorkDurably()) &&
           !await _authRepository.hasPendingCloudPush();
     } catch (error, stackTrace) {
       TaliaLogger.w(
-        'Best-effort cloud flush before sign-out failed; local data will be cleared',
+        'Best-effort cloud flush before sign-out failed; sign-out must block or preserve pending data',
         error,
         stackTrace,
       );
@@ -168,11 +178,44 @@ class CloudSyncCoordinator {
     }
   }
 
-  Future<void> _perform() async {
+  Future<void> preservePendingSignOutWork() async {
+    await _bookmarkService?.preservePendingRecoveryIfNeeded();
+  }
+
+  /// Prevents new sync work and waits until existing network work has stopped
+  /// before the caller invalidates or replaces the authenticated identity.
+  Future<void> beginIdentityTransition() async {
+    _identityTransitionDepth += 1;
+    _localChangeTimer?.cancel();
+    _localChangeTimer = null;
+    while (true) {
+      final inFlight = <Future<void>>[];
+      final syncInFlight = _syncInFlight;
+      final pendingPushInFlight = _pendingPushInFlight;
+      if (syncInFlight != null) inFlight.add(syncInFlight);
+      if (pendingPushInFlight != null) inFlight.add(pendingPushInFlight);
+      if (inFlight.isEmpty) return;
+      await Future.wait(inFlight);
+    }
+  }
+
+  void endIdentityTransition() {
+    if (_identityTransitionDepth == 0) {
+      throw StateError('Unbalanced identity transition end');
+    }
+    _identityTransitionDepth -= 1;
+  }
+
+  bool _ownerIsStillActive(String? ownerId) =>
+      ownerId != null && _authRepository.currentUser?.id == ownerId;
+
+  Future<void> _perform(String? ownerId) async {
+    if (!_ownerIsStillActive(ownerId)) return;
     await _processSyncQueue();
+    if (!_ownerIsStillActive(ownerId)) return;
 
     final bookmarks = _bookmarkService;
-    if (bookmarks != null) {
+    if (_syncBookmarks && bookmarks != null) {
       try {
         await bookmarks.migrateLegacyForCurrentOwner();
         await bookmarks.pullFromCloud();
@@ -182,8 +225,10 @@ class CloudSyncCoordinator {
         await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.bookmarkPull);
       }
     }
+    if (!_ownerIsStillActive(ownerId)) return;
 
     final pullResult = await _authRepository.pullProgressFromCloud();
+    if (!_ownerIsStillActive(ownerId)) return;
     await pullResult.fold(
       (failure) async {
         TaliaLogger.w('Cloud pull failed after login', failure.message);
@@ -198,12 +243,14 @@ class CloudSyncCoordinator {
     final memorization = _memorizationCloudRepository;
     if (memorization != null) {
       final identityPull = await memorization.pullIdentityFromCloud();
+      if (!_ownerIsStillActive(ownerId)) return;
       identityPull.fold(
         (failure) => TaliaLogger.w('Identity pull failed', failure.message),
         (_) => TaliaLogger.i('Identity pull completed'),
       );
 
       final productionPull = await memorization.pullProductionDataFromCloud();
+      if (!_ownerIsStillActive(ownerId)) return;
       await productionPull.fold(
         (failure) async {
           TaliaLogger.w('Production SRS pull failed', failure.message);
@@ -218,6 +265,7 @@ class CloudSyncCoordinator {
       final achievementService = _achievementService;
       if (achievementService != null) {
         final certificatePull = await memorization.pullCertificatesFromCloud();
+        if (!_ownerIsStillActive(ownerId)) return;
         await certificatePull.fold(
           (failure) async {
             TaliaLogger.w('Certificate pull failed', failure.message);
@@ -236,6 +284,7 @@ class CloudSyncCoordinator {
       }
 
       final kidsPull = await memorization.pullKidsProgressFromCloud();
+      if (!_ownerIsStillActive(ownerId)) return;
       await kidsPull.fold(
         (failure) async {
           TaliaLogger.w('Kids progress pull failed', failure.message);
@@ -250,24 +299,31 @@ class CloudSyncCoordinator {
       );
     }
 
-    await _pushAllData();
+    if (!_ownerIsStillActive(ownerId)) return;
+    await _pushAllData(ownerId!);
 
     _progressEvents?.notify(ProgressChangedReason.cloudPull);
   }
 
-  Future<void> _pushAllData() async {
+  Future<void> _pushAllData(String ownerId) async {
+    if (!_ownerIsStillActive(ownerId)) return;
     await _pushAuthProgress();
+    if (!_ownerIsStillActive(ownerId)) return;
 
     final memorization = _memorizationCloudRepository;
     if (memorization != null) {
       await _pushProductionData(memorization);
+      if (!_ownerIsStillActive(ownerId)) return;
       await _pushKidsProgress(memorization);
+      if (!_ownerIsStillActive(ownerId)) return;
       await _pushIdentity(memorization);
+      if (!_ownerIsStillActive(ownerId)) return;
       await _pushCertificates(memorization);
+      if (!_ownerIsStillActive(ownerId)) return;
     }
 
     final bookmarks = _bookmarkService;
-    if (bookmarks != null) {
+    if (_syncBookmarks && bookmarks != null) {
       await _pushBookmarks(bookmarks);
     }
   }
@@ -291,7 +347,9 @@ class CloudSyncCoordinator {
     }
 
     final bookmarks = _bookmarkService;
-    if (bookmarks != null && bookmarks.hasPendingCloudWork) {
+    if (_syncBookmarks &&
+        bookmarks != null &&
+        await bookmarks.hasPendingCloudWorkDurably()) {
       await _pushBookmarks(bookmarks);
     }
   }
@@ -382,7 +440,7 @@ class CloudSyncCoordinator {
     } catch (error, stackTrace) {
       TaliaLogger.w('Bookmark cloud push failed', error, stackTrace);
     }
-    if (bookmarks.hasPendingCloudWork) {
+    if (await bookmarks.hasPendingCloudWorkDurably()) {
       await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.bookmarkPush);
     } else {
       await _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.bookmarkPush);
@@ -392,7 +450,12 @@ class CloudSyncCoordinator {
   Future<bool> _hasPendingSyncWork() async {
     final queue = _cloudSyncQueue;
     if (queue != null && await queue.hasPending()) return true;
-    if (_bookmarkService?.hasPendingCloudWork ?? false) return true;
+    final bookmarks = _bookmarkService;
+    if (_syncBookmarks &&
+        bookmarks != null &&
+        await bookmarks.hasPendingCloudWorkDurably()) {
+      return true;
+    }
     if (await _authRepository.hasPendingCloudPush()) return true;
     final memorization = _memorizationCloudRepository;
     return memorization != null && await memorization.hasPendingCloudWork();
@@ -402,6 +465,11 @@ class CloudSyncCoordinator {
     final queue = _cloudSyncQueue;
     if (queue == null) return;
     for (final item in await queue.dueItems()) {
+      if (!_syncBookmarks &&
+          (item.kind == CloudSyncQueueKind.bookmarkPull ||
+              item.kind == CloudSyncQueueKind.bookmarkPush)) {
+        continue;
+      }
       bool completed;
       try {
         completed = await _retryQueueKind(item.kind);
@@ -459,11 +527,15 @@ class CloudSyncCoordinator {
         return memorization == null ||
             (await memorization.syncKidsProgressToCloud()).isRight();
       case CloudSyncQueueKind.bookmarkPull:
+        if (!_syncBookmarks) return false;
         await _bookmarkService?.pullFromCloud();
         return true;
       case CloudSyncQueueKind.bookmarkPush:
+        if (!_syncBookmarks) return false;
         await _bookmarkService?.pushToCloud();
-        return !(_bookmarkService?.hasPendingCloudWork ?? false);
+        final bookmarks = _bookmarkService;
+        return bookmarks == null ||
+            !await bookmarks.hasPendingCloudWorkDurably();
       default:
         return true;
     }

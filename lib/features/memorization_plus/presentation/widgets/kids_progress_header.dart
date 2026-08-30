@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_animate/flutter_animate.dart';
-
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -29,47 +27,45 @@ class KidsProgressHeader extends StatelessWidget {
         ? context.l10n.kidsGamifiedWelcome
         : '${context.l10n.kidsGamifiedWelcome} ${childName!.trim()}';
 
-    final avatarWidget = InkWell(
-      onTap: onAvatarTap,
-      customBorder: const CircleBorder(),
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: KidsTheme.goldStar.withValues(alpha: 0.6), width: 2),
-          boxShadow: [
-            BoxShadow(
-              color: KidsTheme.goldStar.withValues(alpha: 0.3),
-              blurRadius: 12,
-              spreadRadius: 2,
-            ),
-          ],
+    final avatarCore = Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: KidsTheme.goldStar.withValues(alpha: 0.6),
+          width: 2,
         ),
-        child: CircleAvatar(
-          radius: 34,
-          backgroundColor: KidsTheme.nightSkyDark,
-          child: ClipOval(
-            child: Image.asset(
-              KidsTheme.kidAvatarAsset,
-              width: 62,
-              height: 62,
-              fit: BoxFit.cover,
-            ),
+        boxShadow: [
+          BoxShadow(
+            color: KidsTheme.goldStar.withValues(alpha: 0.3),
+            blurRadius: 12,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: CircleAvatar(
+        radius: 34,
+        backgroundColor: KidsTheme.nightSkyDark,
+        child: ClipOval(
+          child: Image.asset(
+            KidsTheme.kidAvatarAsset,
+            width: 62,
+            height: 62,
+            fit: BoxFit.cover,
           ),
         ),
       ),
     );
 
-    final avatar = WidgetsBinding.instance.runtimeType.toString().contains('Test')
-        ? avatarWidget
-        : avatarWidget.animate(
-            onPlay: (c) => c.repeat(reverse: true),
-          ).scaleXY(
-            begin: 0.97,
-            end: 1.03,
-            duration: 2.seconds,
-            curve: Curves.easeInOut,
+    final avatarWidget = onAvatarTap == null
+        ? avatarCore
+        : InkWell(
+            onTap: onAvatarTap,
+            customBorder: const CircleBorder(),
+            child: avatarCore,
           );
+
+    final avatar = avatarWidget;
 
     final progressDetails = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,11 +175,7 @@ class KidsProgressHeader extends StatelessWidget {
           ),
         );
 
-        if (WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
-          return headerCard;
-        }
-
-        return headerCard.animate().fadeIn(duration: 400.ms).slideY(begin: -0.05, end: 0, curve: Curves.easeOut);
+        return headerCard;
       },
     );
   }
@@ -210,12 +202,7 @@ class _StarCounter extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (WidgetsBinding.instance.runtimeType.toString().contains('Test'))
-            const Icon(Icons.star_rounded, color: KidsTheme.goldStar, size: 28)
-          else
-            const Icon(Icons.star_rounded, color: KidsTheme.goldStar, size: 28)
-                .animate(onPlay: (c) => c.repeat())
-                .shimmer(duration: 2.seconds, color: Colors.white),
+          const Icon(Icons.star_rounded, color: KidsTheme.goldStar, size: 28),
           const SizedBox(height: 2),
           Text(
             context.l10n.kidsGamifiedStarsCount(count),

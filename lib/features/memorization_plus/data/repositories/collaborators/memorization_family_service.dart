@@ -82,7 +82,7 @@ class MemorizationFamilyService {
         FamilyDashboard(children: children, settings: settings),
       );
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 }

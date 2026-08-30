@@ -10,40 +10,7 @@ class _HeroHeader extends StatefulWidget {
   State<_HeroHeader> createState() => _HeroHeaderState();
 }
 
-class _HeroHeaderState extends State<_HeroHeader>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _floatController;
-  late final Animation<double> _floatAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _floatController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    );
-    _floatAnimation = Tween<double>(begin: -4, end: 4).animate(
-      CurvedAnimation(parent: _floatController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!mounted) return;
-    if (MediaQuery.of(context).disableAnimations) {
-      _floatController.value = 0.0;
-    } else if (!_floatController.isAnimating) {
-      _floatController.repeat(reverse: true);
-    }
-  }
-
-  @override
-  void dispose() {
-    _floatController.dispose();
-    super.dispose();
-  }
-
+class _HeroHeaderState extends State<_HeroHeader> {
   String _greetingText(BuildContext context) => switch (widget.state.greeting) {
     'morning' => context.l10n.greetingMorning,
     'afternoon' => context.l10n.greetingAfternoon,
@@ -107,7 +74,7 @@ class _HeroHeaderState extends State<_HeroHeader>
                     children: [
                       Icon(
                         _greetingIcon(),
-                        color: AppColors.goldLight,
+                        color: Colors.white.withValues(alpha: 0.82),
                         size: 22,
                       ),
                       const SizedBox(width: 8),
@@ -135,10 +102,11 @@ class _HeroHeaderState extends State<_HeroHeader>
                       const SizedBox(width: AppSpacing.sm),
                       _HeroIconButton(
                         icon: Icons.settings_suggest_rounded,
+                        tooltip: context.l10n.settings,
                         onTap: () => context.push(AppRoutes.settings),
                       ),
                     ],
-                  ).animate().fadeIn(duration: 350.ms),
+                  ),
                   const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
@@ -150,33 +118,16 @@ class _HeroHeaderState extends State<_HeroHeader>
                           fontFamily: 'Amiri',
                           fontSize: 32,
                         ),
-                      ).animate().fadeIn(duration: 420.ms).slideY(begin: 0.04),
+                      ),
                       const SizedBox(width: 8),
-                      AnimatedBuilder(
-                        animation: _floatAnimation,
-                        builder: (context, child) => Transform.translate(
-                          offset: Offset(0, _floatAnimation.value),
-                          child: child,
-                        ),
-                        child: Image.asset(
-                          'assets/images/logo.png',
-                          width: 32,
-                          height: 32,
-                          fit: BoxFit.contain,
-                        ),
+                      Image.asset(
+                        'assets/images/logo.png',
+                        width: 32,
+                        height: 32,
+                        fit: BoxFit.contain,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    context.l10n.bismillah,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: Colors.white.withValues(alpha: 0.68),
-                      fontFamily: 'Amiri',
-                      fontSize: 14,
-                    ),
-                    textDirection: TextDirection.rtl,
-                  ).animate().fadeIn(duration: 460.ms),
                   const SizedBox(height: AppSpacing.lg),
                   _AchievementRow(
                     progress: widget.state.progress,
@@ -188,39 +139,32 @@ class _HeroHeaderState extends State<_HeroHeader>
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 420.ms, curve: Curves.easeOut);
+    );
   }
 }
 
 class _HeroIconButton extends StatelessWidget {
-  const _HeroIconButton({required this.icon, required this.onTap});
+  const _HeroIconButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onTap,
+  });
 
   final IconData icon;
+  final String tooltip;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: RepaintBoundary(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-          child: Material(
-            color: Colors.white.withValues(alpha: 0.1),
-            child: InkWell(
-              onTap: onTap,
-              child: SizedBox(
-                width: 48,
-                height: 48,
-                child: Icon(
-                  icon,
-                  color: Colors.white.withValues(alpha: 0.82),
-                  size: 20,
-                ),
-              ),
-            ),
-          ),
-        ),
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onTap,
+      icon: Icon(icon),
+      color: Colors.white.withValues(alpha: 0.82),
+      iconSize: 20,
+      style: IconButton.styleFrom(
+        backgroundColor: Colors.white.withValues(alpha: 0.12),
+        minimumSize: const Size(48, 48),
       ),
     );
   }
@@ -302,7 +246,8 @@ class _AchievementBadge extends StatelessWidget {
       }
     }
 
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
       onTap: () {
         final certs = getIt<AchievementService>().getEarnedCertificates(
           isKids: isKids,
@@ -402,7 +347,8 @@ class _DailyWirdCard extends StatelessWidget {
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
 
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       onTap: () {
         HapticFeedback.selectionClick();
         context.push('/quran/page/$pageNumber');
@@ -467,7 +413,7 @@ class _DailyWirdCard extends StatelessWidget {
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+    );
   }
 }
 
@@ -535,8 +481,9 @@ class _ProgressSection extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 4),
-              GestureDetector(
-                onTap: () {
+              IconButton(
+                tooltip: context.l10n.shareProgress,
+                onPressed: () {
                   final l10n = context.l10n;
                   showModalBottomSheet<void>(
                     context: context,
@@ -557,9 +504,7 @@ class _ProgressSection extends StatelessWidget {
                               Navigator.pop(ctx);
                               SocialShareSheet.show(
                                 context,
-                                SocialShareData.progress(
-                                  progress: progress,
-                                ),
+                                SocialShareData.progress(progress: progress),
                               );
                             },
                           ),
@@ -597,7 +542,7 @@ class _ProgressSection extends StatelessWidget {
                     ),
                   );
                 },
-                child: Icon(Icons.share_rounded, size: 18, color: primary),
+                icon: Icon(Icons.share_rounded, size: 18, color: primary),
               ),
             ],
           ),
@@ -723,7 +668,7 @@ class _ProgressSection extends StatelessWidget {
             ),
         ],
       ),
-    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+    );
   }
 }
 
@@ -833,7 +778,7 @@ class _QuickActionsGrid extends StatelessWidget {
           isDark: isDark,
         ),
       ],
-    ).animate().fadeIn(duration: 250.ms, delay: 120.ms);
+    );
   }
 }
 
@@ -999,7 +944,7 @@ class _ParentGuardianToolsCard extends StatelessWidget {
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 240.ms).slideY(begin: 0.03);
+    );
   }
 }
 
@@ -1107,7 +1052,7 @@ class _SignInNudgeBannerState extends State<_SignInNudgeBanner> {
                 ),
               ],
             ),
-          ).animate().fadeIn(duration: 250.ms).slideY(begin: -0.03),
+          ),
         );
       },
     );
@@ -1217,7 +1162,7 @@ class _TutorialPromptBannerState extends State<_TutorialPromptBanner> {
             ),
           ],
         ),
-      ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.02),
+      ),
     );
   }
 }
@@ -1301,7 +1246,7 @@ class _ResumeSessionCard extends StatelessWidget {
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+    );
   }
 }
 
@@ -1534,7 +1479,7 @@ class _NextBestActionCardState extends State<_NextBestActionCard> {
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+    );
   }
 }
 
@@ -1588,9 +1533,7 @@ class _HomeEngagementSection extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: AppDecorations.bentoCard(
         isDark: isDark,
-        accentGlow: isDark
-            ? AppColors.gold.withValues(alpha: 0.12)
-            : AppColors.primary.withValues(alpha: 0.06),
+        accentGlow: AppColors.primary.withValues(alpha: isDark ? 0.12 : 0.06),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1664,7 +1607,7 @@ class _HomeEngagementSection extends StatelessWidget {
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+    );
   }
 }
 
@@ -1698,19 +1641,7 @@ class _HomeEngagementTile extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (icon == Icons.local_fire_department_rounded)
-            Icon(icon, color: color, size: 20)
-                .animate(
-                  onPlay: (controller) => controller.repeat(reverse: true),
-                )
-                .scaleXY(
-                  begin: 0.92,
-                  end: 1.08,
-                  duration: 1600.ms,
-                  curve: Curves.easeInOut,
-                )
-          else
-            Icon(icon, color: color, size: 20),
+          Icon(icon, color: color, size: 20),
           const SizedBox(height: 6),
           Text(
             label,
@@ -1775,6 +1706,6 @@ class _HomeActivityHeatmapSection extends StatelessWidget {
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 250.ms).slideY(begin: 0.03);
+    );
   }
 }

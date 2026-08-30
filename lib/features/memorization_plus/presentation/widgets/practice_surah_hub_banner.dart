@@ -15,7 +15,8 @@ class PracticeSurahHubBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       onTap: () => context.go(AppRoutes.memorizationHub),
       child: Container(
         margin: const EdgeInsets.fromLTRB(

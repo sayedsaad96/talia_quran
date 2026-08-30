@@ -7,36 +7,43 @@ void main() {
 
     // ── Exact match ─────────────────────────────────────────────────────────
 
-    test('passes with score 1.0 when normalized STT exactly matches target', () {
-      // Harakat stripped → exact Jaccard 1.0
-      final result = evaluator.evaluate(
-        targetText: 'مَالِكِ يَوْمِ الدِّينِ',
-        spokenText: 'مالك يوم الدين',
-      );
+    test(
+      'passes with score 1.0 when normalized STT exactly matches target',
+      () {
+        // Harakat stripped → exact Jaccard 1.0
+        final result = evaluator.evaluate(
+          targetText: 'مَالِكِ يَوْمِ الدِّينِ',
+          spokenText: 'مالك يوم الدين',
+        );
 
-      expect(result.passed, isTrue);
-      expect(result.similarityScore, 1.0);
-      expect(result.normalizedTarget, result.normalizedSpoken);
-      expect(result.isNoAttempt, isFalse);
-    });
+        expect(result.passed, isTrue);
+        expect(result.similarityScore, 1.0);
+        expect(result.assessmentMethod, V2AssessmentMethod.automatic);
+        expect(result.normalizedTarget, result.normalizedSpoken);
+        expect(result.isNoAttempt, isFalse);
+      },
+    );
 
     // ── Similarity tolerance (0.92 threshold) ───────────────────────────────
 
-    test('passes when normalized similarity meets threshold (lenient evaluator)', () {
-      // Custom low threshold to isolate threshold logic independently.
-      // 'مالك الدين' vs 'مالك يوم الدين':
-      //   intersection = {مالك, الدين} = 2
-      //   union        = {مالك, يوم, الدين} = 3
-      //   Jaccard      = 2/3 ≈ 0.667 — above 0.5 but below 0.92
-      const lenientEvaluator = V2RecitationEvaluator(passThreshold: 0.5);
-      final result = lenientEvaluator.evaluate(
-        targetText: 'مالك يوم الدين',
-        spokenText: 'مالك الدين',
-      );
+    test(
+      'passes when normalized similarity meets threshold (lenient evaluator)',
+      () {
+        // Custom low threshold to isolate threshold logic independently.
+        // 'مالك الدين' vs 'مالك يوم الدين':
+        //   intersection = {مالك, الدين} = 2
+        //   union        = {مالك, يوم, الدين} = 3
+        //   Jaccard      = 2/3 ≈ 0.667 — above 0.5 but below 0.92
+        const lenientEvaluator = V2RecitationEvaluator(passThreshold: 0.5);
+        final result = lenientEvaluator.evaluate(
+          targetText: 'مالك يوم الدين',
+          spokenText: 'مالك الدين',
+        );
 
-      expect(result.passed, isTrue);
-      expect(result.similarityScore, closeTo(0.67, 0.01));
-    });
+        expect(result.passed, isTrue);
+        expect(result.similarityScore, closeTo(0.67, 0.01));
+      },
+    );
 
     test('fails when similarity is below 0.92 default threshold', () {
       // 'مالك الدين' vs 'مالك يوم الدين' → Jaccard 0.67 < 0.92
@@ -79,6 +86,19 @@ void main() {
       );
 
       expect(result.isNoAttempt, isTrue);
+    });
+
+    test('rejects an automatic score on a manual outcome', () {
+      expect(
+        () => V2RecitationResult(
+          passed: true,
+          similarityScore: 1.0,
+          normalizedTarget: '',
+          normalizedSpoken: '',
+          assessmentMethod: V2AssessmentMethod.manual,
+        ),
+        throwsA(isA<AssertionError>()),
+      );
     });
   });
 }

@@ -87,7 +87,9 @@ class _KidsQuranReaderPageState extends State<KidsQuranReaderPage> {
               ? state.detail
               : _currentDetail;
           if (detail == null && state is QuranPageLoading) {
-            return Scaffold(body: QuranPageSkeletonLoader(isDark: context.isDark));
+            return Scaffold(
+              body: QuranPageSkeletonLoader(isDark: context.isDark),
+            );
           }
           if (detail == null && state is QuranPageError) {
             return Scaffold(
@@ -140,7 +142,7 @@ class KidsQuranReaderContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final bg = isDark ? AppColors.parchmentDark : AppColors.parchmentLight;
-    final accent = isDark ? AppColors.goldLight : AppColors.goldDark;
+    final accent = isDark ? AppColors.primaryLight : AppColors.primary;
 
     return Scaffold(
       backgroundColor: bg,
@@ -174,7 +176,6 @@ class KidsQuranReaderContent extends StatelessWidget {
     );
   }
 }
-
 
 class _KidsQuranHeader extends StatelessWidget {
   const _KidsQuranHeader({

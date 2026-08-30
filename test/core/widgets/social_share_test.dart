@@ -14,24 +14,32 @@ void main() {
   /// Matches the Talia companion image; templates tag it with a stable key
   /// so assertions hold regardless of provider wrapping (ResizeImage) or
   /// whether assets load in the test environment.
-  final Finder characterImage = find.byKey(const ValueKey('share-character-image'));
+  final Finder characterImage = find.byKey(
+    const ValueKey('share-character-image'),
+  );
 
   group('SocialShareData Domain Model & Factories', () {
     test('defines fixed logical canvases for each social export format', () {
       expect(SocialShareFormat.square.exportLogicalSize, const Size(360, 360));
-      expect(SocialShareFormat.portrait.exportLogicalSize, const Size(360, 450));
+      expect(
+        SocialShareFormat.portrait.exportLogicalSize,
+        const Size(360, 450),
+      );
       expect(SocialShareFormat.story.exportLogicalSize, const Size(360, 640));
     });
 
-    test('references only character assets that actually ship with the app', () {
-      for (final category in SocialShareCategory.values) {
-        expect(
-          SocialShareData.defaultCharacterAssetFor(category),
-          'assets/images/character/Talia_Master_Character.png',
-          reason: '$category must resolve to the official master character',
-        );
-      }
-    });
+    test(
+      'references only character assets that actually ship with the app',
+      () {
+        for (final category in SocialShareCategory.values) {
+          expect(
+            SocialShareData.defaultCharacterAssetFor(category),
+            'assets/images/character/Talia_Master_Character.png',
+            reason: '$category must resolve to the official master character',
+          );
+        }
+      },
+    );
 
     test('quranAyah factory keeps trusted verse text and reference only', () {
       const ayah = Ayah(
@@ -89,7 +97,8 @@ void main() {
     test('dua factory creates valid data from domain Zikr', () {
       const zikr = Zikr(
         id: 'dua_1',
-        text: 'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى',
+        text:
+            'اللَّهُمَّ إِنِّي أَسْأَلُكَ الْهُدَى وَالتُّقَى وَالْعَفَافَ وَالْغِنَى',
         transliteration: '',
         translation: '',
         totalCount: 1,
@@ -297,8 +306,9 @@ void main() {
       );
     }
 
-    testWidgets('premium shell exposes its arch and parchment sharing footer',
-        (tester) async {
+    testWidgets('premium shell exposes its arch and parchment sharing footer', (
+      tester,
+    ) async {
       const data = SocialShareData(
         content: 'A real milestone from the user journey',
         title: 'First Quran milestone',
@@ -317,36 +327,46 @@ void main() {
       );
 
       expect(find.byKey(const ValueKey('islamic-hero-arch')), findsOneWidget);
-      expect(find.byKey(const ValueKey('share-parchment-footer')), findsOneWidget);
+      expect(
+        find.byKey(const ValueKey('share-parchment-footer')),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('kids achievement composes the official character inside the hero arch',
-        (tester) async {
-      const data = SocialShareData(
-        content: 'A real milestone from the user journey',
-        title: 'First Quran milestone',
-        category: SocialShareCategory.achievement,
-        audience: SocialShareAudience.kids,
-        showCharacter: true,
-      );
+    testWidgets(
+      'kids achievement composes the official character inside the hero arch',
+      (tester) async {
+        const data = SocialShareData(
+          content: 'A real milestone from the user journey',
+          title: 'First Quran milestone',
+          category: SocialShareCategory.achievement,
+          audience: SocialShareAudience.kids,
+          showCharacter: true,
+        );
 
-      await tester.pumpWidget(
-        buildTestHarness(
-          const SocialShareCard(
-            data: data,
-            theme: SocialShareTheme.emeraldDark,
-            format: SocialShareFormat.portrait,
+        await tester.pumpWidget(
+          buildTestHarness(
+            const SocialShareCard(
+              data: data,
+              theme: SocialShareTheme.emeraldDark,
+              format: SocialShareFormat.portrait,
+            ),
+            size: const Size(360, 450),
           ),
-          size: const Size(360, 450),
-        ),
-      );
+        );
 
-      expect(find.byKey(const ValueKey('share-hero-character')), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
+        expect(
+          find.byKey(const ValueKey('share-hero-character')),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
 
-    testWidgets('CASE 1: Achievement card (Arabic) renders real data', (tester) async {
+    testWidgets('CASE 1: Achievement card (Arabic) renders real data', (
+      tester,
+    ) async {
       const achievement = Achievement(
         id: 'first_page',
         titleKey: 'الصفحة الأولى',
@@ -380,7 +400,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 2: Achievement card (English) is fully localized', (tester) async {
+    testWidgets('CASE 2: Achievement card (English) is fully localized', (
+      tester,
+    ) async {
       const achievement = Achievement(
         id: 'ten_pages',
         titleKey: 'Ten pages read',
@@ -412,16 +434,22 @@ void main() {
       expect(find.text('Talia'), findsOneWidget);
       expect(find.text('New achievement'), findsOneWidget);
       expect(find.text("Sayed's Quran journey"), findsOneWidget);
-      expect(find.text('Plan  •  Memorize  •  Review  •  Retain'), findsOneWidget);
+      expect(
+        find.text('Plan  •  Memorize  •  Review  •  Retain'),
+        findsOneWidget,
+      );
       expect(find.text('taliaapp.com'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 3: Quran verse card (Arabic) shows trusted text only', (tester) async {
+    testWidgets('CASE 3: Quran verse card (Arabic) shows trusted text only', (
+      tester,
+    ) async {
       const ayah = Ayah(
         number: 9,
         surahId: 17,
-        text: 'إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ وَيُبَشِّرُ الْمُؤْمِنِينَ',
+        text:
+            'إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ وَيُبَشِّرُ الْمُؤْمِنِينَ',
         numberInSurah: 9,
       );
 
@@ -439,7 +467,9 @@ void main() {
 
       // Verse text rendered verbatim from the domain entity.
       expect(
-        find.text('﴿ إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ وَيُبَشِّرُ الْمُؤْمِنِينَ ﴾'),
+        find.text(
+          '﴿ إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ وَيُبَشِّرُ الْمُؤْمِنِينَ ﴾',
+        ),
         findsOneWidget,
       );
       expect(find.text('سورة الإسراء'), findsOneWidget);
@@ -449,7 +479,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 4: Quran verse card (English) shows translation', (tester) async {
+    testWidgets('CASE 4: Quran verse card (English) shows translation', (
+      tester,
+    ) async {
       const ayah = Ayah(
         number: 9,
         surahId: 17,
@@ -480,7 +512,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 4b: Arabic verse card hides English translation', (tester) async {
+    testWidgets('CASE 4b: Arabic verse card hides English translation', (
+      tester,
+    ) async {
       const ayah = Ayah(
         number: 9,
         surahId: 17,
@@ -508,41 +542,47 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 5: Dua card (Arabic) renders reference, hides translation', (tester) async {
-      const zikr = Zikr(
-        id: 'dua_1',
-        text: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
-        transliteration: '',
-        translation: 'Our Lord, give us good in this world',
-        totalCount: 1,
-        category: AzkarCategory.duas,
-        reference: 'سورة البقرة: ٢٠١',
-      );
+    testWidgets(
+      'CASE 5: Dua card (Arabic) renders reference, hides translation',
+      (tester) async {
+        const zikr = Zikr(
+          id: 'dua_1',
+          text:
+              'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
+          transliteration: '',
+          translation: 'Our Lord, give us good in this world',
+          totalCount: 1,
+          category: AzkarCategory.duas,
+          reference: 'سورة البقرة: ٢٠١',
+        );
 
-      final data = SocialShareData.dua(
-        zikr: zikr,
-        categoryTitle: 'دعاء قرآني',
-        isDua: true,
-      );
+        final data = SocialShareData.dua(
+          zikr: zikr,
+          categoryTitle: 'دعاء قرآني',
+          isDua: true,
+        );
 
-      await tester.pumpWidget(
-        buildTestHarness(
-          SocialShareCard(
-            data: data,
-            theme: SocialShareTheme.dawnLight,
-            format: SocialShareFormat.portrait,
+        await tester.pumpWidget(
+          buildTestHarness(
+            SocialShareCard(
+              data: data,
+              theme: SocialShareTheme.dawnLight,
+              format: SocialShareFormat.portrait,
+            ),
           ),
-        ),
-      );
+        );
 
-      expect(find.text('دعاء قرآني'), findsOneWidget);
-      expect(find.text('سورة البقرة: ٢٠١'), findsOneWidget);
-      expect(find.text('دعاء'), findsOneWidget);
-      expect(find.textContaining('Our Lord'), findsNothing);
-      expect(tester.takeException(), isNull);
-    });
+        expect(find.text('دعاء قرآني'), findsOneWidget);
+        expect(find.text('سورة البقرة: ٢٠١'), findsOneWidget);
+        expect(find.text('دعاء'), findsOneWidget);
+        expect(find.textContaining('Our Lord'), findsNothing);
+        expect(tester.takeException(), isNull);
+      },
+    );
 
-    testWidgets('CASE 6: Memorization card renders BOTH real stats', (tester) async {
+    testWidgets('CASE 6: Memorization card renders BOTH real stats', (
+      tester,
+    ) async {
       final data = SocialShareData.memorization(
         ayahsCount: 150,
         surahsCount: 6,
@@ -567,7 +607,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 7: Streak card renders counter and record context', (tester) async {
+    testWidgets('CASE 7: Streak card renders counter and record context', (
+      tester,
+    ) async {
       final data = SocialShareData.streak(
         streakDays: 45,
         longestStreak: 45,
@@ -590,7 +632,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 7b: Streak below record shows longest streak', (tester) async {
+    testWidgets('CASE 7b: Streak below record shows longest streak', (
+      tester,
+    ) async {
       final data = SocialShareData.streak(
         streakDays: 30,
         longestStreak: 45,
@@ -611,7 +655,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 8: Progress card renders all three stats', (tester) async {
+    testWidgets('CASE 8: Progress card renders all three stats', (
+      tester,
+    ) async {
       final progress = OverallProgress(
         memorizedAyahs: 250,
         totalAyahs: 6236,
@@ -631,7 +677,10 @@ void main() {
         reviewAyahs: 15,
       );
 
-      final data = SocialShareData.progress(progress: progress, userName: 'سيد');
+      final data = SocialShareData.progress(
+        progress: progress,
+        userName: 'سيد',
+      );
 
       await tester.pumpWidget(
         buildTestHarness(
@@ -652,7 +701,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 8b: Certificate share card renders award + code', (tester) async {
+    testWidgets('CASE 8b: Certificate share card renders award + code', (
+      tester,
+    ) async {
       final award = CertificateAward(
         id: 'cert_juz_30',
         titleAr: 'شهادة إتمام حفظ جزء عم',
@@ -675,12 +726,17 @@ void main() {
 
       // The headline and the header badge both legitimately show this.
       expect(find.text('شهادة إتمام ومواظبة'), findsWidgets);
-      expect(find.textContaining('حصلت بحمد الله على شهادة إتمام حفظ جزء عم'), findsOneWidget);
+      expect(
+        find.textContaining('حصلت على شهادة إتمام حفظ جزء عم تقديراً لإنجازك'),
+        findsOneWidget,
+      );
       expect(find.textContaining(award.verificationCode), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 9: Kids share shows kids identity and companion', (tester) async {
+    testWidgets('CASE 9: Kids share shows kids identity and companion', (
+      tester,
+    ) async {
       const achievement = Achievement(
         id: 'first_page',
         titleKey: 'الصفحة الأولى',
@@ -713,7 +769,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 10: Adult share stays refined without kids layer', (tester) async {
+    testWidgets('CASE 10: Adult share stays refined without kids layer', (
+      tester,
+    ) async {
       const achievement = Achievement(
         id: 'first_page',
         titleKey: 'الصفحة الأولى',
@@ -746,7 +804,9 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('CASE 11: Very long Quran verse never overflows in any format', (tester) async {
+    testWidgets('CASE 11: Very long Quran verse never overflows in any format', (
+      tester,
+    ) async {
       const longAyahText =
           'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ '
           'لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۚ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ ۚ '
@@ -774,13 +834,22 @@ void main() {
           ),
         );
         // The full verse must be present — the export canvas may not clip.
-        expect(find.textContaining('وَهُوَ الْعَلِيُّ الْعَظِيمُ'), findsOneWidget,
-            reason: 'Verse tail missing on format: $fmt');
-        expect(tester.takeException(), isNull, reason: 'Failed on format: $fmt');
+        expect(
+          find.textContaining('وَهُوَ الْعَلِيُّ الْعَظِيمُ'),
+          findsOneWidget,
+          reason: 'Verse tail missing on format: $fmt',
+        );
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: 'Failed on format: $fmt',
+        );
       }
     });
 
-    testWidgets('CASE 12: Long achievement title and description adapt', (tester) async {
+    testWidgets('CASE 12: Long achievement title and description adapt', (
+      tester,
+    ) async {
       const achievement = Achievement(
         id: 'full_quran_read',
         titleKey: 'إنجاز إتمام قراءة القرآن الكريم كاملاً من الغلاف إلى الغلاف',
@@ -811,11 +880,17 @@ void main() {
         );
         expect(find.textContaining('من الغلاف إلى الغلاف'), findsOneWidget);
         expect(find.textContaining('الختمة كاملة'), findsOneWidget);
-        expect(tester.takeException(), isNull, reason: 'Failed on format: $fmt');
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: 'Failed on format: $fmt',
+        );
       }
     });
 
-    testWidgets('CASE 13: Long user name does not break the footer', (tester) async {
+    testWidgets('CASE 13: Long user name does not break the footer', (
+      tester,
+    ) async {
       final data = SocialShareData.streak(
         streakDays: 7,
         longestStreak: 21,
@@ -834,11 +909,17 @@ void main() {
           ),
         );
         expect(find.textContaining('الطالبي'), findsOneWidget);
-        expect(tester.takeException(), isNull, reason: 'Failed on format: $fmt');
+        expect(
+          tester.takeException(),
+          isNull,
+          reason: 'Failed on format: $fmt',
+        );
       }
     });
 
-    testWidgets('CASE 14-16: All export formats render every category safely', (tester) async {
+    testWidgets('CASE 14-16: All export formats render every category safely', (
+      tester,
+    ) async {
       final datasets = <SocialShareData>[
         SocialShareData.achievement(
           achievement: const Achievement(
@@ -909,35 +990,44 @@ void main() {
               size: fmt.exportLogicalSize,
             ),
           );
-          expect(tester.takeException(), isNull,
-              reason: 'Failed: ${data.category} on $fmt');
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: 'Failed: ${data.category} on $fmt',
+          );
         }
       }
     });
 
-    testWidgets('English localization renders safely with empty optional fields', (tester) async {
-      const data = SocialShareData(
-        content: 'Completed the first milestone of the Holy Quran!',
-        title: 'New Milestone',
-        category: SocialShareCategory.achievement,
-      );
+    testWidgets(
+      'English localization renders safely with empty optional fields',
+      (tester) async {
+        const data = SocialShareData(
+          content: 'Completed the first milestone of the Holy Quran!',
+          title: 'New Milestone',
+          category: SocialShareCategory.achievement,
+        );
 
-      await tester.pumpWidget(
-        buildTestHarness(
-          const SocialShareCard(
-            data: data,
-            theme: SocialShareTheme.emeraldDark,
-            format: SocialShareFormat.square,
+        await tester.pumpWidget(
+          buildTestHarness(
+            const SocialShareCard(
+              data: data,
+              theme: SocialShareTheme.emeraldDark,
+              format: SocialShareFormat.square,
+            ),
+            locale: const Locale('en'),
+            size: const Size(360, 360),
           ),
-          locale: const Locale('en'),
-          size: const Size(360, 360),
-        ),
-      );
+        );
 
-      expect(find.text('New Milestone'), findsOneWidget);
-      expect(find.text('Completed the first milestone of the Holy Quran!'), findsOneWidget);
-      expect(tester.takeException(), isNull);
-    });
+        expect(find.text('New Milestone'), findsOneWidget);
+        expect(
+          find.text('Completed the first milestone of the Holy Quran!'),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
   });
 
   group('Share sheet chrome localization', () {
@@ -953,6 +1043,51 @@ void main() {
         home: Scaffold(body: SocialShareSheet(data: data)),
       );
     }
+
+    testWidgets('capture tree preserves locale outside the app hierarchy', (
+      tester,
+    ) async {
+      late Widget captureTree;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          supportedLocales: const [Locale('ar'), Locale('en')],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          home: Builder(
+            builder: (context) {
+              captureTree = buildSocialShareCaptureTree(
+                context: context,
+                child: Builder(
+                  builder: (captureContext) => Text(
+                    Localizations.localeOf(captureContext).languageCode,
+                  ),
+                ),
+              );
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: MediaQuery(
+            data: const MediaQueryData(size: Size(360, 450)),
+            child: Material(child: captureTree),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.text('en'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
 
     testWidgets('English sheet shows English chrome only', (tester) async {
       const data = SocialShareData(

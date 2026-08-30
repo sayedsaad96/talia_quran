@@ -65,23 +65,23 @@ class _AppButtonState extends State<AppButton>
   void _onTapCancel() => _pressController.reverse();
 
   double get _height => switch (widget.size) {
-    AppButtonSize.small => 40,
+    AppButtonSize.small => 48,
     AppButtonSize.medium => 48,
     AppButtonSize.large => AppSpacing.buttonHeight,
   };
 
   EdgeInsets get _padding => switch (widget.size) {
     AppButtonSize.small => const EdgeInsets.symmetric(
-      horizontal: 16,
-      vertical: 8,
+      horizontal: AppSpacing.md,
+      vertical: AppSpacing.sm,
     ),
     AppButtonSize.medium => const EdgeInsets.symmetric(
-      horizontal: 24,
-      vertical: 12,
+      horizontal: AppSpacing.lg,
+      vertical: AppSpacing.itemGap,
     ),
     AppButtonSize.large => const EdgeInsets.symmetric(
-      horizontal: 32,
-      vertical: 16,
+      horizontal: AppSpacing.xl,
+      vertical: AppSpacing.md,
     ),
   };
 
@@ -95,20 +95,37 @@ class _AppButtonState extends State<AppButton>
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isActive = !widget.isDisabled && !widget.isLoading;
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
-    return GestureDetector(
-      onTapDown: isActive ? _onTapDown : null,
-      onTapUp: isActive ? _onTapUp : null,
-      onTapCancel: isActive ? _onTapCancel : null,
-      onTap: isActive ? widget.onPressed : null,
-      child: AnimatedBuilder(
-        animation: _scaleAnim,
-        builder: (context, child) =>
-            Transform.scale(scale: _scaleAnim.value, child: child),
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 150),
-          opacity: widget.isDisabled ? 0.5 : 1.0,
-          child: _buildContent(isDark),
+    return Semantics(
+      button: true,
+      enabled: isActive,
+      child: Listener(
+        onPointerDown: isActive ? _onTapDown : null,
+        onPointerUp: isActive ? _onTapUp : null,
+        onPointerCancel: isActive ? (_) => _onTapCancel() : null,
+        child: AnimatedBuilder(
+          animation: _scaleAnim,
+          builder: (context, child) => Transform.scale(
+            scale: disableAnimations ? 1 : _scaleAnim.value,
+            child: child,
+          ),
+          child: AnimatedOpacity(
+            duration: disableAnimations
+                ? Duration.zero
+                : const Duration(milliseconds: 150),
+            opacity: widget.isDisabled ? 0.5 : 1.0,
+            child: Material(
+              type: MaterialType.transparency,
+              child: InkWell(
+                onTap: isActive ? widget.onPressed : null,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                splashColor: Theme.of(context).splashColor,
+                highlightColor: Theme.of(context).highlightColor,
+                child: _buildContent(isDark),
+              ),
+            ),
+          ),
         ),
       ),
     );
@@ -159,7 +176,9 @@ class _AppButtonState extends State<AppButton>
           textStyle: _textStyle,
           width: widget.width,
           gradient: const LinearGradient(
-            colors: [Color(0xFFC0392B), Color(0xFF922B21)],
+            colors: [AppColors.error, AppColors.errorDark],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
         );
       case AppButtonVariant.goldPrimary:

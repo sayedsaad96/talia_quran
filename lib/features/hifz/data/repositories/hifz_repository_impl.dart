@@ -1,4 +1,4 @@
-import 'package:dartz/dartz.dart';
+﻿import 'package:dartz/dartz.dart';
 import '../../../../core/error/app_failure.dart';
 import '../../domain/entities/hifz_entities.dart';
 import '../../domain/repositories/hifz_repository.dart';
@@ -19,7 +19,7 @@ class HifzRepositoryImpl implements HifzRepository {
       final models = await _datasource.getProgressForSurah(surahId);
       return Right(models);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -32,7 +32,7 @@ class HifzRepositoryImpl implements HifzRepository {
       final model = await _datasource.getAyahProgress(surahId, ayahNumber);
       return Right(model);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -61,7 +61,7 @@ class HifzRepositoryImpl implements HifzRepository {
           .toList();
       return Right(due);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -99,7 +99,7 @@ class HifzRepositoryImpl implements HifzRepository {
 
       return Right(result);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -109,7 +109,7 @@ class HifzRepositoryImpl implements HifzRepository {
       final path = _datasource.getHifzPath();
       return Right(path);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 

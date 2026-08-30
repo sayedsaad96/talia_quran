@@ -186,6 +186,95 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tryAgain => 'Try Again';
 
   @override
+  String get errorCacheMessage =>
+      'Couldn\'t reach your saved data. Please try again.';
+
+  @override
+  String get errorNetworkMessage =>
+      'Check your internet connection and try again.';
+
+  @override
+  String get errorNotFoundMessage =>
+      'The content you\'re looking for wasn\'t found.';
+
+  @override
+  String get errorParseMessage =>
+      'Something went wrong while reading the content. Please try again.';
+
+  @override
+  String get errorUnknownMessage =>
+      'Something unexpected happened. Please try again.';
+
+  @override
+  String celebrationAyah(int xp) {
+    return 'Well done! +$xp XP ⭐';
+  }
+
+  @override
+  String celebrationPage(int xp) {
+    return 'Page complete! +$xp XP 🎯';
+  }
+
+  @override
+  String get celebrationJuzDone =>
+      'You\'ve completed the entire juz, by Allah\'s grace';
+
+  @override
+  String get tutorialQuickStartTitle => 'Your quick Talia map';
+
+  @override
+  String get tutorialQuickStartSubtitle => 'The five key areas for daily use';
+
+  @override
+  String get tutorialQuickStartHint =>
+      'Use search or the filters below to open any detailed guide.';
+
+  @override
+  String get tutorialShortcutHomeLabel => 'Home';
+
+  @override
+  String get tutorialShortcutHomeDesc => 'Daily wird & progress';
+
+  @override
+  String get tutorialShortcutQuranLabel => 'Quran';
+
+  @override
+  String get tutorialShortcutQuranDesc => 'Mushaf & reading';
+
+  @override
+  String get tutorialShortcutHifzLabel => 'Memorize';
+
+  @override
+  String get tutorialShortcutHifzDesc => 'Plan & sessions';
+
+  @override
+  String get tutorialShortcutAzkarLabel => 'Adhkar';
+
+  @override
+  String get tutorialShortcutAzkarDesc => 'Wird & counter';
+
+  @override
+  String get tutorialShortcutProgressLabel => 'Progress';
+
+  @override
+  String get tutorialShortcutProgressDesc => 'Certificates & achievements';
+
+  @override
+  String get splashTagline => 'Your Companion in the Journey of the Quran';
+
+  @override
+  String get splashInitError => 'Couldn\'t finish loading. Please try again.';
+
+  @override
+  String get retryLabel => 'Try again';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
   String get noData => 'No data found';
 
   @override
@@ -259,6 +348,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get close => 'Close';
+
+  @override
+  String get clearSearch => 'Clear search';
+
+  @override
+  String get selectReciter => 'Choose reciter';
+
+  @override
+  String get enterFocusMode => 'Enter focus mode';
+
+  @override
+  String get exitFocusMode => 'Exit focus mode';
+
+  @override
+  String get closeReader => 'Close reader';
+
+  @override
+  String hizbNumberLabel(Object number) {
+    return 'Hizb $number';
+  }
+
+  @override
+  String azkarCountOfTotal(int total) {
+    return 'of $total';
+  }
 
   @override
   String get cancel => 'Cancel';
@@ -850,6 +964,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get azkarSubtitle => 'Remember Allah often';
 
   @override
+  String get azkarContentUnderReview =>
+      'Azkar content is being reviewed and will appear here once approved.';
+
+  @override
   String zikrCount(Object count) {
     return '$count zikr';
   }
@@ -1426,9 +1544,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get splashSubtitle =>
       'Read, memorize, review, and grow with the Quran.';
-
-  @override
-  String get splashTagline => 'Your Companion in the Journey of the Quran';
 
   @override
   String get splashFeatureRead => 'Read';

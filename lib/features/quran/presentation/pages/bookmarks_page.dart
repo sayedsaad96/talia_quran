@@ -1,5 +1,4 @@
-﻿import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -61,9 +60,6 @@ class _BookmarksTabState extends State<BookmarksTab> {
                 context.push(bookmarkReaderLocation(entry));
               },
               onDismissed: _removeBookmark,
-            ).animate().fadeIn(
-              duration: 200.ms,
-              delay: Duration(milliseconds: index * 50),
             );
           },
         );
@@ -103,7 +99,9 @@ class _EmptyBookmarks extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.lg),
             Text(
-              context.isArabic ? 'لا توجد علامات مرجعية بعد' : 'No bookmarks yet',
+              context.isArabic
+                  ? 'لا توجد علامات مرجعية بعد'
+                  : 'No bookmarks yet',
               style: AppTypography.titleMedium.copyWith(
                 color: textColor,
                 fontWeight: FontWeight.bold,
@@ -114,7 +112,10 @@ class _EmptyBookmarks extends StatelessWidget {
               context.isArabic
                   ? 'اضغط مطوّلاً على أي آية أثناء القراءة لحفظها كعلامة مرجعية وتصل إليها بسهولة هنا'
                   : 'Long-press any ayah while reading to save it as a bookmark',
-              style: AppTypography.bodySmall.copyWith(color: textColor, height: 1.5),
+              style: AppTypography.bodySmall.copyWith(
+                color: textColor,
+                height: 1.5,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -253,13 +254,12 @@ class _SurahBookmarkGroup extends StatelessWidget {
                             style: AppTypography.quranSmall.copyWith(
                               color: textColor,
                             ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
                             textDirection: TextDirection.rtl,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.xs),
                         IconButton(
+                          tooltip: context.l10n.share,
                           padding: EdgeInsets.zero,
                           visualDensity: VisualDensity.compact,
                           icon: Icon(

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -176,7 +176,7 @@ class KidsGamifiedListenContent extends StatelessWidget {
   final VoidCallback onRecordRecitation;
   final VoidCallback onStopRecording;
 
-  /// V1-M8 — manual/self-grade completion route (null hides the action).
+  /// V1-M8 â€” manual/self-grade completion route (null hides the action).
   final VoidCallback? onManualComplete;
 
   @override
@@ -211,7 +211,7 @@ class KidsGamifiedListenContent extends StatelessWidget {
                             ayahText: state.ayahText,
                             isCompleted: state.isCompleted,
                             // isBuffering is true only during URL loading/buffering,
-                            // not during actual playback — more accurate than isPlaying
+                            // not during actual playback â€” more accurate than isPlaying
                             isAudioLoading: state.isBuffering,
                             audioUnavailable: audioUnavailable,
                           ),
@@ -259,7 +259,7 @@ class _KidsGamifiedListenAppBar extends StatelessWidget {
           IconButton(
             tooltip: MaterialLocalizations.of(context).backButtonTooltip,
             onPressed: onBack,
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            icon: const BackButtonIcon(),
             color: Colors.white,
           ),
           const SizedBox(width: AppSpacing.sm),
@@ -352,7 +352,7 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
   final VoidCallback onRecordRecitation;
   final VoidCallback onStopRecording;
 
-  /// V1-M8 — manual/self-grade completion route (null hides the action).
+  /// V1-M8 â€” manual/self-grade completion route (null hides the action).
   final VoidCallback? onManualComplete;
 
   @override

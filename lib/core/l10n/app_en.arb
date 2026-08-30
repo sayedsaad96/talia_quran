@@ -59,6 +59,34 @@
   "loading": "Loading...",
   "errorOccurred": "An error occurred",
   "tryAgain": "Try Again",
+  "errorCacheMessage": "Couldn't reach your saved data. Please try again.",
+  "errorNetworkMessage": "Check your internet connection and try again.",
+  "errorNotFoundMessage": "The content you're looking for wasn't found.",
+  "errorParseMessage": "Something went wrong while reading the content. Please try again.",
+  "errorUnknownMessage": "Something unexpected happened. Please try again.",
+  "celebrationAyah": "Well done! +{xp} XP ⭐",
+  "@celebrationAyah": { "placeholders": { "xp": { "type": "int" } } },
+  "celebrationPage": "Page complete! +{xp} XP 🎯",
+  "@celebrationPage": { "placeholders": { "xp": { "type": "int" } } },
+  "celebrationJuzDone": "You've completed the entire juz, by Allah's grace",
+  "tutorialQuickStartTitle": "Your quick Talia map",
+  "tutorialQuickStartSubtitle": "The five key areas for daily use",
+  "tutorialQuickStartHint": "Use search or the filters below to open any detailed guide.",
+  "tutorialShortcutHomeLabel": "Home",
+  "tutorialShortcutHomeDesc": "Daily wird & progress",
+  "tutorialShortcutQuranLabel": "Quran",
+  "tutorialShortcutQuranDesc": "Mushaf & reading",
+  "tutorialShortcutHifzLabel": "Memorize",
+  "tutorialShortcutHifzDesc": "Plan & sessions",
+  "tutorialShortcutAzkarLabel": "Adhkar",
+  "tutorialShortcutAzkarDesc": "Wird & counter",
+  "tutorialShortcutProgressLabel": "Progress",
+  "tutorialShortcutProgressDesc": "Certificates & achievements",
+  "splashTagline": "Your companion through the Quran",
+  "splashInitError": "Couldn't finish loading. Please try again.",
+  "retryLabel": "Try again",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
   "noData": "No data found",
   "emptyState": "Nothing here yet",
   "play": "Play",
@@ -84,6 +112,25 @@
   "large": "Large",
   "extraLarge": "Extra Large",
   "close": "Close",
+  "clearSearch": "Clear search",
+  "selectReciter": "Choose reciter",
+  "enterFocusMode": "Enter focus mode",
+  "exitFocusMode": "Exit focus mode",
+  "closeReader": "Close reader",
+  "hizbNumberLabel": "Hizb {number}",
+  "@hizbNumberLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "azkarCountOfTotal": "of {total}",
+  "@azkarCountOfTotal": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "cancel": "Cancel",
   "save": "Save",
   "confirm": "Confirm",
@@ -282,6 +329,7 @@
   "backupProgressTitle": "Manage your account",
   "backupProgressDesc": "Sign in from Settings to manage your account and family features",
   "azkarSubtitle": "Remember Allah often",
+  "azkarContentUnderReview": "Azkar content is being reviewed and will appear here once approved.",
   "zikrCount": "{count} zikr",
   "azkarCount": "{count} azkar",
   "duaCount": "{count} duas",

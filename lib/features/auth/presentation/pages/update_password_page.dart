@@ -6,6 +6,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/error_info_banner.dart';
+import '../../domain/entities/auth_error_code.dart';
 import '../cubits/auth_cubit.dart';
 
 class UpdatePasswordPage extends StatefulWidget {
@@ -20,6 +21,7 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   String? _error;
 
   @override
@@ -45,6 +47,7 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
         appBar: AppBar(
           title: Text(context.l10n.updatePasswordTitle),
           leading: IconButton(
+            tooltip: context.l10n.close,
             icon: const Icon(Icons.close_rounded),
             onPressed: () => context.go('/login'),
           ),
@@ -65,7 +68,23 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
               }
             }
             if (state is AuthError) {
-              setState(() => _error = state.message);
+              // Show a stable, localized message — never raw backend text.
+              AuthErrorCode? code;
+              for (final c in AuthErrorCode.values) {
+                if (state.message == c.name) code = c;
+              }
+              setState(
+                () => _error = switch (code) {
+                  AuthErrorCode.passwordTooShort =>
+                    context.l10n.passwordTooShort,
+                  AuthErrorCode.samePasswordAsOld =>
+                    context.l10n.authPasswordSameAsOld,
+                  AuthErrorCode.networkError => context.l10n.authNoInternet,
+                  AuthErrorCode.sessionExpired =>
+                    context.l10n.authSessionExpired,
+                  _ => context.l10n.authGenericError,
+                },
+              );
             }
           },
           builder: (context, state) {
@@ -97,9 +116,8 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                           const SizedBox(height: AppSpacing.sm),
                           Text(
                             context.l10n.updatePasswordSubtitle,
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: cs.onSurfaceVariant,
-                            ),
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: cs.onSurfaceVariant),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 28),
@@ -117,13 +135,18 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                             obscureText: _obscurePassword,
                             decoration: InputDecoration(
                               labelText: context.l10n.newPassword,
-                              prefixIcon: const Icon(Icons.lock_outline_rounded),
+                              prefixIcon: const Icon(
+                                Icons.lock_outline_rounded,
+                              ),
                               suffixIcon: IconButton(
                                 icon: Icon(
                                   _obscurePassword
                                       ? Icons.visibility_off_rounded
                                       : Icons.visibility_rounded,
                                 ),
+                                tooltip: _obscurePassword
+                                    ? context.l10n.showPassword
+                                    : context.l10n.hidePassword,
                                 onPressed: () => setState(
                                   () => _obscurePassword = !_obscurePassword,
                                 ),
@@ -145,12 +168,30 @@ class _UpdatePasswordPageState extends State<UpdatePasswordPage> {
                           const SizedBox(height: 14),
                           TextFormField(
                             controller: _confirmPasswordController,
-                            obscureText: _obscurePassword,
+                            obscureText: _obscureConfirmPassword,
                             decoration: InputDecoration(
                               labelText: context.l10n.confirmNewPassword,
-                              prefixIcon: const Icon(Icons.lock_outline_rounded),
+                              prefixIcon: const Icon(
+                                Icons.lock_outline_rounded,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscureConfirmPassword
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded,
+                                ),
+                                tooltip: _obscureConfirmPassword
+                                    ? context.l10n.showPassword
+                                    : context.l10n.hidePassword,
+                                onPressed: () => setState(
+                                  () => _obscureConfirmPassword =
+                                      !_obscureConfirmPassword,
+                                ),
+                              ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
                               ),
                             ),
                             validator: (value) {

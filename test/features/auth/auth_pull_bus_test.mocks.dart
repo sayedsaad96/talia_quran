@@ -127,11 +127,13 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
       ) as _i4.Future<_i2.Either<_i6.Failure, _i5.AppUser>>);
 
   @override
-  _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> signOut() =>
+  _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>> signOut(
+          {bool? preserveAccountData = false}) =>
       (super.noSuchMethod(
         Invocation.method(
           #signOut,
           [],
+          {#preserveAccountData: preserveAccountData},
         ),
         returnValue: _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>.value(
             _FakeEither_0<_i6.Failure, _i2.Unit>(
@@ -139,6 +141,7 @@ class MockAuthRepository extends _i1.Mock implements _i3.AuthRepository {
           Invocation.method(
             #signOut,
             [],
+            {#preserveAccountData: preserveAccountData},
           ),
         )),
       ) as _i4.Future<_i2.Either<_i6.Failure, _i2.Unit>>);

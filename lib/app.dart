@@ -89,6 +89,8 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
         routerConfig: AppRouter.splashOnlyRouter,
       );
     }

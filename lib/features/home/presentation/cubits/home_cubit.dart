@@ -167,6 +167,7 @@ class HomeCubit extends Cubit<HomeState> {
 
     if (isClosed) return;
     final totalXp = await _xpService.getTotalXp();
+    if (isClosed) return;
     progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
       emit(
         HomeLoaded(

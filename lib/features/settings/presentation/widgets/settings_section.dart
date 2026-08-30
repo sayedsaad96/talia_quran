@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -25,7 +24,8 @@ class SettingsSection extends StatelessWidget {
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = (isDark ? AppColors.darkDivider : AppColors.lightDivider)
         .withValues(alpha: isDark ? 0.55 : 0.8);
-    final accent = accentColor ?? (isDark ? AppColors.primaryLight : AppColors.primary);
+    final accent =
+        accentColor ?? (isDark ? AppColors.primaryLight : AppColors.primary);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,7 +54,9 @@ class SettingsSection extends StatelessWidget {
               Text(
                 title,
                 style: AppTypography.labelMedium.copyWith(
-                  color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                  color: isDark
+                      ? AppColors.darkTextPrimary
+                      : AppColors.lightTextPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                 ),
@@ -77,7 +79,7 @@ class SettingsSection extends StatelessWidget {
           ),
         ),
       ],
-    ).animate().fadeIn(duration: 260.ms).slideY(begin: 0.025, end: 0);
+    );
   }
 }
 

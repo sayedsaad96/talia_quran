@@ -62,6 +62,34 @@
   "loading": "جاري التحميل...",
   "errorOccurred": "حدث خطأ",
   "tryAgain": "حاول مجدداً",
+  "errorCacheMessage": "تعذّر الوصول إلى البيانات المحفوظة. حاول مجدداً.",
+  "errorNetworkMessage": "تحقّق من اتصالك بالإنترنت وحاول مجدداً.",
+  "errorNotFoundMessage": "لم يتم العثور على المحتوى المطلوب.",
+  "errorParseMessage": "حدثت مشكلة أثناء قراءة المحتوى. حاول مجدداً.",
+  "errorUnknownMessage": "حدث خطأ غير متوقع. حاول مجدداً.",
+  "celebrationAyah": "أحسنت! +{xp} XP ⭐",
+  "@celebrationAyah": { "placeholders": { "xp": { "type": "int" } } },
+  "celebrationPage": "اكتملت الصفحة! +{xp} XP 🎯",
+  "@celebrationPage": { "placeholders": { "xp": { "type": "int" } } },
+  "celebrationJuzDone": "أتممت الجزء كاملاً بإذن الله",
+  "tutorialQuickStartTitle": "خريطة تالية السريعة",
+  "tutorialQuickStartSubtitle": "أهم خمسة أقسام لاستخدام التطبيق يومياً",
+  "tutorialQuickStartHint": "استخدم البحث أو التصفية للوصول إلى أي شرح تفصيلي.",
+  "tutorialShortcutHomeLabel": "الرئيسية",
+  "tutorialShortcutHomeDesc": "الورد والتقدم اليومي",
+  "tutorialShortcutQuranLabel": "القرآن",
+  "tutorialShortcutQuranDesc": "المصحف والقراءة",
+  "tutorialShortcutHifzLabel": "الحفظ",
+  "tutorialShortcutHifzDesc": "الخطة والجلسات",
+  "tutorialShortcutAzkarLabel": "الأذكار",
+  "tutorialShortcutAzkarDesc": "الورد والعداد",
+  "tutorialShortcutProgressLabel": "التقدم",
+  "tutorialShortcutProgressDesc": "الشهادات والإنجازات",
+  "splashTagline": "رفيقك في رحاب القرآن",
+  "splashInitError": "تعذّر إكمال التحميل، يرجى المحاولة مرة أخرى",
+  "retryLabel": "إعادة المحاولة",
+  "showPassword": "إظهار كلمة المرور",
+  "hidePassword": "إخفاء كلمة المرور",
   "noData": "لا توجد بيانات",
   "emptyState": "لا يوجد محتوى بعد",
   "play": "تشغيل",
@@ -87,6 +115,25 @@
   "large": "كبير",
   "extraLarge": "كبير جداً",
   "close": "إغلاق",
+  "clearSearch": "مسح البحث",
+  "selectReciter": "اختيار القارئ",
+  "enterFocusMode": "الدخول إلى وضع التركيز",
+  "exitFocusMode": "الخروج من وضع التركيز",
+  "closeReader": "إغلاق القارئ",
+  "hizbNumberLabel": "الحزب {number}",
+  "@hizbNumberLabel": {
+    "placeholders": {
+      "number": {}
+    }
+  },
+  "azkarCountOfTotal": "من {total}",
+  "@azkarCountOfTotal": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "cancel": "إلغاء",
   "save": "حفظ",
   "confirm": "تأكيد",
@@ -285,6 +332,7 @@
   "backupProgressTitle": "إدارة الحساب",
   "backupProgressDesc": "سجّل دخولك من الإعدادات لإدارة حسابك وميزات العائلة",
   "azkarSubtitle": "اذكر الله كثيراً",
+  "azkarContentUnderReview": "محتوى الأذكار قيد المراجعة والاعتماد، وسيظهر هنا فور اعتماده.",
   "zikrCount": "{count} ذكر",
   "azkarCount": "{count} أذكار",
   "duaCount": "{count} دعاء",

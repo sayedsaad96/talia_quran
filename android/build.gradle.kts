@@ -22,10 +22,14 @@ subprojects {
 
 subprojects {
     plugins.withId("com.android.library") {
-        configure<com.android.build.gradle.BaseExtension> {
-            compileSdkVersion(34)
-            if (namespace == null) {
-                namespace = project.group.toString()
+        extensions.configure<com.android.build.api.variant.LibraryAndroidComponentsExtension> {
+            finalizeDsl { libraryExtension ->
+                if ((libraryExtension.compileSdk ?: 0) < 34) {
+                    libraryExtension.compileSdk = 34
+                }
+                if (libraryExtension.namespace == null) {
+                    libraryExtension.namespace = project.group.toString()
+                }
             }
         }
     }

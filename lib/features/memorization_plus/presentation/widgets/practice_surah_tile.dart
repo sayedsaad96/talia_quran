@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
@@ -28,14 +27,16 @@ class PracticeSurahTile extends StatelessWidget {
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
 
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
       onTap: () async {
-        final route = await MemorizationNavigationResolver(
-          getIt<MemorizationPlusRepository>(),
-        ).practiceSurahSessionLocation(
-          surah.id,
-          surahAyahCount: surah.ayahCount,
-        );
+        final route =
+            await MemorizationNavigationResolver(
+              getIt<MemorizationPlusRepository>(),
+            ).practiceSurahSessionLocation(
+              surah.id,
+              surahAyahCount: surah.ayahCount,
+            );
         if (!context.mounted) return;
         await context.push(route);
       },
@@ -104,6 +105,6 @@ class PracticeSurahTile extends StatelessWidget {
           ],
         ),
       ),
-    ).animate().fadeIn(duration: 200.ms).slideX(begin: 0.02, end: 0);
+    );
   }
 }

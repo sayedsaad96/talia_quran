@@ -77,13 +77,24 @@ class CertificateCelebrationDialog extends StatefulWidget {
 class _CertificateCelebrationDialogState
     extends State<CertificateCelebrationDialog> {
   late final ConfettiController _confettiController;
+  bool _started = false;
 
   @override
   void initState() {
     super.initState();
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 3),
-    )..play();
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_started) return;
+    _started = true;
+    if (!MediaQuery.disableAnimationsOf(context)) {
+      _confettiController.play();
+    }
   }
 
   @override
@@ -95,6 +106,8 @@ class _CertificateCelebrationDialogState
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final motionValue = disableAnimations ? 1.0 : null;
     final multiple = widget.awards.length > 1;
     final title = context.l10n.congratulations;
     String getLocalizedTitle(CertificateAward award) {
@@ -103,7 +116,7 @@ class _CertificateCelebrationDialogState
           return context.l10n.certificateTitleJuz(award.juzNumber ?? 0);
         case CertificateType.surah:
           final name = context.isArabic ? award.surahNameAr : award.surahNameEn;
-          return name != null 
+          return name != null
               ? context.l10n.certificateTitleSurahNamed(name)
               : context.l10n.certificateTitleSurah;
         case CertificateType.halfQuran:
@@ -115,7 +128,9 @@ class _CertificateCelebrationDialogState
 
     final subtitle = multiple
         ? context.l10n.certificateCelebrationMultiple(widget.awards.length)
-        : context.l10n.certificateCelebrationSingle(getLocalizedTitle(widget.awards.first));
+        : context.l10n.certificateCelebrationSingle(
+            getLocalizedTitle(widget.awards.first),
+          );
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -124,87 +139,90 @@ class _CertificateCelebrationDialogState
         alignment: Alignment.center,
         children: [
           Container(
-            constraints: const BoxConstraints(maxWidth: 460),
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            decoration: BoxDecoration(
-              color: isDark ? AppColors.darkCard : AppColors.lightCard,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              border: Border.all(
-                color: AppColors.gold.withValues(alpha: 0.5),
-                width: 2,
-              ),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.workspace_premium_rounded,
-                  color: AppColors.gold,
-                  size: 64,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  title,
-                  style: AppTypography.headlineMedium.copyWith(
-                    color: AppColors.gold,
+                constraints: const BoxConstraints(maxWidth: 460),
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+                  border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.5),
+                    width: 2,
                   ),
                 ),
-                const SizedBox(height: AppSpacing.sm),
-                Text(
-                  subtitle,
-                  textAlign: TextAlign.center,
-                  style: AppTypography.bodyLarge.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxHeight: 280),
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        for (final award in widget.awards) ...[
-                          _AwardTile(
-                            award: award,
-                            isDark: isDark,
-                            onView: () => widget.onViewAward(award),
-                          ),
-                          if (award != widget.awards.last)
-                            const SizedBox(height: AppSpacing.sm),
-                        ],
-                      ],
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.workspace_premium_rounded,
+                      color: AppColors.gold,
+                      size: 64,
                     ),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: Text(
-                    context.l10n.continueMemorizing,
-                    style: AppTypography.labelLarge.copyWith(
-                      color: isDark
-                          ? AppColors.darkTextSecondary
-                          : AppColors.lightTextSecondary,
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      title,
+                      style: AppTypography.headlineMedium.copyWith(
+                        color: AppColors.gold,
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(
+                      subtitle,
+                      textAlign: TextAlign.center,
+                      style: AppTypography.bodyLarge.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.lg),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 280),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            for (final award in widget.awards) ...[
+                              _AwardTile(
+                                award: award,
+                                isDark: isDark,
+                                onView: () => widget.onViewAward(award),
+                              ),
+                              if (award != widget.awards.last)
+                                const SizedBox(height: AppSpacing.sm),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: Text(
+                        context.l10n.continueMemorizing,
+                        style: AppTypography.labelLarge.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
+              )
+              .animate(autoPlay: !disableAnimations, value: motionValue)
+              .scale(curve: Curves.easeOutBack, duration: 500.ms),
+          if (!disableAnimations)
+            ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+              colors: const [
+                AppColors.gold,
+                AppColors.primary,
+                AppColors.goldLight,
+                AppColors.primaryLight,
+                AppColors.goldDark,
               ],
             ),
-          ).animate().scale(curve: Curves.easeOutBack, duration: 500.ms),
-          ConfettiWidget(
-            confettiController: _confettiController,
-            blastDirectionality: BlastDirectionality.explosive,
-            shouldLoop: false,
-            colors: const [
-              AppColors.gold,
-              AppColors.primary,
-              AppColors.goldLight,
-              AppColors.primaryLight,
-              AppColors.goldDark,
-            ],
-          ),
         ],
       ),
     );

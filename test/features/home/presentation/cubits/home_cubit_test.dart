@@ -141,8 +141,8 @@ void main() {
     );
   });
 
-  tearDown(() {
-    cubit.close();
+  tearDown(() async {
+    if (!cubit.isClosed) await cubit.close();
     progressEvents.dispose();
   });
 
@@ -352,13 +352,29 @@ void main() {
       expect(progressLoads, 1);
     },
   );
+
+  test('load completes quietly when cubit closes during XP fetch', () async {
+    xpService.pendingTotalXp = Completer<int>();
+
+    final load = cubit.load();
+    await xpService.totalXpRequested.future;
+    await cubit.close();
+    xpService.pendingTotalXp!.complete(120);
+
+    await expectLater(load, completes);
+  });
 }
 
 class _FakeXpService implements XpService {
   int totalXp = 120;
+  Completer<int>? pendingTotalXp;
+  final totalXpRequested = Completer<void>();
 
   @override
-  Future<int> getTotalXp() async => totalXp;
+  Future<int> getTotalXp() {
+    if (!totalXpRequested.isCompleted) totalXpRequested.complete();
+    return pendingTotalXp?.future ?? Future.value(totalXp);
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

@@ -452,6 +452,162 @@ abstract class AppLocalizations {
   /// **'حاول مجدداً'**
   String get tryAgain;
 
+  /// No description provided for @errorCacheMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر الوصول إلى البيانات المحفوظة. حاول مجدداً.'**
+  String get errorCacheMessage;
+
+  /// No description provided for @errorNetworkMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحقّق من اتصالك بالإنترنت وحاول مجدداً.'**
+  String get errorNetworkMessage;
+
+  /// No description provided for @errorNotFoundMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم العثور على المحتوى المطلوب.'**
+  String get errorNotFoundMessage;
+
+  /// No description provided for @errorParseMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدثت مشكلة أثناء قراءة المحتوى. حاول مجدداً.'**
+  String get errorParseMessage;
+
+  /// No description provided for @errorUnknownMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'حدث خطأ غير متوقع. حاول مجدداً.'**
+  String get errorUnknownMessage;
+
+  /// No description provided for @celebrationAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت! +{xp} XP ⭐'**
+  String celebrationAyah(int xp);
+
+  /// No description provided for @celebrationPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتملت الصفحة! +{xp} XP 🎯'**
+  String celebrationPage(int xp);
+
+  /// No description provided for @celebrationJuzDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت الجزء كاملاً بإذن الله'**
+  String get celebrationJuzDone;
+
+  /// No description provided for @tutorialQuickStartTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'خريطة تالية السريعة'**
+  String get tutorialQuickStartTitle;
+
+  /// No description provided for @tutorialQuickStartSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أهم خمسة أقسام لاستخدام التطبيق يومياً'**
+  String get tutorialQuickStartSubtitle;
+
+  /// No description provided for @tutorialQuickStartHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'استخدم البحث أو التصفية للوصول إلى أي شرح تفصيلي.'**
+  String get tutorialQuickStartHint;
+
+  /// No description provided for @tutorialShortcutHomeLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الرئيسية'**
+  String get tutorialShortcutHomeLabel;
+
+  /// No description provided for @tutorialShortcutHomeDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'الورد والتقدم اليومي'**
+  String get tutorialShortcutHomeDesc;
+
+  /// No description provided for @tutorialShortcutQuranLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'القرآن'**
+  String get tutorialShortcutQuranLabel;
+
+  /// No description provided for @tutorialShortcutQuranDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'المصحف والقراءة'**
+  String get tutorialShortcutQuranDesc;
+
+  /// No description provided for @tutorialShortcutHifzLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحفظ'**
+  String get tutorialShortcutHifzLabel;
+
+  /// No description provided for @tutorialShortcutHifzDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخطة والجلسات'**
+  String get tutorialShortcutHifzDesc;
+
+  /// No description provided for @tutorialShortcutAzkarLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأذكار'**
+  String get tutorialShortcutAzkarLabel;
+
+  /// No description provided for @tutorialShortcutAzkarDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'الورد والعداد'**
+  String get tutorialShortcutAzkarDesc;
+
+  /// No description provided for @tutorialShortcutProgressLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'التقدم'**
+  String get tutorialShortcutProgressLabel;
+
+  /// No description provided for @tutorialShortcutProgressDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'الشهادات والإنجازات'**
+  String get tutorialShortcutProgressDesc;
+
+  /// No description provided for @splashTagline.
+  ///
+  /// In ar, this message translates to:
+  /// **'رفيقك في رحاب القرآن'**
+  String get splashTagline;
+
+  /// No description provided for @splashInitError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر إكمال التحميل، يرجى المحاولة مرة أخرى'**
+  String get splashInitError;
+
+  /// No description provided for @retryLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get retryLabel;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار كلمة المرور'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In ar, this message translates to:
+  /// **'إخفاء كلمة المرور'**
+  String get hidePassword;
+
   /// No description provided for @noData.
   ///
   /// In ar, this message translates to:
@@ -601,6 +757,48 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إغلاق'**
   String get close;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح البحث'**
+  String get clearSearch;
+
+  /// No description provided for @selectReciter.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختيار القارئ'**
+  String get selectReciter;
+
+  /// No description provided for @enterFocusMode.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدخول إلى وضع التركيز'**
+  String get enterFocusMode;
+
+  /// No description provided for @exitFocusMode.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخروج من وضع التركيز'**
+  String get exitFocusMode;
+
+  /// No description provided for @closeReader.
+  ///
+  /// In ar, this message translates to:
+  /// **'إغلاق القارئ'**
+  String get closeReader;
+
+  /// No description provided for @hizbNumberLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحزب {number}'**
+  String hizbNumberLabel(Object number);
+
+  /// No description provided for @azkarCountOfTotal.
+  ///
+  /// In ar, this message translates to:
+  /// **'من {total}'**
+  String azkarCountOfTotal(int total);
 
   /// No description provided for @cancel.
   ///
@@ -1689,6 +1887,12 @@ abstract class AppLocalizations {
   /// **'اذكر الله كثيراً'**
   String get azkarSubtitle;
 
+  /// No description provided for @azkarContentUnderReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'محتوى الأذكار قيد المراجعة والاعتماد، وسيظهر هنا فور اعتماده.'**
+  String get azkarContentUnderReview;
+
   /// No description provided for @zikrCount.
   ///
   /// In ar, this message translates to:
@@ -2702,12 +2906,6 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اقرأ، احفظ، راجع، وانمُ مع القرآن.'**
   String get splashSubtitle;
-
-  /// No description provided for @splashTagline.
-  ///
-  /// In ar, this message translates to:
-  /// **'رفيقك في رحاب القرآن'**
-  String get splashTagline;
 
   /// No description provided for @splashFeatureRead.
   ///

@@ -60,7 +60,7 @@ class MemorizationKidsLocalService {
       final progress = await _datasource.getKidsProgress();
       return Right(await _hydrateKidsStreak(progress));
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -72,7 +72,7 @@ class MemorizationKidsLocalService {
       await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -159,7 +159,7 @@ class MemorizationKidsLocalService {
       }
       return Right(stages);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -167,7 +167,7 @@ class MemorizationKidsLocalService {
     try {
       return Right(await _datasource.getKidsSessionLogs());
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -204,7 +204,7 @@ class MemorizationKidsLocalService {
       _progressEvents.notify(ProgressChangedReason.kidsProgress);
       return Right(log);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -235,7 +235,7 @@ class MemorizationKidsLocalService {
       );
       return result;
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -243,7 +243,7 @@ class MemorizationKidsLocalService {
     try {
       return Right(await _datasource.getParentSettings());
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -256,7 +256,7 @@ class MemorizationKidsLocalService {
       );
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -280,7 +280,7 @@ class MemorizationKidsLocalService {
       await _recordFailedPinAttempt(ownerId);
       return const Right(false);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -297,7 +297,7 @@ class MemorizationKidsLocalService {
       );
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -315,7 +315,7 @@ class MemorizationKidsLocalService {
       await _datasource.saveParentRewards(const []);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -341,7 +341,7 @@ class MemorizationKidsLocalService {
       await _datasource.saveParentRewards(next);
       return Right(next);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -365,7 +365,7 @@ class MemorizationKidsLocalService {
       await _datasource.saveParentRewards(next);
       return Right(next);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -415,7 +415,7 @@ class MemorizationKidsLocalService {
         ),
       );
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   });
 

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -216,15 +216,12 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
 
   void _loadFallbackSurahNames() {
     if (mounted) {
-        final surahLabel = context.l10n.surah;
-        setState(() {
-          _surahNames = List.generate(
-            115,
-            (i) => i == 0 ? '' : '$surahLabel $i',
-          );
-          _surahAyahCounts = _standardSurahAyahCounts;
-          _clampStartAyahForSurah();
-        });
+      final surahLabel = context.l10n.surah;
+      setState(() {
+        _surahNames = List.generate(115, (i) => i == 0 ? '' : '$surahLabel $i');
+        _surahAyahCounts = _standardSurahAyahCounts;
+        _clampStartAyahForSurah();
+      });
     }
   }
 
@@ -402,14 +399,11 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
                   background: Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          const Color(0xFF6C3483),
-                          AppColors.primary.withValues(alpha: 0.8),
-                        ],
+                        colors: [AppColors.primaryLight, AppColors.primaryDark],
                       ),
                     ),
                     child: SafeArea(
@@ -995,7 +989,8 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
       children: items.map((item) {
         final isSelected = _targetUser == item.$1;
         return Expanded(
-          child: GestureDetector(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             onTap: () => setState(() => _targetUser = item.$1),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
@@ -1069,7 +1064,8 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
       children: items.map((item) {
         final isSelected = _difficulty == item.$1;
         return Expanded(
-          child: GestureDetector(
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             onTap: () => setState(() => _difficulty = item.$1),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),

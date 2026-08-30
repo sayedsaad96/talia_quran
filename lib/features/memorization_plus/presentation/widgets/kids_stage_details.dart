@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:flutter_animate/flutter_animate.dart';
-
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -27,7 +25,9 @@ class KidsStageDetails extends StatelessWidget {
       icon: const Icon(Icons.play_arrow_rounded, size: 28),
       label: Text(
         context.l10n.kidsGamifiedStartMission,
-        style: AppTypography.headlineSmall.copyWith(fontWeight: FontWeight.bold),
+        style: AppTypography.headlineSmall.copyWith(
+          fontWeight: FontWeight.bold,
+        ),
       ),
       style: FilledButton.styleFrom(
         backgroundColor: KidsTheme.forestGreen,
@@ -67,17 +67,7 @@ class KidsStageDetails extends StatelessWidget {
           color: KidsTheme.reviewPurple,
         ),
         const SizedBox(height: AppSpacing.lg),
-        if (WidgetsBinding.instance.runtimeType.toString().contains('Test'))
-          startButton
-        else
-          startButton
-              .animate(onPlay: (c) => c.repeat(reverse: true))
-              .scaleXY(
-                begin: 1.0,
-                end: 1.05,
-                duration: 1.5.seconds,
-                curve: Curves.easeInOut,
-              ),
+        startButton,
       ],
     );
   }
@@ -125,14 +115,7 @@ class _RibbonHeader extends StatelessWidget {
       ),
     );
 
-    if (WidgetsBinding.instance.runtimeType.toString().contains('Test')) {
-      return headerContainer;
-    }
-
-    return headerContainer
-        .animate()
-        .fadeIn(duration: 500.ms)
-        .slideY(begin: -0.1, end: 0, curve: Curves.easeOut);
+    return headerContainer;
   }
 }
 

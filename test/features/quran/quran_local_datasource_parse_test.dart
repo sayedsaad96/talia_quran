@@ -12,9 +12,9 @@ void main() {
 
   setUpAll(() {
     jsonStr = File('assets/data/quran.json').readAsStringSync();
-    surahsJson = jsonDecode(
-      File('assets/data/surahs.json').readAsStringSync(),
-    ) as List<dynamic>;
+    surahsJson =
+        jsonDecode(File('assets/data/surahs.json').readAsStringSync())
+            as List<dynamic>;
   });
 
   SurahModel surahModel(int id) {
@@ -24,31 +24,82 @@ void main() {
   }
 
   group('parseQuranData — sacred-text exactness', () {
-    test('surah 2, 9, 95 and 97 texts pass through character-for-character',
-        () {
+    test('surah 2, 9, 95 and 97 fallback fixtures are exact literals', () {
+      const expectedAyah1 = <int, String>{
+        2: 'الٓمٓ',
+        9: 'بَرَآءَةٌۭ مِّنَ ٱللَّهِ وَرَسُولِهِۦٓ إِلَى ٱلَّذِينَ عَٰهَدتُّم مِّنَ ٱلْمُشْرِكِينَ',
+        95: 'وَٱلتِّينِ وَٱلزَّيْتُونِ',
+        97: 'إِنَّآ أَنزَلْنَٰهُ فِى لَيْلَةِ ٱلْقَدْرِ',
+      };
       final result = QuranLocalDatasourceImpl.parseQuranData({
         'jsonStr': jsonStr,
-        'surahs': [surahModel(2), surahModel(9), surahModel(95), surahModel(97)],
+        'surahs': expectedAyah1.keys.map(surahModel).toList(),
       });
 
-      for (final surahId in [2, 9, 95, 97]) {
-        final rawAyahs = (jsonDecode(jsonStr)[surahId.toString()] as List)
-            .cast<Map<String, dynamic>>();
-        final parsed = result.ayahs[surahId]!;
-        expect(parsed, hasLength(rawAyahs.length));
-        for (var i = 0; i < rawAyahs.length; i++) {
-          final expected = rawAyahs[i]['text']!.toString().replaceAll(
-                '\uFEFF',
-                '',
-              );
-          expect(parsed[i].text, expected,
-              reason: 'Surah $surahId ayah ${i + 1} mutated in parse');
-          expect(parsed[i].number, rawAyahs[i]['global']);
-          expect(parsed[i].page, rawAyahs[i]['page']);
-          expect(parsed[i].juz, rawAyahs[i]['juz']);
-        }
+      for (final entry in expectedAyah1.entries) {
+        expect(
+          result.ayahs[entry.key]!.first.text,
+          entry.value,
+          reason: 'Fallback corpus drifted at Surah ${entry.key}, ayah 1',
+        );
       }
     });
+
+    test('preserves every input code point including BOM and whitespace', () {
+      const sacredInput = '\uFEFF  قُلْ\nهُوَ  ';
+      final fixture = <String, dynamic>{
+        '112': [
+          {
+            'chapter': 112,
+            'verse': 1,
+            'text': sacredInput,
+            'global': 6222,
+            'page': 604,
+            'juz': 30,
+          },
+        ],
+      };
+
+      final result = QuranLocalDatasourceImpl.parseQuranData({
+        'jsonStr': jsonEncode(fixture),
+        'surahs': [surahModel(112)],
+      });
+
+      expect(result.ayahs[112]!.single.text, sacredInput);
+    });
+
+    test(
+      'surah 2, 9, 95 and 97 texts pass through character-for-character',
+      () {
+        final result = QuranLocalDatasourceImpl.parseQuranData({
+          'jsonStr': jsonStr,
+          'surahs': [
+            surahModel(2),
+            surahModel(9),
+            surahModel(95),
+            surahModel(97),
+          ],
+        });
+
+        for (final surahId in [2, 9, 95, 97]) {
+          final rawAyahs = (jsonDecode(jsonStr)[surahId.toString()] as List)
+              .cast<Map<String, dynamic>>();
+          final parsed = result.ayahs[surahId]!;
+          expect(parsed, hasLength(rawAyahs.length));
+          for (var i = 0; i < rawAyahs.length; i++) {
+            final expected = rawAyahs[i]['text']!.toString();
+            expect(
+              parsed[i].text,
+              expected,
+              reason: 'Surah $surahId ayah ${i + 1} mutated in parse',
+            );
+            expect(parsed[i].number, rawAyahs[i]['global']);
+            expect(parsed[i].page, rawAyahs[i]['page']);
+            expect(parsed[i].juz, rawAyahs[i]['juz']);
+          }
+        }
+      },
+    );
   });
 
   group('parseQuranData — fail-closed structural metadata', () {

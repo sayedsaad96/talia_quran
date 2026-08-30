@@ -3,6 +3,7 @@ import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/theme/app_colors.dart';
 
 /// Ensures QCF fonts for a specific Quran page are loaded into Flutter engine
 /// before rendering the page. Displays a high-quality Shimmer loading placeholder
@@ -82,14 +83,14 @@ class QuranPageSkeletonLoader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final baseColor = isDark
-        ? const Color(0xFF1E2D35)
-        : const Color(0xFFE8DFD1);
+        ? AppColors.shimmerBase
+        : AppColors.shimmerBaseLight;
     final highlightColor = isDark
-        ? const Color(0xFF2A3F4B)
-        : const Color(0xFFF7F2E9);
+        ? AppColors.shimmerHighlight
+        : AppColors.shimmerHighlightLight;
     final goldAccent = isDark
-        ? const Color(0xFFC8A55B).withValues(alpha: 0.3)
-        : const Color(0xFFB08930).withValues(alpha: 0.3);
+        ? AppColors.desertSand.withValues(alpha: 0.3)
+        : AppColors.desertSand.withValues(alpha: 0.3);
 
     return Shimmer.fromColors(
       baseColor: baseColor,

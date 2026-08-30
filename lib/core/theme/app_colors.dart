@@ -36,7 +36,9 @@ abstract class AppColors {
 
   static const Color lightTextPrimary = Color(0xFF1A1209);
   static const Color lightTextSecondary = Color(0xFF6B5E4E);
-  static const Color lightTextHint = Color(0xFFAA9E92);
+
+  /// ≥ 4.5:1 on [lightSurfaceVariant] / white (WCAG AA for functional text).
+  static const Color lightTextHint = Color(0xFF756A5A);
 
   // ─── Dark Theme ──────────────────────────────────────────────────────────────
   static const Color darkBackground = Color(0xFF021210); // Deep green-black
@@ -47,7 +49,9 @@ abstract class AppColors {
 
   static const Color darkTextPrimary = Color(0xFFF0EDE6);
   static const Color darkTextSecondary = Color(0xFFA8B0BC);
-  static const Color darkTextHint = Color(0xFF5A6370);
+
+  /// ≥ 4.5:1 on [darkSurfaceVariant] (WCAG AA for functional text).
+  static const Color darkTextHint = Color(0xFF8B98A4);
 
   // ─── OLED Pitch Black Theme (Optional) ────────────────────────────────────────
   static const Color oledBackground = Color(0xFF000000);
@@ -65,8 +69,12 @@ abstract class AppColors {
   // ─── Glow & Ambient Colors ────────────────────────────────────────────────────
   static const Color ambientTeal = Color(0xFF1A6B5A);
   static const Color ambientGold = Color(0xFFD4A017);
-  static const Color shimmerBase = Color(0xFF2A3540);
-  static const Color shimmerHighlight = Color(0xFF3D5060);
+
+  // ─── Shimmer (skeleton loaders) — single source of truth ─────────────────────
+  static const Color shimmerBaseLight = Color(0xFFEDEAE0);
+  static const Color shimmerHighlightLight = Color(0xFFF8F5EE);
+  static const Color shimmerBase = Color(0xFF1E2D35);
+  static const Color shimmerHighlight = Color(0xFF2A3F4B);
 
   // ─── Spiritual Palette ────────────────────────────────────────────────────────
   static const Color parchmentWarm = Color(0xFFF5EDD6); // كالرق الدافئ — light
@@ -93,6 +101,7 @@ abstract class AppColors {
   static const Color success = Color(0xFF2E7D5E);
   static const Color warning = Color(0xFFD4821A);
   static const Color error = Color(0xFFC0392B);
+  static const Color errorDark = Color(0xFF922B21);
   static const Color info = Color(0xFF2980B9);
 
   // ─── Quran Reading Colors ────────────────────────────────────────────────────

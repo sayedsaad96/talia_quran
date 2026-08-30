@@ -16,11 +16,14 @@ class AzkarLocalDatasourceImpl implements AzkarLocalDatasource {
   Future<List<ZikrModel>> getAzkar(AzkarCategory category) async {
     try {
       if (_cache == null) {
-        final jsonStr = await rootBundle.loadString('assets/data/azkar.json');
+        final jsonStr = await rootBundle.loadString(
+          'assets/data/azkar_release.json',
+        );
         _cache = await compute(
           (String str) => jsonDecode(str) as Map<String, dynamic>,
           jsonStr,
         );
+        _validateUniqueReleaseIds(_cache!);
       }
 
       final key = switch (category) {
@@ -36,6 +39,21 @@ class AzkarLocalDatasourceImpl implements AzkarLocalDatasource {
           .toList();
     } catch (e) {
       throw CacheFailure('Failed to load azkar: $e');
+    }
+  }
+
+  void _validateUniqueReleaseIds(Map<String, dynamic> source) {
+    final ids = <String>{};
+    for (final key in const ['morning', 'evening', 'general', 'duas']) {
+      final records = source[key];
+      if (records is! List<dynamic>) continue;
+      for (final record in records) {
+        if (record is! Map<String, dynamic>) continue;
+        final id = record['id'];
+        if (id is String && id.trim().isNotEmpty && !ids.add(id)) {
+          throw FormatException('Duplicate release record id: $id');
+        }
+      }
     }
   }
 }

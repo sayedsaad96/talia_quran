@@ -1,13 +1,15 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/streak_entity.dart';
 import '../../domain/entities/streak_result.dart';
+import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
 import '../../../../core/progress/progress_events_bus.dart';
 import '../../../../core/services/streak_service.dart';
+import '../../../../core/utils/talia_logger.dart';
 
 part 'streak_state.dart';
 
@@ -34,9 +36,10 @@ class StreakCubit extends Cubit<StreakState> {
       if (!isClosed) {
         emit(StreakLoaded(streak: entity));
       }
-    } catch (e) {
+    } catch (e, s) {
+      TaliaLogger.e('loadStreak failed', e, s);
       if (!isClosed) {
-        emit(StreakError(e.toString()));
+        emit(const StreakError(CubitMessageCodes.errorUnknown));
       }
     }
   }
@@ -51,9 +54,10 @@ class StreakCubit extends Cubit<StreakState> {
         }
       }
       return result;
-    } catch (e) {
+    } catch (e, s) {
+      TaliaLogger.e('recordActivity failed', e, s);
       if (!isClosed) {
-        emit(StreakError(e.toString()));
+        emit(const StreakError(CubitMessageCodes.errorUnknown));
       }
       return const StreakResult.sameDay();
     }

@@ -47,8 +47,46 @@ void main() {
         final expectedCount = surah['ayahCount'] as int;
         final ayahs = quran[id.toString()] as List?;
         expect(ayahs, isNotNull, reason: 'Surah $id missing from quran.json');
-        expect(ayahs!.length, expectedCount,
-            reason: 'Surah $id ayah count mismatch');
+        expect(
+          ayahs!.length,
+          expectedCount,
+          reason: 'Surah $id ayah count mismatch',
+        );
+      }
+    });
+
+    test('surah boundaries, first pages and first juz match surahs.json', () {
+      for (final rawSurah in surahs) {
+        final surah = rawSurah as Map<String, dynamic>;
+        final id = surah['id'] as int;
+        final ayahs = (quran[id.toString()] as List)
+            .cast<Map<String, dynamic>>();
+
+        expect(
+          ayahs.first['chapter'],
+          id,
+          reason: 'Surah $id starts in the wrong chapter',
+        );
+        expect(
+          ayahs.first['verse'],
+          1,
+          reason: 'Surah $id does not start at ayah 1',
+        );
+        expect(
+          ayahs.last['verse'],
+          surah['ayahCount'],
+          reason: 'Surah $id ends at the wrong ayah boundary',
+        );
+        expect(
+          ayahs.first['page'],
+          surah['page'],
+          reason: 'Surah $id first page disagrees with surahs.json',
+        );
+        expect(
+          ayahs.first['juz'],
+          surah['juz'],
+          reason: 'Surah $id first juz disagrees with surahs.json',
+        );
       }
     });
 
@@ -57,8 +95,11 @@ void main() {
       for (var surahId = 1; surahId <= 114; surahId++) {
         final ayahs = quran[surahId.toString()] as List;
         for (final ayah in ayahs) {
-          expect(ayah['global'], expectedGlobal,
-              reason: 'Surah $surahId global sequence broken');
+          expect(
+            ayah['global'],
+            expectedGlobal,
+            reason: 'Surah $surahId global sequence broken',
+          );
           expectedGlobal++;
         }
       }
@@ -69,8 +110,11 @@ void main() {
       for (var surahId = 1; surahId <= 114; surahId++) {
         final ayahs = quran[surahId.toString()] as List;
         for (var i = 0; i < ayahs.length; i++) {
-          expect(ayahs[i]['verse'], i + 1,
-              reason: 'Surah $surahId verse numbering broken');
+          expect(
+            ayahs[i]['verse'],
+            i + 1,
+            reason: 'Surah $surahId verse numbering broken',
+          );
           expect(ayahs[i]['chapter'], surahId);
         }
       }
@@ -94,26 +138,45 @@ void main() {
     test('every ayah record carries non-null structural metadata', () {
       for (final entry in quran.entries) {
         for (final ayah in entry.value as List) {
-          expect(ayah['text'], isA<String>(),
-              reason: 'Surah ${entry.key}: missing text');
-          expect((ayah['text'] as String).isNotEmpty, isTrue,
-              reason: 'Surah ${entry.key}: empty text');
-          expect(ayah['global'], isA<int>(),
-              reason: 'Surah ${entry.key}: missing global');
-          expect(ayah['page'], isA<int>(),
-              reason: 'Surah ${entry.key}: missing page');
-          expect(ayah['juz'], isA<int>(),
-              reason: 'Surah ${entry.key}: missing juz');
+          expect(
+            ayah['text'],
+            isA<String>(),
+            reason: 'Surah ${entry.key}: missing text',
+          );
+          expect(
+            (ayah['text'] as String).isNotEmpty,
+            isTrue,
+            reason: 'Surah ${entry.key}: empty text',
+          );
+          expect(
+            ayah['global'],
+            isA<int>(),
+            reason: 'Surah ${entry.key}: missing global',
+          );
+          expect(
+            ayah['page'],
+            isA<int>(),
+            reason: 'Surah ${entry.key}: missing page',
+          );
+          expect(
+            ayah['juz'],
+            isA<int>(),
+            reason: 'Surah ${entry.key}: missing juz',
+          );
         }
       }
     });
 
-    test('Al-Fatihah ayah 1 retains its approved numbered-basmalah convention',
-        () {
-      final ayah1 = (quran['1'] as List)[0] as Map<String, dynamic>;
-      expect(normalizedAyahText(ayah1),
-          startsWith('بسم الله الرحمان الرحيم'));
-    });
+    test(
+      'Al-Fatihah ayah 1 retains its approved numbered-basmalah convention',
+      () {
+        final ayah1 = (quran['1'] as List)[0] as Map<String, dynamic>;
+        expect(
+          normalizedAyahText(ayah1),
+          startsWith('بسم الله الرحمان الرحيم'),
+        );
+      },
+    );
 
     test('At-Tawbah contains no basmalah anywhere in ayah 1', () {
       final ayah1 = (quran['9'] as List)[0] as Map<String, dynamic>;
@@ -124,13 +187,12 @@ void main() {
       );
     });
 
-    test(
-        'no surah other than Al-Fatihah embeds the basmalah in ayah 1 '
+    test('no surah other than Al-Fatihah embeds the basmalah in ayah 1 '
         '(basmalah is structural, not part of the numbered ayah)', () {
       for (var surahId = 2; surahId <= 114; surahId++) {
         if (surahId == 9) continue;
-        final ayah1 = (quran[surahId.toString()] as List)[0]
-            as Map<String, dynamic>;
+        final ayah1 =
+            (quran[surahId.toString()] as List)[0] as Map<String, dynamic>;
         expect(
           normalizedAyahText(ayah1),
           isNot(startsWith('بسم الله')),
@@ -142,9 +204,11 @@ void main() {
     });
 
     test('runtime SHA-256 matches the frozen content manifest', () {
-      final manifest = jsonDecode(
-        File('assets/data/content_manifest.json').readAsStringSync(),
-      ) as Map<String, dynamic>;
+      final manifest =
+          jsonDecode(
+                File('assets/data/content_manifest.json').readAsStringSync(),
+              )
+              as Map<String, dynamic>;
       final quranEntry = (manifest['items'] as List)
           .cast<Map<String, dynamic>>()
           .singleWhere((item) => item['path'] == 'assets/data/quran.json');
@@ -160,9 +224,9 @@ void main() {
     setUpAll(() {
       manifest =
           jsonDecode(
-              File('assets/data/content_manifest.json').readAsStringSync(),
-            )
-            as Map<String, dynamic>;
+                File('assets/data/content_manifest.json').readAsStringSync(),
+              )
+              as Map<String, dynamic>;
     });
 
     const allowedReviewStates = {'pendingReview', 'approved', 'rejected'};
@@ -188,21 +252,28 @@ void main() {
       expect(items.length, greaterThanOrEqualTo(3));
       for (final item in items.cast<Map<String, dynamic>>()) {
         for (final field in requiredItemFields) {
-          expect(item[field], isNotNull,
-              reason: '${item['path']} missing $field');
+          expect(
+            item[field],
+            isNotNull,
+            reason: '${item['path']} missing $field',
+          );
         }
-        expect(item['reviewStatus'], isIn(allowedReviewStates),
-            reason: '${item['path']} has invalid reviewStatus');
-        expect(RegExp(r'^[0-9a-f]{64}$').hasMatch(item['sha256'] as String),
-            isTrue,
-            reason: '${item['path']} sha256 is not a lowercase hex digest');
+        expect(
+          item['reviewStatus'],
+          isIn(allowedReviewStates),
+          reason: '${item['path']} has invalid reviewStatus',
+        );
+        expect(
+          RegExp(r'^[0-9a-f]{64}$').hasMatch(item['sha256'] as String),
+          isTrue,
+          reason: '${item['path']} sha256 is not a lowercase hex digest',
+        );
       }
     });
 
-    test('Quran entries declare riwayah; every hash matches on-disk bytes',
-        () {
-      for (final item in (manifest['items'] as List)
-          .cast<Map<String, dynamic>>()) {
+    test('Quran entries declare riwayah; every hash matches on-disk bytes', () {
+      for (final item
+          in (manifest['items'] as List).cast<Map<String, dynamic>>()) {
         if (item['role'] == 'quran_text' || item['role'] == 'quran_structure') {
           expect(item['riwayah'], isNotNull);
           expect(
@@ -212,14 +283,72 @@ void main() {
           );
         }
         final file = File(item['path'] as String);
-        expect(file.existsSync(), isTrue,
-            reason: '${item['path']} listed in manifest but missing');
+        expect(
+          file.existsSync(),
+          isTrue,
+          reason: '${item['path']} listed in manifest but missing',
+        );
         expect(
           sha256.convert(file.readAsBytesSync()).toString(),
           item['sha256'],
           reason: '${item['path']} drifted from the frozen manifest',
         );
       }
+    });
+
+    test('quran_structure declares its derivation from the frozen corpus', () {
+      final structureEntry = (manifest['items'] as List)
+          .cast<Map<String, dynamic>>()
+          .singleWhere((item) => item['role'] == 'quran_structure');
+
+      expect(
+        structureEntry['sourceProvider'],
+        'project_derived_from_frozen_quran_corpus',
+      );
+      expect(structureEntry['sourceEdition'], 'derived_structural_index');
+      expect(structureEntry['derivedFrom'], 'assets/data/quran.json');
+      expect(structureEntry['crossCheckedFields'], [
+        'surah_boundaries',
+        'page',
+        'juz',
+      ]);
+    });
+
+    test('runtime QCF corpus identity matches the locked dependency', () {
+      expect(manifest['runtimeQuranRenderingCorpus'], isA<Map>());
+      final renderingCorpus = Map<String, dynamic>.from(
+        manifest['runtimeQuranRenderingCorpus'] as Map,
+      );
+      final lockText = File('pubspec.lock').readAsStringSync();
+      final lockedPackage = RegExp(
+        r'^  qcf_quran_plus:\s*$([\s\S]*?)(?=^  [a-zA-Z0-9_]+:|\z)',
+        multiLine: true,
+      ).firstMatch(lockText)!.group(1)!;
+      final lockedVersion = RegExp(
+        r'^    version: "([^"]+)"',
+        multiLine: true,
+      ).firstMatch(lockedPackage)!.group(1)!;
+      final lockedSha256 = RegExp(
+        r'^      sha256: "?([0-9a-f]{64})"?',
+        multiLine: true,
+      ).firstMatch(lockedPackage)!.group(1)!;
+
+      expect(renderingCorpus['role'], 'quran_runtime_rendering_corpus');
+      expect(renderingCorpus['package'], 'qcf_quran_plus');
+      expect(renderingCorpus['dependencyVersion'], lockedVersion);
+      expect(renderingCorpus['lockedSha256'], lockedSha256);
+      expect(
+        renderingCorpus['lockedSha256'],
+        'a1a3dbe3ce0cdd9298dfc59cc00bb1c0f6405d19fce9cf1bf222588b9555b9ce',
+      );
+      expect(
+        renderingCorpus['sourceUrl'],
+        'https://github.com/hussein12347/qcf_quran_plus',
+      );
+      expect(renderingCorpus['riwayah'], 'hafs');
+      expect(renderingCorpus['licenseStatus'], 'MIT');
+      expect(renderingCorpus['freezeDate'], manifest['freezeDate']);
+      expect(renderingCorpus['reviewStatus'], isIn(allowedReviewStates));
     });
   });
 }

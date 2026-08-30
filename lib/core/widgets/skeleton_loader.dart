@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 import '../constants/app_spacing.dart';
+import '../theme/app_colors.dart';
 
 /// Skeleton loader base box widget
 class SkeletonBox extends StatelessWidget {
@@ -19,8 +20,12 @@ class SkeletonBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return Shimmer.fromColors(
-      baseColor: isDark ? const Color(0xFF1E2D35) : const Color(0xFFE0E0E0),
-      highlightColor: isDark ? const Color(0xFF2A3F4B) : const Color(0xFFF5F5F5),
+      baseColor: isDark
+          ? AppColors.shimmerBase
+          : AppColors.shimmerBaseLight,
+      highlightColor: isDark
+          ? AppColors.shimmerHighlight
+          : AppColors.shimmerHighlightLight,
       child: Container(
         width: width,
         height: height,
@@ -51,7 +56,7 @@ class HomeSkeletonLoader extends StatelessWidget {
             vertical: AppSpacing.md,
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 600),
+            constraints: const BoxConstraints(maxWidth: 840),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,

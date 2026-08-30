@@ -201,7 +201,7 @@ class MemorizationDailyPlanService {
 
       return Right(bestPlan);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -236,7 +236,7 @@ class MemorizationDailyPlanService {
       );
       return generated.map((plan) => plan);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -246,7 +246,7 @@ class MemorizationDailyPlanService {
       await _prefs.setBool(PlanCloudDirtyKeys.dailyPlan, true);
       return const Right(null);
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 
@@ -283,7 +283,7 @@ class MemorizationDailyPlanService {
       );
       return folded;
     } catch (e) {
-      return Left(CacheFailure(e.toString()));
+      return Left(CacheFailure.from(e));
     }
   }
 

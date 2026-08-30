@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
@@ -14,9 +15,14 @@ class AppTextField extends StatelessWidget {
     this.suffixIcon,
     this.onChanged,
     this.onSubmitted,
+    this.validator,
+    this.errorText,
     this.obscureText = false,
     this.keyboardType,
     this.textInputAction,
+    this.textDirection,
+    this.autofillHints,
+    this.inputFormatters,
     this.maxLines = 1,
     this.enabled = true,
     this.autofocus = false,
@@ -32,9 +38,18 @@ class AppTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final ValueChanged<String>? onChanged;
   final ValueChanged<String>? onSubmitted;
+
+  /// Works standalone (auto-validates) or inside a parent [Form].
+  final FormFieldValidator<String>? validator;
+
+  /// Direct error text override (bypasses [validator] auto-validation).
+  final String? errorText;
   final bool obscureText;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
+  final TextDirection? textDirection;
+  final Iterable<String>? autofillHints;
+  final List<TextInputFormatter>? inputFormatters;
   final int maxLines;
   final bool enabled;
   final bool autofocus;
@@ -50,25 +65,30 @@ class AppTextField extends StatelessWidget {
         : AppColors.lightSurfaceVariant;
     final hintColor = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
 
-    return TextField(
+    return TextFormField(
       controller: controller,
       focusNode: focusNode,
       obscureText: obscureText,
       keyboardType: keyboardType,
       textInputAction: textInputAction,
+      textDirection: textDirection,
+      autofillHints: autofillHints,
+      inputFormatters: inputFormatters,
       maxLines: maxLines,
       enabled: enabled,
       autofocus: autofocus,
       readOnly: readOnly,
       onTap: onTap,
       onChanged: onChanged,
-      onSubmitted: onSubmitted,
+      onFieldSubmitted: onSubmitted,
+      validator: validator,
       style: AppTypography.bodyMedium.copyWith(
         color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
       ),
       decoration: InputDecoration(
         hintText: hint,
         labelText: label,
+        errorText: errorText,
         filled: true,
         fillColor: fillColor,
         hintStyle: AppTypography.bodyMedium.copyWith(color: hintColor),

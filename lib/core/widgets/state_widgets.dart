@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../theme/app_colors.dart';
@@ -91,10 +90,10 @@ class ShimmerList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final base = isDark ? const Color(0xFF1C2330) : const Color(0xFFE8E0D5);
+    final base = isDark ? AppColors.shimmerBase : AppColors.shimmerBaseLight;
     final highlight = isDark
-        ? const Color(0xFF2A3140)
-        : const Color(0xFFF0EDE6);
+        ? AppColors.shimmerHighlight
+        : AppColors.shimmerHighlightLight;
 
     return Shimmer.fromColors(
       baseColor: base,
@@ -103,7 +102,7 @@ class ShimmerList extends StatelessWidget {
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         itemCount: itemCount,
-        separatorBuilder: (_, _) => const SizedBox(height: 8),
+        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
         itemBuilder: (_, _) => Container(
           height: height,
           decoration: BoxDecoration(
@@ -257,13 +256,11 @@ class EmptyJourneyWidget extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.menu_book_rounded, size: 64, color: AppColors.gold)
-                .animate(onPlay: (c) => c.repeat(reverse: true))
-                .scale(
-                  begin: const Offset(1, 1),
-                  end: const Offset(1.05, 1.05),
-                  duration: 2000.ms,
-                ),
+            const Icon(
+              Icons.menu_book_rounded,
+              size: 64,
+              color: AppColors.primary,
+            ),
             const SizedBox(height: AppSpacing.lg),
             Text(
               context.l10n.startYourJourneyWithQuran,

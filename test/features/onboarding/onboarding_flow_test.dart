@@ -155,6 +155,44 @@ void main() {
       expect(find.text('Welcome to Talia'), findsOneWidget);
     });
 
+    testWidgets('welcome uses the hero artwork as the only brand mark', (
+      tester,
+    ) async {
+      await _registerCore();
+      await _pumpOnboarding(tester);
+
+      expect(
+        find.image(const AssetImage('assets/images/logo_new_padded.png')),
+        findsNothing,
+      );
+      expect(
+        find.image(const AssetImage('assets/images/onboarding/splash_new.png')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('welcome copy stays visually separated from the hero artwork', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(390, 844);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      await _registerCore();
+      await _pumpOnboarding(tester);
+
+      final heroBottom = tester
+          .getRect(
+            find.image(
+              const AssetImage('assets/images/onboarding/splash_new.png'),
+            ),
+          )
+          .bottom;
+      final titleTop = tester.getRect(find.text('Welcome to Talia')).top;
+
+      expect(titleTop - heroBottom, greaterThanOrEqualTo(16));
+    });
+
     testWidgets('fork shows living previews, trust line, and two waypoints', (
       tester,
     ) async {
@@ -165,7 +203,14 @@ void main() {
 
       // The mushaf window and the child night window prove both worlds.
       expect(find.text('وَرَتِّلِ ٱلْقُرْآنَ تَرْتِيلًا'), findsOneWidget);
-      expect(find.byType(Image), findsAtLeast(2));
+      expect(
+        find.image(
+          const AssetImage(
+            'assets/images/character/Talia_Master_Character.png',
+          ),
+        ),
+        findsOneWidget,
+      );
       // Offline-first trust line under the guest CTA.
       expect(
         find.text('Works offline · your data stays on your device'),
