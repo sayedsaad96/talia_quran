@@ -23,6 +23,32 @@ Everything else—generic governance platforms, full riwayah-domain migration, d
 
 **Decision:** the triage is complete and the reduced V1 scope is ready to implement. The application itself remains **NO-GO for publication** until every V1 release gate in this document passes and the qualified Islamic reviewer signs the frozen release candidate.
 
+## V1 Scope Hard Stop
+
+**This section overrides every other scope statement in this document. If a task, estimate, acceptance condition, or implementation idea conflicts with it, this section wins.**
+
+1. Do not rehabilitate content that can simply be removed from V1.
+2. For Adhkar/Dua, ship only the smallest verified subset actually required by the existing V1 UX.
+3. Any unverifiable or unnecessary religious record may be removed from V1 rather than repaired.
+4. V1-S items are opportunistic only, not mandatory scope.
+5. A V1-S item may be implemented only if all of the following remain true:
+   - XS/S effort;
+   - no architecture change;
+   - no new abstraction;
+   - no new migration;
+   - no new external dependency;
+   - no Islamic re-review is triggered;
+   - and it does not delay any V1-M item.
+6. If any proposed implementation begins expanding beyond the stated minimum, **STOP and report the expansion** instead of implementing it.
+7. Do not create frameworks, portals, generic engines, reusable governance systems, or broad refactors for a one-time V1 requirement.
+8. Prefer deletion, disabling, or hiding a non-critical feature over building infrastructure to preserve it.
+9. Do not preserve existing content or features merely because they already exist.
+10. The smallest safe V1 is preferable to a larger “more complete” V1.
+
+### Enforcement rule
+
+Every implementation task begins with a delete/disable/hide assessment. Preservation must be justified by a V1 core journey or a release-safety requirement. If the minimum implementation exceeds its stated effort ceiling, the engineer stops and reports the expansion; the default response is to remove or hide the non-critical surface, not to increase the scope.
+
 ## Current Release Reality
 
 ### Verified directly against the current repository
@@ -34,8 +60,8 @@ Everything else—generic governance platforms, full riwayah-domain migration, d
 | Basmalah boundary | Ayah 1 contains an embedded basmalah in 112 surahs other than Al-Fatihah and At-Tawbah. | Blocking because memorization, search/detail, and QCF paths can disagree about ayah boundaries. |
 | Memorization text | `QuranTextDisplayFormatter.cleanAyahForMemorization` removes markers, changes spacing, inserts word boundaries, and collapses whitespace; `QcfHifzVerseView` applies it to QCF and asset text. | Blocking: sacred text used for memorization is not guaranteed character-for-character exact. |
 | Quran datasource | Missing `global`, `juz`, or `page` values are guessed rather than rejected. | Small but high-consequence fail-open behavior; include in the Quran correction batch. |
-| Adhkar/dua asset | 85 records; no authenticity-grade or tier fields; 73 references are not resolvable to a numbered citation; duplicate-text groups exist. | Blocking for any record retained in V1 until reviewed, graded where applicable, cited, and approved. |
-| Religious literals | Hand-typed verses/hadith/dua exist in tips, notifications, a certificate, settings, and home UI. Notification code can truncate religious text. | Blocking. Remove the nonessential output or source it from the approved corpus without mutation. |
+| Adhkar/dua asset | 85 candidate records across four current categories; no authenticity-grade or tier fields; 73 references are not resolvable to a numbered citation; duplicate-text groups exist. | The 85 records are an input pool, not V1 scope. Retain only a smallest approved allowlist; delete the rest and hide any category left empty. |
+| Religious literals | Hand-typed verses/hadith/dua exist in tips, notifications, a certificate, settings, and home UI. Notification code can truncate religious text. | Blocking. Delete or hide the nonessential output. An essential Quran surface may use only the already approved exact Quran corpus; do not create a preservation project. |
 | Dataset governance | No pinned content manifest records source edition, riwayah, license, hashes, dataset version, or review status. | A small immutable manifest is required; a general governance framework is not. |
 | Guardian unlink | Client code calls `revoke_guardian_link`; no migration defines that RPC. | Guaranteed-broken exposed action if the hosted schema follows the repository. |
 | Bookmark sign-out | `flushBeforeSignOut` can return success without checking pending bookmark cloud work, then local account cleanup removes the bookmark state. | Blocking, reproducible data-loss path. |
@@ -82,7 +108,9 @@ These are decision aids, not release gates. The binary gates later in this docum
 4. **Core journeys must degrade safely.** Reading, memorization, and Kids completion must have a usable offline/no-STT path.
 5. **Prefer deletion and a narrow schema change over a platform.** V1 does not need generic evidence abstractions, an importer framework, or a reviewer portal.
 6. **Verify the deployed system, not only migrations.** A correct SQL file does not prove the hosted database is correct.
-7. **Preserve stable features.** Do not redesign navigation, scheduling, sync, rewards, or architecture unless required by a blocker below.
+7. **Preserve stable core features.** Do not redesign navigation, scheduling, sync, rewards, or architecture unless required by a blocker below. Hiding an unsafe optional destination under the Hard Stop is allowed and is not a navigation redesign.
+8. **Start optional religious content from an empty allowlist.** A record is added only when the current V1 UX needs it and the reviewer can verify it without remediation work.
+9. **Should Fix is not Definition of Done.** Release gates cannot fail because an opportunistic V1-S item was skipped.
 
 ## Critical Findings
 
@@ -96,7 +124,7 @@ The local Quran asset embeds the basmalah in ayah 1 for 112 surahs, while the QC
 
 The 85-record adhkar/dua file cannot represent mandatory grade/tier data, most references are not numerically resolvable, and several screens contain hand-typed religious content. Notifications can modify a dua through truncation.
 
-**V1 decision:** remove nonessential tips/fallback religious notifications and other decorative literals. For the adhkar/dua feature that remains, add only the minimum direct fields needed for source, citation, authenticity grade, tier, dataset version, and review state; remove any record the reviewer cannot approve. Do not build a generic `ContentEvidence` system.
+**V1 decision:** remove nonessential tips, religious notification fallbacks, and decorative religious literals. Start the Adhkar/Dua release allowlist empty, identify only the records required by the category cards that V1 will actually keep, and add a record only after it is directly verifiable. Hide any empty/unnecessary category, route, notification action, or card. Do not repair the rest of the 85 records and do not build a generic `ContentEvidence` system.
 
 ### CF-3 — Sign-out can lose a pending bookmark
 
@@ -121,22 +149,34 @@ Both memorization modes depend on platform STT with no manual fallback. Kids fir
 | ID | Deliverable | Minimum acceptable implementation | Effort | Acceptance evidence |
 |---|---|---|---:|---|
 | V1-M1 | Exact Quran corpus and display | Correct ayah-1 basmalah boundaries while preserving Al-Fatihah and At-Tawbah rules; remove sacred-text mutation; fail on absent structural metadata; keep basmalah as an approved unnumbered header where appropriate. | L | Counts/boundary/hash tests; exact-string tests through QCF and fallback paths; offline sample on device; reviewer approval. |
-| V1-M2 | Minimal immutable content manifest | One checked-in manifest for Quran and adhkar/dua with source, edition/version, riwayah where relevant, license status, SHA-256, import/freeze date, and reviewer status. | S | Test recomputes hashes and rejects drift; frozen RC points to exact manifest and commit. |
-| V1-M3 | Reviewed adhkar/dua corpus | Extend the existing record/model directly with resolvable source/citation, source type, authenticity grade where applicable, dua tier, dataset version, and review state. Deduplicate intentionally and remove unverifiable records. | Engineering M; Islamic review XL | Every shipped record passes schema rules and has a reviewer disposition; UI shows source and grade/tier as applicable. |
-| V1-M4 | Remove ungoverned religious output | Delete daily religious tips and religious notification fallbacks unless sourced from the approved corpus; use generic localized reminder text; never truncate sacred text; remove or source certificate/settings/home literals. | M | Repository scan plus UI/notification/share tests show no unapproved literal and no ellipsis mutation of religious text. |
+| V1-M2 | Minimal immutable content manifest | One checked-in manifest for the Quran asset and only the Adhkar/Dua subset actually shipped, with source, edition/version, riwayah where relevant, license status, SHA-256, freeze date, and reviewer status. | S | Test recomputes hashes and rejects drift; frozen RC points to the exact shipped files, manifest, and commit. |
+| V1-M3 | Smallest verified Adhkar/Dua allowlist | Begin with zero records. Select only the minimum records required for the V1 category cards that remain; add direct citation/grade/tier fields only for those records; delete all other records and hide empty categories/routes/actions. If this exceeds M engineering effort, disable the Adhkar/Dua feature and report the scope expansion. | Engineering S/M; Islamic review M | Every shipped record is directly approved; no excluded record is bundled or reachable; no V1 gate requires repairing or reviewing all 85 candidates. |
+| V1-M4 | Remove ungoverned religious output | Delete daily religious tips, religious notification fallbacks, decorative certificate/settings/home literals, and religious share output that is not essential. Use generic localized reminder text and never truncate sacred text. Do not move removed content into a new source. | S | Repository scan plus UI/notification/share tests show the removed surfaces are absent, no unapproved literal is reachable, and no sacred text is shortened or paraphrased. |
 | V1-M5 | Bookmark-safe sign-out | Include bookmarks and every current dirty domain in the authoritative flush gate; preserve durable state on normal and forced exits. | S | Offline bookmark → failed push → sign-out blocked; force path retains recoverability; reconnect produces one correct cloud record. |
 | V1-M6 | Guardian unlink contract | Add a least-privilege `revoke_guardian_link` migration, signature/authorization tests, contract check, and deploy it; alternatively hide unlink/remove-child in V1 if deployment cannot be proven. | S | Unauthorized counterpart rejected; both valid directions work; hosted RPC verified; UI result handled. |
 | V1-M7 | Close critical database authority | Revoke `EXECUTE` on `prune_audit_logs()` from `authenticated`; ensure only a service/maintenance role can invoke it. | XS | Fresh-DB and hosted checks prove authenticated cannot execute and maintenance path still works. |
-| V1-M8 | Offline/no-STT completion | Add localized manual/self-grade actions to Adult and Kids; permit a safe first-use offline route that does not require three successful remote audio plays. | M | Denied microphone, unavailable recognizer, airplane mode, and empty audio cache all reach a recorded completion/review outcome without a crash or false automatic score. |
-| V1-M9 | Honest voice privacy | Replace the absolute on-device claim with accurate platform/provider wording, explain that Talia does not retain raw audio, and link the manual option. | XS | Arabic and English policy text matches implemented behavior and store privacy declarations. |
+| V1-M8 | Offline/no-STT completion | Add localized Arabic/English manual/self-grade actions to Adult and Kids; permit a safe first-use offline route that does not require three successful remote audio plays. | M | Denied microphone, unavailable recognizer, airplane mode, and empty audio cache all reach a recorded completion/review outcome without a crash or false automatic score. |
+| V1-M9 | Honest voice privacy | Replace the absolute on-device claim with accurate Arabic/English platform/provider wording, explain that Talia does not retain raw audio, and link the manual option. | XS | Both policy languages match implemented behavior and store privacy declarations. |
 | V1-M10 | Reproducible release proof | Run clean dependency restore, code generation if applicable, analyzer, all tests, release build, backend checks, and physical-device smoke tests from the frozen commit. | M | Stored command logs, artifact identity, device checklist, and zero unresolved critical/high defects. |
 | V1-M11 | Qualified Islamic review | Review the exact frozen RC content and journeys described below; record approve/reject per scope item. No post-approval content mutation. | External XL | Signed approval linked to commit, manifest hashes, app version, and reviewed artifact. |
+
+### Adhkar/Dua allowlist selection protocol
+
+1. Start the V1 allowlist empty; the 85 existing records have no presumption of inclusion.
+2. Remove tips, religious notification fallbacks, and decorative religious output before selecting any record.
+3. For each currently visible category, ask whether that category is necessary to the V1 UX. Hide it when the answer is no.
+4. For a necessary category, the qualified reviewer selects the smallest coherent set that is already directly verifiable. Engineering adds only the direct metadata and display changes required by those selected records.
+5. Do not open correction work for a rejected, ambiguous, duplicate, weakly cited, or unnecessary candidate; exclude it.
+6. If no coherent subset can be approved within the V1-M3 S/M engineering ceiling, hide the category. If no category qualifies, hide the entire Adhkar/Dua destination for V1.
+7. Record the final allowlisted IDs and shipped-asset hash. Anything not on the list must be absent from the release bundle or unreachable by the release UI.
+
+There is deliberately no numerical record target. Safety and coherence determine the small allowlist; completeness does not.
 
 ### Implementation order inside the Must-Fix scope
 
 1. Freeze baseline and add failing integrity/regression tests.
 2. Correct Quran boundaries/rendering and create the manifest.
-3. Remove unsafe religious surfaces; update and review the retained adhkar/dua corpus.
+3. Delete unsafe religious surfaces; create an empty Adhkar/Dua allowlist, add only the smallest directly verified subset, and hide empty categories.
 4. Fix bookmark sign-out, guardian RPC, and database privilege independently.
 5. Add manual/offline progression and align privacy text.
 6. Freeze RC, run engineering/backend/device gates, then conduct final Islamic review.
@@ -144,15 +184,14 @@ Both memorization modes depend on platform STT with no manual fallback. Kids fir
 
 ## V1 Should Fix
 
-These are included only when they remain within the stated effort and do not delay a Must-Fix item or invalidate Islamic review.
+V1-S items are **not release scope and are not part of Definition of Done**. Skip them by default. An item may be accepted only when it is XS/S, changes no architecture, adds no abstraction, migration, or dependency, triggers no Islamic re-review, and delays no V1-M item. If any condition becomes false, defer the item immediately without replacing it.
 
 | ID | Item | Why now | Effort | Deferral rule |
 |---|---|---|---:|---|
-| V1-S1 | Separate configurable Kids acceptance threshold from the adult 92% setting. | Low effort and reduces inappropriate false failures; reviewer/product owner should approve the value. | XS | Defer if manual grading fully mitigates it and no value is approved. |
-| V1-S2 | Localize critical new error, privacy, notification, and manual-grade strings in Arabic and English. | These strings are in release-blocking journeys. | S | Only secondary copy may defer; no hardcoded release-path string may remain. |
-| V1-S3 | Make QCF/font failure visibly safe and fall back only to exact approved asset text. | Prevents a silent blank/modified memorization view. | S | Must be promoted to Must Fix if device smoke reveals a blank or altered view. |
-| V1-S4 | Record free-tier provider budgets/alerts and verify the paginated review RPC is deployed. | Cheap protection against configuration drift and full 6,236-row fallback pulls. | S | Manual provider alert setup can occur immediately before staged rollout. |
-| V1-S5 | Add a narrow lint/test list for the known religious-output surfaces. | Prevents regression during the short V1 correction window. | S | A broad semantic religious-literal linter is not required. |
+| V1-S1 | Separate the Kids threshold with a direct constant/config value only. | Low effort and reduces inappropriate false failures. | XS | Implement only if the value is already accepted before RC review and the change is truly local; otherwise V1.1. |
+| V1-S2 | Record free-tier provider budgets/alerts. | Manual operational protection without product or schema work. | XS/S | Defer if access/setup is not immediate; it cannot block RC work. |
+
+Critical Arabic/English copy, exact QCF fallback behavior, and regression checks belong to their V1-M acceptance criteria; they are not optional V1-S work.
 
 ## Deferred — V1.1
 
@@ -160,6 +199,7 @@ These are included only when they remain within the stated effort and do not del
 |---|---|---|
 | Dead-letter UI, classification, and automatic pull recovery | Dead rows are durable; push kinds self-heal and pull stall generally recovers at login. | Cross-device pulls can stop silently until re-login after repeated failures. |
 | Parent rewards outbox and monotonic merge | Current parent create is remote-first and reports failure; no ordinary hidden local-success path was proven. | Weaker offline UX and possible stale overwrite under unusual concurrency. |
+| Separate Kids grading threshold, if V1-S1 is skipped | Manual grading removes the V1 completion blocker. | Automatic Kids grading remains as strict as the adult path. |
 | Revoke residual direct DML on streaks/XP/daily activity | RLS limits writes to the caller's own rows; this is integrity/gamification abuse, not cross-user exposure. | A user can bypass monotonic RPC semantics for their own gamification data. |
 | Full Flutter CI plus fresh-DB CI | Manual release gates can safely cover one V1 candidate. | More dependence on disciplined human execution after V1. |
 | Audio download/offline pack management and prefetch wiring | Manual/offline progression removes the release blocker. | First-use offline users cannot listen to uncached recitation. |
@@ -184,7 +224,7 @@ These are included only when they remain within the stated effort and do not del
 - General `ContentEvidence`/content-policy domain and reusable governance engine.
 - Multi-riwayah, multi-edition, and multi-reciter compatibility matrix.
 - Sophisticated Quran importer with upstream-diff adjudication and automated licensing workflow.
-- Navigation redesign or reduction of the existing five tabs.
+- Navigation redesign. Hiding one unsafe optional destination under the Hard Stop is a scoped removal, not a redesign project.
 - Large-file and dependency-graph refactors that do not correct a V1 defect.
 - Performance budgets, scale/load suites, and full observability platform.
 - Advanced personalization, adaptive pedagogy, and scheduler research work.
@@ -196,6 +236,8 @@ These are included only when they remain within the stated effort and do not del
 The following are intentionally not part of the minimum safe release:
 
 - Replacing a **runtime** live Quran fetch: the application currently ships local assets; `scripts/fetch_quran.dart` is a developer script, not a runtime dependency.
+- Repairing, grading, citing, translating, or re-reviewing all 85 Adhkar/Dua candidates. Only the smallest approved allowlist ships.
+- Keeping all four current Adhkar/Dua category cards. An empty or unnecessary category is hidden rather than populated for completeness.
 - Rebuilding all repositories/services into a new architecture before launch.
 - Migrating all local persistence to one storage engine.
 - Eliminating every large widget/cubit before V1.
@@ -213,21 +255,21 @@ The labels below apply to the original `Talia Final Review Readiness Implementat
 | # | Original task | Triage | V1 decision | Effort before V1 |
 |---:|---|---|---|---:|
 | 1 | Reproducible baseline and audit reconciliation | PARTIAL | Record the frozen commit and run fresh release commands. Do not reopen or rewrite historical audits. | XS |
-| 2 | Religious-content evidence types and release policy | SIMPLIFY | Add minimum fields directly to the existing adhkar/dua model and a short policy/checklist. No generic evidence hierarchy. | M |
+| 2 | Religious-content evidence types and release policy | DEFER | Do not create the evidence domain in V1. Task 7 may add only direct fields needed by the tiny shipped allowlist. | — |
 | 3 | Immutable corpus manifests and validation tooling | SIMPLIFY | One small manifest plus hash/schema tests. No general CLI or CI platform. | S |
 | 4 | Auditable Quran import and exact corpus tests | PARTIAL | Produce/freeze one corrected approved local corpus and boundary tests. Full reusable importer is deferred. | M |
 | 5 | Exact Quran rendering and fail-closed structure | KEEP | Required before release; limit change to sacred display, structural validation, and safe exact fallback. | M |
 | 6 | Riwayah-safe text/audio/tajweed/identity | SIMPLIFY | Declare and pin one riwayah; reviewer verifies enabled reciters; disable any unverified combination. Full model migration later. | S |
-| 7 | Reviewed adhkar/dua corpus | SIMPLIFY | Review only records actually shipped; add required direct metadata; remove unverifiable records. No importer framework. | Engineering M; review XL |
-| 8 | Remove ungoverned religious output | KEEP | Delete optional tips/fallbacks; generic notifications; no sacred truncation; source or remove remaining literals. | M |
+| 7 | Reviewed adhkar/dua corpus | SIMPLIFY | Start from an empty allowlist; add only the smallest directly verified subset; delete the rest and hide empty categories. Disable the feature if preservation exceeds M effort. | Engineering S/M; review M |
+| 8 | Remove ungoverned religious output | KEEP | Delete optional tips, fallbacks, decorative literals, and unsafe share output. Do not rehabilitate or relocate them. | S |
 | 9 | Guardian unlink and hosted contract | KEEP | Add/deploy/verify RPC or hide the action. | S |
 | 10 | Bookmark loss during sign-out | KEEP | Correct the all-domain gate and add the exact failure-path integration test. | S |
 | 11 | Dead-letter visibility/recovery/classification | DEFER | V1.1. Preserve durable queue; document re-login recovery/support procedure for V1. | — |
 | 12 | Queue parent rewards and monotonic merge | DEFER | V1.1. Current remote-first failure is visible; do not redesign sync before launch. | — |
 | 13 | Database grants and hosted-schema gate | PARTIAL | Revoke global prune authority and verify critical tables/RPC/RLS in fresh staging and production. Broader hardening later. | M |
-| 14 | STT privacy, manual recall, Kids pedagogy | PARTIAL | Manual Adult/Kids fallback, offline audio escape, truthful privacy, optional separate Kids threshold. Audio packs/on-device routing later. | M |
+| 14 | STT privacy, manual recall, Kids pedagogy | PARTIAL | Manual Adult/Kids fallback, offline audio escape, and truthful privacy only. Kids threshold is opportunistic V1-S1; audio packs/on-device routing wait. | M |
 | 15 | Scheduling, weak evidence, protect-before-grow | DEFER | V1.2. Preserve the stable tested scheduler; correct external terminology if it overclaims canonical SM-2. | — |
-| 16 | Localization, terminology, navigation, accessibility | PARTIAL | Translate only blocker-related and core release-path strings. Keep five tabs. Broader pass V1.1. | S |
+| 16 | Localization, terminology, navigation, accessibility | PARTIAL | Translate only strings introduced or changed by V1-M work. Do not redesign navigation; permit hiding an unsafe optional content destination. Broader pass V1.1. | S |
 | 17 | CI, real-service tests, performance, maintainability | PARTIAL | Add only critical regression tests and manually execute full release verification. CI/performance/refactors later. | M |
 | 18 | Islamic reviewer packet and RC freeze | SIMPLIFY | A concise checklist, manifest, diff summary, artifact/version, and commit are sufficient. | S |
 | 19 | Process Islamic review with traceability | KEEP | Mandatory manual qualified review of the frozen RC; no workflow automation needed. | External XL |
@@ -236,9 +278,9 @@ The labels below apply to the original `Talia Final Review Readiness Implementat
 ### Triage result
 
 - **KEEP:** 5 tasks (5, 8, 9, 10, 19).
-- **SIMPLIFY:** 5 tasks (2, 3, 6, 7, 18).
+- **SIMPLIFY:** 4 tasks (3, 6, 7, 18).
 - **PARTIAL:** 7 tasks (1, 4, 13, 14, 16, 17, 20).
-- **DEFER:** 3 full tasks (11, 12, 15), plus the advanced portions of the partial tasks.
+- **DEFER:** 4 full tasks (2, 11, 12, 15), plus the advanced portions of the partial tasks.
 - **DROP:** no whole original task; several overbuilt sub-deliverables are dropped under `Dropped / Not Required`.
 
 The 20 row labels are mutually exclusive; deferred sub-deliverables inside `PARTIAL` rows are described in the row decision.
@@ -253,8 +295,9 @@ Frozen baseline
 │   └── manifest/hash → Quran reviewer check
 ├── Religious-content track
 │   ├── remove optional literals/truncation
-│   ├── minimal adhkar/dua schema + reviewed records
-│   └── manifest/hash → content reviewer check
+│   ├── empty allowlist → smallest verified subset only
+│   ├── hide empty categories/routes/actions
+│   └── shipped-subset manifest/hash → content reviewer check
 ├── Data/backend track
 │   ├── bookmark-safe sign-out
 │   ├── guardian RPC or hidden action
@@ -273,7 +316,7 @@ All four tracks green
   → internal store track → staged production rollout
 ```
 
-The Quran and religious-content tracks require reviewer input and should start first. Data/backend and core-journey work can proceed independently in parallel. Any religious-content change after approval returns the candidate to reviewer check.
+The Quran and religious-content tracks require reviewer input and should start first. Data/backend and core-journey work can proceed independently in parallel. Any religious-content change after approval returns the candidate to reviewer check. If the religious-content track expands beyond its S/M engineering ceiling, stop it and disable the affected optional feature or category.
 
 ## Minimal Test Plan
 
@@ -291,10 +334,13 @@ The Quran and religious-content tracks require reviewer input and should start f
    - missing global/page/juz data fails closed;
    - no notification/share helper truncates Quran/dua/dhikr text.
 3. **Adhkar/dua contract**
+   - only allowlisted retained IDs are bundled and reachable;
    - every retained record has required fields and a valid reviewer state;
    - source/citation and authenticity grade are present where applicable;
    - dua tier is one of the approved values;
    - manifest hash matches; record IDs are unique; duplicates are explicitly adjudicated.
+   - empty/excluded categories, routes, notification actions, and cards are hidden;
+   - no test requires excluded candidates to be repaired or preserved.
 4. **Bookmark sign-out integration**
    - pending offline bookmark plus failed cloud push blocks normal sign-out;
    - forced path does not silently discard recoverable durable state;
@@ -326,13 +372,13 @@ The Quran and religious-content tracks require reviewer input and should start f
 
 The qualified Islamic reviewer receives one frozen candidate, not a moving branch. The packet must contain the commit, app version/build, manifest, hashes, content diffs, and a short device/navigation checklist.
 
-The reviewer must approve or reject:
+The reviewer must approve or reject the content actually shipped:
 
 1. Quran edition/riwayah declaration and source/license record.
 2. Quran counts, surah/ayah boundaries, Al-Fatihah and At-Tawbah basmalah rules, and representative boundary samples including 2, 95, and 97.
 3. Exact QCF and fallback rendering in reading, memorization, plan, search/detail, and share surfaces.
 4. Every enabled reciter's compatibility with the declared text/riwayah; unverified reciters are disabled.
-5. Every retained adhkar/dua record: Arabic text, count, source, resolvable citation, grade attribution, tier, translation, and transliteration.
+5. Every retained allowlisted adhkar/dua record: Arabic text, count, source, resolvable citation, grade attribution, tier, translation, and transliteration. Removed candidates do not require rehabilitation or individual review.
 6. All remaining religious content in home, settings, certificate, notifications, and sharing; absence of truncation or paraphrase presented as source text.
 7. Kids wording, grading framing, encouragement, and manual self-assessment language.
 8. The user-facing labels that distinguish sourced text, guidance, and product instructions.
@@ -370,6 +416,7 @@ Perform on at least one supported physical Android device and one additional And
 - repeat both with microphone denied/manual grade;
 - empty-cache airplane-mode reading and memorization progression;
 - adhkar counter, source/grade display, reset behavior, and background/resume;
+- only approved Adhkar/Dua categories and records are visible; removed/empty categories and notification actions are unreachable;
 - guardian link/unlink or verify the action is intentionally hidden;
 - offline mutation, reconnect, sync, sign-out block, and re-login recovery;
 - notification displays generic localized text and never truncated religious text;
@@ -390,9 +437,9 @@ Internal track → small staged percentage → observe store vitals, auth/backen
 
 | Gate | Pass condition | Owner | Failure result |
 |---|---|---|---|
-| G0 — Scope freeze | Only V1 Must Fix and approved Should Fix items enter RC1. | Release manager | Remove scope creep or re-estimate. |
+| G0 — Scope hard stop | Only V1-M items enter the committed RC plan. A V1-S item is accepted only if every Hard Stop condition still holds. Any expansion stops for a report; optional content/features are deleted, disabled, or hidden rather than rescued. | Release manager | Remove scope expansion; do not re-estimate upward without an explicit new user decision. |
 | G1 — Quran integrity | Correct boundaries, exact rendering, fail-closed fields, matching manifest hash, focused tests green. | Flutter/content engineering | NO-GO. |
-| G2 — Religious content | No unapproved/truncated literals; all retained records satisfy schema and preliminary reviewer disposition. | Content engineering | NO-GO. |
+| G2 — Religious content | No unapproved/truncated literals; only the smallest approved allowlist ships; all other candidates and empty categories are absent or unreachable. | Content engineering | Delete/hide the affected optional content; NO-GO only if unsafe content remains reachable. |
 | G3 — Data safety | Bookmark failure-path tests pass; no known core pending-data loss path. | Sync engineer | NO-GO. |
 | G4 — Backend/security | Guardian action works or is hidden; pruning privilege revoked; fresh/staging/production contract passes. | Backend/security owner | NO-GO. |
 | G5 — Core offline/privacy | Adult/Kids manual route works; first-use offline route works; AR/EN policy matches behavior. | Flutter/product | NO-GO. |
@@ -403,7 +450,7 @@ Internal track → small staged percentage → observe store vitals, auth/backen
 
 ### Definition of Done for V1
 
-V1 is done only when G0–G9 pass, the approved artifact is in the internal store track, staged rollout has an owner and rollback decision, and all deferred work is recorded without being misrepresented as completed.
+V1 is done only when G0–G9 pass, the approved artifact is in the internal store track, staged rollout has an owner and rollback decision, and all deferred work is recorded without being misrepresented as completed. No V1-S item is required for this definition.
 
 ## Estimated Effort
 
@@ -412,15 +459,17 @@ Scale: **XS <1 hour; S 1–3 hours; M 3–8 hours; L 1–2 days; XL >2 days.** E
 | Workstream | Engineering | External/review | Parallelism |
 |---|---:|---:|---|
 | Quran correction, exact rendering, manifest, tests | L | Reviewer M | Start first; blocks final content freeze. |
-| Adhkar/dua metadata + unsafe-output removal | L | Islamic review XL | Can run in parallel with Quran engineering; likely calendar critical path. |
+| Smallest Adhkar/Dua allowlist + unsafe-output deletion | S/M | Islamic review M | Start empty; if preservation exceeds M, hide/disable instead of expanding. |
 | Bookmark sign-out | S | — | Independent. |
 | Guardian RPC + prune privilege + verifier | M | Production access S | Independent; deployment timing may block. |
 | Manual/offline route + privacy/localization | M | Product/reviewer S | Independent of backend. |
 | Full verification, device/store smoke, RC records | M | QA/store M | Starts after merge/freeze. |
 
-**Expected engineering effort:** approximately 4–7 focused engineering days with parallel ownership, or 7–12 sequential working days for one engineer.  
-**Expected qualified Islamic review:** XL, because every retained adhkar/dua record and all religious surfaces must be inspected; schedule 2–5 working days plus correction/re-review time.  
-**Likely calendar critical path:** reviewed adhkar/dua disposition → frozen content hashes → final Islamic approval → store artifact.
+**Expected engineering effort:** approximately 3–6 focused engineering days with parallel ownership, or 5–9 sequential working days for one engineer. V1-S work is excluded.
+
+**Expected qualified Islamic review:** L/XL for the complete frozen application, with the Adhkar/Dua portion limited to the small retained allowlist rather than all 85 candidates.
+
+**Likely calendar critical path:** choose the smallest verified allowlist → freeze shipped content hashes → final Islamic approval → store artifact.
 
 ## Risk of Deferring
 
@@ -444,24 +493,24 @@ None of these deferrals permits adding a second riwayah, new religious content, 
 
 This is a **GO to implement the reduced V1 correction scope**, not a GO to publish the current application. Publication remains **NO-GO** until V1-M1 through V1-M11 are complete and release gates G0 through G9 pass.
 
-The reduced plan removes most of the original architectural and automation work while retaining every correction that protects Quran exactness, religious traceability, user data, core offline use, privacy truthfulness, and backend authorization. It is the smallest defensible path to the user's stated final qualified Islamic review and subsequent store release.
+The reduced plan removes most of the original architectural and automation work while retaining every correction that protects Quran exactness, the traceability of religious content that actually ships, user data, core offline use, privacy truthfulness, and backend authorization. Optional content starts excluded and earns inclusion; it is never repaired merely for completeness. This is the smallest defensible path to the user's stated final qualified Islamic review and subsequent store release.
 
 ### Explicit answers to the eight release questions
 
 1. **What is the minimum safe V1?**  
-   The existing application with no new features, after exact Quran/corpus correction, reviewed traceable retained religious content, removal of unsafe religious literals/truncation, bookmark-safe sign-out, working-or-hidden guardian unlink, revoked audit-prune authority, manual Adult/Kids offline grading, truthful privacy text, production backend proof, physical-device smoke, and signed Islamic approval.
+   The existing core application with no new features, after exact Quran/corpus correction, only a smallest verified Adhkar/Dua allowlist (or the feature hidden), deletion of unsafe religious output, bookmark-safe sign-out, working-or-hidden guardian unlink, revoked audit-prune authority, manual Adult/Kids offline grading, truthful privacy text, production backend proof, physical-device smoke, and signed Islamic approval.
 
 2. **What are the five highest-value fixes before release?**  
-   (1) Quran exactness/boundaries; (2) reviewed adhkar/dua plus removal of ungoverned output; (3) bookmark sign-out data-loss prevention; (4) guardian RPC/database privilege/hosted-contract verification; (5) offline/no-STT completion plus accurate privacy.
+   (1) Quran exactness/boundaries; (2) delete ungoverned religious output and ship only a smallest verified Adhkar/Dua allowlist; (3) bookmark sign-out data-loss prevention; (4) guardian RPC/database privilege/hosted-contract verification; (5) offline/no-STT completion plus accurate privacy.
 
 3. **Which original tasks should be cut, simplified, or deferred?**  
-   Simplify Tasks 2, 3, 6, 7, and 18; partially execute 1, 4, 13, 14, 16, 17, and 20; defer 11, 12, and 15 plus the advanced portions of the partial tasks. Keep only the narrow release-critical results of 5, 8, 9, 10, and 19.
+   Defer Tasks 2, 11, 12, and 15; simplify 3, 6, 7, and 18; partially execute 1, 4, 13, 14, 16, 17, and 20. Keep only the narrow release-critical results of 5, 8, 9, 10, and 19. Drop the repair of excluded religious records and the preservation of empty/unnecessary content categories.
 
 4. **What remains safe to ship once blockers are fixed?**  
-   The current Mushaf reader/navigation/search, bookmarks after the gate fix, auth/guest/account isolation, Adult V2 memorization state machine, Smart Coach/current scheduling, progress/streak/XP/certificates, Kids UX with the new manual route, approved adhkar counter, audio cache behavior, and the existing five-tab navigation.
+   The current Mushaf reader/navigation/search, bookmarks after the gate fix, auth/guest/account isolation, Adult V2 memorization state machine, Smart Coach/current scheduling, progress/streak/XP/certificates, Kids UX with the new manual route, the counter for only retained approved Adhkar/Dua content, and audio cache behavior. Navigation remains unchanged unless the Hard Stop requires hiding an unsafe optional content destination; optional religious categories need not ship.
 
 5. **What is the minimum Islamic review scope?**  
-   The frozen Quran edition/hash/boundaries/rendering/audio compatibility; every retained adhkar/dua text/count/source/citation/grade/tier/translation; all religious UI, notification, certificate, and share output; and Kids religious/pedagogical wording, tied to the exact RC commit and artifact.
+   The frozen Quran edition/hash/boundaries/rendering/audio compatibility; every record in the small retained Adhkar/Dua allowlist; all religious UI, notification, certificate, and share output that remains reachable; and Kids religious/pedagogical wording, tied to the exact RC commit and artifact. Removed candidates require no repair or individual approval.
 
 6. **What is the minimum backend verification?**  
    Fresh/staging/production proof of core table/RLS/anon posture, exact critical RPC signatures, guardian unlink authorization, pruning-function denial to authenticated users, CAS/paginated review functions, migration identity, and production configuration. No credentials means NO-GO.
