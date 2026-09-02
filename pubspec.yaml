@@ -121,6 +121,7 @@ flutter:
     - assets/data/surahs.json
     - assets/data/content_manifest.json
     - assets/data/azkar_release.json
+    - assets/data/khatm_dua.json
     - assets/fonts/
     - assets/images/
     - assets/images/character/

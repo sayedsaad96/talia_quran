@@ -16,7 +16,10 @@ import '../../features/quran/presentation/pages/kids_quran_reader_page.dart';
 import '../../features/quran/presentation/pages/quran_page.dart';
 import '../../features/quran/presentation/pages/quran_reader_page.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
+import '../../features/khatmah/domain/entities/khatmah_dedication.dart';
 import '../../features/khatmah/domain/entities/khatmah_plan.dart';
+import '../../features/khatmah/presentation/pages/khatm_dua_page.dart';
+import '../../features/khatmah/presentation/pages/khatmah_completion_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_dashboard_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/practice_surah_page.dart';
@@ -96,6 +99,8 @@ abstract class AppRoutes {
   static const String privacyPolicy = '/settings/privacy-policy';
   static const String khatmahSetup = '/khatmah/setup';
   static const String khatmahDashboard = '/khatmah/dashboard';
+  static const String khatmDua = '/quran/khatm-dua';
+  static const String khatmahCompletion = '/khatmah/completion';
 }
 
 /// Bridges [AuthCubit] state stream into a [Listenable] so [GoRouter]
@@ -137,6 +142,8 @@ final _publicRoutes = <String>[
   AppRoutes.memorizationV2Session,
   AppRoutes.khatmahSetup,
   AppRoutes.khatmahDashboard,
+  AppRoutes.khatmDua,
+  AppRoutes.khatmahCompletion,
   if (kDebugMode) AppRoutes.qcfRenderingPoc,
 ];
 
@@ -499,6 +506,26 @@ abstract class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.khatmahDashboard,
         builder: (context, state) => const KhatmahDashboardPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.khatmDua,
+        builder: (context, state) {
+          final dedication = state.extra is KhatmahDedication
+              ? state.extra as KhatmahDedication
+              : null;
+          return KhatmDuaPage(dedication: dedication);
+        },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.khatmahCompletion,
+        builder: (context, state) {
+          final plan = state.extra is KhatmahPlan
+              ? state.extra as KhatmahPlan
+              : null;
+          return KhatmahCompletionPage(plan: plan);
+        },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

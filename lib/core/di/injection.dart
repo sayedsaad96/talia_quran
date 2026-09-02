@@ -114,6 +114,9 @@ import '../../features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart
 import '../../features/khatmah/domain/usecases/update_khatmah_progress_usecase.dart';
 import '../../features/khatmah/presentation/cubits/khatmah_cubit.dart';
 import '../../features/khatmah/presentation/cubits/khatmah_setup_cubit.dart';
+import '../../features/khatmah/data/datasources/khatm_dua_datasource.dart';
+import '../../features/khatmah/domain/usecases/get_khatm_dua_usecase.dart';
+import '../../features/khatmah/presentation/cubits/khatm_dua_cubit.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -266,6 +269,7 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<KhatmahLocalDatasource>(
     () => KhatmahLocalDatasource(getIt<SharedPreferences>()),
   );
+  getIt.registerLazySingleton<KhatmDuaDatasource>(KhatmDuaDatasource.new);
 
   // ─── Core Services ──────────────────────────────────────────────────────────
   getIt.registerSingleton<StreakService>(
@@ -492,6 +496,9 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<DeleteKhatmahUsecase>(
     () => DeleteKhatmahUsecase(getIt<KhatmahRepository>()),
   );
+  getIt.registerLazySingleton<GetKhatmDuaUsecase>(
+    () => GetKhatmDuaUsecase(getIt<KhatmDuaDatasource>()),
+  );
 
   // ─── Cubits ─────────────────────────────────────────────────────────────────
   getIt.registerFactory<ProgressCubit>(
@@ -666,6 +673,9 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerFactory<KhatmahSetupCubit>(
     () => KhatmahSetupCubit(getIt<CreateKhatmahUsecase>()),
+  );
+  getIt.registerFactory<KhatmDuaCubit>(
+    () => KhatmDuaCubit(getIt<GetKhatmDuaUsecase>()),
   );
   getIt.registerSingleton<AuthCubit>(
     AuthCubit(
