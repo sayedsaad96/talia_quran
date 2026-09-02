@@ -512,6 +512,8 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<QuranRepository>(),
       getIt<SaveReadPageUsecase>(),
       getIt<StreakService>(),
+      getIt<UpdateKhatmahProgressUsecase>(),
+      getIt<GetActiveKhatmahUsecase>(),
     ),
   );
   getIt.registerFactory<PracticeSurahCubit>(

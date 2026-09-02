@@ -16,6 +16,7 @@ import '../../features/quran/presentation/pages/kids_quran_reader_page.dart';
 import '../../features/quran/presentation/pages/quran_page.dart';
 import '../../features/quran/presentation/pages/quran_reader_page.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
+import '../../features/khatmah/domain/entities/khatmah_plan.dart';
 import '../../features/memorization_plus/presentation/pages/practice_surah_page.dart';
 import '../../features/azkar/presentation/pages/azkar_page.dart';
 import '../../features/azkar/presentation/pages/azkar_category_page.dart';
@@ -452,7 +453,10 @@ abstract class AppRouter {
         builder: (context, state) {
           final pageNumber =
               int.tryParse(state.pathParameters['pageNumber'] ?? '1') ?? 1;
-          return QuranReaderPage(pageNumber: pageNumber);
+          final mode = state.uri.queryParameters['mode'] == 'khatmah'
+              ? QuranReaderMode.khatmah
+              : QuranReaderMode.free;
+          return QuranReaderPage(pageNumber: pageNumber, readerMode: mode);
         },
       ),
       GoRoute(

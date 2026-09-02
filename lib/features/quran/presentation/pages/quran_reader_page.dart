@@ -32,12 +32,23 @@ import '../widgets/app_quran_page_view.dart';
 import '../widgets/quran_floating_audio_player.dart';
 import '../widgets/quran_page_font_guard.dart';
 import '../widgets/reciter_selector_sheet.dart';
+import '../../../khatmah/domain/entities/khatmah_plan.dart';
+import '../../../khatmah/presentation/cubits/khatmah_cubit.dart';
+import '../../../khatmah/presentation/widgets/khatmah_reader_session_bar.dart';
 
 class QuranReaderPage extends StatefulWidget {
-  const QuranReaderPage({super.key, this.surahId, this.pageNumber});
+  const QuranReaderPage({
+    super.key,
+    this.surahId,
+    this.pageNumber,
+    this.readerMode = QuranReaderMode.free,
+    this.khatmahCubit,
+  });
 
   final int? surahId;
   final int? pageNumber;
+  final QuranReaderMode readerMode;
+  final KhatmahCubit? khatmahCubit;
 
   @override
   State<QuranReaderPage> createState() => _QuranReaderPageState();
@@ -48,6 +59,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   final _highlights = const <qcf.HighlightVerse>[];
 
   late final QuranPageCubit _quranPageCubit;
+  KhatmahCubit? _khatmahCubit;
   PageController? _pageController;
   SurahDetailCubit? _surahDetailCubit;
   Timer? _readTimer;
@@ -68,6 +80,18 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   void initState() {
     super.initState();
     _quranPageCubit = getIt<QuranPageCubit>();
+
+    if (widget.readerMode == QuranReaderMode.khatmah) {
+      if (widget.khatmahCubit != null) {
+        _khatmahCubit = widget.khatmahCubit;
+      } else {
+        try {
+          if (getIt.isRegistered<KhatmahCubit>()) {
+            _khatmahCubit = getIt<KhatmahCubit>()..load();
+          }
+        } catch (_) {}
+      }
+    }
 
     if (widget.pageNumber != null) {
       final initialPage = _normalizePageNumber(widget.pageNumber!);
@@ -94,6 +118,9 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     _pageController?.dispose();
     _surahDetailCubit?.close();
     _quranPageCubit.close();
+    if (widget.khatmahCubit == null) {
+      _khatmahCubit?.close();
+    }
     super.dispose();
   }
 
@@ -122,6 +149,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   }
 
   void _saveCurrentPage(int pageNumber) {
+    if (widget.readerMode == QuranReaderMode.khatmah) return;
     unawaited(
       getIt<AppSessionService>().saveLocation(
         '/quran/page/${_normalizePageNumber(pageNumber)}',
@@ -175,7 +203,12 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
       return;
     }
     _readConfirmationGate.markPending(pageNumber);
-    unawaited(context.read<QuranPageCubit>().confirmRead(pageNumber));
+    unawaited(
+      context.read<QuranPageCubit>().confirmRead(
+            pageNumber,
+            readerMode: widget.readerMode,
+          ),
+    );
   }
 
   void _startReadTimer(QuranPageDetail detail, BuildContext context) {
@@ -302,7 +335,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     final bg = isDark ? AppColors.parchmentDark : AppColors.parchmentLight;
     final gold = isDark ? AppColors.primaryLight : AppColors.primary;
 
-    return BlocProvider.value(
+    final content = BlocProvider.value(
       value: _quranPageCubit,
       child: BlocListener<QuranAudioPlayerCubit, QuranAudioPlayerState>(
         listener: (context, audioState) {
@@ -418,23 +451,34 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
                                 ),
                             topBar: _isFocusMode
                                 ? null
-                                : _MushafTopBar(
-                                    surahName: firstSurah?.nameAr ?? '',
-                                    juzNumber: juzNumber,
-                                    pageNumber: pageNumber,
-                                    gold: gold,
-                                    bg: bg,
-                                    onToggleFocus: () {
-                                      HapticFeedback.selectionClick();
-                                      setState(() => _isFocusMode = true);
-                                    },
-                                    onClose: () {
-                                      if (context.canPop()) {
-                                        context.pop();
-                                      } else {
-                                        context.go('/');
-                                      }
-                                    },
+                                : Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (widget.readerMode ==
+                                          QuranReaderMode.khatmah)
+                                        KhatmahReaderSessionBar(
+                                          cubit: _khatmahCubit,
+                                          currentPage: pageNumber,
+                                        ),
+                                      _MushafTopBar(
+                                        surahName: firstSurah?.nameAr ?? '',
+                                        juzNumber: juzNumber,
+                                        pageNumber: pageNumber,
+                                        gold: gold,
+                                        bg: bg,
+                                        onToggleFocus: () {
+                                          HapticFeedback.selectionClick();
+                                          setState(() => _isFocusMode = true);
+                                        },
+                                        onClose: () {
+                                          if (context.canPop()) {
+                                            context.pop();
+                                          } else {
+                                            context.go('/');
+                                          }
+                                        },
+                                      ),
+                                    ],
                                   ),
                             bottomBar: _isFocusMode
                                 ? null
@@ -493,6 +537,14 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
         ),
       ),
     );
+
+    if (_khatmahCubit != null) {
+      return BlocProvider.value(
+        value: _khatmahCubit!,
+        child: content,
+      );
+    }
+    return content;
   }
 }
 
