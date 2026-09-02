@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/complete_khatmah_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/update_khatmah_progress_usecase.dart';
@@ -22,6 +23,9 @@ class MockCompleteKhatmahUsecase extends Mock
 class MockPauseResumeKhatmahUsecase extends Mock
     implements PauseResumeKhatmahUsecase {}
 
+class MockDeleteKhatmahUsecase extends Mock
+    implements DeleteKhatmahUsecase {}
+
 class FakeKhatmahPlan extends Fake implements KhatmahPlan {}
 
 void main() {
@@ -29,6 +33,7 @@ void main() {
   late MockUpdateKhatmahProgressUsecase mockUpdateProgress;
   late MockCompleteKhatmahUsecase mockComplete;
   late MockPauseResumeKhatmahUsecase mockPauseResume;
+  late MockDeleteKhatmahUsecase mockDelete;
 
   final testPlan = KhatmahPlan(
     id: 'test-khatmah-1',
@@ -55,6 +60,7 @@ void main() {
     mockUpdateProgress = MockUpdateKhatmahProgressUsecase();
     mockComplete = MockCompleteKhatmahUsecase();
     mockPauseResume = MockPauseResumeKhatmahUsecase();
+    mockDelete = MockDeleteKhatmahUsecase();
   });
 
   KhatmahCubit buildCubit() => KhatmahCubit(
@@ -62,6 +68,7 @@ void main() {
         mockUpdateProgress,
         mockComplete,
         mockPauseResume,
+        mockDelete,
       );
 
   group('KhatmahCubit Initial State', () {
@@ -207,15 +214,14 @@ void main() {
     );
 
     blocTest<KhatmahCubit, KhatmahState>(
-      'calls complete and emits KhatmahCompleted when reaching page 604',
+      'calls complete and emits KhatmahCompleted with completed status when reaching page 604',
       build: () {
         final nearEndPlan = testPlan.copyWith(currentPage: 600);
-        final completedPlan =
-            testPlan.copyWith(currentPage: 604, status: KhatmahStatus.completed);
+        final updatedPlan = testPlan.copyWith(currentPage: 604);
         when(() => mockGetActive()).thenAnswer((_) async => nearEndPlan);
         when(() => mockUpdateProgress(nearEndPlan, 604))
-            .thenAnswer((_) async => completedPlan);
-        when(() => mockComplete(completedPlan)).thenAnswer((_) async {});
+            .thenAnswer((_) async => updatedPlan);
+        when(() => mockComplete(any())).thenAnswer((_) async {});
         return buildCubit();
       },
       act: (cubit) async {
@@ -229,10 +235,17 @@ void main() {
           wirdStartPage: 601,
           wirdEndPage: 604,
         ),
-        KhatmahCompleted(
-          plan: testPlan.copyWith(
-              currentPage: 604, status: KhatmahStatus.completed),
-        ),
+        isA<KhatmahCompleted>()
+            .having(
+              (s) => s.plan.status,
+              'plan.status',
+              KhatmahStatus.completed,
+            )
+            .having(
+              (s) => s.plan.currentPage,
+              'plan.currentPage',
+              604,
+            ),
       ],
       verify: (_) {
         verify(() => mockComplete(any())).called(1);
@@ -323,12 +336,25 @@ void main() {
 
   group('abandonPlan()', () {
     blocTest<KhatmahCubit, KhatmahState>(
-      'emits KhatmahNoActivePlan',
-      build: buildCubit,
-      act: (cubit) => cubit.abandonPlan(),
+      'calls deleteKhatmah, emits KhatmahNoActivePlan, and subsequent load() emits KhatmahNoActivePlan',
+      build: () {
+        when(() => mockDelete()).thenAnswer((_) async {});
+        when(() => mockGetActive()).thenAnswer((_) async => null);
+        return buildCubit();
+      },
+      act: (cubit) async {
+        await cubit.abandonPlan();
+        await cubit.load();
+      },
       expect: () => [
         const KhatmahNoActivePlan(),
+        const KhatmahLoading(),
+        const KhatmahNoActivePlan(),
       ],
+      verify: (_) {
+        verify(() => mockDelete()).called(1);
+        verify(() => mockGetActive()).called(1);
+      },
     );
   });
 }

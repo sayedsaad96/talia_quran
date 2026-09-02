@@ -29,9 +29,9 @@ void blocTest<B extends BlocBase<State>, State>(
       if (expect != null) {
         final dynamic expected = expect();
         if (expected is List) {
-          expectLater(states, expected);
+          await expectLater(states, expected);
         } else if (expected is Matcher) {
-          expectLater(states, expected);
+          await expectLater(states, expected);
         }
       }
 

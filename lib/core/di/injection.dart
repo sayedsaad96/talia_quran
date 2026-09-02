@@ -108,6 +108,7 @@ import '../../features/khatmah/data/repositories/khatmah_repository_impl.dart';
 import '../../features/khatmah/domain/repositories/khatmah_repository.dart';
 import '../../features/khatmah/domain/usecases/complete_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/create_khatmah_usecase.dart';
+import '../../features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/update_khatmah_progress_usecase.dart';
@@ -488,6 +489,9 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<PauseResumeKhatmahUsecase>(
     () => PauseResumeKhatmahUsecase(getIt<KhatmahRepository>()),
   );
+  getIt.registerLazySingleton<DeleteKhatmahUsecase>(
+    () => DeleteKhatmahUsecase(getIt<KhatmahRepository>()),
+  );
 
   // ─── Cubits ─────────────────────────────────────────────────────────────────
   getIt.registerFactory<ProgressCubit>(
@@ -654,6 +658,7 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<UpdateKhatmahProgressUsecase>(),
       getIt<CompleteKhatmahUsecase>(),
       getIt<PauseResumeKhatmahUsecase>(),
+      getIt<DeleteKhatmahUsecase>(),
     ),
   );
   getIt.registerFactory<KhatmahSetupCubit>(

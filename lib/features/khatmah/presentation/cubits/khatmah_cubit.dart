@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
 import '../../domain/usecases/complete_khatmah_usecase.dart';
+import '../../domain/usecases/delete_khatmah_usecase.dart';
 import '../../domain/usecases/get_active_khatmah_usecase.dart';
 import '../../domain/usecases/pause_resume_khatmah_usecase.dart';
 import '../../domain/usecases/update_khatmah_progress_usecase.dart';
@@ -67,12 +68,14 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     this._updateProgress,
     this._complete,
     this._pauseResume,
+    this._deleteKhatmah,
   ) : super(const KhatmahInitial());
 
   final GetActiveKhatmahUsecase _getActive;
   final UpdateKhatmahProgressUsecase _updateProgress;
   final CompleteKhatmahUsecase _complete;
   final PauseResumeKhatmahUsecase _pauseResume;
+  final DeleteKhatmahUsecase _deleteKhatmah;
 
   Future<void> load() async {
     emit(const KhatmahLoading());
@@ -92,7 +95,9 @@ class KhatmahCubit extends Cubit<KhatmahState> {
 
     if (updated.currentPage >= KhatmahSchedulingEngine.totalPages) {
       await _complete(updated);
-      emit(KhatmahCompleted(plan: updated));
+      emit(KhatmahCompleted(
+        plan: updated.copyWith(status: KhatmahStatus.completed),
+      ));
       return;
     }
 
@@ -122,6 +127,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   }
 
   Future<void> abandonPlan() async {
+    await _deleteKhatmah();
     emit(const KhatmahNoActivePlan());
   }
 

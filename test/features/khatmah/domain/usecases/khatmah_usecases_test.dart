@@ -6,6 +6,7 @@ import 'package:talia_quran/features/khatmah/domain/entities/khatmah_scheduling_
 import 'package:talia_quran/features/khatmah/domain/repositories/khatmah_repository.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/complete_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/create_khatmah_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/update_khatmah_progress_usecase.dart';
@@ -175,6 +176,17 @@ void main() {
             .having((p) => p.pausedAt, 'pausedAt', isNull)
             .having((p) => p.expectedEndDate, 'expectedEndDate', expectedEnd),
       ))).called(1);
+    });
+  });
+
+  group('DeleteKhatmahUsecase', () {
+    test('calls repository.deletePlan', () async {
+      when(() => mockRepository.deletePlan()).thenAnswer((_) async {});
+
+      final usecase = DeleteKhatmahUsecase(mockRepository);
+      await usecase();
+
+      verify(() => mockRepository.deletePlan()).called(1);
     });
   });
 }
