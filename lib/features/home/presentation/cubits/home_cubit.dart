@@ -25,6 +25,8 @@ import '../../../../core/progress/progress_events_bus.dart';
 import '../../../../core/services/xp_service.dart';
 import '../../../memorization_plus/domain/services/memorization_insights_aggregator.dart';
 import '../../../../core/utils/talia_logger.dart';
+import '../../../khatmah/domain/entities/khatmah_plan.dart';
+import '../../../khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 
 part 'home_state.dart';
 
@@ -41,6 +43,7 @@ class HomeCubit extends Cubit<HomeState> {
   final SharedPreferences _prefs;
   final ProgressEventsBus _progressEvents;
   final XpService _xpService;
+  final GetActiveKhatmahUsecase? _getActiveKhatmah;
   late final StreamSubscription<void> _pathChangesSub;
   late final StreamSubscription<ProgressChangedReason> _progressChangesSub;
   Timer? _reloadDebounce;
@@ -57,8 +60,9 @@ class HomeCubit extends Cubit<HomeState> {
     this._journeyEngine,
     this._prefs,
     this._progressEvents,
-    this._xpService,
-  ) : super(const HomeInitial()) {
+    this._xpService, [
+    this._getActiveKhatmah,
+  ]) : super(const HomeInitial()) {
     _pathChangesSub = _pathResolver.changes.listen((_) {
       if (!isClosed) {
         _scheduleFullReload();
@@ -113,6 +117,7 @@ class HomeCubit extends Cubit<HomeState> {
     final planFuture = _getCustomPlan();
     final heatmapFuture = _getHeatmap();
     final coachFuture = _getCoachRecommendation();
+    final khatmahFuture = _getActiveKhatmah?.call();
 
     final progressResult = await progressFuture;
     OverallProgress? overallProgress;
@@ -128,6 +133,7 @@ class HomeCubit extends Cubit<HomeState> {
     SmartCoachRecommendation? coachRecommendation;
     final coachResult = await coachFuture;
     coachResult.fold((_) => null, (r) => coachRecommendation = r);
+    final activeKhatmah = await khatmahFuture;
 
     // Load last restorable location for "Continue Reading" chip
     final lastLocation = _sessionService.getLastRestorableLocation();
@@ -184,6 +190,7 @@ class HomeCubit extends Cubit<HomeState> {
           coachRecommendation: coachRecommendation,
           heroAction: heroAction,
           totalXp: totalXp,
+          activeKhatmah: activeKhatmah,
         ),
       );
     });

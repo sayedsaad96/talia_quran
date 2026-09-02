@@ -32,7 +32,10 @@ class HomeLoaded extends HomeState {
     this.coachRecommendation,
     this.heroAction,
     this.totalXp = 0,
+    this.activeKhatmah,
   });
+
+  static const Object _khatmahSentinel = Object();
 
   HomeLoaded copyWith({
     OverallProgress? progress,
@@ -48,6 +51,7 @@ class HomeLoaded extends HomeState {
     SmartCoachRecommendation? coachRecommendation,
     UnifiedJourneyAction? heroAction,
     int? totalXp,
+    Object? activeKhatmah = _khatmahSentinel,
   }) {
     return HomeLoaded(
       progress: progress ?? this.progress,
@@ -63,6 +67,9 @@ class HomeLoaded extends HomeState {
       coachRecommendation: coachRecommendation ?? this.coachRecommendation,
       heroAction: heroAction ?? this.heroAction,
       totalXp: totalXp ?? this.totalXp,
+      activeKhatmah: identical(activeKhatmah, _khatmahSentinel)
+          ? this.activeKhatmah
+          : activeKhatmah as KhatmahPlan?,
     );
   }
 
@@ -83,6 +90,7 @@ class HomeLoaded extends HomeState {
   final DateTime activityStartDate;
   final SmartCoachRecommendation? coachRecommendation;
   final int totalXp;
+  final KhatmahPlan? activeKhatmah;
 
   @override
   List<Object?> get props => [
@@ -99,6 +107,7 @@ class HomeLoaded extends HomeState {
     coachRecommendation,
     heroAction,
     totalXp,
+    activeKhatmah,
   ];
 }
 

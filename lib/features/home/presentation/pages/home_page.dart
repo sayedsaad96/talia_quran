@@ -35,6 +35,7 @@ import '../../../progress/domain/entities/progress_entities.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../../streak/presentation/cubits/streak_cubit.dart';
 import '../cubits/home_cubit.dart';
+import '../../../khatmah/presentation/widgets/khatmah_hero_card.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
 part 'home_page_widgets.dart';
@@ -239,6 +240,24 @@ class _HomeContent extends StatelessWidget {
                 state: state,
                 isDark: isDark,
                 isKids: isKids,
+              ),
+            ),
+          ),
+
+        // ─── Khatmah Hero Card ──────────────────────────────────────────────
+        if (state.activeKhatmah != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.md,
+                AppSpacing.pagePadding,
+                0,
+              ),
+              child: KhatmahHeroCard(
+                plan: state.activeKhatmah!,
+                isDark: isDark,
+                margin: EdgeInsets.zero,
               ),
             ),
           ),
