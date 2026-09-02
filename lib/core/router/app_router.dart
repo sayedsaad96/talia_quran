@@ -17,6 +17,8 @@ import '../../features/quran/presentation/pages/quran_page.dart';
 import '../../features/quran/presentation/pages/quran_reader_page.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../../features/khatmah/domain/entities/khatmah_plan.dart';
+import '../../features/khatmah/presentation/pages/khatmah_dashboard_page.dart';
+import '../../features/khatmah/presentation/pages/khatmah_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/practice_surah_page.dart';
 import '../../features/azkar/presentation/pages/azkar_page.dart';
 import '../../features/azkar/presentation/pages/azkar_category_page.dart';
@@ -92,6 +94,8 @@ abstract class AppRoutes {
   static const String certificate = '/certificate';
   static const String tutorialGuide = '/tutorial-guide';
   static const String privacyPolicy = '/settings/privacy-policy';
+  static const String khatmahSetup = '/khatmah/setup';
+  static const String khatmahDashboard = '/khatmah/dashboard';
 }
 
 /// Bridges [AuthCubit] state stream into a [Listenable] so [GoRouter]
@@ -131,6 +135,8 @@ final _publicRoutes = <String>[
   AppRoutes.privacyPolicy,
   AppRoutes.memorizationPlus,
   AppRoutes.memorizationV2Session,
+  AppRoutes.khatmahSetup,
+  AppRoutes.khatmahDashboard,
   if (kDebugMode) AppRoutes.qcfRenderingPoc,
 ];
 
@@ -483,6 +489,16 @@ abstract class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.privacyPolicy,
         builder: (context, state) => const PrivacyPolicyPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.khatmahSetup,
+        builder: (context, state) => const KhatmahSetupPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.khatmahDashboard,
+        builder: (context, state) => const KhatmahDashboardPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

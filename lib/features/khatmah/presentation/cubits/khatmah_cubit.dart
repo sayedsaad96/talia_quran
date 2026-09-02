@@ -126,6 +126,48 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     await load();
   }
 
+  Future<void> calmAdjustment() async {
+    final current = state;
+    if (current is! KhatmahActive) return;
+    final plan = current.plan;
+    final remaining = plan.remainingPages;
+    final days = KhatmahSchedulingEngine.calculateDaysFromPages(
+      remaining,
+      plan.targetPagesPerDay,
+    );
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final newEndDate = KhatmahSchedulingEngine.calculateEndDate(today, days);
+    final updated = plan.copyWith(
+      expectedEndDate: newEndDate,
+      targetDays: days,
+    );
+    await _updateProgress(updated, plan.currentPage);
+    _emitActive(updated);
+  }
+
+  Future<void> mildCompensation([int extraPages = 1]) async {
+    final current = state;
+    if (current is! KhatmahActive) return;
+    final plan = current.plan;
+    final newDaily = plan.targetPagesPerDay + extraPages;
+    final remaining = plan.remainingPages;
+    final days = KhatmahSchedulingEngine.calculateDaysFromPages(
+      remaining,
+      newDaily,
+    );
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final newEndDate = KhatmahSchedulingEngine.calculateEndDate(today, days);
+    final updated = plan.copyWith(
+      targetPagesPerDay: newDaily,
+      expectedEndDate: newEndDate,
+      targetDays: days,
+    );
+    await _updateProgress(updated, plan.currentPage);
+    _emitActive(updated);
+  }
+
   Future<void> abandonPlan() async {
     await _deleteKhatmah();
     emit(const KhatmahNoActivePlan());
