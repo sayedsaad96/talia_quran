@@ -111,6 +111,8 @@ import '../../features/khatmah/domain/usecases/create_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/update_khatmah_progress_usecase.dart';
+import '../../features/khatmah/presentation/cubits/khatmah_cubit.dart';
+import '../../features/khatmah/presentation/cubits/khatmah_setup_cubit.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -645,6 +647,17 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerFactory<StreakCubit>(
     () => StreakCubit(getIt<StreakService>(), getIt<ProgressEventsBus>()),
+  );
+  getIt.registerFactory<KhatmahCubit>(
+    () => KhatmahCubit(
+      getIt<GetActiveKhatmahUsecase>(),
+      getIt<UpdateKhatmahProgressUsecase>(),
+      getIt<CompleteKhatmahUsecase>(),
+      getIt<PauseResumeKhatmahUsecase>(),
+    ),
+  );
+  getIt.registerFactory<KhatmahSetupCubit>(
+    () => KhatmahSetupCubit(getIt<CreateKhatmahUsecase>()),
   );
   getIt.registerSingleton<AuthCubit>(
     AuthCubit(
