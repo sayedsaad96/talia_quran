@@ -130,6 +130,8 @@ extension TaliaLocalizationHelpers on BuildContext {
       CertificateType.surah => _localizedSurahCertificateTitle(award),
       CertificateType.halfQuran => l10n.certificateTitleHalfQuran,
       CertificateType.fullQuran => l10n.certificateTitleFullQuran,
+      CertificateType.khatmahReading =>
+        _isArabic ? 'شهادة إتمام ختمة تلاوة القرآن' : 'Quran Khatmah Certificate',
     };
   }
 

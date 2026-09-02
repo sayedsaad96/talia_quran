@@ -411,6 +411,7 @@ class ShareCardShell extends StatelessWidget {
       // Certificates: geometric rosette — formal, distinguished,
       // classic in Islamic illuminated manuscripts.
       case SocialShareCategory.certificate:
+      case SocialShareCategory.khatmah:
         return GeometricRosettePainter(
           color: theme.accentColor,
           opacity: theme.isDark ? 0.1 : 0.08,

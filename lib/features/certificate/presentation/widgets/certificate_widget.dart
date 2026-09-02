@@ -230,6 +230,8 @@ class CertificateWidget extends StatelessWidget {
         return 'نصف القرآن الكريم';
       case CertificateType.fullQuran:
         return 'القرآن الكريم كاملاً';
+      case CertificateType.khatmahReading:
+        return 'ختمة القرآن الكريم كاملاً';
     }
   }
 
@@ -243,6 +245,8 @@ class CertificateWidget extends StatelessWidget {
         return 'شهادة حفظ نصف القرآن الكريم';
       case CertificateType.fullQuran:
         return 'شهادة ختم القرآن الكريم كاملاً';
+      case CertificateType.khatmahReading:
+        return 'شهادة ختم تلاوة القرآن الكريم';
     }
   }
 
@@ -250,7 +254,10 @@ class CertificateWidget extends StatelessWidget {
     return '${completionDate.year}/${completionDate.month.toString().padLeft(2, '0')}/${completionDate.day.toString().padLeft(2, '0')}';
   }
 
-  bool get _isFullOrHalf => award.type == CertificateType.fullQuran || award.type == CertificateType.halfQuran;
+  bool get _isFullOrHalf =>
+      award.type == CertificateType.fullQuran ||
+      award.type == CertificateType.halfQuran ||
+      award.type == CertificateType.khatmahReading;
 
   @override
   Widget build(BuildContext context) {

@@ -123,6 +123,10 @@ class _CertificateCelebrationDialogState
           return context.l10n.certificateTitleHalfQuran;
         case CertificateType.fullQuran:
           return context.l10n.certificateTitleFullQuran;
+        case CertificateType.khatmahReading:
+          return context.isArabic
+              ? 'شهادة إتمام ختمة تلاوة القرآن الكريم'
+              : 'Quran Recitation Khatmah Certificate';
       }
     }
 
@@ -247,6 +251,7 @@ class _AwardTile extends StatelessWidget {
       CertificateType.surah => Icons.verified_rounded,
       CertificateType.halfQuran => Icons.auto_stories_rounded,
       CertificateType.fullQuran => Icons.workspace_premium_rounded,
+      CertificateType.khatmahReading => Icons.auto_stories_rounded,
     };
 
     return Container(

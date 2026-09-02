@@ -25,6 +25,7 @@ abstract class ShareCardTemplateResolver {
         );
 
       case SocialShareCategory.achievement:
+      case SocialShareCategory.khatmah:
         return AchievementTemplate(
           data: data,
           theme: theme,

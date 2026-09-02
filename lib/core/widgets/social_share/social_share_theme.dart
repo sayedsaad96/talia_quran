@@ -85,6 +85,10 @@ enum SocialShareThemeType {
             : SocialShareThemeType.dawnLight;
       case SocialShareCategory.certificate:
         return SocialShareThemeType.parchmentGold;
+      case SocialShareCategory.khatmah:
+        return kids
+            ? SocialShareThemeType.parchmentGold
+            : SocialShareThemeType.emeraldDark;
     }
   }
 }

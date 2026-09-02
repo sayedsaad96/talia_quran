@@ -61,6 +61,7 @@ class _CertificatePageState extends State<CertificatePage> {
       'talia_certificate_surah_${widget.award.surahId}.png',
     CertificateType.halfQuran => 'talia_certificate_half_quran.png',
     CertificateType.fullQuran => 'talia_certificate_full_quran.png',
+    CertificateType.khatmahReading => 'talia_certificate_khatmah.png',
   };
 
   Future<Uint8List> _captureCertificateBytes() =>
@@ -90,6 +91,9 @@ class _CertificatePageState extends State<CertificatePage> {
         ),
         CertificateType.halfQuran => l10n.shareCertificateHalfQuran,
         CertificateType.fullQuran => l10n.shareCertificateFullQuran,
+        CertificateType.khatmahReading => isArabic
+            ? 'أتممت بحمد الله ختم تلاوة القرآن الكريم كاملاً عبر تطبيق تالية'
+            : 'I completed reading the Holy Quran with Talia App',
       };
 
       final bytes = await _captureCertificateBytes();

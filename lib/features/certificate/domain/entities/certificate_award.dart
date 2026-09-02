@@ -7,7 +7,40 @@ library;
 
 import 'package:equatable/equatable.dart';
 
-enum CertificateType { juz, surah, halfQuran, fullQuran }
+enum CertificateType {
+  juz,
+  surah,
+  halfQuran,
+  fullQuran,
+  khatmahReading;
+
+  String get verificationPrefix => switch (this) {
+        CertificateType.juz => 'J',
+        CertificateType.surah => 'S',
+        CertificateType.halfQuran => 'HQ',
+        CertificateType.fullQuran => 'FQ',
+        CertificateType.khatmahReading => 'KR',
+      };
+
+  String get titleAr => switch (this) {
+        CertificateType.juz => 'شهادة حفظ جزء من القرآن',
+        CertificateType.surah => 'شهادة حفظ سورة من القرآن',
+        CertificateType.halfQuran => 'شهادة حفظ نصف القرآن الكريم',
+        CertificateType.fullQuran => 'شهادة ختم القرآن الكريم كاملاً',
+        CertificateType.khatmahReading => 'شهادة إتمام ختمة تلاوة القرآن الكريم',
+      };
+
+  String get titleEn => switch (this) {
+        CertificateType.juz => 'Juz Memorization Certificate',
+        CertificateType.surah => 'Surah Memorization Certificate',
+        CertificateType.halfQuran => 'Half Quran Memorization Certificate',
+        CertificateType.fullQuran => 'Full Quran Memorization Certificate',
+        CertificateType.khatmahReading => 'Quran Recitation Khatmah Certificate',
+      };
+
+  String get labelAr => titleAr;
+  String get labelEn => titleEn;
+}
 
 class CertificateAward extends Equatable {
   const CertificateAward({
@@ -19,6 +52,7 @@ class CertificateAward extends Equatable {
     this.surahId,
     this.surahNameAr,
     this.surahNameEn,
+    this.titleEn,
   });
 
   final String id;
@@ -29,6 +63,7 @@ class CertificateAward extends Equatable {
   final int? surahId;
   final String? surahNameAr;
   final String? surahNameEn;
+  final String? titleEn;
 
   String get verificationCode {
     final prefix = switch (type) {
@@ -36,6 +71,7 @@ class CertificateAward extends Equatable {
       CertificateType.surah => 'S${surahId ?? 1}',
       CertificateType.halfQuran => 'HQ',
       CertificateType.fullQuran => 'FQ',
+      CertificateType.khatmahReading => 'KR',
     };
     final hash = (id.hashCode.abs() % 9000 + 1000).toString();
     return 'TL-${earnedAt.year}-$prefix-$hash';
@@ -44,6 +80,7 @@ class CertificateAward extends Equatable {
   Map<String, dynamic> toJson() => {
     'id': id,
     'titleAr': titleAr,
+    if (titleEn != null) 'titleEn': titleEn,
     'type': type.name,
     'earnedAt': earnedAt.toIso8601String(),
     'juzNumber': juzNumber,
@@ -56,6 +93,7 @@ class CertificateAward extends Equatable {
       CertificateAward(
         id: json['id'] as String,
         titleAr: json['titleAr'] as String,
+        titleEn: json['titleEn'] as String?,
         type: CertificateType.values.firstWhere(
           (e) => e.name == json['type'],
           orElse: () => CertificateType.juz,
@@ -102,5 +140,6 @@ class CertificateAward extends Equatable {
     surahId,
     surahNameAr,
     surahNameEn,
+    titleEn,
   ];
 }

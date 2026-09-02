@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../utils/quran_ayah_display_text.dart';
 import '../../../../features/azkar/domain/entities/azkar_entities.dart';
 import '../../../../features/certificate/domain/entities/certificate_award.dart';
+import '../../../../features/khatmah/domain/entities/khatmah_plan.dart';
 import '../../../../features/progress/domain/entities/progress_entities.dart';
 import '../../../../features/quran/domain/entities/quran_entities.dart';
 
@@ -15,7 +16,8 @@ enum SocialShareCategory {
   memorization,
   streak,
   progress,
-  certificate;
+  certificate,
+  khatmah;
 
   IconData get icon {
     switch (this) {
@@ -35,8 +37,59 @@ enum SocialShareCategory {
         return Icons.insights_rounded;
       case SocialShareCategory.certificate:
         return Icons.verified_rounded;
+      case SocialShareCategory.khatmah:
+        return Icons.auto_stories_rounded;
     }
   }
+
+  String get titleAr {
+    switch (this) {
+      case SocialShareCategory.quranAyah:
+        return 'آية قرآنية';
+      case SocialShareCategory.azkar:
+        return 'أذكار';
+      case SocialShareCategory.dua:
+        return 'دعاء';
+      case SocialShareCategory.achievement:
+        return 'إنجاز';
+      case SocialShareCategory.memorization:
+        return 'حفظ القرآن';
+      case SocialShareCategory.streak:
+        return 'استمرارية';
+      case SocialShareCategory.progress:
+        return 'حصاد التقدم';
+      case SocialShareCategory.certificate:
+        return 'شهادة إتمام';
+      case SocialShareCategory.khatmah:
+        return 'ختمة القرآن';
+    }
+  }
+
+  String get titleEn {
+    switch (this) {
+      case SocialShareCategory.quranAyah:
+        return 'Quran Ayah';
+      case SocialShareCategory.azkar:
+        return 'Azkar';
+      case SocialShareCategory.dua:
+        return 'Dua';
+      case SocialShareCategory.achievement:
+        return 'Achievement';
+      case SocialShareCategory.memorization:
+        return 'Memorization';
+      case SocialShareCategory.streak:
+        return 'Streak';
+      case SocialShareCategory.progress:
+        return 'Progress';
+      case SocialShareCategory.certificate:
+        return 'Certificate';
+      case SocialShareCategory.khatmah:
+        return 'Quran Khatmah';
+    }
+  }
+
+  String get labelAr => titleAr;
+  String get labelEn => titleEn;
 }
 
 /// The active memorization path controls only the share-card presentation.
@@ -334,6 +387,47 @@ class SocialShareData {
       verificationCode: award.verificationCode,
       juzNumber: award.juzNumber,
       surahName: award.surahNameAr,
+      userName: userName,
+      showCharacter: showCharacter,
+      characterAssetPath: masterCharacterAsset,
+    );
+  }
+
+  /// Factory for Khatmah completion share from domain model
+  factory SocialShareData.khatmah({
+    required KhatmahPlan plan,
+    String? userName,
+    String? customTitle,
+    String? customContent,
+    bool showCharacter = false,
+  }) {
+    String? dedicationSubtitle;
+    if (plan.dedication.isDedicated &&
+        plan.dedication.recipientName != null &&
+        plan.dedication.recipientName!.trim().isNotEmpty) {
+      final name = plan.dedication.recipientName!.trim();
+      dedicationSubtitle = 'إهداء إلى: $name';
+      if (plan.dedication.customNote != null &&
+          plan.dedication.customNote!.trim().isNotEmpty) {
+        dedicationSubtitle += ' - ${plan.dedication.customNote!.trim()}';
+      }
+    }
+
+    final shareTitle = customTitle ??
+        (plan.title.trim().isNotEmpty
+            ? plan.title.trim()
+            : 'ختمة القرآن الكريم');
+    final shareContent = customContent ??
+        'أتممت بحمد الله وتوفيقه ختم القرآن الكريم في ${plan.targetDays} يوماً';
+
+    return SocialShareData(
+      content: shareContent,
+      title: shareTitle,
+      subtitle: dedicationSubtitle,
+      category: SocialShareCategory.khatmah,
+      targetValue: plan.targetDays,
+      currentValue: plan.completedPagesCount,
+      readPagesCount: plan.completedPagesCount,
       userName: userName,
       showCharacter: showCharacter,
       characterAssetPath: masterCharacterAsset,
