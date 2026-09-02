@@ -103,6 +103,14 @@ import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/application/cloud_sync_coordinator.dart';
 import '../identity/account_data_reset.dart';
 import '../../features/auth/presentation/cubits/auth_cubit.dart';
+import '../../features/khatmah/data/datasources/khatmah_local_datasource.dart';
+import '../../features/khatmah/data/repositories/khatmah_repository_impl.dart';
+import '../../features/khatmah/domain/repositories/khatmah_repository.dart';
+import '../../features/khatmah/domain/usecases/complete_khatmah_usecase.dart';
+import '../../features/khatmah/domain/usecases/create_khatmah_usecase.dart';
+import '../../features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
+import '../../features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
+import '../../features/khatmah/domain/usecases/update_khatmah_progress_usecase.dart';
 
 final GetIt getIt = GetIt.instance;
 
@@ -252,6 +260,9 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<AzkarLocalDatasource>(
     () => AzkarLocalDatasourceImpl(),
   );
+  getIt.registerLazySingleton<KhatmahLocalDatasource>(
+    () => KhatmahLocalDatasource(getIt<SharedPreferences>()),
+  );
 
   // ─── Core Services ──────────────────────────────────────────────────────────
   getIt.registerSingleton<StreakService>(
@@ -320,6 +331,9 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<AzkarRepository>(
     () => AzkarRepositoryImpl(getIt<AzkarLocalDatasource>()),
+  );
+  getIt.registerLazySingleton<KhatmahRepository>(
+    () => KhatmahRepositoryImpl(getIt<KhatmahLocalDatasource>()),
   );
   getIt.registerLazySingleton<MemorizationPlusRepository>(
     () => MemorizationPlusRepositoryImpl(
@@ -456,6 +470,21 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<GetFamilyDashboardUsecase>(
     () => GetFamilyDashboardUsecase(getIt<MemorizationPlusRepository>()),
+  );
+  getIt.registerLazySingleton<GetActiveKhatmahUsecase>(
+    () => GetActiveKhatmahUsecase(getIt<KhatmahRepository>()),
+  );
+  getIt.registerLazySingleton<CreateKhatmahUsecase>(
+    () => CreateKhatmahUsecase(getIt<KhatmahRepository>()),
+  );
+  getIt.registerLazySingleton<UpdateKhatmahProgressUsecase>(
+    () => UpdateKhatmahProgressUsecase(getIt<KhatmahRepository>()),
+  );
+  getIt.registerLazySingleton<CompleteKhatmahUsecase>(
+    () => CompleteKhatmahUsecase(getIt<KhatmahRepository>()),
+  );
+  getIt.registerLazySingleton<PauseResumeKhatmahUsecase>(
+    () => PauseResumeKhatmahUsecase(getIt<KhatmahRepository>()),
   );
 
   // ─── Cubits ─────────────────────────────────────────────────────────────────
