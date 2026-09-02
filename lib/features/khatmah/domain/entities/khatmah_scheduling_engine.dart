@@ -24,15 +24,19 @@ class KhatmahSchedulingEngine {
     int targetPagesPerDay,
   ) {
     final startPage = min(currentPage + 1, totalPages);
-    final endPage = min(startPage + targetPagesPerDay - 1, totalPages);
+    final endPage = min(
+      max(startPage, startPage + targetPagesPerDay - 1),
+      totalPages,
+    );
     return (startPage: startPage, endPage: endPage);
   }
 
   static DateTime recalculateAfterResume(
     int remainingPages,
-    int pagesPerDay,
-  ) {
+    int pagesPerDay, [
+    DateTime? fromDate,
+  ]) {
     final days = calculateDaysFromPages(remainingPages, pagesPerDay);
-    return calculateEndDate(DateTime.now(), days);
+    return calculateEndDate(fromDate ?? DateTime.now(), days);
   }
 }

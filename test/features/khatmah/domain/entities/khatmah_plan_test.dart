@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
 
 void main() {
   KhatmahPlan makePlan({int currentPage = 0, int startPage = 1}) {
@@ -66,6 +67,38 @@ void main() {
       expect(updated.dedication.condition, DedicationCondition.alive);
     });
 
+    test('copyWith clearPausedAt unsets pausedAt', () {
+      final pausedPlan = makePlan().copyWith(
+        status: KhatmahStatus.paused,
+        pausedAt: DateTime(2026, 2, 1),
+      );
+      expect(pausedPlan.pausedAt, isNotNull);
+
+      final resumedPlan = pausedPlan.copyWith(
+        status: KhatmahStatus.active,
+        clearPausedAt: true,
+      );
+      expect(resumedPlan.pausedAt, isNull);
+      expect(resumedPlan.status, KhatmahStatus.active);
+    });
+
+    test('pause and resume helpers work correctly', () {
+      final plan = makePlan();
+      final pauseTime = DateTime(2026, 2, 1);
+      final paused = plan.pause(at: pauseTime);
+      expect(paused.status, KhatmahStatus.paused);
+      expect(paused.pausedAt, pauseTime);
+
+      final resumeTime = DateTime(2026, 2, 10);
+      final resumed = paused.resume(fromDate: resumeTime);
+      expect(resumed.status, KhatmahStatus.active);
+      expect(resumed.pausedAt, isNull);
+      expect(
+        resumed.expectedEndDate,
+        resumeTime.add(const Duration(days: 151)),
+      );
+    });
+
     test('equality works with Equatable', () {
       final plan1 = makePlan();
       final plan2 = makePlan();
@@ -96,6 +129,46 @@ void main() {
         condition: DedicationCondition.deceased,
       );
       expect(d1, equals(d2));
+    });
+  });
+
+  group('KhatmahHistoryEntry', () {
+    test('creates entry and checks fields and equatable props', () {
+      final entry1 = KhatmahHistoryEntry(
+        id: 'hist-1',
+        khatmahNumber: 1,
+        title: 'Ramadan Khatmah',
+        startDate: DateTime(2026, 1, 1),
+        completedDate: DateTime(2026, 1, 30),
+        totalDays: 30,
+        dedication: const KhatmahDedication(
+          isDedicated: true,
+          recipientName: 'Father',
+          condition: DedicationCondition.deceased,
+        ),
+        certificateId: 'cert-123',
+      );
+
+      final entry2 = KhatmahHistoryEntry(
+        id: 'hist-1',
+        khatmahNumber: 1,
+        title: 'Ramadan Khatmah',
+        startDate: DateTime(2026, 1, 1),
+        completedDate: DateTime(2026, 1, 30),
+        totalDays: 30,
+        dedication: const KhatmahDedication(
+          isDedicated: true,
+          recipientName: 'Father',
+          condition: DedicationCondition.deceased,
+        ),
+        certificateId: 'cert-123',
+      );
+
+      expect(entry1, equals(entry2));
+      expect(entry1.khatmahNumber, 1);
+      expect(entry1.totalDays, 30);
+      expect(entry1.certificateId, 'cert-123');
+      expect(entry1.dedication?.recipientName, 'Father');
     });
   });
 }

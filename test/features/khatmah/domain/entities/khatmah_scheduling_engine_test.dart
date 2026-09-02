@@ -43,7 +43,27 @@ void main() {
       expect(wird.endPage, 604);
     });
 
-    test('recalculateAfterResume calculates new end date from remaining pages and pagesPerDay', () {
+    test('todaysWird handles non-positive targetPagesPerDay gracefully', () {
+      final wird0 = KhatmahSchedulingEngine.todaysWird(10, 0);
+      expect(wird0.startPage, 11);
+      expect(wird0.endPage, 11);
+
+      final wirdNeg = KhatmahSchedulingEngine.todaysWird(10, -5);
+      expect(wirdNeg.startPage, 11);
+      expect(wirdNeg.endPage, 11);
+    });
+
+    test('recalculateAfterResume calculates exact end date when fromDate is provided', () {
+      final fixedDate = DateTime(2026, 3, 1);
+      final resumed = KhatmahSchedulingEngine.recalculateAfterResume(
+        604,
+        4,
+        fixedDate,
+      );
+      expect(resumed, DateTime(2026, 3, 1).add(const Duration(days: 151)));
+    });
+
+    test('recalculateAfterResume defaults to DateTime.now() when fromDate is omitted', () {
       final now = DateTime.now();
       final resumed = KhatmahSchedulingEngine.recalculateAfterResume(604, 4);
       final diff = resumed.difference(now).inDays;

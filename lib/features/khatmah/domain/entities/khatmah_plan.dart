@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'khatmah_dedication.dart';
+import 'khatmah_scheduling_engine.dart';
 
 enum KhatmahStatus { active, paused, completed }
 enum QuranReaderMode { free, khatmah }
@@ -35,8 +36,9 @@ class KhatmahPlan extends Equatable {
 
   int get completedPagesCount =>
       currentPage < startPage ? 0 : currentPage - startPage + 1;
-  double get progressPercentage => completedPagesCount / 604;
-  int get remainingPages => 604 - currentPage;
+  double get progressPercentage =>
+      completedPagesCount / KhatmahSchedulingEngine.totalPages;
+  int get remainingPages => KhatmahSchedulingEngine.totalPages - currentPage;
 
   KhatmahPlan copyWith({
     String? id,
@@ -51,6 +53,7 @@ class KhatmahPlan extends Equatable {
     KhatmahDedication? dedication,
     DateTime? lastReadDate,
     DateTime? pausedAt,
+    bool clearPausedAt = false,
   }) {
     return KhatmahPlan(
       id: id ?? this.id,
@@ -64,7 +67,27 @@ class KhatmahPlan extends Equatable {
       status: status ?? this.status,
       dedication: dedication ?? this.dedication,
       lastReadDate: lastReadDate ?? this.lastReadDate,
-      pausedAt: pausedAt ?? this.pausedAt,
+      pausedAt: clearPausedAt ? null : (pausedAt ?? this.pausedAt),
+    );
+  }
+
+  KhatmahPlan pause({DateTime? at}) {
+    return copyWith(
+      status: KhatmahStatus.paused,
+      pausedAt: at ?? DateTime.now(),
+    );
+  }
+
+  KhatmahPlan resume({DateTime? fromDate}) {
+    final newExpectedEndDate = KhatmahSchedulingEngine.recalculateAfterResume(
+      remainingPages,
+      targetPagesPerDay,
+      fromDate,
+    );
+    return copyWith(
+      status: KhatmahStatus.active,
+      expectedEndDate: newExpectedEndDate,
+      clearPausedAt: true,
     );
   }
 
