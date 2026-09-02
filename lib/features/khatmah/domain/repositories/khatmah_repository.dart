@@ -6,7 +6,7 @@ abstract class KhatmahRepository {
   Future<void> createPlan(KhatmahPlan plan);
   Future<void> updatePlan(KhatmahPlan plan);
   Future<void> deletePlan();
-  Future<void> completePlan(KhatmahPlan plan);
+  Future<KhatmahHistoryEntry> completePlan(KhatmahPlan plan);
   Future<List<KhatmahHistoryEntry>> getHistory();
   Future<int> getCompletedCount();
 }

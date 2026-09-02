@@ -10,7 +10,6 @@ class KhatmahLocalDatasource {
 
   static const _kActivePlan = 'khatmah_active_plan';
   static const _kHistory = 'khatmah_history';
-  static const _kCloudDirty = 'khatmah_cloud_dirty';
 
   Future<KhatmahPlanModel?> getActivePlan() {
     final raw = _prefs.getString(_kActivePlan);
@@ -26,12 +25,10 @@ class KhatmahLocalDatasource {
 
   Future<void> savePlan(KhatmahPlanModel plan) async {
     await _prefs.setString(_kActivePlan, jsonEncode(plan.toJson()));
-    await _prefs.setBool(_kCloudDirty, true);
   }
 
   Future<void> deletePlan() async {
     await _prefs.remove(_kActivePlan);
-    await _prefs.setBool(_kCloudDirty, true);
   }
 
   Future<List<KhatmahHistoryModel>> getHistory() {
@@ -41,8 +38,7 @@ class KhatmahLocalDatasource {
       final list = jsonDecode(raw) as List<dynamic>;
       return Future.value(
         list
-            .map((e) =>
-                KhatmahHistoryModel.fromJson(e as Map<String, dynamic>))
+            .map((e) => KhatmahHistoryModel.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
     } catch (_) {
@@ -50,14 +46,17 @@ class KhatmahLocalDatasource {
     }
   }
 
-  Future<void> addHistoryEntry(KhatmahHistoryModel entry) async {
+  Future<KhatmahHistoryModel> addHistoryEntry(KhatmahHistoryModel entry) async {
     final existing = await getHistory();
+    for (final existingEntry in existing) {
+      if (existingEntry.id == entry.id) return existingEntry;
+    }
     existing.add(entry);
     await _prefs.setString(
       _kHistory,
       jsonEncode(existing.map((e) => e.toJson()).toList()),
     );
-    await _prefs.setBool(_kCloudDirty, true);
+    return entry;
   }
 
   Future<int> getKhatmahCount() async {

@@ -34,8 +34,16 @@ class KhatmahRepositoryImpl implements KhatmahRepository {
   }
 
   @override
-  Future<void> completePlan(KhatmahPlan plan) async {
-    final count = await _datasource.getKhatmahCount();
+  Future<KhatmahHistoryEntry> completePlan(KhatmahPlan plan) async {
+    final history = await _datasource.getHistory();
+    for (final entry in history) {
+      if (entry.id == plan.id) {
+        await _datasource.deletePlan();
+        return entry.toEntity();
+      }
+    }
+
+    final count = history.length;
     final now = DateTime.now();
     final totalDays = max(1, now.difference(plan.startDate).inDays + 1);
     final entry = KhatmahHistoryModel.fromEntity(
@@ -49,8 +57,9 @@ class KhatmahRepositoryImpl implements KhatmahRepository {
         dedication: plan.dedication.isDedicated ? plan.dedication : null,
       ),
     );
-    await _datasource.addHistoryEntry(entry);
+    final persistedEntry = await _datasource.addHistoryEntry(entry);
     await _datasource.deletePlan();
+    return persistedEntry.toEntity();
   }
 
   @override

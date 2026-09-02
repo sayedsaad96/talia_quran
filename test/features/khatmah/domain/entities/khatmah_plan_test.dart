@@ -18,6 +18,60 @@ void main() {
   }
 
   group('KhatmahPlan', () {
+    test('recordPage records a jump without filling skipped pages', () {
+      final updated = makePlan().recordPage(100);
+
+      expect(updated.completedPages, {100});
+      expect(updated.currentPage, 0);
+      expect(updated.nextUnreadPage, 1);
+      expect(updated.isComplete, isFalse);
+    });
+
+    test('normalizes completed pages to an immutable Quran page set', () {
+      final plan = KhatmahPlan(
+        id: 'normalized',
+        title: 'Normalized',
+        completedPages: {0, 1, 1, 605},
+        targetPagesPerDay: 4,
+        targetDays: 151,
+        startDate: DateTime(2026, 1, 1),
+        expectedEndDate: DateTime(2026, 6, 1),
+      );
+
+      expect(plan.completedPages, {1});
+      expect(() => plan.completedPages.add(2), throwsUnsupportedError);
+    });
+
+    test('keeps page 2 as next unread after pages 1 and 100 are recorded', () {
+      final updated = makePlan().recordPage(1).recordPage(100);
+
+      expect(updated.currentPage, 1);
+      expect(updated.nextUnreadPage, 2);
+    });
+
+    test('re-recording a page is idempotent', () {
+      final once = makePlan().recordPage(10);
+      final twice = once.recordPage(10);
+
+      expect(twice, once);
+      expect(twice.completedPages, {10});
+    });
+
+    test('recording an earlier page never erases progress', () {
+      final updated = makePlan().recordPage(100).recordPage(50);
+
+      expect(updated.completedPages, {50, 100});
+    });
+
+    test('is complete only after every Quran page has explicit coverage', () {
+      final incomplete = makePlan().recordPage(604);
+      final complete = makePlan().recordThroughPage(604);
+
+      expect(incomplete.isComplete, isFalse);
+      expect(complete.isComplete, isTrue);
+      expect(complete.currentPage, 604);
+    });
+
     test('completedPagesCount is 0 when no pages read', () {
       expect(makePlan(currentPage: 0).completedPagesCount, 0);
     });
@@ -26,9 +80,9 @@ void main() {
       expect(makePlan(currentPage: 10).completedPagesCount, 10);
     });
 
-    test('completedPagesCount with custom startPage', () {
-      expect(makePlan(currentPage: 15, startPage: 11).completedPagesCount, 5);
-      expect(makePlan(currentPage: 5, startPage: 10).completedPagesCount, 0);
+    test('completedPagesCount ignores the legacy startPage compatibility field', () {
+      expect(makePlan(currentPage: 15, startPage: 11).completedPagesCount, 15);
+      expect(makePlan(currentPage: 5, startPage: 10).completedPagesCount, 5);
     });
 
     test('progressPercentage at halfway', () {

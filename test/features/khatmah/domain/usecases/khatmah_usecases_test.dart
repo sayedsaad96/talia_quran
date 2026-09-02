@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_scheduling_engine.dart';
 import 'package:talia_quran/features/khatmah/domain/repositories/khatmah_repository.dart';
@@ -104,7 +105,16 @@ void main() {
 
   group('CompleteKhatmahUsecase', () {
     test('sets currentPage=604, status=completed, and calls repository.completePlan', () async {
-      when(() => mockRepository.completePlan(any())).thenAnswer((_) async {});
+      when(() => mockRepository.completePlan(any())).thenAnswer(
+        (_) async => KhatmahHistoryEntry(
+          id: testPlan.id,
+          khatmahNumber: 1,
+          title: testPlan.title,
+          startDate: testPlan.startDate,
+          completedDate: DateTime(2026, 2, 1),
+          totalDays: 32,
+        ),
+      );
 
       final usecase = CompleteKhatmahUsecase(mockRepository);
       await usecase(testPlan);

@@ -102,6 +102,16 @@ void main() {
       expect(await repository.getCompletedCount(), 2);
     });
 
+    test('completePlan returns the same persisted entry when retried by plan id', () async {
+      final first = await repository.completePlan(testPlan);
+      final retried = await repository.completePlan(testPlan);
+
+      expect(retried, first);
+      final history = await repository.getHistory();
+      expect(history, hasLength(1));
+      expect(history.single, first);
+    });
+
     test('completePlan sets dedication to null when isDedicated is false', () async {
       final nonDedicatedPlan = KhatmahPlan(
         id: 'plan-no-ded',

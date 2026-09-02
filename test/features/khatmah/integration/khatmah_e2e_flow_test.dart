@@ -366,7 +366,7 @@ void main() {
       expect(jsonActivePlan['title'], equals('جدتي الغالية'));
       expect(jsonActivePlan['targetPagesPerDay'], equals(4));
       expect(jsonActivePlan['currentPage'], equals(0));
-      expect(prefs.getBool('khatmah_cloud_dirty'), isTrue);
+      expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
 
       // Verify strict isolation: read_pages was NOT touched
       final readPagesAfterSetup = prefs.getString(AppConstants.kReadPages);

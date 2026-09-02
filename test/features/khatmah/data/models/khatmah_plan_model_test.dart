@@ -77,6 +77,7 @@ void main() {
         title: 'Ramadan Khatmah',
         startPage: 1,
         currentPage: 50,
+        completedPages: {50, 1, 2},
         targetPagesPerDay: 4,
         targetDays: 151,
         startDate: DateTime(2026, 1, 1),
@@ -100,6 +101,8 @@ void main() {
       expect(restored.title, model.title);
       expect(restored.startPage, 1);
       expect(restored.currentPage, 50);
+      expect(restored.completedPages, {1, 2, 50});
+      expect(json['completedPages'], [1, 2, 50]);
       expect(restored.targetPagesPerDay, 4);
       expect(restored.targetDays, 151);
       expect(restored.startDate, DateTime(2026, 1, 1));
@@ -136,6 +139,23 @@ void main() {
       expect(entity.dedication.isDedicated, false);
       expect(entity.lastReadDate, DateTime(2026, 2, 3));
       expect(entity.pausedAt, DateTime(2026, 2, 4));
+    });
+
+    test('migrates a legacy cursor-only plan to explicit coverage', () {
+      final model = KhatmahPlanModel.fromJson({
+        'id': 'legacy-plan',
+        'title': 'Legacy',
+        'startPage': 1,
+        'currentPage': 10,
+        'targetPagesPerDay': 4,
+        'targetDays': 151,
+        'startDate': '2026-01-01T00:00:00.000',
+        'expectedEndDate': '2026-06-01T00:00:00.000',
+        'dedication': <String, dynamic>{},
+      });
+
+      expect(model.completedPages, {1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+      expect(model.toEntity().completedPages, model.completedPages);
     });
 
     test('fromEntity produces correct KhatmahPlanModel', () {

@@ -21,7 +21,7 @@ void main() {
       expect(plan, isNull);
     });
 
-    test('savePlan saves plan and sets cloud dirty flag', () async {
+    test('savePlan saves the plan without persisting a cloud-sync flag', () async {
       final plan = KhatmahPlanModel(
         id: 'plan-1',
         title: 'Active Plan',
@@ -41,10 +41,10 @@ void main() {
       expect(retrieved, isNotNull);
       expect(retrieved!.id, 'plan-1');
       expect(retrieved.currentPage, 15);
-      expect(prefs.getBool('khatmah_cloud_dirty'), isTrue);
+      expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
     });
 
-    test('deletePlan removes active plan and sets cloud dirty flag', () async {
+    test('deletePlan removes the active plan without persisting a cloud-sync flag', () async {
       final plan = KhatmahPlanModel(
         id: 'plan-1',
         title: 'Active Plan',
@@ -64,7 +64,7 @@ void main() {
       await datasource.deletePlan();
 
       expect(await datasource.getActivePlan(), isNull);
-      expect(prefs.getBool('khatmah_cloud_dirty'), isTrue);
+      expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
     });
 
     test('getActivePlan returns null when stored JSON is corrupted', () async {
@@ -107,7 +107,7 @@ void main() {
       expect(history[0].id, 'hist-1');
       expect(history[1].id, 'hist-2');
       expect(await datasource.getKhatmahCount(), 2);
-      expect(prefs.getBool('khatmah_cloud_dirty'), isTrue);
+      expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
     });
 
     test('getHistory returns empty list when stored JSON is corrupted', () async {

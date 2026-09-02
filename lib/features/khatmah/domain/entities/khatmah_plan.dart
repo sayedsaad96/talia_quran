@@ -1,16 +1,19 @@
 import 'package:equatable/equatable.dart';
+
 import 'khatmah_dedication.dart';
 import 'khatmah_scheduling_engine.dart';
 
 enum KhatmahStatus { active, paused, completed }
+
 enum QuranReaderMode { free, khatmah }
 
 class KhatmahPlan extends Equatable {
-  const KhatmahPlan({
+  KhatmahPlan({
     required this.id,
     required this.title,
     this.startPage = 1,
-    this.currentPage = 0,
+    int currentPage = 0,
+    Iterable<int>? completedPages,
     required this.targetPagesPerDay,
     required this.targetDays,
     required this.startDate,
@@ -19,12 +22,22 @@ class KhatmahPlan extends Equatable {
     this.dedication = const KhatmahDedication(),
     this.lastReadDate,
     this.pausedAt,
-  });
+  }) : completedPages = Set.unmodifiable(
+         _normalizeCompletedPages(
+           completedPages ?? _legacyCompletedPages(currentPage),
+         ),
+       ),
+       currentPage = _highestContiguousPage(
+         _normalizeCompletedPages(
+           completedPages ?? _legacyCompletedPages(currentPage),
+         ),
+       );
 
   final String id;
   final String title;
   final int startPage;
   final int currentPage;
+  final Set<int> completedPages;
   final int targetPagesPerDay;
   final int targetDays;
   final DateTime startDate;
@@ -34,17 +47,46 @@ class KhatmahPlan extends Equatable {
   final DateTime? lastReadDate;
   final DateTime? pausedAt;
 
-  int get completedPagesCount =>
-      currentPage < startPage ? 0 : currentPage - startPage + 1;
+  int get completedPagesCount => completedPages.length;
+
   double get progressPercentage =>
       completedPagesCount / KhatmahSchedulingEngine.totalPages;
-  int get remainingPages => KhatmahSchedulingEngine.totalPages - currentPage;
+
+  int get remainingPages =>
+      KhatmahSchedulingEngine.totalPages - completedPagesCount;
+
+  int get nextUnreadPage {
+    for (var page = 1; page <= KhatmahSchedulingEngine.totalPages; page++) {
+      if (!completedPages.contains(page)) return page;
+    }
+    return KhatmahSchedulingEngine.totalPages + 1;
+  }
+
+  bool get isComplete =>
+      completedPagesCount == KhatmahSchedulingEngine.totalPages;
+
+  KhatmahPlan recordPage(int pageNumber) {
+    return copyWith(completedPages: {...completedPages, pageNumber});
+  }
+
+  KhatmahPlan recordThroughPage(int pageNumber) {
+    final nextPage = nextUnreadPage;
+    if (pageNumber < nextPage) return this;
+
+    return copyWith(
+      completedPages: {
+        ...completedPages,
+        for (var page = nextPage; page <= pageNumber; page++) page,
+      },
+    );
+  }
 
   KhatmahPlan copyWith({
     String? id,
     String? title,
     int? startPage,
     int? currentPage,
+    Iterable<int>? completedPages,
     int? targetPagesPerDay,
     int? targetDays,
     DateTime? startDate,
@@ -60,6 +102,8 @@ class KhatmahPlan extends Equatable {
       title: title ?? this.title,
       startPage: startPage ?? this.startPage,
       currentPage: currentPage ?? this.currentPage,
+      completedPages:
+          completedPages ?? (currentPage == null ? this.completedPages : null),
       targetPagesPerDay: targetPagesPerDay ?? this.targetPagesPerDay,
       targetDays: targetDays ?? this.targetDays,
       startDate: startDate ?? this.startDate,
@@ -91,19 +135,46 @@ class KhatmahPlan extends Equatable {
     );
   }
 
+  static Set<int> _legacyCompletedPages(int currentPage) {
+    return {
+      for (
+        var page = 1;
+        page <= currentPage && page <= KhatmahSchedulingEngine.totalPages;
+        page++
+      )
+        page,
+    };
+  }
+
+  static Set<int> _normalizeCompletedPages(Iterable<int> pages) {
+    return {
+      for (final page in pages)
+        if (page >= 1 && page <= KhatmahSchedulingEngine.totalPages) page,
+    };
+  }
+
+  static int _highestContiguousPage(Set<int> pages) {
+    var current = 0;
+    while (pages.contains(current + 1)) {
+      current++;
+    }
+    return current;
+  }
+
   @override
   List<Object?> get props => [
-        id,
-        title,
-        startPage,
-        currentPage,
-        targetPagesPerDay,
-        targetDays,
-        startDate,
-        expectedEndDate,
-        status,
-        dedication,
-        lastReadDate,
-        pausedAt,
-      ];
+    id,
+    title,
+    startPage,
+    currentPage,
+    completedPages,
+    targetPagesPerDay,
+    targetDays,
+    startDate,
+    expectedEndDate,
+    status,
+    dedication,
+    lastReadDate,
+    pausedAt,
+  ];
 }
