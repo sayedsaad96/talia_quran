@@ -31,7 +31,7 @@ void main() {
     id: 'khatmah-test-1',
     title: 'ختمة رمضان المبارك',
     startPage: 1,
-    currentPage: 20,
+    completedPages: {for (var page = 1; page <= 20; page++) page},
     targetPagesPerDay: 4,
     targetDays: 151,
     startDate: DateTime(2026, 1, 1),

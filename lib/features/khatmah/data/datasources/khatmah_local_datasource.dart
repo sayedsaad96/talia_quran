@@ -29,9 +29,15 @@ class KhatmahLocalDatasource {
   }
 
   Future<void> savePlan(KhatmahPlanModel plan) async {
-    final saved = await _prefs.setString(_kActivePlan, jsonEncode(plan.toJson()));
+    final saved = await _prefs.setString(
+      _kActivePlan,
+      jsonEncode(plan.toJson()),
+    );
     if (!saved) {
-      throw const KhatmahStorageException('Failed to save the active Khatmah plan.');
+      await _restoreAuthoritativeCache();
+      throw const KhatmahStorageException(
+        'Failed to save the active Khatmah plan.',
+      );
     }
   }
 
@@ -42,7 +48,10 @@ class KhatmahLocalDatasource {
     }
     final removed = await _prefs.remove(_kActivePlan);
     if (!removed) {
-      throw const KhatmahStorageException('Failed to delete the active Khatmah plan.');
+      await _restoreAuthoritativeCache();
+      throw const KhatmahStorageException(
+        'Failed to delete the active Khatmah plan.',
+      );
     }
     return true;
   }
@@ -77,9 +86,18 @@ class KhatmahLocalDatasource {
       jsonEncode(existing.map((e) => e.toJson()).toList()),
     );
     if (!saved) {
+      await _restoreAuthoritativeCache();
       throw const KhatmahStorageException('Failed to save Khatmah history.');
     }
     return entry;
+  }
+
+  Future<void> _restoreAuthoritativeCache() async {
+    try {
+      await _prefs.reload();
+    } catch (_) {
+      // Preserve the typed persistence error from the rejected mutation.
+    }
   }
 
   Future<int> getKhatmahCount() async {

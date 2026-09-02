@@ -30,7 +30,7 @@ void main() {
       id: 'khatmah-1',
       title: 'ختمة رمضان',
       startPage: 1,
-      currentPage: 604,
+      completedPages: {for (var page = 1; page <= 604; page++) page},
       targetPagesPerDay: 20,
       targetDays: 30,
       startDate: DateTime(2026, 3, 1),

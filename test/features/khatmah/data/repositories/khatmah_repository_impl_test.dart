@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:talia_quran/features/khatmah/data/datasources/khatmah_local_datasource.dart';
 import 'package:talia_quran/features/khatmah/data/repositories/khatmah_repository_impl.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
 import 'package:talia_quran/features/khatmah/domain/repositories/khatmah_repository.dart';
+import 'package:talia_quran/features/khatmah/data/models/khatmah_plan_model.dart';
 
 class _FailOnceDeleteDatasource extends KhatmahLocalDatasource {
   _FailOnceDeleteDatasource(super.prefs);
@@ -19,6 +23,42 @@ class _FailOnceDeleteDatasource extends KhatmahLocalDatasource {
       throw const KhatmahStorageException('Delete failed for test.');
     }
     return super.deletePlan(expectedPlanId: expectedPlanId);
+  }
+}
+
+class _BlockingDeleteDatasource extends KhatmahLocalDatasource {
+  _BlockingDeleteDatasource(super.prefs);
+
+  final deleteStarted = Completer<void>();
+  final releaseDelete = Completer<void>();
+  final savedPlanIds = <String>[];
+
+  @override
+  Future<void> savePlan(KhatmahPlanModel plan) async {
+    savedPlanIds.add(plan.id);
+    await super.savePlan(plan);
+  }
+
+  @override
+  Future<bool> deletePlan({String? expectedPlanId}) async {
+    if (!deleteStarted.isCompleted) deleteStarted.complete();
+    await releaseDelete.future;
+    return super.deletePlan(expectedPlanId: expectedPlanId);
+  }
+}
+
+class _RejectOnceHistoryStore extends InMemorySharedPreferencesStore {
+  _RejectOnceHistoryStore() : super.empty();
+
+  var rejectNextHistoryWrite = true;
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async {
+    if (key.endsWith('khatmah_history') && rejectNextHistoryWrite) {
+      rejectNextHistoryWrite = false;
+      return false;
+    }
+    return super.setValue(valueType, key, value);
   }
 }
 
@@ -168,6 +208,63 @@ void main() {
       final history = await repository.getHistory();
       expect(history.map((entry) => entry.id), containsAll(['plan-1', 'plan-2']));
       expect(history.map((entry) => entry.khatmahNumber), {1, 2});
+    });
+
+    test('waits for completion delete before saving a replacement plan', () async {
+      final blockingDatasource = _BlockingDeleteDatasource(prefs);
+      final queuedRepository = KhatmahRepositoryImpl(blockingDatasource);
+      final completedPlan = testPlan.recordThroughPage(604);
+      final replacementPlan = completedPlan.copyWith(id: 'replacement');
+
+      final completion = queuedRepository.completePlan(completedPlan);
+      await blockingDatasource.deleteStarted.future;
+      final replacement = queuedRepository.updatePlan(replacementPlan);
+
+      await Future<void>.delayed(Duration.zero);
+      expect(blockingDatasource.savedPlanIds, isEmpty);
+
+      blockingDatasource.releaseDelete.complete();
+      await completion;
+      await replacement;
+      expect((await queuedRepository.getActivePlan())?.id, replacementPlan.id);
+    });
+
+    test('continues with queued mutations after a completion failure', () async {
+      final failingDatasource = _FailOnceDeleteDatasource(prefs);
+      final queuedRepository = KhatmahRepositoryImpl(failingDatasource);
+      final completedPlan = testPlan.recordThroughPage(604);
+      final replacementPlan = completedPlan.copyWith(id: 'replacement');
+      await queuedRepository.createPlan(completedPlan);
+
+      final completion = queuedRepository.completePlan(completedPlan);
+      final replacement = queuedRepository.updatePlan(replacementPlan);
+
+      await expectLater(completion, throwsA(isA<KhatmahStorageException>()));
+      await replacement;
+      expect((await queuedRepository.getActivePlan())?.id, replacementPlan.id);
+    });
+
+    test('reloads rejected history writes before retrying completion', () async {
+      final store = _RejectOnceHistoryStore();
+      SharedPreferencesStorePlatform.instance = store;
+      SharedPreferences.resetStatic();
+      final rejectingPrefs = await SharedPreferences.getInstance();
+      final rejectingDatasource = KhatmahLocalDatasource(rejectingPrefs);
+      final retryRepository = KhatmahRepositoryImpl(rejectingDatasource);
+      final completedPlan = testPlan.recordThroughPage(604);
+      expect(await retryRepository.getHistory(), isEmpty);
+      await retryRepository.createPlan(completedPlan);
+
+      await expectLater(
+        () => retryRepository.completePlan(completedPlan),
+        throwsA(isA<KhatmahStorageException>()),
+      );
+      expect(await retryRepository.getHistory(), isEmpty);
+
+      final entry = await retryRepository.completePlan(completedPlan);
+      expect(entry.id, completedPlan.id);
+      expect(await retryRepository.getHistory(), hasLength(1));
+      expect(await retryRepository.getActivePlan(), isNull);
     });
 
     test('uses lastReadDate as the persisted completion date', () async {

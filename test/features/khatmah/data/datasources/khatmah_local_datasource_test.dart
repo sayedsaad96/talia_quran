@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
@@ -29,6 +31,22 @@ class _RejectingPreferencesStore extends InMemorySharedPreferencesStore {
   }
 }
 
+class _RejectOnceRemovalStore extends InMemorySharedPreferencesStore {
+  _RejectOnceRemovalStore(String rawPlan)
+    : super.withData({'flutter.khatmah_active_plan': rawPlan});
+
+  var rejectNextRemoval = true;
+
+  @override
+  Future<bool> remove(String key) async {
+    if (key.endsWith('khatmah_active_plan') && rejectNextRemoval) {
+      rejectNextRemoval = false;
+      return false;
+    }
+    return super.remove(key);
+  }
+}
+
 void main() {
   late SharedPreferences prefs;
   late KhatmahLocalDatasource datasource;
@@ -50,7 +68,6 @@ void main() {
         id: 'plan-1',
         title: 'Active Plan',
         startPage: 1,
-        currentPage: 15,
         completedPages: {for (var page = 1; page <= 15; page++) page},
         targetPagesPerDay: 4,
         targetDays: 151,
@@ -74,7 +91,6 @@ void main() {
         id: 'plan-1',
         title: 'Active Plan',
         startPage: 1,
-        currentPage: 15,
         completedPages: {for (var page = 1; page <= 15; page++) page},
         targetPagesPerDay: 4,
         targetDays: 151,
@@ -159,6 +175,34 @@ void main() {
       );
     });
 
+    test('reloads rejected deletion before a later retry', () async {
+      final plan = KhatmahPlanModel(
+        id: 'retry-delete',
+        title: 'Retry delete',
+        targetPagesPerDay: 1,
+        targetDays: 1,
+        startDate: DateTime(2026, 1, 1),
+        expectedEndDate: DateTime(2026, 1, 2),
+        status: 'active',
+        dedication: KhatmahDedicationModel(isDedicated: false),
+      );
+      SharedPreferencesStorePlatform.instance = _RejectOnceRemovalStore(
+        jsonEncode(plan.toJson()),
+      );
+      SharedPreferences.resetStatic();
+      final retryPrefs = await SharedPreferences.getInstance();
+      final retryDatasource = KhatmahLocalDatasource(retryPrefs);
+
+      await expectLater(
+        retryDatasource.deletePlan,
+        throwsA(isA<KhatmahStorageException>()),
+      );
+      expect((await retryDatasource.getActivePlan())?.id, plan.id);
+
+      expect(await retryDatasource.deletePlan(), isTrue);
+      expect(await retryDatasource.getActivePlan(), isNull);
+    });
+
     test('getActivePlan surfaces typed storage error when stored JSON is corrupted', () async {
       await prefs.setString('khatmah_active_plan', '{broken json...');
 
@@ -234,7 +278,6 @@ void main() {
         id: 'plan-isolated',
         title: 'Isolated',
         startPage: 1,
-        currentPage: 5,
         completedPages: {for (var page = 1; page <= 5; page++) page},
         targetPagesPerDay: 5,
         targetDays: 120,

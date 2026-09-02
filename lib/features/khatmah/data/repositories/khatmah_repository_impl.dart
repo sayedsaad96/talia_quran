@@ -12,7 +12,13 @@ class KhatmahRepositoryImpl implements KhatmahRepository {
   KhatmahRepositoryImpl(this._datasource);
 
   final KhatmahLocalDatasource _datasource;
-  Future<void> _completionQueue = Future.value();
+  Future<void> _mutationQueue = Future.value();
+
+  Future<T> _enqueueMutation<T>(Future<T> Function() mutation) {
+    final result = _mutationQueue.then<T>((_) => mutation());
+    _mutationQueue = result.then<void>((_) {}, onError: (_, _) {});
+    return result;
+  }
 
   @override
   Future<KhatmahPlan?> getActivePlan() async {
@@ -22,24 +28,26 @@ class KhatmahRepositoryImpl implements KhatmahRepository {
 
   @override
   Future<void> createPlan(KhatmahPlan plan) async {
-    await _datasource.savePlan(KhatmahPlanModel.fromEntity(plan));
+    await _enqueueMutation(
+      () => _datasource.savePlan(KhatmahPlanModel.fromEntity(plan)),
+    );
   }
 
   @override
   Future<void> updatePlan(KhatmahPlan plan) async {
-    await _datasource.savePlan(KhatmahPlanModel.fromEntity(plan));
+    await _enqueueMutation(
+      () => _datasource.savePlan(KhatmahPlanModel.fromEntity(plan)),
+    );
   }
 
   @override
   Future<void> deletePlan() async {
-    await _datasource.deletePlan();
+    await _enqueueMutation(() => _datasource.deletePlan());
   }
 
   @override
   Future<KhatmahHistoryEntry> completePlan(KhatmahPlan plan) async {
-    final completion = _completionQueue.then((_) => _completePlan(plan));
-    _completionQueue = completion.then<void>((_) {}, onError: (_, _) {});
-    return completion;
+    return _enqueueMutation(() => _completePlan(plan));
   }
 
   Future<KhatmahHistoryEntry> _completePlan(KhatmahPlan plan) async {
@@ -58,7 +66,10 @@ class KhatmahRepositoryImpl implements KhatmahRepository {
 
     final count = history.length;
     final completedDate = plan.lastReadDate ?? DateTime.now();
-    final totalDays = max(1, completedDate.difference(plan.startDate).inDays + 1);
+    final totalDays = max(
+      1,
+      completedDate.difference(plan.startDate).inDays + 1,
+    );
     final entry = KhatmahHistoryModel.fromEntity(
       KhatmahHistoryEntry(
         id: plan.id,

@@ -95,7 +95,7 @@ void main() {
     targetDays: 151,
     startDate: DateTime(2026, 1, 1),
     expectedEndDate: DateTime(2026, 6, 1),
-    currentPage: 42,
+    completedPages: {for (var page = 1; page <= 42; page++) page},
     status: KhatmahStatus.active,
   );
 

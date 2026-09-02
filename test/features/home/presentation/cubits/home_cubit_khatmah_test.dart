@@ -54,7 +54,7 @@ void main() {
     id: 'test-khatmah-1',
     title: 'Ramadan Khatmah',
     startPage: 1,
-    currentPage: 30,
+    completedPages: {for (var page = 1; page <= 30; page++) page},
     targetPagesPerDay: 4,
     targetDays: 151,
     startDate: DateTime(2026, 1, 1),

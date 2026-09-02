@@ -1,5 +1,6 @@
 import '../entities/khatmah_plan.dart';
 import '../entities/khatmah_reading_result.dart';
+import '../entities/khatmah_scheduling_engine.dart';
 import '../repositories/khatmah_repository.dart';
 
 class RecordKhatmahReadingUsecase {
@@ -18,9 +19,10 @@ class RecordKhatmahReadingUsecase {
         'Only active Khatmah plans can record reading progress.',
       );
     }
-    if (pageNumber < 1 || pageNumber > 604) {
+    if (pageNumber < 1 || pageNumber > KhatmahSchedulingEngine.totalPages) {
       throw const KhatmahProgressException(
-        'Page number must be between 1 and 604.',
+        'Page number must be between 1 and '
+        '${KhatmahSchedulingEngine.totalPages}.',
       );
     }
 

@@ -559,7 +559,7 @@ void main() {
         targetDays: 151,
         startDate: DateTime(2026, 1, 1),
         expectedEndDate: DateTime(2026, 6, 1),
-        currentPage: 12,
+        completedPages: {for (var page = 1; page <= 12; page++) page},
         status: KhatmahStatus.active,
         dedication: const KhatmahDedication(
           isDedicated: true,
@@ -629,7 +629,7 @@ void main() {
         targetDays: 151,
         startDate: DateTime(2026, 1, 1),
         expectedEndDate: DateTime(2026, 6, 1),
-        currentPage: 20,
+        completedPages: {for (var page = 1; page <= 20; page++) page},
         status: KhatmahStatus.active,
       );
 
