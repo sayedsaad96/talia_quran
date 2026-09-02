@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/features/khatmah/data/datasources/khatm_dua_datasource.dart';
@@ -10,12 +11,12 @@ void main() {
   late MockGetKhatmDuaUsecase mockGetKhatmDua;
   late KhatmDuaCubit cubit;
 
-  final testData = KhatmDuaData(
+  const testData = KhatmDuaData(
     arabicText: 'اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ...',
     source: 'مصحف مجمع الملك فهد لطباعة المصحف الشريف',
     sourceNote: 'دعاء مأثور ومشهور مطبوع في ملحق المصحف الشريف',
     tier: 'guidance',
-    dedicationInserts: const {
+    dedicationInserts: {
       'alive': 'بركة لـ {name}',
       'deceased': 'رحمة لـ {name}',
       'sick': 'شفاء لـ {name}',
@@ -40,10 +41,10 @@ void main() {
 
     final expected = [
       const KhatmDuaLoading(),
-      KhatmDuaLoaded(data: testData, fontScale: 1.0),
+      const KhatmDuaLoaded(data: testData, fontScale: 1.0),
     ];
 
-    expectLater(cubit.stream, emitsInOrder(expected));
+    unawaited(expectLater(cubit.stream, emitsInOrder(expected)));
 
     await cubit.load();
     verify(() => mockGetKhatmDua()).called(1);
@@ -57,7 +58,7 @@ void main() {
       const KhatmDuaError('Exception: Asset load failed'),
     ];
 
-    expectLater(cubit.stream, emitsInOrder(expected));
+    unawaited(expectLater(cubit.stream, emitsInOrder(expected)));
 
     await cubit.load();
   });

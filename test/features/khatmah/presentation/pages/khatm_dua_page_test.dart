@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -13,12 +14,12 @@ class MockGetKhatmDuaUsecase extends Mock implements GetKhatmDuaUsecase {}
 void main() {
   late MockGetKhatmDuaUsecase mockGetKhatmDua;
 
-  final sampleDuaData = KhatmDuaData(
+  const sampleDuaData = KhatmDuaData(
     arabicText: 'اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ، وَاجْعَلْهُ لِي إِمَاماً وَنُوراً',
     source: 'مصحف مجمع الملك فهد لطباعة المصحف الشريف',
     sourceNote: 'دعاء مأثور ومشهور مطبوع في ملحق المصحف الشريف',
     tier: 'guidance',
-    dedicationInserts: const {
+    dedicationInserts: {
       'alive': 'اللَّهُمَّ اجْعَلْ ثَوَابَ هَذِهِ التِّلَاوَةِ لِعَبْدِكَ {name}',
       'deceased': 'اللَّهُمَّ اغْفِرْ لِعَبْدِكَ {name} وَارْحَمْهُ',
       'sick': 'اللَّهُمَّ اشْفِ عَبْدَكَ {name}',
@@ -45,7 +46,8 @@ void main() {
     when(() => mockGetKhatmDua()).thenAnswer(
       (_) => Future.delayed(const Duration(seconds: 1), () => sampleDuaData),
     );
-    final cubit = KhatmDuaCubit(mockGetKhatmDua)..load();
+    final cubit = KhatmDuaCubit(mockGetKhatmDua);
+    unawaited(cubit.load());
 
     await tester.pumpWidget(createWidget(cubit: cubit));
     expect(find.byType(CircularProgressIndicator), findsOneWidget);

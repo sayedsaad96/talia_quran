@@ -70,15 +70,21 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
 
   String _getDedicationDua(KhatmahDedication dedication) {
     final name = dedication.recipientName?.trim();
-    final nameStr = (name != null && name.isNotEmpty) ? name : '';
+    final hasName = name != null && name.isNotEmpty;
     switch (dedication.condition) {
       case DedicationCondition.deceased:
-        return 'اللَّهُمَّ اغْفِرْ لِعَبْدِكَ $nameStr وَارْحَمْهُ، وَعَافِهِ وَاعْفُ عَنْهُ، وَأَكْرِمْ نُزُلَهُ، وَوَسِّعْ مُدْخَلَهُ، وَاجْعَلْ ثَوَابَ هَذِهِ الخَتْمَةِ نُوراً وَرَحْمَةً فِي قَبْرِهِ.';
+        return hasName
+            ? 'اللَّهُمَّ اغْفِرْ لِعَبْدِكَ $name وَارْحَمْهُ، وَعَافِهِ وَاعْفُ عَنْهُ، وَأَكْرِمْ نُزُلَهُ، وَوَسِّعْ مُدْخَلَهُ، وَاجْعَلْ ثَوَابَ هَذِهِ الخَتْمَةِ نُوراً وَرَحْمَةً فِي قَبْرِهِ.'
+            : 'اللَّهُمَّ اغْفِرْ لَهُ وَارْحَمْهُ، وَعَافِهِ وَاعْفُ عَنْهُ، وَأَكْرِمْ نُزُلَهُ، وَوَسِّعْ مُدْخَلَهُ، وَاجْعَلْ ثَوَابَ هَذِهِ الخَتْمَةِ نُوراً وَرَحْمَةً فِي قَبْرِهِ.';
       case DedicationCondition.sick:
-        return 'اللَّهُمَّ رَبَّ النَّاسِ أَذْهِبِ البَأْسَ، اشْفِ عَبْدَكَ $nameStr أَنْتَ الشَّافِي لاَ شِفَاءَ إِلاَّ شِفَاؤُكَ، شِفَاءً لاَ يُغَادِرُ سَقَماً.';
+        return hasName
+            ? 'اللَّهُمَّ رَبَّ النَّاسِ أَذْهِبِ البَأْسَ، اشْفِ عَبْدَكَ $name أَنْتَ الشَّافِي لاَ شِفَاءَ إِلاَّ شِفَاؤُكَ، شِفَاءً لاَ يُغَادِرُ سَقَماً.'
+            : 'اللَّهُمَّ رَبَّ النَّاسِ أَذْهِبِ البَأْسَ، اشْفِهِ أَنْتَ الشَّافِي لاَ شِفَاءَ إِلاَّ شِفَاؤُكَ، شِفَاءً لاَ يُغَادِرُ سَقَماً.';
       case DedicationCondition.alive:
       case null:
-        return 'اللَّهُمَّ اجْعَلْ ثَوَابَ هَذِهِ التِّلَاوَةِ وَبَرَكَتَهَا لِعَبْدِكَ $nameStr، اللَّهُمَّ بَارِكْ فِي عُمْرِهِ وَوَفِّقْهُ لِكُلِّ خَيْرٍ.';
+        return hasName
+            ? 'اللَّهُمَّ اجْعَلْ ثَوَابَ هَذِهِ التِّلَاوَةِ وَبَرَكَتَهَا لِعَبْدِكَ $name، اللَّهُمَّ بَارِكْ فِي عُمْرِهِ وَوَفِّقْهُ لِكُلِّ خَيْرٍ.'
+            : 'اللَّهُمَّ اجْعَلْ ثَوَابَ هَذِهِ التِّلَاوَةِ وَبَرَكَتَهَا لَهُ، اللَّهُمَّ بَارِكْ فِي عُمْرِهِ وَوَفِّقْهُ لِكُلِّ خَيْرٍ.';
     }
   }
 
@@ -115,7 +121,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
       buffer.writeln('Via Talia Quran App 🌿');
     }
 
-    Share.share(buffer.toString());
+    SharePlus.instance.share(ShareParams(text: buffer.toString()));
   }
 
   @override
