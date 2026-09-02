@@ -39,11 +39,27 @@ class KhatmahReaderSessionBar extends StatelessWidget {
     return BlocBuilder<KhatmahCubit, KhatmahState>(
       bloc: resolvedCubit,
       builder: (context, state) {
-        if (state is! KhatmahActive) {
-          return const SizedBox.shrink();
+        if (state is KhatmahPaused) {
+          return _statusBar(
+            context,
+            'Khatmah is paused',
+            Icons.pause_circle_outline_rounded,
+          );
         }
-
-        final plan = state.plan;
+        if (state is KhatmahProgressFailure) {
+          return _statusBar(
+            context,
+            'Progress was not saved',
+            Icons.error_outline_rounded,
+            onRetry: resolvedCubit!.retryLastProgress,
+          );
+        }
+        final plan = switch (state) {
+          final KhatmahActive active => active.plan,
+          final KhatmahWirdCompleted completed => completed.plan,
+          _ => null,
+        };
+        if (plan == null) return const SizedBox.shrink();
         final isArabic = context.isArabic;
         final isDark = context.isDark;
         final gold = isDark ? AppColors.primaryLight : AppColors.primary;
@@ -54,12 +70,19 @@ class KhatmahReaderSessionBar extends StatelessWidget {
 
         // Calculate progress within today's wird
         int wirdIndex;
-        if (current < state.wirdStartPage) {
+        final wird = state is KhatmahActive
+            ? state
+            : KhatmahActive(
+                plan: plan,
+                wirdStartPage: plan.currentPage + 1,
+                wirdEndPage: plan.currentPage + plan.targetPagesPerDay,
+              );
+        if (current < wird.wirdStartPage) {
           wirdIndex = 1;
-        } else if (current >= state.wirdEndPage) {
+        } else if (current >= wird.wirdEndPage) {
           wirdIndex = dailyTarget;
         } else {
-          wirdIndex = (current - state.wirdStartPage + 1).clamp(1, dailyTarget);
+          wirdIndex = (current - wird.wirdStartPage + 1).clamp(1, dailyTarget);
         }
 
         final pageNumStr = isArabic
@@ -81,8 +104,9 @@ class KhatmahReaderSessionBar extends StatelessWidget {
         final hasDedication = plan.dedication.isDedicated && hasRecipient;
         final recipient = plan.dedication.recipientName?.trim() ?? '';
         final dedicationPrefix = isArabic ? 'إهداء: ' : 'Dedicated to: ';
-        final dedicationText =
-            hasDedication ? '$dedicationPrefix$recipient' : null;
+        final dedicationText = hasDedication
+            ? '$dedicationPrefix$recipient'
+            : null;
 
         return Container(
           margin: const EdgeInsets.fromLTRB(12, 4, 12, 4),
@@ -90,10 +114,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
           decoration: BoxDecoration(
             color: bg.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-            border: Border.all(
-              color: gold.withValues(alpha: 0.28),
-              width: 1,
-            ),
+            border: Border.all(color: gold.withValues(alpha: 0.28), width: 1),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.05),
@@ -104,11 +125,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(
-                Icons.auto_stories_rounded,
-                size: 16,
-                color: gold,
-              ),
+              Icon(Icons.auto_stories_rounded, size: 16, color: gold),
               const SizedBox(width: AppSpacing.sm),
               Expanded(
                 child: Column(
@@ -164,7 +181,8 @@ class KhatmahReaderSessionBar extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.xs),
               TextButton.icon(
-                onPressed: onExit ??
+                onPressed:
+                    onExit ??
                     () {
                       if (context.canPop()) {
                         context.pop();
@@ -172,11 +190,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
                         context.go('/');
                       }
                     },
-                icon: Icon(
-                  Icons.exit_to_app_rounded,
-                  size: 14,
-                  color: gold,
-                ),
+                icon: Icon(Icons.exit_to_app_rounded, size: 14, color: gold),
                 label: Text(
                   isArabic ? 'حفظ وخروج' : 'Save & exit',
                   style: AppTypography.labelSmall.copyWith(
@@ -185,8 +199,10 @@ class KhatmahReaderSessionBar extends StatelessWidget {
                   ),
                 ),
                 style: TextButton.styleFrom(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
@@ -195,6 +211,36 @@ class KhatmahReaderSessionBar extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _statusBar(
+    BuildContext context,
+    String message,
+    IconData icon, {
+    VoidCallback? onRetry,
+  }) {
+    final isDark = context.isDark;
+    final color = isDark ? AppColors.primaryLight : AppColors.primary;
+    return Semantics(
+      label: message,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: (isDark ? AppColors.darkSurface : AppColors.lightSurface),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(child: Text(message, style: AppTypography.bodySmall)),
+            if (onRetry != null)
+              TextButton(onPressed: onRetry, child: const Text('Retry')),
+          ],
+        ),
+      ),
     );
   }
 }

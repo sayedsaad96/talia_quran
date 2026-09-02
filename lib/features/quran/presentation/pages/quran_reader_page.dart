@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/services/quran_reciter.dart';
@@ -33,6 +34,7 @@ import '../widgets/quran_floating_audio_player.dart';
 import '../widgets/quran_page_font_guard.dart';
 import '../widgets/reciter_selector_sheet.dart';
 import '../../../khatmah/domain/entities/khatmah_plan.dart';
+import '../../../khatmah/domain/entities/khatmah_reading_result.dart';
 import '../../../khatmah/presentation/cubits/khatmah_cubit.dart';
 import '../../../khatmah/presentation/widgets/khatmah_reader_session_bar.dart';
 
@@ -64,11 +66,13 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   SurahDetailCubit? _surahDetailCubit;
   Timer? _readTimer;
   Timer? _readConfirmedFeedbackTimer;
+  StreamSubscription<KhatmahState>? _khatmahSubscription;
   QuranPageDetail? _currentDetail;
   int? _currentPageNumber;
   bool _showLongPressHint = false;
   bool _showReadConfirmedFeedback = false;
   bool _isFocusMode = false;
+  bool _hasNavigatedToCompletion = false;
 
   final QuranReadConfirmationGate _readConfirmationGate =
       QuranReadConfirmationGate();
@@ -93,6 +97,12 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
       }
     }
 
+    _khatmahSubscription = _khatmahCubit?.stream.listen((state) {
+      if (mounted) {
+        _handleKhatmahState(context, state);
+      }
+    });
+
     if (widget.pageNumber != null) {
       final initialPage = _normalizePageNumber(widget.pageNumber!);
       _openAtPage(initialPage);
@@ -115,6 +125,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   void dispose() {
     _readTimer?.cancel();
     _readConfirmedFeedbackTimer?.cancel();
+    _khatmahSubscription?.cancel();
     _pageController?.dispose();
     _surahDetailCubit?.close();
     _quranPageCubit.close();
@@ -173,6 +184,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
 
   void _showReadConfirmed() {
     _readConfirmedFeedbackTimer?.cancel();
+    _khatmahSubscription?.cancel();
     if (mounted) {
       setState(() => _showReadConfirmedFeedback = true);
     }
@@ -203,12 +215,43 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
       return;
     }
     _readConfirmationGate.markPending(pageNumber);
-    unawaited(
-      context.read<QuranPageCubit>().confirmRead(
-            pageNumber,
-            readerMode: widget.readerMode,
+    unawaited(_confirmThenRecordKhatmah(pageNumber));
+  }
+
+  Future<void> _confirmThenRecordKhatmah(int pageNumber) async {
+    final confirmed = await _quranPageCubit.confirmRead(pageNumber);
+    if (!confirmed) return;
+    if (widget.readerMode == QuranReaderMode.khatmah) {
+      await _khatmahCubit?.recordDigitalPage(pageNumber);
+    }
+  }
+
+  void _handleKhatmahState(BuildContext context, KhatmahState state) {
+    if (state is KhatmahProgressFailure) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+            'Unable to save Khatmah progress. Please try again.',
           ),
-    );
+          action: SnackBarAction(
+            label: 'Retry',
+            onPressed: () => _khatmahCubit?.retryLastProgress(),
+          ),
+        ),
+      );
+      return;
+    }
+    if (state is KhatmahCompleted && !_hasNavigatedToCompletion) {
+      _hasNavigatedToCompletion = true;
+      context.go(
+        AppRoutes.khatmahCompletion,
+        extra: KhatmahReadingResult(
+          plan: state.plan,
+          historyEntry: state.historyEntry,
+          newlyCompletedPages: const {},
+        ),
+      );
+    }
   }
 
   void _startReadTimer(QuranPageDetail detail, BuildContext context) {
@@ -539,10 +582,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     );
 
     if (_khatmahCubit != null) {
-      return BlocProvider.value(
-        value: _khatmahCubit!,
-        child: content,
-      );
+      return BlocProvider.value(value: _khatmahCubit!, child: content);
     }
     return content;
   }

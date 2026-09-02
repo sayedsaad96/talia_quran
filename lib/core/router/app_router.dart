@@ -18,6 +18,7 @@ import '../../features/quran/presentation/pages/quran_reader_page.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../../features/khatmah/domain/entities/khatmah_dedication.dart';
 import '../../features/khatmah/domain/entities/khatmah_plan.dart';
+import '../../features/khatmah/domain/entities/khatmah_reading_result.dart';
 import '../../features/khatmah/presentation/pages/khatm_dua_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_completion_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_dashboard_page.dart';
@@ -520,11 +521,15 @@ abstract class AppRouter {
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.khatmahCompletion,
+        redirect: (context, state) {
+          final result = state.extra;
+          return result is KhatmahReadingResult && result.completed
+              ? null
+              : AppRoutes.home;
+        },
         builder: (context, state) {
-          final plan = state.extra is KhatmahPlan
-              ? state.extra as KhatmahPlan
-              : null;
-          return KhatmahCompletionPage(plan: plan);
+          final result = state.extra! as KhatmahReadingResult;
+          return KhatmahCompletionPage(plan: result.plan);
         },
       ),
       GoRoute(

@@ -33,13 +33,12 @@ import 'package:talia_quran/features/khatmah/data/repositories/khatmah_repositor
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_scheduling_engine.dart';
-import 'package:talia_quran/features/khatmah/domain/usecases/complete_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/create_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/get_khatm_dua_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
-import 'package:talia_quran/features/khatmah/domain/usecases/update_khatmah_progress_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatm_dua_cubit.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_cubit.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_setup_cubit.dart';
@@ -161,8 +160,7 @@ void main() {
   late KhatmahRepositoryImpl khatmahRepository;
   late CreateKhatmahUsecase createKhatmahUsecase;
   late GetActiveKhatmahUsecase getActiveKhatmahUsecase;
-  late UpdateKhatmahProgressUsecase updateKhatmahProgressUsecase;
-  late CompleteKhatmahUsecase completeKhatmahUsecase;
+  late RecordKhatmahReadingUsecase recordKhatmahReadingUsecase;
   late PauseResumeKhatmahUsecase pauseResumeKhatmahUsecase;
   late DeleteKhatmahUsecase deleteKhatmahUsecase;
   late KhatmDuaDatasource khatmDuaDatasource;
@@ -204,9 +202,9 @@ void main() {
     khatmahRepository = KhatmahRepositoryImpl(khatmahDatasource);
     createKhatmahUsecase = CreateKhatmahUsecase(khatmahRepository);
     getActiveKhatmahUsecase = GetActiveKhatmahUsecase(khatmahRepository);
-    updateKhatmahProgressUsecase =
-        UpdateKhatmahProgressUsecase(khatmahRepository);
-    completeKhatmahUsecase = CompleteKhatmahUsecase(khatmahRepository);
+    recordKhatmahReadingUsecase = RecordKhatmahReadingUsecase(
+      khatmahRepository,
+    );
     pauseResumeKhatmahUsecase = PauseResumeKhatmahUsecase(khatmahRepository);
     deleteKhatmahUsecase = DeleteKhatmahUsecase(khatmahRepository);
 
@@ -229,32 +227,41 @@ void main() {
     mockSaveRead = MockSaveReadPageUsecase();
     mockStreak = MockStreakService();
 
-    when(() => mockGetProgress.call())
-        .thenAnswer((_) async => const Right(initialOverallProgress));
-    when(() => mockGetQuranPage.call(any()))
-        .thenAnswer((_) async => const Right(testQuranPageDetail));
-    when(() => mockGetCustomPlan.call()).thenAnswer((_) async => const Right(null));
-    when(() => mockMemRepo.getMemorizationProfile())
-        .thenAnswer((_) async => Right(MemorizationProfile.empty()));
-    when(() => mockMemRepo.getAllReviewRecords(scope: any(named: 'scope')))
-        .thenAnswer((_) async => const Right([]));
+    when(
+      () => mockGetProgress.call(),
+    ).thenAnswer((_) async => const Right(initialOverallProgress));
+    when(
+      () => mockGetQuranPage.call(any()),
+    ).thenAnswer((_) async => const Right(testQuranPageDetail));
+    when(
+      () => mockGetCustomPlan.call(),
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      () => mockMemRepo.getMemorizationProfile(),
+    ).thenAnswer((_) async => Right(MemorizationProfile.empty()));
+    when(
+      () => mockMemRepo.getAllReviewRecords(scope: any(named: 'scope')),
+    ).thenAnswer((_) async => const Right([]));
     when(() => mockGetHeatmap.call()).thenAnswer(
-      (_) async => ActivityHeatmapData(
-        countsByDay: const {},
-        startDate: DateTime.now(),
-      ),
+      (_) async =>
+          ActivityHeatmapData(countsByDay: const {}, startDate: DateTime.now()),
     );
-    when(() => mockPathResolver.changes).thenAnswer((_) => const Stream.empty());
-    when(() => mockGetCoachRecommendation.call())
-        .thenAnswer((_) async => const Right(null));
+    when(
+      () => mockPathResolver.changes,
+    ).thenAnswer((_) => const Stream.empty());
+    when(
+      () => mockGetCoachRecommendation.call(),
+    ).thenAnswer((_) async => const Right(null));
 
-    when(() => mockQuranRepo.getQuranPage(any()))
-        .thenAnswer((_) async => const Right(testQuranPageDetail));
-    when(() => mockSaveRead.call(any()))
-        .thenAnswer((_) async => const Right(null));
-    when(() => mockStreak.recordActivity()).thenAnswer(
-      (_) async => const StreakResult.sameDay(),
-    );
+    when(
+      () => mockQuranRepo.getQuranPage(any()),
+    ).thenAnswer((_) async => const Right(testQuranPageDetail));
+    when(
+      () => mockSaveRead.call(any()),
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      () => mockStreak.recordActivity(),
+    ).thenAnswer((_) async => const StreakResult.sameDay());
 
     reciterService = QuranReciterService(prefs);
     playerService = QuranContinuousPlayerService(
@@ -270,26 +277,18 @@ void main() {
       ..registerSingleton<QuranReciterService>(reciterService)
       ..registerSingleton<AuthCubit>(_FakeAuthCubit())
       ..registerSingleton<GetActiveKhatmahUsecase>(getActiveKhatmahUsecase)
-      ..registerSingleton<UpdateKhatmahProgressUsecase>(
-        updateKhatmahProgressUsecase,
+      ..registerSingleton<RecordKhatmahReadingUsecase>(
+        recordKhatmahReadingUsecase,
       )
-      ..registerSingleton<CompleteKhatmahUsecase>(completeKhatmahUsecase)
       ..registerSingleton<PauseResumeKhatmahUsecase>(pauseResumeKhatmahUsecase)
       ..registerSingleton<DeleteKhatmahUsecase>(deleteKhatmahUsecase)
       ..registerFactory<QuranPageCubit>(
-        () => QuranPageCubit(
-          mockQuranRepo,
-          mockSaveRead,
-          mockStreak,
-          updateKhatmahProgressUsecase,
-          getActiveKhatmahUsecase,
-        ),
+        () => QuranPageCubit(mockQuranRepo, mockSaveRead, mockStreak),
       )
       ..registerFactory<KhatmahCubit>(
         () => KhatmahCubit(
           getActiveKhatmahUsecase,
-          updateKhatmahProgressUsecase,
-          completeKhatmahUsecase,
+          recordKhatmahReadingUsecase,
           pauseResumeKhatmahUsecase,
           deleteKhatmahUsecase,
         ),
@@ -322,8 +321,7 @@ void main() {
   }
 
   group('Complete End-to-End Quran Khatmah Journey', () {
-    test(
-        'full lifecycle: setup plan with dedication -> isolated storage -> '
+    test('full lifecycle: setup plan with dedication -> isolated storage -> '
         'surfaced on home -> read in khatmah mode (no restorableLocation) -> '
         'read in free mode (updates restorableLocation, no khatmah progress) -> '
         'complete page 604 -> archive to history -> generate KR- code -> '
@@ -342,10 +340,7 @@ void main() {
         customNote: 'رحمها الله وأسكنها فسيح جناته',
       );
 
-      await setupCubit.createPlan(
-        pagesPerDay: 4,
-        dedication: dedication,
-      );
+      await setupCubit.createPlan(pagesPerDay: 4, dedication: dedication);
 
       expect(setupCubit.state, isA<KhatmahSetupDone>());
       final createdPlan = (setupCubit.state as KhatmahSetupDone).plan;
@@ -356,7 +351,10 @@ void main() {
       expect(createdPlan.status, equals(KhatmahStatus.active));
       expect(createdPlan.dedication.isDedicated, isTrue);
       expect(createdPlan.dedication.recipientName, equals('جدتي الغالية'));
-      expect(createdPlan.dedication.condition, equals(DedicationCondition.deceased));
+      expect(
+        createdPlan.dedication.condition,
+        equals(DedicationCondition.deceased),
+      );
       await setupCubit.close();
 
       // Verify isolated storage in SharedPreferences
@@ -396,15 +394,21 @@ void main() {
         mockQuranRepo,
         mockSaveRead,
         mockStreak,
-        updateKhatmahProgressUsecase,
-        getActiveKhatmahUsecase,
       );
 
       await quranPageCubit.loadPage(1);
       expect(quranPageCubit.state, isA<QuranPageLoaded>());
 
       // User confirms reading page 1 in Khatmah mode
-      await quranPageCubit.confirmRead(1, readerMode: QuranReaderMode.khatmah);
+      expect(await quranPageCubit.confirmRead(1), isTrue);
+      final readerKhatmahCubit = KhatmahCubit(
+        getActiveKhatmahUsecase,
+        recordKhatmahReadingUsecase,
+        pauseResumeKhatmahUsecase,
+        deleteKhatmahUsecase,
+      );
+      await readerKhatmahCubit.load();
+      await readerKhatmahCubit.recordDigitalPage(1);
 
       // Verify khatmah progress was updated in repository / datasource
       final activePlanAfterRead = await getActiveKhatmahUsecase();
@@ -423,10 +427,13 @@ void main() {
 
       // In free mode, the reader page records its restorable location
       await appSessionService.saveLocation('/quran/page/5');
-      await quranPageCubit.confirmRead(5, readerMode: QuranReaderMode.free);
+      expect(await quranPageCubit.confirmRead(5), isTrue);
 
       // Verify AppSessionService location was updated
-      expect(appSessionService.getLastRestorableLocation(), equals('/quran/page/5'));
+      expect(
+        appSessionService.getLastRestorableLocation(),
+        equals('/quran/page/5'),
+      );
 
       // Verify Khatmah plan currentPage was NOT modified by free mode reading
       final activePlanAfterFreeRead = await getActiveKhatmahUsecase();
@@ -440,35 +447,27 @@ void main() {
       //          to history, generates KR- certificate award code, loads
       //          authentic du'a, and clears active plan
       // ───────────────────────────────────────────────────────────────────────
-      await khatmahRepository.updatePlan(
-        activePlanAfterFreeRead.recordThroughPage(
-          KhatmahSchedulingEngine.totalPages - 1,
-        ),
-      );
-
       final khatmahCubit = KhatmahCubit(
         getActiveKhatmahUsecase,
-        updateKhatmahProgressUsecase,
-        completeKhatmahUsecase,
+        recordKhatmahReadingUsecase,
         pauseResumeKhatmahUsecase,
         deleteKhatmahUsecase,
       );
-
       await khatmahCubit.load();
       expect(khatmahCubit.state, isA<KhatmahActive>());
-      final currentKhatmahState = khatmahCubit.state as KhatmahActive;
-      expect(
-        currentKhatmahState.plan.currentPage,
-        equals(KhatmahSchedulingEngine.totalPages - 1),
-      );
 
-      // Advance reading through remaining pages up to final page 604
-      await khatmahCubit.advancePage(604);
+      // Explicit digital coverage is required; a later page never fills gaps.
+      for (var page = 2; page <= KhatmahSchedulingEngine.totalPages; page++) {
+        await khatmahCubit.recordDigitalPage(page);
+      }
 
       // Verify KhatmahCompleted state emitted
       expect(khatmahCubit.state, isA<KhatmahCompleted>());
       final completedState = khatmahCubit.state as KhatmahCompleted;
-      expect(completedState.plan.currentPage, equals(KhatmahSchedulingEngine.totalPages));
+      expect(
+        completedState.plan.currentPage,
+        equals(KhatmahSchedulingEngine.totalPages),
+      );
       expect(completedState.plan.status, equals(KhatmahStatus.completed));
       expect(completedState.plan.title, equals('جدتي الغالية'));
 
@@ -519,7 +518,10 @@ void main() {
         'جدتي الغالية',
       );
       expect(insert, contains('جدتي الغالية'));
-      expect(insert, contains('اللَّهُمَّ اغْفِرْ لِعَبْدِكَ جدتي الغالية وَارْحَمْهُ'));
+      expect(
+        insert,
+        contains('اللَّهُمَّ اغْفِرْ لِعَبْدِكَ جدتي الغالية وَارْحَمْهُ'),
+      );
       await duaCubit.close();
 
       // ───────────────────────────────────────────────────────────────────────
@@ -543,164 +545,168 @@ void main() {
       final certJson = certificate.toJson();
       expect(certJson['type'], equals('khatmahReading'));
       final restoredCert = CertificateAward.fromJson(certJson);
-      expect(restoredCert.verificationCode, equals(certificate.verificationCode));
+      expect(
+        restoredCert.verificationCode,
+        equals(certificate.verificationCode),
+      );
       expect(restoredCert, equals(certificate));
     });
   });
 
   group('Widget and UI Level Integration', () {
     testWidgets(
-        'Home screen renders KhatmahHeroCard when active plan exists, and hides it when null',
-        (tester) async {
-      final activePlan = KhatmahPlan(
-        id: 'widget-khatmah-1',
-        title: 'ختمة رمضان المبارك',
-        targetPagesPerDay: 4,
-        targetDays: 151,
-        startDate: DateTime(2026, 1, 1),
-        expectedEndDate: DateTime(2026, 6, 1),
-        completedPages: {for (var page = 1; page <= 12; page++) page},
-        status: KhatmahStatus.active,
-        dedication: const KhatmahDedication(
-          isDedicated: true,
-          recipientName: 'والدي العزيز',
-        ),
-      );
+      'Home screen renders KhatmahHeroCard when active plan exists, and hides it when null',
+      (tester) async {
+        final activePlan = KhatmahPlan(
+          id: 'widget-khatmah-1',
+          title: 'ختمة رمضان المبارك',
+          targetPagesPerDay: 4,
+          targetDays: 151,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 6, 1),
+          completedPages: {for (var page = 1; page <= 12; page++) page},
+          status: KhatmahStatus.active,
+          dedication: const KhatmahDedication(
+            isDedicated: true,
+            recipientName: 'والدي العزيز',
+          ),
+        );
 
-      // Pump widget with active khatmah card
-      await tester.pumpWidget(
-        MaterialApp(
-          locale: const Locale('ar'),
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          home: Scaffold(
-            body: SingleChildScrollView(
-              child: Column(
-                children: [
-                  KhatmahHeroCard(
-                    plan: activePlan,
-                    isDark: false,
-                  ),
-                ],
+        // Pump widget with active khatmah card
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: const Locale('ar'),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            home: Scaffold(
+              body: SingleChildScrollView(
+                child: Column(
+                  children: [KhatmahHeroCard(plan: activePlan, isDark: false)],
+                ),
               ),
             ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text('ختمة رمضان المبارك'), findsWidgets);
-      expect(find.byType(KhatmahHeroCard), findsOneWidget);
+        expect(find.text('ختمة رمضان المبارك'), findsWidgets);
+        expect(find.byType(KhatmahHeroCard), findsOneWidget);
 
-      // When activeKhatmah is null, KhatmahHeroCard is not present
-      await tester.pumpWidget(
-        const MaterialApp(
-          locale: Locale('ar'),
-          supportedLocales: AppLocalizations.supportedLocales,
-          localizationsDelegates: [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          home: Scaffold(
-            body: SizedBox.shrink(),
+        // When activeKhatmah is null, KhatmahHeroCard is not present
+        await tester.pumpWidget(
+          const MaterialApp(
+            locale: Locale('ar'),
+            supportedLocales: AppLocalizations.supportedLocales,
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            home: Scaffold(body: SizedBox.shrink()),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      expect(find.text('ختمة رمضان المبارك'), findsNothing);
-      expect(find.byType(KhatmahHeroCard), findsNothing);
-    });
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('ختمة رمضان المبارك'), findsNothing);
+        expect(find.byType(KhatmahHeroCard), findsNothing);
+      },
+    );
 
     testWidgets(
-        'QuranReaderPage: in khatmah mode shows session bar & does not save location; '
-        'in free mode hides session bar & saves location to AppSessionService',
-        (tester) async {
-      final khatmahPlan = KhatmahPlan(
-        id: 'reader-khatmah-1',
-        title: 'Khatmah Reader Integration',
-        targetPagesPerDay: 4,
-        targetDays: 151,
-        startDate: DateTime(2026, 1, 1),
-        expectedEndDate: DateTime(2026, 6, 1),
-        completedPages: {for (var page = 1; page <= 20; page++) page},
-        status: KhatmahStatus.active,
-      );
+      'QuranReaderPage: in khatmah mode shows session bar & does not save location; '
+      'in free mode hides session bar & saves location to AppSessionService',
+      (tester) async {
+        final khatmahPlan = KhatmahPlan(
+          id: 'reader-khatmah-1',
+          title: 'Khatmah Reader Integration',
+          targetPagesPerDay: 4,
+          targetDays: 151,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 6, 1),
+          completedPages: {for (var page = 1; page <= 20; page++) page},
+          status: KhatmahStatus.active,
+        );
 
-      await khatmahRepository.createPlan(khatmahPlan);
-      final activeCubit = KhatmahCubit(
-        getActiveKhatmahUsecase,
-        updateKhatmahProgressUsecase,
-        completeKhatmahUsecase,
-        pauseResumeKhatmahUsecase,
-        deleteKhatmahUsecase,
-      );
-      await activeCubit.load();
+        await khatmahRepository.createPlan(khatmahPlan);
+        final activeCubit = KhatmahCubit(
+          getActiveKhatmahUsecase,
+          recordKhatmahReadingUsecase,
+          pauseResumeKhatmahUsecase,
+          deleteKhatmahUsecase,
+        );
+        await activeCubit.load();
 
-      // Test 1: Khatmah Mode
-      await tester.pumpWidget(
-        MultiBlocProvider(
-          providers: [
-            BlocProvider<QuranAudioPlayerCubit>.value(value: audioPlayerCubit),
-            BlocProvider<KhatmahCubit>.value(value: activeCubit),
-          ],
-          child: const MaterialApp(
-            locale: Locale('ar'),
-            supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
+        // Test 1: Khatmah Mode
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<QuranAudioPlayerCubit>.value(
+                value: audioPlayerCubit,
+              ),
+              BlocProvider<KhatmahCubit>.value(value: activeCubit),
             ],
-            home: QuranReaderPage(
-              pageNumber: 21,
-              readerMode: QuranReaderMode.khatmah,
+            child: const MaterialApp(
+              locale: Locale('ar'),
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              home: QuranReaderPage(
+                pageNumber: 21,
+                readerMode: QuranReaderMode.khatmah,
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.byType(KhatmahReaderSessionBar), findsOneWidget);
-      expect(appSessionService.getLastRestorableLocation(), isNull);
+        expect(find.byType(KhatmahReaderSessionBar), findsOneWidget);
+        expect(appSessionService.getLastRestorableLocation(), isNull);
 
-      // Test 2: Free Mode
-      await tester.pumpWidget(
-        MultiBlocProvider(
-          providers: [
-            BlocProvider<QuranAudioPlayerCubit>.value(value: audioPlayerCubit),
-          ],
-          child: const MaterialApp(
-            locale: Locale('ar'),
-            supportedLocales: AppLocalizations.supportedLocales,
-            localizationsDelegates: [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
+        // Test 2: Free Mode
+        await tester.pumpWidget(
+          MultiBlocProvider(
+            providers: [
+              BlocProvider<QuranAudioPlayerCubit>.value(
+                value: audioPlayerCubit,
+              ),
             ],
-            home: QuranReaderPage(
-              pageNumber: 21,
-              readerMode: QuranReaderMode.free,
+            child: const MaterialApp(
+              locale: Locale('ar'),
+              supportedLocales: AppLocalizations.supportedLocales,
+              localizationsDelegates: [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              home: QuranReaderPage(
+                pageNumber: 21,
+                readerMode: QuranReaderMode.free,
+              ),
             ),
           ),
-        ),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.byType(KhatmahReaderSessionBar), findsNothing);
-      expect(appSessionService.getLastRestorableLocation(), equals('/quran/page/21'));
+        expect(find.byType(KhatmahReaderSessionBar), findsNothing);
+        expect(
+          appSessionService.getLastRestorableLocation(),
+          equals('/quran/page/21'),
+        );
 
-      await activeCubit.close();
-    });
+        await activeCubit.close();
+      },
+    );
   });
 }

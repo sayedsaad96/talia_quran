@@ -106,12 +106,12 @@ import '../../features/auth/presentation/cubits/auth_cubit.dart';
 import '../../features/khatmah/data/datasources/khatmah_local_datasource.dart';
 import '../../features/khatmah/data/repositories/khatmah_repository_impl.dart';
 import '../../features/khatmah/domain/repositories/khatmah_repository.dart';
-import '../../features/khatmah/domain/usecases/complete_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/create_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
+import '../../features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart';
 import '../../features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
-import '../../features/khatmah/domain/usecases/update_khatmah_progress_usecase.dart';
+import '../../features/khatmah/domain/usecases/update_khatmah_schedule_usecase.dart';
 import '../../features/khatmah/presentation/cubits/khatmah_cubit.dart';
 import '../../features/khatmah/presentation/cubits/khatmah_setup_cubit.dart';
 import '../../features/khatmah/data/datasources/khatm_dua_datasource.dart';
@@ -484,11 +484,11 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<CreateKhatmahUsecase>(
     () => CreateKhatmahUsecase(getIt<KhatmahRepository>()),
   );
-  getIt.registerLazySingleton<UpdateKhatmahProgressUsecase>(
-    () => UpdateKhatmahProgressUsecase(getIt<KhatmahRepository>()),
+  getIt.registerLazySingleton<UpdateKhatmahScheduleUsecase>(
+    () => UpdateKhatmahScheduleUsecase(getIt<KhatmahRepository>()),
   );
-  getIt.registerLazySingleton<CompleteKhatmahUsecase>(
-    () => CompleteKhatmahUsecase(getIt<KhatmahRepository>()),
+  getIt.registerLazySingleton<RecordKhatmahReadingUsecase>(
+    () => RecordKhatmahReadingUsecase(getIt<KhatmahRepository>()),
   );
   getIt.registerLazySingleton<PauseResumeKhatmahUsecase>(
     () => PauseResumeKhatmahUsecase(getIt<KhatmahRepository>()),
@@ -519,8 +519,6 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<QuranRepository>(),
       getIt<SaveReadPageUsecase>(),
       getIt<StreakService>(),
-      getIt<UpdateKhatmahProgressUsecase>(),
-      getIt<GetActiveKhatmahUsecase>(),
     ),
   );
   getIt.registerFactory<PracticeSurahCubit>(
@@ -665,10 +663,10 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerFactory<KhatmahCubit>(
     () => KhatmahCubit(
       getIt<GetActiveKhatmahUsecase>(),
-      getIt<UpdateKhatmahProgressUsecase>(),
-      getIt<CompleteKhatmahUsecase>(),
+      getIt<RecordKhatmahReadingUsecase>(),
       getIt<PauseResumeKhatmahUsecase>(),
       getIt<DeleteKhatmahUsecase>(),
+      getIt<UpdateKhatmahScheduleUsecase>(),
     ),
   );
   getIt.registerFactory<KhatmahSetupCubit>(

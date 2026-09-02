@@ -1,14 +1,16 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../../domain/entities/khatmah_history_entry.dart';
 import '../../domain/entities/khatmah_plan.dart';
+import '../../domain/entities/khatmah_reading_result.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
-import '../../domain/usecases/complete_khatmah_usecase.dart';
 import '../../domain/usecases/delete_khatmah_usecase.dart';
 import '../../domain/usecases/get_active_khatmah_usecase.dart';
 import '../../domain/usecases/pause_resume_khatmah_usecase.dart';
-import '../../domain/usecases/update_khatmah_progress_usecase.dart';
+import '../../domain/usecases/record_khatmah_reading_usecase.dart';
+import '../../domain/usecases/update_khatmah_schedule_usecase.dart';
 
-// ─── States ──────────────────────────────────────────────────────────────────
 abstract class KhatmahState extends Equatable {
   const KhatmahState();
 
@@ -43,6 +45,15 @@ class KhatmahActive extends KhatmahState {
   List<Object?> get props => [plan, wirdStartPage, wirdEndPage];
 }
 
+class KhatmahPaused extends KhatmahState {
+  const KhatmahPaused({required this.plan});
+
+  final KhatmahPlan plan;
+
+  @override
+  List<Object?> get props => [plan];
+}
+
 class KhatmahWirdCompleted extends KhatmahState {
   const KhatmahWirdCompleted({required this.plan});
 
@@ -52,120 +63,235 @@ class KhatmahWirdCompleted extends KhatmahState {
   List<Object?> get props => [plan];
 }
 
-class KhatmahCompleted extends KhatmahState {
-  const KhatmahCompleted({required this.plan});
+class KhatmahProgressFailure extends KhatmahState {
+  const KhatmahProgressFailure({
+    required this.plan,
+    required this.pageNumber,
+    required this.source,
+    required this.error,
+  });
 
   final KhatmahPlan plan;
+  final int pageNumber;
+  final KhatmahReadingSource source;
+  final Object error;
 
   @override
-  List<Object?> get props => [plan];
+  List<Object?> get props => [plan, pageNumber, source, error];
 }
 
-// ─── Cubit ───────────────────────────────────────────────────────────────────
+class KhatmahCompleted extends KhatmahState {
+  const KhatmahCompleted({required this.plan, required this.historyEntry});
+
+  final KhatmahPlan plan;
+  final KhatmahHistoryEntry historyEntry;
+
+  @override
+  List<Object?> get props => [plan, historyEntry];
+}
+
 class KhatmahCubit extends Cubit<KhatmahState> {
   KhatmahCubit(
     this._getActive,
-    this._updateProgress,
-    this._complete,
+    this._recordReading,
     this._pauseResume,
-    this._deleteKhatmah,
-  ) : super(const KhatmahInitial());
+    this._deleteKhatmah, [
+    this._updateSchedule,
+  ]) : super(const KhatmahInitial());
 
   final GetActiveKhatmahUsecase _getActive;
-  final UpdateKhatmahProgressUsecase _updateProgress;
-  final CompleteKhatmahUsecase _complete;
+  final RecordKhatmahReadingUsecase _recordReading;
   final PauseResumeKhatmahUsecase _pauseResume;
   final DeleteKhatmahUsecase _deleteKhatmah;
 
+  // Retained only for the existing scheduling-adjustment controls. Reader
+  // progress must use RecordKhatmahReadingUsecase through the methods below.
+  final UpdateKhatmahScheduleUsecase? _updateSchedule;
+
   Future<void> load() async {
     emit(const KhatmahLoading());
-    final plan = await _getActive();
-    if (plan == null || plan.status != KhatmahStatus.active) {
-      emit(const KhatmahNoActivePlan());
-      return;
+    try {
+      final plan = await _getActive();
+      if (plan == null || plan.status == KhatmahStatus.completed) {
+        emit(const KhatmahNoActivePlan());
+      } else if (plan.status == KhatmahStatus.paused) {
+        emit(KhatmahPaused(plan: plan));
+      } else {
+        _emitActive(plan);
+      }
+    } catch (error) {
+      emit(
+        KhatmahProgressFailure(
+          plan: _emptyPlan,
+          pageNumber: 0,
+          source: KhatmahReadingSource.digital,
+          error: error,
+        ),
+      );
     }
-    _emitActive(plan);
   }
 
-  Future<void> advancePage(int pageNumber) async {
+  Future<void> recordDigitalPage(int pageNumber) =>
+      _recordCurrent(pageNumber, KhatmahReadingSource.digital);
+
+  Future<void> recordPhysicalThroughPage(int pageNumber) =>
+      _recordCurrent(pageNumber, KhatmahReadingSource.physical);
+
+  /// Legacy dashboard entry point. A physical logger records an explicit range,
+  /// never a fabricated cursor jump.
+  Future<void> advancePage(int pageNumber) =>
+      recordPhysicalThroughPage(pageNumber);
+
+  Future<void> retryLastProgress() async {
     final current = state;
-    if (current is! KhatmahActive) return;
+    if (current is KhatmahProgressFailure && current.pageNumber > 0) {
+      await _record(current.plan, current.pageNumber, current.source);
+    }
+  }
 
-    final updated = await _updateProgress(current.plan, pageNumber);
+  Future<void> _recordCurrent(
+    int pageNumber,
+    KhatmahReadingSource source,
+  ) async {
+    final plan = switch (state) {
+      final KhatmahActive current => current.plan,
+      final KhatmahWirdCompleted current => current.plan,
+      final KhatmahPaused current => current.plan,
+      final KhatmahProgressFailure current => current.plan,
+      _ => null,
+    };
+    if (plan != null) {
+      await _record(plan, pageNumber, source);
+    }
+  }
 
-    if (updated.currentPage >= KhatmahSchedulingEngine.totalPages) {
-      await _complete(updated);
-      emit(KhatmahCompleted(
-        plan: updated.copyWith(status: KhatmahStatus.completed),
-      ));
+  Future<void> _record(
+    KhatmahPlan plan,
+    int pageNumber,
+    KhatmahReadingSource source,
+  ) async {
+    try {
+      final result = await _recordReading(plan, pageNumber, source: source);
+      _emitReadingResult(result);
+    } catch (error) {
+      emit(
+        KhatmahProgressFailure(
+          plan: plan,
+          pageNumber: pageNumber,
+          source: source,
+          error: error,
+        ),
+      );
+    }
+  }
+
+  void _emitReadingResult(KhatmahReadingResult result) {
+    final history = result.historyEntry;
+    if (history != null) {
+      emit(KhatmahCompleted(plan: result.plan, historyEntry: history));
       return;
     }
-
-    if (pageNumber >= current.wirdEndPage) {
-      emit(KhatmahWirdCompleted(plan: updated));
-      return;
+    final wird = KhatmahSchedulingEngine.todaysWird(
+      result.plan.currentPage,
+      result.plan.targetPagesPerDay,
+    );
+    if (result.plan.currentPage >= wird.endPage) {
+      emit(KhatmahWirdCompleted(plan: result.plan));
+    } else {
+      _emitActive(result.plan);
     }
-
-    _emitActive(updated);
   }
 
   Future<void> pause() async {
     final current = state;
     if (current is! KhatmahActive) return;
-    await _pauseResume.pause(current.plan);
-    emit(const KhatmahNoActivePlan());
+    try {
+      final paused = await _pauseResume.pause(current.plan);
+      emit(KhatmahPaused(plan: paused));
+    } catch (error) {
+      emit(
+        KhatmahProgressFailure(
+          plan: current.plan,
+          pageNumber: 0,
+          source: KhatmahReadingSource.digital,
+          error: error,
+        ),
+      );
+    }
   }
 
   Future<void> resume() async {
-    final plan = await _getActive();
-    if (plan != null && plan.status == KhatmahStatus.paused) {
-      final resumed = await _pauseResume.resume(plan);
-      _emitActive(resumed);
-      return;
+    try {
+      final plan = await _getActive();
+      if (plan != null && plan.status == KhatmahStatus.paused) {
+        _emitActive(await _pauseResume.resume(plan));
+      } else {
+        await load();
+      }
+    } catch (error) {
+      final plan = state is KhatmahPaused
+          ? (state as KhatmahPaused).plan
+          : _emptyPlan;
+      emit(
+        KhatmahProgressFailure(
+          plan: plan,
+          pageNumber: 0,
+          source: KhatmahReadingSource.digital,
+          error: error,
+        ),
+      );
     }
-    await load();
   }
 
-  Future<void> calmAdjustment() async {
-    final current = state;
-    if (current is! KhatmahActive) return;
-    final plan = current.plan;
-    final remaining = plan.remainingPages;
+  Future<void> calmAdjustment() => _adjustSchedule((plan) {
     final days = KhatmahSchedulingEngine.calculateDaysFromPages(
-      remaining,
+      plan.remainingPages,
       plan.targetPagesPerDay,
     );
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final newEndDate = KhatmahSchedulingEngine.calculateEndDate(today, days);
-    final updated = plan.copyWith(
-      expectedEndDate: newEndDate,
+    return plan.copyWith(
       targetDays: days,
+      expectedEndDate: KhatmahSchedulingEngine.calculateEndDate(today, days),
     );
-    await _updateProgress(updated, plan.currentPage);
-    _emitActive(updated);
-  }
+  });
 
-  Future<void> mildCompensation([int extraPages = 1]) async {
-    final current = state;
-    if (current is! KhatmahActive) return;
-    final plan = current.plan;
-    final newDaily = plan.targetPagesPerDay + extraPages;
-    final remaining = plan.remainingPages;
+  Future<void> mildCompensation([int extraPages = 1]) => _adjustSchedule((
+    plan,
+  ) {
+    final target = plan.targetPagesPerDay + extraPages;
     final days = KhatmahSchedulingEngine.calculateDaysFromPages(
-      remaining,
-      newDaily,
+      plan.remainingPages,
+      target,
     );
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final newEndDate = KhatmahSchedulingEngine.calculateEndDate(today, days);
-    final updated = plan.copyWith(
-      targetPagesPerDay: newDaily,
-      expectedEndDate: newEndDate,
+    return plan.copyWith(
+      targetPagesPerDay: target,
       targetDays: days,
+      expectedEndDate: KhatmahSchedulingEngine.calculateEndDate(today, days),
     );
-    await _updateProgress(updated, plan.currentPage);
-    _emitActive(updated);
+  });
+
+  Future<void> _adjustSchedule(
+    KhatmahPlan Function(KhatmahPlan) transform,
+  ) async {
+    final current = state;
+    if (current is! KhatmahActive || _updateSchedule == null) return;
+    final adjusted = transform(current.plan);
+    try {
+      await _updateSchedule(adjusted);
+      _emitActive(adjusted);
+    } catch (error) {
+      emit(
+        KhatmahProgressFailure(
+          plan: current.plan,
+          pageNumber: 0,
+          source: KhatmahReadingSource.digital,
+          error: error,
+        ),
+      );
+    }
   }
 
   Future<void> abandonPlan() async {
@@ -178,10 +304,23 @@ class KhatmahCubit extends Cubit<KhatmahState> {
       plan.currentPage,
       plan.targetPagesPerDay,
     );
-    emit(KhatmahActive(
-      plan: plan,
-      wirdStartPage: wird.startPage,
-      wirdEndPage: wird.endPage,
-    ));
+    emit(
+      KhatmahActive(
+        plan: plan,
+        wirdStartPage: wird.startPage,
+        wirdEndPage: wird.endPage,
+      ),
+    );
   }
+
+  static final KhatmahPlan _emptyPlan = KhatmahPlan(
+    id: '',
+    title: '',
+    targetPagesPerDay: 1,
+    targetDays: 1,
+    startDate: DateTime(2000),
+    expectedEndDate: DateTime(2000),
+    completedPages: const {},
+    status: KhatmahStatus.active,
+  );
 }
