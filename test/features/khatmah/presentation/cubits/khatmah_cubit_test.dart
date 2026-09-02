@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
@@ -146,6 +148,45 @@ void main() {
     verify(
       () => recordReading(activePlan, 2, source: KhatmahReadingSource.digital),
     ).called(2);
+    await cubit.close();
+  });
+
+  test(
+    'paused plans reject digital progress without calling storage',
+    () async {
+      final paused = activePlan.copyWith(status: KhatmahStatus.paused);
+      when(() => getActive()).thenAnswer((_) async => paused);
+      final cubit = buildCubit();
+      await cubit.load();
+      await cubit.recordDigitalPage(2);
+      expect(cubit.state, KhatmahPaused(plan: paused));
+      verifyNever(
+        () => recordReading(paused, 2, source: KhatmahReadingSource.digital),
+      );
+      await cubit.close();
+    },
+  );
+
+  test('concurrent record requests persist only once', () async {
+    final completer = Completer<KhatmahReadingResult>();
+    when(() => getActive()).thenAnswer((_) async => activePlan);
+    when(
+      () => recordReading(activePlan, 2, source: KhatmahReadingSource.digital),
+    ).thenAnswer((_) => completer.future);
+    final cubit = buildCubit();
+    await cubit.load();
+    final first = cubit.recordDigitalPage(2);
+    final second = cubit.recordDigitalPage(2);
+    verify(
+      () => recordReading(activePlan, 2, source: KhatmahReadingSource.digital),
+    ).called(1);
+    completer.complete(
+      KhatmahReadingResult(
+        plan: activePlan.recordPage(2),
+        newlyCompletedPages: const {2},
+      ),
+    );
+    await Future.wait([first, second]);
     await cubit.close();
   });
 }

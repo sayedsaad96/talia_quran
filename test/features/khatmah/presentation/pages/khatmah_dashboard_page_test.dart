@@ -5,25 +5,35 @@ import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_scheduling_engine.dart';
-import 'package:talia_quran/features/khatmah/domain/usecases/complete_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
-import 'package:talia_quran/features/khatmah/domain/usecases/update_khatmah_progress_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/update_khatmah_schedule_usecase.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_cubit.dart';
 import 'package:talia_quran/features/khatmah/presentation/pages/khatmah_dashboard_page.dart';
 
-class MockGetActiveKhatmahUsecase extends Mock implements GetActiveKhatmahUsecase {}
-class MockUpdateKhatmahProgressUsecase extends Mock implements UpdateKhatmahProgressUsecase {}
-class MockCompleteKhatmahUsecase extends Mock implements CompleteKhatmahUsecase {}
-class MockPauseResumeKhatmahUsecase extends Mock implements PauseResumeKhatmahUsecase {}
+class MockGetActiveKhatmahUsecase extends Mock
+    implements GetActiveKhatmahUsecase {}
+
+class MockRecordKhatmahReadingUsecase extends Mock
+    implements RecordKhatmahReadingUsecase {}
+
+class MockUpdateKhatmahScheduleUsecase extends Mock
+    implements UpdateKhatmahScheduleUsecase {}
+
+class MockPauseResumeKhatmahUsecase extends Mock
+    implements PauseResumeKhatmahUsecase {}
+
 class MockDeleteKhatmahUsecase extends Mock implements DeleteKhatmahUsecase {}
+
 class FakeKhatmahPlan extends Fake implements KhatmahPlan {}
 
 void main() {
   late MockGetActiveKhatmahUsecase mockGetActive;
-  late MockUpdateKhatmahProgressUsecase mockUpdateProgress;
-  late MockCompleteKhatmahUsecase mockComplete;
+  late MockRecordKhatmahReadingUsecase mockRecordReading;
+  late MockUpdateKhatmahScheduleUsecase mockUpdateSchedule;
   late MockPauseResumeKhatmahUsecase mockPauseResume;
   late MockDeleteKhatmahUsecase mockDelete;
 
@@ -51,19 +61,19 @@ void main() {
 
   setUp(() {
     mockGetActive = MockGetActiveKhatmahUsecase();
-    mockUpdateProgress = MockUpdateKhatmahProgressUsecase();
-    mockComplete = MockCompleteKhatmahUsecase();
+    mockRecordReading = MockRecordKhatmahReadingUsecase();
+    mockUpdateSchedule = MockUpdateKhatmahScheduleUsecase();
     mockPauseResume = MockPauseResumeKhatmahUsecase();
     mockDelete = MockDeleteKhatmahUsecase();
   });
 
   KhatmahCubit buildCubit() => KhatmahCubit(
-        mockGetActive,
-        mockUpdateProgress,
-        mockComplete,
-        mockPauseResume,
-        mockDelete,
-      );
+    mockGetActive,
+    mockRecordReading,
+    mockPauseResume,
+    mockDelete,
+    mockUpdateSchedule,
+  );
 
   Widget buildWidget({
     required KhatmahCubit cubit,
@@ -82,92 +92,125 @@ void main() {
             final page = state.pathParameters['page'];
             final mode = state.uri.queryParameters['mode'];
             onNavigate?.call('/quran/page/$page?mode=$mode');
-            return Scaffold(
-              body: Text('Page: $page, Mode: $mode'),
-            );
+            return Scaffold(body: Text('Page: $page, Mode: $mode'));
           },
         ),
       ],
     );
 
-    return MaterialApp.router(
-      routerConfig: router,
-    );
+    return MaterialApp.router(routerConfig: router);
   }
 
-  testWidgets('renders header with title, dedication badge, and progress gauge', (tester) async {
-    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
-    final cubit = buildCubit();
+  testWidgets(
+    'renders header with title, dedication badge, and progress gauge',
+    (tester) async {
+      when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+      final cubit = buildCubit();
 
-    await tester.pumpWidget(buildWidget(cubit: cubit));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildWidget(cubit: cubit));
+      await tester.pumpAndSettle();
 
-    expect(find.text('ختمة رمضان المبارك'), findsOneWidget);
-    expect(find.textContaining('والدتي الغالية'), findsOneWidget);
-    expect(find.byKey(const Key('khatmah_dashboard_dedication_badge')), findsOneWidget);
-    expect(find.byKey(const Key('khatmah_progress_gauge')), findsOneWidget);
-  });
+      expect(find.text('ختمة رمضان المبارك'), findsOneWidget);
+      expect(find.textContaining('والدتي الغالية'), findsOneWidget);
+      expect(
+        find.byKey(const Key('khatmah_dashboard_dedication_badge')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('khatmah_progress_gauge')), findsOneWidget);
+    },
+  );
 
-  testWidgets('renders today\'s wird and clicking continue reading navigates to reader in khatmah mode', (tester) async {
-    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
-    String? navigatedRoute;
-    final cubit = buildCubit();
+  testWidgets(
+    'renders today\'s wird and clicking continue reading navigates to reader in khatmah mode',
+    (tester) async {
+      when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+      String? navigatedRoute;
+      final cubit = buildCubit();
 
-    await tester.pumpWidget(buildWidget(
-      cubit: cubit,
-      onNavigate: (route) => navigatedRoute = route,
-    ));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(
+        buildWidget(
+          cubit: cubit,
+          onNavigate: (route) => navigatedRoute = route,
+        ),
+      );
+      await tester.pumpAndSettle();
 
-    final wird = KhatmahSchedulingEngine.todaysWird(testPlan.currentPage, testPlan.targetPagesPerDay);
-    // Button to continue reading
-    final continueBtn = find.byKey(const Key('khatmah_dashboard_continue_reading_button'));
-    expect(continueBtn, findsOneWidget);
+      final wird = KhatmahSchedulingEngine.todaysWird(
+        testPlan.currentPage,
+        testPlan.targetPagesPerDay,
+      );
+      // Button to continue reading
+      final continueBtn = find.byKey(
+        const Key('khatmah_dashboard_continue_reading_button'),
+      );
+      expect(continueBtn, findsOneWidget);
 
-    await tester.ensureVisible(continueBtn);
-    await tester.tap(continueBtn);
-    await tester.pumpAndSettle();
+      await tester.ensureVisible(continueBtn);
+      await tester.tap(continueBtn);
+      await tester.pumpAndSettle();
 
-    expect(navigatedRoute, '/quran/page/${wird.startPage}?mode=khatmah');
-  });
+      expect(navigatedRoute, '/quran/page/${wird.startPage}?mode=khatmah');
+    },
+  );
 
-  testWidgets('physical mushaf logger dialog records read page and updates progress', (tester) async {
-    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
-    when(() => mockUpdateProgress(any(), any())).thenAnswer(
-      (inv) async => (inv.positionalArguments[0] as KhatmahPlan).copyWith(
-        currentPage: inv.positionalArguments[1] as int,
-      ),
-    );
-    final cubit = buildCubit();
+  testWidgets(
+    'physical mushaf logger dialog records read page and updates progress',
+    (tester) async {
+      when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+      when(
+        () => mockRecordReading(any(), any(), source: any(named: 'source')),
+      ).thenAnswer((inv) async {
+        final plan = inv.positionalArguments[0] as KhatmahPlan;
+        final page = inv.positionalArguments[1] as int;
+        return KhatmahReadingResult(
+          plan: plan.recordThroughPage(page),
+          newlyCompletedPages: const {},
+        );
+      });
+      final cubit = buildCubit();
 
-    await tester.pumpWidget(buildWidget(cubit: cubit));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildWidget(cubit: cubit));
+      await tester.pumpAndSettle();
 
-    // Tap physical mushaf logger button
-    final logMushafBtn = find.byKey(const Key('khatmah_dashboard_log_mushaf_button'));
-    expect(logMushafBtn, findsOneWidget);
-    await tester.ensureVisible(logMushafBtn);
-    await tester.tap(logMushafBtn);
-    await tester.pumpAndSettle();
+      // Tap physical mushaf logger button
+      final logMushafBtn = find.byKey(
+        const Key('khatmah_dashboard_log_mushaf_button'),
+      );
+      expect(logMushafBtn, findsOneWidget);
+      await tester.ensureVisible(logMushafBtn);
+      await tester.tap(logMushafBtn);
+      await tester.pumpAndSettle();
 
-    // Input page number
-    final pageInput = find.byKey(const Key('khatmah_dashboard_mushaf_page_input'));
-    expect(pageInput, findsOneWidget);
-    await tester.enterText(pageInput, '25');
-    await tester.pumpAndSettle();
+      // Input page number
+      final pageInput = find.byKey(
+        const Key('khatmah_dashboard_mushaf_page_input'),
+      );
+      expect(pageInput, findsOneWidget);
+      await tester.enterText(pageInput, '25');
+      await tester.pumpAndSettle();
 
-    // Tap save
-    final saveBtn = find.byKey(const Key('khatmah_dashboard_mushaf_save_button'));
-    await tester.tap(saveBtn);
-    await tester.pumpAndSettle();
+      // Tap save
+      final saveBtn = find.byKey(
+        const Key('khatmah_dashboard_mushaf_save_button'),
+      );
+      await tester.tap(saveBtn);
+      await tester.pumpAndSettle();
 
-    verify(() => mockUpdateProgress(any(), 25)).called(1);
-  });
+      verify(
+        () =>
+            mockRecordReading(any(), 25, source: KhatmahReadingSource.physical),
+      ).called(1);
+    },
+  );
 
-  testWidgets('pausing khatmah calls cubit.pause() and allows resume', (tester) async {
+  testWidgets('pausing khatmah calls cubit.pause() and allows resume', (
+    tester,
+  ) async {
     when(() => mockGetActive()).thenAnswer((_) async => testPlan);
     final pausedPlan = testPlan.copyWith(status: KhatmahStatus.paused);
-    when(() => mockPauseResume.pause(any())).thenAnswer((_) async => pausedPlan);
+    when(
+      () => mockPauseResume.pause(any()),
+    ).thenAnswer((_) async => pausedPlan);
     when(() => mockPauseResume.resume(any())).thenAnswer((_) async => testPlan);
 
     final cubit = buildCubit();
@@ -176,7 +219,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // Pause button
-    final pauseBtn = find.byKey(const Key('khatmah_dashboard_pause_resume_button'));
+    final pauseBtn = find.byKey(
+      const Key('khatmah_dashboard_pause_resume_button'),
+    );
     expect(pauseBtn, findsOneWidget);
     await tester.ensureVisible(pauseBtn);
     await tester.tap(pauseBtn);
@@ -186,7 +231,9 @@ void main() {
 
     // After pausing, button should allow resuming
     when(() => mockGetActive()).thenAnswer((_) async => pausedPlan);
-    final resumeBtn = find.byKey(const Key('khatmah_dashboard_pause_resume_button'));
+    final resumeBtn = find.byKey(
+      const Key('khatmah_dashboard_pause_resume_button'),
+    );
     expect(resumeBtn, findsOneWidget);
     await tester.ensureVisible(resumeBtn);
     await tester.tap(resumeBtn);
@@ -195,7 +242,9 @@ void main() {
     verify(() => mockPauseResume.resume(any())).called(1);
   });
 
-  testWidgets('abandoning khatmah shows confirmation dialog and calls delete', (tester) async {
+  testWidgets('abandoning khatmah shows confirmation dialog and calls delete', (
+    tester,
+  ) async {
     when(() => mockGetActive()).thenAnswer((_) async => testPlan);
     when(() => mockDelete()).thenAnswer((_) async {});
 
@@ -205,14 +254,18 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap abandon button
-    final abandonBtn = find.byKey(const Key('khatmah_dashboard_abandon_button'));
+    final abandonBtn = find.byKey(
+      const Key('khatmah_dashboard_abandon_button'),
+    );
     expect(abandonBtn, findsOneWidget);
     await tester.ensureVisible(abandonBtn);
     await tester.tap(abandonBtn);
     await tester.pumpAndSettle();
 
     // Confirm in dialog
-    final confirmBtn = find.byKey(const Key('khatmah_dashboard_abandon_confirm_button'));
+    final confirmBtn = find.byKey(
+      const Key('khatmah_dashboard_abandon_confirm_button'),
+    );
     expect(confirmBtn, findsOneWidget);
     await tester.tap(confirmBtn);
     await tester.pumpAndSettle();
@@ -220,31 +273,59 @@ void main() {
     verify(() => mockDelete()).called(1);
   });
 
-  testWidgets('adaptive controls: calm adjustment and mild compensation trigger updates', (tester) async {
-    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
-    when(() => mockUpdateProgress(any(), any())).thenAnswer(
-      (inv) async => inv.positionalArguments[0] as KhatmahPlan,
-    );
+  testWidgets(
+    'adaptive controls: calm adjustment and mild compensation trigger updates',
+    (tester) async {
+      when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+      when(
+        () => mockRecordReading(any(), any(), source: any(named: 'source')),
+      ).thenAnswer((inv) async {
+        final plan = inv.positionalArguments[0] as KhatmahPlan;
+        final page = inv.positionalArguments[1] as int;
+        return KhatmahReadingResult(
+          plan: plan.recordThroughPage(page),
+          newlyCompletedPages: const {},
+        );
+      });
 
-    final cubit = buildCubit();
+      final cubit = buildCubit();
 
-    await tester.pumpWidget(buildWidget(cubit: cubit));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(buildWidget(cubit: cubit));
+      await tester.pumpAndSettle();
 
-    final calmBtn = find.byKey(const Key('khatmah_dashboard_calm_adjustment_button'));
-    expect(calmBtn, findsOneWidget);
-    await tester.ensureVisible(calmBtn);
-    await tester.tap(calmBtn);
-    await tester.pumpAndSettle();
+      final calmBtn = find.byKey(
+        const Key('khatmah_dashboard_calm_adjustment_button'),
+      );
+      expect(calmBtn, findsOneWidget);
+      await tester.ensureVisible(calmBtn);
+      await tester.tap(calmBtn);
+      await tester.pumpAndSettle();
 
-    verify(() => mockUpdateProgress(any(), any())).called(1);
+      verify(
+        () => mockUpdateSchedule(
+          planId: testPlan.id,
+          targetPagesPerDay: any(named: 'targetPagesPerDay'),
+          targetDays: any(named: 'targetDays'),
+          expectedEndDate: any(named: 'expectedEndDate'),
+        ),
+      ).called(1);
 
-    final mildBtn = find.byKey(const Key('khatmah_dashboard_mild_compensation_button'));
-    expect(mildBtn, findsOneWidget);
-    await tester.ensureVisible(mildBtn);
-    await tester.tap(mildBtn);
-    await tester.pumpAndSettle();
+      final mildBtn = find.byKey(
+        const Key('khatmah_dashboard_mild_compensation_button'),
+      );
+      expect(mildBtn, findsOneWidget);
+      await tester.ensureVisible(mildBtn);
+      await tester.tap(mildBtn);
+      await tester.pumpAndSettle();
 
-    verify(() => mockUpdateProgress(any(), any())).called(1);
-  });
+      verify(
+        () => mockUpdateSchedule(
+          planId: testPlan.id,
+          targetPagesPerDay: any(named: 'targetPagesPerDay'),
+          targetDays: any(named: 'targetDays'),
+          expectedEndDate: any(named: 'expectedEndDate'),
+        ),
+      ).called(1);
+    },
+  );
 }

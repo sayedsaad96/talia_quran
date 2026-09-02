@@ -1,15 +1,33 @@
 import '../entities/khatmah_plan.dart';
+import '../entities/khatmah_reading_result.dart';
 import '../repositories/khatmah_repository.dart';
 
-/// Persists schedule-only edits. It deliberately accepts a complete plan rather
-/// than a page number, so reader coverage remains owned by record-reading.
+/// Persists only schedule metadata from the authoritative active plan.
 class UpdateKhatmahScheduleUsecase {
   const UpdateKhatmahScheduleUsecase(this._repository);
 
   final KhatmahRepository _repository;
 
-  Future<KhatmahPlan> call(KhatmahPlan plan) async {
-    await _repository.updatePlan(plan);
-    return plan;
+  Future<KhatmahPlan> call({
+    required String planId,
+    required int targetPagesPerDay,
+    required int targetDays,
+    required DateTime expectedEndDate,
+  }) async {
+    final current = await _repository.getActivePlan();
+    if (current == null ||
+        current.id != planId ||
+        current.status != KhatmahStatus.active) {
+      throw const KhatmahProgressException(
+        'Only the current active Khatmah schedule can be changed.',
+      );
+    }
+    final updated = current.copyWith(
+      targetPagesPerDay: targetPagesPerDay,
+      targetDays: targetDays,
+      expectedEndDate: expectedEndDate,
+    );
+    await _repository.updatePlan(updated);
+    return updated;
   }
 }

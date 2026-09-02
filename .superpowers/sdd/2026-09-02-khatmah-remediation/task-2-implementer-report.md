@@ -37,3 +37,24 @@
 
 - The specified E2E suite still appears to hang after assertions during teardown; the Task 1 report documents the same pre-existing symptom. No timed-out/non-exiting command is reported as passed.
 - Existing broad dashboard fixtures still use the old Cubit constructor and need a follow-up fixture-only migration before running the entire presentation suite.
+
+## Review-fix follow-up
+
+### Implemented
+
+- Paused reader commands now preserve `KhatmahPaused` and never invoke record storage.
+- Khatmah progress writes now have an in-flight guard, cleared in `finally`, so concurrent commands collapse to one durable operation and failures remain retryable.
+- Failure state no longer fabricates an empty plan; it carries the last authoritative plan when one is known.
+- Reader confirmation feedback no longer cancels its Khatmah subscription.
+- Schedule persistence now fetches the active plan and accepts explicit schedule metadata only, preserving coverage and status.
+- Dashboard fixture wiring was migrated to record-reading/schedule-only dependencies.
+
+### RED / GREEN
+
+- RED: focused Cubit test exposed paused commands entering `KhatmahProgressFailure` and two concurrent calls reaching record storage twice.
+- GREEN: `flutter test test/features/khatmah/presentation/cubits/khatmah_cubit_test.dart` — 6 passing.
+- `dart analyze lib/features/khatmah lib/features/quran lib/core/di/injection.dart lib/core/router/app_router.dart` — no issues.
+
+### Remaining concern
+
+- The dashboard runner again did not yield a normal final summary after loading; the broader reader lifecycle interaction and E2E teardown diagnosis need another pass before claiming the full required combined command is green.

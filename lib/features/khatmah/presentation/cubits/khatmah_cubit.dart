@@ -71,7 +71,7 @@ class KhatmahProgressFailure extends KhatmahState {
     required this.error,
   });
 
-  final KhatmahPlan plan;
+  final KhatmahPlan? plan;
   final int pageNumber;
   final KhatmahReadingSource source;
   final Object error;
@@ -107,11 +107,14 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   // Retained only for the existing scheduling-adjustment controls. Reader
   // progress must use RecordKhatmahReadingUsecase through the methods below.
   final UpdateKhatmahScheduleUsecase? _updateSchedule;
+  KhatmahPlan? _lastKnownPlan;
+  bool _isRecording = false;
 
   Future<void> load() async {
     emit(const KhatmahLoading());
     try {
       final plan = await _getActive();
+      _lastKnownPlan = plan ?? _lastKnownPlan;
       if (plan == null || plan.status == KhatmahStatus.completed) {
         emit(const KhatmahNoActivePlan());
       } else if (plan.status == KhatmahStatus.paused) {
@@ -122,7 +125,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     } catch (error) {
       emit(
         KhatmahProgressFailure(
-          plan: _emptyPlan,
+          plan: _lastKnownPlan,
           pageNumber: 0,
           source: KhatmahReadingSource.digital,
           error: error,
@@ -144,8 +147,10 @@ class KhatmahCubit extends Cubit<KhatmahState> {
 
   Future<void> retryLastProgress() async {
     final current = state;
-    if (current is KhatmahProgressFailure && current.pageNumber > 0) {
-      await _record(current.plan, current.pageNumber, current.source);
+    if (current is KhatmahProgressFailure &&
+        current.plan != null &&
+        current.pageNumber > 0) {
+      await _record(current.plan!, current.pageNumber, current.source);
     }
   }
 
@@ -156,7 +161,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     final plan = switch (state) {
       final KhatmahActive current => current.plan,
       final KhatmahWirdCompleted current => current.plan,
-      final KhatmahPaused current => current.plan,
+      final KhatmahPaused _ => null,
       final KhatmahProgressFailure current => current.plan,
       _ => null,
     };
@@ -170,8 +175,11 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     int pageNumber,
     KhatmahReadingSource source,
   ) async {
+    if (_isRecording) return;
+    _isRecording = true;
     try {
       final result = await _recordReading(plan, pageNumber, source: source);
+      _lastKnownPlan = result.plan;
       _emitReadingResult(result);
     } catch (error) {
       emit(
@@ -182,6 +190,8 @@ class KhatmahCubit extends Cubit<KhatmahState> {
           error: error,
         ),
       );
+    } finally {
+      _isRecording = false;
     }
   }
 
@@ -231,7 +241,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     } catch (error) {
       final plan = state is KhatmahPaused
           ? (state as KhatmahPaused).plan
-          : _emptyPlan;
+          : _lastKnownPlan;
       emit(
         KhatmahProgressFailure(
           plan: plan,
@@ -280,7 +290,12 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     if (current is! KhatmahActive || _updateSchedule == null) return;
     final adjusted = transform(current.plan);
     try {
-      await _updateSchedule(adjusted);
+      await _updateSchedule(
+        planId: current.plan.id,
+        targetPagesPerDay: adjusted.targetPagesPerDay,
+        targetDays: adjusted.targetDays,
+        expectedEndDate: adjusted.expectedEndDate,
+      );
       _emitActive(adjusted);
     } catch (error) {
       emit(
@@ -312,15 +327,4 @@ class KhatmahCubit extends Cubit<KhatmahState> {
       ),
     );
   }
-
-  static final KhatmahPlan _emptyPlan = KhatmahPlan(
-    id: '',
-    title: '',
-    targetPagesPerDay: 1,
-    targetDays: 1,
-    startDate: DateTime(2000),
-    expectedEndDate: DateTime(2000),
-    completedPages: const {},
-    status: KhatmahStatus.active,
-  );
 }
