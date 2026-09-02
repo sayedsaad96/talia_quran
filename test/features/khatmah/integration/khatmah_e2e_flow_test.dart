@@ -440,6 +440,12 @@ void main() {
       //          to history, generates KR- certificate award code, loads
       //          authentic du'a, and clears active plan
       // ───────────────────────────────────────────────────────────────────────
+      await khatmahRepository.updatePlan(
+        activePlanAfterFreeRead.recordThroughPage(
+          KhatmahSchedulingEngine.totalPages - 1,
+        ),
+      );
+
       final khatmahCubit = KhatmahCubit(
         getActiveKhatmahUsecase,
         updateKhatmahProgressUsecase,
@@ -451,7 +457,10 @@ void main() {
       await khatmahCubit.load();
       expect(khatmahCubit.state, isA<KhatmahActive>());
       final currentKhatmahState = khatmahCubit.state as KhatmahActive;
-      expect(currentKhatmahState.plan.currentPage, equals(1));
+      expect(
+        currentKhatmahState.plan.currentPage,
+        equals(KhatmahSchedulingEngine.totalPages - 1),
+      );
 
       // Advance reading through remaining pages up to final page 604
       await khatmahCubit.advancePage(604);

@@ -11,8 +11,7 @@ class UpdateKhatmahProgressUsecase {
     int pageNumber, [
     DateTime? lastReadDate,
   ]) async {
-    final updatedPlan = plan.copyWith(
-      currentPage: pageNumber,
+    final updatedPlan = plan.recordPage(pageNumber).copyWith(
       lastReadDate: lastReadDate ?? DateTime.now(),
     );
     await _repository.updatePlan(updatedPlan);

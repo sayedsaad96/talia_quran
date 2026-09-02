@@ -23,14 +23,10 @@ class KhatmahPlan extends Equatable {
     this.lastReadDate,
     this.pausedAt,
   }) : completedPages = Set.unmodifiable(
-         _normalizeCompletedPages(
-           completedPages ?? _legacyCompletedPages(currentPage),
-         ),
+         _normalizeCompletedPages(completedPages ?? const <int>{}),
        ),
        currentPage = _highestContiguousPage(
-         _normalizeCompletedPages(
-           completedPages ?? _legacyCompletedPages(currentPage),
-         ),
+         _normalizeCompletedPages(completedPages ?? const <int>{}),
        );
 
   final String id;
@@ -102,8 +98,7 @@ class KhatmahPlan extends Equatable {
       title: title ?? this.title,
       startPage: startPage ?? this.startPage,
       currentPage: currentPage ?? this.currentPage,
-      completedPages:
-          completedPages ?? (currentPage == null ? this.completedPages : null),
+      completedPages: completedPages ?? this.completedPages,
       targetPagesPerDay: targetPagesPerDay ?? this.targetPagesPerDay,
       targetDays: targetDays ?? this.targetDays,
       startDate: startDate ?? this.startDate,
@@ -133,17 +128,6 @@ class KhatmahPlan extends Equatable {
       expectedEndDate: newExpectedEndDate,
       clearPausedAt: true,
     );
-  }
-
-  static Set<int> _legacyCompletedPages(int currentPage) {
-    return {
-      for (
-        var page = 1;
-        page <= currentPage && page <= KhatmahSchedulingEngine.totalPages;
-        page++
-      )
-        page,
-    };
   }
 
   static Set<int> _normalizeCompletedPages(Iterable<int> pages) {

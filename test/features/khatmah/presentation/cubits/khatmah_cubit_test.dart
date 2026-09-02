@@ -39,7 +39,7 @@ void main() {
     id: 'test-khatmah-1',
     title: 'Ramadan Khatmah',
     startPage: 1,
-    currentPage: 10,
+    completedPages: {for (var page = 1; page <= 10; page++) page},
     targetPagesPerDay: 4,
     targetDays: 151,
     startDate: DateTime(2026, 1, 1),
@@ -157,7 +157,7 @@ void main() {
     blocTest<KhatmahCubit, KhatmahState>(
       'emits updated KhatmahActive when reading within daily wird',
       build: () {
-        final updatedPlan = testPlan.copyWith(currentPage: 12);
+        final updatedPlan = testPlan.recordThroughPage(12);
         when(() => mockGetActive()).thenAnswer((_) async => testPlan);
         when(() => mockUpdateProgress(testPlan, 12))
             .thenAnswer((_) async => updatedPlan);
@@ -175,7 +175,7 @@ void main() {
           wirdEndPage: 14,
         ),
         KhatmahActive(
-          plan: testPlan.copyWith(currentPage: 12),
+          plan: testPlan.recordThroughPage(12),
           wirdStartPage: 13,
           wirdEndPage: 16,
         ),
@@ -188,7 +188,7 @@ void main() {
     blocTest<KhatmahCubit, KhatmahState>(
       'emits KhatmahWirdCompleted when reaching or exceeding daily wird end page',
       build: () {
-        final updatedPlan = testPlan.copyWith(currentPage: 14);
+        final updatedPlan = testPlan.recordThroughPage(14);
         when(() => mockGetActive()).thenAnswer((_) async => testPlan);
         when(() => mockUpdateProgress(testPlan, 14))
             .thenAnswer((_) async => updatedPlan);
@@ -205,7 +205,7 @@ void main() {
           wirdStartPage: 11,
           wirdEndPage: 14,
         ),
-        KhatmahWirdCompleted(plan: testPlan.copyWith(currentPage: 14)),
+        KhatmahWirdCompleted(plan: testPlan.recordThroughPage(14)),
       ],
       verify: (_) {
         verify(() => mockUpdateProgress(testPlan, 14)).called(1);
@@ -216,8 +216,8 @@ void main() {
     blocTest<KhatmahCubit, KhatmahState>(
       'calls complete and emits KhatmahCompleted with completed status when reaching page 604',
       build: () {
-        final nearEndPlan = testPlan.copyWith(currentPage: 600);
-        final updatedPlan = testPlan.copyWith(currentPage: 604);
+        final nearEndPlan = testPlan.recordThroughPage(600);
+        final updatedPlan = nearEndPlan.recordThroughPage(604);
         when(() => mockGetActive()).thenAnswer((_) async => nearEndPlan);
         when(() => mockUpdateProgress(nearEndPlan, 604))
             .thenAnswer((_) async => updatedPlan);
@@ -231,7 +231,7 @@ void main() {
       expect: () => [
         const KhatmahLoading(),
         KhatmahActive(
-          plan: testPlan.copyWith(currentPage: 600),
+          plan: testPlan.recordThroughPage(600),
           wirdStartPage: 601,
           wirdEndPage: 604,
         ),

@@ -1,9 +1,33 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:talia_quran/features/khatmah/data/datasources/khatmah_local_datasource.dart';
 import 'package:talia_quran/features/khatmah/data/models/khatmah_dedication_model.dart';
 import 'package:talia_quran/features/khatmah/data/models/khatmah_history_model.dart';
 import 'package:talia_quran/features/khatmah/data/models/khatmah_plan_model.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
+
+class _RejectingPreferencesStore extends InMemorySharedPreferencesStore {
+  _RejectingPreferencesStore({
+    required this.rejectWrites,
+    required this.rejectRemovals,
+  }) : super.empty();
+
+  final bool rejectWrites;
+  final bool rejectRemovals;
+
+  @override
+  Future<bool> setValue(String valueType, String key, Object value) async {
+    if (rejectWrites) return false;
+    return super.setValue(valueType, key, value);
+  }
+
+  @override
+  Future<bool> remove(String key) async {
+    if (rejectRemovals) return false;
+    return super.remove(key);
+  }
+}
 
 void main() {
   late SharedPreferences prefs;
@@ -27,6 +51,7 @@ void main() {
         title: 'Active Plan',
         startPage: 1,
         currentPage: 15,
+        completedPages: {for (var page = 1; page <= 15; page++) page},
         targetPagesPerDay: 4,
         targetDays: 151,
         startDate: DateTime(2026, 1, 1),
@@ -50,6 +75,7 @@ void main() {
         title: 'Active Plan',
         startPage: 1,
         currentPage: 15,
+        completedPages: {for (var page = 1; page <= 15; page++) page},
         targetPagesPerDay: 4,
         targetDays: 151,
         startDate: DateTime(2026, 1, 1),
@@ -67,11 +93,93 @@ void main() {
       expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
     });
 
-    test('getActivePlan returns null when stored JSON is corrupted', () async {
+    test('deletePlan preserves the replacement when an expected id does not match', () async {
+      final original = KhatmahPlanModel(
+        id: 'original',
+        title: 'Original',
+        targetPagesPerDay: 4,
+        targetDays: 151,
+        startDate: DateTime(2026, 1, 1),
+        expectedEndDate: DateTime(2026, 6, 1),
+        status: 'active',
+        dedication: KhatmahDedicationModel(isDedicated: false),
+      );
+      final replacement = KhatmahPlanModel(
+        id: 'replacement',
+        title: original.title,
+        targetPagesPerDay: original.targetPagesPerDay,
+        targetDays: original.targetDays,
+        startDate: original.startDate,
+        expectedEndDate: original.expectedEndDate,
+        status: original.status,
+        dedication: original.dedication,
+      );
+
+      await datasource.savePlan(original);
+      await datasource.savePlan(replacement);
+
+      expect(await datasource.deletePlan(expectedPlanId: original.id), isFalse);
+      expect((await datasource.getActivePlan())?.id, replacement.id);
+    });
+
+    test('savePlan surfaces a typed error when preferences reject a write', () async {
+      SharedPreferencesStorePlatform.instance = _RejectingPreferencesStore(
+        rejectWrites: true,
+        rejectRemovals: false,
+      );
+      final rejectingDatasource = KhatmahLocalDatasource(prefs);
+      final plan = KhatmahPlanModel(
+        id: 'write-failure',
+        title: 'Write failure',
+        targetPagesPerDay: 1,
+        targetDays: 1,
+        startDate: DateTime(2026, 1, 1),
+        expectedEndDate: DateTime(2026, 1, 2),
+        status: 'active',
+        dedication: KhatmahDedicationModel(isDedicated: false),
+      );
+
+      await expectLater(
+        () => rejectingDatasource.savePlan(plan),
+        throwsA(isA<KhatmahStorageException>()),
+      );
+    });
+
+    test('deletePlan surfaces a typed error when preferences reject deletion', () async {
+      SharedPreferencesStorePlatform.instance = _RejectingPreferencesStore(
+        rejectWrites: false,
+        rejectRemovals: true,
+      );
+      final rejectingDatasource = KhatmahLocalDatasource(prefs);
+      await prefs.setString('khatmah_active_plan', '{}');
+
+      await expectLater(
+        rejectingDatasource.deletePlan,
+        throwsA(isA<KhatmahStorageException>()),
+      );
+    });
+
+    test('getActivePlan surfaces typed storage error when stored JSON is corrupted', () async {
       await prefs.setString('khatmah_active_plan', '{broken json...');
 
-      final plan = await datasource.getActivePlan();
-      expect(plan, isNull);
+      await expectLater(
+        datasource.getActivePlan,
+        throwsA(isA<KhatmahStorageException>()),
+      );
+    });
+
+    test('surfaces malformed completedPages instead of returning null', () async {
+      await prefs.setString(
+        'khatmah_active_plan',
+        '{"id":"bad","title":"Bad","targetPagesPerDay":4,"targetDays":1,'
+        '"startDate":"2026-01-01T00:00:00.000","expectedEndDate":"2026-01-01T00:00:00.000",'
+        '"dedication":{},"completedPages":[1,"2"]}',
+      );
+
+      await expectLater(
+        datasource.getActivePlan,
+        throwsA(isA<KhatmahStorageException>()),
+      );
     });
 
     test('getHistory returns empty list initially', () async {
@@ -110,11 +218,13 @@ void main() {
       expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
     });
 
-    test('getHistory returns empty list when stored JSON is corrupted', () async {
+    test('getHistory surfaces typed storage error when stored JSON is corrupted', () async {
       await prefs.setString('khatmah_history', 'corrupted data');
 
-      final history = await datasource.getHistory();
-      expect(history, isEmpty);
+      await expectLater(
+        datasource.getHistory,
+        throwsA(isA<KhatmahStorageException>()),
+      );
     });
 
     test('data isolation: khatmah keys do not interfere with read_pages', () async {
@@ -125,6 +235,7 @@ void main() {
         title: 'Isolated',
         startPage: 1,
         currentPage: 5,
+        completedPages: {for (var page = 1; page <= 5; page++) page},
         targetPagesPerDay: 5,
         targetDays: 120,
         startDate: DateTime(2026, 1, 1),

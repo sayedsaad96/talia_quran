@@ -9,7 +9,7 @@ void main() {
       id: 'test-id',
       title: 'Test Khatmah',
       startPage: startPage,
-      currentPage: currentPage,
+      completedPages: {for (var page = 1; page <= currentPage; page++) page},
       targetPagesPerDay: 4,
       targetDays: 151,
       startDate: DateTime(2026, 1, 1),
@@ -25,6 +25,24 @@ void main() {
       expect(updated.currentPage, 0);
       expect(updated.nextUnreadPage, 1);
       expect(updated.isComplete, isFalse);
+    });
+
+    test('copyWith cursor input cannot invent or erase explicit coverage', () {
+      final plan = makePlan().recordPage(100);
+      final copied = plan.copyWith(currentPage: 604);
+
+      expect(copied.completedPages, {100});
+      expect(copied.currentPage, 0);
+    });
+
+    test('equality and hash code are stable across coverage insertion order', () {
+      final first = makePlan().recordPage(1).recordPage(100);
+      final sameCoverageDifferentOrder = makePlan().recordPage(100).recordPage(1);
+      final differentCoverage = makePlan().recordPage(1).recordPage(2);
+
+      expect(first, sameCoverageDifferentOrder);
+      expect(first.hashCode, sameCoverageDifferentOrder.hashCode);
+      expect(first, isNot(differentCoverage));
     });
 
     test('normalizes completed pages to an immutable Quran page set', () {
@@ -106,7 +124,7 @@ void main() {
     test('copyWith returns updated plan', () {
       final plan = makePlan();
       final updated = plan.copyWith(
-        currentPage: 50,
+        completedPages: {for (var page = 1; page <= 50; page++) page},
         status: KhatmahStatus.paused,
         dedication: const KhatmahDedication(
           isDedicated: true,

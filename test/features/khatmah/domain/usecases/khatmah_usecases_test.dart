@@ -3,6 +3,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_scheduling_engine.dart';
 import 'package:talia_quran/features/khatmah/domain/repositories/khatmah_repository.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/complete_khatmah_usecase.dart';
@@ -30,7 +31,7 @@ void main() {
       id: 'plan-1',
       title: 'Ramadan Khatmah',
       startPage: 1,
-      currentPage: 30,
+      completedPages: {for (var page = 1; page <= 30; page++) page},
       targetPagesPerDay: 4,
       targetDays: 151,
       startDate: DateTime(2026, 1, 1),
@@ -85,9 +86,16 @@ void main() {
       final usecase = UpdateKhatmahProgressUsecase(mockRepository);
       final updated = await usecase(testPlan, 50);
 
-      expect(updated.currentPage, 50);
+      expect(updated.currentPage, 30);
+      expect(updated.completedPages, contains(50));
       expect(updated.lastReadDate, isNotNull);
-      verify(() => mockRepository.updatePlan(any(that: isA<KhatmahPlan>().having((p) => p.currentPage, 'currentPage', 50)))).called(1);
+      verify(() => mockRepository.updatePlan(any(
+        that: isA<KhatmahPlan>().having(
+          (p) => p.completedPages,
+          'completedPages',
+          contains(50),
+        ),
+      ))).called(1);
     });
 
     test('updates lastReadDate with provided custom date', () async {
@@ -97,14 +105,21 @@ void main() {
       final customDate = DateTime(2026, 3, 10, 14, 0);
       final updated = await usecase(testPlan, 60, customDate);
 
-      expect(updated.currentPage, 60);
+      expect(updated.currentPage, 30);
+      expect(updated.completedPages, contains(60));
       expect(updated.lastReadDate, equals(customDate));
-      verify(() => mockRepository.updatePlan(any(that: isA<KhatmahPlan>().having((p) => p.currentPage, 'currentPage', 60)))).called(1);
+      verify(() => mockRepository.updatePlan(any(
+        that: isA<KhatmahPlan>().having(
+          (p) => p.completedPages,
+          'completedPages',
+          contains(60),
+        ),
+      ))).called(1);
     });
   });
 
   group('CompleteKhatmahUsecase', () {
-    test('sets currentPage=604, status=completed, and calls repository.completePlan', () async {
+    test('rejects incomplete coverage without calling repository completion', () async {
       when(() => mockRepository.completePlan(any())).thenAnswer(
         (_) async => KhatmahHistoryEntry(
           id: testPlan.id,
@@ -117,13 +132,12 @@ void main() {
       );
 
       final usecase = CompleteKhatmahUsecase(mockRepository);
-      await usecase(testPlan);
+      await expectLater(
+        () => usecase(testPlan),
+        throwsA(isA<KhatmahProgressException>()),
+      );
 
-      verify(() => mockRepository.completePlan(any(
-        that: isA<KhatmahPlan>()
-            .having((p) => p.currentPage, 'currentPage', 604)
-            .having((p) => p.status, 'status', KhatmahStatus.completed),
-      ))).called(1);
+      verifyNever(() => mockRepository.completePlan(any()));
     });
   });
 

@@ -5,6 +5,7 @@ import 'package:talia_quran/features/khatmah/data/models/khatmah_plan_model.dart
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
 
 void main() {
   group('KhatmahDedicationModel', () {
@@ -100,7 +101,7 @@ void main() {
       expect(restored.id, model.id);
       expect(restored.title, model.title);
       expect(restored.startPage, 1);
-      expect(restored.currentPage, 50);
+      expect(restored.currentPage, 2);
       expect(restored.completedPages, {1, 2, 50});
       expect(json['completedPages'], [1, 2, 50]);
       expect(restored.targetPagesPerDay, 4);
@@ -120,6 +121,7 @@ void main() {
         title: 'Daily Wird Khatmah',
         startPage: 1,
         currentPage: 20,
+        completedPages: {for (var page = 1; page <= 20; page++) page},
         targetPagesPerDay: 10,
         targetDays: 61,
         startDate: DateTime(2026, 2, 1),
@@ -158,12 +160,69 @@ void main() {
       expect(model.toEntity().completedPages, model.completedPages);
     });
 
+    test('migrates legacy coverage from startPage and derives global cursor', () {
+      final model = KhatmahPlanModel.fromJson({
+        'id': 'legacy-started-late',
+        'title': 'Legacy',
+        'startPage': 11,
+        'currentPage': 15,
+        'targetPagesPerDay': 4,
+        'targetDays': 151,
+        'startDate': '2026-01-01T00:00:00.000',
+        'expectedEndDate': '2026-06-01T00:00:00.000',
+        'dedication': <String, dynamic>{},
+      });
+
+      expect(model.completedPages, {11, 12, 13, 14, 15});
+      expect(model.currentPage, 0);
+      expect(model.toJson()['currentPage'], 0);
+    });
+
+    test('derives serialized currentPage from normalized coverage', () {
+      final model = KhatmahPlanModel(
+        id: 'derived-cursor',
+        title: 'Derived',
+        currentPage: 500,
+        completedPages: {1, 2, 100, 605},
+        targetPagesPerDay: 4,
+        targetDays: 151,
+        startDate: DateTime(2026, 1, 1),
+        expectedEndDate: DateTime(2026, 6, 1),
+        dedication: KhatmahDedicationModel(isDedicated: false),
+      );
+
+      expect(model.currentPage, 2);
+      expect(model.toJson()['currentPage'], 2);
+    });
+
+    test('rejects malformed completedPages containers and members', () {
+      final baseJson = {
+        'id': 'malformed',
+        'title': 'Malformed',
+        'targetPagesPerDay': 4,
+        'targetDays': 151,
+        'startDate': '2026-01-01T00:00:00.000',
+        'expectedEndDate': '2026-06-01T00:00:00.000',
+        'dedication': <String, dynamic>{},
+      };
+
+      expect(
+        () => KhatmahPlanModel.fromJson({...baseJson, 'completedPages': '1,2'}),
+        throwsA(isA<KhatmahStorageException>()),
+      );
+      expect(
+        () => KhatmahPlanModel.fromJson({...baseJson, 'completedPages': [1, '2']}),
+        throwsA(isA<KhatmahStorageException>()),
+      );
+    });
+
     test('fromEntity produces correct KhatmahPlanModel', () {
       final entity = KhatmahPlan(
         id: 'plan-789',
         title: 'Completed Khatmah',
         startPage: 1,
         currentPage: 604,
+        completedPages: {for (var page = 1; page <= 604; page++) page},
         targetPagesPerDay: 20,
         targetDays: 31,
         startDate: DateTime(2026, 1, 1),

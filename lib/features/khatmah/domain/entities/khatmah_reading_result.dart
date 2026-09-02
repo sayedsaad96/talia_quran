@@ -12,6 +12,15 @@ class KhatmahProgressException implements Exception {
   String toString() => 'KhatmahProgressException: $message';
 }
 
+class KhatmahStorageException implements Exception {
+  const KhatmahStorageException(this.message);
+
+  final String message;
+
+  @override
+  String toString() => 'KhatmahStorageException: $message';
+}
+
 class KhatmahReadingResult {
   KhatmahReadingResult({
     required this.plan,

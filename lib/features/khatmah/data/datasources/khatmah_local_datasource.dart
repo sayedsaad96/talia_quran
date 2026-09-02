@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../domain/entities/khatmah_reading_result.dart';
 import '../models/khatmah_history_model.dart';
 import '../models/khatmah_plan_model.dart';
 
@@ -18,17 +19,32 @@ class KhatmahLocalDatasource {
       return Future.value(
         KhatmahPlanModel.fromJson(jsonDecode(raw) as Map<String, dynamic>),
       );
+    } on KhatmahStorageException {
+      rethrow;
     } catch (_) {
-      return Future.value(null);
+      return Future.error(
+        const KhatmahStorageException('Active Khatmah plan data is corrupted.'),
+      );
     }
   }
 
   Future<void> savePlan(KhatmahPlanModel plan) async {
-    await _prefs.setString(_kActivePlan, jsonEncode(plan.toJson()));
+    final saved = await _prefs.setString(_kActivePlan, jsonEncode(plan.toJson()));
+    if (!saved) {
+      throw const KhatmahStorageException('Failed to save the active Khatmah plan.');
+    }
   }
 
-  Future<void> deletePlan() async {
-    await _prefs.remove(_kActivePlan);
+  Future<bool> deletePlan({String? expectedPlanId}) async {
+    if (expectedPlanId != null) {
+      final activePlan = await getActivePlan();
+      if (activePlan?.id != expectedPlanId) return false;
+    }
+    final removed = await _prefs.remove(_kActivePlan);
+    if (!removed) {
+      throw const KhatmahStorageException('Failed to delete the active Khatmah plan.');
+    }
+    return true;
   }
 
   Future<List<KhatmahHistoryModel>> getHistory() {
@@ -41,8 +57,12 @@ class KhatmahLocalDatasource {
             .map((e) => KhatmahHistoryModel.fromJson(e as Map<String, dynamic>))
             .toList(),
       );
+    } on KhatmahStorageException {
+      rethrow;
     } catch (_) {
-      return Future.value([]);
+      return Future.error(
+        const KhatmahStorageException('Khatmah history data is corrupted.'),
+      );
     }
   }
 
@@ -52,10 +72,13 @@ class KhatmahLocalDatasource {
       if (existingEntry.id == entry.id) return existingEntry;
     }
     existing.add(entry);
-    await _prefs.setString(
+    final saved = await _prefs.setString(
       _kHistory,
       jsonEncode(existing.map((e) => e.toJson()).toList()),
     );
+    if (!saved) {
+      throw const KhatmahStorageException('Failed to save Khatmah history.');
+    }
     return entry;
   }
 
