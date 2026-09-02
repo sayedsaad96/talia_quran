@@ -18,6 +18,7 @@ import 'core/services/app_initializer.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/cubits/auth_cubit.dart';
+import 'features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import 'features/settings/presentation/cubits/profile_cubit.dart';
 
 /// Notifier that signals when [AppInitializer] has finished.
@@ -126,6 +127,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         BlocProvider.value(value: getIt<LocaleCubit>()),
         BlocProvider.value(value: getIt<ProfileCubit>()),
         BlocProvider.value(value: getIt<AuthCubit>()),
+        BlocProvider.value(value: getIt<QuranAudioPlayerCubit>()),
       ],
       child: BlocListener<AuthCubit, AuthState>(
         listener: (context, state) {

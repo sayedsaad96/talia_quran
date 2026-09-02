@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
@@ -122,6 +122,42 @@ void main() {
       );
     });
 
+    testWidgets('long journey builds only visible stage cards lazily', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+      final stages = List.generate(
+        100,
+        (index) => KidsJourneyStage(
+          stageNumber: index + 1,
+          surahId: 2,
+          startAyah: index + 1,
+          endAyah: index + 1,
+          completedAyahs: const [],
+          status: index == 0
+              ? KidsJourneyStageStatus.current
+              : KidsJourneyStageStatus.locked,
+        ),
+      );
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedJourneyContent(
+            state: KidsJourneyLoaded(
+              surahId: 2,
+              stages: stages,
+              progress: const KidsProgress.initial(),
+            ),
+            onBack: () {},
+            onStageSelected: (_) {},
+          ),
+        ),
+      );
+
+      expect(find.byType(KidsHouseCard).evaluate().length, lessThan(100));
+    });
     testWidgets('back button triggers onBack callback', (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);

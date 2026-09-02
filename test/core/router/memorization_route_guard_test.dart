@@ -16,9 +16,10 @@ import 'package:talia_quran/features/quran/domain/repositories/quran_repository.
 /// Minimal repository fake that only answers [getMemorizationProfile]; every
 /// other member is unused by the guards under test.
 class _FakeMemoRepo implements MemorizationPlusRepository {
-  _FakeMemoRepo(this._profile);
+  _FakeMemoRepo(this._profile, {this.parentSettings = const ParentSettings()});
 
   final MemorizationProfile? _profile;
+  final ParentSettings parentSettings;
 
   @override
   Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() async {
@@ -43,6 +44,10 @@ class _FakeMemoRepo implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, CustomMemorizationPlan?>> getCustomPlan() async =>
       const Right(null);
+
+  @override
+  Future<Either<Failure, ParentSettings>> getParentSettings() async =>
+      Right(parentSettings);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -121,11 +126,16 @@ MemorizationProfile _profile(MemorizationPath path) => MemorizationProfile(
 void main() {
   final getIt = GetIt.instance;
 
-  void registerProfile(MemorizationProfile? profile) {
+  void registerProfile(
+    MemorizationProfile? profile, {
+    ParentSettings parentSettings = const ParentSettings(),
+  }) {
     if (getIt.isRegistered<MemorizationPlusRepository>()) {
       getIt.unregister<MemorizationPlusRepository>();
     }
-    getIt.registerSingleton<MemorizationPlusRepository>(_FakeMemoRepo(profile));
+    getIt.registerSingleton<MemorizationPlusRepository>(
+      _FakeMemoRepo(profile, parentSettings: parentSettings),
+    );
   }
 
   void registerAuth(AuthState state) {
@@ -277,7 +287,7 @@ void main() {
   });
 
   group('kidsJourneyRedirect', () {
-    test('sends a journey route without a surah to the kids home', () async {
+    test('resolves a journey route without a surah', () async {
       registerProfile(_profile(MemorizationPath.child));
       final state = _FakeGoRouterState(
         Uri.parse(AppRoutes.memorizationPlusKidsJourney),
@@ -285,8 +295,34 @@ void main() {
 
       expect(
         await MemorizationRouteGuard.kidsJourneyRedirect(state),
-        AppRoutes.memorizationPlusKidsHome,
+        '${AppRoutes.memorizationPlusKidsJourney}?surahId=114',
       );
+    });
+  });
+
+  group('kidsHomeRedirect', () {
+    test('resolves a bare kids home route from the child settings', () async {
+      registerProfile(
+        _profile(MemorizationPath.child),
+        parentSettings: const ParentSettings(startingSurahId: 112),
+      );
+      final state = _FakeGoRouterState(
+        Uri.parse(AppRoutes.memorizationPlusKidsHome),
+      );
+
+      expect(
+        await MemorizationRouteGuard.kidsHomeRedirect(state),
+        '${AppRoutes.memorizationPlusKidsHome}?surahId=112',
+      );
+    });
+
+    test('keeps an already resolved kids home route', () async {
+      registerProfile(_profile(MemorizationPath.child));
+      final state = _FakeGoRouterState(
+        Uri.parse('${AppRoutes.memorizationPlusKidsHome}?surahId=113'),
+      );
+
+      expect(await MemorizationRouteGuard.kidsHomeRedirect(state), isNull);
     });
   });
 

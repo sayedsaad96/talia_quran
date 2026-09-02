@@ -8,6 +8,7 @@ abstract class MemorizationIdentityRepository {
   Future<Either<Failure, MemorizationProfile>> selectMemorizationPath(
     MemorizationPath path,
   );
+  Future<Either<Failure, MemorizationProfile>> configureChildAge(int age);
   Future<Either<Failure, MemorizationProfile>> continueWithoutGuardian();
   Future<Either<Failure, PairingSession>> createGuardianPairingSession();
   Future<Either<Failure, MemorizationProfile>> acceptGuardianPairingCode(

@@ -182,7 +182,7 @@ void main() {
 
       expect(
         releaseEntry['sourceEdition'],
-        'all_109_records_qualified_review_approved',
+        'all_109_records_project_owner_approved',
       );
       expect(releaseEntry['reviewStatus'], 'approved');
       expect(releaseEntry['sha256'], releaseDigest);

@@ -13,6 +13,7 @@ class MemorizationProfileModel extends MemorizationProfile {
     required super.updatedAt,
     super.linkedChildId,
     super.guardianId,
+    super.childAge,
   });
 
   factory MemorizationProfileModel.empty() {
@@ -61,6 +62,7 @@ class MemorizationProfileModel extends MemorizationProfile {
       isParentGuardian: json['isParentGuardian'] as bool? ?? false,
       linkedChildId: json['linkedChildId'] as String?,
       guardianId: json['guardianId'] as String?,
+      childAge: json['childAge'] as int?,
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ?? now,
       updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? now,
     );
@@ -75,6 +77,7 @@ class MemorizationProfileModel extends MemorizationProfile {
         isParentGuardian: profile.isParentGuardian,
         linkedChildId: profile.linkedChildId,
         guardianId: profile.guardianId,
+        childAge: profile.childAge,
         createdAt: profile.createdAt,
         updatedAt: profile.updatedAt,
       );
@@ -87,6 +90,7 @@ class MemorizationProfileModel extends MemorizationProfile {
     'isParentGuardian': isParentGuardian,
     'linkedChildId': linkedChildId,
     'guardianId': guardianId,
+    'childAge': childAge,
     'createdAt': createdAt.toIso8601String(),
     'updatedAt': updatedAt.toIso8601String(),
   };
@@ -238,10 +242,14 @@ class AyahReviewRecordModel extends AyahReviewRecord {
               modeIndex < ReviewRecordCreatedByMode.values.length
           ? ReviewRecordCreatedByMode.values[modeIndex]
           : ReviewRecordCreatedByMode.unknown,
-      predictedRetrievability: (json['predictedRetrievability'] as num?)?.toDouble(),
+      predictedRetrievability: (json['predictedRetrievability'] as num?)
+          ?.toDouble(),
       predictedFsrsIntervalDays: json['predictedFsrsIntervalDays'] as int?,
-      predictedFsrsDueDate: json['predictedFsrsDueDate'] != null ? DateTime.parse(json['predictedFsrsDueDate'] as String) : null,
-      predictedRecallProbability: (json['predictedRecallProbability'] as num?)?.toDouble(),
+      predictedFsrsDueDate: json['predictedFsrsDueDate'] != null
+          ? DateTime.parse(json['predictedFsrsDueDate'] as String)
+          : null,
+      predictedRecallProbability: (json['predictedRecallProbability'] as num?)
+          ?.toDouble(),
       schedulerVsFsrsGapDays: json['schedulerVsFsrsGapDays'] as int?,
       schedulerVsFsrsRatio: (json['schedulerVsFsrsRatio'] as num?)?.toDouble(),
       schedulerEarlierThanFsrs: json['schedulerEarlierThanFsrs'] as bool?,
@@ -361,6 +369,12 @@ class KidsSessionLogModel extends KidsSessionLog {
     required super.pointsEarned,
     required super.completedAt,
     super.syncedAt,
+    super.missionType,
+    super.ayahNumbers,
+    super.durationSeconds,
+    super.attemptCount,
+    super.hintCount,
+    super.masteryRating,
   });
 
   factory KidsSessionLogModel.fromJson(Map<String, dynamic> json) =>
@@ -374,6 +388,23 @@ class KidsSessionLogModel extends KidsSessionLog {
         syncedAt: json['syncedAt'] == null
             ? null
             : DateTime.parse(json['syncedAt'] as String),
+        missionType: KidsMissionType.values.firstWhere(
+          (value) => value.name == json['missionType'],
+          orElse: () => KidsMissionType.newMemorization,
+        ),
+        ayahNumbers:
+            (json['ayahNumbers'] as List?)
+                ?.whereType<num>()
+                .map((value) => value.toInt())
+                .toList() ??
+            [json['ayahNumber'] as int],
+        durationSeconds: json['durationSeconds'] as int? ?? 0,
+        attemptCount: json['attemptCount'] as int? ?? 1,
+        hintCount: json['hintCount'] as int? ?? 0,
+        masteryRating: PerformanceRating.values.firstWhere(
+          (value) => value.name == json['masteryRating'],
+          orElse: () => PerformanceRating.excellent,
+        ),
       );
 
   factory KidsSessionLogModel.fromEntity(KidsSessionLog log) =>
@@ -385,6 +416,12 @@ class KidsSessionLogModel extends KidsSessionLog {
         pointsEarned: log.pointsEarned,
         completedAt: log.completedAt,
         syncedAt: log.syncedAt,
+        missionType: log.missionType,
+        ayahNumbers: log.ayahNumbers,
+        durationSeconds: log.durationSeconds,
+        attemptCount: log.attemptCount,
+        hintCount: log.hintCount,
+        masteryRating: log.masteryRating,
       );
 
   Map<String, dynamic> toJson() => {
@@ -395,6 +432,12 @@ class KidsSessionLogModel extends KidsSessionLog {
     'pointsEarned': pointsEarned,
     'completedAt': completedAt.toIso8601String(),
     'syncedAt': syncedAt?.toIso8601String(),
+    'missionType': missionType.name,
+    'ayahNumbers': ayahNumbers,
+    'durationSeconds': durationSeconds,
+    'attemptCount': attemptCount,
+    'hintCount': hintCount,
+    'masteryRating': masteryRating.name,
   };
 }
 
@@ -406,6 +449,11 @@ class ParentSettingsModel extends ParentSettings {
     super.reminderMinute,
     super.weeklyGoalSessions,
     super.remoteLinkEnabled,
+    super.localChildNickname,
+    super.guidanceAudioEnabled,
+    super.sessionGoalMinutes,
+    super.startingSurahId,
+    super.kidsHifzV2Enabled,
   });
 
   const ParentSettingsModel.defaults() : super();
@@ -418,6 +466,11 @@ class ParentSettingsModel extends ParentSettings {
         reminderMinute: json['reminderMinute'] as int? ?? 30,
         weeklyGoalSessions: json['weeklyGoalSessions'] as int? ?? 5,
         remoteLinkEnabled: json['remoteLinkEnabled'] as bool? ?? false,
+        localChildNickname: json['localChildNickname'] as String?,
+        guidanceAudioEnabled: json['guidanceAudioEnabled'] as bool?,
+        sessionGoalMinutes: json['sessionGoalMinutes'] as int?,
+        startingSurahId: json['startingSurahId'] as int? ?? 114,
+        kidsHifzV2Enabled: json['kidsHifzV2Enabled'] as bool? ?? false,
       );
 
   factory ParentSettingsModel.fromEntity(ParentSettings settings) =>
@@ -428,6 +481,11 @@ class ParentSettingsModel extends ParentSettings {
         reminderMinute: settings.reminderMinute,
         weeklyGoalSessions: settings.weeklyGoalSessions,
         remoteLinkEnabled: settings.remoteLinkEnabled,
+        localChildNickname: settings.localChildNickname,
+        guidanceAudioEnabled: settings.guidanceAudioEnabled,
+        sessionGoalMinutes: settings.sessionGoalMinutes,
+        startingSurahId: settings.startingSurahId,
+        kidsHifzV2Enabled: settings.kidsHifzV2Enabled,
       );
 
   Map<String, dynamic> toJson() => {
@@ -437,6 +495,11 @@ class ParentSettingsModel extends ParentSettings {
     'reminderMinute': reminderMinute,
     'weeklyGoalSessions': weeklyGoalSessions,
     'remoteLinkEnabled': remoteLinkEnabled,
+    'localChildNickname': localChildNickname,
+    'guidanceAudioEnabled': guidanceAudioEnabled,
+    'sessionGoalMinutes': sessionGoalMinutes,
+    'startingSurahId': startingSurahId,
+    'kidsHifzV2Enabled': kidsHifzV2Enabled,
   };
 }
 

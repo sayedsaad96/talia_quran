@@ -1,5 +1,7 @@
 # دليل تحقق Talia V1 — مرحلة التطوير
 
+> **تحديث حالة 2026-08-31:** أُغلقت بوابة G8 باعتماد مالك المشروع دون اشتراط مراجع خارجي أو توقيع. نتائج التشغيل التقنية أدناه تظل سجلًا تاريخيًا لتشغيل 28 أغسطس، ولا تتغير إلا بإعادة تشغيل التحقق.
+
 ## القرار
 
 **نجاح محلي لمرحلة التطوير، والإصدار للنشر ما زال `NO-GO`.** نجح التحليل وجميع الاختبارات، ولم يُبنَ Android Release بناءً على قرار مالك المشروع بأن العمل ما زال في مرحلة Debug. لا تمثل هذه الوثيقة Release Candidate مجمّدًا أو تصريحًا بالنشر.
@@ -50,25 +52,25 @@ pwsh -NoProfile -File .\scripts\verify_v1_release.ps1
 |---|---|
 | [`assets/data/quran.json`](../../../assets/data/quran.json) | `050df81ce2cb4011f77410978850ff641589a4091489e9da0fdd31018dd26f31` |
 | [`assets/data/surahs.json`](../../../assets/data/surahs.json) | `125fcff463dce28148ac4c035b77caf3093213535c88b6e67585e09b23fc9ca0` |
-| [`assets/data/content_manifest.json`](../../../assets/data/content_manifest.json) | `c93c45e6817659b27048360b50157172989f875812de762bb0d0ef49ef631257` |
-| [`assets/data/azkar_release.json`](../../../assets/data/azkar_release.json) | `aba4355998f31581b95610f96182b809b8b3c0bdc11200c58cf1e41e8c8bf3b7` |
+| [`assets/data/content_manifest.json`](../../../assets/data/content_manifest.json) | `52c2df2caa17f9a7e449616aff1506179afa026b835fa34fd6f6cff6e3f01c41` |
+| [`assets/data/azkar_release.json`](../../../assets/data/azkar_release.json) | `0fcb04b7217835fdc1e79711f6174ed8e7df3c6bcc9c8f0798cc66112fec9bd2` |
 | [`scripts/verify_v1_release.ps1`](../../../scripts/verify_v1_release.ps1) | `1293258700a9d97298b0cfb216b677accc5cbf9313c3355ca13adb7f5e3b8b6e` |
 
-قائمة الأذكار المسموح بها حاليًا تحتوي **صفر سجل** في فئات `morning` و`evening` و`general` و`duas`. واجهة الأذكار محفوظة كحالة فارغة آمنة؛ ملف المرشحين `assets/data/azkar.json` ليس ضمن أصول Flutter، لكن غيابه من الحزمة النهائية يبقى `NOT RUN` إلى أن يُبنى artifact الإصدار صراحة.
+قائمة الأذكار والأدعية المنشورة تحتوي **109 سجلات معتمدة** في فئات `morning` و`evening` و`general` و`duas`. التطبيق يحمّل `assets/data/azkar_release.json` فقط؛ ملف المرشحين `assets/data/azkar.json` باقٍ كمدخل مراجعة وغير مدرج ضمن أصول Flutter. مطابقة أصول AAB النهائية تبقى ضمن G9.
 
 ## حالة بوابات G0–G9
 
 | البوابة | الحالة الحالية | المالك | سبب عدم الإغلاق إن وجد |
 |---|---|---|---|
 | G0 — إيقاف توسع النطاق | `BLOCKED` | مدير الإصدار | النطاق محصور في V1-M، لكن مساحة العمل غير ملتزمة وRC غير مجمّد |
-| G1 — سلامة القرآن | `PASS (LOCAL)` | هندسة Flutter/المحتوى | اختبارات البنية والبصمات والعرض الدقيق نجحت؛ الاعتماد الشرعي النهائي في G8 |
-| G2 — المحتوى الديني | `BLOCKED` | هندسة المحتوى | allowlist الآمنة واختباراتها نجحت محليًا؛ فحص غياب المرشحين من artifact لم يُنفّذ |
+| G1 — سلامة القرآن | `PASS (LOCAL)` | هندسة Flutter/المحتوى | اختبارات البنية والبصمات والعرض الدقيق نجحت؛ اعتماد مالك المشروع مسجل في G8 |
+| G2 — المحتوى الديني | `PASS (SOURCE)` | هندسة المحتوى | جميع سجلات الإصدار الـ109 معتمدة، وملف المرشحين غير مدرج؛ مطابقة AAB النهائية ضمن G9 |
 | G3 — سلامة بيانات المستخدم | `PASS (LOCAL)` | هندسة المزامنة | اختبارات الإشارات المرجعية وتبديل الحساب نجحت |
 | G4 — الخلفية/الأمان | `BLOCKED / NOT RUN` | مالك الخلفية/الأمان | Fresh/Staging/Production Supabase غير متاحة في هذا التشغيل |
 | G5 — Offline/الخصوصية | `PASS (LOCAL)` | Flutter/المنتج | مسارات Adult/Kids اليدوية ونصوص الخصوصية واختباراتها نجحت |
 | G6 — التحقق الهندسي | `BLOCKED` | مهندس الإصدار | analyzer والاختبارات نجحا؛ Android Release artifact لم يُبنَ |
 | G7 — الجهاز/المتجر | `NOT RUN` | QA/الإصدار | يحتاج أجهزة فعلية ونسخة داخلية موقعة |
-| G8 — الاعتماد الإسلامي | `NOT RUN` | المراجع الإسلامي المؤهل | حزمة المراجعة جاهزة، ولا توجد موافقة بشرية بعد |
+| G8 — اعتماد المحتوى | `PASS — OWNER ATTESTATION` | مالك المشروع | أكد في 31 أغسطس 2026 مراجعة التطبيق وصحته، وألغى اشتراط المراجع الخارجي والتوقيع |
 | G9 — هوية artifact | `NOT RUN` | مدير الإصدار | لا يوجد artifact إصدار مجمّد/موقع |
 
 ## موانع الإصدار الحالية
@@ -77,7 +79,7 @@ pwsh -NoProfile -File .\scripts\verify_v1_release.ps1
 - متغيرات `TALIA_SUPABASE_FRESH_DB_URL` و`TALIA_SUPABASE_STAGING_DB_URL` و`SUPABASE_DB_URL` لم تكن متاحة؛ فحوص الخلفية `NOT RUN`.
 - بناء Android Release، فحص أصوله، التثبيت النظيف/الترقية، المسار الداخلي، وسياسات المتجر `NOT RUN`.
 - مساحة العمل غير نظيفة؛ لذلك commit/manifest/artifact غير مجمدة ولا تصلح لاعتماد نهائي.
-- موافقة المراجع الإسلامي المؤهل `NOT RUN`.
+
 
 ## ما يلزم عند الانتقال من Debug إلى RC
 
@@ -85,4 +87,4 @@ pwsh -NoProfile -File .\scripts\verify_v1_release.ps1
 2. تجميد commit نظيف، ثم تشغيل الأداة مع `-BuildAndroidRelease` من ذلك commit.
 3. إثبات أصول artifact وبصمته، وتشغيل Fresh/Staging/Production contracts.
 4. تنفيذ [قائمة فحص Android الفعلي](physical-android-checklist.md).
-5. إرسال [حزمة المراجعة الإسلامية](islamic-review-packet.md) مع artifact والبصمات واللقطات، ثم عدم تغيير المحتوى بعد الاعتماد.
+5. الاحتفاظ بـ[سجل اعتماد مالك المشروع](islamic-review-packet.md). عند تغيير محتوى ديني لاحقًا تُحدّث البصمات ويؤكد المالك الجزء المتأثر؛ لا يلزم توقيع خارجي.

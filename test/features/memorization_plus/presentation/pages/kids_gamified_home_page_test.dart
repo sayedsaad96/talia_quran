@@ -4,11 +4,25 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_home_page.dart';
 
 void main() {
   group('KidsGamifiedHomePage', () {
+    test('mission route preserves the due-review task type', () {
+      const mission = KidsNextMission(
+        type: KidsMissionType.dueReview,
+        surahId: 114,
+        ayahNumbers: [2],
+      );
+
+      expect(
+        kidsMissionLocation(mission),
+        '${AppRoutes.memorizationPlusKids}?surahId=114&ayahNumber=2&missionType=dueReview',
+      );
+    });
+
     testWidgets('renders progress, mission, and bottom navigation actions', (
       tester,
     ) async {

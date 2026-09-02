@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 
 import '../theme/app_colors.dart';
+import '../utils/quran_ayah_display_text.dart';
 
 // ─── Display Mode ─────────────────────────────────────────────────────────────
 
@@ -116,6 +117,7 @@ class QcfHifzVerseView extends StatelessWidget {
     if (!_isValidIdentity) {
       return _FallbackText(
         text: fallbackText,
+        ayahNumber: verseNumber,
         textAlign: textAlign,
         fontSize: _fontSize,
         isDark: _isDark(context),
@@ -135,6 +137,7 @@ class QcfHifzVerseView extends StatelessWidget {
     } catch (_) {
       return _FallbackText(
         text: fallbackText,
+        ayahNumber: verseNumber,
         textAlign: textAlign,
         fontSize: _fontSize,
         isDark: _isDark(context),
@@ -177,9 +180,6 @@ class _QcfContent extends StatelessWidget {
           ? AppColors.darkTextPrimary
           : AppColors.lightTextPrimary;
 
-      // Build inline span for single verse or same-surah range.
-      // Sacred text is rendered verbatim — never cleaned, rewritten, or
-      // truncated (V1-M1 exactness gate).
       final spans = <TextSpan>[];
       for (var verse = startVerse; verse <= endVerse; verse++) {
         final rawVerseText = qcf.getVerse(surahNumber, verse);
@@ -188,13 +188,22 @@ class _QcfContent extends StatelessWidget {
         if (rawVerseText.isEmpty) {
           return _FallbackText(
             text: fallbackText,
+            ayahNumber: startVerse,
             textAlign: textAlign,
             fontSize: fontSize,
             isDark: isDark,
           );
         }
 
-        spans.add(TextSpan(text: rawVerseText));
+        if (verse > startVerse) spans.add(const TextSpan(text: ' '));
+        spans.add(
+          TextSpan(
+            text: QuranAyahDisplayText.withVerseBrackets(
+              rawVerseText,
+              ayahNumber: verse,
+            ),
+          ),
+        );
       }
 
       final qcfStyle = qcf.QuranTextStyles.qcfStyle(
@@ -214,6 +223,7 @@ class _QcfContent extends StatelessWidget {
     } catch (_) {
       return _FallbackText(
         text: fallbackText,
+        ayahNumber: startVerse,
         textAlign: textAlign,
         fontSize: fontSize,
         isDark: isDark,
@@ -229,12 +239,14 @@ class _QcfContent extends StatelessWidget {
 class _FallbackText extends StatelessWidget {
   const _FallbackText({
     required this.text,
+    required this.ayahNumber,
     required this.textAlign,
     required this.fontSize,
     required this.isDark,
   });
 
   final String text;
+  final int ayahNumber;
   final TextAlign textAlign;
   final double fontSize;
   final bool isDark;
@@ -244,7 +256,7 @@ class _FallbackText extends StatelessWidget {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Text(
-        text,
+        QuranAyahDisplayText.withVerseBrackets(text, ayahNumber: ayahNumber),
         style: TextStyle(
           fontFamily: 'Amiri',
           fontSize: fontSize,

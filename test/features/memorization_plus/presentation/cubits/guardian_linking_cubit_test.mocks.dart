@@ -88,6 +88,24 @@ class MockMemorizationPlusRepository extends _i1.Mock
 
   @override
   _i4.Future<_i2.Either<_i5.Failure, _i6.MemorizationProfile>>
+      configureChildAge(int? age) => (super.noSuchMethod(
+            Invocation.method(
+              #configureChildAge,
+              [age],
+            ),
+            returnValue: _i4
+                .Future<_i2.Either<_i5.Failure, _i6.MemorizationProfile>>.value(
+                _FakeEither_0<_i5.Failure, _i6.MemorizationProfile>(
+              this,
+              Invocation.method(
+                #configureChildAge,
+                [age],
+              ),
+            )),
+          ) as _i4.Future<_i2.Either<_i5.Failure, _i6.MemorizationProfile>>);
+
+  @override
+  _i4.Future<_i2.Either<_i5.Failure, _i6.MemorizationProfile>>
       continueWithoutGuardian() => (super.noSuchMethod(
             Invocation.method(
               #continueWithoutGuardian,
@@ -585,20 +603,34 @@ class MockMemorizationPlusRepository extends _i1.Mock
 
   @override
   _i4.Future<_i2.Either<_i5.Failure, _i6.KidsSessionLog>> saveKidsSessionLog({
+    String? sessionId,
     required int? surahId,
     required int? ayahNumber,
     required int? repeatsCompleted,
     required int? pointsEarned,
+    _i6.KidsMissionType? missionType = _i6.KidsMissionType.newMemorization,
+    List<int>? ayahNumbers = const [],
+    int? durationSeconds = 0,
+    int? attemptCount = 1,
+    int? hintCount = 0,
+    _i6.PerformanceRating? masteryRating = _i6.PerformanceRating.excellent,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveKidsSessionLog,
           [],
           {
+            #sessionId: sessionId,
             #surahId: surahId,
             #ayahNumber: ayahNumber,
             #repeatsCompleted: repeatsCompleted,
             #pointsEarned: pointsEarned,
+            #missionType: missionType,
+            #ayahNumbers: ayahNumbers,
+            #durationSeconds: durationSeconds,
+            #attemptCount: attemptCount,
+            #hintCount: hintCount,
+            #masteryRating: masteryRating,
           },
         ),
         returnValue:
@@ -609,10 +641,17 @@ class MockMemorizationPlusRepository extends _i1.Mock
             #saveKidsSessionLog,
             [],
             {
+              #sessionId: sessionId,
               #surahId: surahId,
               #ayahNumber: ayahNumber,
               #repeatsCompleted: repeatsCompleted,
               #pointsEarned: pointsEarned,
+              #missionType: missionType,
+              #ayahNumbers: ayahNumbers,
+              #durationSeconds: durationSeconds,
+              #attemptCount: attemptCount,
+              #hintCount: hintCount,
+              #masteryRating: masteryRating,
             },
           ),
         )),
@@ -913,18 +952,32 @@ class MockMemorizationPlusRepository extends _i1.Mock
   @override
   _i4.Future<
       _i2.Either<_i5.Failure, _i6.KidsCompletionResult>> awardKidsPoints({
+    String? sessionId,
     required int? surahId,
     required int? ayahNumber,
     required int? repeatsCompleted,
+    _i6.KidsMissionType? missionType = _i6.KidsMissionType.newMemorization,
+    List<int>? ayahNumbers = const [],
+    int? durationSeconds = 0,
+    int? attemptCount = 1,
+    int? hintCount = 0,
+    _i6.PerformanceRating? masteryRating = _i6.PerformanceRating.excellent,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
           #awardKidsPoints,
           [],
           {
+            #sessionId: sessionId,
             #surahId: surahId,
             #ayahNumber: ayahNumber,
             #repeatsCompleted: repeatsCompleted,
+            #missionType: missionType,
+            #ayahNumbers: ayahNumbers,
+            #durationSeconds: durationSeconds,
+            #attemptCount: attemptCount,
+            #hintCount: hintCount,
+            #masteryRating: masteryRating,
           },
         ),
         returnValue:
@@ -935,9 +988,16 @@ class MockMemorizationPlusRepository extends _i1.Mock
             #awardKidsPoints,
             [],
             {
+              #sessionId: sessionId,
               #surahId: surahId,
               #ayahNumber: ayahNumber,
               #repeatsCompleted: repeatsCompleted,
+              #missionType: missionType,
+              #ayahNumbers: ayahNumbers,
+              #durationSeconds: durationSeconds,
+              #attemptCount: attemptCount,
+              #hintCount: hintCount,
+              #masteryRating: masteryRating,
             },
           ),
         )),

@@ -5,6 +5,7 @@ import 'package:mockito/mockito.dart';
 
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
@@ -29,6 +30,52 @@ void main() {
 
   tearDown(() {
     cubit.close();
+  });
+
+  test('completed surah has no current stage', () {
+    const state = KidsJourneyLoaded(
+      surahId: 114,
+      stages: [
+        KidsJourneyStage(
+          stageNumber: 1,
+          surahId: 114,
+          startAyah: 1,
+          endAyah: 6,
+          completedAyahs: [1, 2, 3, 4, 5, 6],
+          status: KidsJourneyStageStatus.completed,
+        ),
+      ],
+      progress: KidsProgress.initial(),
+    );
+
+    expect(state.currentStage, isNull);
+  });
+
+  test('review stage is selected before a current memorization stage', () {
+    const state = KidsJourneyLoaded(
+      surahId: 114,
+      stages: [
+        KidsJourneyStage(
+          stageNumber: 1,
+          surahId: 114,
+          startAyah: 1,
+          endAyah: 3,
+          completedAyahs: [1, 2, 3],
+          status: KidsJourneyStageStatus.needsReview,
+        ),
+        KidsJourneyStage(
+          stageNumber: 2,
+          surahId: 114,
+          startAyah: 4,
+          endAyah: 6,
+          completedAyahs: [],
+          status: KidsJourneyStageStatus.current,
+        ),
+      ],
+      progress: KidsProgress.initial(),
+    );
+
+    expect(state.currentStage?.status, KidsJourneyStageStatus.needsReview);
   });
 
   group('load', () {
@@ -64,6 +111,34 @@ void main() {
     );
 
     test(
+      'places an interrupted kids session before new memorization',
+      () async {
+        await cubit.close();
+        cubit = KidsJourneyCubit(
+          mockGetJourney,
+          mockGetProgress,
+          mockQuranRepo,
+          resumeMissionLoader: () async => const KidsNextMission(
+            type: KidsMissionType.resume,
+            surahId: 113,
+            ayahNumbers: [2],
+          ),
+        );
+        when(mockGetJourney(any)).thenAnswer((_) async => const Right(tStages));
+        when(mockGetProgress()).thenAnswer((_) async => const Right(tProgress));
+        when(
+          mockQuranRepo.getSurahDetail(tSurahId),
+        ).thenAnswer((_) async => const Right(tSurahDetail));
+
+        await cubit.load(surahId: tSurahId);
+
+        final loaded = cubit.state as KidsJourneyLoaded;
+        expect(loaded.nextMission?.type, KidsMissionType.resume);
+        expect(loaded.nextMission?.surahId, 113);
+        expect(loaded.nextMission?.startAyah, 2);
+      },
+    );
+    test(
       'emits [KidsJourneyLoading, KidsJourneyLoaded] when successful',
       () async {
         when(mockGetJourney(any)).thenAnswer((_) async => const Right(tStages));
@@ -81,6 +156,11 @@ void main() {
               stages: tStages,
               progress: tProgress,
               surahName: tSurahName,
+              nextMission: KidsNextMission(
+                type: KidsMissionType.newMemorization,
+                surahId: tSurahId,
+                ayahNumbers: [1],
+              ),
             ),
           ]),
         );
@@ -132,6 +212,37 @@ void main() {
       },
     );
 
+    test('resolves a due review as the single next mission', () async {
+      final dueRecord = AyahReviewRecord(
+        surahId: tSurahId,
+        ayahNumber: 1,
+        strengthLevel: 1,
+        intervalDays: 1,
+        lastReviewedAt: DateTime.utc(2020, 1, 1),
+        nextReviewDate: DateTime.utc(2020, 1, 2),
+        totalReviews: 1,
+        lastRating: PerformanceRating.average,
+        createdByMode: ReviewRecordCreatedByMode.kidsMode,
+      );
+      cubit = KidsJourneyCubit(
+        mockGetJourney,
+        mockGetProgress,
+        mockQuranRepo,
+        reviewRecordsLoader: () async => [dueRecord],
+      );
+      when(mockGetJourney(any)).thenAnswer((_) async => const Right(tStages));
+      when(mockGetProgress()).thenAnswer((_) async => const Right(tProgress));
+      when(
+        mockQuranRepo.getSurahDetail(tSurahId),
+      ).thenAnswer((_) async => const Right(tSurahDetail));
+
+      await cubit.load(surahId: tSurahId);
+
+      final loaded = cubit.state as KidsJourneyLoaded;
+      expect(loaded.nextMission?.type, KidsMissionType.dueReview);
+      expect(loaded.nextMission?.ayahNumbers, const [1]);
+    });
+
     test(
       'emits [KidsJourneyLoading, KidsJourneyLoaded] with null surahName if quranRepo fails',
       () async {
@@ -150,6 +261,11 @@ void main() {
               stages: tStages,
               progress: tProgress,
               surahName: null,
+              nextMission: KidsNextMission(
+                type: KidsMissionType.newMemorization,
+                surahId: tSurahId,
+                ayahNumbers: [1],
+              ),
             ),
           ]),
         );

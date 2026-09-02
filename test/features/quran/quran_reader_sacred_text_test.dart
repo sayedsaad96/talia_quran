@@ -2,17 +2,20 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/services/app_session_service.dart';
+import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/core/services/quran_reciter_service.dart';
 import 'package:talia_quran/core/services/streak_service.dart';
 import 'package:talia_quran/features/progress/domain/usecases/save_read_page_usecase.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 import 'package:talia_quran/features/quran/presentation/cubits/quran_page_cubit.dart';
+import 'package:talia_quran/features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import 'package:talia_quran/features/quran/presentation/pages/quran_reader_page.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/app_quran_page_view.dart';
 
@@ -56,10 +59,10 @@ void main() {
 
   tearDown(() => getIt.reset());
 
-  testWidgets('ayah options display preserves surrounding whitespace', (
+  testWidgets('ayah options display keeps verse brackets without its number', (
     tester,
   ) async {
-    const sacredText = '  نَصٌّ مُقَدَّسٌ\n';
+    const sacredText = '  نَصٌّ مُقَدَّسٌ ١\n';
     const surah = Surah(
       id: 9,
       nameAr: 'التوبة',
@@ -84,10 +87,20 @@ void main() {
     );
     const repository = _PageQuranRepository(page);
     final prefs = await SharedPreferences.getInstance();
+    final reciterService = QuranReciterService(prefs);
+    final playerService = QuranContinuousPlayerService(
+      quranRepository: repository,
+      reciterService: reciterService,
+    );
+    final audioCubit = QuranAudioPlayerCubit(playerService);
+    addTearDown(() async {
+      await audioCubit.close();
+      playerService.dispose();
+    });
     getIt
       ..registerSingleton<SharedPreferences>(prefs)
       ..registerSingleton<AppSessionService>(AppSessionService(prefs))
-      ..registerSingleton<QuranReciterService>(QuranReciterService(prefs))
+      ..registerSingleton<QuranReciterService>(reciterService)
       ..registerSingleton<QuranPageCubit>(
         QuranPageCubit(
           repository,
@@ -97,16 +110,19 @@ void main() {
       );
 
     await tester.pumpWidget(
-      const MaterialApp(
-        locale: Locale('ar'),
-        localizationsDelegates: [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: QuranReaderPage(pageNumber: 187),
+      BlocProvider.value(
+        value: audioCubit,
+        child: const MaterialApp(
+          locale: Locale('ar'),
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: QuranReaderPage(pageNumber: 187),
+        ),
       ),
     );
     await tester.pump();
@@ -122,7 +138,7 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
 
-    expect(find.text(sacredText), findsOneWidget);
-    expect(find.text(sacredText.trim()), findsNothing);
+    expect(find.text('﴿ نَصٌّ مُقَدَّسٌ ﴾'), findsOneWidget);
+    expect(find.text('﴿ نَصٌّ مُقَدَّسٌ ١ ﴾'), findsNothing);
   });
 }

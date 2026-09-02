@@ -91,6 +91,7 @@ void main() {
     realEngine = V2SessionEngine();
     mockScheduler = MockScheduleNextReviewUsecase();
     mockLocalDatasource = MockV2SessionLocalDatasource();
+    when(mockLocalDatasource.currentOwnerId).thenReturn('test-owner');
     mockXPService = MockXpService();
     mockStreakService = MockStreakService();
     mockAchievementService = MockAchievementService();

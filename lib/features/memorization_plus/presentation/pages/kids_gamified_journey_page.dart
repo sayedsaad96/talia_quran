@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,7 +12,7 @@ import '../../domain/entities/memorization_entities.dart';
 import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
-import '../widgets/kids_journey_map.dart';
+import '../widgets/kids_house_card.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
 import '../widgets/kids_progress_header.dart';
 
@@ -127,7 +127,7 @@ class KidsGamifiedJourneyContent extends StatelessWidget {
                         AppSpacing.lg,
                         AppSpacing.md,
                         AppSpacing.lg,
-                        AppSpacing.xl,
+                        0,
                       ),
                       sliver: SliverList.list(
                         children: [
@@ -157,21 +157,41 @@ class KidsGamifiedJourneyContent extends StatelessWidget {
                             EmptyStateWidget(
                               message: context.l10n.kidsGamifiedJourneyComplete,
                               icon: Icons.emoji_events_rounded,
-                            )
-                          else
-                            KidsJourneyMap(
-                              stages: state.stages,
-                              surahNameBuilder: (_) =>
-                                  state.surahName ??
-                                  '${context.l10n.surah} ${state.surahId}',
-                              onStageTap: onStageSelected,
-                              onLockedStageTap: (stage) =>
-                                  _showLockedStageMessage(context),
                             ),
-                          const SizedBox(height: 96),
                         ],
                       ),
                     ),
+                    if (state.stages.isNotEmpty)
+                      SliverPadding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.lg,
+                        ),
+                        sliver: SliverList.builder(
+                          itemCount: state.stages.length,
+                          itemBuilder: (context, index) {
+                            final stage = state.stages[index];
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 34),
+                              child: Align(
+                                alignment: index.isEven
+                                    ? Alignment.centerLeft
+                                    : Alignment.centerRight,
+                                child: KidsHouseCard(
+                                  width: 172,
+                                  stage: stage,
+                                  surahName:
+                                      state.surahName ??
+                                      '${context.l10n.surah} ${state.surahId}',
+                                  onTap: () => onStageSelected(stage),
+                                  onLockedTap: () =>
+                                      _showLockedStageMessage(context),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    const SliverToBoxAdapter(child: SizedBox(height: 96)),
                   ],
                 ),
               ),

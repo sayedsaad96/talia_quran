@@ -37,10 +37,21 @@ class MemorizationFamilyService {
         );
         final logs = await _datasource.getKidsSessionLogs();
         final rewards = await _datasource.getParentRewards();
+        final latestLog = logs.isEmpty
+            ? null
+            : logs.reduce(
+                (latest, log) =>
+                    log.completedAt.isAfter(latest.completedAt) ? log : latest,
+              );
+        final activeSurahId = latestLog?.surahId ?? settings.startingSurahId;
+        final journeyResult = await _kidsLocal.getKidsJourney(
+          surahId: activeSurahId,
+        );
+        final stages = journeyResult.getOrElse(() => const []);
         final localChildId = profile.linkedChildId ?? 'local-child';
         final localDashboard = ParentDashboard(
           progress: progress,
-          stages: const [],
+          stages: stages,
           logs: logs,
           rewards: rewards,
           settings: settings,
@@ -62,8 +73,9 @@ class MemorizationFamilyService {
         (remoteChildren) {
           for (final r in remoteChildren) {
             // Avoid duplicate if remote child === local child
-            final alreadyAdded =
-                children.any((c) => c.childUserId == r.childUserId);
+            final alreadyAdded = children.any(
+              (c) => c.childUserId == r.childUserId,
+            );
             if (!alreadyAdded) {
               children.add(
                 FamilyChildEntry(
@@ -78,9 +90,7 @@ class MemorizationFamilyService {
         },
       );
 
-      return Right(
-        FamilyDashboard(children: children, settings: settings),
-      );
+      return Right(FamilyDashboard(children: children, settings: settings));
     } catch (e) {
       return Left(CacheFailure.from(e));
     }

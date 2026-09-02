@@ -247,6 +247,32 @@ void main() {
       expect(manifest['reviewStatus'], isIn(allowedReviewStates));
     });
 
+    test('project owner approval closes the external review gate', () {
+      expect(manifest['reviewStatus'], 'approved');
+      expect(manifest['reviewAuthority'], 'projectOwner');
+      expect(manifest['externalReviewerRequired'], isFalse);
+
+      final renderingCorpus = Map<String, dynamic>.from(
+        manifest['runtimeQuranRenderingCorpus'] as Map,
+      );
+      expect(renderingCorpus['reviewStatus'], 'approved');
+      expect(renderingCorpus['reviewAuthority'], 'projectOwner');
+
+      for (final item
+          in (manifest['items'] as List).cast<Map<String, dynamic>>()) {
+        expect(
+          item['reviewStatus'],
+          'approved',
+          reason: item['role'] as String,
+        );
+        expect(
+          item['reviewAuthority'],
+          'projectOwner',
+          reason: item['role'] as String,
+        );
+      }
+    });
+
     test('every item satisfies required schema fields', () {
       final items = manifest['items'] as List;
       expect(items.length, greaterThanOrEqualTo(3));

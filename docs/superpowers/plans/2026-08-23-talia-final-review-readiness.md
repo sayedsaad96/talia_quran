@@ -1,10 +1,12 @@
 # Talia Final Review Readiness Implementation Plan
 
+> **Superseded policy — 2026-08-31:** Any requirement in this historical plan for a qualified external Islamic reviewer or signature is retired. The project owner is the final content authority and G8 is closed through the recorded owner attestation in docs/release/v1/islamic-review-packet.md. The engineering tasks and technical release gates remain useful.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Produce a release-candidate build of Talia whose engineering, Quran, Adhkar/Dua, memorization, Kids, offline, accessibility, synchronization, and security invariants are demonstrably satisfied, ready for full qualified Islamic review and publication only after approval.
+**Goal:** Produce a release-candidate build of Talia whose engineering, Quran, Adhkar/Dua, memorization, Kids, offline, accessibility, synchronization, and security invariants are demonstrably satisfied, ready for publication after the remaining technical gates; project-owner content approval is already recorded.
 
-**Architecture:** Keep the existing Flutter/Cubit/Clean Architecture/GoRouter/GetIt/Supabase/Isar stack. Add a small religious-content evidence layer and immutable corpus manifests; make Quran and devotional content fail closed; then repair the independent product and data-integrity findings. Every phase ends in a reviewable green gate, and the final approval artifact binds the reviewer decision to the exact Quran/Adhkar manifests and application commit.
+**Architecture:** Keep the existing Flutter/Cubit/Clean Architecture/GoRouter/GetIt/Supabase/Isar stack. Add a small religious-content evidence layer and immutable corpus manifests; make Quran and devotional content fail closed; then repair the independent product and data-integrity findings. Every phase ends in a reviewable green gate, and the approval record binds the project-owner decision to the exact Quran/Adhkar manifests and application commit.
 
 **Tech Stack:** Flutter, Dart, flutter_bloc/Cubit, GetIt, GoRouter, Isar, SharedPreferences, Supabase/Postgres/RLS, GitHub Actions, PowerShell contract scripts.
 
@@ -20,7 +22,7 @@
 - Core reading, recall, progress, and queued mutations remain offline-first.
 - Do not change the locked Flutter/Cubit/Clean Architecture/GoRouter/GetIt/Supabase/Isar stack.
 - Preserve user data with migrations and backward-compatible reads before deleting legacy fields or storage keys.
-- A qualified Islamic reviewer must approve the exact corpus hashes and review packet before publication.
+- The project owner is the final content authority. G8 owner approval is complete; no external reviewer or signature is required.
 - Any post-approval change to Quran, Adhkar/Dua, religious UI literals, citations, grades, reciter/riwayah mappings, or religious notifications invalidates approval and returns the build to the Islamic-review gate.
 - Each task follows test-first development and ends with focused tests, full affected-suite tests, analyzer, and a small commit.
 
@@ -33,7 +35,7 @@
 | G2 Data safety/security | Guardian, bookmark, sync, rewards, grants, hosted contract verified | RC build |
 | G3 Learning quality | Recall-first review, documented scheduler, Kids policy, offline fallback | RC build |
 | G4 Product quality | Localization, accessibility, performance, CI/E2E evidence green | RC build |
-| G5 Islamic review | Qualified reviewer approves hashes, citations, grades, counts, translations and presentation | Publication |
+| G5 content approval | Project owner accepts hashes, citations, grades, counts, translations and presentation | `PASS — owner attestation` |
 | G6 Store release | Signed build matches approved commit and manifests; smoke/rollback evidence captured | Production rollout |
 
 ---
@@ -226,7 +228,7 @@ test('every shipped religious asset has immutable identity', () {
 }
 ```
 
-During implementation, replace descriptive values only with evidence copied from the selected provider; never guess them. `pending` is the only allowed status before reviewer sign-off.
+During implementation, replace descriptive values only with evidence copied from the selected provider; never guess them. `pending` is the only allowed status before project-owner approval.
 
 - [ ] **Step 3: Implement deterministic validation**
 
@@ -266,7 +268,7 @@ git commit -m "build: gate religious corpus integrity"
 - Modify: `assets/data/content_manifest.json`
 
 **Interfaces:**
-- Consumes: A licensed, versioned, reviewer-selected Hafs corpus file supplied as an explicit local input.
+- Consumes: A licensed, versioned, project-owner-selected Hafs corpus file supplied as an explicit local input.
 - Produces: Deterministic production assets and manifest hashes; never downloads live data directly into production assets.
 
 - [ ] **Step 1: Write corpus contract tests**
@@ -295,7 +297,7 @@ The importer validates schema and boundaries, writes deterministically, prints t
 
 - [ ] **Step 3: Record provider evidence**
 
-`quran.yaml` must contain provider, exact edition/version, riwayah, page layout, license evidence, retrieval date, original input hash, generated output hash, and reviewer status. Values come from provider/reviewer documentation only.
+`quran.yaml` must contain provider, exact edition/version, riwayah, page layout, license evidence, retrieval date, original input hash, generated output hash, and reviewer status. Values come from provider evidence and the project-owner approval record only.
 
 - [ ] **Step 4: Import structural metadata as sourced fields**
 
@@ -447,7 +449,7 @@ git commit -am "feat: enforce Quran corpus and riwayah alignment"
 - Create: `test/content/adhkar_corpus_integrity_test.dart`
 
 **Interfaces:**
-- Consumes: Reviewer-selected licensed dataset with exact Arabic, counts, structured citations, grades and grader attribution.
+- Consumes: Project-owner-selected licensed dataset with exact Arabic, counts, structured citations, grades and grader attribution.
 - Produces: Approved-schema records; Quranic records reference Quran IDs rather than hand-typed duplicate revelation where practical.
 
 - [ ] **Step 1: Write schema and release tests**
@@ -934,7 +936,7 @@ git commit -m "test: enforce final release quality gates"
 
 ---
 
-### Task 18: Build the Islamic Reviewer Packet and Freeze Release Candidate 1
+### Task 18: Preserve the Owner Approval Record and Freeze Release Candidate 1
 
 **Files:**
 - Create: `tool/content_validation/export_reviewer_packet.dart`
@@ -984,7 +986,7 @@ Do not publish or mark content approved at this step.
 
 ---
 
-### Task 19: Process Islamic Review Without Breaking Traceability
+### Task 19: Preserve Owner Approval Without Breaking Traceability
 
 **Files:**
 - Create per cycle: `docs/content-review/feedback/current-rc-review.yaml`
@@ -993,7 +995,7 @@ Do not publish or mark content approved at this step.
 - Modify: `assets/data/content_manifest.json` review statuses only after matching approval.
 
 **Interfaces:**
-- Consumes: Signed reviewer findings tied to RC hashes.
+- Consumes: The recorded project-owner decision tied to content hashes; no signature required.
 - Produces: Corrected candidate cycles or a final approval artifact tied to immutable hashes.
 
 - [ ] **Step 1: Record each reviewer finding structurally**
@@ -1019,7 +1021,7 @@ Any content change reruns G1, G4, reviewer packet export, hashes, and full revie
 
 - [ ] **Step 4: Accept approval only when hashes match**
 
-The approval artifact must contain reviewer identity, qualification record/reference, date, decision, reviewed scopes, app commit, manifest hash, corpus hashes, and any disclosed limitations. The publication validator rejects a signature whose hashes differ from the current tree.
+The approval artifact records the project-owner authority, date, decision, reviewed scopes, manifest hash, corpus hashes, and disclosed limitations. No signature is required. The publication validator rejects an approval record whose hashes differ from the current tree.
 
 - [ ] **Step 5: Commit the matching approval**
 
@@ -1071,11 +1073,11 @@ Privacy labels must match microphone/STT/network/analytics behavior. Screenshots
 
 - [ ] **Step 5: Stage rollout with rollback criteria**
 
-Release to internal testing, then closed testing, then a small production percentage. Pause/rollback on content hash mismatch, Quran render defect, crash-free regression, data loss, sync duplication, STT-blocked completion, or reviewer-reported religious issue.
+Release to internal testing, then closed testing, then a small production percentage. Pause/rollback on content hash mismatch, Quran render defect, crash-free regression, data loss, sync duplication, STT-blocked completion, or owner-reported religious-content issue.
 
 - [ ] **Step 6: Close the release**
 
-Archive all G0-G6 evidence, reviewer approval, store artifact hashes, migration evidence, known limitations, and monitoring links. Schedule periodic content spot-checks and require a new approval cycle for every religious-content update.
+Archive all G0-G6 evidence, project-owner approval, store artifact hashes, migration evidence, known limitations, and monitoring links. Schedule periodic content spot-checks and require a new approval cycle for every religious-content update.
 
 ---
 
@@ -1102,13 +1104,13 @@ RC target: **90+/100**, requiring:
 - Every shipped Adhkar/Dua/Hadith-derived record has resolvable evidence and the required grade/tier/review state.
 - Quran text, QCF/tajweed presentation, numbering, and every enabled reciter are explicitly aligned to the approved riwayah.
 - Analyzer, full tests, release builds, fresh/target database contracts, and clean-device smoke tests pass.
-- The qualified Islamic reviewer approves the exact RC hashes and all requested corrections are closed.
+- Project-owner content approval is recorded, the exact content hashes match, and all requested corrections are closed.
 - Store artifacts are built from the approved tag and their hashes are recorded.
 - Rollback and post-release content-governance processes are documented and tested.
 
 ## Self-Review Record
 
 - **Spec coverage:** All findings in both audits and the unified remediation plan are mapped to Tasks 1-20; religious correctness, sourced sajdah/hizb metadata, Hifz, Kids, offline, localization, accessibility, data safety, security, testing, reviewer handoff, and publication are covered. The remediation plan's rejected learning rules were corrected against explicit KB lines before finalization.
-- **No placeholders:** Commands use explicit paths and behaviors. Angle-bracket values occur only where execution requires an external reviewer/database/signing value and are named as required inputs rather than implementation gaps.
+- **No placeholders:** Commands use explicit paths and behaviors. Angle-bracket values occur only where execution requires an database/signing value and are named as required inputs rather than implementation gaps.
 - **Type consistency:** `ContentEvidence`, `ContentReleasePolicy`, `QuranCorpusIdentity`, `ReviewAttempt`, manifest identities, RC hashes, and approval hashes are introduced before their consumers.
 - **Scope control:** New optional religious features, Tafsir, multi-riwayah expansion, prayer-time integration, and broad visual redesign are excluded from this release; current features are completed and governed first.

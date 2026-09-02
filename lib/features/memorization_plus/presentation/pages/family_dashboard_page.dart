@@ -5,6 +5,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/services/notification_scheduler.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -185,6 +186,59 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
+                context.l10n.kidsJourneyBetaTitle,
+                style: AppTypography.titleMedium,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              SwitchListTile(
+                title: Text(context.l10n.kidsJourneyBetaTitle),
+                subtitle: Text(context.l10n.kidsJourneyBetaDescription),
+                value: settings.kidsHifzV2Enabled,
+                onChanged: (value) async {
+                  await sheetContext.read<FamilyDashboardCubit>().saveSettings(
+                    settings.copyWith(kidsHifzV2Enabled: value),
+                  );
+                  if (sheetContext.mounted) Navigator.pop(sheetContext);
+                },
+              ),
+              SwitchListTile(
+                title: Text(context.l10n.kidsGuidanceAudioTitle),
+                subtitle: Text(context.l10n.kidsGuidanceAudioDescription),
+                value: settings.guidanceAudioEnabled ?? true,
+                onChanged: (value) async {
+                  await sheetContext.read<FamilyDashboardCubit>().saveSettings(
+                    settings.copyWith(guidanceAudioEnabled: value),
+                  );
+                  if (sheetContext.mounted) Navigator.pop(sheetContext);
+                },
+              ),
+              ListTile(
+                title: Text(context.l10n.kidsSessionGoalTitle),
+                trailing: DropdownButton<int>(
+                  value: settings.sessionGoalMinutes ?? 6,
+                  items: [6, 8, 10]
+                      .map(
+                        (minutes) => DropdownMenuItem(
+                          value: minutes,
+                          child: Text(
+                            context.l10n.kidsSessionGoalValue(minutes),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (minutes) async {
+                    if (minutes == null) return;
+                    await sheetContext
+                        .read<FamilyDashboardCubit>()
+                        .saveSettings(
+                          settings.copyWith(sessionGoalMinutes: minutes),
+                        );
+                    if (sheetContext.mounted) Navigator.pop(sheetContext);
+                  },
+                ),
+              ),
+              const Divider(),
+              Text(
                 context.l10n.parentDashboardReminders,
                 style: AppTypography.titleMedium,
               ),
@@ -199,10 +253,14 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                 value: settings.reminderEnabled,
                 onChanged: (val) async {
                   final cubit = sheetContext.read<FamilyDashboardCubit>();
+                  final l10n = sheetContext.l10n;
                   if (val) {
                     final time = await showTimePicker(
                       context: sheetContext,
-                      initialTime: const TimeOfDay(hour: 20, minute: 0),
+                      initialTime: TimeOfDay(
+                        hour: settings.reminderHour,
+                        minute: settings.reminderMinute,
+                      ),
                     );
                     if (time != null && sheetContext.mounted) {
                       await cubit.saveSettings(
@@ -212,6 +270,9 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                           reminderMinute: time.minute,
                         ),
                       );
+                      await getIt<NotificationScheduler>().refreshNotifications(
+                        l10n,
+                      );
                       if (sheetContext.mounted) {
                         Navigator.pop(sheetContext);
                       }
@@ -219,6 +280,9 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                   } else {
                     await cubit.saveSettings(
                       settings.copyWith(reminderEnabled: false),
+                    );
+                    await getIt<NotificationScheduler>().refreshNotifications(
+                      l10n,
                     );
                     if (sheetContext.mounted) {
                       Navigator.pop(sheetContext);

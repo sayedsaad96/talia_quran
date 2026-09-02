@@ -1,5 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'dart:async';
+import 'dart:math';
+
+import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:just_audio/just_audio.dart';
@@ -18,7 +20,6 @@ import '../../../../core/services/achievement_service.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/services/audio_lifecycle_manager.dart';
 import '../../../../core/services/streak_service.dart'; // RISK-5 FIX
-import '../../../../core/services/xp_service.dart'; // RISK-5 FIX
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
@@ -29,6 +30,9 @@ import '../../../../features/quran/domain/repositories/quran_repository.dart';
 
 part 'kids_mode_state.dart';
 
+typedef KidsGuardianPinVerifier = Future<bool> Function(String pin);
+typedef KidsSessionPolicyLoader = Future<KidsSessionPolicy> Function();
+
 class KidsModeCubit extends Cubit<KidsModeState> {
   KidsModeCubit(
     this._getKidsProgress,
@@ -38,11 +42,16 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     this._quranRepository,
     this._sessionEngine,
     this._reviewAdapter,
-    this._streakService, // RISK-5 FIX
-    this._xpService, [ // RISK-5 FIX
+    this._streakService, [
     KidsRecitationRecorder? recitationRecorder,
     AppSessionService? appSessionService,
+    KidsGuardianPinVerifier? guardianPinVerifier,
+    KidsSessionPolicyLoader? sessionPolicyLoader,
+    V2SessionProgressAdapter? progressAdapter,
   ]) : _appSessionService = appSessionService,
+       _guardianPinVerifier = guardianPinVerifier,
+       _sessionPolicyLoader = sessionPolicyLoader,
+       _progressAdapter = progressAdapter,
        super(const KidsModeInitial()) {
     _recitationRecorder = recitationRecorder ?? KidsSpeechRecitationRecorder();
     AudioLifecycleManager.instance.register(_player);
@@ -68,9 +77,11 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final QuranRepository _quranRepository;
   final V2SessionEngine _sessionEngine;
   final V2SessionReviewAdapter _reviewAdapter;
-  final StreakService _streakService; // RISK-5 FIX
-  final XpService _xpService; // RISK-5 FIX
+  final StreakService _streakService;
   final AppSessionService? _appSessionService;
+  final KidsGuardianPinVerifier? _guardianPinVerifier;
+  final KidsSessionPolicyLoader? _sessionPolicyLoader;
+  final V2SessionProgressAdapter? _progressAdapter;
   late final KidsRecitationRecorder _recitationRecorder;
   final AudioPlayer _player = AudioPlayer();
   late final StreamSubscription<PlayerState> _playerSub;
@@ -81,7 +92,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   int _loopCount = 0;
   final Set<String> _completionsInFlight = <String>{};
-  static const int _maxLoops = 3;
+  static const int _maxLoops = 1;
+  DateTime? _sessionStartedAt;
+  String? _sessionId;
+  KidsMissionType _missionType = KidsMissionType.newMemorization;
 
   // Recording timer
   Timer? _recordingTimer;
@@ -92,7 +106,12 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     _loopCount = count;
   }
 
-  Future<void> load(int surahId, int ayahNumber, String ayahText) async {
+  Future<void> load(
+    int surahId,
+    int ayahNumber,
+    String ayahText, {
+    KidsMissionType missionType = KidsMissionType.newMemorization,
+  }) async {
     emit(const KidsModeLoading());
 
     final journeyResult = await _getKidsJourney(
@@ -135,26 +154,40 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       (p) => p,
     );
 
-    final sessionState = _sessionEngine.startLearning(
-      V2SessionState.initial(
-        surahId: surahId,
-        blockAyahs: [
-          Ayah(
-            number: ayahNumber,
-            surahId: surahId,
-            text: resolvedText,
-            numberInSurah: ayahNumber,
-          ),
-        ],
-        blockReviewRequired: false,
-      ),
+    final fallbackAyah = Ayah(
+      number: ayahNumber,
+      surahId: surahId,
+      text: resolvedText,
+      numberInSurah: ayahNumber,
     );
+    var sessionState = missionType == KidsMissionType.resume
+        ? await _restoreKidsSession(surahId, fallbackAyah)
+        : null;
+    final resumed = sessionState != null;
+    if (sessionState == null) {
+      final policy = await _loadSessionPolicy();
+      sessionState = _sessionEngine.startLearning(
+        V2SessionState.initial(
+          surahId: surahId,
+          blockAyahs: [fallbackAyah],
+          blockReviewRequired: policy.blockReviewRequired,
+        ),
+      );
+    }
+    await _saveKidsSession(sessionState);
+
+    final activeAyah = sessionState.currentAyah;
+    final startedAt = DateTime.now().toUtc();
+    _sessionStartedAt = startedAt;
+    _sessionId =
+        'kids_${startedAt.microsecondsSinceEpoch}_${surahId}_$ayahNumber';
+    _missionType = resumed ? KidsMissionType.resume : missionType;
 
     emit(
       KidsModeLoaded(
         surahId: surahId,
-        ayahNumber: ayahNumber,
-        ayahText: resolvedText,
+        ayahNumber: activeAyah.numberInSurah,
+        ayahText: activeAyah.text,
         sessionState: sessionState,
         progress: progress,
         isPlaying: false,
@@ -163,6 +196,69 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         isCompleted: false,
       ),
     );
+  }
+
+  Future<KidsSessionPolicy> _loadSessionPolicy() async {
+    try {
+      return await _sessionPolicyLoader?.call() ?? KidsSessionPolicy.forAge(8);
+    } catch (_) {
+      return KidsSessionPolicy.forAge(8);
+    }
+  }
+
+  Future<V2SessionState?> _restoreKidsSession(
+    int surahId,
+    Ayah fallbackAyah,
+  ) async {
+    final adapter = _progressAdapter;
+    if (adapter == null) return null;
+    try {
+      final saved = (await adapter.loadIfExists(
+        surahId,
+      )).fold(() => null, (session) => session);
+      if (saved == null) return null;
+      final phaseIndex = saved.phaseIndex;
+      if (phaseIndex < 0 || phaseIndex >= V2SessionPhase.values.length) {
+        await adapter.clear(surahId);
+        return null;
+      }
+      final phase = V2SessionPhase.values[phaseIndex];
+      if (phase == V2SessionPhase.created || phase.isTerminal) {
+        await adapter.clear(surahId);
+        return null;
+      }
+      if (saved.blockAyahNumbers.isEmpty) {
+        await adapter.clear(surahId);
+        return null;
+      }
+
+      var allAyahs = <Ayah>[fallbackAyah];
+      final surahResult = await _quranRepository.getSurahDetail(surahId);
+      surahResult.fold((_) {}, (detail) => allAyahs = detail.ayahs);
+      final availableNumbers = allAyahs
+          .map((ayah) => ayah.numberInSurah)
+          .toSet();
+      if (!saved.blockAyahNumbers.every(availableNumbers.contains)) return null;
+      return V2SessionProgressAdapter.restore(saved, allAyahs);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveKidsSession(V2SessionState session) async {
+    try {
+      await _progressAdapter?.save(session);
+    } catch (_) {
+      // Resume is best-effort and must never block the child's active mission.
+    }
+  }
+
+  Future<void> _clearKidsSession(int surahId) async {
+    try {
+      await _progressAdapter?.clear(surahId);
+    } catch (_) {
+      // Completion remains valid even when local resume cleanup fails.
+    }
   }
 
   Future<void> playAudio() async {
@@ -183,10 +279,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   Future<void> _playAyah(int surahId, int ayahNumber) async {
     try {
-      // Cache-first playback: reuses the same cache the adult V2 path uses, so
-      // the 3× loop below plays the 2nd/3rd iterations from disk instead of
-      // re-downloading. Source URL is identical (AudioCacheService builds it
-      // via QuranAudioService.buildUrl internally).
+      // Cache-first playback lets optional child-requested replays reuse the
+      // same source without creating an automatic playback loop.
       final source = await AudioCacheService.instance.getAudioSource(
         surahId,
         ayahNumber,
@@ -236,7 +330,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   }
 
   /// Records the child's recitation and evaluates it against the ayah text,
-  /// mirroring the adult V2 path (V2RecitationEvaluator, ≥ 92% similarity).
+  /// using the shared ordered V2 evaluator and its explicit verdict bands.
   Future<void> startRecording() async {
     if (state is! KidsModeLoaded) return;
     final st = state as KidsModeLoaded;
@@ -255,16 +349,29 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       await stopAudio();
     }
 
+    // Move the shared engine into its hidden-text recall phase before opening
+    // the microphone, so every unsuccessful attempt is tracked consistently.
+    var recitingSession = st.sessionState;
+    if (recitingSession.phase == V2SessionPhase.learning) {
+      recitingSession = _sessionEngine.startMemorizing(recitingSession);
+    }
+    if (recitingSession.phase == V2SessionPhase.memorizing ||
+        recitingSession.phase == V2SessionPhase.remediation) {
+      recitingSession = _sessionEngine.startReciting(recitingSession);
+    }
+
     // Prepare the completer so stopRecording() can signal early stop.
     _recordingCompleter = Completer<KidsRecitationCaptureResult>();
 
     emit(
       st.copyWith(
+        sessionState: recitingSession,
         isRecording: true,
         recordingSeconds: 0,
         clearRecordingError: true,
       ),
     );
+    await _saveKidsSession(recitingSession);
 
     // Per-second timer drives the recording duration indicator in the UI.
     var elapsedSeconds = 0;
@@ -319,14 +426,20 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
 
     if (!evalResult.passed) {
-      // Words were detected but didn't match the ayah.
+      // Preserve the ordered verdict and escalate repeated failures in V2.
+      final evaluatedSession = _sessionEngine.evaluateRecitation(
+        current.sessionState,
+        capture.recognizedWords,
+      );
       emit(
         current.copyWith(
+          sessionState: evaluatedSession,
           isRecording: false,
           recordingSeconds: 0,
           recordingError: CubitMessageCodes.kidsRecitationMismatch,
         ),
       );
+      await _saveKidsSession(evaluatedSession);
       return;
     }
 
@@ -364,15 +477,19 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
   }
 
-  /// V1-M8 — manual/self-grade completion route.
-  ///
-  /// Used when audio playback or STT is unavailable (airplane mode, empty
-  /// cache, denied microphone). A parent/guardian confirms the child
-  /// completed the listening and recitation without device verification.
-  Future<void> submitManualCompletion() async {
-    if (state is! KidsModeLoaded) return;
+  /// Guardian-verified fallback for genuine audio or speech-recognition faults.
+  /// A recitation mismatch is pedagogical evidence and can never use this path.
+  Future<bool> submitManualCompletion({String? guardianPin}) async {
+    if (state is! KidsModeLoaded) return false;
     final st = state as KidsModeLoaded;
-    if (st.isCompleted) return;
+    if (st.isCompleted || !st.canUseGuardianFallback) return false;
+
+    final verifier = _guardianPinVerifier;
+    if (verifier == null || guardianPin == null || guardianPin.length != 4) {
+      return false;
+    }
+    if (!await verifier(guardianPin)) return false;
+
     if (st.isRecording) {
       await _recitationRecorder.stop();
       _recordingTimer?.cancel();
@@ -381,6 +498,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       emit(st.copyWith(isRecording: false, recordingSeconds: 0));
     }
     await markCompleted(manualGrade: true);
+    return state is KidsModeLoaded && (state as KidsModeLoaded).isCompleted;
   }
 
   Future<void> markCompleted({
@@ -420,11 +538,36 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     _completionsInFlight.add(completionKey);
 
     try {
+      final failureCount = st.sessionState.failureTracker.failureCountFor(
+        st.surahId,
+        st.ayahNumber,
+      );
+      final trackedHint = st.sessionState.hintTracker.levelFor(
+        st.surahId,
+        st.ayahNumber,
+      );
+      final effectiveHint = manualGrade ? V2HintLevel.fullAyah : trackedHint;
+      final masteryRating = _masteryRatingFor(
+        failureCount: failureCount,
+        hintLevel: effectiveHint,
+      );
+      final startedAt = _sessionStartedAt ?? DateTime.now().toUtc();
+      final durationSeconds = max(
+        0,
+        DateTime.now().toUtc().difference(startedAt).inSeconds,
+      );
       final result = await _awardPoints(
         AwardKidsPointsParams(
+          sessionId: _sessionId,
           surahId: st.surahId,
           ayahNumber: st.ayahNumber,
           repeatsCompleted: _loopCount,
+          missionType: _missionType,
+          ayahNumbers: [st.ayahNumber],
+          durationSeconds: durationSeconds,
+          attemptCount: failureCount + 1,
+          hintCount: effectiveHint == V2HintLevel.none ? 0 : 1,
+          masteryRating: masteryRating,
         ),
       );
 
@@ -435,13 +578,37 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       if (completion == null) return;
 
       if (completion.alreadyCompleted) {
+        final reviewResult = await _reviewAdapter.recordPass(
+          surahId: st.surahId,
+          ayahNumber: st.ayahNumber,
+          hintLevel: effectiveHint,
+          createdByMode: ReviewRecordCreatedByMode.kidsMode,
+        );
+        final reviewFailure = reviewResult.fold(
+          (failure) => failure,
+          (_) => null,
+        );
+        if (reviewFailure != null) {
+          emit(
+            st.copyWith(recordingError: CubitMessageCodes.hifzReviewSaveFailed),
+          );
+          return;
+        }
+        final completedSession = _completeV2Session(
+          st.sessionState,
+          manualGrade: manualGrade,
+          automaticSpokenText: automaticSpokenText,
+        );
+        await _recordSessionActivity();
+        await _clearKidsSession(st.surahId);
         await _appSessionService?.clearLastRestorableLocation();
         emit(
           st.copyWith(
             progress: completion.progress,
-            isCompleted: false,
+            isCompleted: true,
+            sessionState: completedSession,
             sessionStarsEarned: 0,
-            recordingError: CubitMessageCodes.kidsAyahAlreadyCompleted,
+            clearRecordingError: true,
           ),
         );
         return;
@@ -450,7 +617,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       final reviewResult = await _reviewAdapter.recordPass(
         surahId: st.surahId,
         ayahNumber: st.ayahNumber,
-        hintLevel: V2HintLevel.none,
+        hintLevel: effectiveHint,
         createdByMode: ReviewRecordCreatedByMode.kidsMode,
       );
       final reviewFailure = reviewResult.fold(
@@ -458,6 +625,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         (_) => null,
       );
       if (reviewFailure != null) {
+        await _clearKidsSession(st.surahId);
         emit(
           st.copyWith(
             progress: completion.progress,
@@ -475,13 +643,8 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         automaticSpokenText: automaticSpokenText,
       );
 
-      // RISK-5 FIX: record streak & XP from Kids Mode — same as Hifz & Adults
-      try {
-        await _streakService.recordActivity(activityDelta: 1);
-        await _xpService.addXp('ayah_memorized');
-      } catch (_) {
-        // Non-critical
-      }
+      await _recordSessionActivity();
+      await _clearKidsSession(st.surahId);
 
       final newAwards = await _achievementService.checkAndUnlockCertificates(
         isKids: true,
@@ -498,6 +661,27 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       );
     } finally {
       _completionsInFlight.remove(completionKey);
+    }
+  }
+
+  PerformanceRating _masteryRatingFor({
+    required int failureCount,
+    required V2HintLevel hintLevel,
+  }) {
+    if (hintLevel == V2HintLevel.fullAyah || failureCount >= 2) {
+      return PerformanceRating.weak;
+    }
+    if (hintLevel == V2HintLevel.firstWord || failureCount == 1) {
+      return PerformanceRating.average;
+    }
+    return PerformanceRating.excellent;
+  }
+
+  Future<void> _recordSessionActivity() async {
+    try {
+      await _streakService.recordActivity(activityDelta: 1);
+    } catch (_) {
+      // Session completion remains valid when the streak service is unavailable.
     }
   }
 
@@ -527,6 +711,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   @override
   Future<void> close() async {
+    final current = state;
+    if (current is KidsModeLoaded && !current.isCompleted) {
+      await _saveKidsSession(current.sessionState);
+    }
     AudioLifecycleManager.instance.unregister(_player);
     _recordingTimer?.cancel();
     await _player.stop();

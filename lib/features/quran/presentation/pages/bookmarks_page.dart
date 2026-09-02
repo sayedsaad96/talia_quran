@@ -6,6 +6,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/quran_ayah_display_text.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../data/datasources/bookmark_service.dart';
@@ -250,7 +251,10 @@ class _SurahBookmarkGroup extends StatelessWidget {
                         const SizedBox(width: AppSpacing.sm),
                         Expanded(
                           child: Text(
-                            entry.ayahText,
+                            QuranAyahDisplayText.withVerseBrackets(
+                              entry.ayahText,
+                              ayahNumber: entry.ayahNumber,
+                            ),
                             style: AppTypography.quranSmall.copyWith(
                               color: textColor,
                             ),

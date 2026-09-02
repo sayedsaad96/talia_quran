@@ -3,6 +3,16 @@ import 'package:talia_quran/features/memorization_plus/domain/entities/memorizat
 
 void main() {
   group('KidsProgress.addPoints', () {
+    test('adds the mastery stars supplied by the completed mission', () {
+      const progress = KidsProgress.initial();
+
+      final updated = progress.addPoints(10, stars: 3);
+
+      expect(updated.totalPoints, 10);
+      expect(updated.starsEarned, 3);
+      expect(updated.ayahsCompleted, 1);
+    });
+
     test('does not increment currentStreak (StreakService is SSOT)', () {
       const progress = KidsProgress(
         totalPoints: 0,

@@ -159,6 +159,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settings => 'الإعدادات';
 
   @override
+  String get settingsPageSubtitle => 'اضبط تالية بما يناسب روتينك';
+
+  @override
+  String get settingsQuickPreferences => 'تفضيلات سريعة';
+
+  @override
+  String get settingsMoreSettings => 'إعدادات أخرى';
+
+  @override
   String get language => 'اللغة';
 
   @override
@@ -291,6 +300,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get previous => 'السابق';
+
+  @override
+  String get playSurah => 'تشغيل السورة';
+
+  @override
+  String get playPage => 'تلاوة الصفحة';
+
+  @override
+  String get listenToSurah => 'استماع للسورة';
+
+  @override
+  String get nowPlaying => 'يتلو الآن';
 
   @override
   String get ofLabel => 'من';
@@ -4020,4 +4041,65 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get startNow => 'ابدأ الآن';
+
+  @override
+  String get kidsJourneyBetaTitle => 'رحلة الحفظ الجديدة';
+
+  @override
+  String get kidsJourneyBetaDescription =>
+      'تفعيل مهمة اليوم والمراجعة المتباعدة مع إمكانية الرجوع.';
+
+  @override
+  String get kidsGuidanceAudioTitle => 'صوت المرشد';
+
+  @override
+  String get kidsGuidanceAudioDescription =>
+      'إرشادات قصيرة لا تعمل أثناء تلاوة القرآن.';
+
+  @override
+  String get kidsSessionGoalTitle => 'مدة الجلسة المستهدفة';
+
+  @override
+  String kidsSessionGoalValue(int minutes) {
+    return '$minutes دقائق';
+  }
+
+  @override
+  String get kidsSetupReminderTime => 'وقت التذكير';
+
+  @override
+  String get kidsSetupWeeklyGoal => 'الهدف الأسبوعي';
+
+  @override
+  String kidsSetupWeeklyGoalValue(int sessions) {
+    return '$sessions جلسات أسبوعياً';
+  }
+
+  @override
+  String get kidsSetupStartingSurah => 'سورة البداية';
+
+  @override
+  String parentCommitmentDays(int count) {
+    return '$count أيام التزام';
+  }
+
+  @override
+  String parentDueReviews(int count) {
+    return '$count مراجعات مستحقة';
+  }
+
+  @override
+  String parentNeedsSupport(int count) {
+    return '$count آيات تحتاج دعمًا';
+  }
+
+  @override
+  String parentAverageDuration(int minutes) {
+    return 'متوسط $minutes د';
+  }
+
+  @override
+  String parentHintUses(int count) {
+    return '$count تلميحات';
+  }
 }

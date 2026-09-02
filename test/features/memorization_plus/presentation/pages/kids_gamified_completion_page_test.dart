@@ -62,6 +62,20 @@ void main() {
       expect(find.text('Return to map'), findsOneWidget);
     });
 
+    test('completed surah does not reopen its last ayah', () {
+      const stages = [
+        KidsJourneyStage(
+          stageNumber: 1,
+          surahId: 114,
+          startAyah: 1,
+          endAyah: 6,
+          completedAyahs: [1, 2, 3, 4, 5, 6],
+          status: KidsJourneyStageStatus.completed,
+        ),
+      ];
+
+      expect(KidsJourneyMissionResolver.nextMission(stages), isNull);
+    });
     test(
       'selects the current journey mission instead of incrementing ayah',
       () {

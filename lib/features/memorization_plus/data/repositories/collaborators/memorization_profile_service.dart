@@ -1,4 +1,4 @@
-﻿import 'package:dartz/dartz.dart';
+import 'package:dartz/dartz.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../../core/constants/app_constants.dart';
 import '../../../../../core/error/app_failure.dart';
@@ -12,7 +12,11 @@ import 'memorization_profile_store.dart';
 /// legacy track flag. Persists through [MemorizationProfileStore] and the
 /// local datasource.
 class MemorizationProfileService {
-  MemorizationProfileService(this._datasource, this._profileStore, [this._prefs]);
+  MemorizationProfileService(
+    this._datasource,
+    this._profileStore, [
+    this._prefs,
+  ]);
 
   final MemorizationPlusLocalDatasource _datasource;
   final MemorizationProfileStore _profileStore;
@@ -57,6 +61,25 @@ class MemorizationProfileService {
       return Right(saved);
     } catch (e) {
       return Left(CacheFailure.from(e));
+    }
+  }
+
+  Future<Either<Failure, MemorizationProfile>> configureChildAge(
+    int age,
+  ) async {
+    if (age < 5 || age > 12) {
+      return const Left(CacheFailure('Child age must be between 5 and 12'));
+    }
+    try {
+      final profile = await _loadProfile();
+      if (!profile.isChild) {
+        return const Left(CacheFailure('Select the kids path first'));
+      }
+      final saved = await _saveProfile(profile.copyWith(childAge: age));
+      await _prefs?.setBool(kIdentityCloudDirty, true);
+      return Right(saved);
+    } catch (error) {
+      return Left(CacheFailure.from(error));
     }
   }
 

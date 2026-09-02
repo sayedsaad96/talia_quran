@@ -4,6 +4,7 @@ export 'daily_plan.dart';
 export 'family_dashboard.dart';
 export 'kids_journey_stage.dart';
 export 'kids_progress.dart';
+export 'kids_session_policy.dart';
 export 'kids_session_log.dart';
 export 'parent_dashboard.dart';
 export 'remote_child_summary.dart';

@@ -4,19 +4,38 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 
-class SettingsSection extends StatelessWidget {
+class SettingsSection extends StatefulWidget {
   const SettingsSection({
     super.key,
     required this.title,
     required this.children,
     this.accentColor,
     this.icon,
+    this.subtitle,
+    this.collapsible = false,
+    this.initiallyExpanded = true,
   });
 
   final String title;
   final List<Widget> children;
   final Color? accentColor;
   final IconData? icon;
+  final String? subtitle;
+  final bool collapsible;
+  final bool initiallyExpanded;
+
+  @override
+  State<SettingsSection> createState() => _SettingsSectionState();
+}
+
+class _SettingsSectionState extends State<SettingsSection> {
+  late bool _isExpanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _isExpanded = !widget.collapsible || widget.initiallyExpanded;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,60 +44,150 @@ class SettingsSection extends StatelessWidget {
     final border = (isDark ? AppColors.darkDivider : AppColors.lightDivider)
         .withValues(alpha: isDark ? 0.55 : 0.8);
     final accent =
-        accentColor ?? (isDark ? AppColors.primaryLight : AppColors.primary);
+        widget.accentColor ??
+        (isDark ? AppColors.primaryLight : AppColors.primary);
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsetsDirectional.only(
-            start: AppSpacing.xs,
-            bottom: AppSpacing.sm,
-          ),
-          child: Row(
-            children: [
-              if (icon != null) ...[
-                Icon(icon, size: 16, color: accent),
-                const SizedBox(width: 6),
-              ] else ...[
-                Container(
-                  width: 3,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    color: accent,
-                    borderRadius: BorderRadius.circular(2),
+    return Material(
+      color: surface,
+      elevation: isDark ? 0 : 1,
+      shadowColor: AppColors.primary.withValues(alpha: 0.07),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+      clipBehavior: Clip.antiAlias,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          border: Border.all(color: border, width: 0.7),
+        ),
+        child: Column(
+          children: [
+            Semantics(
+              button: widget.collapsible,
+              expanded: widget.collapsible ? _isExpanded : null,
+              child: InkWell(
+                onTap: widget.collapsible
+                    ? () => setState(() => _isExpanded = !_isExpanded)
+                    : null,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: isDark ? 0.16 : 0.09),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
+                          border: Border.all(
+                            color: accent.withValues(alpha: 0.18),
+                          ),
+                        ),
+                        child: Icon(
+                          widget.icon ?? Icons.tune_rounded,
+                          size: 21,
+                          color: accent,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.title,
+                              style: AppTypography.titleMedium.copyWith(
+                                color: textColor,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 15,
+                              ),
+                            ),
+                            if (widget.subtitle case final subtitle?) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                subtitle,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: subtextColor,
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (widget.collapsible)
+                        AnimatedRotation(
+                          turns: _isExpanded ? 0.5 : 0,
+                          duration: const Duration(milliseconds: 220),
+                          curve: Curves.easeOutCubic,
+                          child: Icon(
+                            Icons.keyboard_arrow_down_rounded,
+                            color: subtextColor,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
-              ],
-              Text(
-                title,
-                style: AppTypography.labelMedium.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
               ),
-            ],
-          ),
-        ),
-        Material(
-          color: surface,
-          elevation: isDark ? 0 : 1,
-          shadowColor: Colors.black.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          clipBehavior: Clip.antiAlias,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              border: Border.all(color: border, width: 0.6),
             ),
-            child: Column(children: children),
-          ),
+            AnimatedSize(
+              duration: const Duration(milliseconds: 240),
+              curve: Curves.easeOutCubic,
+              alignment: Alignment.topCenter,
+              child: _isExpanded
+                  ? Column(
+                      children: [
+                        Divider(height: 1, thickness: 0.7, color: border),
+                        ...widget.children,
+                      ],
+                    )
+                  : const SizedBox(width: double.infinity),
+            ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class SettingsAdaptiveGrid extends StatelessWidget {
+  const SettingsAdaptiveGrid({super.key, required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = AppSpacing.md;
+        final usesTwoColumns = constraints.maxWidth >= 760;
+
+        if (!usesTwoColumns) {
+          return Column(
+            children: [
+              for (var index = 0; index < children.length; index++) ...[
+                children[index],
+                if (index != children.length - 1) const SizedBox(height: gap),
+              ],
+            ],
+          );
+        }
+
+        final itemWidth = (constraints.maxWidth - gap) / 2;
+        return Wrap(
+          spacing: gap,
+          runSpacing: gap,
+          children: [
+            for (final child in children)
+              SizedBox(width: itemWidth, child: child),
+          ],
+        );
+      },
     );
   }
 }

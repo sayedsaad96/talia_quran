@@ -7,10 +7,29 @@ import '../../features/progress/domain/repositories/progress_repository.dart';
 
 import 'notification_service.dart';
 
+typedef KidsSessionDatesLoader = Future<List<DateTime>> Function();
+
+bool hasCompletedKidsMissionToday(
+  Iterable<DateTime> completedAt, {
+  DateTime? now,
+}) {
+  final localNow = (now ?? DateTime.now()).toLocal();
+  return completedAt.any((date) {
+    final localDate = date.toLocal();
+    return localDate.year == localNow.year &&
+        localDate.month == localNow.month &&
+        localDate.day == localNow.day;
+  });
+}
+
 class NotificationScheduler {
   final TaliaNotificationService _service;
+  final KidsSessionDatesLoader? _kidsSessionDatesLoader;
 
-  NotificationScheduler(this._service);
+  NotificationScheduler(
+    this._service, {
+    KidsSessionDatesLoader? kidsSessionDatesLoader,
+  }) : _kidsSessionDatesLoader = kidsSessionDatesLoader;
 
   /// Reschedules every enabled reminder. Called from app resume, locale
   /// changes and first launch — none of which may surface plugin errors,
@@ -31,6 +50,7 @@ class NotificationScheduler {
 
     int currentStreak = 1;
     int dueReviews = 0;
+    var kidsMissionCompletedToday = false;
 
     try {
       if (getIt.isRegistered<StreakReader>()) {
@@ -38,8 +58,13 @@ class NotificationScheduler {
         currentStreak = streakEntity.currentStreak;
       }
       if (getIt.isRegistered<ProgressRepository>()) {
-        final progressResult = await getIt<ProgressRepository>().getOverallProgress();
+        final progressResult = await getIt<ProgressRepository>()
+            .getOverallProgress();
         progressResult.fold((_) => null, (p) => dueReviews = p.reviewAyahs);
+      }
+      final kidsDates = await _kidsSessionDatesLoader?.call();
+      if (kidsDates != null) {
+        kidsMissionCompletedToday = hasCompletedKidsMissionToday(kidsDates);
       }
     } catch (_) {
       // Non-critical fallback
@@ -178,7 +203,7 @@ class NotificationScheduler {
       await _service.cancelDailyDuaReminder();
     }
 
-    if (kidsReviewEnabled) {
+    if (kidsReviewEnabled && !kidsMissionCompletedToday) {
       final hour =
           prefs.getInt(
             '${TaliaNotificationService.kidsReminderPreferenceKey}_hour',

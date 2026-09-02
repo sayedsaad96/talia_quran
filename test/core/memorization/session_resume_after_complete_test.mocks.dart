@@ -9,7 +9,7 @@ import 'package:audio_session/audio_session.dart' as _i24;
 import 'package:dartz/dartz.dart' as _i2;
 import 'package:just_audio/just_audio.dart' as _i8;
 import 'package:mockito/mockito.dart' as _i1;
-import 'package:mockito/src/dummies.dart' as _i23;
+import 'package:mockito/src/dummies.dart' as _i19;
 import 'package:speech_to_text/speech_to_text.dart' as _i25;
 import 'package:speech_to_text_platform_interface/speech_to_text_platform_interface.dart'
     as _i26;
@@ -17,16 +17,16 @@ import 'package:talia_quran/core/constants/xp_constants.dart' as _i5;
 import 'package:talia_quran/core/error/app_failure.dart' as _i11;
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart'
     as _i15;
-import 'package:talia_quran/core/services/achievement_service.dart' as _i22;
-import 'package:talia_quran/core/services/streak_service.dart' as _i21;
-import 'package:talia_quran/core/services/xp_service.dart' as _i20;
+import 'package:talia_quran/core/services/achievement_service.dart' as _i23;
+import 'package:talia_quran/core/services/streak_service.dart' as _i22;
+import 'package:talia_quran/core/services/xp_service.dart' as _i21;
 import 'package:talia_quran/core/sync/sync_result.dart' as _i14;
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart'
     as _i16;
 import 'package:talia_quran/features/memorization_plus/data/datasources/v2_session_local_datasource.dart'
     as _i18;
 import 'package:talia_quran/features/memorization_plus/data/models/isar_v2_session.dart'
-    as _i19;
+    as _i20;
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart'
     as _i3;
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart'
@@ -312,6 +312,24 @@ class MockMemorizationPlusRepository extends _i1.Mock
               Invocation.method(
                 #selectMemorizationPath,
                 [path],
+              ),
+            )),
+          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
+
+  @override
+  _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>
+      configureChildAge(int? age) => (super.noSuchMethod(
+            Invocation.method(
+              #configureChildAge,
+              [age],
+            ),
+            returnValue: _i10.Future<
+                    _i2.Either<_i11.Failure, _i3.MemorizationProfile>>.value(
+                _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
+              this,
+              Invocation.method(
+                #configureChildAge,
+                [age],
               ),
             )),
           ) as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
@@ -818,20 +836,34 @@ class MockMemorizationPlusRepository extends _i1.Mock
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.KidsSessionLog>> saveKidsSessionLog({
+    String? sessionId,
     required int? surahId,
     required int? ayahNumber,
     required int? repeatsCompleted,
     required int? pointsEarned,
+    _i3.KidsMissionType? missionType = _i3.KidsMissionType.newMemorization,
+    List<int>? ayahNumbers = const [],
+    int? durationSeconds = 0,
+    int? attemptCount = 1,
+    int? hintCount = 0,
+    _i3.PerformanceRating? masteryRating = _i3.PerformanceRating.excellent,
   }) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveKidsSessionLog,
           [],
           {
+            #sessionId: sessionId,
             #surahId: surahId,
             #ayahNumber: ayahNumber,
             #repeatsCompleted: repeatsCompleted,
             #pointsEarned: pointsEarned,
+            #missionType: missionType,
+            #ayahNumbers: ayahNumbers,
+            #durationSeconds: durationSeconds,
+            #attemptCount: attemptCount,
+            #hintCount: hintCount,
+            #masteryRating: masteryRating,
           },
         ),
         returnValue:
@@ -842,10 +874,17 @@ class MockMemorizationPlusRepository extends _i1.Mock
             #saveKidsSessionLog,
             [],
             {
+              #sessionId: sessionId,
               #surahId: surahId,
               #ayahNumber: ayahNumber,
               #repeatsCompleted: repeatsCompleted,
               #pointsEarned: pointsEarned,
+              #missionType: missionType,
+              #ayahNumbers: ayahNumbers,
+              #durationSeconds: durationSeconds,
+              #attemptCount: attemptCount,
+              #hintCount: hintCount,
+              #masteryRating: masteryRating,
             },
           ),
         )),
@@ -1144,18 +1183,32 @@ class MockMemorizationPlusRepository extends _i1.Mock
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.KidsCompletionResult>>
       awardKidsPoints({
+    String? sessionId,
     required int? surahId,
     required int? ayahNumber,
     required int? repeatsCompleted,
+    _i3.KidsMissionType? missionType = _i3.KidsMissionType.newMemorization,
+    List<int>? ayahNumbers = const [],
+    int? durationSeconds = 0,
+    int? attemptCount = 1,
+    int? hintCount = 0,
+    _i3.PerformanceRating? masteryRating = _i3.PerformanceRating.excellent,
   }) =>
           (super.noSuchMethod(
             Invocation.method(
               #awardKidsPoints,
               [],
               {
+                #sessionId: sessionId,
                 #surahId: surahId,
                 #ayahNumber: ayahNumber,
                 #repeatsCompleted: repeatsCompleted,
+                #missionType: missionType,
+                #ayahNumbers: ayahNumbers,
+                #durationSeconds: durationSeconds,
+                #attemptCount: attemptCount,
+                #hintCount: hintCount,
+                #masteryRating: masteryRating,
               },
             ),
             returnValue: _i10.Future<
@@ -1166,9 +1219,16 @@ class MockMemorizationPlusRepository extends _i1.Mock
                 #awardKidsPoints,
                 [],
                 {
+                  #sessionId: sessionId,
                   #surahId: surahId,
                   #ayahNumber: ayahNumber,
                   #repeatsCompleted: repeatsCompleted,
+                  #missionType: missionType,
+                  #ayahNumbers: ayahNumbers,
+                  #durationSeconds: durationSeconds,
+                  #attemptCount: attemptCount,
+                  #hintCount: hintCount,
+                  #masteryRating: masteryRating,
                 },
               ),
             )),
@@ -1499,17 +1559,30 @@ class MockV2SessionLocalDatasource extends _i1.Mock
   }
 
   @override
-  _i10.Future<_i19.IsarV2Session?> getSession(int? surahId) =>
+  String get currentOwnerId => (super.noSuchMethod(
+        Invocation.getter(#currentOwnerId),
+        returnValue: _i19.dummyValue<String>(
+          this,
+          Invocation.getter(#currentOwnerId),
+        ),
+      ) as String);
+
+  @override
+  _i10.Future<_i20.IsarV2Session?> getSession(
+    int? surahId, {
+    _i3.MemorizationAudience? audience = _i3.MemorizationAudience.adult,
+  }) =>
       (super.noSuchMethod(
         Invocation.method(
           #getSession,
           [surahId],
+          {#audience: audience},
         ),
-        returnValue: _i10.Future<_i19.IsarV2Session?>.value(),
-      ) as _i10.Future<_i19.IsarV2Session?>);
+        returnValue: _i10.Future<_i20.IsarV2Session?>.value(),
+      ) as _i10.Future<_i20.IsarV2Session?>);
 
   @override
-  _i10.Future<void> saveSession(_i19.IsarV2Session? session) =>
+  _i10.Future<void> saveSession(_i20.IsarV2Session? session) =>
       (super.noSuchMethod(
         Invocation.method(
           #saveSession,
@@ -1520,10 +1593,15 @@ class MockV2SessionLocalDatasource extends _i1.Mock
       ) as _i10.Future<void>);
 
   @override
-  _i10.Future<void> clearSession(int? surahId) => (super.noSuchMethod(
+  _i10.Future<void> clearSession(
+    int? surahId, {
+    _i3.MemorizationAudience? audience = _i3.MemorizationAudience.adult,
+  }) =>
+      (super.noSuchMethod(
         Invocation.method(
           #clearSession,
           [surahId],
+          {#audience: audience},
         ),
         returnValue: _i10.Future<void>.value(),
         returnValueForMissingStub: _i10.Future<void>.value(),
@@ -1533,7 +1611,7 @@ class MockV2SessionLocalDatasource extends _i1.Mock
 /// A class which mocks [XpService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockXpService extends _i1.Mock implements _i20.XpService {
+class MockXpService extends _i1.Mock implements _i21.XpService {
   MockXpService() {
     _i1.throwOnMissingStub(this);
   }
@@ -1581,7 +1659,7 @@ class MockXpService extends _i1.Mock implements _i20.XpService {
 /// A class which mocks [StreakService].
 ///
 /// See the documentation for Mockito's code generation for more information.
-class MockStreakService extends _i1.Mock implements _i21.StreakService {
+class MockStreakService extends _i1.Mock implements _i22.StreakService {
   MockStreakService() {
     _i1.throwOnMissingStub(this);
   }
@@ -1655,7 +1733,7 @@ class MockStreakService extends _i1.Mock implements _i21.StreakService {
 ///
 /// See the documentation for Mockito's code generation for more information.
 class MockAchievementService extends _i1.Mock
-    implements _i22.AchievementService {
+    implements _i23.AchievementService {
   MockAchievementService() {
     _i1.throwOnMissingStub(this);
   }
@@ -2016,7 +2094,7 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
   @override
   String get webSinkId => (super.noSuchMethod(
         Invocation.getter(#webSinkId),
-        returnValue: _i23.dummyValue<String>(
+        returnValue: _i19.dummyValue<String>(
           this,
           Invocation.getter(#webSinkId),
         ),
@@ -2579,7 +2657,7 @@ class MockSpeechToText extends _i1.Mock implements _i25.SpeechToText {
   @override
   String get lastRecognizedWords => (super.noSuchMethod(
         Invocation.getter(#lastRecognizedWords),
-        returnValue: _i23.dummyValue<String>(
+        returnValue: _i19.dummyValue<String>(
           this,
           Invocation.getter(#lastRecognizedWords),
         ),
@@ -2588,7 +2666,7 @@ class MockSpeechToText extends _i1.Mock implements _i25.SpeechToText {
   @override
   String get lastStatus => (super.noSuchMethod(
         Invocation.getter(#lastStatus),
-        returnValue: _i23.dummyValue<String>(
+        returnValue: _i19.dummyValue<String>(
           this,
           Invocation.getter(#lastStatus),
         ),

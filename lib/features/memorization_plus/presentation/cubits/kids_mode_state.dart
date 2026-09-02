@@ -67,6 +67,14 @@ class KidsModeLoaded extends KidsModeState {
   final String? recordingError;
   final int sessionStarsEarned;
 
+  /// True only for technical failures. A textual recitation mismatch is never
+  /// eligible for guardian override.
+  bool get canUseGuardianFallback =>
+      audioError != null ||
+      recordingError == CubitMessageCodes.kidsMicPermissionDenied ||
+      recordingError == CubitMessageCodes.kidsRecordingUnavailable ||
+      recordingError == CubitMessageCodes.kidsRecordingNotCaptured;
+
   KidsModeLoaded copyWith({
     V2SessionState? sessionState,
     KidsProgress? progress,

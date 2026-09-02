@@ -159,6 +159,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settings => 'Settings';
 
   @override
+  String get settingsPageSubtitle => 'Customize Talia to fit your routine';
+
+  @override
+  String get settingsQuickPreferences => 'Quick preferences';
+
+  @override
+  String get settingsMoreSettings => 'More Settings';
+
+  @override
   String get language => 'Language';
 
   @override
@@ -294,6 +303,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get previous => 'Previous';
+
+  @override
+  String get playSurah => 'Play Surah';
+
+  @override
+  String get playPage => 'Recite Page';
+
+  @override
+  String get listenToSurah => 'Listen to Surah';
+
+  @override
+  String get nowPlaying => 'Now Reciting';
 
   @override
   String get ofLabel => 'of';
@@ -3962,4 +3983,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get startNow => 'Start now';
+
+  @override
+  String get kidsJourneyBetaTitle => 'New memorization journey';
+
+  @override
+  String get kidsJourneyBetaDescription =>
+      'Enable Today\'s Mission and spaced review, with the option to return.';
+
+  @override
+  String get kidsGuidanceAudioTitle => 'Guide voice';
+
+  @override
+  String get kidsGuidanceAudioDescription =>
+      'Short prompts that never play over Quran recitation.';
+
+  @override
+  String get kidsSessionGoalTitle => 'Target session length';
+
+  @override
+  String kidsSessionGoalValue(int minutes) {
+    return '$minutes minutes';
+  }
+
+  @override
+  String get kidsSetupReminderTime => 'Reminder time';
+
+  @override
+  String get kidsSetupWeeklyGoal => 'Weekly goal';
+
+  @override
+  String kidsSetupWeeklyGoalValue(int sessions) {
+    return '$sessions sessions per week';
+  }
+
+  @override
+  String get kidsSetupStartingSurah => 'Starting surah';
+
+  @override
+  String parentCommitmentDays(int count) {
+    return '$count commitment days';
+  }
+
+  @override
+  String parentDueReviews(int count) {
+    return '$count reviews due';
+  }
+
+  @override
+  String parentNeedsSupport(int count) {
+    return '$count ayahs need support';
+  }
+
+  @override
+  String parentAverageDuration(int minutes) {
+    return '$minutes min average';
+  }
+
+  @override
+  String parentHintUses(int count) {
+    return '$count hints used';
+  }
 }

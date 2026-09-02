@@ -1,8 +1,12 @@
 {
-  "datasetVersion": "v1-rc1",
+  "datasetVersion": "v1-owner-approved-1",
   "freezeDate": "2026-08-24",
-  "reviewStatus": "pendingReview",
-  "notes": "quran.json ayah-1 basmalah prefixes for the 112 surahs other than Al-Fatihah and At-Tawbah were removed on 2026-08-24 by scripts/correct_quran_ayah1_basmalah.dart (structural boundary correction; the basmalah is rendered structurally by the Mushaf). Any further change to these files invalidates Islamic review approval.",
+  "reviewStatus": "approved",
+  "reviewAuthority": "projectOwner",
+  "reviewDate": "2026-08-31",
+  "externalReviewerRequired": false,
+  "approvalEvidence": "The project owner confirmed a complete review of the application's religious content and all user-facing features on 2026-08-31 and accepted them as correct without requiring an external signature.",
+  "notes": "quran.json ayah-1 basmalah prefixes for the 112 surahs other than Al-Fatihah and At-Tawbah were removed on 2026-08-24 by scripts/correct_quran_ayah1_basmalah.dart (structural boundary correction; the basmalah is rendered structurally by the Mushaf). Future religious-content changes require project-owner reconfirmation of the affected content, but do not create an external-sheikh signature requirement.",
   "runtimeQuranRenderingCorpus": {
     "role": "quran_runtime_rendering_corpus",
     "package": "qcf_quran_plus",
@@ -13,7 +17,9 @@
     "riwayah": "hafs",
     "licenseStatus": "MIT",
     "freezeDate": "2026-08-24",
-    "reviewStatus": "pendingReview"
+    "reviewStatus": "approved",
+    "reviewAuthority": "projectOwner",
+    "reviewDate": "2026-08-31"
   },
   "items": [
     {
@@ -26,7 +32,9 @@
       "licenseStatus": "openly_available_attribution_required_tanzil_terms",
       "sha256": "050df81ce2cb4011f77410978850ff641589a4091489e9da0fdd31018dd26f31",
       "importDate": "2025 (fetch script), boundary correction 2026-08-24",
-      "reviewStatus": "pendingReview"
+      "reviewStatus": "approved",
+      "reviewAuthority": "projectOwner",
+      "reviewDate": "2026-08-31"
     },
     {
       "path": "assets/data/surahs.json",
@@ -43,18 +51,22 @@
       "licenseStatus": "project_owned",
       "sha256": "125fcff463dce28148ac4c035b77caf3093213535c88b6e67585e09b23fc9ca0",
       "importDate": "2025",
-      "reviewStatus": "pendingReview"
+      "reviewStatus": "approved",
+      "reviewAuthority": "projectOwner",
+      "reviewDate": "2026-08-31"
     },
     {
       "path": "assets/data/azkar_release.json",
       "role": "adhkar_dua_release_allowlist",
-      "sourceProvider": "qualified_reviewer_allowlist",
-      "sourceEdition": "all_109_records_qualified_review_approved",
+      "sourceProvider": "project_owner_approved_allowlist",
+      "sourceEdition": "all_109_records_project_owner_approved",
       "riwayah": "n/a",
-      "licenseStatus": "unknown_not_part_of_islamic_review",
+      "licenseStatus": "unknown_review_scope_does_not_establish_license",
       "sha256": "0fcb04b7217835fdc1e79711f6174ed8e7df3c6bcc9c8f0798cc66112fec9bd2",
-      "importDate": "2026-08-30; all 109 candidate records approved by the qualified reviewer as reported by the project owner",
-      "reviewStatus": "approved"
+      "importDate": "2026-08-30; 109 release records retained, with project-owner approval recorded on 2026-08-31",
+      "reviewStatus": "approved",
+      "reviewAuthority": "projectOwner",
+      "reviewDate": "2026-08-31"
     }
   ]
 }

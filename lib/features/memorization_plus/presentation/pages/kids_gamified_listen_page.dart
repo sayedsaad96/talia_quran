@@ -1,4 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
+
+import '../../../../core/memorization/v2/session_phase.dart';
 import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +14,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../domain/entities/memorization_entities.dart';
 import '../cubits/kids_mode_cubit.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../theme/kids_theme.dart';
@@ -23,21 +26,25 @@ class KidsGamifiedListenPage extends StatelessWidget {
     required this.surahId,
     required this.ayahNumber,
     required this.ayahText,
+    this.missionType = KidsMissionType.newMemorization,
   });
 
   final int surahId;
   final int ayahNumber;
   final String ayahText;
+  final KidsMissionType missionType;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) =>
-          getIt<KidsModeCubit>()..load(surahId, ayahNumber, ayahText),
+          getIt<KidsModeCubit>()
+            ..load(surahId, ayahNumber, ayahText, missionType: missionType),
       child: _KidsGamifiedListenView(
         surahId: surahId,
         ayahNumber: ayahNumber,
         ayahText: ayahText,
+        missionType: missionType,
       ),
     );
   }
@@ -48,11 +55,56 @@ class _KidsGamifiedListenView extends StatelessWidget {
     required this.surahId,
     required this.ayahNumber,
     required this.ayahText,
+    required this.missionType,
   });
 
   final int surahId;
   final int ayahNumber;
   final String ayahText;
+  final KidsMissionType missionType;
+
+  Future<void> _submitGuardianCompletion(BuildContext context) async {
+    final pinController = TextEditingController();
+    final pin = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.l10n.parentDashboardEnterPinTitle),
+        content: TextField(
+          controller: pinController,
+          autofocus: true,
+          obscureText: true,
+          keyboardType: TextInputType.number,
+          maxLength: 4,
+          decoration: InputDecoration(
+            helperText: context.l10n.parentDashboardPinHelp,
+          ),
+          onSubmitted: (value) => Navigator.pop(dialogContext, value.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, pinController.text.trim()),
+            child: Text(context.l10n.confirm),
+          ),
+        ],
+      ),
+    );
+    pinController.dispose();
+    if (pin == null || !context.mounted) return;
+
+    final accepted = await context.read<KidsModeCubit>().submitManualCompletion(
+      guardianPin: pin,
+    );
+    if (!accepted && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.l10n.parentDashboardPinIncorrect)),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +174,7 @@ class _KidsGamifiedListenView extends StatelessWidget {
                 surahId,
                 ayahNumber,
                 ayahText,
+                missionType: missionType,
               ),
             );
           }
@@ -149,8 +202,7 @@ class _KidsGamifiedListenView extends StatelessWidget {
                 context.read<KidsModeCubit>().startRecording(),
             onStopRecording: () =>
                 context.read<KidsModeCubit>().stopRecording(),
-            onManualComplete: () =>
-                context.read<KidsModeCubit>().submitManualCompletion(),
+            onManualComplete: () => _submitGuardianCompletion(context),
           );
         },
       ),
@@ -205,16 +257,20 @@ class KidsGamifiedListenContent extends StatelessWidget {
                       ),
                       sliver: SliverList.list(
                         children: [
-                          KidsAyahCard(
-                            surahId: state.surahId,
-                            ayahNumber: state.ayahNumber,
-                            ayahText: state.ayahText,
-                            isCompleted: state.isCompleted,
-                            // isBuffering is true only during URL loading/buffering,
-                            // not during actual playback â€” more accurate than isPlaying
-                            isAudioLoading: state.isBuffering,
-                            audioUnavailable: audioUnavailable,
-                          ),
+                          if (state.isRecording ||
+                              state.sessionState.phase.textHidden)
+                            const _KidsHiddenRecallCard()
+                          else
+                            KidsAyahCard(
+                              surahId: state.surahId,
+                              ayahNumber: state.ayahNumber,
+                              ayahText: state.ayahText,
+                              isCompleted: state.isCompleted,
+                              // Buffering means the audio source is loading,
+                              // not that recitation playback is in progress.
+                              isAudioLoading: state.isBuffering,
+                              audioUnavailable: audioUnavailable,
+                            ),
                           const SizedBox(height: AppSpacing.lg),
                           _KidsGamifiedLoopIndicator(state: state),
                           const SizedBox(height: AppSpacing.xl),
@@ -234,6 +290,47 @@ class KidsGamifiedListenContent extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _KidsHiddenRecallCard extends StatelessWidget {
+  const _KidsHiddenRecallCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: context.l10n.kidsGamifiedTestStepSubtitle,
+      child: Container(
+        key: const ValueKey('kids-hidden-recall-card'),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.lg,
+          vertical: AppSpacing.xl,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: KidsTheme.cardRadius,
+          border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+        ),
+        child: Column(
+          children: [
+            const Icon(
+              Icons.visibility_off_rounded,
+              color: Colors.white,
+              size: 36,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              context.l10n.kidsGamifiedTestStepSubtitle,
+              textAlign: TextAlign.center,
+              style: AppTypography.titleMedium.copyWith(
+                color: Colors.white,
+                letterSpacing: 0,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -364,7 +461,7 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
         !state.isCompleted &&
         !isRecording &&
         onManualComplete != null &&
-        (state.audioError != null || state.recordingError != null);
+        state.canUseGuardianFallback;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

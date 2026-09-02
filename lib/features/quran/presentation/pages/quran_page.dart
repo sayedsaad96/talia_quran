@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/l10n/localization_helpers.dart';
+import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../cubits/quran_audio_player_cubit.dart';
 import '../cubits/surah_list_cubit.dart';
 import '../../domain/entities/quran_entities.dart';
+import '../widgets/juz_grid_view.dart';
 import '../widgets/reciter_selector_sheet.dart';
 import 'bookmarks_page.dart';
 
@@ -87,7 +90,7 @@ class _QuranViewState extends State<_QuranView>
                           icon: Icons.search_off_rounded,
                         )
                       : _SurahListView(surahs: state.filtered),
-                  _JuzGridView(surahs: state.surahs),
+                  const JuzGridView(),
                   const BookmarksTab(),
                 ],
               );
@@ -409,6 +412,58 @@ class _SurahTile extends StatelessWidget {
                   ],
                 ),
               ),
+              // Quick Play Surah Button
+              BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
+                builder: (context, audioState) {
+                  final isCurrentSurah =
+                      audioState.scope == PlayScope.surah &&
+                      audioState.currentSurahId == surah.id &&
+                      audioState.hasActiveAudio;
+                  final isPlaying = isCurrentSurah && audioState.isPlaying;
+                  final isLoading = isCurrentSurah && audioState.isLoading;
+
+                  return Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      end: AppSpacing.xs,
+                    ),
+                    child: IconButton(
+                      icon: isLoading
+                          ? SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: primary,
+                              ),
+                            )
+                          : Icon(
+                              isPlaying
+                                  ? Icons.pause_circle_filled_rounded
+                                  : (isCurrentSurah
+                                        ? Icons.play_circle_fill_rounded
+                                        : Icons.play_circle_outline_rounded),
+                              size: 26,
+                              color: isCurrentSurah
+                                  ? primary
+                                  : (isDark
+                                        ? AppColors.darkTextSecondary
+                                        : AppColors.lightTextSecondary),
+                            ),
+                      tooltip: isPlaying
+                          ? (context.isArabic ? 'إيقاف مؤقت' : 'Pause')
+                          : (context.isArabic
+                                ? 'استماع للسورة'
+                                : 'Listen to Surah'),
+                      onPressed: () {
+                        HapticFeedback.selectionClick();
+                        context.read<QuranAudioPlayerCubit>().playSurah(
+                          surah.id,
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
               Icon(
                 context.isArabic
                     ? Icons.arrow_back_ios_new_rounded
@@ -458,152 +513,6 @@ class _Chip extends StatelessWidget {
           fontSize: 11,
         ),
       ),
-    );
-  }
-}
-
-class _JuzGridView extends StatelessWidget {
-  const _JuzGridView({required this.surahs});
-  final List<Surah> surahs;
-
-  static const List<int> _juzStartPages = [
-    1,
-    22,
-    42,
-    62,
-    82,
-    102,
-    121,
-    142,
-    162,
-    182,
-    201,
-    222,
-    242,
-    262,
-    282,
-    302,
-    322,
-    342,
-    362,
-    382,
-    402,
-    422,
-    442,
-    462,
-    482,
-    502,
-    522,
-    542,
-    562,
-    582,
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.pagePadding,
-        AppSpacing.pagePadding,
-        AppSpacing.pagePadding,
-        120,
-      ),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 220,
-        crossAxisSpacing: AppSpacing.md,
-        mainAxisSpacing: AppSpacing.md,
-        childAspectRatio: 2.2,
-      ),
-      itemCount: 30,
-      itemBuilder: (context, i) {
-        final initialPage = _juzStartPages[i];
-
-        final juzName = context.localizedJuzName(i + 1);
-        return Semantics(
-          button: true,
-          label: '${context.l10n.juz} $juzName',
-          child: Material(
-            color: isDark
-                ? AppColors.darkSurfaceVariant
-                : AppColors.lightSurfaceVariant,
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            child: InkWell(
-              onTap: () => context.push('/quran/page/$initialPage'),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  border: Border.all(color: primary.withValues(alpha: 0.12)),
-                ),
-                child: Row(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                        start: AppSpacing.md,
-                      ),
-                      child: CircleAvatar(
-                        radius: 18,
-                        backgroundColor: primary.withValues(alpha: 0.1),
-                        foregroundColor: primary,
-                        child: Text(
-                          '${i + 1}',
-                          style: AppTypography.labelMedium.copyWith(
-                            color: primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              context.l10n.juz,
-                              style: AppTypography.labelSmall.copyWith(
-                                color: isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary,
-                              ),
-                            ),
-                            Text(
-                              juzName,
-                              style: AppTypography.titleMedium.copyWith(
-                                color: isDark
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.lightTextPrimary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Icon(
-                        Icons.menu_book_rounded,
-                        size: 20,
-                        color: primary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-      },
     );
   }
 }

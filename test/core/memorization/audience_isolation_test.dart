@@ -6,6 +6,7 @@ import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
+import 'package:talia_quran/core/memorization/v2/ayah_failure_tracker.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
@@ -136,6 +137,32 @@ void main() {
       expect(kidsAfter.totalReviews, 1);
     });
 
+    test('kids weak ayah signal is stored only in kids records', () async {
+      var tracker = const V2AyahFailureTracker();
+      for (var attempt = 0; attempt < 3; attempt++) {
+        tracker = tracker.recordFailure(surahId: 114, ayahNumber: 2);
+      }
+
+      await reviewAdapter.recordWeakAyahs(
+        tracker,
+        passedAyahNumbers: const {},
+        createdByMode: ReviewRecordCreatedByMode.kidsMode,
+      );
+
+      final kids = await datasource.getReviewRecord(
+        114,
+        2,
+        scope: ReviewRecordReadScope.kids,
+      );
+      final adult = await datasource.getReviewRecord(
+        114,
+        2,
+        scope: ReviewRecordReadScope.adult,
+      );
+      expect(kids?.lastRating, PerformanceRating.weak);
+      expect(kids?.createdByMode, ReviewRecordCreatedByMode.kidsMode);
+      expect(adult, isNull);
+    });
     test('adult pass does not overwrite kids record on same ayah', () async {
       const surahId = 114;
       const ayahNumber = 1;

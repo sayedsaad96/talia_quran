@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/constants/surah_names.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_scaffold.dart';
@@ -49,11 +51,11 @@ class _PathSelectionView extends StatelessWidget {
               unawaited(_goToAdultEntry(context));
             } else if (profile.isChild) {
               final authState = context.read<AuthCubit>().state;
-              context.go(
-                authState is AuthAuthenticated
-                    ? AppRoutes.memorizationPlusGuardianLinking
-                    : AppRoutes.memorizationPlusKidsHome,
-              );
+              if (authState is AuthAuthenticated) {
+                context.go(AppRoutes.memorizationPlusGuardianLinking);
+              } else {
+                unawaited(_goToKidsEntry(context));
+              }
             }
           }
         },
@@ -120,6 +122,13 @@ class _PathSelectionView extends StatelessWidget {
     if (context.mounted) context.go(location);
   }
 
+  Future<void> _goToKidsEntry(BuildContext context) async {
+    final location = await MemorizationNavigationResolver(
+      getIt<MemorizationPlusRepository>(),
+    ).childOnboardingLocation();
+    if (context.mounted) context.go(location);
+  }
+
   List<Widget> _pathCards(BuildContext context, bool isLoading) {
     final adultsCard = MemorizationPathChoiceCard(
       title: context.l10n.memorizationPathAdultsTitle,
@@ -142,14 +151,7 @@ class _PathSelectionView extends StatelessWidget {
       icon: Icons.child_care,
       accentColor: AppColors.primaryLight,
       isLoading: isLoading,
-      onTap: () {
-        _confirmPathSelection(
-          context,
-          path: MemorizationPath.child,
-          title: context.l10n.memorizationPathKidsTitle,
-          description: context.l10n.memorizationPathKidsDesc,
-        );
-      },
+      onTap: () => _showChildSetup(context),
     );
     const spacer = SizedBox(height: 24);
 
@@ -157,6 +159,240 @@ class _PathSelectionView extends StatelessWidget {
       return [kidsCard, spacer, adultsCard];
     }
     return [adultsCard, spacer, kidsCard];
+  }
+
+  Future<void> _showChildSetup(BuildContext context) async {
+    final nameController = TextEditingController();
+    final pinController = TextEditingController();
+    final confirmPinController = TextEditingController();
+    var age = 6;
+    var reminderTime = const TimeOfDay(hour: 18, minute: 30);
+    var weeklyGoalSessions = 5;
+    var guidanceAudioEnabled = true;
+    var startingSurahId = 114;
+    var canSubmit = false;
+
+    _ChildSetupDraft? draft;
+    try {
+      draft = await showModalBottomSheet<_ChildSetupDraft>(
+        context: context,
+        isScrollControlled: true,
+        showDragHandle: true,
+        builder: (sheetContext) => StatefulBuilder(
+          builder: (sheetContext, setSheetState) {
+            void refreshValidity() {
+              setSheetState(() {
+                canSubmit =
+                    nameController.text.trim().isNotEmpty &&
+                    pinController.text.length == 4 &&
+                    pinController.text == confirmPinController.text;
+              });
+            }
+
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  12,
+                  24,
+                  MediaQuery.viewInsetsOf(sheetContext).bottom + 24,
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        context.l10n.memorizationPathKidsTitle,
+                        style: AppTypography.headlineSmall,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 20),
+                      TextField(
+                        controller: nameController,
+                        textInputAction: TextInputAction.next,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.name,
+                          hintText: context.l10n.enterName,
+                        ),
+                        onChanged: (_) => refreshValidity(),
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<int>(
+                        initialValue: age,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.age,
+                        ),
+                        items: [
+                          for (var value = 5; value <= 12; value++)
+                            DropdownMenuItem(
+                              value: value,
+                              child: Text('$value'),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setSheetState(() {
+                              age = value;
+                              guidanceAudioEnabled = value <= 7;
+                            });
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<int>(
+                        initialValue: startingSurahId,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.kidsSetupStartingSurah,
+                        ),
+                        items: [
+                          for (var value = 114; value >= 78; value--)
+                            DropdownMenuItem(
+                              value: value,
+                              child: Text(
+                                context.isArabic
+                                    ? SurahNames.nameAr(value)
+                                    : SurahNames.nameEn(value),
+                              ),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setSheetState(() => startingSurahId = value);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownButtonFormField<int>(
+                        initialValue: weeklyGoalSessions,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.kidsSetupWeeklyGoal,
+                        ),
+                        items: [
+                          for (final value in const [3, 5, 7])
+                            DropdownMenuItem(
+                              value: value,
+                              child: Text(
+                                context.l10n.kidsSetupWeeklyGoalValue(value),
+                              ),
+                            ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            setSheetState(() => weeklyGoalSessions = value);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(context.l10n.kidsSetupReminderTime),
+                        trailing: TextButton(
+                          onPressed: () async {
+                            final selected = await showTimePicker(
+                              context: sheetContext,
+                              initialTime: reminderTime,
+                            );
+                            if (selected != null && sheetContext.mounted) {
+                              setSheetState(() => reminderTime = selected);
+                            }
+                          },
+                          child: Text(reminderTime.format(sheetContext)),
+                        ),
+                      ),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(context.l10n.kidsGuidanceAudioTitle),
+                        subtitle: Text(
+                          context.l10n.kidsGuidanceAudioDescription,
+                        ),
+                        value: guidanceAudioEnabled,
+                        onChanged: (value) {
+                          setSheetState(() => guidanceAudioEnabled = value);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: pinController,
+                        obscureText: true,
+                        keyboardType: TextInputType.number,
+                        maxLength: 4,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: InputDecoration(
+                          labelText: context.l10n.parentDashboardCreatePinTitle,
+                          helperText: context.l10n.parentDashboardPinHelp,
+                        ),
+                        onChanged: (_) => refreshValidity(),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: confirmPinController,
+                        obscureText: true,
+                        keyboardType: TextInputType.number,
+                        maxLength: 4,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        decoration: InputDecoration(
+                          labelText: context.l10n.parentDashboardPinConfirm,
+                        ),
+                        onChanged: (_) => refreshValidity(),
+                      ),
+                      const SizedBox(height: 20),
+                      FilledButton(
+                        onPressed: !canSubmit
+                            ? null
+                            : () => Navigator.pop(
+                                sheetContext,
+                                _ChildSetupDraft(
+                                  nickname: nameController.text.trim(),
+                                  age: age,
+                                  pin: pinController.text,
+                                  reminderHour: reminderTime.hour,
+                                  reminderMinute: reminderTime.minute,
+                                  weeklyGoalSessions: weeklyGoalSessions,
+                                  guidanceAudioEnabled: guidanceAudioEnabled,
+                                  startingSurahId: startingSurahId,
+                                ),
+                              ),
+                        child: Text(context.l10n.confirm),
+                      ),
+                      TextButton(
+                        onPressed: () => Navigator.pop(sheetContext),
+                        child: Text(context.l10n.cancel),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    } finally {
+      // Defer disposal to the next frame so that any in-flight animations
+      // referencing these controllers finish their teardown first.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        nameController.dispose();
+        pinController.dispose();
+        confirmPinController.dispose();
+      });
+    }
+    if (draft == null || !context.mounted) return;
+    unawaited(
+      context.read<MemorizationIdentityCubit>().setupChild(
+        nickname: draft.nickname,
+        age: draft.age,
+        pin: draft.pin,
+        reminderHour: draft.reminderHour,
+        reminderMinute: draft.reminderMinute,
+        weeklyGoalSessions: draft.weeklyGoalSessions,
+        guidanceAudioEnabled: draft.guidanceAudioEnabled,
+        startingSurahId: draft.startingSurahId,
+      ),
+    );
   }
 
   Future<void> _confirmPathSelection(
@@ -219,4 +455,26 @@ class _PathSelectionView extends StatelessWidget {
       unawaited(context.read<MemorizationIdentityCubit>().selectPath(path));
     }
   }
+}
+
+class _ChildSetupDraft {
+  const _ChildSetupDraft({
+    required this.nickname,
+    required this.age,
+    required this.pin,
+    required this.reminderHour,
+    required this.reminderMinute,
+    required this.weeklyGoalSessions,
+    required this.guidanceAudioEnabled,
+    required this.startingSurahId,
+  });
+
+  final String nickname;
+  final int age;
+  final String pin;
+  final int reminderHour;
+  final int reminderMinute;
+  final int weeklyGoalSessions;
+  final bool guidanceAudioEnabled;
+  final int startingSurahId;
 }

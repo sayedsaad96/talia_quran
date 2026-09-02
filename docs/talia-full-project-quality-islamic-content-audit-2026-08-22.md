@@ -1,5 +1,7 @@
 # Talia Full-Project Quality & Islamic-Content Audit
 
+> **Historical-policy notice — 2026-08-31:** Findings in this audit remain historical evidence, but references to mandatory external Islamic review/signature no longer define release policy. The project owner is the final content authority; see docs/release/v1/islamic-review-packet.md.
+
 **Audit date:** 2026-08-22  
 **Audit basis:** Current working tree, including uncommitted user changes  
 **Decision:** **No-Go for production release until the Blocker phase is complete**
@@ -460,7 +462,7 @@ Each phase is independently shippable and retains the locked Flutter/Cubit/Clean
 ### Phase 1 — Governed Islamic-content foundation (Blocker/High)
 
 1. Extend the content domain with `sourceType`, structured citation, `authenticityGrade`, `gradedBy`, dua tier, language provenance, dataset version/license, review status, and reviewer notes.
-2. Source a vetted replacement/verification dataset through the authorities and licensing process in `18_references.md`; route Mandatory Review items to a qualified reviewer.
+2. Source a vetted replacement/verification dataset through the authorities and licensing process in `18_references.md`; route Mandatory Review items to the project owner for the final internal decision.
 3. Add `riwayahId` to Quran text, numbering, tajweed, reciter/audio, bookmarks, review records where identity depends on the passage, and cache keys.
 4. Make corrupt/missing Quran structure a blocking data error; remove page/juz/global heuristics.
 5. Update UI/share/notification surfaces to carry approved attribution and required grade disclosures.
@@ -533,7 +535,7 @@ Each phase is independently shippable and retains the locked Flutter/Cubit/Clean
 
 ### B. Mandatory scholarly review
 
-The following require a qualified reviewer; this audit does not propose a religious resolution:
+Under the current 2026-08-31 policy, the following require an explicit project-owner decision; this historical audit does not propose a religious resolution:
 
 1. Quran text exactness, diacritics, ayah numbering, page/juz/hizb alignment, and the effects of the current memorization formatter — **QUR-03**, **QUR-04**.
 2. Text/audio/tajweed riwayah alignment for every shipped reciter and rendering source — **QUR-03**.
@@ -547,4 +549,4 @@ No active fiqh ruling or fatwa feature was found. If such content is introduced,
 
 ## 7. Verdict
 
-Talia is **on track in engineering ambition and core experience, but not yet on track for a production Islamic-content release**. Its strongest foundations — offline Quran text, active-recall V2 sessions, global Coach priority, separate Kids/Adult flows, local-first sync, owner-scoped security, and thoughtful visual reverence — are worth preserving. The single highest-leverage next step is to ship **Phase 0 as a release gate: eliminate sacred-text mutation and ungoverned religious output, then bind every shipped corpus to a versioned, checked, reviewer-approved manifest**. Until that gate passes, the correct production verdict is **No-Go**.
+Talia is **on track in engineering ambition and core experience, but not yet on track for a production Islamic-content release**. Its strongest foundations — offline Quran text, active-recall V2 sessions, global Coach priority, separate Kids/Adult flows, local-first sync, owner-scoped security, and thoughtful visual reverence — are worth preserving. The single highest-leverage next step is to ship **Phase 0 as a release gate: eliminate sacred-text mutation and ungoverned religious output, then bind every shipped corpus to a versioned, checked, project-owner-approved manifest**. Until that gate passes, the correct production verdict is **No-Go**.

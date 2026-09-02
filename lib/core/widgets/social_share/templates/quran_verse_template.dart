@@ -9,9 +9,9 @@ import '../talia_share_tokens.dart';
 
 /// Specialized Template for Quran Verses.
 ///
-/// The verse text is the hero: it comes verbatim from the trusted Quran
-/// source (`Ayah.text`) and no Quran wording is ever composed or hardcoded
-/// in presentation code. The composition is calm and typography-focused —
+/// The verse text is the hero: its trusted Quran wording is preserved while
+/// the duplicate terminal number is omitted for display. The composition is
+/// calm and typography-focused —
 /// an ornament divider above, the illuminated verse, then the reference.
 class QuranVerseTemplate extends StatelessWidget {
   final SocialShareData data;
@@ -98,10 +98,7 @@ class QuranVerseTemplate extends StatelessWidget {
           SizedBox(height: isCompact ? 7 : 12),
 
           // ─── 3. Gold divider under the verse ───────────────────────────
-          GoldDivider(
-            color: theme.accentColor,
-            width: isCompact ? 96 : 120,
-          ),
+          GoldDivider(color: theme.accentColor, width: isCompact ? 96 : 120),
 
           SizedBox(height: isCompact ? 7 : 12),
 

@@ -1,5 +1,8 @@
 import 'package:equatable/equatable.dart';
 
+import 'ayah_review_record.dart';
+import 'kids_session_policy.dart';
+
 class KidsSessionLog extends Equatable {
   const KidsSessionLog({
     required this.id,
@@ -9,7 +12,15 @@ class KidsSessionLog extends Equatable {
     required this.pointsEarned,
     required this.completedAt,
     this.syncedAt,
-  });
+    this.missionType = KidsMissionType.newMemorization,
+    this.ayahNumbers = const [],
+    this.durationSeconds = 0,
+    this.attemptCount = 1,
+    this.hintCount = 0,
+    this.masteryRating = PerformanceRating.excellent,
+  }) : assert(durationSeconds >= 0),
+       assert(attemptCount >= 1),
+       assert(hintCount >= 0);
 
   final String id;
   final int surahId;
@@ -18,6 +29,12 @@ class KidsSessionLog extends Equatable {
   final int pointsEarned;
   final DateTime completedAt;
   final DateTime? syncedAt;
+  final KidsMissionType missionType;
+  final List<int> ayahNumbers;
+  final int durationSeconds;
+  final int attemptCount;
+  final int hintCount;
+  final PerformanceRating masteryRating;
 
   bool get isSynced => syncedAt != null;
 
@@ -29,6 +46,12 @@ class KidsSessionLog extends Equatable {
     pointsEarned: pointsEarned,
     completedAt: completedAt,
     syncedAt: syncedAt ?? this.syncedAt,
+    missionType: missionType,
+    ayahNumbers: ayahNumbers,
+    durationSeconds: durationSeconds,
+    attemptCount: attemptCount,
+    hintCount: hintCount,
+    masteryRating: masteryRating,
   );
 
   @override
@@ -40,5 +63,11 @@ class KidsSessionLog extends Equatable {
     pointsEarned,
     completedAt,
     syncedAt,
+    missionType,
+    ayahNumbers,
+    durationSeconds,
+    attemptCount,
+    hintCount,
+    masteryRating,
   ];
 }

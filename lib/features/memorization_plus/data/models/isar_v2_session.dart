@@ -7,14 +7,25 @@
 
 import 'package:isar/isar.dart';
 
+import '../../../../core/memorization/review_record_identity.dart';
+import '../../domain/entities/kids_session_policy.dart';
+
 part 'isar_v2_session.g.dart';
 
 @collection
 class IsarV2Session {
   Id id = Isar.autoIncrement;
 
-  /// One active session per surah — use surahId as the unique key.
+  /// Account + audience + surah identity. Nullable only for legacy rows, which
+  /// are migrated to the active adult owner on first read.
   @Index(unique: true, replace: true)
+  String? sessionKey;
+
+  String? ownerId;
+
+  int audienceIndex = MemorizationAudience.adult.index;
+
+  @Index()
   late int surahId;
 
   /// JSON-encoded ayah numbers in the current block, e.g. "1,2,3,4,5"
@@ -79,6 +90,11 @@ class IsarV2Session {
 
   // ── Factory ──────────────────────────────────────────────
 
+  static String keyFor({
+    required String ownerId,
+    required MemorizationAudience audience,
+    required int surahId,
+  }) => '$ownerId|${audience.name}|$surahId';
   static IsarV2Session create({
     required int surahId,
     required List<int> blockAyahNumbers,
@@ -88,8 +104,13 @@ class IsarV2Session {
     required Map<int, int> failureCounts,
     required Map<int, int> hintLevels,
     required bool blockReviewRequired,
+    String ownerId = ReviewRecordIdentity.localOwnerId,
+    MemorizationAudience audience = MemorizationAudience.adult,
   }) {
     return IsarV2Session()
+      ..sessionKey = keyFor(ownerId: ownerId, audience: audience, surahId: surahId)
+      ..ownerId = ownerId
+      ..audienceIndex = audience.index
       ..surahId = surahId
       ..blockAyahNumbersCsv = blockAyahNumbers.join(',')
       ..currentAyahIndex = currentAyahIndex

@@ -11,13 +11,17 @@ import '../services/app_version_service.dart';
 import '../services/hifz_migration_service.dart';
 import '../services/notification_service.dart';
 import '../services/notification_scheduler.dart';
+import '../services/quran_continuous_player_service.dart';
 import '../services/quran_reciter_service.dart';
+import '../../features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import '../services/streak_reader.dart';
 import '../services/streak_service.dart';
 import '../services/xp_service.dart';
 import '../services/achievement_service.dart';
 import '../theme/theme_cubit.dart';
 import '../l10n/locale_cubit.dart';
+import '../memorization/review_record_audience_scope.dart';
+import '../memorization/kids_hifz_feature_flags.dart';
 import '../memorization/memorization_path_resolver.dart';
 import '../memorization/pending_ayah_resolver.dart';
 import '../memorization/smart_coach_engine.dart';
@@ -27,6 +31,7 @@ import '../memorization/progress_metrics_service.dart';
 import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
 import '../memorization/v2/session_engine.dart';
+import '../memorization/v2/session_phase.dart';
 import '../progress/progress_events_bus.dart';
 import '../identity/record_owner_provider.dart';
 import '../sync/cloud_sync_queue.dart';
@@ -71,6 +76,8 @@ import '../../features/memorization_plus/data/models/isar_ayah_review_record.dar
 import '../../features/memorization_plus/data/models/isar_v2_session.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
+import '../../features/memorization_plus/domain/entities/kids_session_policy.dart';
+import '../../features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_cloud_repository.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_identity_repository.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
@@ -198,7 +205,18 @@ Future<void> configureDependencies({bool background = false}) async {
     TaliaNotificationService.new,
   );
   getIt.registerLazySingleton<NotificationScheduler>(
-    () => NotificationScheduler(getIt<TaliaNotificationService>()),
+    () => NotificationScheduler(
+      getIt<TaliaNotificationService>(),
+      kidsSessionDatesLoader: () async {
+        if (!getIt.isRegistered<MemorizationPlusRepository>()) return [];
+        final result = await getIt<MemorizationPlusRepository>()
+            .getKidsSessionLogs();
+        return result.fold(
+          (_) => <DateTime>[],
+          (logs) => logs.map((log) => log.completedAt).toList(),
+        );
+      },
+    ),
   );
   getIt.registerSingleton<ProgressEventsBus>(ProgressEventsBus());
 
@@ -275,6 +293,16 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<QuranRepository>(
     () => QuranRepositoryImpl(getIt<QuranLocalDatasource>()),
+  );
+  getIt.registerLazySingleton<QuranContinuousPlayerService>(
+    () => QuranContinuousPlayerService(
+      quranRepository: getIt<QuranRepository>(),
+      reciterService: getIt<QuranReciterService>(),
+    ),
+    dispose: (service) => service.dispose(),
+  );
+  getIt.registerLazySingleton<QuranAudioPlayerCubit>(
+    () => QuranAudioPlayerCubit(getIt<QuranContinuousPlayerService>()),
   );
   getIt.registerLazySingleton<HifzRepository>(
     () => HifzRepositoryImpl(
@@ -485,10 +513,22 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<QuranRepository>(),
       getIt<V2SessionEngine>(),
       getIt<V2SessionReviewAdapter>(),
-      getIt<StreakService>(), // RISK-5 FIX
-      getIt<XpService>(), // RISK-5 FIX
+      getIt<StreakService>(),
       null,
       getIt<AppSessionService>(),
+      (pin) async => (await getIt<ParentAccessUsecase>().verifyPin(
+        pin,
+      )).getOrElse(() => false),
+      () async {
+        final result = await getIt<MemorizationPlusRepository>()
+            .getMemorizationProfile();
+        final age = result.fold((_) => 8, (profile) => profile.childAge ?? 8);
+        return KidsSessionPolicy.forAge(age >= 5 && age <= 12 ? age : 8);
+      },
+      V2SessionProgressAdapter(
+        datasource: getIt<V2SessionLocalDatasource>(),
+        audience: MemorizationAudience.kids,
+      ),
     ),
   );
   getIt.registerFactory<CustomPlanCubit>(
@@ -499,6 +539,41 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<GetKidsJourneyUsecase>(),
       getIt<GetKidsProgressUsecase>(),
       getIt<QuranRepository>(),
+      reviewRecordsLoader: () async {
+        final result = await getIt<MemorizationPlusRepository>()
+            .getAllReviewRecords(scope: ReviewRecordReadScope.kids);
+        return result.getOrElse(() => const []);
+      },
+      resumeMissionLoader: () async {
+        final datasource = getIt<V2SessionLocalDatasource>();
+        final saved = await datasource.getLatestSession(
+          audience: MemorizationAudience.kids,
+        );
+        if (saved == null) return null;
+        final phaseIndex = saved.phaseIndex;
+        final phaseIsValid =
+            phaseIndex >= 0 && phaseIndex < V2SessionPhase.values.length;
+        final hasBlock = saved.blockAyahNumbers.isNotEmpty;
+        if (!phaseIsValid || !hasBlock) return null;
+        final phase = V2SessionPhase.values[phaseIndex];
+        if (phase == V2SessionPhase.created || phase.isTerminal) {
+          await datasource.clearSession(
+            saved.surahId,
+            audience: MemorizationAudience.kids,
+          );
+          return null;
+        }
+        final currentIndex = saved.currentAyahIndex.clamp(
+          0,
+          saved.blockAyahNumbers.length - 1,
+        );
+        return KidsNextMission(
+          type: KidsMissionType.resume,
+          surahId: saved.surahId,
+          ayahNumbers: [saved.blockAyahNumbers[currentIndex]],
+        );
+      },
+      v2Enabled: KidsHifzFeatureFlags.isEnabled(getIt<SharedPreferences>()),
     ),
   );
 

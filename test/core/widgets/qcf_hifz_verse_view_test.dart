@@ -134,7 +134,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text(fallback), findsOneWidget);
+      expect(find.text('﴿ $fallback ﴾'), findsOneWidget);
     });
 
     testWidgets('shows fallback text when surahNumber is 115 (invalid)', (
@@ -152,7 +152,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text(fallback), findsOneWidget);
+      expect(find.text('﴿ $fallback ﴾'), findsOneWidget);
     });
 
     testWidgets('shows fallback text when verseNumber is 0 (invalid)', (
@@ -170,7 +170,7 @@ void main() {
           ),
         ),
       );
-      expect(find.text(fallback), findsOneWidget);
+      expect(find.text('﴿ $fallback ﴾'), findsOneWidget);
     });
 
     testWidgets(
@@ -189,7 +189,7 @@ void main() {
             ),
           ),
         );
-        expect(find.text(fallback), findsOneWidget);
+        expect(find.text('﴿ $fallback ﴾'), findsOneWidget);
       },
     );
 
@@ -208,13 +208,15 @@ void main() {
             ),
           ),
         );
-        expect(find.text(fallback), findsOneWidget);
+        expect(find.text('﴿ $fallback ﴾'), findsOneWidget);
       },
     );
 
-    testWidgets('renders fallback text exactly as provided — no marker removal '
-        '(sacred-text exactness gate)', (tester) async {
+    testWidgets('hides a matching terminal number in fallback text', (
+      tester,
+    ) async {
       const rawFallback = 'قُلْ أَعُوذُ بِرَبِّ النَّاسِ ١';
+      const displayedFallback = '﴿ قُلْ أَعُوذُ بِرَبِّ النَّاسِ ﴾';
       await tester.pumpWidget(
         _wrap(
           const QcfHifzVerseView(
@@ -227,7 +229,8 @@ void main() {
         ),
       );
 
-      expect(find.text(rawFallback), findsOneWidget);
+      expect(find.text(displayedFallback), findsOneWidget);
+      expect(find.text(rawFallback), findsNothing);
     });
 
     testWidgets('never rewrites Quran spacing in fallback text', (
@@ -246,10 +249,10 @@ void main() {
         ),
       );
 
-      expect(find.text(provided), findsOneWidget);
+      expect(find.text('﴿ $provided ﴾'), findsOneWidget);
     });
 
-    testWidgets('renders QCF verse text verbatim without cleaning', (
+    testWidgets('hides the matching terminal number from QCF verse text', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -266,23 +269,31 @@ void main() {
 
       final expectedRaw = qcf.getVerse(112, 1);
       final richText = tester.widget<RichText>(find.byType(RichText));
-      expect(richText.text.toPlainText(), expectedRaw);
+      expect(richText.text.toPlainText(), isNot(expectedRaw));
+      expect(richText.text.toPlainText(), '﴿ قُلۡ هُوَ ٱللَّهُ أَحَدٌ ﴾');
     });
 
     testWidgets('renders literal QCF fixtures for surahs 2, 9, 95 and 97', (
       tester,
     ) async {
-      const fixtures = <({int surah, String qcfText})>[
-        (surah: 2, qcfText: 'الٓمٓ\u00A0١'),
+      const fixtures = <({int surah, String qcfText, String displayedText})>[
+        (surah: 2, qcfText: 'الٓمٓ\u00A0١', displayedText: '﴿ الٓمٓ ﴾'),
         (
           surah: 9,
           qcfText:
               '۞بَرَآءَةٞ مِّنَ ٱللَّهِ وَرَسُولِهِۦٓ إِلَى ٱلَّذِينَ عَٰهَدتُّم مِّنَ ٱلۡمُشۡرِكِينَ\u00A0١\n',
+          displayedText:
+              '﴿ ۞بَرَآءَةٞ مِّنَ ٱللَّهِ وَرَسُولِهِۦٓ إِلَى ٱلَّذِينَ عَٰهَدتُّم مِّنَ ٱلۡمُشۡرِكِينَ ﴾',
         ),
-        (surah: 95, qcfText: 'وَٱلتِّينِ وَٱلزَّيۡتُونِ\u00A0١'),
+        (
+          surah: 95,
+          qcfText: 'وَٱلتِّينِ وَٱلزَّيۡتُونِ\u00A0١',
+          displayedText: '﴿ وَٱلتِّينِ وَٱلزَّيۡتُونِ ﴾',
+        ),
         (
           surah: 97,
           qcfText: 'إِنَّآ أَنزَلۡنَٰهُ فِي لَيۡلَةِ ٱلۡقَدۡرِ\u00A0١',
+          displayedText: '﴿ إِنَّآ أَنزَلۡنَٰهُ فِي لَيۡلَةِ ٱلۡقَدۡرِ ﴾',
         ),
       ];
 
@@ -301,9 +312,14 @@ void main() {
 
         final richText = tester.widget<RichText>(find.byType(RichText));
         expect(
-          richText.text.toPlainText(),
+          qcf.getVerse(fixture.surah, 1),
           fixture.qcfText,
           reason: 'QCF corpus drifted at Surah ${fixture.surah}, ayah 1',
+        );
+        expect(
+          richText.text.toPlainText(),
+          fixture.displayedText,
+          reason: 'Terminal number rendered at Surah ${fixture.surah}',
         );
       }
     });
@@ -340,7 +356,7 @@ void main() {
         );
 
         expect(
-          find.text(fixture.fallbackText),
+          find.text('﴿ ${fixture.fallbackText} ﴾'),
           findsOneWidget,
           reason: 'Fallback corpus drifted at Surah ${fixture.surah}, ayah 1',
         );

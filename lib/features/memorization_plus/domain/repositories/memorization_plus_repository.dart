@@ -17,6 +17,8 @@ abstract class MemorizationPlusRepository
     MemorizationPath path,
   );
   @override
+  Future<Either<Failure, MemorizationProfile>> configureChildAge(int age);
+  @override
   Future<Either<Failure, MemorizationProfile>> continueWithoutGuardian();
   @override
   Future<Either<Failure, PairingSession>> createGuardianPairingSession();
@@ -94,10 +96,17 @@ abstract class MemorizationPlusRepository
   });
   Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs();
   Future<Either<Failure, KidsSessionLog>> saveKidsSessionLog({
+    String? sessionId,
     required int surahId,
     required int ayahNumber,
     required int repeatsCompleted,
     required int pointsEarned,
+    KidsMissionType missionType = KidsMissionType.newMemorization,
+    List<int> ayahNumbers = const [],
+    int durationSeconds = 0,
+    int attemptCount = 1,
+    int hintCount = 0,
+    PerformanceRating masteryRating = PerformanceRating.excellent,
   });
   Future<Either<Failure, ParentDashboard>> getParentDashboard({
     required int surahId,
@@ -134,9 +143,16 @@ abstract class MemorizationPlusRepository
     String rewardId,
   );
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
+    String? sessionId,
     required int surahId,
     required int ayahNumber,
     required int repeatsCompleted,
+    KidsMissionType missionType = KidsMissionType.newMemorization,
+    List<int> ayahNumbers = const [],
+    int durationSeconds = 0,
+    int attemptCount = 1,
+    int hintCount = 0,
+    PerformanceRating masteryRating = PerformanceRating.excellent,
   });
 
   // ─── Custom memorization plan ──────────────────────────────────────────────

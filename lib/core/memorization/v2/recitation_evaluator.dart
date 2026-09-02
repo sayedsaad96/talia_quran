@@ -9,12 +9,13 @@ import '../../../core/utils/arabic_normalizer.dart';
 ///   Normalized similarity >= [kV2PassThreshold] → Pass (STT tolerance)
 ///   Below threshold → Fail → Remediation
 ///
-/// Why 0.92 not 1.0:
+/// Why 0.88 not 1.0:
 ///   `speech_to_text` on-device ASR produces minor variations even for
 ///   correct recitations (e.g., shadda omission, alif variation).
-///   0.92 is high enough to enforce accuracy while absorbing ASR noise.
+///   0.88 is the initial ordered-match threshold pending child-voice calibration.
 ///   This implements the spirit of "100% match" from the product rules.
-const double kV2PassThreshold = 0.92;
+const double kV2PassThreshold = 0.88;
+const double kV2RetryThreshold = 0.70;
 
 /// Identifies how a recitation outcome was assessed.
 ///
@@ -23,11 +24,18 @@ const double kV2PassThreshold = 0.92;
 /// learner confirmation as speech-recognition evidence.
 enum V2AssessmentMethod { automatic, manual }
 
+enum RecitationVerdict { pass, retry, remediate, technicalUnavailable }
+
 final class V2RecitationEvaluator {
-  const V2RecitationEvaluator({double passThreshold = kV2PassThreshold})
-    : _threshold = passThreshold;
+  const V2RecitationEvaluator({
+    double passThreshold = kV2PassThreshold,
+    double retryThreshold = kV2RetryThreshold,
+  }) : assert(retryThreshold <= passThreshold),
+       _threshold = passThreshold,
+       _retryThreshold = retryThreshold;
 
   final double _threshold;
+  final double _retryThreshold;
 
   /// Evaluates a single ayah recitation.
   ///
@@ -49,36 +57,79 @@ final class V2RecitationEvaluator {
     if (normalizedSpoken == normalizedTarget) {
       return V2RecitationResult(
         passed: true,
+        verdict: RecitationVerdict.pass,
         similarityScore: 1.0,
         normalizedTarget: normalizedTarget,
         normalizedSpoken: normalizedSpoken,
       );
     }
 
-    // Similarity-based match for STT tolerance.
+    // Short ayahs must be recalled exactly. Longer ayahs use ordered edit
+    // similarity, with an explicit retry band rather than a binary failure.
     final similarity = _computeSimilarity(normalizedTarget, normalizedSpoken);
+    final targetWordCount = normalizedTarget
+        .split(' ')
+        .where((word) => word.isNotEmpty)
+        .length;
+    final mayPass = targetWordCount > 3 && similarity >= _threshold;
+    final verdict = mayPass
+        ? RecitationVerdict.pass
+        : similarity >= _retryThreshold
+        ? RecitationVerdict.retry
+        : RecitationVerdict.remediate;
     return V2RecitationResult(
-      passed: similarity >= _threshold,
+      passed: verdict == RecitationVerdict.pass,
+      verdict: verdict,
       similarityScore: similarity,
       normalizedTarget: normalizedTarget,
       normalizedSpoken: normalizedSpoken,
     );
   }
 
-  /// Token-overlap similarity (word-level Jaccard).
-  /// More robust than character-level Dice for Arabic word boundaries.
+  /// Ordered word-edit similarity that preserves order and repeated words.
   double _computeSimilarity(String target, String spoken) {
-    final targetTokens = target.split(' ').where((t) => t.isNotEmpty).toSet();
-    final spokenTokens = spoken.split(' ').where((t) => t.isNotEmpty).toSet();
+    final targetTokens = target.split(' ').where((t) => t.isNotEmpty).toList();
+    final spokenTokens = spoken.split(' ').where((t) => t.isNotEmpty).toList();
 
     if (targetTokens.isEmpty) return 0.0;
+    final previous = List<int>.generate(spokenTokens.length + 1, (i) => i);
 
-    final intersection = targetTokens.intersection(spokenTokens).length;
-    final union = targetTokens.union(spokenTokens).length;
+    for (
+      var targetIndex = 1;
+      targetIndex <= targetTokens.length;
+      targetIndex++
+    ) {
+      var diagonal = previous[0];
+      previous[0] = targetIndex;
+      for (
+        var spokenIndex = 1;
+        spokenIndex <= spokenTokens.length;
+        spokenIndex++
+      ) {
+        final above = previous[spokenIndex];
+        final substitutionCost =
+            targetTokens[targetIndex - 1] == spokenTokens[spokenIndex - 1]
+            ? 0
+            : 1;
+        previous[spokenIndex] = _min3(
+          previous[spokenIndex] + 1,
+          previous[spokenIndex - 1] + 1,
+          diagonal + substitutionCost,
+        );
+        diagonal = above;
+      }
+    }
 
-    if (union == 0) return 0.0;
-    return intersection / union;
+    final distance = previous.last;
+    final longest = targetTokens.length > spokenTokens.length
+        ? targetTokens.length
+        : spokenTokens.length;
+    return (1 - (distance / longest)).clamp(0.0, 1.0);
   }
+
+  int _min3(int first, int second, int third) => first < second
+      ? (first < third ? first : third)
+      : (second < third ? second : third);
 }
 
 /// Result of a single recitation evaluation.
@@ -89,7 +140,11 @@ final class V2RecitationResult {
     required this.normalizedTarget,
     required this.normalizedSpoken,
     this.assessmentMethod = V2AssessmentMethod.automatic,
-  }) : assert(
+    RecitationVerdict? verdict,
+  }) : verdict =
+           verdict ??
+           (passed ? RecitationVerdict.pass : RecitationVerdict.remediate),
+       assert(
          assessmentMethod != V2AssessmentMethod.manual ||
              similarityScore == null,
        ),
@@ -101,6 +156,7 @@ final class V2RecitationResult {
       normalizedTarget = '',
       normalizedSpoken = '',
       assessmentMethod = V2AssessmentMethod.automatic,
+      verdict = RecitationVerdict.technicalUnavailable,
       isNoAttempt = true;
 
   static const noAttempt = V2RecitationResult._noAttempt();
@@ -112,6 +168,7 @@ final class V2RecitationResult {
   final String normalizedTarget;
   final String normalizedSpoken;
   final V2AssessmentMethod assessmentMethod;
+  final RecitationVerdict verdict;
 
   /// True if STT returned empty — not counted as a failure.
   final bool isNoAttempt;

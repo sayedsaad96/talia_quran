@@ -73,6 +73,10 @@ class _SettingsView extends StatelessWidget {
           }
         },
         builder: (context, state) {
+          final accentColor = isDark
+              ? AppColors.primaryLight
+              : AppColors.primary;
+
           return Scaffold(
             backgroundColor: isDark
                 ? AppColors.darkBackground
@@ -80,7 +84,7 @@ class _SettingsView extends StatelessWidget {
             body: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 720),
+                constraints: const BoxConstraints(maxWidth: 1040),
                 child: CustomScrollView(
                   slivers: [
                     _buildAppBar(context, isDark),
@@ -95,9 +99,7 @@ class _SettingsView extends StatelessWidget {
                         delegate: SliverChildListDelegate([
                           SettingsSection(
                             title: context.l10n.settingsSectionAccount,
-                            accentColor: isDark
-                                ? AppColors.primaryLight
-                                : AppColors.primary,
+                            accentColor: accentColor,
                             icon: Icons.person_rounded,
                             children: [
                               AccountSection(isDark: isDark),
@@ -107,10 +109,9 @@ class _SettingsView extends StatelessWidget {
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           SettingsSection(
-                            title: context.l10n.settingsSectionAppearance,
-                            accentColor: isDark
-                                ? AppColors.primaryLight
-                                : AppColors.primary,
+                            title: context.l10n.settingsQuickPreferences,
+                            subtitle: context.l10n.settingsSectionAppearance,
+                            accentColor: accentColor,
                             icon: Icons.palette_rounded,
                             children: [
                               SettingsInlineHeader(
@@ -130,117 +131,137 @@ class _SettingsView extends StatelessWidget {
                               ThemeSettingTile(isDark: isDark),
                             ],
                           ),
-                          const SizedBox(height: AppSpacing.lg),
-                          SettingsSection(
-                            title:
-                                context.l10n.settingsSectionQuranMemorization,
-                            accentColor: isDark
-                                ? AppColors.primaryLight
-                                : AppColors.primary,
-                            icon: Icons.auto_stories_rounded,
-                            children: [
-                              AccuracySettingTile(isDark: isDark),
-                              SettingsDivider(isDark: isDark),
-                              MemorizationPathSummaryTile(
-                                isDark: isDark,
-                                profile: state.memorizationProfile,
-                              ),
-                              if (state.memorizationProfile?.hasSelectedPath ==
-                                  true) ...[
-                                SettingsDivider(isDark: isDark),
-                                ResetMemorizationPathTile(
-                                  isDark: isDark,
-                                  onReset: context
-                                      .read<SettingsCubit>()
-                                      .resetMemorizationIdentity,
-                                ),
-                              ],
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          if (state.isAdultPath ||
-                              state.shouldShowParentSection) ...[
-                            SettingsSection(
-                              title: context.l10n.settingsSectionKidsGuardian,
-                              accentColor: isDark
-                                  ? AppColors.primaryLight
-                                  : AppColors.primary,
-                              icon: Icons.family_restroom_rounded,
-                              children: [
-                                if (state.isAdultPath)
-                                  ParentModeToggle(
-                                    isDark: isDark,
-                                    isParentMode: state.isParentMode,
-                                    onChanged: context
-                                        .read<SettingsCubit>()
-                                        .toggleParentMode,
-                                  ),
-                                if (state.isAdultPath &&
-                                    state.shouldShowParentSection)
-                                  SettingsDivider(isDark: isDark),
-                                if (state.shouldShowParentSection)
-                                  ParentDashboardTile(isDark: isDark),
-                              ],
+                          const SizedBox(height: AppSpacing.xl),
+                          Padding(
+                            padding: const EdgeInsetsDirectional.only(
+                              start: AppSpacing.xs,
+                              bottom: AppSpacing.md,
                             ),
-                            const SizedBox(height: AppSpacing.lg),
-                          ],
-                          SettingsSection(
-                            title: context
-                                .l10n
-                                .settingsSectionProgressAchievements,
-                            accentColor: isDark
-                                ? AppColors.primaryLight
-                                : AppColors.primary,
-                            icon: Icons.notifications_active_rounded,
-                            children: [NotificationSettingTile(isDark: isDark)],
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          SettingsSection(
-                            title: context.l10n.settingsSectionHelpTutorial,
-                            accentColor: isDark
-                                ? AppColors.primaryLight
-                                : AppColors.primary,
-                            icon: Icons.help_outline_rounded,
-                            children: [TutorialGuideTile(isDark: isDark)],
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          SettingsSection(
-                            title: context.l10n.settingsSectionPrivacySecurity,
-                            accentColor: isDark
-                                ? AppColors.primaryLight
-                                : AppColors.primary,
-                            icon: Icons.security_rounded,
-                            children: [
-                              PrivacyPolicyTile(isDark: isDark),
-                              BlocBuilder<AuthCubit, AuthState>(
-                                builder: (context, authState) {
-                                  if (authState is! AuthAuthenticated) {
-                                    return const SizedBox.shrink();
-                                  }
-                                  return Column(
-                                    children: [
-                                      SettingsDivider(isDark: isDark),
-                                      DeleteAccountTile(
-                                        isDark: isDark,
-                                        email: authState.user.email,
-                                      ),
-                                    ],
-                                  );
-                                },
+                            child: Text(
+                              context.l10n.settingsMoreSettings,
+                              style: AppTypography.titleMedium.copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                                fontWeight: FontWeight.w700,
                               ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: AppSpacing.lg),
-                          SettingsSection(
-                            title: context.l10n.settingsSectionAboutTalia,
-                            accentColor: isDark
-                                ? AppColors.primaryLight
-                                : AppColors.primary,
-                            icon: Icons.info_outline_rounded,
+                          SettingsAdaptiveGrid(
                             children: [
-                              AboutTile(isDark: isDark),
-                              SettingsDivider(isDark: isDark),
-                              ShareAppTile(isDark: isDark),
+                              SettingsSection(
+                                title: context
+                                    .l10n
+                                    .settingsSectionQuranMemorization,
+                                accentColor: accentColor,
+                                icon: Icons.auto_stories_rounded,
+                                collapsible: true,
+                                initiallyExpanded: false,
+                                children: [
+                                  AccuracySettingTile(isDark: isDark),
+                                  SettingsDivider(isDark: isDark),
+                                  MemorizationPathSummaryTile(
+                                    isDark: isDark,
+                                    profile: state.memorizationProfile,
+                                  ),
+                                  if (state
+                                          .memorizationProfile
+                                          ?.hasSelectedPath ==
+                                      true) ...[
+                                    SettingsDivider(isDark: isDark),
+                                    ResetMemorizationPathTile(
+                                      isDark: isDark,
+                                      onReset: context
+                                          .read<SettingsCubit>()
+                                          .resetMemorizationIdentity,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              if (state.isAdultPath ||
+                                  state.shouldShowParentSection)
+                                SettingsSection(
+                                  title:
+                                      context.l10n.settingsSectionKidsGuardian,
+                                  accentColor: accentColor,
+                                  icon: Icons.family_restroom_rounded,
+                                  collapsible: true,
+                                  initiallyExpanded: false,
+                                  children: [
+                                    if (state.isAdultPath)
+                                      ParentModeToggle(
+                                        isDark: isDark,
+                                        isParentMode: state.isParentMode,
+                                        onChanged: context
+                                            .read<SettingsCubit>()
+                                            .toggleParentMode,
+                                      ),
+                                    if (state.isAdultPath &&
+                                        state.shouldShowParentSection)
+                                      SettingsDivider(isDark: isDark),
+                                    if (state.shouldShowParentSection)
+                                      ParentDashboardTile(isDark: isDark),
+                                  ],
+                                ),
+                              SettingsSection(
+                                title: context
+                                    .l10n
+                                    .settingsSectionProgressAchievements,
+                                accentColor: accentColor,
+                                icon: Icons.notifications_active_rounded,
+                                collapsible: true,
+                                initiallyExpanded: false,
+                                children: [
+                                  NotificationSettingTile(isDark: isDark),
+                                ],
+                              ),
+                              SettingsSection(
+                                title: context.l10n.settingsSectionHelpTutorial,
+                                accentColor: accentColor,
+                                icon: Icons.help_outline_rounded,
+                                collapsible: true,
+                                initiallyExpanded: false,
+                                children: [TutorialGuideTile(isDark: isDark)],
+                              ),
+                              SettingsSection(
+                                title:
+                                    context.l10n.settingsSectionPrivacySecurity,
+                                accentColor: accentColor,
+                                icon: Icons.security_rounded,
+                                collapsible: true,
+                                initiallyExpanded: false,
+                                children: [
+                                  PrivacyPolicyTile(isDark: isDark),
+                                  BlocBuilder<AuthCubit, AuthState>(
+                                    builder: (context, authState) {
+                                      if (authState is! AuthAuthenticated) {
+                                        return const SizedBox.shrink();
+                                      }
+                                      return Column(
+                                        children: [
+                                          SettingsDivider(isDark: isDark),
+                                          DeleteAccountTile(
+                                            isDark: isDark,
+                                            email: authState.user.email,
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                              SettingsSection(
+                                title: context.l10n.settingsSectionAboutTalia,
+                                accentColor: accentColor,
+                                icon: Icons.info_outline_rounded,
+                                collapsible: true,
+                                initiallyExpanded: false,
+                                children: [
+                                  AboutTile(isDark: isDark),
+                                  SettingsDivider(isDark: isDark),
+                                  ShareAppTile(isDark: isDark),
+                                ],
+                              ),
                             ],
                           ),
                         ]),
@@ -259,7 +280,7 @@ class _SettingsView extends StatelessWidget {
   SliverAppBar _buildAppBar(BuildContext context, bool isDark) {
     return SliverAppBar(
       pinned: true,
-      expandedHeight: 160,
+      expandedHeight: 136,
       backgroundColor: isDark
           ? AppColors.darkBackground
           : AppColors.lightBackground,
@@ -325,9 +346,9 @@ class _SettingsView extends StatelessWidget {
             ),
             PositionedDirectional(
               start: AppSpacing.pagePadding,
-              top: 74,
+              top: 68,
               child: Text(
-                'مركز التحكم والتفضيلات الشخصية',
+                context.l10n.settingsPageSubtitle,
                 style: AppTypography.bodySmall.copyWith(
                   color: Colors.white.withValues(alpha: 0.8),
                   fontSize: 12,

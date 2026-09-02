@@ -30,6 +30,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     required this.stages,
     required this.progress,
     this.surahName,
+    this.nextMission,
     this.qrPayload,
     this.message,
     this.isCreatingLink = false,
@@ -39,15 +40,19 @@ class KidsJourneyLoaded extends KidsJourneyState {
   final List<KidsJourneyStage> stages;
   final KidsProgress progress;
   final String? surahName;
+  final KidsNextMission? nextMission;
   final String? qrPayload;
   final String? message;
   final bool isCreatingLink;
 
   KidsJourneyStage? get currentStage {
     for (final stage in stages) {
+      if (stage.status == KidsJourneyStageStatus.needsReview) return stage;
+    }
+    for (final stage in stages) {
       if (stage.status == KidsJourneyStageStatus.current) return stage;
     }
-    return stages.isEmpty ? null : stages.last;
+    return null;
   }
 
   KidsJourneyLoaded copyWith({
@@ -55,6 +60,8 @@ class KidsJourneyLoaded extends KidsJourneyState {
     KidsProgress? progress,
     String? surahName,
     bool clearSurahName = false,
+    KidsNextMission? nextMission,
+    bool clearNextMission = false,
     String? qrPayload,
     bool clearQrPayload = false,
     String? message,
@@ -65,6 +72,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     stages: stages ?? this.stages,
     progress: progress ?? this.progress,
     surahName: clearSurahName ? null : (surahName ?? this.surahName),
+    nextMission: clearNextMission ? null : (nextMission ?? this.nextMission),
     qrPayload: clearQrPayload ? null : (qrPayload ?? this.qrPayload),
     message: clearMessage ? null : (message ?? this.message),
     isCreatingLink: isCreatingLink ?? this.isCreatingLink,
@@ -76,6 +84,7 @@ class KidsJourneyLoaded extends KidsJourneyState {
     stages,
     progress,
     surahName,
+    nextMission,
     qrPayload,
     message,
     isCreatingLink,

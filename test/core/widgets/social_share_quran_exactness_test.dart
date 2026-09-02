@@ -4,8 +4,8 @@ import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
 void main() {
-  test('quranAyah preserves the domain text character-for-character', () {
-    const sacredText = '  وَٱلتِّينِ وَٱلزَّيْتُونِ\n';
+  test('quranAyah removes only its matching terminal number', () {
+    const sacredText = '  وَٱلتِّينِ وَٱلزَّيْتُونِ\u00A0١\n';
     const ayah = Ayah(
       number: 6099,
       surahId: 95,
@@ -17,20 +17,32 @@ void main() {
 
     final share = SocialShareData.quranAyah(ayah: ayah, surahName: 'التين');
 
-    expect(share.content, sacredText);
+    expect(share.content, '  وَٱلتِّينِ وَٱلزَّيْتُونِ');
+    expect(ayah.text, sacredText);
   });
 
-  test('quranVerse preserves the bookmarked text character-for-character', () {
-    const sacredText = '\uFEFF  إِنَّآ أَنزَلْنَٰهُ فِى لَيْلَةِ ٱلْقَدْرِ\n';
+  test(
+    'quranVerse removes a matching terminal number from bookmarked text',
+    () {
+      const sacredText =
+          '\uFEFF  إِنَّآ أَنزَلْنَٰهُ فِى لَيْلَةِ ٱلْقَدْرِ ﴿١﴾';
 
-    final share = SocialShareData.quranVerse(
-      ayahText: sacredText,
-      surahName: 'القدر',
-      ayahNumber: 1,
-    );
+      final share = SocialShareData.quranVerse(
+        ayahText: sacredText,
+        surahName: 'القدر',
+        ayahNumber: 1,
+      );
 
-    expect(share.content, sacredText);
-  });
+      expect(
+        share.content,
+        '\uFEFF  إِنَّآ أَنزَلْنَٰهُ فِى لَيْلَةِ ٱلْقَدْرِ',
+      );
+      expect(
+        share.toPlainShareText(footer: 'تالية'),
+        contains('﴿ إِنَّآ أَنزَلْنَٰهُ فِى لَيْلَةِ ٱلْقَدْرِ ﴾'),
+      );
+    },
+  );
 
   test(
     'dua share preserves approved text and citation character-for-character',

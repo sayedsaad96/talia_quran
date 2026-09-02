@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
@@ -112,6 +112,11 @@ class _ChildDetailBody extends StatelessWidget {
         // â”€â”€â”€ Metrics row â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         _MetricsRow(child: child),
         const SizedBox(height: AppSpacing.md),
+
+        if (child.localData case final localData?) ...[
+          _LearningSupportCard(dashboard: localData),
+          const SizedBox(height: AppSpacing.md),
+        ],
 
         // â”€â”€â”€ Memorization progress (remote only, if production available) â”€â”€
         if (production != null) ...[
@@ -330,6 +335,66 @@ class _MetricChip extends StatelessWidget {
           Text(label, style: AppTypography.labelMedium),
         ],
       ),
+    );
+  }
+}
+
+class _LearningSupportCard extends StatelessWidget {
+  const _LearningSupportCard({required this.dashboard});
+
+  final ParentDashboard dashboard;
+
+  @override
+  Widget build(BuildContext context) {
+    final averageMinutes = (dashboard.averageSessionDurationSeconds / 60)
+        .ceil();
+    return _Panel(
+      title: context.l10n.childDetailMemorizationProgress,
+      child: Wrap(
+        spacing: AppSpacing.sm,
+        runSpacing: AppSpacing.sm,
+        children: [
+          _SupportMetric(
+            icon: Icons.calendar_today_rounded,
+            label: context.l10n.parentCommitmentDays(dashboard.commitmentDays),
+          ),
+          _SupportMetric(
+            icon: Icons.replay_rounded,
+            label: context.l10n.parentDueReviews(dashboard.dueReviewCount),
+          ),
+          _SupportMetric(
+            icon: Icons.volunteer_activism_rounded,
+            label: context.l10n.parentNeedsSupport(
+              dashboard.ayahsNeedingSupport,
+            ),
+          ),
+          _SupportMetric(
+            icon: Icons.timer_outlined,
+            label: context.l10n.parentAverageDuration(averageMinutes),
+          ),
+          _SupportMetric(
+            icon: Icons.lightbulb_outline_rounded,
+            label: context.l10n.parentHintUses(dashboard.totalHintUses),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SupportMetric extends StatelessWidget {
+  const _SupportMetric({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Chip(
+      avatar: Icon(icon, size: 18, color: AppColors.primary),
+      label: Text(label),
+      backgroundColor: AppColors.primary.withValues(alpha: 0.08),
+      side: BorderSide.none,
     );
   }
 }

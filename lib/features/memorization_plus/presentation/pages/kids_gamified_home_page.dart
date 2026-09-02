@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../domain/navigation/kids_next_mission_resolver.dart';
 import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
@@ -37,6 +38,11 @@ class KidsGamifiedHomePage extends StatelessWidget {
 @visibleForTesting
 String kidsQuranReaderLocation(int surahId) =>
     '${AppRoutes.memorizationPlusKidsQuran}?surahId=$surahId';
+
+@visibleForTesting
+String kidsMissionLocation(KidsNextMission mission) =>
+    '${AppRoutes.memorizationPlusKids}?surahId=${mission.surahId}'
+    '&ayahNumber=${mission.startAyah}&missionType=${mission.type.name}';
 
 class _KidsGamifiedHomeView extends StatelessWidget {
   const _KidsGamifiedHomeView({required this.surahId, this.childName});
@@ -95,16 +101,13 @@ class _KidsGamifiedHomeView extends StatelessWidget {
     BuildContext context,
     KidsJourneyLoaded state,
   ) async {
-    final stage = state.currentStage;
-    if (stage == null) {
+    final mission = state.nextMission;
+    if (mission == null) {
       await context.push(
         '${AppRoutes.memorizationPlusKidsJourney}?surahId=${state.surahId}',
       );
     } else {
-      final startAyah = stage.nextAyahToStart;
-      await context.push(
-        '${AppRoutes.memorizationPlusKids}?surahId=${stage.surahId}&ayahNumber=$startAyah',
-      );
+      await context.push(kidsMissionLocation(mission));
     }
 
     if (context.mounted) {
@@ -189,8 +192,6 @@ class KidsGamifiedHomeContent extends StatelessWidget {
     );
   }
 }
-
-
 
 class _KidsHomeBottomNav extends StatelessWidget {
   const _KidsHomeBottomNav({

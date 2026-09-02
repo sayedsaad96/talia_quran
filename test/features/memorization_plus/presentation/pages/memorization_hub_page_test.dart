@@ -185,6 +185,10 @@ class _ProfileRepository implements MemorizationPlusRepository {
       const Right([]);
 
   @override
+  Future<Either<Failure, ParentSettings>> getParentSettings() async =>
+      const Right(ParentSettings());
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 
   @override

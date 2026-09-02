@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import 'ayah_review_record.dart';
 import 'kids_journey_stage.dart';
 import 'kids_progress.dart';
 import 'kids_session_log.dart';
@@ -15,6 +16,10 @@ class ParentSettings extends Equatable {
     this.weeklyGoalSessions = 5,
     this.remoteLinkEnabled = false,
     this.localChildNickname,
+    this.guidanceAudioEnabled,
+    this.sessionGoalMinutes,
+    this.startingSurahId = 114,
+    this.kidsHifzV2Enabled = false,
   });
 
   final String? pinHash;
@@ -27,6 +32,12 @@ class ParentSettings extends Equatable {
   /// Optional nickname for the local child on this device.
   final String? localChildNickname;
 
+  /// Null keeps the age-band default; an explicit value is a parent override.
+  final bool? guidanceAudioEnabled;
+  final int? sessionGoalMinutes;
+  final int startingSurahId;
+  final bool kidsHifzV2Enabled;
+
   bool get hasPin => pinHash != null && pinHash!.isNotEmpty;
 
   ParentSettings copyWith({
@@ -38,6 +49,10 @@ class ParentSettings extends Equatable {
     int? weeklyGoalSessions,
     bool? remoteLinkEnabled,
     String? localChildNickname,
+    bool? guidanceAudioEnabled,
+    int? sessionGoalMinutes,
+    int? startingSurahId,
+    bool? kidsHifzV2Enabled,
   }) => ParentSettings(
     pinHash: clearPin ? null : (pinHash ?? this.pinHash),
     reminderEnabled: reminderEnabled ?? this.reminderEnabled,
@@ -46,6 +61,10 @@ class ParentSettings extends Equatable {
     weeklyGoalSessions: weeklyGoalSessions ?? this.weeklyGoalSessions,
     remoteLinkEnabled: remoteLinkEnabled ?? this.remoteLinkEnabled,
     localChildNickname: localChildNickname ?? this.localChildNickname,
+    guidanceAudioEnabled: guidanceAudioEnabled ?? this.guidanceAudioEnabled,
+    sessionGoalMinutes: sessionGoalMinutes ?? this.sessionGoalMinutes,
+    startingSurahId: startingSurahId ?? this.startingSurahId,
+    kidsHifzV2Enabled: kidsHifzV2Enabled ?? this.kidsHifzV2Enabled,
   );
 
   @override
@@ -57,6 +76,10 @@ class ParentSettings extends Equatable {
     weeklyGoalSessions,
     remoteLinkEnabled,
     localChildNickname,
+    guidanceAudioEnabled,
+    sessionGoalMinutes,
+    startingSurahId,
+    kidsHifzV2Enabled,
   ];
 }
 
@@ -116,6 +139,44 @@ class ParentDashboard extends Equatable {
   final List<KidsSessionLog> logs;
   final List<ParentReward> rewards;
   final ParentSettings settings;
+
+  int get commitmentDays => logs
+      .map((log) {
+        final local = log.completedAt.toLocal();
+        return '${local.year}-${local.month}-${local.day}';
+      })
+      .toSet()
+      .length;
+
+  int get dueReviewCount => stages
+      .where((stage) => stage.status == KidsJourneyStageStatus.needsReview)
+      .fold(0, (sum, stage) => sum + stage.totalAyahs);
+
+  int get ayahsNeedingSupport {
+    final latestByAyah = <String, KidsSessionLog>{};
+    for (final log in logs) {
+      final key = '${log.surahId}:${log.ayahNumber}';
+      final existing = latestByAyah[key];
+      if (existing == null || log.completedAt.isAfter(existing.completedAt)) {
+        latestByAyah[key] = log;
+      }
+    }
+    return latestByAyah.values
+        .where((log) => log.masteryRating == PerformanceRating.weak)
+        .length;
+  }
+
+  int get averageSessionDurationSeconds {
+    final measured = logs.where((log) => log.durationSeconds > 0).toList();
+    if (measured.isEmpty) return 0;
+    final total = measured.fold<int>(
+      0,
+      (sum, log) => sum + log.durationSeconds,
+    );
+    return (total / measured.length).round();
+  }
+
+  int get totalHintUses => logs.fold(0, (sum, log) => sum + log.hintCount);
 
   int get weeklyCompletedSessions {
     final now = DateTime.now().toUtc();

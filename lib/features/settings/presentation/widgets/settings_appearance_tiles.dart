@@ -6,7 +6,6 @@ import '../../../../core/l10n/locale_cubit.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/theme/theme_cubit.dart';
-import 'settings_section.dart';
 
 class ThemeSettingTile extends StatelessWidget {
   const ThemeSettingTile({super.key, required this.isDark});
@@ -18,36 +17,52 @@ class ThemeSettingTile extends StatelessWidget {
       builder: (context, themeMode) {
         final primary = isDark ? AppColors.primaryLight : AppColors.primary;
 
-        return Column(
-          children: [
-            ThemeOption(
-              label: context.l10n.lightMode,
-              icon: Icons.light_mode_rounded,
-              isSelected: themeMode == ThemeMode.light,
-              color: AppColors.streakOrange,
-              isDark: isDark,
-              onTap: () => context.read<ThemeCubit>().setTheme(ThemeMode.light),
-            ),
-            SettingsDivider(isDark: isDark),
-            ThemeOption(
-              label: context.l10n.darkMode,
-              icon: Icons.dark_mode_rounded,
-              isSelected: themeMode == ThemeMode.dark,
-              color: AppColors.accentBlue,
-              isDark: isDark,
-              onTap: () => context.read<ThemeCubit>().setTheme(ThemeMode.dark),
-            ),
-            SettingsDivider(isDark: isDark),
-            ThemeOption(
-              label: context.l10n.systemDefault,
-              icon: Icons.brightness_auto_rounded,
-              isSelected: themeMode == ThemeMode.system,
-              color: primary,
-              isDark: isDark,
-              onTap: () =>
-                  context.read<ThemeCubit>().setTheme(ThemeMode.system),
-            ),
-          ],
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.sm,
+            AppSpacing.md,
+            AppSpacing.md,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: ThemeOption(
+                  label: context.l10n.lightMode,
+                  icon: Icons.light_mode_rounded,
+                  isSelected: themeMode == ThemeMode.light,
+                  color: primary,
+                  isDark: isDark,
+                  onTap: () =>
+                      context.read<ThemeCubit>().setTheme(ThemeMode.light),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: ThemeOption(
+                  label: context.l10n.darkMode,
+                  icon: Icons.dark_mode_rounded,
+                  isSelected: themeMode == ThemeMode.dark,
+                  color: primary,
+                  isDark: isDark,
+                  onTap: () =>
+                      context.read<ThemeCubit>().setTheme(ThemeMode.dark),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: ThemeOption(
+                  label: context.l10n.systemDefault,
+                  icon: Icons.brightness_auto_rounded,
+                  isSelected: themeMode == ThemeMode.system,
+                  color: primary,
+                  isDark: isDark,
+                  onTap: () =>
+                      context.read<ThemeCubit>().setTheme(ThemeMode.system),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -78,67 +93,58 @@ class ThemeOption extends StatelessWidget {
         ? AppColors.darkTextPrimary
         : AppColors.lightTextPrimary;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        child: Row(
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? color.withValues(alpha: 0.18)
-                    : color.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected ? color : color.withValues(alpha: 0.2),
-                  width: isSelected ? 1.5 : 1.0,
-                ),
-              ),
-              child: Icon(icon, color: color, size: 20),
+    return Semantics(
+      label: label,
+      button: true,
+      selected: isSelected,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 104,
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? color.withValues(alpha: isDark ? 0.2 : 0.11)
+                : (isDark
+                      ? AppColors.darkSurfaceVariant
+                      : AppColors.lightSurfaceVariant),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: isSelected
+                  ? color.withValues(alpha: 0.7)
+                  : Colors.transparent,
+              width: 1.3,
             ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Text(
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: isSelected ? 0.2 : 0.1),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Text(
                 label,
-                style: AppTypography.bodyMedium.copyWith(
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.labelMedium.copyWith(
                   color: textColor,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
                 ),
               ),
-            ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isSelected ? color : Colors.transparent,
-                border: Border.all(
-                  color: isSelected
-                      ? color
-                      : (isDark
-                            ? AppColors.darkDivider
-                            : AppColors.lightDivider),
-                  width: 2,
-                ),
-              ),
-              child: isSelected
-                  ? const Icon(
-                      Icons.check_rounded,
-                      color: Colors.white,
-                      size: 13,
-                    )
-                  : null,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -156,30 +162,42 @@ class LocaleSettingTile extends StatelessWidget {
         final isAr = locale.languageCode == 'ar';
         final primary = isDark ? AppColors.primaryLight : AppColors.primary;
 
-        return Column(
-          children: [
-            LocaleOption(
-              label: context.l10n.arabic,
-              sublabel: 'العربية',
-              flag: '🇸🇦',
-              isSelected: isAr,
-              color: primary,
-              isDark: isDark,
-              onTap: () =>
-                  context.read<LocaleCubit>().setLocale(const Locale('ar')),
-            ),
-            SettingsDivider(isDark: isDark),
-            LocaleOption(
-              label: 'English',
-              sublabel: context.l10n.english,
-              flag: '🇬🇧',
-              isSelected: !isAr,
-              color: primary,
-              isDark: isDark,
-              onTap: () =>
-                  context.read<LocaleCubit>().setLocale(const Locale('en')),
-            ),
-          ],
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.sm,
+            AppSpacing.md,
+            AppSpacing.md,
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: LocaleOption(
+                  label: context.l10n.arabic,
+                  sublabel: 'العربية',
+                  flag: '🇸🇦',
+                  isSelected: isAr,
+                  color: primary,
+                  isDark: isDark,
+                  onTap: () =>
+                      context.read<LocaleCubit>().setLocale(const Locale('ar')),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: LocaleOption(
+                  label: 'English',
+                  sublabel: context.l10n.english,
+                  flag: '🇬🇧',
+                  isSelected: !isAr,
+                  color: primary,
+                  isDark: isDark,
+                  onTap: () =>
+                      context.read<LocaleCubit>().setLocale(const Locale('en')),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
@@ -215,78 +233,73 @@ class LocaleOption extends StatelessWidget {
         ? AppColors.darkTextHint
         : AppColors.lightTextHint;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: isDark ? AppColors.darkBackground : AppColors.lightBackground,
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected
-                      ? color
-                      : (isDark ? AppColors.darkDivider : AppColors.lightDivider),
-                  width: isSelected ? 1.5 : 1.0,
+    return Semantics(
+      label: label,
+      button: true,
+      selected: isSelected,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          height: 78,
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? color.withValues(alpha: isDark ? 0.18 : 0.09)
+                : (isDark
+                      ? AppColors.darkSurfaceVariant
+                      : AppColors.lightSurfaceVariant),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(
+              color: isSelected
+                  ? color.withValues(alpha: 0.65)
+                  : Colors.transparent,
+              width: 1.3,
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isDark
+                      ? AppColors.darkBackground
+                      : AppColors.lightBackground,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                ),
+                child: Text(flag, style: AppTypography.titleLarge),
+              ),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: textColor,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      sublabel,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: subtextColor,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: Text(flag, style: AppTypography.headlineMedium),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: textColor,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    sublabel,
-                    style: AppTypography.labelSmall.copyWith(
-                      color: subtextColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 22,
-              height: 22,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isSelected ? color : Colors.transparent,
-                border: Border.all(
-                  color: isSelected
-                      ? color
-                      : (isDark
-                            ? AppColors.darkDivider
-                            : AppColors.lightDivider),
-                  width: 2,
-                ),
-              ),
-              child: isSelected
-                  ? const Icon(
-                      Icons.check_rounded,
-                      color: Colors.white,
-                      size: 13,
-                    )
-                  : null,
-            ),
-          ],
+              if (isSelected)
+                Icon(Icons.check_circle_rounded, color: color, size: 18),
+            ],
+          ),
         ),
       ),
     );

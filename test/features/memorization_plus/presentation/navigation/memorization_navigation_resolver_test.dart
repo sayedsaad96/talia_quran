@@ -42,6 +42,38 @@ void main() {
     });
 
     test(
+      'due kids review takes priority over the latest journey log',
+      () async {
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            kidsLogs: [
+              _kidsLog(surahId: 114, completedAt: DateTime.utc(2026, 1, 2)),
+            ],
+            reviewRecords: [_dueKidsRecord(surahId: 112, ayahNumber: 2)],
+          ),
+        );
+
+        final targets = await resolver.resolve();
+
+        expect(
+          Uri.parse(targets.kidsHomeLocation).queryParameters['surahId'],
+          '112',
+        );
+      },
+    );
+    test('uses the parent-selected starting surah for a new child', () async {
+      const resolver = MemorizationNavigationResolver(
+        _FakeRepository(parentSettings: ParentSettings(startingSurahId: 112)),
+      );
+
+      final targets = await resolver.resolve();
+
+      expect(
+        Uri.parse(targets.kidsHomeLocation).queryParameters['surahId'],
+        '112',
+      );
+    });
+    test(
       'missing current plan routes safely instead of forcing Surah 1',
       () async {
         const resolver = MemorizationNavigationResolver(_FakeRepository());
@@ -53,10 +85,16 @@ void main() {
           targets.reviewQuizLocation,
           AppRoutes.memorizationPlusCustomPlan,
         );
-        expect(targets.kidsJourneyLocation, AppRoutes.memorizationPlusKidsHome);
+        expect(
+          Uri.parse(targets.kidsJourneyLocation).queryParameters['surahId'],
+          '114',
+        );
         expect(targets.todayPlanLocation, isNot(contains('surahId=1')));
         expect(targets.reviewQuizLocation, isNot(contains('surahId=1')));
-        expect(targets.kidsJourneyLocation, isNot(contains('surahId=1')));
+        expect(
+          Uri.parse(targets.kidsJourneyLocation).queryParameters['surahId'],
+          isNot('1'),
+        );
       },
     );
 
@@ -100,6 +138,20 @@ KidsSessionLog _kidsLog({
   completedAt: completedAt,
 );
 
+AyahReviewRecord _dueKidsRecord({
+  required int surahId,
+  required int ayahNumber,
+}) => AyahReviewRecord(
+  surahId: surahId,
+  ayahNumber: ayahNumber,
+  strengthLevel: 6,
+  intervalDays: 1,
+  lastReviewedAt: DateTime.utc(2025, 12, 1),
+  nextReviewDate: DateTime.utc(2025, 12, 2),
+  totalReviews: 1,
+  lastRating: PerformanceRating.average,
+  createdByMode: ReviewRecordCreatedByMode.kidsMode,
+);
 CustomMemorizationPlan _customPlan(int surahId, PlanTargetUser targetUser) =>
     CustomMemorizationPlan(
       name: 'Plan',
@@ -123,11 +175,15 @@ class _FakeRepository implements MemorizationPlusRepository {
     this.cachedPlan,
     this.customPlan,
     this.kidsLogs = const [],
+    this.reviewRecords = const [],
+    this.parentSettings = const ParentSettings(),
   });
 
   final DailyPlan? cachedPlan;
   final CustomMemorizationPlan? customPlan;
   final List<KidsSessionLog> kidsLogs;
+  final List<AyahReviewRecord> reviewRecords;
+  final ParentSettings parentSettings;
 
   @override
   Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() async =>
@@ -140,12 +196,14 @@ class _FakeRepository implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
     ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
-  }) async =>
-      const Right([]);
+  }) async => Right(reviewRecords);
 
   @override
   Future<Either<Failure, List<KidsSessionLog>>> getKidsSessionLogs() async =>
       Right(kidsLogs);
+  @override
+  Future<Either<Failure, ParentSettings>> getParentSettings() async =>
+      Right(parentSettings);
 
   @override
   Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() async =>

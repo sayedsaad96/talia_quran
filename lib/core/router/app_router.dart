@@ -212,6 +212,27 @@ class MemorizationRouteGuard {
     return AppRoutes.memorizationPlus;
   }
 
+  /// Resolves a bare Kids home link through the child's configured journey
+  /// instead of silently assigning a default surah in the route builder.
+  static Future<String?> kidsHomeRedirect(GoRouterState state) async {
+    final audienceRedirect = await kidsOnlyRedirect();
+    if (audienceRedirect != null) return audienceRedirect;
+
+    final extra = state.extra as Map<String, dynamic>?;
+    final surahId =
+        extra?['surahId'] as int? ??
+        int.tryParse(state.uri.queryParameters['surahId'] ?? '');
+    if (AppRouter._isValidSurahId(surahId)) return null;
+
+    try {
+      return await MemorizationNavigationResolver(
+        getIt<MemorizationPlusRepository>(),
+      ).childOnboardingLocation();
+    } catch (_) {
+      return '${AppRoutes.memorizationPlus}?preferred=kids';
+    }
+  }
+
   /// Resolves a notification's generic Kids journey link to the active map.
   static Future<String?> kidsJourneyRedirect(GoRouterState state) async {
     final profile = await _readProfile();
@@ -538,27 +559,36 @@ abstract class AppRouter {
           }
           final resolvedSurahId = surahId!;
           final ayahText = extra?['ayahText'] as String? ?? '';
+          final rawMissionType =
+              extra?['missionType'] ?? state.uri.queryParameters['missionType'];
+          final missionType = rawMissionType is KidsMissionType
+              ? rawMissionType
+              : KidsMissionType.values.firstWhere(
+                  (value) => value.name == rawMissionType,
+                  orElse: () => KidsMissionType.newMemorization,
+                );
           return KidsGamifiedListenPage(
             surahId: resolvedSurahId,
             ayahNumber: ayahNumber,
             ayahText: ayahText,
+            missionType: missionType,
           );
         },
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.memorizationPlusKidsHome,
-        redirect: (context, state) => MemorizationRouteGuard.kidsOnlyRedirect(),
+        redirect: (context, state) =>
+            MemorizationRouteGuard.kidsHomeRedirect(state),
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final surahId =
               extra?['surahId'] as int? ??
-              int.tryParse(state.uri.queryParameters['surahId'] ?? '') ??
-              1;
+              int.tryParse(state.uri.queryParameters['surahId'] ?? '');
           if (!_isValidSurahId(surahId)) {
             return const PathSelectionPage();
           }
-          return KidsGamifiedHomePage(surahId: surahId);
+          return KidsGamifiedHomePage(surahId: surahId!);
         },
       ),
       GoRoute(

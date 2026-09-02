@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
@@ -123,7 +124,7 @@ void main() {
               onBack: () {},
               onPlayPause: () {},
               onRecordRecitation: () {},
-            onStopRecording: () {},
+              onStopRecording: () {},
             ),
           ),
         );
@@ -178,53 +179,81 @@ void main() {
       );
 
       expect(find.text('I finished memorizing'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('kids-gamified-manual-complete')));
+      await tester.tap(
+        find.byKey(const ValueKey('kids-gamified-manual-complete')),
+      );
       expect(manuallyCompleted, isTrue);
     });
 
-    testWidgets('isRecording=true shows recording indicator and disables play', (
+    testWidgets('recitation mismatch never exposes guardian completion', (
       tester,
     ) async {
-      tester.view.devicePixelRatio = 1;
-      tester.view.physicalSize = const Size(900, 1200);
-      addTearDown(tester.view.reset);
-
-      var played = false;
-      var recorded = false;
-      var stopped = false;
-
       await tester.pumpWidget(
         _TestApp(
           child: KidsGamifiedListenContent(
-            state: _baseState.copyWith(isRecording: true),
+            state: _baseState.copyWith(
+              recordingError: CubitMessageCodes.kidsRecitationMismatch,
+            ),
             onBack: () {},
-            onPlayPause: () => played = true,
-            onRecordRecitation: () => recorded = true,
-            onStopRecording: () => stopped = true,
+            onPlayPause: () {},
+            onRecordRecitation: () {},
+            onStopRecording: () {},
+            onManualComplete: () {},
           ),
         ),
       );
 
-      // While recording, the panel appears with 'Recording...'
-      expect(find.text('Recording...'), findsOneWidget);
-      expect(find.byKey(const ValueKey('recording-panel')), findsOneWidget);
-
-      // Tapping the disabled play button should NOT fire callback
-      await tester.tap(
-        find.byKey(const ValueKey('kids-gamified-play-audio')),
-        warnIfMissed: false,
+      expect(
+        find.byKey(const ValueKey('kids-gamified-manual-complete')),
+        findsNothing,
       );
-      await tester.pump();
-      expect(played, isFalse);
-
-      // Tapping the stop button should fire onStopRecording
-      await tester.tap(
-        find.byKey(const ValueKey('kids-gamified-stop-recording')),
-      );
-      await tester.pump();
-      expect(recorded, isFalse); // start recording was not called
-      expect(stopped, isTrue); // stop recording was called
     });
+    testWidgets(
+      'isRecording=true shows recording indicator and disables play',
+      (tester) async {
+        tester.view.devicePixelRatio = 1;
+        tester.view.physicalSize = const Size(900, 1200);
+        addTearDown(tester.view.reset);
+
+        var played = false;
+        var recorded = false;
+        var stopped = false;
+
+        await tester.pumpWidget(
+          _TestApp(
+            child: KidsGamifiedListenContent(
+              state: _baseState.copyWith(isRecording: true),
+              onBack: () {},
+              onPlayPause: () => played = true,
+              onRecordRecitation: () => recorded = true,
+              onStopRecording: () => stopped = true,
+            ),
+          ),
+        );
+
+        // While recording, the panel appears with 'Recording...'
+        expect(find.text('Recording...'), findsOneWidget);
+        expect(find.byKey(const ValueKey('recording-panel')), findsOneWidget);
+        expect(find.text('Test ayah text'), findsNothing);
+        expect(find.byType(KidsAyahCard), findsNothing);
+
+        // Tapping the disabled play button should NOT fire callback
+        await tester.tap(
+          find.byKey(const ValueKey('kids-gamified-play-audio')),
+          warnIfMissed: false,
+        );
+        await tester.pump();
+        expect(played, isFalse);
+
+        // Tapping the stop button should fire onStopRecording
+        await tester.tap(
+          find.byKey(const ValueKey('kids-gamified-stop-recording')),
+        );
+        await tester.pump();
+        expect(recorded, isFalse); // start recording was not called
+        expect(stopped, isTrue); // stop recording was called
+      },
+    );
 
     testWidgets('isCompleted=true disables mic button', (tester) async {
       tester.view.devicePixelRatio = 1;

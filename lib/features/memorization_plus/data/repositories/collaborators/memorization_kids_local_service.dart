@@ -33,7 +33,7 @@ class MemorizationKidsLocalService {
     ParentPinSecureStore? parentPinStore,
     RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
   }) : _parentPinStore = parentPinStore ?? FlutterParentPinSecureStore(),
-      _owner = owner;
+       _owner = owner;
 
   final MemorizationPlusLocalDatasource _datasource;
   final QuranRepository _quranRepository;
@@ -119,7 +119,13 @@ class MemorizationKidsLocalService {
         (detail) => totalAyahs = detail.surah.ayahCount,
       );
 
-      const stageSize = 5;
+      final profile = await _datasource.getMemorizationProfile();
+      final configuredAge = profile.childAge;
+      final policyAge =
+          configuredAge != null && configuredAge >= 5 && configuredAge <= 12
+          ? configuredAge
+          : 8;
+      final stageSize = KidsSessionPolicy.forAge(policyAge).journeyStageSize;
       final stages = <KidsJourneyStage>[];
       var foundCurrent = false;
       for (var start = 1; start <= totalAyahs; start += stageSize) {
@@ -172,16 +178,30 @@ class MemorizationKidsLocalService {
   }
 
   Future<Either<Failure, KidsSessionLog>> saveKidsSessionLog({
+    String? sessionId,
     required int surahId,
     required int ayahNumber,
     required int repeatsCompleted,
     required int pointsEarned,
+    KidsMissionType missionType = KidsMissionType.newMemorization,
+    List<int> ayahNumbers = const [],
+    int durationSeconds = 0,
+    int attemptCount = 1,
+    int hintCount = 0,
+    PerformanceRating masteryRating = PerformanceRating.excellent,
   }) async {
     try {
       final logs = await _datasource.getKidsSessionLogs();
       KidsSessionLogModel? existing;
       for (final log in logs) {
-        if (log.surahId == surahId && log.ayahNumber == ayahNumber) {
+        final sameExplicitSession = sessionId != null && log.id == sessionId;
+        final sameLegacyCompletion =
+            sessionId == null &&
+            missionType == KidsMissionType.newMemorization &&
+            log.surahId == surahId &&
+            log.ayahNumber == ayahNumber &&
+            log.pointsEarned > 0;
+        if (sameExplicitSession || sameLegacyCompletion) {
           existing = log;
           break;
         }
@@ -191,12 +211,18 @@ class MemorizationKidsLocalService {
       // UTC: consistent with all other review/session date fields.
       final now = DateTime.now().toUtc();
       final log = KidsSessionLogModel(
-        id: '${now.microsecondsSinceEpoch}_${surahId}_$ayahNumber',
+        id: sessionId ?? '${now.microsecondsSinceEpoch}_${surahId}_$ayahNumber',
         surahId: surahId,
         ayahNumber: ayahNumber,
         repeatsCompleted: repeatsCompleted,
         pointsEarned: pointsEarned,
         completedAt: now,
+        missionType: missionType,
+        ayahNumbers: ayahNumbers.isEmpty ? [ayahNumber] : ayahNumbers,
+        durationSeconds: max(0, durationSeconds),
+        attemptCount: max(1, attemptCount),
+        hintCount: max(0, hintCount),
+        masteryRating: masteryRating,
       );
       await _datasource.saveKidsSessionLog(log);
       await _unlockWeeklyRewardIfNeeded();
@@ -220,19 +246,19 @@ class MemorizationKidsLocalService {
       final settings = await _datasource.getParentSettings();
       final rewards = await _datasource.getParentRewards();
       final journey = await getKidsJourney(surahId: surahId);
-      final Either<Failure, ParentDashboard> result =
-          journey.fold<Either<Failure, ParentDashboard>>(
-        Left.new,
-        (stages) => Right(
-          ParentDashboard(
-            progress: progress,
-            stages: stages,
-            logs: logs,
-            rewards: rewards,
-            settings: settings,
-          ),
-        ),
-      );
+      final Either<Failure, ParentDashboard> result = journey
+          .fold<Either<Failure, ParentDashboard>>(
+            Left.new,
+            (stages) => Right(
+              ParentDashboard(
+                progress: progress,
+                stages: stages,
+                logs: logs,
+                rewards: rewards,
+                settings: settings,
+              ),
+            ),
+          );
       return result;
     } catch (e) {
       return Left(CacheFailure.from(e));
@@ -266,7 +292,8 @@ class MemorizationKidsLocalService {
       final stored = settings.pinHash;
       final ownerId = _owner.currentOwnerId;
       final blockedUntil = await _parentPinStore.readBlockedUntil(ownerId);
-      if (blockedUntil != null && blockedUntil.isAfter(DateTime.now().toUtc())) {
+      if (blockedUntil != null &&
+          blockedUntil.isAfter(DateTime.now().toUtc())) {
         return const Right(false);
       }
       final verifier = await _parentPinStore.readVerifier(ownerId);
@@ -288,7 +315,10 @@ class MemorizationKidsLocalService {
     try {
       final settings = await _datasource.getParentSettings();
       final ownerId = _owner.currentOwnerId;
-      await _parentPinStore.writeVerifier(ownerId, ParentPinVerifier.create(pin));
+      await _parentPinStore.writeVerifier(
+        ownerId,
+        ParentPinVerifier.create(pin),
+      );
       await _clearPinThrottle(ownerId);
       await _datasource.saveParentSettings(
         ParentSettingsModel.fromEntity(
@@ -370,17 +400,44 @@ class MemorizationKidsLocalService {
   }
 
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
+    String? sessionId,
     required int surahId,
     required int ayahNumber,
     required int repeatsCompleted,
+    KidsMissionType missionType = KidsMissionType.newMemorization,
+    List<int> ayahNumbers = const [],
+    int durationSeconds = 0,
+    int attemptCount = 1,
+    int hintCount = 0,
+    PerformanceRating masteryRating = PerformanceRating.excellent,
   }) => _withKidsAwardLock(surahId, ayahNumber, () async {
     try {
       final current = await _datasource.getKidsProgress();
       final logs = await _datasource.getKidsSessionLogs();
       final alreadyCompleted = logs.any(
-        (log) => log.surahId == surahId && log.ayahNumber == ayahNumber,
+        (log) =>
+            log.surahId == surahId &&
+            log.ayahNumber == ayahNumber &&
+            log.pointsEarned > 0,
       );
       if (alreadyCompleted) {
+        if (missionType != KidsMissionType.newMemorization) {
+          final logResult = await saveKidsSessionLog(
+            sessionId: sessionId,
+            surahId: surahId,
+            ayahNumber: ayahNumber,
+            repeatsCompleted: repeatsCompleted,
+            pointsEarned: 0,
+            missionType: missionType,
+            ayahNumbers: ayahNumbers,
+            durationSeconds: durationSeconds,
+            attemptCount: attemptCount,
+            hintCount: hintCount,
+            masteryRating: masteryRating,
+          );
+          final logFailure = logResult.fold((failure) => failure, (_) => null);
+          if (logFailure != null) return Left(logFailure);
+        }
         return Right(
           KidsCompletionResult(
             progress: await _hydrateKidsStreak(current),
@@ -391,17 +448,29 @@ class MemorizationKidsLocalService {
         );
       }
 
-      // Points: 10 base + 2 per extra repeat
-      final points = 10 + ((repeatsCompleted - 1) * 2).clamp(0, 20);
-      final updated = current.addPoints(points);
+      // Listening repetitions are practice, not a rewardable action.
+      const points = 10;
+      final stars = switch (masteryRating) {
+        PerformanceRating.excellent => 3,
+        PerformanceRating.average => 2,
+        PerformanceRating.weak => 1,
+      };
+      final updated = current.addPoints(points, stars: stars);
       await _datasource.saveKidsProgress(
         KidsProgressModel.fromEntity(_kidsProgressForStorage(updated)),
       );
       final logResult = await saveKidsSessionLog(
+        sessionId: sessionId,
         surahId: surahId,
         ayahNumber: ayahNumber,
         repeatsCompleted: repeatsCompleted,
         pointsEarned: points,
+        missionType: missionType,
+        ayahNumbers: ayahNumbers,
+        durationSeconds: durationSeconds,
+        attemptCount: attemptCount,
+        hintCount: hintCount,
+        masteryRating: masteryRating,
       );
       final logFailure = logResult.fold((failure) => failure, (_) => null);
       if (logFailure != null) return Left(logFailure);
@@ -466,7 +535,8 @@ class MemorizationKidsLocalService {
   }
 
   bool _matchesLegacyPin(String? stored, String pin) =>
-      stored == _hashPin(pin) || (_isLegacyPlaintextPin(stored) && stored == pin);
+      stored == _hashPin(pin) ||
+      (_isLegacyPlaintextPin(stored) && stored == pin);
 
   Future<void> _upgradeLegacyPin(
     String ownerId,
@@ -476,7 +546,9 @@ class MemorizationKidsLocalService {
     await _parentPinStore.writeVerifier(ownerId, ParentPinVerifier.create(pin));
     await _clearPinThrottle(ownerId);
     await _datasource.saveParentSettings(
-      ParentSettingsModel.fromEntity(settings.copyWith(pinHash: _securePinMarker)),
+      ParentSettingsModel.fromEntity(
+        settings.copyWith(pinHash: _securePinMarker),
+      ),
     );
   }
 

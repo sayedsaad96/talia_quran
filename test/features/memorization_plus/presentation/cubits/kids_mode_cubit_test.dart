@@ -1,8 +1,11 @@
 import 'dart:async';
+import 'dart:ffi' show Abi;
+import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:isar/isar.dart';
 import 'package:mockito/mockito.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/cubit_message_codes.dart';
@@ -10,18 +13,42 @@ import 'package:talia_quran/core/memorization/review_record_audience_scope.dart'
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
 import 'package:talia_quran/core/memorization/v2/recitation_evaluator.dart';
 import 'package:talia_quran/core/memorization/v2/session_engine.dart';
+import 'package:talia_quran/core/memorization/v2/session_phase.dart';
+import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/core/services/achievement_service.dart';
 import 'package:talia_quran/core/services/streak_service.dart';
-import 'package:talia_quran/core/services/xp_service.dart';
+import 'package:talia_quran/features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
+import 'package:talia_quran/features/memorization_plus/data/models/isar_v2_session.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/memorization_plus/domain/usecases/memorization_plus_usecases.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
+import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 import 'package:talia_quran/features/streak/domain/entities/streak_result.dart';
-import 'package:talia_quran/features/xp/domain/entities/xp_gain_result.dart';
 
 import 'memorization_session_cubit_test.mocks.dart' show MockSpeechToText;
+
+bool _kidsResumeIsarCoreInitialized = false;
+
+Future<void> _initializeKidsResumeIsarCoreForTests() async {
+  if (_kidsResumeIsarCoreInitialized) return;
+  if (Platform.isWindows) {
+    final localAppData = Platform.environment['LOCALAPPDATA'];
+    if (localAppData != null) {
+      final dllPath =
+          '$localAppData\\Pub\\Cache\\hosted\\pub.dev\\'
+          'isar_flutter_libs-3.1.0+1\\windows\\isar.dll';
+      if (File(dllPath).existsSync()) {
+        await Isar.initializeIsarCore(libraries: {Abi.current(): dllPath});
+        _kidsResumeIsarCoreInitialized = true;
+        return;
+      }
+    }
+  }
+  await Isar.initializeIsarCore();
+  _kidsResumeIsarCoreInitialized = true;
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -31,32 +58,37 @@ void main() {
     late _FakeAchievementService achievementService;
     late _UnusedQuranRepository quranRepository;
     late _FakeStreakService streakService;
-    late _FakeXpService xpService;
     late KidsModeCubit cubit;
 
-    KidsModeCubit buildCubit({required KidsRecitationRecorder recorder}) =>
-        KidsModeCubit(
-          GetKidsProgressUsecase(repository),
-          GetKidsJourneyUsecase(repository),
-          AwardKidsPointsUsecase(repository),
-          achievementService,
-          quranRepository,
-          V2SessionEngine(),
-          V2SessionReviewAdapter(
-            repository: repository,
-            scheduler: const ScheduleNextReviewUsecase(),
-          ),
-          streakService,
-          xpService,
-          recorder,
-        );
+    KidsModeCubit buildCubit({
+      required KidsRecitationRecorder recorder,
+      KidsSessionPolicy? policy,
+      QuranRepository? quran,
+      V2SessionProgressAdapter? progressAdapter,
+    }) => KidsModeCubit(
+      GetKidsProgressUsecase(repository),
+      GetKidsJourneyUsecase(repository),
+      AwardKidsPointsUsecase(repository),
+      achievementService,
+      quran ?? quranRepository,
+      V2SessionEngine(),
+      V2SessionReviewAdapter(
+        repository: repository,
+        scheduler: const ScheduleNextReviewUsecase(),
+      ),
+      streakService,
+      recorder,
+      null,
+      (pin) async => pin == '1234',
+      policy == null ? null : () async => policy,
+      progressAdapter,
+    );
 
     setUp(() {
       repository = _FakeMemorizationPlusRepository();
       achievementService = _FakeAchievementService();
       quranRepository = _UnusedQuranRepository();
       streakService = _FakeStreakService();
-      xpService = _FakeXpService();
 
       cubit = buildCubit(recorder: _FakeKidsRecitationRecorder());
     });
@@ -72,10 +104,22 @@ void main() {
             Completer<Either<Failure, KidsCompletionResult>>();
         repository.awardCompleter = awardCompleter;
 
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(
+            result: const KidsRecitationCaptureResult.unavailable(),
+          ),
+        );
         await cubit.load(114, 1, 'ayah text');
-        final firstCompletion = cubit.submitManualCompletion();
+        cubit.debugSetLoopCount(3);
+        await cubit.startRecording();
+        final firstCompletion = cubit.submitManualCompletion(
+          guardianPin: '1234',
+        );
         await Future<void>.delayed(Duration.zero);
-        final duplicateCompletion = cubit.submitManualCompletion();
+        final duplicateCompletion = cubit.submitManualCompletion(
+          guardianPin: '1234',
+        );
         await Future<void>.delayed(Duration.zero);
 
         expect(repository.awardCalls, 1);
@@ -94,16 +138,77 @@ void main() {
         await Future.wait([firstCompletion, duplicateCompletion]);
 
         expect(repository.awardCalls, 1);
-        expect(repository.repeatsCompletedCalls, [0]);
+        expect(repository.repeatsCompletedCalls, [3]);
         expect(repository.markCalls, 1);
         expect(streakService.recordCalls, 1);
-        expect(xpService.addCalls, 1);
         expect(repository.awardLogWrites, 1);
         expect(repository.saveLogCalls, 0);
         expect(achievementService.checkCalls, 1);
       },
     );
 
+    test('restores and clears an interrupted kids V2 session', () async {
+      await _initializeKidsResumeIsarCoreForTests();
+      final tempDir = await Directory.systemTemp.createTemp(
+        'talia_kids_resume_',
+      );
+      final isar = await Isar.open(
+        [IsarV2SessionSchema],
+        directory: tempDir.path,
+        name: 'kids_resume_${DateTime.now().microsecondsSinceEpoch}',
+      );
+      addTearDown(() async {
+        await isar.close(deleteFromDisk: true);
+        if (tempDir.existsSync()) await tempDir.delete(recursive: true);
+      });
+      final adapter = V2SessionProgressAdapter(
+        datasource: V2SessionLocalDatasource(isar),
+        audience: MemorizationAudience.kids,
+      );
+      await adapter.save(
+        V2SessionState.initial(
+          surahId: 114,
+          blockAyahs: const [
+            Ayah(number: 1, surahId: 114, text: 'ayah text', numberInSurah: 1),
+          ],
+          blockReviewRequired: false,
+        ).copyWith(phase: V2SessionPhase.reciting),
+      );
+      repository.awardCompleter = Completer()
+        ..complete(
+          const Right(
+            KidsCompletionResult(
+              progress: KidsProgress.initial(),
+              pointsEarned: 0,
+              starsEarned: 1,
+              alreadyCompleted: true,
+            ),
+          ),
+        );
+
+      await cubit.close();
+      cubit = buildCubit(
+        recorder: _FakeKidsRecitationRecorder(),
+        quran: const _ResumeQuranRepository(),
+        progressAdapter: adapter,
+      );
+      await cubit.load(
+        114,
+        1,
+        'ayah text',
+        missionType: KidsMissionType.resume,
+      );
+
+      final resumed = cubit.state as KidsModeLoaded;
+      expect(resumed.sessionState.phase, V2SessionPhase.reciting);
+      cubit.debugSetLoopCount(1);
+      await cubit.markCompleted(automaticSpokenText: 'ayah text');
+
+      expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
+      expect(repository.lastMissionType, KidsMissionType.resume);
+      final savedAfterCompletion = await adapter.loadIfExists(114);
+      expect(savedAfterCompletion.fold(() => false, (_) => true), isFalse);
+    });
     test(
       'review record failure still awards points then emits error',
       () async {
@@ -125,7 +230,7 @@ void main() {
         await cubit.load(114, 1, 'ayah text');
         cubit.debugSetLoopCount(3);
 
-        await cubit.submitManualCompletion();
+        await cubit.markCompleted(automaticSpokenText: 'ayah text');
 
         expect(cubit.state, isA<KidsModeLoaded>());
         final loaded = cubit.state as KidsModeLoaded;
@@ -138,6 +243,27 @@ void main() {
       },
     );
 
+    test(
+      'load requires one conscious listen and never an automatic loop',
+      () async {
+        await cubit.load(114, 1, 'ayah text');
+
+        final loaded = cubit.state as KidsModeLoaded;
+        expect(loaded.maxLoops, 1);
+      },
+    );
+    test('ages eight to twelve require linked block review', () async {
+      await cubit.close();
+      cubit = buildCubit(
+        recorder: _FakeKidsRecitationRecorder(),
+        policy: KidsSessionPolicy.forAge(8),
+      );
+
+      await cubit.load(114, 1, 'ayah text');
+
+      final loaded = cubit.state as KidsModeLoaded;
+      expect(loaded.sessionState.blockReviewRequired, isTrue);
+    });
     test('load rejects an ayah in a locked journey stage', () async {
       repository.journey = const [
         KidsJourneyStage(
@@ -267,8 +393,102 @@ void main() {
       expect(repository.markCalls, 1);
       expect(repository.awardLogWrites, 1);
       expect(repository.saveLogCalls, 0);
+      expect(repository.lastSessionId, isNotEmpty);
+      expect(repository.lastMissionType, KidsMissionType.newMemorization);
+      expect(repository.lastAttemptCount, 1);
+      expect(repository.lastHintCount, 0);
+      expect(repository.lastMasteryRating, PerformanceRating.excellent);
     });
 
+    test('recitation mismatch never enables guardian completion', () async {
+      await cubit.close();
+      cubit = buildCubit(
+        recorder: _FakeKidsRecitationRecorder(
+          result: const KidsRecitationCaptureResult.captured(
+            words: 'different words',
+          ),
+        ),
+      );
+
+      await cubit.load(114, 1, 'ayah text');
+      cubit.debugSetLoopCount(3);
+      await cubit.startRecording();
+
+      final before = cubit.state as KidsModeLoaded;
+      expect(before.recordingError, CubitMessageCodes.kidsRecitationMismatch);
+      expect(before.canUseGuardianFallback, isFalse);
+
+      final accepted = await cubit.submitManualCompletion(guardianPin: '1234');
+
+      expect(accepted, isFalse);
+      expect(repository.awardCalls, 0);
+      expect(repository.markCalls, 0);
+    });
+
+    test('three mismatches escalate the ayah to weak remediation', () async {
+      await cubit.close();
+      cubit = buildCubit(
+        recorder: _FakeKidsRecitationRecorder(
+          result: const KidsRecitationCaptureResult.captured(
+            words: 'different words',
+          ),
+        ),
+      );
+
+      await cubit.load(114, 1, 'ayah text');
+      cubit.debugSetLoopCount(1);
+
+      await cubit.startRecording();
+      await cubit.startRecording();
+      await cubit.startRecording();
+
+      final loaded = cubit.state as KidsModeLoaded;
+      expect(loaded.sessionState.failureTracker.failureCountFor(114, 1), 3);
+      expect(loaded.sessionState.failureTracker.isWeak(114, 1), isTrue);
+      expect(
+        loaded.sessionState.lastRecitationResult?.verdict,
+        RecitationVerdict.remediate,
+      );
+    });
+    test(
+      'technical STT failure requires PIN and records a weak review',
+      () async {
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(
+            result: const KidsRecitationCaptureResult.unavailable(),
+          ),
+        );
+        repository.awardCompleter = Completer()
+          ..complete(
+            const Right(
+              KidsCompletionResult(
+                progress: KidsProgress.initial(),
+                pointsEarned: 10,
+                starsEarned: 1,
+                alreadyCompleted: false,
+              ),
+            ),
+          );
+
+        await cubit.load(114, 1, 'ayah text');
+        cubit.debugSetLoopCount(3);
+        await cubit.startRecording();
+
+        expect((cubit.state as KidsModeLoaded).canUseGuardianFallback, isTrue);
+        expect(
+          await cubit.submitManualCompletion(guardianPin: '9999'),
+          isFalse,
+        );
+        expect(repository.awardCalls, 0);
+
+        expect(await cubit.submitManualCompletion(guardianPin: '1234'), isTrue);
+        expect(repository.lastSavedReview?.lastRating, PerformanceRating.weak);
+        expect(repository.lastMasteryRating, PerformanceRating.weak);
+        expect(repository.lastHintCount, 1);
+        expect((cubit.state as KidsModeLoaded).isCompleted, isTrue);
+      },
+    );
     test(
       'automatic completion with missing transcript does not award or complete',
       () async {
@@ -289,7 +509,6 @@ void main() {
         expect(repository.markCalls, 0);
         expect(repository.awardLogWrites, 0);
         expect(streakService.recordCalls, 0);
-        expect(xpService.addCalls, 0);
       },
     );
     test(
@@ -307,8 +526,16 @@ void main() {
             ),
           );
 
+        await cubit.close();
+        cubit = buildCubit(
+          recorder: _FakeKidsRecitationRecorder(
+            result: const KidsRecitationCaptureResult.unavailable(),
+          ),
+        );
         await cubit.load(114, 1, 'canonical ayah text');
-        await cubit.submitManualCompletion();
+        cubit.debugSetLoopCount(3);
+        await cubit.startRecording();
+        await cubit.submitManualCompletion(guardianPin: '1234');
 
         final loaded = cubit.state as KidsModeLoaded;
         expect(loaded.isCompleted, isTrue);
@@ -324,12 +551,12 @@ void main() {
           loaded.sessionState.lastRecitationResult?.normalizedSpoken,
           isEmpty,
         );
-        expect(repository.repeatsCompletedCalls, [0]);
+        expect(repository.repeatsCompletedCalls, [3]);
       },
     );
 
     test(
-      'replay of an already-completed ayah does not record SRS pass',
+      'review of an already-completed ayah refreshes SRS without new rewards',
       () async {
         repository.awardCompleter = Completer()
           ..complete(
@@ -343,23 +570,25 @@ void main() {
             ),
           );
 
-        await cubit.load(114, 1, 'ayah text');
+        await cubit.load(
+          114,
+          1,
+          'ayah text',
+          missionType: KidsMissionType.dueReview,
+        );
         cubit.debugSetLoopCount(3);
 
-        await cubit.submitManualCompletion();
+        await cubit.markCompleted(automaticSpokenText: 'ayah text');
 
         expect(cubit.state, isA<KidsModeLoaded>());
         final loaded = cubit.state as KidsModeLoaded;
-        expect(loaded.isCompleted, isFalse);
+        expect(loaded.isCompleted, isTrue);
         expect(loaded.sessionStarsEarned, 0);
-        expect(
-          loaded.recordingError,
-          CubitMessageCodes.kidsAyahAlreadyCompleted,
-        );
+        expect(loaded.recordingError, isNull);
         expect(repository.awardCalls, 1);
-        expect(repository.markCalls, 0);
-        expect(streakService.recordCalls, 0);
-        expect(xpService.addCalls, 0);
+        expect(repository.markCalls, 1);
+        expect(repository.lastMissionType, KidsMissionType.dueReview);
+        expect(streakService.recordCalls, 1);
       },
     );
 
@@ -388,7 +617,7 @@ void main() {
             ),
           );
 
-        await cubit.submitManualCompletion();
+        await cubit.markCompleted(automaticSpokenText: 'ayah text');
 
         expect(streakService.recordCalls, 1);
         final state = cubit.state as KidsModeLoaded;
@@ -475,6 +704,12 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
   int saveLogCalls = 0;
   final repeatsCompletedCalls = <int>[];
   Failure? reviewWriteFailure;
+  AyahReviewRecord? lastSavedReview;
+  String? lastSessionId;
+  KidsMissionType? lastMissionType;
+  int? lastAttemptCount;
+  int? lastHintCount;
+  PerformanceRating? lastMasteryRating;
 
   @override
   Future<Either<Failure, KidsProgress>> getKidsProgress() async =>
@@ -491,12 +726,26 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
 
   @override
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
+    String? sessionId,
     required int surahId,
     required int ayahNumber,
     required int repeatsCompleted,
+    KidsMissionType missionType = KidsMissionType.newMemorization,
+    List<int> ayahNumbers = const [],
+    int durationSeconds = 0,
+    int attemptCount = 1,
+    int hintCount = 0,
+    PerformanceRating masteryRating = PerformanceRating.excellent,
   }) async {
     expect(surahId, 114);
     expect(ayahNumber, 1);
+    expect(ayahNumbers, [1]);
+    expect(durationSeconds, greaterThanOrEqualTo(0));
+    lastSessionId = sessionId;
+    lastMissionType = missionType;
+    lastAttemptCount = attemptCount;
+    lastHintCount = hintCount;
+    lastMasteryRating = masteryRating;
     repeatsCompletedCalls.add(repeatsCompleted);
     awardCalls++;
     final result = await awardCompleter!.future;
@@ -524,6 +773,7 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
     expect(record.surahId, 114);
     expect(record.ayahNumber, 1);
     expect(record.createdByMode, ReviewRecordCreatedByMode.kidsMode);
+    lastSavedReview = record;
     markCalls++;
     final failure = reviewWriteFailure;
     if (failure != null) return Left(failure);
@@ -532,10 +782,17 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
 
   @override
   Future<Either<Failure, KidsSessionLog>> saveKidsSessionLog({
+    String? sessionId,
     required int surahId,
     required int ayahNumber,
     required int repeatsCompleted,
     required int pointsEarned,
+    KidsMissionType missionType = KidsMissionType.newMemorization,
+    List<int> ayahNumbers = const [],
+    int durationSeconds = 0,
+    int attemptCount = 1,
+    int hintCount = 0,
+    PerformanceRating masteryRating = PerformanceRating.excellent,
   }) async {
     expect(surahId, 114);
     expect(ayahNumber, 1);
@@ -572,6 +829,33 @@ class _UnusedQuranRepository implements QuranRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _ResumeQuranRepository implements QuranRepository {
+  const _ResumeQuranRepository();
+
+  @override
+  Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) async {
+    return const Right(
+      SurahDetail(
+        surah: Surah(
+          id: 114,
+          nameAr: 'الناس',
+          nameEn: 'An-Nas',
+          ayahCount: 6,
+          juz: 30,
+          type: 'meccan',
+          page: 604,
+        ),
+        ayahs: [
+          Ayah(number: 1, surahId: 114, text: 'ayah text', numberInSurah: 1),
+        ],
+      ),
+    );
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class _FakeStreakService implements StreakService {
   int recordCalls = 0;
 
@@ -580,20 +864,6 @@ class _FakeStreakService implements StreakService {
     expect(activityDelta, 1);
     recordCalls++;
     return const StreakResult.sameDay();
-  }
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
-}
-
-class _FakeXpService implements XpService {
-  int addCalls = 0;
-
-  @override
-  Future<XpGainResult> addXp(String eventKey) async {
-    expect(eventKey, 'ayah_memorized');
-    addCalls++;
-    return const XpGainResult.zero();
   }
 
   @override

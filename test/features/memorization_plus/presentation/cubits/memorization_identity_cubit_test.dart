@@ -60,6 +60,54 @@ void main() {
     await expectation;
   });
 
+  test('setupChild persists age, nickname, policy defaults, and PIN', () async {
+    final selectedChild = testProfile.copyWith(
+      selectedPath: MemorizationPath.child,
+      guardianOnboardingStatus: GuardianOnboardingStatus.required,
+    );
+    final configuredChild = selectedChild.copyWith(childAge: 6);
+    when(
+      mockRepository.selectMemorizationPath(MemorizationPath.child),
+    ).thenAnswer((_) async => Right(selectedChild));
+    when(
+      mockRepository.configureChildAge(6),
+    ).thenAnswer((_) async => Right(configuredChild));
+    when(
+      mockRepository.getParentSettings(),
+    ).thenAnswer((_) async => const Right(ParentSettings()));
+    when(
+      mockRepository.saveParentSettings(any),
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      mockRepository.setParentPin('1234'),
+    ).thenAnswer((_) async => const Right(null));
+
+    await cubit.setupChild(
+      nickname: 'مريم',
+      age: 6,
+      pin: '1234',
+      reminderHour: 19,
+      reminderMinute: 15,
+      weeklyGoalSessions: 4,
+      guidanceAudioEnabled: false,
+      startingSurahId: 112,
+    );
+
+    expect(cubit.state, MemorizationIdentitySuccess(profile: configuredChild));
+    final saved =
+        verify(mockRepository.saveParentSettings(captureAny)).captured.single
+            as ParentSettings;
+    expect(saved.localChildNickname, 'مريم');
+    expect(saved.reminderHour, 19);
+    expect(saved.reminderMinute, 15);
+    expect(saved.weeklyGoalSessions, 4);
+    expect(saved.guidanceAudioEnabled, isFalse);
+    expect(saved.sessionGoalMinutes, 6);
+    expect(saved.startingSurahId, 112);
+    expect(saved.kidsHifzV2Enabled, isTrue);
+    verify(mockRepository.setParentPin('1234')).called(1);
+  });
+
   test('selectPath emits Loading then Error when fails', () async {
     when(
       mockRepository.selectMemorizationPath(MemorizationPath.adult),

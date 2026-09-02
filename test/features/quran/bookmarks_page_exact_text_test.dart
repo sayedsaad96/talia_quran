@@ -53,7 +53,11 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final ayahText = tester.widget<Text>(find.text(sacredText));
+    final ayahText = tester.widget<Text>(
+      find.byWidgetPredicate(
+        (w) => w is Text && (w.data?.contains(sacredText) ?? false),
+      ),
+    );
     expect(ayahText.maxLines, isNull);
     expect(ayahText.overflow, isNot(TextOverflow.ellipsis));
   });

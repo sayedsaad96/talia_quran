@@ -76,9 +76,63 @@ void main() {
   });
 
   testWidgets(
+    'mobile layout prioritizes quick preferences and progressively reveals secondary settings',
+    (tester) async {
+      await _pumpSettings(tester, viewSize: const Size(420, 900));
+
+      expect(find.text('Quick preferences'), findsOneWidget);
+      expect(find.text('Language'), findsOneWidget);
+      expect(find.text('Theme'), findsOneWidget);
+      expect(find.text('Talia user guide'), findsNothing);
+
+      await _tapVisibleText(tester, 'Help & Tutorial');
+
+      expect(find.text('Talia user guide'), findsOneWidget);
+    },
+  );
+
+  testWidgets('quick preferences use compact horizontal choices', (
+    tester,
+  ) async {
+    await _pumpSettings(tester, viewSize: const Size(420, 900));
+
+    final arabicOption = find.bySemanticsLabel('Arabic');
+    final englishOption = find.bySemanticsLabel('English');
+    final lightOption = find.bySemanticsLabel('Light Mode');
+    final darkOption = find.bySemanticsLabel('Dark Mode');
+    final arabicCenter = tester.getCenter(arabicOption);
+    final englishCenter = tester.getCenter(englishOption);
+    final lightCenter = tester.getCenter(lightOption);
+    final darkCenter = tester.getCenter(darkOption);
+
+    expect(arabicOption, findsOneWidget);
+    expect(englishOption, findsOneWidget);
+    expect(lightOption, findsOneWidget);
+    expect(darkOption, findsOneWidget);
+    expect((arabicCenter.dy - englishCenter.dy).abs(), lessThan(1));
+    expect((arabicCenter.dx - englishCenter.dx).abs(), greaterThan(80));
+    expect((lightCenter.dy - darkCenter.dy).abs(), lessThan(1));
+    expect((lightCenter.dx - darkCenter.dx).abs(), greaterThan(70));
+  });
+
+  testWidgets('wide layout presents secondary settings in two columns', (
+    tester,
+  ) async {
+    await _pumpSettings(tester, viewSize: const Size(1100, 1800));
+
+    final helpCenter = tester.getCenter(find.text('Help & Tutorial'));
+    final privacyCenter = tester.getCenter(find.text('Privacy & Security'));
+
+    expect((helpCenter.dy - privacyCenter.dy).abs(), lessThan(4));
+    expect((helpCenter.dx - privacyCenter.dx).abs(), greaterThan(200));
+  });
+
+  testWidgets(
     'Quran & Memorization section contains accuracy and reset path when selected',
     (tester) async {
       await _pumpSettings(tester, path: MemorizationPath.adult);
+
+      await _tapVisibleText(tester, 'Quran & Memorization');
 
       expect(find.text('Quran & Memorization'), findsOneWidget);
       expect(find.text('Accuracy Level'), findsOneWidget);
@@ -91,6 +145,8 @@ void main() {
     tester,
   ) async {
     await _pumpSettings(tester, path: MemorizationPath.adult);
+
+    await _tapVisibleText(tester, 'Kids & Guardian');
 
     expect(find.text('Kids & Guardian'), findsOneWidget);
     expect(find.text('I am a parent/guardian'), findsOneWidget);
@@ -105,6 +161,8 @@ void main() {
       path: MemorizationPath.adult,
       isParentGuardian: true,
     );
+
+    await _tapVisibleText(tester, 'Kids & Guardian');
 
     expect(find.text('Parent Dashboard'), findsOneWidget);
     expect(
@@ -124,6 +182,7 @@ void main() {
       isParentGuardian: true,
     );
 
+    await _tapVisibleText(tester, 'Kids & Guardian');
     await _tapVisibleText(tester, 'Parent Dashboard');
 
     expect(find.text('login route'), findsOneWidget);
@@ -148,6 +207,7 @@ void main() {
       await _pumpSettings(tester, user: _signedInUser);
 
       await _scrollUntilVisible(tester, 'Privacy & Security');
+      await _tapVisibleText(tester, 'Privacy & Security');
 
       expect(find.text('Privacy & Security'), findsOneWidget);
       expect(find.text('Privacy Policy'), findsOneWidget);
@@ -159,6 +219,7 @@ void main() {
     await _pumpSettings(tester);
 
     await _scrollUntilVisible(tester, 'Help & Tutorial');
+    await _tapVisibleText(tester, 'Help & Tutorial');
 
     expect(find.text('Help & Tutorial'), findsOneWidget);
     expect(find.text('Talia user guide'), findsOneWidget);
@@ -173,6 +234,7 @@ void main() {
     );
 
     await _scrollUntilVisible(tester, 'About Talia');
+    await _tapVisibleText(tester, 'About Talia');
 
     expect(find.text('v1.3.0 (45)'), findsOneWidget);
   });
@@ -186,6 +248,7 @@ void main() {
     );
 
     await _scrollUntilVisible(tester, 'About Talia');
+    await _tapVisibleText(tester, 'About Talia');
 
     expect(find.text('v— (—)'), findsOneWidget);
   });
@@ -196,6 +259,7 @@ void main() {
     await _pumpSettings(tester);
 
     await _scrollUntilVisible(tester, 'Progress & Achievements');
+    await _tapVisibleText(tester, 'Progress & Achievements');
 
     expect(find.text('Daily Review Reminder'), findsOneWidget);
     expect(find.text('Streak Protection'), findsOneWidget);
@@ -210,6 +274,7 @@ void main() {
   ) async {
     final repo = await _pumpSettings(tester, path: MemorizationPath.adult);
 
+    await _tapVisibleText(tester, 'Quran & Memorization');
     await _tapVisibleText(tester, 'Reset path');
     expect(find.text('Reset memorization path?'), findsOneWidget);
     expect(find.text('Type "Reset path" to confirm.'), findsOneWidget);
@@ -227,6 +292,7 @@ void main() {
   ) async {
     await _pumpSettings(tester);
 
+    await _tapVisibleText(tester, 'Privacy & Security');
     await _tapVisibleText(tester, 'Privacy Policy');
 
     expect(find.text('privacy route'), findsOneWidget);
@@ -237,6 +303,7 @@ void main() {
   ) async {
     await _pumpSettings(tester);
 
+    await _tapVisibleText(tester, 'Help & Tutorial');
     await _tapVisibleText(tester, 'Talia user guide');
 
     expect(find.text('tutorial route'), findsOneWidget);
@@ -298,8 +365,9 @@ Future<_FakeMemorizationRepository> _pumpSettings(
     version: '1.0.0',
     buildNumber: '1',
   ),
+  Size viewSize = const Size(1080, 1800),
 }) async {
-  tester.view.physicalSize = const Size(1080, 1800);
+  tester.view.physicalSize = viewSize;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);

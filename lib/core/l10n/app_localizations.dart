@@ -398,6 +398,24 @@ abstract class AppLocalizations {
   /// **'الإعدادات'**
   String get settings;
 
+  /// No description provided for @settingsPageSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اضبط تالية بما يناسب روتينك'**
+  String get settingsPageSubtitle;
+
+  /// No description provided for @settingsQuickPreferences.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفضيلات سريعة'**
+  String get settingsQuickPreferences;
+
+  /// No description provided for @settingsMoreSettings.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعدادات أخرى'**
+  String get settingsMoreSettings;
+
   /// No description provided for @language.
   ///
   /// In ar, this message translates to:
@@ -649,6 +667,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'السابق'**
   String get previous;
+
+  /// No description provided for @playSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'تشغيل السورة'**
+  String get playSurah;
+
+  /// No description provided for @playPage.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلاوة الصفحة'**
+  String get playPage;
+
+  /// No description provided for @listenToSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'استماع للسورة'**
+  String get listenToSurah;
+
+  /// No description provided for @nowPlaying.
+  ///
+  /// In ar, this message translates to:
+  /// **'يتلو الآن'**
+  String get nowPlaying;
 
   /// No description provided for @ofLabel.
   ///
@@ -7200,6 +7242,96 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'ابدأ الآن'**
   String get startNow;
+
+  /// No description provided for @kidsJourneyBetaTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'رحلة الحفظ الجديدة'**
+  String get kidsJourneyBetaTitle;
+
+  /// No description provided for @kidsJourneyBetaDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفعيل مهمة اليوم والمراجعة المتباعدة مع إمكانية الرجوع.'**
+  String get kidsJourneyBetaDescription;
+
+  /// No description provided for @kidsGuidanceAudioTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'صوت المرشد'**
+  String get kidsGuidanceAudioTitle;
+
+  /// No description provided for @kidsGuidanceAudioDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'إرشادات قصيرة لا تعمل أثناء تلاوة القرآن.'**
+  String get kidsGuidanceAudioDescription;
+
+  /// No description provided for @kidsSessionGoalTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدة الجلسة المستهدفة'**
+  String get kidsSessionGoalTitle;
+
+  /// No description provided for @kidsSessionGoalValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'{minutes} دقائق'**
+  String kidsSessionGoalValue(int minutes);
+
+  /// No description provided for @kidsSetupReminderTime.
+  ///
+  /// In ar, this message translates to:
+  /// **'وقت التذكير'**
+  String get kidsSetupReminderTime;
+
+  /// No description provided for @kidsSetupWeeklyGoal.
+  ///
+  /// In ar, this message translates to:
+  /// **'الهدف الأسبوعي'**
+  String get kidsSetupWeeklyGoal;
+
+  /// No description provided for @kidsSetupWeeklyGoalValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'{sessions} جلسات أسبوعياً'**
+  String kidsSetupWeeklyGoalValue(int sessions);
+
+  /// No description provided for @kidsSetupStartingSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة البداية'**
+  String get kidsSetupStartingSurah;
+
+  /// No description provided for @parentCommitmentDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} أيام التزام'**
+  String parentCommitmentDays(int count);
+
+  /// No description provided for @parentDueReviews.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} مراجعات مستحقة'**
+  String parentDueReviews(int count);
+
+  /// No description provided for @parentNeedsSupport.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} آيات تحتاج دعمًا'**
+  String parentNeedsSupport(int count);
+
+  /// No description provided for @parentAverageDuration.
+  ///
+  /// In ar, this message translates to:
+  /// **'متوسط {minutes} د'**
+  String parentAverageDuration(int minutes);
+
+  /// No description provided for @parentHintUses.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} تلميحات'**
+  String parentHintUses(int count);
 }
 
 class _AppLocalizationsDelegate

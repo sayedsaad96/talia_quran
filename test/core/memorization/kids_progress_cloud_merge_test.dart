@@ -1,7 +1,9 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/memorization/kids_progress_cloud_merge.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/ayah_review_record.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_progress.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/kids_session_log.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/kids_session_policy.dart';
 
 void main() {
   test('takes the greater numeric fields from either side', () {
@@ -72,5 +74,70 @@ void main() {
     );
     expect(KidsSessionLogsCloudMerge.completedAyahsCount(merged), 2);
     expect(merged.singleWhere((log) => log.ayahNumber == 1).isSynced, isTrue);
+  });
+  test('keeps distinct review sessions while counting an ayah once', () {
+    final first = KidsSessionLog(
+      id: 'session-1',
+      surahId: 114,
+      ayahNumber: 1,
+      repeatsCompleted: 1,
+      pointsEarned: 10,
+      completedAt: DateTime.utc(2026, 8, 1),
+    );
+    final review = KidsSessionLog(
+      id: 'review-1',
+      surahId: 114,
+      ayahNumber: 1,
+      repeatsCompleted: 1,
+      pointsEarned: 0,
+      completedAt: DateTime.utc(2026, 8, 8),
+      missionType: KidsMissionType.dueReview,
+    );
+
+    final merged = KidsSessionLogsCloudMerge.merge(
+      local: [first],
+      remote: [review],
+    );
+
+    expect(merged.map((log) => log.id), ['session-1', 'review-1']);
+    expect(KidsSessionLogsCloudMerge.completedAyahsCount(merged), 1);
+  });
+  test('cloud acknowledgement does not erase local learning metrics', () {
+    final local = KidsSessionLog(
+      id: 'review-session',
+      surahId: 114,
+      ayahNumber: 2,
+      repeatsCompleted: 1,
+      pointsEarned: 0,
+      completedAt: DateTime.utc(2026, 8, 8),
+      missionType: KidsMissionType.dueReview,
+      ayahNumbers: const [1, 2],
+      durationSeconds: 90,
+      attemptCount: 2,
+      hintCount: 1,
+      masteryRating: PerformanceRating.average,
+    );
+    final cloudAcknowledgement = KidsSessionLog(
+      id: 'review-session',
+      surahId: 114,
+      ayahNumber: 2,
+      repeatsCompleted: 1,
+      pointsEarned: 0,
+      completedAt: DateTime.utc(2026, 8, 8),
+      syncedAt: DateTime.utc(2026, 8, 9),
+    );
+
+    final merged = KidsSessionLogsCloudMerge.merge(
+      local: [local],
+      remote: [cloudAcknowledgement],
+    ).single;
+
+    expect(merged.isSynced, isTrue);
+    expect(merged.missionType, KidsMissionType.dueReview);
+    expect(merged.ayahNumbers, [1, 2]);
+    expect(merged.durationSeconds, 90);
+    expect(merged.attemptCount, 2);
+    expect(merged.hintCount, 1);
+    expect(merged.masteryRating, PerformanceRating.average);
   });
 }

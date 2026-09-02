@@ -123,12 +123,15 @@ final class V2SessionReviewAdapter {
   Future<void> recordWeakAyahs(
     V2AyahFailureTracker tracker, {
     required Set<int> passedAyahNumbers,
+    ReviewRecordCreatedByMode createdByMode =
+        ReviewRecordCreatedByMode.v2Session,
   }) async {
     for (final record in tracker.weakAyahsExcluding(passedAyahNumbers)) {
       await recordPass(
         surahId: record.surahId,
         ayahNumber: record.ayahNumber,
         hintLevel: V2HintLevel.fullAyah,
+        createdByMode: createdByMode,
       );
     }
   }
@@ -143,10 +146,14 @@ final class V2SessionReviewAdapter {
 ///   - On session start          → [loadIfExists] to detect resume
 ///   - On session complete        → [clear]
 final class V2SessionProgressAdapter {
-  const V2SessionProgressAdapter({required V2SessionLocalDatasource datasource})
-    : _datasource = datasource;
+  const V2SessionProgressAdapter({
+    required V2SessionLocalDatasource datasource,
+    MemorizationAudience audience = MemorizationAudience.adult,
+  }) : _datasource = datasource,
+       _audience = audience;
 
   final V2SessionLocalDatasource _datasource;
+  final MemorizationAudience _audience;
 
   /// Saves current session state for resume capability.
   Future<void> save(V2SessionState state) async {
@@ -169,6 +176,8 @@ final class V2SessionProgressAdapter {
       failureCounts: failureCounts,
       hintLevels: hintLevels,
       blockReviewRequired: state.blockReviewRequired,
+      ownerId: _datasource.currentOwnerId,
+      audience: _audience,
     );
 
     await _datasource.saveSession(isar);
@@ -178,7 +187,7 @@ final class V2SessionProgressAdapter {
   ///
   /// Returns [Some] if a saved session is found, [None] otherwise.
   Future<Option<IsarV2Session>> loadIfExists(int surahId) async {
-    final session = await _datasource.getSession(surahId);
+    final session = await _datasource.getSession(surahId, audience: _audience);
     return session == null ? const None() : Some(session);
   }
 
@@ -260,7 +269,7 @@ final class V2SessionProgressAdapter {
 
   /// Deletes the saved session after completion or explicit abandon.
   Future<void> clear(int surahId) async {
-    await _datasource.clearSession(surahId);
+    await _datasource.clearSession(surahId, audience: _audience);
   }
 }
 

@@ -1,5 +1,7 @@
 # Talia V1 — Minimum Safe Release Plan
 
+> **Policy update — 2026-08-31:** External sheikh/reviewer approval and signatures are no longer release requirements. The project owner is the final content authority and closed G8 by reviewing and approving the application. This update supersedes every external-review or signature requirement below; technical, backend, device, artifact, and Google Play gates remain unchanged.
+
 **Date:** 2026-08-23  
 **Decision type:** Release triage and scope reduction  
 **Repository baseline reviewed:** `06827f40a45af0fe8a86e5cf9f9ad04f912c79dc` (`main`)  
@@ -21,7 +23,9 @@ The original 20-task final-readiness plan is technically thorough but larger tha
 
 Everything else—generic governance platforms, full riwayah-domain migration, dead-letter UX, rewards outbox redesign, scheduler redesign, broad accessibility work, large-file refactors, performance budgets, and comprehensive CI—is deferred.
 
-**Decision:** the triage is complete and the reduced V1 scope is ready to implement. The application itself remains **NO-GO for publication** until every V1 release gate in this document passes and the qualified Islamic reviewer signs the frozen release candidate.
+**Decision:** the triage is complete and the reduced V1 scope is ready to implement. G8 is closed through the project owner's recorded approval.
+
+Publication remains **NO-GO** until the remaining technical, backend, device, artifact, and store gates pass.
 
 ## V1 Scope Hard Stop
 
@@ -37,7 +41,7 @@ Everything else—generic governance platforms, full riwayah-domain migration, d
    - no new abstraction;
    - no new migration;
    - no new external dependency;
-   - no Islamic re-review is triggered;
+   - no project-owner content reconfirmation is triggered;
    - and it does not delay any V1-M item.
 6. If any proposed implementation begins expanding beyond the stated minimum, **STOP and report the expansion** instead of implementing it.
 7. Do not create frameworks, portals, generic engines, reusable governance systems, or broad refactors for a one-time V1 requirement.
@@ -103,7 +107,7 @@ These are decision aids, not release gates. The binary gates later in this docum
 ## V1 Release Philosophy
 
 1. **Sacred text is fail-closed.** Talia must show approved Quran/dua/dhikr text exactly. It may remove an unneeded religious surface, but it may not silently rewrite or truncate its content.
-2. **Human Islamic approval is the final authority.** Automation proves integrity and traceability; it does not replace the qualified reviewer.
+2. **Project-owner content approval is the final internal authority.** Automation proves integrity and traceability; the owner decides whether shipped religious content is accepted. External review and signatures are optional.
 3. **Protect user work before adding sophistication.** No known path may discard pending bookmarks or other core progress.
 4. **Core journeys must degrade safely.** Reading, memorization, and Kids completion must have a usable offline/no-STT path.
 5. **Prefer deletion and a narrow schema change over a platform.** V1 does not need generic evidence abstractions, an importer framework, or a reviewer portal.
@@ -158,14 +162,14 @@ Both memorization modes depend on platform STT with no manual fallback. Kids fir
 | V1-M8 | Offline/no-STT completion | Add localized Arabic/English manual/self-grade actions to Adult and Kids; permit a safe first-use offline route that does not require three successful remote audio plays. | M | Denied microphone, unavailable recognizer, airplane mode, and empty audio cache all reach a recorded completion/review outcome without a crash or false automatic score. |
 | V1-M9 | Honest voice privacy | Replace the absolute on-device claim with accurate Arabic/English platform/provider wording, explain that Talia does not retain raw audio, and link the manual option. | XS | Both policy languages match implemented behavior and store privacy declarations. |
 | V1-M10 | Reproducible release proof | Run clean dependency restore, code generation if applicable, analyzer, all tests, release build, backend checks, and physical-device smoke tests from the frozen commit. | M | Stored command logs, artifact identity, device checklist, and zero unresolved critical/high defects. |
-| V1-M11 | Qualified Islamic review | Review the exact frozen RC content and journeys described below; record approve/reject per scope item. No post-approval content mutation. | External XL | Signed approval linked to commit, manifest hashes, app version, and reviewed artifact. |
+| V1-M11 | Project-owner content approval | Record the owner's decision for the shipped religious content and journeys. No unrecorded post-approval content mutation. | Owner XS | Completed owner-attestation record linked to the content manifest and hashes; no external signature required. |
 
 ### Adhkar/Dua allowlist selection protocol
 
 1. Start the V1 allowlist empty; the 85 existing records have no presumption of inclusion.
 2. Remove tips, religious notification fallbacks, and decorative religious output before selecting any record.
 3. For each currently visible category, ask whether that category is necessary to the V1 UX. Hide it when the answer is no.
-4. For a necessary category, the qualified reviewer selects the smallest coherent set that is already directly verifiable. Engineering adds only the direct metadata and display changes required by those selected records.
+4. For a necessary category, the project owner selects and accepts the coherent set to ship. Engineering adds only the direct metadata and display changes required by those selected records.
 5. Do not open correction work for a rejected, ambiguous, duplicate, weakly cited, or unnecessary candidate; exclude it.
 6. If no coherent subset can be approved within the V1-M3 S/M engineering ceiling, hide the category. If no category qualifies, hide the entire Adhkar/Dua destination for V1.
 7. Record the final allowlisted IDs and shipped-asset hash. Anything not on the list must be absent from the release bundle or unreachable by the release UI.
@@ -179,12 +183,12 @@ There is deliberately no numerical record target. Safety and coherence determine
 3. Delete unsafe religious surfaces; create an empty Adhkar/Dua allowlist, add only the smallest directly verified subset, and hide empty categories.
 4. Fix bookmark sign-out, guardian RPC, and database privilege independently.
 5. Add manual/offline progression and align privacy text.
-6. Freeze RC, run engineering/backend/device gates, then conduct final Islamic review.
+6. Freeze RC and run the remaining engineering, backend, device, artifact, and store gates. Owner content approval is already recorded.
 7. Build the unchanged approved artifact and perform store smoke/staged rollout.
 
 ## V1 Should Fix
 
-V1-S items are **not release scope and are not part of Definition of Done**. Skip them by default. An item may be accepted only when it is XS/S, changes no architecture, adds no abstraction, migration, or dependency, triggers no Islamic re-review, and delays no V1-M item. If any condition becomes false, defer the item immediately without replacing it.
+V1-S items are **not release scope and are not part of Definition of Done**. Skip them by default. An item may be accepted only when it is XS/S, changes no architecture, adds no abstraction, migration, or dependency, triggers no project-owner content reconfirmation, and delays no V1-M item. If any condition becomes false, defer the item immediately without replacing it.
 
 | ID | Item | Why now | Effort | Deferral rule |
 |---|---|---|---:|---|
@@ -271,8 +275,8 @@ The labels below apply to the original `Talia Final Review Readiness Implementat
 | 15 | Scheduling, weak evidence, protect-before-grow | DEFER | V1.2. Preserve the stable tested scheduler; correct external terminology if it overclaims canonical SM-2. | — |
 | 16 | Localization, terminology, navigation, accessibility | PARTIAL | Translate only strings introduced or changed by V1-M work. Do not redesign navigation; permit hiding an unsafe optional content destination. Broader pass V1.1. | S |
 | 17 | CI, real-service tests, performance, maintainability | PARTIAL | Add only critical regression tests and manually execute full release verification. CI/performance/refactors later. | M |
-| 18 | Islamic reviewer packet and RC freeze | SIMPLIFY | A concise checklist, manifest, diff summary, artifact/version, and commit are sufficient. | S |
-| 19 | Process Islamic review with traceability | KEEP | Mandatory manual qualified review of the frozen RC; no workflow automation needed. | External XL |
+| 18 | Owner approval record and RC freeze | SIMPLIFY | A concise owner-attestation record, manifest, hashes, artifact/version, and commit are sufficient. | S |
+| 19 | Preserve owner content approval with traceability | KEEP | Keep the owner decision and content hashes; no external reviewer or signature workflow is required. | Owner XS |
 | 20 | Produce, verify, and roll out store release | PARTIAL | Signed release artifact, clean/upgrade smoke, internal track, then staged rollout. Automated publication and simultaneous platforms are optional. | M |
 
 ### Triage result
@@ -311,8 +315,8 @@ All four tracks green
   → freeze Release Candidate 1
   → clean analyze + full tests + release build
   → physical-device clean-install/upgrade/offline smoke
-  → final qualified Islamic review against RC1 hashes
-  → no-content-change signed artifact
+  → retain the recorded owner approval and verify the shipped content hashes
+  → no-unrecorded-content-change store artifact
   → internal store track → staged production rollout
 ```
 
@@ -368,11 +372,11 @@ The Quran and religious-content tracks require reviewer input and should start f
 - complete real-service end-to-end automation for every feature;
 - performance refactoring without a measured release failure.
 
-## Minimal Islamic Review Scope
+## Project-Owner Content Approval Scope
 
-The qualified Islamic reviewer receives one frozen candidate, not a moving branch. The packet must contain the commit, app version/build, manifest, hashes, content diffs, and a short device/navigation checklist.
+The project owner is the final internal content authority. The approval record identifies the manifest and content hashes. A frozen artifact is still required by G9 for release reproducibility, but no external reviewer or signature is required.
 
-The reviewer must approve or reject the content actually shipped:
+The project owner confirms the content actually shipped, covering:
 
 1. Quran edition/riwayah declaration and source/license record.
 2. Quran counts, surah/ayah boundaries, Al-Fatihah and At-Tawbah basmalah rules, and representative boundary samples including 2, 95, and 97.
@@ -383,7 +387,7 @@ The reviewer must approve or reject the content actually shipped:
 7. Kids wording, grading framing, encouragement, and manual self-assessment language.
 8. The user-facing labels that distinguish sourced text, guidance, and product instructions.
 
-**Approval rule:** one rejection blocks release until corrected and re-reviewed. A content/hash change invalidates the prior approval. A pure binary/code-signing change may avoid re-review only if reproducible evidence proves assets and rendered strings are unchanged.
+**Approval rule:** the owner's 2026-08-31 approval closes G8. A later religious-content/hash change requires owner reconfirmation of the affected part and updated hashes. External review or signature does not become mandatory. Pure binary/code-signing changes do not reopen G8 when reproducible evidence proves religious assets and rendered strings are unchanged.
 
 ## Minimal Backend Verification
 
@@ -445,7 +449,7 @@ Internal track → small staged percentage → observe store vitals, auth/backen
 | G5 — Core offline/privacy | Adult/Kids manual route works; first-use offline route works; AR/EN policy matches behavior. | Flutter/product | NO-GO. |
 | G6 — Engineering verification | Fresh analyzer clean, complete suite green, release artifact builds, no unresolved P0/P1 in V1 scope. | Release engineer | NO-GO. |
 | G7 — Device/store smoke | Clean install and upgrade checklist pass on target physical devices/internal track. | QA/release | NO-GO. |
-| G8 — Islamic approval | Qualified reviewer signs exact commit/manifest/artifact content. | Islamic reviewer | NO-GO. |
+| G8 — Content approval | Project owner records acceptance of the religious content; external review/signature optional. | Project owner | `PASS — OWNER ATTESTATION (2026-08-31)`. |
 | G9 — Artifact identity | Store artifact is built from approved commit; embedded content hashes match; no post-review content change. | Release manager | Rebuild and repeat affected gates. |
 
 ### Definition of Done for V1
@@ -458,18 +462,18 @@ Scale: **XS <1 hour; S 1–3 hours; M 3–8 hours; L 1–2 days; XL >2 days.** E
 
 | Workstream | Engineering | External/review | Parallelism |
 |---|---:|---:|---|
-| Quran correction, exact rendering, manifest, tests | L | Reviewer M | Start first; blocks final content freeze. |
-| Smallest Adhkar/Dua allowlist + unsafe-output deletion | S/M | Islamic review M | Start empty; if preservation exceeds M, hide/disable instead of expanding. |
+| Quran correction, exact rendering, manifest, tests | L | Owner accepted | Content approval recorded; technical verification remains. |
+| Adhkar/Dua release allowlist + unsafe-output deletion | S/M | Owner accepted | The current 109-record release file is approved; future content changes require owner reconfirmation. |
 | Bookmark sign-out | S | — | Independent. |
 | Guardian RPC + prune privilege + verifier | M | Production access S | Independent; deployment timing may block. |
-| Manual/offline route + privacy/localization | M | Product/reviewer S | Independent of backend. |
+| Manual/offline route + privacy/localization | M | Product/owner | Independent of backend; owner acceptance recorded. |
 | Full verification, device/store smoke, RC records | M | QA/store M | Starts after merge/freeze. |
 
 **Expected engineering effort:** approximately 3–6 focused engineering days with parallel ownership, or 5–9 sequential working days for one engineer. V1-S work is excluded.
 
-**Expected qualified Islamic review:** L/XL for the complete frozen application, with the Adhkar/Dua portion limited to the small retained allowlist rather than all 85 candidates.
+**Owner content approval:** complete as of 2026-08-31. No external review wait or signature is included in the release schedule.
 
-**Likely calendar critical path:** choose the smallest verified allowlist → freeze shipped content hashes → final Islamic approval → store artifact.
+**Likely calendar critical path:** freeze the current shipped content hashes → complete technical/backend/device verification → build and verify the store artifact.
 
 ## Risk of Deferring
 
@@ -493,12 +497,12 @@ None of these deferrals permits adding a second riwayah, new religious content, 
 
 This is a **GO to implement the reduced V1 correction scope**, not a GO to publish the current application. Publication remains **NO-GO** until V1-M1 through V1-M11 are complete and release gates G0 through G9 pass.
 
-The reduced plan removes most of the original architectural and automation work while retaining every correction that protects Quran exactness, the traceability of religious content that actually ships, user data, core offline use, privacy truthfulness, and backend authorization. Optional content starts excluded and earns inclusion; it is never repaired merely for completeness. This is the smallest defensible path to the user's stated final qualified Islamic review and subsequent store release.
+The reduced plan removes most of the original architectural and automation work while retaining every correction that protects Quran exactness, the traceability of religious content that actually ships, user data, core offline use, privacy truthfulness, and backend authorization. Optional content starts excluded and earns inclusion; it is never repaired merely for completeness. This is the smallest defensible path to the owner-approved content baseline and subsequent store release.
 
 ### Explicit answers to the eight release questions
 
 1. **What is the minimum safe V1?**  
-   The existing core application with no new features, after exact Quran/corpus correction, only a smallest verified Adhkar/Dua allowlist (or the feature hidden), deletion of unsafe religious output, bookmark-safe sign-out, working-or-hidden guardian unlink, revoked audit-prune authority, manual Adult/Kids offline grading, truthful privacy text, production backend proof, physical-device smoke, and signed Islamic approval.
+   The existing core application with no new features, after exact Quran/corpus correction, only a smallest verified Adhkar/Dua allowlist (or the feature hidden), deletion of unsafe religious output, bookmark-safe sign-out, working-or-hidden guardian unlink, revoked audit-prune authority, manual Adult/Kids offline grading, truthful privacy text, production backend proof, physical-device smoke, and recorded project-owner content approval.
 
 2. **What are the five highest-value fixes before release?**  
    (1) Quran exactness/boundaries; (2) delete ungoverned religious output and ship only a smallest verified Adhkar/Dua allowlist; (3) bookmark sign-out data-loss prevention; (4) guardian RPC/database privilege/hosted-contract verification; (5) offline/no-STT completion plus accurate privacy.
@@ -509,7 +513,8 @@ The reduced plan removes most of the original architectural and automation work 
 4. **What remains safe to ship once blockers are fixed?**  
    The current Mushaf reader/navigation/search, bookmarks after the gate fix, auth/guest/account isolation, Adult V2 memorization state machine, Smart Coach/current scheduling, progress/streak/XP/certificates, Kids UX with the new manual route, the counter for only retained approved Adhkar/Dua content, and audio cache behavior. Navigation remains unchanged unless the Hard Stop requires hiding an unsafe optional content destination; optional religious categories need not ship.
 
-5. **What is the minimum Islamic review scope?**  
+5. **What is the minimum owner content-approval scope?**
+
    The frozen Quran edition/hash/boundaries/rendering/audio compatibility; every record in the small retained Adhkar/Dua allowlist; all religious UI, notification, certificate, and share output that remains reachable; and Kids religious/pedagogical wording, tied to the exact RC commit and artifact. Removed candidates require no repair or individual approval.
 
 6. **What is the minimum backend verification?**  
@@ -519,4 +524,4 @@ The reduced plan removes most of the original architectural and automation work 
    Focused integrity/data-loss/offline/backend tests, clean analyzer, the complete existing+new suite, a signed release build, clean-install and upgrade smoke on physical target devices, internal-store installation, then staged rollout with monitoring and rollback ownership.
 
 8. **Is the project ready to publish now?**  
-   **No.** The project is ready to begin a sharply reduced V1 implementation. It becomes publishable only after every binary gate passes and the qualified Islamic reviewer approves the unchanged frozen release candidate.
+   **No.** G8 content approval is complete, but the project becomes publishable only after the remaining technical, backend, device, artifact, signing, and store gates pass.

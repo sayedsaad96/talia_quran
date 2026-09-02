@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/quran/presentation/widgets/quran_mini_player_bar.dart';
 import '../extensions/context_extensions.dart';
 import '../router/app_router.dart';
 import '../theme/app_colors.dart';
@@ -55,7 +56,19 @@ class AppShell extends StatelessWidget {
               thickness: 1,
               color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
             ),
-            Expanded(child: navigationShell),
+            Expanded(
+              child: Stack(
+                children: [
+                  navigationShell,
+                  const PositionedDirectional(
+                    start: 0,
+                    end: 0,
+                    bottom: 0,
+                    child: QuranMiniPlayerBar(),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       );
@@ -63,11 +76,17 @@ class AppShell extends StatelessWidget {
 
     return Scaffold(
       body: navigationShell,
-      bottomNavigationBar: _TaliaBottomNav(
-        currentIndex: navigationShell.currentIndex,
-        isDark: isDark,
-        tabs: _tabs,
-        onTap: _onTap,
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const QuranMiniPlayerBar(),
+          _TaliaBottomNav(
+            currentIndex: navigationShell.currentIndex,
+            isDark: isDark,
+            tabs: _tabs,
+            onTap: _onTap,
+          ),
+        ],
       ),
     );
   }

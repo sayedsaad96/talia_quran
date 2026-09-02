@@ -5,6 +5,8 @@ import 'package:talia_quran/core/constants/app_constants.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/progress_metrics.dart';
 import 'package:talia_quran/core/memorization/progress_metrics_service.dart';
+import 'package:talia_quran/core/memorization/kids_hifz_feature_flags.dart';
+import 'package:talia_quran/core/services/notification_service.dart';
 import 'package:talia_quran/core/services/streak_reader.dart';
 import 'package:talia_quran/core/security/parent_pin_secure_store.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
@@ -57,6 +59,33 @@ void main() {
       },
     );
 
+    test(
+      'getKidsJourney uses a three-ayah stage for ages five to seven',
+      () async {
+        final now = DateTime.now().toUtc();
+        await datasource.saveMemorizationProfile(
+          MemorizationProfileModel(
+            schemaVersion: 1,
+            selectedPath: MemorizationPath.child,
+            guardianLinkStatus: GuardianLinkStatus.none,
+            guardianOnboardingStatus: GuardianOnboardingStatus.completed,
+            isParentGuardian: false,
+            createdAt: now,
+            updatedAt: now,
+            childAge: 6,
+          ),
+        );
+
+        final result = await repository.getKidsJourney(surahId: 114);
+        final stages = result.getOrElse(
+          () => throw StateError('Expected journey generation to succeed'),
+        );
+
+        expect(stages, hasLength(2));
+        expect(stages.first.endAyah, 3);
+        expect(stages[1].startAyah, 4);
+      },
+    );
     test('saveKidsSessionLog persists local kids session log', () async {
       final result = await repository.saveKidsSessionLog(
         surahId: 114,
@@ -73,6 +102,77 @@ void main() {
       expect(log.ayahNumber, 1);
       expect(logs, hasLength(1));
       expect(logs.single.pointsEarned, 14);
+    });
+
+    test(
+      'saveKidsSessionLog persists learning metrics without speech',
+      () async {
+        final result = await repository.saveKidsSessionLog(
+          sessionId: 'session-114-1',
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 1,
+          pointsEarned: 10,
+          missionType: KidsMissionType.newMemorization,
+          ayahNumbers: const [1],
+          durationSeconds: 92,
+          attemptCount: 2,
+          hintCount: 1,
+          masteryRating: PerformanceRating.average,
+        );
+
+        final log = result.getOrElse(
+          () => throw StateError('Expected metric session log to save'),
+        );
+
+        expect(log.id, 'session-114-1');
+        expect(log.durationSeconds, 92);
+        expect(log.attemptCount, 2);
+        expect(log.hintCount, 1);
+        expect(log.masteryRating, PerformanceRating.average);
+        expect(log.ayahNumbers, const [1]);
+      },
+    );
+
+    test('a due review is logged without granting a second reward', () async {
+      final first = await repository.awardKidsPoints(
+        sessionId: 'new-114-1',
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 1,
+        masteryRating: PerformanceRating.excellent,
+      );
+      final review = await repository.awardKidsPoints(
+        sessionId: 'review-114-1',
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 1,
+        missionType: KidsMissionType.dueReview,
+        durationSeconds: 45,
+        attemptCount: 2,
+        masteryRating: PerformanceRating.average,
+      );
+
+      final firstResult = first.getOrElse(
+        () => throw StateError('Expected first completion to succeed'),
+      );
+      final reviewResult = review.getOrElse(
+        () => throw StateError('Expected due review to succeed'),
+      );
+      final progress = await datasource.getKidsProgress();
+      final logs = await datasource.getKidsSessionLogs();
+
+      expect(firstResult.starsEarned, 3);
+      expect(reviewResult.alreadyCompleted, isTrue);
+      expect(reviewResult.pointsEarned, 0);
+      expect(reviewResult.starsEarned, 0);
+      expect(progress.totalPoints, 10);
+      expect(progress.starsEarned, 3);
+      expect(logs, hasLength(2));
+      final reviewLog = logs.singleWhere((log) => log.id == 'review-114-1');
+      expect(reviewLog.missionType, KidsMissionType.dueReview);
+      expect(reviewLog.pointsEarned, 0);
+      expect(reviewLog.masteryRating, PerformanceRating.average);
     });
 
     test('saveKidsSessionLog is idempotent per ayah', () async {
@@ -121,13 +221,13 @@ void main() {
       final logs = await datasource.getKidsSessionLogs();
 
       expect(firstResult.alreadyCompleted, isFalse);
-      expect(firstResult.pointsEarned, 14);
-      expect(firstResult.starsEarned, 1);
+      expect(firstResult.pointsEarned, 10);
+      expect(firstResult.starsEarned, 3);
       expect(replayResult.alreadyCompleted, isTrue);
       expect(replayResult.pointsEarned, 0);
       expect(replayResult.starsEarned, 0);
-      expect(progress.totalPoints, 14);
-      expect(progress.starsEarned, 1);
+      expect(progress.totalPoints, 10);
+      expect(progress.starsEarned, 3);
       expect(progress.ayahsCompleted, 1);
       expect(logs, hasLength(1));
     });
@@ -264,14 +364,14 @@ void main() {
       );
       expect(
         completions.fold<int>(0, (sum, result) => sum + result.pointsEarned),
-        14,
+        10,
       );
       expect(
         completions.fold<int>(0, (sum, result) => sum + result.starsEarned),
-        1,
+        3,
       );
-      expect(progress.totalPoints, 14);
-      expect(progress.starsEarned, 1);
+      expect(progress.totalPoints, 10);
+      expect(progress.starsEarned, 3);
       expect(progress.ayahsCompleted, 1);
       expect(logs, hasLength(1));
       expect(
@@ -307,6 +407,39 @@ void main() {
       expect(stages.last.status, KidsJourneyStageStatus.current);
     });
 
+    test(
+      'parent settings synchronize kids reminder and V2 feature keys',
+      () async {
+        final result = await repository.saveParentSettings(
+          const ParentSettings(
+            reminderEnabled: true,
+            reminderHour: 17,
+            reminderMinute: 25,
+            kidsHifzV2Enabled: true,
+          ),
+        );
+
+        expect(result.isRight(), isTrue);
+        expect(
+          prefs.getBool(TaliaNotificationService.kidsReminderPreferenceKey),
+          isTrue,
+        );
+        expect(
+          prefs.getInt(
+            '${TaliaNotificationService.kidsReminderPreferenceKey}_hour',
+          ),
+          17,
+        );
+        expect(
+          prefs.getInt(
+            '${TaliaNotificationService.kidsReminderPreferenceKey}_minute',
+          ),
+          25,
+        );
+        expect(prefs.getBool(KidsHifzFeatureFlags.enabledKey), isTrue);
+      },
+    );
+
     test('parent settings and rewards are stored locally', () async {
       await repository.setParentPin('1234');
       final verified = await repository.verifyParentPin('1234');
@@ -316,7 +449,10 @@ void main() {
       expect(verified.getOrElse(() => false), isTrue);
       expect(settings.pinHash, isNot('1234'));
       expect(settings.pinHash, 'secure-v2');
-      expect(await parentPinStore.readVerifier('local'), startsWith('pbkdf2-sha256\$'));
+      expect(
+        await parentPinStore.readVerifier('local'),
+        startsWith('pbkdf2-sha256\$'),
+      );
       expect(rewards.getOrElse(() => const []), hasLength(1));
     });
 
@@ -678,7 +814,8 @@ class _MemoryParentPinStore implements ParentPinSecureStore {
   }
 
   @override
-  Future<DateTime?> readBlockedUntil(String ownerId) async => _blockedUntil[ownerId];
+  Future<DateTime?> readBlockedUntil(String ownerId) async =>
+      _blockedUntil[ownerId];
 
   @override
   Future<int> readFailureCount(String ownerId) async => _failures[ownerId] ?? 0;

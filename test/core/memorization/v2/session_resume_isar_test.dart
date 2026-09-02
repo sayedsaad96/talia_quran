@@ -23,6 +23,7 @@ import 'package:talia_quran/core/memorization/v2/session_phase.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_v2_session.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
 bool _isarCoreInitialized = false;
@@ -168,6 +169,114 @@ void main() {
       },
     );
 
+    test(
+      'adult and kids sessions for the same surah remain isolated',
+      () async {
+        final adultAdapter = V2SessionProgressAdapter(
+          datasource: datasource,
+          audience: MemorizationAudience.adult,
+        );
+        final kidsAdapter = V2SessionProgressAdapter(
+          datasource: datasource,
+          audience: MemorizationAudience.kids,
+        );
+
+        await adultAdapter.save(
+          const V2SessionState(
+            surahId: 1,
+            blockAyahs: _blockAyahs,
+            currentAyahIndex: 0,
+            phase: V2SessionPhase.learning,
+            passedAyahNumbers: {},
+            failureTracker: V2AyahFailureTracker.empty,
+            hintTracker: V2HintTracker.empty,
+            blockReviewRequired: true,
+          ),
+        );
+        await kidsAdapter.save(
+          const V2SessionState(
+            surahId: 1,
+            blockAyahs: _blockAyahs,
+            currentAyahIndex: 1,
+            phase: V2SessionPhase.reciting,
+            passedAyahNumbers: {1},
+            failureTracker: V2AyahFailureTracker.empty,
+            hintTracker: V2HintTracker.empty,
+            blockReviewRequired: false,
+          ),
+        );
+
+        final adult = (await adultAdapter.loadIfExists(
+          1,
+        )).fold(() => null, (value) => value);
+        final kids = (await kidsAdapter.loadIfExists(
+          1,
+        )).fold(() => null, (value) => value);
+
+        expect(adult?.phaseIndex, V2SessionPhase.learning.index);
+        expect(kids?.phaseIndex, V2SessionPhase.reciting.index);
+        expect(await isar.isarV2Sessions.count(), 2);
+      },
+    );
+    test(
+      'latest kids session ignores adult rows and older kids rows',
+      () async {
+        final adultAdapter = V2SessionProgressAdapter(
+          datasource: datasource,
+          audience: MemorizationAudience.adult,
+        );
+        final kidsAdapter = V2SessionProgressAdapter(
+          datasource: datasource,
+          audience: MemorizationAudience.kids,
+        );
+
+        await adultAdapter.save(
+          const V2SessionState(
+            surahId: 1,
+            blockAyahs: _blockAyahs,
+            currentAyahIndex: 0,
+            phase: V2SessionPhase.learning,
+            passedAyahNumbers: {},
+            failureTracker: V2AyahFailureTracker.empty,
+            hintTracker: V2HintTracker.empty,
+            blockReviewRequired: true,
+          ),
+        );
+        await kidsAdapter.save(
+          const V2SessionState(
+            surahId: 2,
+            blockAyahs: _blockAyahs,
+            currentAyahIndex: 0,
+            phase: V2SessionPhase.learning,
+            passedAyahNumbers: {},
+            failureTracker: V2AyahFailureTracker.empty,
+            hintTracker: V2HintTracker.empty,
+            blockReviewRequired: false,
+          ),
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 2));
+        await kidsAdapter.save(
+          const V2SessionState(
+            surahId: 3,
+            blockAyahs: _blockAyahs,
+            currentAyahIndex: 1,
+            phase: V2SessionPhase.reciting,
+            passedAyahNumbers: {1},
+            failureTracker: V2AyahFailureTracker.empty,
+            hintTracker: V2HintTracker.empty,
+            blockReviewRequired: false,
+          ),
+        );
+
+        final latest = await datasource.getLatestSession(
+          audience: MemorizationAudience.kids,
+        );
+
+        expect(latest?.surahId, 3);
+        expect(latest?.currentAyahIndex, 1);
+        expect(latest?.phaseIndex, V2SessionPhase.reciting.index);
+      },
+    );
     test('clear removes the row so the next start is fresh', () async {
       await adapter.save(
         const V2SessionState(

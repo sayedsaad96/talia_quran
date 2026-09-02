@@ -58,7 +58,10 @@ class ScheduleNextReviewUsecase {
           newInterval = 1;
         } else {
           final int rawInterval = (effectiveBase * newEaseFactor).round();
-          newInterval = _applyFuzz(rawInterval, record.ayahNumber).clamp(1, 180);
+          newInterval = _applyFuzz(
+            rawInterval,
+            record.ayahNumber,
+          ).clamp(1, 180);
         }
       case PerformanceRating.average:
         newStrength = record.strengthLevel; // no change
@@ -66,7 +69,8 @@ class ScheduleNextReviewUsecase {
         if (record.strengthLevel == 0) {
           newInterval = 1;
         } else {
-          final int rawInterval = (effectiveBase * math.max(1.2, newEaseFactor - 1.0)).round();
+          final int rawInterval =
+              (effectiveBase * math.max(1.2, newEaseFactor - 1.0)).round();
           newInterval = _applyFuzz(rawInterval, record.ayahNumber).clamp(1, 90);
         }
       case PerformanceRating.weak:
@@ -108,7 +112,7 @@ class FsrsStateTrackerUsecase {
     DateTime? nowOverride,
   ]) {
     final now = nowOverride ?? DateTime.now().toUtc();
-    
+
     // Difficulty Tracking
     double newDifficulty = record.difficulty;
     if (rating == PerformanceRating.excellent) {
@@ -119,9 +123,12 @@ class FsrsStateTrackerUsecase {
     newDifficulty = newDifficulty.clamp(1.0, 10.0);
 
     // Stability Tracking (Using actual elapsed days)
-    final actualElapsedDays = math.max(0, now.difference(record.lastReviewedAt).inDays);
+    final actualElapsedDays = math.max(
+      0,
+      now.difference(record.lastReviewedAt).inDays,
+    );
     double newStability = record.stability;
-    
+
     if (rating == PerformanceRating.excellent) {
       newStability += actualElapsedDays;
     } else if (rating == PerformanceRating.average) {
@@ -137,11 +144,17 @@ class FsrsStateTrackerUsecase {
       case ReviewState.newCard:
         newState = ReviewState.learning;
       case ReviewState.learning:
-        newState = rating == PerformanceRating.weak ? ReviewState.learning : ReviewState.review;
+        newState = rating == PerformanceRating.weak
+            ? ReviewState.learning
+            : ReviewState.review;
       case ReviewState.review:
-        newState = rating == PerformanceRating.weak ? ReviewState.relearning : ReviewState.review;
+        newState = rating == PerformanceRating.weak
+            ? ReviewState.relearning
+            : ReviewState.review;
       case ReviewState.relearning:
-        newState = rating == PerformanceRating.weak ? ReviewState.relearning : ReviewState.review;
+        newState = rating == PerformanceRating.weak
+            ? ReviewState.relearning
+            : ReviewState.review;
     }
 
     return record.copyWith(
@@ -167,9 +180,9 @@ class FsrsPredictionUsecase {
     final now = nowOverride ?? DateTime.now().toUtc();
 
     // Retrievability Prediction
-    final retrievability = math.exp(
-      -(actualElapsedDays / math.max(record.stability, 1.0))
-    ).clamp(0.0, 1.0);
+    final retrievability = math
+        .exp(-(actualElapsedDays / math.max(record.stability, 1.0)))
+        .clamp(0.0, 1.0);
 
     // Interval Prediction
     final predictedInterval = (record.stability * (11 - record.difficulty) / 5)
@@ -222,13 +235,27 @@ class GetKidsProgressUsecase implements UseCaseNoParams<KidsProgress> {
 
 class AwardKidsPointsParams {
   const AwardKidsPointsParams({
+    this.sessionId,
     required this.surahId,
     required this.ayahNumber,
     required this.repeatsCompleted,
+    this.missionType = KidsMissionType.newMemorization,
+    this.ayahNumbers = const [],
+    this.durationSeconds = 0,
+    this.attemptCount = 1,
+    this.hintCount = 0,
+    this.masteryRating = PerformanceRating.excellent,
   });
+  final String? sessionId;
   final int surahId;
   final int ayahNumber;
   final int repeatsCompleted;
+  final KidsMissionType missionType;
+  final List<int> ayahNumbers;
+  final int durationSeconds;
+  final int attemptCount;
+  final int hintCount;
+  final PerformanceRating masteryRating;
 }
 
 class AwardKidsPointsUsecase
@@ -240,9 +267,16 @@ class AwardKidsPointsUsecase
   Future<Either<Failure, KidsCompletionResult>> call(
     AwardKidsPointsParams params,
   ) => _repository.awardKidsPoints(
+    sessionId: params.sessionId,
     surahId: params.surahId,
     ayahNumber: params.ayahNumber,
     repeatsCompleted: params.repeatsCompleted,
+    missionType: params.missionType,
+    ayahNumbers: params.ayahNumbers,
+    durationSeconds: params.durationSeconds,
+    attemptCount: params.attemptCount,
+    hintCount: params.hintCount,
+    masteryRating: params.masteryRating,
   );
 }
 
@@ -264,15 +298,29 @@ class GetKidsJourneyUsecase
 
 class SaveKidsSessionLogParams {
   const SaveKidsSessionLogParams({
+    this.sessionId,
     required this.surahId,
     required this.ayahNumber,
     required this.repeatsCompleted,
     required this.pointsEarned,
+    this.missionType = KidsMissionType.newMemorization,
+    this.ayahNumbers = const [],
+    this.durationSeconds = 0,
+    this.attemptCount = 1,
+    this.hintCount = 0,
+    this.masteryRating = PerformanceRating.excellent,
   });
+  final String? sessionId;
   final int surahId;
   final int ayahNumber;
   final int repeatsCompleted;
   final int pointsEarned;
+  final KidsMissionType missionType;
+  final List<int> ayahNumbers;
+  final int durationSeconds;
+  final int attemptCount;
+  final int hintCount;
+  final PerformanceRating masteryRating;
 }
 
 class SaveKidsSessionLogUsecase
@@ -284,10 +332,17 @@ class SaveKidsSessionLogUsecase
   Future<Either<Failure, KidsSessionLog>> call(
     SaveKidsSessionLogParams params,
   ) => _repository.saveKidsSessionLog(
+    sessionId: params.sessionId,
     surahId: params.surahId,
     ayahNumber: params.ayahNumber,
     repeatsCompleted: params.repeatsCompleted,
     pointsEarned: params.pointsEarned,
+    missionType: params.missionType,
+    ayahNumbers: params.ayahNumbers,
+    durationSeconds: params.durationSeconds,
+    attemptCount: params.attemptCount,
+    hintCount: params.hintCount,
+    masteryRating: params.masteryRating,
   );
 }
 
@@ -370,7 +425,6 @@ class ParentRemoteLinkUsecase {
   Future<Either<Failure, void>> removeChild(String childUserId) =>
       _repository.removeChild(childUserId);
 }
-
 
 // ─── GetCustomPlanUsecase ─────────────────────────────────────────────────────
 

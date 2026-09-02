@@ -77,7 +77,8 @@ class KidsProgress extends Equatable {
     );
   }
 
-  KidsProgress addPoints(int points) {
+  KidsProgress addPoints(int points, {int stars = 1}) {
+    assert(stars >= 1 && stars <= 3);
     final newTotal = totalPoints + points;
     int level = currentLevel;
     int needed = level * 100;
@@ -97,13 +98,11 @@ class KidsProgress extends Equatable {
       totalPoints: newTotal,
       currentLevel: level,
       currentStreak: currentStreak,
-      starsEarned: starsEarned + _starsForRating(),
+      starsEarned: starsEarned + stars,
       ayahsCompleted: ayahsCompleted + 1,
       lastSessionAt: now,
     );
   }
-
-  int _starsForRating() => 1; // base, can be extended
 
   KidsProgress withStar() => KidsProgress(
     totalPoints: totalPoints,

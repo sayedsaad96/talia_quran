@@ -26,7 +26,8 @@ class MemorizationNavigationResolver {
   const MemorizationNavigationResolver(
     this._repository, [
     PendingAyahResolver? pendingAyahResolver,
-  ]) : _pendingAyahResolver = pendingAyahResolver ?? const PendingAyahResolver();
+  ]) : _pendingAyahResolver =
+           pendingAyahResolver ?? const PendingAyahResolver();
 
   final MemorizationPlusRepository _repository;
   final PendingAyahResolver _pendingAyahResolver;
@@ -119,7 +120,9 @@ class MemorizationNavigationResolver {
     return result.fold((_) => null, (profile) => profile);
   }
 
-  Future<int?> _activeAdultPlanSurahId([CustomMemorizationPlan? customPlan]) async {
+  Future<int?> _activeAdultPlanSurahId([
+    CustomMemorizationPlan? customPlan,
+  ]) async {
     final plan = customPlan ?? await _customPlan();
     if (plan != null &&
         plan.isActive &&
@@ -159,13 +162,27 @@ class MemorizationNavigationResolver {
   Future<int?> _reviewQuizSurahId(int? adultPlanSurahId) async {
     if (_isValidSurahId(adultPlanSurahId)) return adultPlanSurahId;
 
-    final result = await GetLastReviewedSurahIdUseCase(
-      _repository,
-    )(ReviewRecordReadScope.adult);
+    final result = await GetLastReviewedSurahIdUseCase(_repository)(
+      ReviewRecordReadScope.adult,
+    );
     return result.fold((_) => null, (surahId) => surahId);
   }
 
   Future<int?> _activeKidsSurahId() async {
+    // A due or weak kids review is always the next mission before adding new
+    // memorization or reopening the latest journey position.
+    final reviewRecords = await _reviewRecords(ReviewRecordReadScope.kids);
+    final dueReviews =
+        reviewRecords
+            .where(
+              (record) =>
+                  record.createdByMode == ReviewRecordCreatedByMode.kidsMode &&
+                  (record.isDue || record.lastRating == PerformanceRating.weak),
+            )
+            .toList()
+          ..sort((a, b) => a.nextReviewDate.compareTo(b.nextReviewDate));
+    if (dueReviews.isNotEmpty) return dueReviews.first.surahId;
+
     final logsResult = await _repository.getKidsSessionLogs();
     final logs = logsResult.fold((_) => <KidsSessionLog>[], (logs) {
       return logs.where((log) => _isValidSurahId(log.surahId)).toList()..sort(
@@ -182,7 +199,13 @@ class MemorizationNavigationResolver {
       return customPlan.startSurahId;
     }
 
-    return null;
+    final settingsResult = await _repository.getParentSettings();
+    final configuredStart = settingsResult.fold(
+      (_) => null,
+      (settings) => settings.startingSurahId,
+    );
+    if (_isValidSurahId(configuredStart)) return configuredStart;
+    return KidsJourneyCursor.initial.activeSurahId;
   }
 
   Future<DailyPlan?> _cachedPlan() async {
@@ -256,6 +279,9 @@ class MemorizationNavigationResolver {
   static bool _isValidSurahId(int? surahId) =>
       surahId != null && surahId >= 1 && surahId <= 114;
 
-  static String kidsHomeFallbackLocation(int surahId) =>
-      _kidsHomeLocation(_isValidSurahId(surahId) ? surahId : 1);
+  static String kidsHomeFallbackLocation(int surahId) => _kidsHomeLocation(
+    _isValidSurahId(surahId)
+        ? surahId
+        : KidsJourneyCursor.initial.activeSurahId,
+  );
 }

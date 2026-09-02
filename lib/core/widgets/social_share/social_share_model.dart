@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../../utils/quran_ayah_display_text.dart';
 import '../../../../features/azkar/domain/entities/azkar_entities.dart';
 import '../../../../features/certificate/domain/entities/certificate_award.dart';
 import '../../../../features/progress/domain/entities/progress_entities.dart';
@@ -168,10 +170,13 @@ class SocialShareData {
     bool showCharacter = false,
   }) {
     return SocialShareData(
-      content: ayah.text,
+      content: QuranAyahDisplayText.withoutTrailingNumber(
+        ayah.text,
+        ayahNumber: ayah.numberInSurah,
+      ),
       category: SocialShareCategory.quranAyah,
-      // Labels are supplied by the localized template.  Keep the trusted
-      // Quran source text and reference as data rather than presentation copy.
+      // The Ayah entity remains exact; only the presentation copy omits its
+      // duplicate terminal number. The reference stays separate below.
       title: surahName,
       surahName: surahName,
       ayahNumber: ayah.numberInSurah,
@@ -193,7 +198,10 @@ class SocialShareData {
     String? userName,
   }) {
     return SocialShareData(
-      content: ayahText,
+      content: QuranAyahDisplayText.withoutTrailingNumber(
+        ayahText,
+        ayahNumber: ayahNumber,
+      ),
       category: SocialShareCategory.quranAyah,
       title: surahName,
       surahName: surahName,
@@ -387,7 +395,7 @@ class SocialShareData {
       buffer.writeln(title);
       buffer.writeln();
     }
-    buffer.writeln(content);
+    buffer.writeln(_plainShareContent);
     if (subtitle != null && subtitle!.isNotEmpty) {
       buffer.writeln();
       buffer.writeln(subtitle);
@@ -395,6 +403,16 @@ class SocialShareData {
     buffer.writeln();
     buffer.write(footer ?? '— ابدأ رحلة حفظك مع تالية\n$landingPageUrl');
     return buffer.toString();
+  }
+
+  String get _plainShareContent {
+    if (category != SocialShareCategory.quranAyah || ayahNumber == null) {
+      return content;
+    }
+    return QuranAyahDisplayText.withVerseBrackets(
+      content,
+      ayahNumber: ayahNumber!,
+    );
   }
 }
 

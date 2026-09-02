@@ -24,15 +24,61 @@ class MemorizationCloudMappers {
     );
   }
 
-  KidsSessionLog logFromCloud(Map<String, dynamic> row) => KidsSessionLog(
-    id: row['local_id'] as String? ?? row['id'].toString(),
-    surahId: row['surah_id'] as int,
-    ayahNumber: row['ayah_number'] as int,
-    repeatsCompleted: row['repeats_completed'] as int? ?? 0,
-    pointsEarned: row['points_earned'] as int? ?? 0,
-    completedAt: DateTime.parse(row['completed_at'] as String),
-    syncedAt: DateTime.now(),
-  );
+  KidsSessionLog logFromCloud(Map<String, dynamic> row) {
+    final rawAyahNumbers = row['ayah_numbers'];
+    final ayahNumbers = rawAyahNumbers is List
+        ? rawAyahNumbers
+              .whereType<num>()
+              .map((number) => number.toInt())
+              .toList(growable: false)
+        : const <int>[];
+
+    return KidsSessionLog(
+      id: row['local_id'] as String? ?? row['id'].toString(),
+      surahId: (row['surah_id'] as num).toInt(),
+      ayahNumber: (row['ayah_number'] as num).toInt(),
+      repeatsCompleted: _boundedInt(row['repeats_completed'], fallback: 0),
+      pointsEarned: _boundedInt(row['points_earned'], fallback: 0),
+      completedAt: DateTime.parse(row['completed_at'] as String),
+      syncedAt: DateTime.now(),
+      missionType: _enumByName(
+        KidsMissionType.values,
+        row['mission_type'],
+        KidsMissionType.newMemorization,
+      ),
+      ayahNumbers: ayahNumbers,
+      durationSeconds: _boundedInt(row['duration_seconds'], fallback: 0),
+      attemptCount: _boundedInt(row['attempt_count'], fallback: 1, minimum: 1),
+      hintCount: _boundedInt(row['hint_count'], fallback: 0),
+      masteryRating: _enumByName(
+        PerformanceRating.values,
+        row['mastery_rating'],
+        PerformanceRating.excellent,
+      ),
+    );
+  }
+
+  static int _boundedInt(
+    dynamic value, {
+    required int fallback,
+    int minimum = 0,
+  }) {
+    if (value is! num) return fallback;
+    final parsed = value.toInt();
+    return parsed < minimum ? fallback : parsed;
+  }
+
+  static T _enumByName<T extends Enum>(
+    Iterable<T> values,
+    dynamic raw,
+    T fallback,
+  ) {
+    if (raw is! String) return fallback;
+    return values.firstWhere(
+      (value) => value.name == raw,
+      orElse: () => fallback,
+    );
+  }
 
   ParentReward rewardFromCloud(Map<String, dynamic> row) => ParentReward(
     id: row['id'].toString(),
@@ -118,7 +164,9 @@ class MemorizationCloudMappers {
       childUserId: childId,
       displayName: row['display_name'] as String? ?? 'طفل تالية',
       progress: progressFromCloud(
-        progressRaw == null ? null : Map<String, dynamic>.from(progressRaw as Map),
+        progressRaw == null
+            ? null
+            : Map<String, dynamic>.from(progressRaw as Map),
       ),
       logs: logsRaw
           .map((item) => logFromCloud(Map<String, dynamic>.from(item as Map)))
