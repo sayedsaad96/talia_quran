@@ -139,3 +139,27 @@
 - Request and failure identity is `(planId, source, page)`. Each closure revalidates the latest internal plan before and after persistence, catches its own failure, settles its request, and leaves the tail successful.
 - Successful results prune every covered failure for their plan; completion clears that plan's failures and remains the final emitted state. Successful load replacement/no-plan and abandonment discard stale failures, while retry considers only the active plan.
 - `close()` synchronously gates submissions, memoizes one Future, waits for the captured tail only up to the named production shutdown timeout, and calls `super.close()` once. Late storage completion performs safe internal cleanup without emitting to a closed Cubit.
+
+## Fix Round 6 (2026-09-03)
+
+### RED evidence
+
+- The prior close-timeout path memoized shutdown but did not settle the caller-visible storage request when persistence never completed, so the old stalled-close regression still left the request future hanging even though the Cubit closed.
+
+### GREEN evidence
+
+- Shutdown now settles a never-completed storage request to `false`, cancels a queued request before it starts, and safely consumes a late storage error after close.
+- Identical in-flight deduplication now proves both callers receive the same shared future.
+- Verified totals from the controller pass remain green: Cubit suite 30/30 exit 0; dashboard + reader + E2E + schedule combined 28/28 exit 0; required four-file command 46/46 exit 0.
+- `dart analyze lib/features/khatmah lib/features/quran lib/core/di/injection.dart lib/core/router/app_router.dart`: no issues.
+
+### Files
+
+- `lib/features/khatmah/presentation/cubits/khatmah_cubit.dart`
+- `test/features/khatmah/presentation/cubits/khatmah_cubit_test.dart`
+
+### Self-review
+
+- Close now has one explicit shutdown signal for accepted work, so timed-out teardown settles request futures without starting later queued writes.
+- Late success or failure after shutdown is detached from UI state changes and only contributes safe internal cleanup.
+- No dedication behavior was removed; living/deceased dedication support remains intact.

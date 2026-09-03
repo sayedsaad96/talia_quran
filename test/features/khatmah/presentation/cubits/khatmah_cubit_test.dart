@@ -222,6 +222,7 @@ void main() {
     await cubit.load();
     final first = cubit.recordDigitalPage(2);
     final second = cubit.recordDigitalPage(2);
+    expect(identical(first, second), isTrue);
     await Future<void>.delayed(Duration.zero);
     verify(
       () => recordReading(activePlan, 2, source: KhatmahReadingSource.digital),
@@ -424,10 +425,9 @@ void main() {
   );
 
   test(
-    'close times out a stalled write and late success stays silent',
+    'close cancels stalled and queued requests without starting later writes',
     () async {
       final stalled = Completer<KhatmahReadingResult>();
-      final page2Plan = activePlan.recordPage(2);
       when(() => getActive()).thenAnswer((_) async => activePlan);
       when(
         () =>
@@ -438,17 +438,41 @@ void main() {
       );
       await cubit.load();
 
-      final request = cubit.recordDigitalPage(2);
+      final Future<bool> activeRequest = cubit.recordDigitalPage(2);
+      final Future<bool> queuedRequest = cubit.recordDigitalPage(3);
+      await Future<void>.delayed(Duration.zero);
       await cubit.close().timeout(const Duration(seconds: 1));
       expect(cubit.isClosed, isTrue);
-
-      stalled.complete(
-        KhatmahReadingResult(plan: page2Plan, newlyCompletedPages: const {2}),
+      expect(await activeRequest.timeout(const Duration(seconds: 1)), isFalse);
+      expect(await queuedRequest.timeout(const Duration(seconds: 1)), isFalse);
+      verify(
+        () =>
+            recordReading(activePlan, 2, source: KhatmahReadingSource.digital),
+      ).called(1);
+      verifyNever(
+        () => recordReading(any(), 3, source: KhatmahReadingSource.digital),
       );
-      await request.timeout(const Duration(seconds: 1));
-      expect(cubit.isClosed, isTrue);
     },
   );
+
+  test('late storage error after cancelled close is consumed safely', () async {
+    final lateWrite = Completer<KhatmahReadingResult>();
+    when(() => getActive()).thenAnswer((_) async => activePlan);
+    when(
+      () => recordReading(activePlan, 2, source: KhatmahReadingSource.digital),
+    ).thenAnswer((_) => lateWrite.future);
+    final cubit = buildCubit(shutdownTimeout: const Duration(milliseconds: 10));
+    await cubit.load();
+
+    final Future<bool> request = cubit.recordDigitalPage(2);
+    await Future<void>.delayed(Duration.zero);
+    await cubit.close().timeout(const Duration(seconds: 1));
+    expect(await request.timeout(const Duration(seconds: 1)), isFalse);
+
+    lateWrite.completeError(Exception('late storage failure'));
+    await Future<void>.delayed(Duration.zero);
+    expect(cubit.isClosed, isTrue);
+  });
 
   test('double close returns the same future and closes safely once', () async {
     final cubit = buildCubit();
