@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -36,6 +38,7 @@ void main() {
   late MockUpdateKhatmahScheduleUsecase mockUpdateSchedule;
   late MockPauseResumeKhatmahUsecase mockPauseResume;
   late MockDeleteKhatmahUsecase mockDelete;
+  KhatmahCubit? createdCubit;
 
   final testPlan = KhatmahPlan(
     id: 'khatmah-test-1',
@@ -57,6 +60,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(FakeKhatmahPlan());
+    registerFallbackValue(KhatmahReadingSource.digital);
   });
 
   setUp(() {
@@ -67,13 +71,21 @@ void main() {
     mockDelete = MockDeleteKhatmahUsecase();
   });
 
-  KhatmahCubit buildCubit() => KhatmahCubit(
-    mockGetActive,
-    mockRecordReading,
-    mockPauseResume,
-    mockDelete,
-    mockUpdateSchedule,
-  );
+  tearDown(() async {
+    await createdCubit?.close();
+    createdCubit = null;
+  });
+
+  KhatmahCubit buildCubit() {
+    createdCubit = KhatmahCubit(
+      mockGetActive,
+      mockRecordReading,
+      mockPauseResume,
+      mockDelete,
+      mockUpdateSchedule,
+    );
+    return createdCubit!;
+  }
 
   Widget buildWidget({
     required KhatmahCubit cubit,
@@ -203,6 +215,132 @@ void main() {
     },
   );
 
+  testWidgets('physical logger waits for durable success before closing', (
+    tester,
+  ) async {
+    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+    final durableWrite = Completer<KhatmahReadingResult>();
+    when(
+      () => mockRecordReading(
+        testPlan,
+        25,
+        source: KhatmahReadingSource.physical,
+      ),
+    ).thenAnswer((_) => durableWrite.future);
+    final cubit = buildCubit();
+
+    await tester.pumpWidget(buildWidget(cubit: cubit));
+    await tester.pumpAndSettle();
+    final logButton = find.byKey(
+      const Key('khatmah_dashboard_log_mushaf_button'),
+    );
+    await tester.ensureVisible(logButton);
+    await tester.tap(logButton);
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const Key('khatmah_dashboard_mushaf_page_input')),
+      '25',
+    );
+    await tester.tap(
+      find.byKey(const Key('khatmah_dashboard_mushaf_save_button')),
+    );
+    await tester.pump();
+
+    expect(
+      find.byKey(const Key('khatmah_dashboard_mushaf_page_input')),
+      findsOneWidget,
+    );
+    expect(find.textContaining('successfully'), findsNothing);
+
+    durableWrite.complete(
+      KhatmahReadingResult(
+        plan: testPlan.recordThroughPage(25),
+        newlyCompletedPages: const {21, 22, 23, 24, 25},
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('khatmah_dashboard_mushaf_page_input')),
+      findsNothing,
+    );
+    expect(find.textContaining('successfully'), findsOneWidget);
+  });
+
+  testWidgets(
+    'physical logger preserves page and offers same-page retry after failure',
+    (tester) async {
+      when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+      var attempts = 0;
+      when(
+        () => mockRecordReading(
+          testPlan,
+          25,
+          source: KhatmahReadingSource.physical,
+        ),
+      ).thenAnswer((_) async {
+        attempts++;
+        if (attempts == 1) throw Exception('disk unavailable');
+        return KhatmahReadingResult(
+          plan: testPlan.recordThroughPage(25),
+          newlyCompletedPages: const {21, 22, 23, 24, 25},
+        );
+      });
+      final cubit = buildCubit();
+
+      await tester.pumpWidget(buildWidget(cubit: cubit));
+      await tester.pumpAndSettle();
+      final logButton = find.byKey(
+        const Key('khatmah_dashboard_log_mushaf_button'),
+      );
+      await tester.ensureVisible(logButton);
+      await tester.tap(logButton);
+      await tester.pumpAndSettle();
+      final input = find.byKey(
+        const Key('khatmah_dashboard_mushaf_page_input'),
+      );
+      await tester.enterText(input, '25');
+      await tester.tap(
+        find.byKey(const Key('khatmah_dashboard_mushaf_save_button')),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(input, findsOneWidget);
+      expect(find.text('25'), findsOneWidget);
+      expect(
+        find.byKey(const Key('khatmah_dashboard_mushaf_save_error')),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.byKey(const Key('khatmah_dashboard_mushaf_save_button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(attempts, 2);
+      verify(
+        () => mockRecordReading(
+          testPlan,
+          25,
+          source: KhatmahReadingSource.physical,
+        ),
+      ).called(2);
+    },
+  );
+
+  testWidgets('paused plan remains visible with resume action', (tester) async {
+    final paused = testPlan.copyWith(status: KhatmahStatus.paused);
+    when(() => mockGetActive()).thenAnswer((_) async => paused);
+    final cubit = buildCubit();
+
+    await tester.pumpWidget(buildWidget(cubit: cubit));
+    await tester.pumpAndSettle();
+
+    expect(find.text(paused.title), findsOneWidget);
+    expect(find.text('Resume'), findsOneWidget);
+  });
+
   testWidgets('pausing khatmah calls cubit.pause() and allows resume', (
     tester,
   ) async {
@@ -277,6 +415,14 @@ void main() {
     'adaptive controls: calm adjustment and mild compensation trigger updates',
     (tester) async {
       when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+      when(
+        () => mockUpdateSchedule(
+          planId: testPlan.id,
+          targetPagesPerDay: any(named: 'targetPagesPerDay'),
+          targetDays: any(named: 'targetDays'),
+          expectedEndDate: any(named: 'expectedEndDate'),
+        ),
+      ).thenAnswer((_) async => testPlan);
       when(
         () => mockRecordReading(any(), any(), source: any(named: 'source')),
       ).thenAnswer((inv) async {

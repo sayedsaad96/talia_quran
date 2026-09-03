@@ -81,13 +81,18 @@ class KhatmahProgressFailure extends KhatmahState {
 }
 
 class KhatmahCompleted extends KhatmahState {
-  const KhatmahCompleted({required this.plan, required this.historyEntry});
+  const KhatmahCompleted({
+    required this.plan,
+    required this.historyEntry,
+    this.newlyCompletedPages = const {},
+  });
 
   final KhatmahPlan plan;
   final KhatmahHistoryEntry historyEntry;
+  final Set<int> newlyCompletedPages;
 
   @override
-  List<Object?> get props => [plan, historyEntry];
+  List<Object?> get props => [plan, historyEntry, newlyCompletedPages];
 }
 
 class KhatmahCubit extends Cubit<KhatmahState> {
@@ -198,7 +203,13 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   void _emitReadingResult(KhatmahReadingResult result) {
     final history = result.historyEntry;
     if (history != null) {
-      emit(KhatmahCompleted(plan: result.plan, historyEntry: history));
+      emit(
+        KhatmahCompleted(
+          plan: result.plan,
+          historyEntry: history,
+          newlyCompletedPages: result.newlyCompletedPages,
+        ),
+      );
       return;
     }
     final wird = KhatmahSchedulingEngine.todaysWird(

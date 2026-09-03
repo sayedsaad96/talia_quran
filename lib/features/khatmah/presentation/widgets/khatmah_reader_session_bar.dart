@@ -65,7 +65,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
         final gold = isDark ? AppColors.primaryLight : AppColors.primary;
         final bg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
 
-        final current = currentPage ?? plan.currentPage;
+        final current = plan.currentPage;
         final dailyTarget = plan.targetPagesPerDay;
 
         // Calculate progress within today's wird

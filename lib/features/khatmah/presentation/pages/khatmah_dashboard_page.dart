@@ -17,10 +17,7 @@ import '../cubits/khatmah_cubit.dart';
 import '../widgets/khatmah_progress_gauge.dart';
 
 class KhatmahDashboardPage extends StatefulWidget {
-  const KhatmahDashboardPage({
-    super.key,
-    this.cubit,
-  });
+  const KhatmahDashboardPage({super.key, this.cubit});
 
   final KhatmahCubit? cubit;
 
@@ -57,81 +54,18 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
   }
 
   void _showMushafLoggerDialog(BuildContext context, KhatmahPlan plan) {
-    final controller = TextEditingController();
     final isArabic = context.isArabic;
-
-    showDialog(
+    showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.menu_book_rounded, color: AppColors.gold),
-            const SizedBox(width: AppSpacing.sm),
-            Expanded(
-              child: Text(
-                isArabic ? 'تسجيل قراءة من المصحف' : 'Log Physical Mushaf Reading',
-                style: AppTypography.titleMedium,
-              ),
-            ),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              isArabic
-                  ? 'أدخل رقم آخر صفحة قرأتها من المصحف الورقي (1 - 604):'
-                  : 'Enter the last page read from your physical Mushaf (1 - 604):',
-              style: AppTypography.bodyMedium,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            TextFormField(
-              key: const Key('khatmah_dashboard_mushaf_page_input'),
-              controller: controller,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: InputDecoration(
-                labelText: isArabic ? 'رقم الصفحة' : 'Page number',
-                hintText: isArabic
-                    ? 'مثال: ${plan.currentPage + 1}'
-                    : 'e.g. ${plan.currentPage + 1}',
-                prefixIcon: const Icon(Icons.bookmark_outline_rounded),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(isArabic ? 'إلغاء' : 'Cancel'),
-          ),
-          FilledButton(
-            key: const Key('khatmah_dashboard_mushaf_save_button'),
-            onPressed: () {
-              final page = int.tryParse(controller.text.trim());
-              if (page != null && page >= 1 && page <= KhatmahSchedulingEngine.totalPages) {
-                _cubit.advancePage(page);
-                Navigator.of(ctx).pop();
-                context.showSnackBar(
-                  isArabic
-                      ? 'تم تسجيل قراءة الصفحة $page بنجاح'
-                      : 'Logged page $page successfully',
-                );
-              }
-            },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
-            ),
-            child: Text(isArabic ? 'حفظ التقدم' : 'Save Progress'),
-          ),
-        ],
-      ),
-    );
+      builder: (ctx) => _PhysicalMushafLoggerDialog(cubit: _cubit, plan: plan),
+    ).then((saved) {
+      if (saved != true || !context.mounted) return;
+      context.showSnackBar(
+        isArabic
+            ? 'تم تسجيل القراءة بنجاح'
+            : 'Physical Mushaf progress saved successfully',
+      );
+    });
   }
 
   void _showAbandonConfirmDialog(BuildContext context) {
@@ -170,7 +104,11 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
     );
   }
 
-  Widget _buildDedicationBadge(KhatmahDedication dedication, bool isArabic, bool isDark) {
+  Widget _buildDedicationBadge(
+    KhatmahDedication dedication,
+    bool isArabic,
+    bool isDark,
+  ) {
     final recipient = dedication.recipientName ?? '';
     String conditionLabel = '';
     if (dedication.condition == DedicationCondition.alive) {
@@ -188,22 +126,19 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
     return Container(
       key: const Key('khatmah_dashboard_dedication_badge'),
       margin: const EdgeInsets.only(top: AppSpacing.xs),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.sm,
+        vertical: AppSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: AppColors.gold.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-        border: Border.all(
-          color: AppColors.gold.withValues(alpha: 0.3),
-        ),
+        border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.favorite_rounded,
-            size: 14,
-            color: AppColors.gold,
-          ),
+          const Icon(Icons.favorite_rounded, size: 14, color: AppColors.gold),
           const SizedBox(width: AppSpacing.xs),
           Text(
             isArabic ? 'مهداة إلى: $fullText' : 'Dedicated to: $fullText',
@@ -277,7 +212,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                         runSpacing: AppSpacing.sm,
                         children: [
                           FilledButton.icon(
-                            key: const Key('khatmah_dashboard_pause_resume_button'),
+                            key: const Key(
+                              'khatmah_dashboard_pause_resume_button',
+                            ),
                             onPressed: () => _cubit.resume(),
                             style: FilledButton.styleFrom(
                               backgroundColor: primary,
@@ -309,6 +246,22 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
             plan = state.plan;
             wirdStartPage = state.wirdStartPage;
             wirdEndPage = state.wirdEndPage;
+          } else if (state is KhatmahPaused) {
+            plan = state.plan;
+            final wird = KhatmahSchedulingEngine.todaysWird(
+              plan.currentPage,
+              plan.targetPagesPerDay,
+            );
+            wirdStartPage = wird.startPage;
+            wirdEndPage = wird.endPage;
+          } else if (state is KhatmahProgressFailure && state.plan != null) {
+            plan = state.plan!;
+            final wird = KhatmahSchedulingEngine.todaysWird(
+              plan.currentPage,
+              plan.targetPagesPerDay,
+            );
+            wirdStartPage = wird.startPage;
+            wirdEndPage = wird.endPage;
           } else if (state is KhatmahWirdCompleted) {
             plan = state.plan;
             final wird = KhatmahSchedulingEngine.todaysWird(
@@ -365,7 +318,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                       padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: cardBg,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
                         border: Border.all(
                           color: primary.withValues(alpha: 0.15),
                         ),
@@ -416,7 +371,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                                   AppColors.lightCard,
                                 ],
                         ),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
                         border: Border.all(
                           color: primary.withValues(alpha: 0.2),
                         ),
@@ -426,7 +383,11 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.auto_stories_rounded, color: primary, size: 22),
+                              Icon(
+                                Icons.auto_stories_rounded,
+                                color: primary,
+                                size: 22,
+                              ),
                               const SizedBox(width: AppSpacing.sm),
                               Text(
                                 isArabic ? 'ورد اليوم' : 'Today\'s Wird',
@@ -459,7 +420,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                           ),
                           const SizedBox(height: AppSpacing.md),
                           FilledButton.icon(
-                            key: const Key('khatmah_dashboard_continue_reading_button'),
+                            key: const Key(
+                              'khatmah_dashboard_continue_reading_button',
+                            ),
                             onPressed: () {
                               context.push(
                                 '/quran/page/$wirdStartPage?mode=khatmah',
@@ -470,8 +433,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                               foregroundColor: Colors.white,
                               minimumSize: const Size.fromHeight(48),
                               shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
                               ),
                             ),
                             icon: const Icon(Icons.menu_book_rounded),
@@ -493,7 +457,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                       padding: const EdgeInsets.all(AppSpacing.md),
                       decoration: BoxDecoration(
                         color: cardBg,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
                         border: Border.all(
                           color: primary.withValues(alpha: 0.15),
                         ),
@@ -533,14 +499,19 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                             ),
                           ),
                           OutlinedButton(
-                            key: const Key('khatmah_dashboard_log_mushaf_button'),
-                            onPressed: () => _showMushafLoggerDialog(context, plan),
+                            key: const Key(
+                              'khatmah_dashboard_log_mushaf_button',
+                            ),
+                            onPressed: plan.status == KhatmahStatus.paused
+                                ? null
+                                : () => _showMushafLoggerDialog(context, plan),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: primary,
                               side: BorderSide(color: primary),
                               shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
                               ),
                             ),
                             child: Text(isArabic ? 'تسجيل' : 'Log'),
@@ -552,7 +523,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
 
                     // Adaptive Controls Section
                     Text(
-                      isArabic ? 'خيارات التكيّف الهادئ' : 'Calm Adaptive Controls',
+                      isArabic
+                          ? 'خيارات التكيّف الهادئ'
+                          : 'Calm Adaptive Controls',
                       style: AppTypography.labelLarge.copyWith(
                         fontWeight: FontWeight.w600,
                         color: isDark
@@ -567,7 +540,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                         // Calm adjustment: recalibrate end date
                         Expanded(
                           child: OutlinedButton.icon(
-                            key: const Key('khatmah_dashboard_calm_adjustment_button'),
+                            key: const Key(
+                              'khatmah_dashboard_calm_adjustment_button',
+                            ),
                             onPressed: () {
                               _cubit.calmAdjustment();
                               context.showSnackBar(
@@ -582,8 +557,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                                 horizontal: AppSpacing.xs,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
                               ),
                             ),
                             icon: const Icon(Icons.update_rounded, size: 18),
@@ -597,7 +573,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                         // Mild compensation: add 1-2 pages/day
                         Expanded(
                           child: OutlinedButton.icon(
-                            key: const Key('khatmah_dashboard_mild_compensation_button'),
+                            key: const Key(
+                              'khatmah_dashboard_mild_compensation_button',
+                            ),
                             onPressed: () {
                               _cubit.mildCompensation(1);
                               context.showSnackBar(
@@ -612,11 +590,15 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                                 horizontal: AppSpacing.xs,
                               ),
                               shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
                               ),
                             ),
-                            icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
+                            icon: const Icon(
+                              Icons.add_circle_outline_rounded,
+                              size: 18,
+                            ),
                             label: Text(
                               isArabic ? 'تعويض خفيف' : 'Mild Boost',
                               style: AppTypography.labelMedium,
@@ -638,9 +620,13 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                         }
                       },
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.sm,
+                        ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
                         ),
                       ),
                       icon: Icon(
@@ -663,6 +649,136 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
           );
         },
       ),
+    );
+  }
+}
+
+class _PhysicalMushafLoggerDialog extends StatefulWidget {
+  const _PhysicalMushafLoggerDialog({required this.cubit, required this.plan});
+
+  final KhatmahCubit cubit;
+  final KhatmahPlan plan;
+
+  @override
+  State<_PhysicalMushafLoggerDialog> createState() =>
+      _PhysicalMushafLoggerDialogState();
+}
+
+class _PhysicalMushafLoggerDialogState
+    extends State<_PhysicalMushafLoggerDialog> {
+  late final TextEditingController _controller;
+  bool _isSaving = false;
+  String? _saveError;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _save() async {
+    final page = int.tryParse(_controller.text.trim());
+    if (page == null ||
+        page < 1 ||
+        page > KhatmahSchedulingEngine.totalPages ||
+        _isSaving) {
+      return;
+    }
+    setState(() {
+      _isSaving = true;
+      _saveError = null;
+    });
+    await widget.cubit.recordPhysicalThroughPage(page);
+    if (!mounted) return;
+    final resultState = widget.cubit.state;
+    if (resultState is KhatmahProgressFailure || resultState is KhatmahPaused) {
+      setState(() {
+        _isSaving = false;
+        _saveError = resultState is KhatmahPaused
+            ? 'Khatmah is paused'
+            : 'Unable to save Khatmah progress. Please try again.';
+      });
+      return;
+    }
+    Navigator.of(context).pop(true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isArabic = context.isArabic;
+    return AlertDialog(
+      title: Row(
+        children: [
+          const Icon(Icons.menu_book_rounded, color: AppColors.gold),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              isArabic ? 'تسجيل قراءة من المصحف' : 'Log Physical Mushaf Reading',
+              style: AppTypography.titleMedium,
+            ),
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              isArabic
+                  ? 'أدخل رقم آخر صفحة قرأتها من المصحف الورقي (1 - 604):'
+                  : 'Enter the last page read from your physical Mushaf (1 - 604):',
+              style: AppTypography.bodyMedium,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextFormField(
+              key: const Key('khatmah_dashboard_mushaf_page_input'),
+              controller: _controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: InputDecoration(
+                labelText: isArabic ? 'رقم الصفحة' : 'Page number',
+                hintText: isArabic
+                    ? 'مثال: ${widget.plan.currentPage + 1}'
+                    : 'e.g. ${widget.plan.currentPage + 1}',
+                prefixIcon: const Icon(Icons.bookmark_outline_rounded),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+              ),
+            ),
+            if (_saveError != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                _saveError!,
+                key: const Key('khatmah_dashboard_mushaf_save_error'),
+                style: AppTypography.bodySmall.copyWith(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
+          child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+        ),
+        FilledButton(
+          key: const Key('khatmah_dashboard_mushaf_save_button'),
+          onPressed: _save,
+          style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+          child: Text(isArabic ? 'حفظ التقدم' : 'Save Progress'),
+        ),
+      ],
     );
   }
 }

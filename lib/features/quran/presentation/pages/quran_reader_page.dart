@@ -184,7 +184,6 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
 
   void _showReadConfirmed() {
     _readConfirmedFeedbackTimer?.cancel();
-    _khatmahSubscription?.cancel();
     if (mounted) {
       setState(() => _showReadConfirmedFeedback = true);
     }
@@ -248,7 +247,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
         extra: KhatmahReadingResult(
           plan: state.plan,
           historyEntry: state.historyEntry,
-          newlyCompletedPages: const {},
+          newlyCompletedPages: state.newlyCompletedPages,
         ),
       );
     }

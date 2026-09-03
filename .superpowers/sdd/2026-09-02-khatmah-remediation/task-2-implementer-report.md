@@ -58,3 +58,23 @@
 ### Remaining concern
 
 - The dashboard runner again did not yield a normal final summary after loading; the broader reader lifecycle interaction and E2E teardown diagnosis need another pass before claiming the full required combined command is green.
+
+## Rescue / fix round (2026-09-03)
+
+### Phase 1 reproduction and root-cause hypothesis
+
+- `flutter test test/features/khatmah/presentation/pages/khatmah_dashboard_page_test.dart --reporter expanded`, under a 120-second external watchdog, exited normally with code 1: 3 passed and 3 failed. The final event was `(tearDownAll)`. Two failures came from a missing Mocktail fallback for `KhatmahReadingSource`; the unmatched matcher then contaminated the pause/resume test.
+- `flutter test test/features/quran/presentation/pages/quran_reader_page_mode_test.dart --reporter expanded`, under the same watchdog, exited normally with code 0: 6 passed and `All tests passed!`.
+- `flutter test test/features/khatmah/integration/khatmah_e2e_flow_test.dart --reporter expanded`, under the same watchdog, reached 3 passing assertions but never emitted a final summary or process exit. The final event was the reader UI integration test name.
+- Minimal isolation with `--plain-name` reproduced the E2E stall in the reader UI test alone. Stage markers proved `setUp` completed through GetIt registration and audio construction; the first test-body await, `khatmahRepository.createPlan(khatmahPlan)`, never completed.
+- Root-cause hypothesis: the real SharedPreferences-backed repository mutation is awaited inside `testWidgets` fake async before any pump, so the platform-fake completion is not advanced. The same mutation completes in the nearby plain `test` lifecycle case, while the working reader widget test injects a mock Cubit and performs no real persistence. The minimal hypothesis test is to run only that setup mutation through `tester.runAsync`.
+
+## Final GREEN verification (2026-09-03)
+
+- Root cause fixed: real SharedPreferences-backed `createPlan` setup in the widget E2E runs through `tester.runAsync`, allowing platform-fake completion without fake-async teardown hangs.
+- Removed temporary E2E stage diagnostics after confirming the fix.
+- Reader mode suite: 11 passing; dashboard suite: 9 passing; E2E suite: 3 passing; schedule-only usecase suite: 3 passing.
+- Required combined four-file command: 26 passing, exit 0.
+- Analyzer: `dart analyze lib/features/khatmah lib/features/quran lib/core/di/injection.dart lib/core/router/app_router.dart` — no issues.
+- `git diff --check` clean.
+- Completion state now preserves `newlyCompletedPages` through typed reader navigation; retry selection is deterministic and completion replay remains exactly once.

@@ -632,7 +632,7 @@ void main() {
           status: KhatmahStatus.active,
         );
 
-        await khatmahRepository.createPlan(khatmahPlan);
+        await tester.runAsync(() => khatmahRepository.createPlan(khatmahPlan));
         final activeCubit = KhatmahCubit(
           getActiveKhatmahUsecase,
           recordKhatmahReadingUsecase,
