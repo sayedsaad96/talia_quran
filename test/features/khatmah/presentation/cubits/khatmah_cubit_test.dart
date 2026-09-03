@@ -54,7 +54,10 @@ void main() {
     updateSchedule,
   );
 
-  setUpAll(() => registerFallbackValue(FakeKhatmahPlan()));
+  setUpAll(() {
+    registerFallbackValue(FakeKhatmahPlan());
+    registerFallbackValue(KhatmahReadingSource.digital);
+  });
   setUp(() {
     getActive = MockGetActiveKhatmahUsecase();
     recordReading = MockRecordKhatmahReadingUsecase();
@@ -154,7 +157,11 @@ void main() {
       await cubit.recordDigitalPage(604);
       expect(
         cubit.state,
-        KhatmahCompleted(plan: completed, historyEntry: history),
+        KhatmahCompleted(
+          plan: completed,
+          historyEntry: history,
+          newlyCompletedPages: const {604},
+        ),
       );
       verify(
         () => recordReading(
@@ -225,6 +232,105 @@ void main() {
     await cubit.close();
   });
 
+  test(
+    'queues distinct pages and resolves each against the latest plan',
+    () async {
+      final firstWrite = Completer<KhatmahReadingResult>();
+      final secondWrite = Completer<KhatmahReadingResult>();
+      final firstUpdated = activePlan.recordPage(2);
+      final secondUpdated = firstUpdated.recordPage(3);
+      when(() => getActive()).thenAnswer((_) async => activePlan);
+      when(
+        () => recordReading(any(), any(), source: any(named: 'source')),
+      ).thenAnswer((invocation) {
+        final plan = invocation.positionalArguments[0] as KhatmahPlan;
+        final page = invocation.positionalArguments[1] as int;
+        expect(page, firstWrite.isCompleted ? 3 : 2);
+        expect(plan, page == 2 ? activePlan : firstUpdated);
+        return page == 2 ? firstWrite.future : secondWrite.future;
+      });
+      final cubit = buildCubit();
+      await cubit.load();
+
+      final first = cubit.recordDigitalPage(2);
+      final second = cubit.recordDigitalPage(3);
+      verify(
+        () =>
+            recordReading(activePlan, 2, source: KhatmahReadingSource.digital),
+      ).called(1);
+
+      firstWrite.complete(
+        KhatmahReadingResult(
+          plan: firstUpdated,
+          newlyCompletedPages: const {2},
+        ),
+      );
+      await Future<void>.delayed(Duration.zero);
+      verify(
+        () => recordReading(
+          firstUpdated,
+          3,
+          source: KhatmahReadingSource.digital,
+        ),
+      ).called(1);
+      secondWrite.complete(
+        KhatmahReadingResult(
+          plan: secondUpdated,
+          newlyCompletedPages: const {3},
+        ),
+      );
+      await Future.wait([first, second]);
+
+      expect(
+        (cubit.state as KhatmahActive).plan.completedPages,
+        containsAll([2, 3]),
+      );
+      await cubit.close();
+    },
+  );
+
+  test('failure does not poison queued work or a later retry', () async {
+    final firstWrite = Completer<KhatmahReadingResult>();
+    final queuedWrite = Completer<KhatmahReadingResult>();
+    var calls = 0;
+    when(() => getActive()).thenAnswer((_) async => activePlan);
+    when(
+      () => recordReading(any(), any(), source: any(named: 'source')),
+    ).thenAnswer((invocation) {
+      calls++;
+      if (calls == 1) return firstWrite.future;
+      if (calls == 2) return queuedWrite.future;
+      final plan = invocation.positionalArguments[0] as KhatmahPlan;
+      return Future.value(
+        KhatmahReadingResult(
+          plan: plan.recordPage(2),
+          newlyCompletedPages: const {2},
+        ),
+      );
+    });
+    final cubit = buildCubit();
+    await cubit.load();
+    final failed = cubit.recordDigitalPage(2);
+    final queued = cubit.recordDigitalPage(3);
+    firstWrite.completeError(Exception('disk unavailable'));
+    await Future<void>.delayed(Duration.zero);
+    queuedWrite.complete(
+      KhatmahReadingResult(
+        plan: activePlan.recordPage(3),
+        newlyCompletedPages: const {3},
+      ),
+    );
+    await Future.wait([failed, queued]);
+    await cubit.recordDigitalPage(2);
+
+    expect(calls, 3);
+    expect(
+      (cubit.state as KhatmahActive).plan.completedPages,
+      containsAll([2, 3]),
+    );
+    await cubit.close();
+  });
+
   test('physical progress dispatches the physical reading source', () async {
     final updated = activePlan.recordThroughPage(4);
     when(() => getActive()).thenAnswer((_) async => activePlan);
@@ -257,6 +363,42 @@ void main() {
     await cubit.close();
   });
 
+  test(
+    'load failure after pause retains the paused authoritative plan',
+    () async {
+      final paused = activePlan.pause(at: DateTime(2026, 1, 2));
+      when(() => getActive()).thenAnswer((_) async => activePlan);
+      when(() => pauseResume.pause(activePlan)).thenAnswer((_) async => paused);
+      final cubit = buildCubit();
+      await cubit.load();
+      await cubit.pause();
+      when(() => getActive()).thenThrow(Exception('offline'));
+      await cubit.load();
+      expect((cubit.state as KhatmahProgressFailure).plan, paused);
+      await cubit.close();
+    },
+  );
+
+  test(
+    'load failure after resume retains the resumed authoritative plan',
+    () async {
+      final paused = activePlan.pause(at: DateTime(2026, 1, 2));
+      final resumed = paused.resume(fromDate: DateTime(2026, 1, 3));
+      when(() => getActive()).thenAnswer((_) async => activePlan);
+      when(() => pauseResume.pause(activePlan)).thenAnswer((_) async => paused);
+      when(() => pauseResume.resume(paused)).thenAnswer((_) async => resumed);
+      final cubit = buildCubit();
+      await cubit.load();
+      await cubit.pause();
+      when(() => getActive()).thenAnswer((_) async => paused);
+      await cubit.resume();
+      when(() => getActive()).thenThrow(Exception('offline'));
+      await cubit.load();
+      expect((cubit.state as KhatmahProgressFailure).plan, resumed);
+      await cubit.close();
+    },
+  );
+
   test('delayed in-flight failure releases the guard for retry', () async {
     final delayed = Completer<KhatmahReadingResult>();
     when(() => getActive()).thenAnswer((_) async => activePlan);
@@ -266,9 +408,9 @@ void main() {
     final cubit = buildCubit();
     await cubit.load();
     final first = cubit.recordDigitalPage(2);
-    await cubit.recordDigitalPage(2);
+    final duplicate = cubit.recordDigitalPage(2);
     delayed.completeError(Exception('disk unavailable'));
-    await first;
+    await Future.wait([first, duplicate]);
     expect(cubit.state, isA<KhatmahProgressFailure>());
 
     when(
@@ -306,6 +448,10 @@ void main() {
     'schedule adjustment uses the schedule-only persistence command',
     () async {
       when(() => getActive()).thenAnswer((_) async => activePlan);
+      final authoritative = activePlan.copyWith(
+        targetPagesPerDay: 5,
+        completedPages: {...activePlan.completedPages, 2},
+      );
       when(
         () => updateSchedule(
           planId: activePlan.id,
@@ -313,7 +459,7 @@ void main() {
           targetDays: any(named: 'targetDays'),
           expectedEndDate: any(named: 'expectedEndDate'),
         ),
-      ).thenAnswer((_) async => activePlan);
+      ).thenAnswer((_) async => authoritative);
       final cubit = buildCubit();
       await cubit.load();
       await cubit.mildCompensation();
@@ -325,7 +471,22 @@ void main() {
           expectedEndDate: any(named: 'expectedEndDate'),
         ),
       ).called(1);
-      expect((cubit.state as KhatmahActive).plan.targetPagesPerDay, 5);
+      expect((cubit.state as KhatmahActive).plan, authoritative);
+      await cubit.close();
+    },
+  );
+
+  test(
+    'load failure after abandonment does not resurrect the old plan',
+    () async {
+      when(() => getActive()).thenAnswer((_) async => activePlan);
+      when(() => deleteKhatmah()).thenAnswer((_) async {});
+      final cubit = buildCubit();
+      await cubit.load();
+      await cubit.abandonPlan();
+      when(() => getActive()).thenThrow(Exception('offline'));
+      await cubit.load();
+      expect((cubit.state as KhatmahProgressFailure).plan, isNull);
       await cubit.close();
     },
   );

@@ -329,6 +329,74 @@ void main() {
     },
   );
 
+  testWidgets(
+    'known-plan progress failure keeps dashboard visible with retry',
+    (tester) async {
+      when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+      when(
+        () => mockRecordReading(
+          testPlan,
+          25,
+          source: KhatmahReadingSource.digital,
+        ),
+      ).thenThrow(Exception('disk unavailable'));
+      final cubit = buildCubit();
+
+      await tester.pumpWidget(buildWidget(cubit: cubit));
+      await tester.pumpAndSettle();
+      await cubit.recordDigitalPage(25);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('khatmah_dashboard_title')), findsOneWidget);
+      expect(
+        find.byKey(const Key('khatmah_dashboard_progress_failure_banner')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('khatmah_dashboard_failure_retry_button')),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.byKey(const Key('khatmah_dashboard_failure_retry_button')),
+      );
+      await tester.pumpAndSettle();
+      verify(
+        () => mockRecordReading(
+          testPlan,
+          25,
+          source: KhatmahReadingSource.digital,
+        ),
+      ).called(2);
+    },
+  );
+
+  testWidgets('null-plan load failure renders error with reload action', (
+    tester,
+  ) async {
+    when(() => mockGetActive()).thenThrow(Exception('offline'));
+    final cubit = buildCubit();
+
+    await tester.pumpWidget(buildWidget(cubit: cubit));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(const Key('khatmah_dashboard_load_failure')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const Key('khatmah_dashboard_load_failure_retry_button')),
+      findsOneWidget,
+    );
+
+    when(() => mockGetActive()).thenAnswer((_) async => testPlan);
+    await tester.tap(
+      find.byKey(const Key('khatmah_dashboard_load_failure_retry_button')),
+    );
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('khatmah_dashboard_title')), findsOneWidget);
+  });
+
   testWidgets('paused plan remains visible with resume action', (tester) async {
     final paused = testPlan.copyWith(status: KhatmahStatus.paused);
     when(() => mockGetActive()).thenAnswer((_) async => paused);

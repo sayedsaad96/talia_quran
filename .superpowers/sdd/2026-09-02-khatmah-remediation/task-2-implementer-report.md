@@ -78,3 +78,23 @@
 - Analyzer: `dart analyze lib/features/khatmah lib/features/quran lib/core/di/injection.dart lib/core/router/app_router.dart` — no issues.
 - `git diff --check` clean.
 - Completion state now preserves `newlyCompletedPages` through typed reader navigation; retry selection is deterministic and completion replay remains exactly once.
+
+## Fix Round 3 (2026-09-03)
+
+### RED evidence
+
+- Added deterministic Completer coverage for identical in-flight deduplication, ordered distinct page queueing against the result plan, failure recovery with later retry, pause/resume cache retention, abandonment cache clearing, and authoritative schedule responses.
+- Added dashboard widget RED coverage for known-plan progress failure and null-plan load failure. Both initially failed because the queue/cache/UI behavior was absent.
+
+### GREEN evidence
+
+- Cubit suite: 19 passing.
+- Dashboard suite: 11 passing.
+- Focused analyzer (`lib/features/khatmah`, `lib/features/quran`, DI/router): no issues.
+
+### Architectural rationale
+
+- Replaced the global drop-on-busy guard with a FIFO request queue keyed only by `(source, page)`: duplicate in-flight calls share one Completer, while distinct confirmed pages are retained and executed serially.
+- Queue execution resolves the active plan from current state/cache after each prior result, so later pages persist against the newest authoritative coverage; failures complete their own request and do not poison the queue.
+- `_lastKnownPlan` transitions are updated only on successful load/record/pause/resume/schedule results and cleared on completed/abandoned plans; failure states retain that cache without fabricating a plan.
+- Schedule controls now emit/cache the plan returned by persistence. Dashboard failures retain the plan when known with a retry action, while null-plan load errors provide a dedicated reload state.

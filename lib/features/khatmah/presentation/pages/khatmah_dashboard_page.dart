@@ -104,6 +104,47 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
     );
   }
 
+  Widget _buildProgressFailureBanner(
+    BuildContext context,
+    KhatmahProgressFailure failure,
+  ) {
+    final isArabic = context.isArabic;
+    final errorColor = Theme.of(context).colorScheme.error;
+    final canRetryProgress = failure.plan != null && failure.pageNumber > 0;
+    return Container(
+      key: const Key('khatmah_dashboard_progress_failure_banner'),
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        color: errorColor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: errorColor.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline_rounded, color: errorColor),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            child: Text(
+              isArabic
+                  ? 'تعذر حفظ تقدم الختمة.'
+                  : 'Unable to save Khatmah progress.',
+              key: const Key('khatmah_dashboard_progress_failure_message'),
+              style: AppTypography.bodySmall.copyWith(color: errorColor),
+            ),
+          ),
+          TextButton(
+            key: const Key('khatmah_dashboard_failure_retry_button'),
+            onPressed: canRetryProgress
+                ? _cubit.retryLastProgress
+                : _cubit.load,
+            child: Text(isArabic ? 'إعادة المحاولة' : 'Retry'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDedicationBadge(
     KhatmahDedication dedication,
     bool isArabic,
@@ -166,6 +207,56 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
           if (state is KhatmahLoading || state is KhatmahInitial) {
             return const Scaffold(
               body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          if (state is KhatmahProgressFailure && state.plan == null) {
+            return Scaffold(
+              appBar: AppBar(
+                title: Text(isArabic ? 'لوحة الختمة' : 'Khatmah Dashboard'),
+                centerTitle: true,
+              ),
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xl),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        key: const Key('khatmah_dashboard_load_failure'),
+                        size: 64,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Text(
+                        isArabic
+                            ? 'تعذر تحميل الختمة'
+                            : 'Unable to load your Khatmah',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        isArabic
+                            ? 'تحقق من الاتصال وحاول مرة أخرى.'
+                            : 'Check your connection and try again.',
+                        textAlign: TextAlign.center,
+                        style: AppTypography.bodySmall,
+                      ),
+                      const SizedBox(height: AppSpacing.lg),
+                      FilledButton.icon(
+                        key: const Key(
+                          'khatmah_dashboard_load_failure_retry_button',
+                        ),
+                        onPressed: _cubit.load,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: Text(isArabic ? 'إعادة المحاولة' : 'Reload'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             );
           }
 
@@ -349,6 +440,10 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),
+                    if (state is KhatmahProgressFailure)
+                      _buildProgressFailureBanner(context, state),
+                    if (state is KhatmahProgressFailure)
+                      const SizedBox(height: AppSpacing.md),
 
                     // Progress Gauge
                     KhatmahProgressGauge(plan: plan),
@@ -719,7 +814,9 @@ class _PhysicalMushafLoggerDialogState
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              isArabic ? 'تسجيل قراءة من المصحف' : 'Log Physical Mushaf Reading',
+              isArabic
+                  ? 'تسجيل قراءة من المصحف'
+                  : 'Log Physical Mushaf Reading',
               style: AppTypography.titleMedium,
             ),
           ),
