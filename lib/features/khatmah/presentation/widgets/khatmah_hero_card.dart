@@ -6,7 +6,6 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/khatmah_plan.dart';
-import '../../domain/entities/khatmah_scheduling_engine.dart';
 
 class KhatmahHeroCard extends StatelessWidget {
   const KhatmahHeroCard({
@@ -56,10 +55,9 @@ class KhatmahHeroCard extends StatelessWidget {
       );
     }
 
-    final wird = KhatmahSchedulingEngine.todaysWird(
-      currentPlan.currentPage,
-      currentPlan.targetPagesPerDay,
-    );
+    final today = DateTime.now();
+    final wird = currentPlan.dailyTargetFor(today);
+    final dailyComplete = currentPlan.isDailyTargetComplete(today);
     final isPaused = currentPlan.status == KhatmahStatus.paused;
 
     return Card(
@@ -74,7 +72,7 @@ class KhatmahHeroCard extends StatelessWidget {
         onTap: () => context.push(
           isPaused
               ? '/khatmah/dashboard'
-              : '/quran/page/${wird.startPage}?mode=khatmah',
+              : '/quran/page/${currentPlan.nextUnreadPage}?mode=khatmah',
         ),
         borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         child: Padding(
@@ -120,7 +118,7 @@ class KhatmahHeroCard extends StatelessWidget {
               Text(
                 isPaused
                     ? context.l10n.khatmahPausedSummary
-                    : 'Today: pages ${wird.startPage} - ${wird.endPage}',
+                    : 'Today: pages ${wird.startPage} - ${wird.endPage}${dailyComplete ? ' — completed' : ''}',
                 style: AppTypography.bodyMedium.copyWith(
                   color: isDark
                       ? AppColors.darkTextPrimary

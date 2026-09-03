@@ -20,6 +20,9 @@ class KhatmahPlan extends Equatable {
     this.status = KhatmahStatus.active,
     this.dedication = const KhatmahDedication(),
     this.lastReadDate,
+    this.dailyTargetDate,
+    this.dailyTargetStartPage,
+    this.dailyTargetEndPage,
     this.pausedAt,
   }) : completedPages = Set.unmodifiable(
          _normalizeCompletedPages(completedPages ?? const <int>{}),
@@ -40,6 +43,9 @@ class KhatmahPlan extends Equatable {
   final KhatmahStatus status;
   final KhatmahDedication dedication;
   final DateTime? lastReadDate;
+  final DateTime? dailyTargetDate;
+  final int? dailyTargetStartPage;
+  final int? dailyTargetEndPage;
   final DateTime? pausedAt;
 
   int get completedPagesCount => completedPages.length;
@@ -59,6 +65,50 @@ class KhatmahPlan extends Equatable {
 
   bool get isComplete =>
       completedPagesCount == KhatmahSchedulingEngine.totalPages;
+
+  /// Without an anchor, legacy coverage cannot identify earlier daily activity.
+  ({int startPage, int endPage}) dailyTargetFor(DateTime date) {
+    final start = dailyTargetStartPage;
+    final end = dailyTargetEndPage;
+    if (dailyTargetDate != null &&
+        KhatmahSchedulingEngine.localDate(dailyTargetDate!) ==
+            KhatmahSchedulingEngine.localDate(date) &&
+        start != null &&
+        end != null &&
+        start >= 1 &&
+        end >= start &&
+        end <= KhatmahSchedulingEngine.totalPages) {
+      return (startPage: start, endPage: end);
+    }
+    return KhatmahSchedulingEngine.todaysWird(
+      nextUnreadPage - 1,
+      targetPagesPerDay,
+    );
+  }
+
+  int dailyCompletedPages(DateTime date) {
+    final target = dailyTargetFor(date);
+    return completedPages
+        .where((page) => page >= target.startPage && page <= target.endPage)
+        .length;
+  }
+
+  bool isDailyTargetComplete(DateTime date) {
+    final target = dailyTargetFor(date);
+    return dailyCompletedPages(date) == target.endPage - target.startPage + 1;
+  }
+
+  KhatmahPlan anchorDailyTarget(DateTime date) {
+    final target = dailyTargetFor(date);
+    return copyWith(
+      dailyTargetDate: KhatmahSchedulingEngine.localDate(date),
+      dailyTargetStartPage: target.startPage,
+      dailyTargetEndPage: target.endPage,
+    );
+  }
+
+  int actualElapsedDays(DateTime completedAt) =>
+      KhatmahSchedulingEngine.elapsedCalendarDays(startDate, completedAt);
 
   KhatmahPlan recordPage(int pageNumber) {
     return copyWith(completedPages: {...completedPages, pageNumber});
@@ -89,6 +139,9 @@ class KhatmahPlan extends Equatable {
     KhatmahStatus? status,
     KhatmahDedication? dedication,
     DateTime? lastReadDate,
+    DateTime? dailyTargetDate,
+    int? dailyTargetStartPage,
+    int? dailyTargetEndPage,
     DateTime? pausedAt,
     bool clearPausedAt = false,
   }) {
@@ -104,6 +157,9 @@ class KhatmahPlan extends Equatable {
       status: status ?? this.status,
       dedication: dedication ?? this.dedication,
       lastReadDate: lastReadDate ?? this.lastReadDate,
+      dailyTargetDate: dailyTargetDate ?? this.dailyTargetDate,
+      dailyTargetStartPage: dailyTargetStartPage ?? this.dailyTargetStartPage,
+      dailyTargetEndPage: dailyTargetEndPage ?? this.dailyTargetEndPage,
       pausedAt: clearPausedAt ? null : (pausedAt ?? this.pausedAt),
     );
   }
@@ -157,6 +213,9 @@ class KhatmahPlan extends Equatable {
     status,
     dedication,
     lastReadDate,
+    dailyTargetDate,
+    dailyTargetStartPage,
+    dailyTargetEndPage,
     pausedAt,
   ];
 }

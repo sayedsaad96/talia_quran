@@ -510,6 +510,30 @@ void main() {
   });
 
   group('KhatmahReaderSessionBar widget', () {
+    testWidgets(
+      'completed session counts explicit range rather than a new target',
+      (tester) async {
+        final anchored = testPlan.copyWith(
+          completedPages: {1, 2, 3, 4, 6},
+          dailyTargetDate: DateTime.now(),
+          dailyTargetStartPage: 1,
+          dailyTargetEndPage: 4,
+        );
+        when(
+          () => mockKhatmahCubit.state,
+        ).thenReturn(KhatmahWirdCompleted(plan: anchored));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(
+              body: KhatmahReaderSessionBar(cubit: mockKhatmahCubit),
+            ),
+          ),
+        );
+        await tester.pump();
+        expect(find.textContaining("4 of 4 of today's wird"), findsOneWidget);
+      },
+    );
+
     testWidgets('renders active plan title, wird progress, and dedication', (
       tester,
     ) async {

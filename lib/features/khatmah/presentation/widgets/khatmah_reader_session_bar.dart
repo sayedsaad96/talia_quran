@@ -66,24 +66,13 @@ class KhatmahReaderSessionBar extends StatelessWidget {
         final bg = isDark ? AppColors.darkSurface : AppColors.lightSurface;
 
         final current = plan.currentPage;
-        final dailyTarget = plan.targetPagesPerDay;
-
-        // Calculate progress within today's wird
-        int wirdIndex;
-        final wird = state is KhatmahActive
-            ? state
-            : KhatmahActive(
-                plan: plan,
-                wirdStartPage: plan.currentPage + 1,
-                wirdEndPage: plan.currentPage + plan.targetPagesPerDay,
-              );
-        if (current < wird.wirdStartPage) {
-          wirdIndex = 1;
-        } else if (current >= wird.wirdEndPage) {
-          wirdIndex = dailyTarget;
-        } else {
-          wirdIndex = (current - wird.wirdStartPage + 1).clamp(1, dailyTarget);
-        }
+        final target = state is KhatmahActive
+            ? (startPage: state.wirdStartPage, endPage: state.wirdEndPage)
+            : plan.dailyTargetFor(DateTime.now());
+        final dailyTarget = target.endPage - target.startPage + 1;
+        final wirdIndex = plan.completedPages
+            .where((page) => page >= target.startPage && page <= target.endPage)
+            .length;
 
         final pageNumStr = isArabic
             ? MushafHizbHelper.toArabicNumber(current)

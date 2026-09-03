@@ -10,20 +10,20 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../domain/entities/khatmah_dedication.dart';
-import '../../domain/entities/khatmah_plan.dart';
+import '../../domain/entities/khatmah_reading_result.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
 
 class KhatmahCompletionPage extends StatefulWidget {
   const KhatmahCompletionPage({
     super.key,
-    this.plan,
+    this.completion,
     this.enableConfetti = true,
     this.onReadDua,
     this.onShare,
     this.onHome,
   });
 
-  final KhatmahPlan? plan;
+  final KhatmahReadingResult? completion;
   final bool enableConfetti;
   final VoidCallback? onReadDua;
   final VoidCallback? onShare;
@@ -40,8 +40,9 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
   @override
   void initState() {
     super.initState();
-    _confettiController =
-        ConfettiController(duration: const Duration(seconds: 3));
+    _confettiController = ConfettiController(
+      duration: const Duration(seconds: 3),
+    );
   }
 
   @override
@@ -49,7 +50,9 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
     super.didChangeDependencies();
     if (!_confettiStarted) {
       _confettiStarted = true;
-      if (widget.enableConfetti && !MediaQuery.disableAnimationsOf(context)) {
+      if (widget.completion?.isValidCompletion == true &&
+          widget.enableConfetti &&
+          !MediaQuery.disableAnimationsOf(context)) {
         _confettiController.play();
       }
     }
@@ -88,14 +91,16 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
     }
   }
 
-  void _shareAchievement(KhatmahPlan? plan, bool isArabic) {
+  void _shareAchievement(KhatmahReadingResult completion, bool isArabic) {
+    if (!completion.isValidCompletion) return;
+    final plan = completion.plan;
     if (widget.onShare != null) {
       widget.onShare!();
       return;
     }
 
-    final title = plan?.title ?? (isArabic ? 'ختمة القرآن الكريم' : 'Quran Khatmah');
-    final totalDays = plan?.targetDays ?? 30;
+    final title = plan.title;
+    final totalDays = completion.actualElapsedDays;
     final totalDaysStr = isArabic
         ? MushafHizbHelper.toArabicNumber(totalDays)
         : totalDays.toString();
@@ -103,19 +108,21 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
     final buffer = StringBuffer();
     if (isArabic) {
       buffer.writeln('الحمد لله الذي بنعمته تتم الصالحات! 📖✨');
-      buffer.writeln('أتممت بحمد الله وتوفيقه ختم القرآن الكريم ($title) في $totalDaysStr يوماً.');
-      if (plan?.dedication.isDedicated == true &&
-          plan?.dedication.recipientName != null &&
-          plan!.dedication.recipientName!.isNotEmpty) {
+      buffer.writeln(
+        'أتممت بحمد الله وتوفيقه ختم القرآن الكريم ($title) في $totalDaysStr يوماً.',
+      );
+      if (plan.dedication.isDedicated &&
+          plan.dedication.recipientName != null &&
+          plan.dedication.recipientName!.isNotEmpty) {
         buffer.writeln('إهداء إلى: ${plan.dedication.recipientName}');
       }
       buffer.writeln('عبر تطبيق تالية القرآني 🌿');
     } else {
       buffer.writeln('All praise is due to Allah! 📖✨');
       buffer.writeln('Completed Quran Khatmah ($title) in $totalDaysStr days.');
-      if (plan?.dedication.isDedicated == true &&
-          plan?.dedication.recipientName != null &&
-          plan!.dedication.recipientName!.isNotEmpty) {
+      if (plan.dedication.isDedicated &&
+          plan.dedication.recipientName != null &&
+          plan.dedication.recipientName!.isNotEmpty) {
         buffer.writeln('Dedicated to: ${plan.dedication.recipientName}');
       }
       buffer.writeln('Via Talia Quran App 🌿');
@@ -133,18 +140,29 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
     final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
     final border = isDark ? AppColors.darkDivider : AppColors.lightDivider;
 
-    final plan = widget.plan;
-    final title = plan?.title ?? (isArabic ? 'ختمة القرآن الكريم' : 'Quran Khatmah');
-    final daysTaken = plan?.targetDays ?? 30;
+    final completion = widget.completion;
+    if (completion == null || !completion.isValidCompletion) {
+      return Scaffold(
+        body: Center(
+          child: Text(
+            isArabic
+                ? 'لا توجد ختمة مكتملة محفوظة'
+                : 'No saved completion available',
+          ),
+        ),
+      );
+    }
+    final plan = completion.plan;
+    final title = plan.title;
+    final daysTaken = completion.actualElapsedDays;
     final daysTakenStr = isArabic
         ? MushafHizbHelper.toArabicNumber(daysTaken)
         : daysTaken.toString();
-    final completedDate = plan?.lastReadDate ?? DateTime.now();
+    final completedDate = completion.historyEntry!.completedDate.toLocal();
     final completedDateStr = _formatDate(completedDate, isArabic);
 
-    final hasDedication =
-        plan?.dedication.isDedicated == true && plan?.dedication != null;
-    final dedication = plan?.dedication;
+    final hasDedication = plan.dedication.isDedicated;
+    final dedication = plan.dedication;
 
     return Scaffold(
       backgroundColor: bg,
@@ -257,16 +275,13 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                           label: isArabic ? 'الصفحات' : 'Pages',
                           value: isArabic
                               ? MushafHizbHelper.toArabicNumber(
-                                  KhatmahSchedulingEngine.totalPages)
+                                  KhatmahSchedulingEngine.totalPages,
+                                )
                               : KhatmahSchedulingEngine.totalPages.toString(),
                           icon: Icons.auto_stories_rounded,
                           color: gold,
                         ),
-                        Container(
-                          width: 1,
-                          height: 40,
-                          color: border,
-                        ),
+                        Container(width: 1, height: 40, color: border),
                         _StatItem(
                           label: isArabic ? 'المدة' : 'Duration',
                           value: isArabic
@@ -275,11 +290,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                           icon: Icons.calendar_today_rounded,
                           color: AppColors.primaryLight,
                         ),
-                        Container(
-                          width: 1,
-                          height: 40,
-                          color: border,
-                        ),
+                        Container(width: 1, height: 40, color: border),
                         _StatItem(
                           label: isArabic ? 'تاريخ الختام' : 'Completed',
                           value: completedDateStr,
@@ -291,15 +302,16 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                   ),
 
                   // Tailored Dedication Section (if dedicated)
-                  if (hasDedication && dedication != null) ...[
+                  if (hasDedication) ...[
                     const SizedBox(height: AppSpacing.lg),
                     Container(
                       key: const Key('khatmah_completion_dedication_section'),
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: gold.withValues(alpha: 0.08),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusXl),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusXl,
+                        ),
                         border: Border.all(
                           color: gold.withValues(alpha: 0.4),
                           width: 1.5,
@@ -337,7 +349,8 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                                   decoration: BoxDecoration(
                                     color: gold.withValues(alpha: 0.15),
                                     borderRadius: BorderRadius.circular(
-                                        AppSpacing.radiusFull),
+                                      AppSpacing.radiusFull,
+                                    ),
                                   ),
                                   child: Text(
                                     dedication.relationship!,
@@ -393,7 +406,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                       } else {
                         context.push(
                           AppRoutes.khatmDua,
-                          extra: plan?.dedication,
+                          extra: plan.dedication,
                         );
                       }
                     },
@@ -402,8 +415,9 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                       foregroundColor: Colors.white,
                       minimumSize: const Size.fromHeight(52),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
                       ),
                     ),
                     icon: const Icon(Icons.menu_book_rounded),
@@ -423,14 +437,15 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                   // 2. Share Achievement
                   OutlinedButton.icon(
                     key: const Key('khatmah_completion_share_button'),
-                    onPressed: () => _shareAchievement(plan, isArabic),
+                    onPressed: () => _shareAchievement(completion, isArabic),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: gold,
                       side: BorderSide(color: gold.withValues(alpha: 0.6)),
                       minimumSize: const Size.fromHeight(52),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
                       ),
                     ),
                     icon: const Icon(Icons.share_rounded),

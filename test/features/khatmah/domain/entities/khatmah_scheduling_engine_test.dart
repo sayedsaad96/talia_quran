@@ -3,6 +3,25 @@ import 'package:talia_quran/features/khatmah/domain/entities/khatmah_scheduling_
 
 void main() {
   group('KhatmahSchedulingEngine', () {
+    test(
+      'end date is a local calendar date across the Cairo DST transition',
+      () {
+        expect(
+          KhatmahSchedulingEngine.calculateEndDate(
+            DateTime(2026, 4, 23, 12),
+            3,
+          ),
+          DateTime(2026, 4, 25),
+        );
+        expect(
+          KhatmahSchedulingEngine.elapsedCalendarDays(
+            DateTime(2026, 4, 23, 12),
+            DateTime(2026, 4, 24, 12),
+          ),
+          2,
+        );
+      },
+    );
     test('calculateDaysFromPages returns ceil(remaining/perDay)', () {
       expect(KhatmahSchedulingEngine.calculateDaysFromPages(604, 2), 302);
       expect(KhatmahSchedulingEngine.calculateDaysFromPages(604, 4), 151);
@@ -17,12 +36,13 @@ void main() {
       expect(KhatmahSchedulingEngine.calculatePagesFromDays(604, 365), 2);
     });
 
-    test('calculateEndDate adds correct days', () {
+    test('calculateEndDate includes the start date', () {
       final start = DateTime(2026, 1, 1);
       expect(
-        KhatmahSchedulingEngine.calculateEndDate(start, 30),
+        KhatmahSchedulingEngine.calculateEndDate(start, 31),
         DateTime(2026, 1, 31),
       );
+      expect(KhatmahSchedulingEngine.calculateEndDate(start, 1), start);
     });
 
     test('todaysWird returns correct page range', () {
@@ -53,31 +73,43 @@ void main() {
       expect(wirdNeg.endPage, 11);
     });
 
-    test('recalculateAfterResume calculates exact end date when fromDate is provided', () {
-      final fixedDate = DateTime(2026, 3, 1);
-      final resumed = KhatmahSchedulingEngine.recalculateAfterResume(
-        604,
-        4,
-        fixedDate,
-      );
-      expect(resumed, DateTime(2026, 3, 1).add(const Duration(days: 151)));
-    });
+    test(
+      'recalculateAfterResume calculates exact end date when fromDate is provided',
+      () {
+        final fixedDate = DateTime(2026, 3, 1);
+        final resumed = KhatmahSchedulingEngine.recalculateAfterResume(
+          604,
+          4,
+          fixedDate,
+        );
+        expect(resumed, DateTime(2026, 7, 29));
+      },
+    );
 
-    test('recalculateAfterResume defaults to DateTime.now() when fromDate is omitted', () {
-      final now = DateTime.now();
-      final resumed = KhatmahSchedulingEngine.recalculateAfterResume(604, 4);
-      final diff = resumed.difference(now).inDays;
-      expect(diff, inInclusiveRange(150, 151));
-    });
+    test(
+      'recalculateAfterResume defaults to DateTime.now() when fromDate is omitted',
+      () {
+        final now = DateTime.now();
+        final resumed = KhatmahSchedulingEngine.recalculateAfterResume(604, 4);
+        final diff = resumed.difference(now).inDays;
+        expect(diff, inInclusiveRange(149, 150));
+      },
+    );
 
-    test('calculateDaysFromPages handles 0 or negative pagesPerDay gracefully', () {
-      expect(KhatmahSchedulingEngine.calculateDaysFromPages(100, 0), 100);
-      expect(KhatmahSchedulingEngine.calculateDaysFromPages(100, -1), 100);
-    });
+    test(
+      'calculateDaysFromPages handles 0 or negative pagesPerDay gracefully',
+      () {
+        expect(KhatmahSchedulingEngine.calculateDaysFromPages(100, 0), 100);
+        expect(KhatmahSchedulingEngine.calculateDaysFromPages(100, -1), 100);
+      },
+    );
 
-    test('calculatePagesFromDays handles 0 or negative targetDays gracefully', () {
-      expect(KhatmahSchedulingEngine.calculatePagesFromDays(100, 0), 100);
-      expect(KhatmahSchedulingEngine.calculatePagesFromDays(100, -1), 100);
-    });
+    test(
+      'calculatePagesFromDays handles 0 or negative targetDays gracefully',
+      () {
+        expect(KhatmahSchedulingEngine.calculatePagesFromDays(100, 0), 100);
+        expect(KhatmahSchedulingEngine.calculatePagesFromDays(100, -1), 100);
+      },
+    );
   });
 }

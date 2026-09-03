@@ -230,7 +230,10 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     this._deleteKhatmah, {
     UpdateKhatmahScheduleUsecase? updateSchedule,
     Duration shutdownTimeout = const Duration(seconds: 2),
+    DateTime Function()? now,
   }) : _updateSchedule = updateSchedule,
+       _now = now ?? DateTime.now,
+       _readingClock = now,
        _shutdownTimeout = shutdownTimeout,
        super(const KhatmahInitial());
 
@@ -243,6 +246,8 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   // progress must use RecordKhatmahReadingUsecase through the methods below.
   final UpdateKhatmahScheduleUsecase? _updateSchedule;
   final Duration _shutdownTimeout;
+  final DateTime Function() _now;
+  final DateTime Function()? _readingClock;
   KhatmahPlan? _lastKnownPlan;
   final Map<_RecordRequestKey, Completer<bool>> _pendingRecordRequests = {};
   final Map<_RecordRequestKey, _FailedRecordRequest> _failedRecordRequests = {};
@@ -389,11 +394,14 @@ class KhatmahCubit extends Cubit<KhatmahState> {
       final plan = _recordingPlan;
       if (plan == null || plan.id != request.key.planId) return false;
 
-      final operation = _recordReading(
-        plan,
-        request.pageNumber,
-        source: request.source,
-      );
+      final operation = _readingClock == null
+          ? _recordReading(plan, request.pageNumber, source: request.source)
+          : _recordReading(
+              plan,
+              request.pageNumber,
+              source: request.source,
+              readAt: _readingClock(),
+            );
       final outcome = await _detachedPersistenceOutcome(
         operation,
         _shutdownSignal,
@@ -490,22 +498,14 @@ class KhatmahCubit extends Cubit<KhatmahState> {
       _lastKnownPlan = null;
       return;
     }
-    final wird = KhatmahSchedulingEngine.todaysWird(
-      result.plan.currentPage,
-      result.plan.targetPagesPerDay,
-    );
-    if (result.plan.currentPage >= wird.endPage) {
-      _emitIfOpen(KhatmahWirdCompleted(plan: result.plan));
-    } else {
-      _emitActive(result.plan);
-    }
+    _emitActive(result.plan);
   }
 
   Future<void> pause() async {
-    final current = state;
-    if (current is! KhatmahActive) return;
+    final plan = _recordingPlan;
+    if (plan == null) return;
     try {
-      final paused = await _pauseResume.pause(current.plan);
+      final paused = await _pauseResume.pause(plan);
       _lastKnownPlan = paused;
       _emitIfOpen(KhatmahPaused(plan: paused));
     } catch (error) {
@@ -557,7 +557,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
       plan.remainingPages,
       plan.targetPagesPerDay,
     );
-    final now = DateTime.now();
+    final now = _now();
     final today = DateTime(now.year, now.month, now.day);
     return plan.copyWith(
       targetDays: days,
@@ -573,7 +573,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
       plan.remainingPages,
       target,
     );
-    final now = DateTime.now();
+    final now = _now();
     final today = DateTime(now.year, now.month, now.day);
     return plan.copyWith(
       targetPagesPerDay: target,
@@ -585,12 +585,12 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   Future<void> _adjustSchedule(
     KhatmahPlan Function(KhatmahPlan) transform,
   ) async {
-    final current = state;
-    if (current is! KhatmahActive || _updateSchedule == null) return;
-    final adjusted = transform(current.plan);
+    final plan = _recordingPlan;
+    if (plan == null || _updateSchedule == null) return;
+    final adjusted = transform(plan);
     try {
       final updated = await _updateSchedule(
-        planId: current.plan.id,
+        planId: plan.id,
         targetPagesPerDay: adjusted.targetPagesPerDay,
         targetDays: adjusted.targetDays,
         expectedEndDate: adjusted.expectedEndDate,
@@ -628,10 +628,12 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   }
 
   void _emitActive(KhatmahPlan plan) {
-    final wird = KhatmahSchedulingEngine.todaysWird(
-      plan.currentPage,
-      plan.targetPagesPerDay,
-    );
+    final today = _now();
+    if (plan.isDailyTargetComplete(today)) {
+      _emitIfOpen(KhatmahWirdCompleted(plan: plan));
+      return;
+    }
+    final wird = plan.dailyTargetFor(today);
     _emitIfOpen(
       KhatmahActive(
         plan: plan,

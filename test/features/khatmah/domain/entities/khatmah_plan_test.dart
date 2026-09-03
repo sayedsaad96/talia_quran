@@ -35,21 +35,26 @@ void main() {
       expect(copied.currentPage, 0);
     });
 
-    test('equality and hash code are stable across coverage insertion order', () {
-      final first = makePlan().recordPage(1).recordPage(100);
-      final sameCoverageDifferentOrder = makePlan().recordPage(100).recordPage(1);
-      final differentCoverage = makePlan().recordPage(1).recordPage(2);
+    test(
+      'equality and hash code are stable across coverage insertion order',
+      () {
+        final first = makePlan().recordPage(1).recordPage(100);
+        final sameCoverageDifferentOrder = makePlan()
+            .recordPage(100)
+            .recordPage(1);
+        final differentCoverage = makePlan().recordPage(1).recordPage(2);
 
-      expect(first, sameCoverageDifferentOrder);
-      expect(first.hashCode, sameCoverageDifferentOrder.hashCode);
-      expect(first, isNot(differentCoverage));
-    });
+        expect(first, sameCoverageDifferentOrder);
+        expect(first.hashCode, sameCoverageDifferentOrder.hashCode);
+        expect(first, isNot(differentCoverage));
+      },
+    );
 
     test('normalizes completed pages to an immutable Quran page set', () {
       final plan = KhatmahPlan(
         id: 'normalized',
         title: 'Normalized',
-        completedPages: {0, 1, 1, 605},
+        completedPages: [0, 1, 1, 605],
         targetPagesPerDay: 4,
         targetDays: 151,
         startDate: DateTime(2026, 1, 1),
@@ -98,10 +103,16 @@ void main() {
       expect(makePlan(currentPage: 10).completedPagesCount, 10);
     });
 
-    test('completedPagesCount ignores the legacy startPage compatibility field', () {
-      expect(makePlan(currentPage: 15, startPage: 11).completedPagesCount, 15);
-      expect(makePlan(currentPage: 5, startPage: 10).completedPagesCount, 5);
-    });
+    test(
+      'completedPagesCount ignores the legacy startPage compatibility field',
+      () {
+        expect(
+          makePlan(currentPage: 15, startPage: 11).completedPagesCount,
+          15,
+        );
+        expect(makePlan(currentPage: 5, startPage: 10).completedPagesCount, 5);
+      },
+    );
 
     test('progressPercentage at halfway', () {
       expect(makePlan(currentPage: 302).progressPercentage, closeTo(0.5, 0.01));
@@ -167,7 +178,7 @@ void main() {
       expect(resumed.pausedAt, isNull);
       expect(
         resumed.expectedEndDate,
-        resumeTime.add(const Duration(days: 151)),
+        DateTime(resumeTime.year, resumeTime.month, resumeTime.day + 150),
       );
     });
 

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../utils/quran_ayah_display_text.dart';
 import '../../../../features/azkar/domain/entities/azkar_entities.dart';
 import '../../../../features/certificate/domain/entities/certificate_award.dart';
-import '../../../../features/khatmah/domain/entities/khatmah_plan.dart';
+import '../../../../features/khatmah/domain/entities/khatmah_reading_result.dart';
 import '../../../../features/progress/domain/entities/progress_entities.dart';
 import '../../../../features/quran/domain/entities/quran_entities.dart';
 
@@ -395,12 +395,14 @@ class SocialShareData {
 
   /// Factory for Khatmah completion share from domain model
   factory SocialShareData.khatmah({
-    required KhatmahPlan plan,
+    required KhatmahReadingResult completion,
     String? userName,
     String? customTitle,
     String? customContent,
     bool showCharacter = false,
   }) {
+    final daysTaken = completion.actualElapsedDays;
+    final plan = completion.plan;
     String? dedicationSubtitle;
     if (plan.dedication.isDedicated &&
         plan.dedication.recipientName != null &&
@@ -413,19 +415,21 @@ class SocialShareData {
       }
     }
 
-    final shareTitle = customTitle ??
+    final shareTitle =
+        customTitle ??
         (plan.title.trim().isNotEmpty
             ? plan.title.trim()
             : 'ختمة القرآن الكريم');
-    final shareContent = customContent ??
-        'أتممت بحمد الله وتوفيقه ختم القرآن الكريم في ${plan.targetDays} يوماً';
+    final shareContent =
+        customContent ??
+        'أتممت بحمد الله وتوفيقه ختم القرآن الكريم في $daysTaken يوماً';
 
     return SocialShareData(
       content: shareContent,
       title: shareTitle,
       subtitle: dedicationSubtitle,
       category: SocialShareCategory.khatmah,
-      targetValue: plan.targetDays,
+      targetValue: daysTaken,
       currentValue: plan.completedPagesCount,
       readPagesCount: plan.completedPagesCount,
       userName: userName,

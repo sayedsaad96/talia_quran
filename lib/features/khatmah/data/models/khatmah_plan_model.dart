@@ -16,6 +16,9 @@ class KhatmahPlanModel {
     this.status = 'active',
     required this.dedication,
     this.lastReadDate,
+    this.dailyTargetDate,
+    this.dailyTargetStartPage,
+    this.dailyTargetEndPage,
     this.pausedAt,
   }) : completedPages = Set.unmodifiable(
          _normalizeCompletedPages(completedPages ?? const <int>{}),
@@ -36,6 +39,9 @@ class KhatmahPlanModel {
   final String status;
   final KhatmahDedicationModel dedication;
   final DateTime? lastReadDate;
+  final DateTime? dailyTargetDate;
+  final int? dailyTargetStartPage;
+  final int? dailyTargetEndPage;
   final DateTime? pausedAt;
 
   factory KhatmahPlanModel.fromJson(Map<String, dynamic> json) {
@@ -63,6 +69,11 @@ class KhatmahPlanModel {
       pausedAt: json['pausedAt'] != null
           ? DateTime.parse(json['pausedAt'] as String)
           : null,
+      dailyTargetDate: json['dailyTargetDate'] != null
+          ? DateTime.parse(json['dailyTargetDate'] as String)
+          : null,
+      dailyTargetStartPage: json['dailyTargetStartPage'] as int?,
+      dailyTargetEndPage: json['dailyTargetEndPage'] as int?,
     );
   }
 
@@ -79,6 +90,9 @@ class KhatmahPlanModel {
     'status': status,
     'dedication': dedication.toJson(),
     'lastReadDate': lastReadDate?.toIso8601String(),
+    'dailyTargetDate': dailyTargetDate?.toIso8601String(),
+    'dailyTargetStartPage': dailyTargetStartPage,
+    'dailyTargetEndPage': dailyTargetEndPage,
     'pausedAt': pausedAt?.toIso8601String(),
   };
 
@@ -95,6 +109,9 @@ class KhatmahPlanModel {
       status: entity.status.name,
       dedication: KhatmahDedicationModel.fromEntity(entity.dedication),
       lastReadDate: entity.lastReadDate,
+      dailyTargetDate: entity.dailyTargetDate,
+      dailyTargetStartPage: entity.dailyTargetStartPage,
+      dailyTargetEndPage: entity.dailyTargetEndPage,
       pausedAt: entity.pausedAt,
     );
   }
@@ -114,6 +131,9 @@ class KhatmahPlanModel {
     ),
     dedication: dedication.toEntity(),
     lastReadDate: lastReadDate,
+    dailyTargetDate: dailyTargetDate,
+    dailyTargetStartPage: dailyTargetStartPage,
+    dailyTargetEndPage: dailyTargetEndPage,
     pausedAt: pausedAt,
   );
 

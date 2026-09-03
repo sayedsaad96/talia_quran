@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
 import 'package:talia_quran/features/khatmah/presentation/pages/khatmah_completion_page.dart';
 
 void main() {
@@ -14,6 +17,7 @@ void main() {
     targetPagesPerDay: 20,
     targetDays: 30,
     startDate: DateTime(2026, 3, 1),
+    lastReadDate: DateTime(2026, 3, 5),
     expectedEndDate: DateTime(2026, 3, 31),
     status: KhatmahStatus.completed,
     dedication: const KhatmahDedication(
@@ -36,7 +40,18 @@ void main() {
         GoRoute(
           path: '/khatmah/completion',
           builder: (context, state) => KhatmahCompletionPage(
-            plan: plan ?? testPlan,
+            completion: KhatmahReadingResult(
+              plan: plan ?? testPlan,
+              newlyCompletedPages: const {604},
+              historyEntry: KhatmahHistoryEntry(
+                id: testPlan.id,
+                khatmahNumber: 1,
+                title: testPlan.title,
+                startDate: testPlan.startDate,
+                completedDate: DateTime(2026, 3, 5),
+                totalDays: 5,
+              ),
+            ),
             enableConfetti: false,
             onReadDua: onReadDua,
             onShare: onShare,
@@ -45,28 +60,123 @@ void main() {
         ),
         GoRoute(
           path: '/quran/khatm-dua',
-          builder: (context, state) => const Scaffold(
-            body: Text('Khatm Dua Destination Page'),
-          ),
+          builder: (context, state) =>
+              const Scaffold(body: Text('Khatm Dua Destination Page')),
         ),
         GoRoute(
           path: '/',
-          builder: (context, state) => const Scaffold(
-            body: Text('Home Destination Page'),
-          ),
+          builder: (context, state) =>
+              const Scaffold(body: Text('Home Destination Page')),
         ),
       ],
     );
 
-    return MaterialApp.router(
-      locale: const Locale('ar'),
-      routerConfig: router,
-    );
+    return MaterialApp.router(locale: const Locale('ar'), routerConfig: router);
   }
 
   setUp(() {});
 
-  testWidgets('displays congratulations heading and celebratory details', (tester) async {
+  testWidgets('shows actual elapsed days rather than planned duration', (
+    tester,
+  ) async {
+    await tester.pumpWidget(createWidget());
+    await tester.pumpAndSettle();
+    expect(find.text('5 days'), findsOneWidget);
+    expect(find.text('30 days'), findsNothing);
+    expect(find.text('2026-03-05'), findsOneWidget);
+  });
+
+  testWidgets('null completion cannot fabricate an achievement', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: KhatmahCompletionPage(enableConfetti: false)),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const Key('khatmah_completion_share_button')),
+      findsNothing,
+    );
+    expect(find.textContaining('مبارك ختم القرآن'), findsNothing);
+  });
+
+  testWidgets('invalid completion inputs never expose celebration or sharing', (
+    tester,
+  ) async {
+    final history = KhatmahHistoryEntry(
+      id: testPlan.id,
+      khatmahNumber: 1,
+      title: testPlan.title,
+      startDate: testPlan.startDate,
+      completedDate: DateTime(2026, 3, 5),
+      totalDays: 5,
+    );
+    final invalid = [
+      KhatmahReadingResult(plan: testPlan, newlyCompletedPages: const {}),
+      for (final plan in [
+        testPlan.copyWith(id: 'different-plan'),
+        testPlan.copyWith(status: KhatmahStatus.active),
+        testPlan.copyWith(status: KhatmahStatus.paused),
+        testPlan.copyWith(completedPages: {604}),
+        testPlan.copyWith(startDate: DateTime(2026, 3, 6)),
+      ])
+        KhatmahReadingResult(
+          plan: plan,
+          historyEntry: history,
+          newlyCompletedPages: const {},
+        ),
+    ];
+    for (final completion in invalid) {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: KhatmahCompletionPage(
+            completion: completion,
+            enableConfetti: false,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('khatmah_completion_share_button')),
+        findsNothing,
+      );
+      expect(find.textContaining('مبارك ختم القرآن'), findsNothing);
+    }
+  });
+
+  testWidgets('share sheet receives actual days and unchanged dedication', (
+    tester,
+  ) async {
+    const channel = MethodChannel('dev.fluttercommunity.plus/share');
+    String? sharedText;
+    tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(channel, (
+      call,
+    ) async {
+      if (call.method == 'share') {
+        sharedText = (call.arguments as Map)['text'] as String;
+      }
+      return 'dev.fluttercommunity.plus/share/unavailable';
+    });
+    addTearDown(
+      () => tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        channel,
+        null,
+      ),
+    );
+    await tester.pumpWidget(createWidget());
+    await tester.pumpAndSettle();
+    final share = find.byKey(const Key('khatmah_completion_share_button'));
+    await tester.ensureVisible(share);
+    await tester.tap(share);
+    await tester.pumpAndSettle();
+    expect(sharedText, contains('in 5 days'));
+    expect(sharedText, isNot(contains('30 days')));
+    expect(sharedText, contains('الوالدة حفظها الله'));
+  });
+
+  testWidgets('displays congratulations heading and celebratory details', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -80,7 +190,9 @@ void main() {
     expect(find.textContaining('604'), findsOneWidget);
   });
 
-  testWidgets('renders tailored dedication section when plan has dedication', (tester) async {
+  testWidgets('renders tailored dedication section when plan has dedication', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -89,12 +201,17 @@ void main() {
     await tester.pumpWidget(createWidget(plan: testPlan));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('khatmah_completion_dedication_section')), findsOneWidget);
+    expect(
+      find.byKey(const Key('khatmah_completion_dedication_section')),
+      findsOneWidget,
+    );
     expect(find.textContaining('الوالدة حفظها الله'), findsNWidgets(2));
     expect(find.textContaining('الأم'), findsOneWidget);
   });
 
-  testWidgets('tapping read dua button invokes callback or navigates', (tester) async {
+  testWidgets('tapping read dua button invokes callback or navigates', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -102,14 +219,13 @@ void main() {
 
     bool readDuaCalled = false;
     await tester.pumpWidget(
-      createWidget(
-        plan: testPlan,
-        onReadDua: () => readDuaCalled = true,
-      ),
+      createWidget(plan: testPlan, onReadDua: () => readDuaCalled = true),
     );
     await tester.pumpAndSettle();
 
-    final readDuaBtn = find.byKey(const Key('khatmah_completion_read_dua_button'));
+    final readDuaBtn = find.byKey(
+      const Key('khatmah_completion_read_dua_button'),
+    );
     expect(readDuaBtn, findsOneWidget);
     await tester.ensureVisible(readDuaBtn);
 
@@ -127,10 +243,7 @@ void main() {
 
     bool shareCalled = false;
     await tester.pumpWidget(
-      createWidget(
-        plan: testPlan,
-        onShare: () => shareCalled = true,
-      ),
+      createWidget(plan: testPlan, onShare: () => shareCalled = true),
     );
     await tester.pumpAndSettle();
 
@@ -152,10 +265,7 @@ void main() {
 
     bool homeCalled = false;
     await tester.pumpWidget(
-      createWidget(
-        plan: testPlan,
-        onHome: () => homeCalled = true,
-      ),
+      createWidget(plan: testPlan, onHome: () => homeCalled = true),
     );
     await tester.pumpAndSettle();
 

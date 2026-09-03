@@ -126,6 +126,35 @@ void main() {
   }
 
   testWidgets(
+    'daily-complete dashboard keeps original range and can continue',
+    (tester) async {
+      final anchored = testPlan.copyWith(
+        dailyTargetDate: DateTime.now(),
+        dailyTargetStartPage: 17,
+        dailyTargetEndPage: 20,
+      );
+      when(() => mockGetActive()).thenAnswer((_) async => anchored);
+      String? destination;
+      await tester.pumpWidget(
+        buildWidget(
+          cubit: buildCubit(),
+          onNavigate: (value) => destination = value,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Pages 17 to 20'), findsOneWidget);
+      expect(find.text("Today's Wird completed"), findsOneWidget);
+      final button = find.byKey(
+        const Key('khatmah_dashboard_continue_reading_button'),
+      );
+      await tester.ensureVisible(button);
+      await tester.tap(button);
+      await tester.pumpAndSettle();
+      expect(destination, '/quran/page/21?mode=khatmah');
+    },
+  );
+
+  testWidgets(
     'renders header with title, dedication badge, and progress gauge',
     (tester) async {
       when(() => mockGetActive()).thenAnswer((_) async => testPlan);

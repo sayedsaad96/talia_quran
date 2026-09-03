@@ -85,6 +85,30 @@ void main() {
     expect(find.byType(LinearProgressIndicator), findsOneWidget);
   });
 
+  testWidgets(
+    'completed daily range stays visible and extra reading starts unread',
+    (tester) async {
+      final anchored = testPlan.copyWith(
+        dailyTargetDate: DateTime.now(),
+        dailyTargetStartPage: 27,
+        dailyTargetEndPage: 30,
+      );
+      String? destination;
+      await tester.pumpWidget(
+        createWidgetUnderTest(
+          plan: anchored,
+          onNavigate: (value) => destination = value,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('27 - 30'), findsOneWidget);
+      expect(find.textContaining('completed'), findsOneWidget);
+      await tester.tap(find.text('Ramadan Khatmah'));
+      await tester.pumpAndSettle();
+      expect(destination, '/quran/page/31?mode=khatmah');
+    },
+  );
+
   testWidgets('renders today\'s wird page range correctly', (tester) async {
     await tester.pumpWidget(createWidgetUnderTest(plan: testPlan));
     await tester.pumpAndSettle();

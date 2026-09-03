@@ -523,13 +523,13 @@ abstract class AppRouter {
         path: AppRoutes.khatmahCompletion,
         redirect: (context, state) {
           final result = state.extra;
-          return result is KhatmahReadingResult && result.completed
+          return result is KhatmahReadingResult && result.isValidCompletion
               ? null
               : AppRoutes.home;
         },
         builder: (context, state) {
           final result = state.extra! as KhatmahReadingResult;
-          return KhatmahCompletionPage(plan: result.plan);
+          return KhatmahCompletionPage(completion: result);
         },
       ),
       GoRoute(

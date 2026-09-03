@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import '../../domain/entities/khatmah_history_entry.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
@@ -98,10 +96,7 @@ class KhatmahRepositoryImpl implements KhatmahRepository {
 
     final count = history.length;
     final completedDate = plan.lastReadDate ?? DateTime.now();
-    final totalDays = max(
-      1,
-      completedDate.difference(plan.startDate).inDays + 1,
-    );
+    final totalDays = plan.actualElapsedDays(completedDate);
     final entry = KhatmahHistoryModel.fromEntity(
       KhatmahHistoryEntry(
         id: plan.id,

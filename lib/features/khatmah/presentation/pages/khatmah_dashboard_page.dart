@@ -113,11 +113,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
     try {
       final resumed = await _cubit.resume();
       if (!mounted || resumed == null) return;
-      final wird = KhatmahSchedulingEngine.todaysWird(
-        resumed.currentPage,
-        resumed.targetPagesPerDay,
-      );
-      await context.push('/quran/page/${wird.startPage}?mode=khatmah');
+      await context.push('/quran/page/${resumed.nextUnreadPage}?mode=khatmah');
     } finally {
       _resumeNavigationInFlight = false;
     }
@@ -338,34 +334,22 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
             wirdEndPage = state.wirdEndPage;
           } else if (state is KhatmahPaused) {
             plan = state.plan;
-            final wird = KhatmahSchedulingEngine.todaysWird(
-              plan.currentPage,
-              plan.targetPagesPerDay,
-            );
+            final wird = plan.dailyTargetFor(DateTime.now());
             wirdStartPage = wird.startPage;
             wirdEndPage = wird.endPage;
           } else if (state is KhatmahResuming) {
             plan = state.plan;
-            final wird = KhatmahSchedulingEngine.todaysWird(
-              plan.currentPage,
-              plan.targetPagesPerDay,
-            );
+            final wird = plan.dailyTargetFor(DateTime.now());
             wirdStartPage = wird.startPage;
             wirdEndPage = wird.endPage;
           } else if (state is KhatmahProgressFailure && state.plan != null) {
             plan = state.plan!;
-            final wird = KhatmahSchedulingEngine.todaysWird(
-              plan.currentPage,
-              plan.targetPagesPerDay,
-            );
+            final wird = plan.dailyTargetFor(DateTime.now());
             wirdStartPage = wird.startPage;
             wirdEndPage = wird.endPage;
           } else if (state is KhatmahWirdCompleted) {
             plan = state.plan;
-            final wird = KhatmahSchedulingEngine.todaysWird(
-              plan.currentPage,
-              plan.targetPagesPerDay,
-            );
+            final wird = plan.dailyTargetFor(DateTime.now());
             wirdStartPage = wird.startPage;
             wirdEndPage = wird.endPage;
           } else if (state is KhatmahCompleted) {
@@ -379,6 +363,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
           final wirdPagesCount = wirdEndPage - wirdStartPage + 1;
           final isPaused = plan.status == KhatmahStatus.paused;
           final isResuming = state is KhatmahResuming;
+          final dailyComplete = plan.isDailyTargetComplete(DateTime.now());
           final wirdStartStr = isArabic
               ? MushafHizbHelper.toArabicNumber(wirdStartPage)
               : wirdStartPage.toString();
@@ -494,7 +479,13 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                               ),
                               const SizedBox(width: AppSpacing.sm),
                               Text(
-                                isArabic ? 'ورد اليوم' : 'Today\'s Wird',
+                                dailyComplete
+                                    ? (isArabic
+                                          ? 'أتممت ورد اليوم'
+                                          : "Today's Wird completed")
+                                    : (isArabic
+                                          ? 'ورد اليوم'
+                                          : 'Today\'s Wird'),
                                 style: AppTypography.titleMedium.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -532,7 +523,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                                 : isPaused
                                 ? () => unawaited(_resumeAndOpenReader())
                                 : () => context.push(
-                                    '/quran/page/$wirdStartPage?mode=khatmah',
+                                    '/quran/page/${plan.nextUnreadPage}?mode=khatmah',
                                   ),
                             style: FilledButton.styleFrom(
                               backgroundColor: primary,

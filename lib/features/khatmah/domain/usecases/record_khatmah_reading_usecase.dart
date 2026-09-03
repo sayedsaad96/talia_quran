@@ -26,15 +26,19 @@ class RecordKhatmahReadingUsecase {
       );
     }
 
+    final readingDate = readAt ?? DateTime.now();
+    final anchoredPlan = plan.anchorDailyTarget(readingDate);
     final coveredPlan = switch (source) {
-      KhatmahReadingSource.digital => plan.recordPage(pageNumber),
-      KhatmahReadingSource.physical => plan.recordThroughPage(pageNumber),
+      KhatmahReadingSource.digital => anchoredPlan.recordPage(pageNumber),
+      KhatmahReadingSource.physical => anchoredPlan.recordThroughPage(
+        pageNumber,
+      ),
     };
     final newlyCompletedPages = coveredPlan.completedPages.difference(
       plan.completedPages,
     );
     final updatedPlan = coveredPlan.copyWith(
-      lastReadDate: readAt ?? DateTime.now(),
+      lastReadDate: readingDate,
       status: coveredPlan.isComplete ? KhatmahStatus.completed : null,
     );
 
