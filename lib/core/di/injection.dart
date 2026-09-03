@@ -670,7 +670,10 @@ Future<void> configureDependencies({bool background = false}) async {
     ),
   );
   getIt.registerFactory<KhatmahSetupCubit>(
-    () => KhatmahSetupCubit(getIt<CreateKhatmahUsecase>()),
+    () => KhatmahSetupCubit(
+      getIt<CreateKhatmahUsecase>(),
+      deleteKhatmah: getIt<DeleteKhatmahUsecase>(),
+    ),
   );
   getIt.registerFactory<KhatmDuaCubit>(
     () => KhatmDuaCubit(getIt<GetKhatmDuaUsecase>()),

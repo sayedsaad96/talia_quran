@@ -4,16 +4,20 @@ import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_scheduling_engine.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/create_khatmah_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_setup_cubit.dart';
 
 import '../../../../helpers/bloc_test_helper.dart';
 
 class MockCreateKhatmahUsecase extends Mock implements CreateKhatmahUsecase {}
 
+class MockDeleteKhatmahUsecase extends Mock implements DeleteKhatmahUsecase {}
+
 class FakeKhatmahPlan extends Fake implements KhatmahPlan {}
 
 void main() {
   late MockCreateKhatmahUsecase mockCreateKhatmah;
+  late MockDeleteKhatmahUsecase mockDeleteKhatmah;
 
   setUpAll(() {
     registerFallbackValue(FakeKhatmahPlan());
@@ -21,9 +25,11 @@ void main() {
 
   setUp(() {
     mockCreateKhatmah = MockCreateKhatmahUsecase();
+    mockDeleteKhatmah = MockDeleteKhatmahUsecase();
   });
 
-  KhatmahSetupCubit buildCubit() => KhatmahSetupCubit(mockCreateKhatmah);
+  KhatmahSetupCubit buildCubit() =>
+      KhatmahSetupCubit(mockCreateKhatmah, deleteKhatmah: mockDeleteKhatmah);
 
   group('KhatmahSetupCubit Initial State', () {
     test('initial state is KhatmahSetupIdle', () {
@@ -57,12 +63,16 @@ void main() {
         ),
       ],
       verify: (_) {
-        verify(() => mockCreateKhatmah(any(
+        verify(
+          () => mockCreateKhatmah(
+            any(
               that: isA<KhatmahPlan>()
                   .having((p) => p.targetPagesPerDay, 'targetPagesPerDay', 4)
                   .having((p) => p.targetDays, 'targetDays', 151)
                   .having((p) => p.title, 'title', 'Khatmah'),
-            ))).called(1);
+            ),
+          ),
+        ).called(1);
       },
     );
 
@@ -88,21 +98,56 @@ void main() {
           'plan',
           isA<KhatmahPlan>()
               .having((p) => p.targetPagesPerDay, 'targetPagesPerDay', 10)
-              .having((p) => p.targetDays, 'targetDays',
-                  KhatmahSchedulingEngine.calculateDaysFromPages(604, 10))
+              .having(
+                (p) => p.targetDays,
+                'targetDays',
+                KhatmahSchedulingEngine.calculateDaysFromPages(604, 10),
+              )
               .having((p) => p.title, 'title', 'Grandmother')
               .having((p) => p.dedication.isDedicated, 'isDedicated', true)
-              .having((p) => p.dedication.recipientName, 'recipientName',
-                  'Grandmother'),
+              .having(
+                (p) => p.dedication.recipientName,
+                'recipientName',
+                'Grandmother',
+              ),
         ),
       ],
       verify: (_) {
-        verify(() => mockCreateKhatmah(any(
+        verify(
+          () => mockCreateKhatmah(
+            any(
               that: isA<KhatmahPlan>()
                   .having((p) => p.title, 'title', 'Grandmother')
                   .having((p) => p.targetPagesPerDay, 'targetPagesPerDay', 10),
-            ))).called(1);
+            ),
+          ),
+        ).called(1);
       },
+    );
+
+    blocTest<KhatmahSetupCubit, KhatmahSetupState>(
+      'preserves living dedication data when creating a plan',
+      build: () {
+        when(() => mockCreateKhatmah(any())).thenAnswer((_) async {});
+        return buildCubit();
+      },
+      act: (cubit) => cubit.createPlan(
+        pagesPerDay: 10,
+        dedication: const KhatmahDedication(
+          isDedicated: true,
+          recipientName: 'Father',
+          relationship: 'Father',
+          condition: DedicationCondition.alive,
+        ),
+      ),
+      expect: () => [
+        const KhatmahSetupSaving(),
+        isA<KhatmahSetupDone>().having(
+          (state) => state.plan.dedication.condition,
+          'dedication condition',
+          DedicationCondition.alive,
+        ),
+      ],
     );
 
     blocTest<KhatmahSetupCubit, KhatmahSetupState>(
@@ -120,19 +165,16 @@ void main() {
       ),
       expect: () => [
         const KhatmahSetupSaving(),
-        isA<KhatmahSetupDone>().having(
-          (s) => s.plan.title,
-          'title',
-          'Khatmah',
-        ),
+        isA<KhatmahSetupDone>().having((s) => s.plan.title, 'title', 'Khatmah'),
       ],
     );
 
     blocTest<KhatmahSetupCubit, KhatmahSetupState>(
       'emits [KhatmahSetupSaving, KhatmahSetupError] when createPlan throws',
       build: () {
-        when(() => mockCreateKhatmah(any()))
-            .thenThrow(Exception('Database error'));
+        when(
+          () => mockCreateKhatmah(any()),
+        ).thenThrow(Exception('Database error'));
         return buildCubit();
       },
       act: (cubit) => cubit.createPlan(pagesPerDay: 4),
@@ -147,6 +189,65 @@ void main() {
       verify: (_) {
         verify(() => mockCreateKhatmah(any())).called(1);
       },
+    );
+
+    blocTest<KhatmahSetupCubit, KhatmahSetupState>(
+      'emits conflict with the existing paused plan instead of a generic error',
+      build: () {
+        final existingPlan = KhatmahPlan(
+          id: 'paused-plan',
+          title: 'Paused Khatmah',
+          targetPagesPerDay: 4,
+          targetDays: 151,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 6, 1),
+          status: KhatmahStatus.paused,
+        );
+        when(
+          () => mockCreateKhatmah(any()),
+        ).thenThrow(KhatmahPlanAlreadyExistsException(existingPlan));
+        return buildCubit();
+      },
+      act: (cubit) => cubit.createPlan(pagesPerDay: 4),
+      expect: () => [
+        const KhatmahSetupSaving(),
+        isA<KhatmahSetupConflict>()
+            .having((state) => state.existingPlan.id, 'plan id', 'paused-plan')
+            .having(
+              (state) => state.existingPlan.status,
+              'plan status',
+              KhatmahStatus.paused,
+            ),
+      ],
+    );
+
+    blocTest<KhatmahSetupCubit, KhatmahSetupState>(
+      'abandons a conflicted plan only after an explicit request, then returns to idle',
+      build: () {
+        final existingPlan = KhatmahPlan(
+          id: 'active-plan',
+          title: 'Existing Khatmah',
+          targetPagesPerDay: 4,
+          targetDays: 151,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 6, 1),
+        );
+        when(
+          () => mockCreateKhatmah(any()),
+        ).thenThrow(KhatmahPlanAlreadyExistsException(existingPlan));
+        when(() => mockDeleteKhatmah()).thenAnswer((_) async {});
+        return buildCubit();
+      },
+      act: (cubit) async {
+        await cubit.createPlan(pagesPerDay: 4);
+        await cubit.abandonExistingPlan();
+      },
+      expect: () => [
+        const KhatmahSetupSaving(),
+        isA<KhatmahSetupConflict>(),
+        const KhatmahSetupIdle(),
+      ],
+      verify: (_) => verify(() => mockDeleteKhatmah()).called(1),
     );
   });
 }

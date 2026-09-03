@@ -1790,5 +1790,18 @@
   "parentAverageDuration": "متوسط {minutes} د",
   "@parentAverageDuration": { "placeholders": { "minutes": { "type": "int" } } },
   "parentHintUses": "{count} تلميحات",
-  "@parentHintUses": { "placeholders": { "count": { "type": "int" } } }
+  "@parentHintUses": { "placeholders": { "count": { "type": "int" } } },
+  "khatmahStartAction": "ابدأ ختمة",
+  "khatmahResumeAction": "استئناف",
+  "khatmahNoPlanTitle": "لا توجد ختمة حالية",
+  "khatmahNoPlanDescription": "ابدأ ختمة جديدة بالوتيرة التي تناسبك.",
+  "khatmahPausedSummary": "الختمة متوقفة مؤقتاً — استأنف للمتابعة",
+  "khatmahExistingActivePlan": "لديك ختمة نشطة بالفعل",
+  "khatmahExistingPausedPlan": "لديك ختمة متوقفة مؤقتاً بالفعل",
+  "khatmahViewCurrentPlan": "عرض الختمة الحالية",
+  "khatmahEndCurrentPlan": "إنهاء الختمة الحالية",
+  "khatmahEndCurrentConfirmTitle": "إنهاء الختمة الحالية؟",
+  "khatmahEndCurrentConfirmDescription": "سيتم حذف خطة \"{title}\". بعد ذلك يمكنك اختيار بدء خطة جديدة.",
+  "@khatmahEndCurrentConfirmDescription": { "placeholders": { "title": { "type": "String" } } },
+  "khatmahEndPlanAction": "إنهاء الختمة"
 }

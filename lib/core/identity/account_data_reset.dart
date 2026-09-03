@@ -74,6 +74,11 @@ class AccountDataReset {
     'quran_bookmarks',
     // Resume location may contain account-specific memorization state.
     'last_restorable_location',
+    // Khatmah plans, their completed-history archive, and the retired
+    // cloud-sync marker belong exclusively to the signed-in account.
+    'khatmah_active_plan',
+    'khatmah_history',
+    'khatmah_cloud_dirty',
   };
 
   /// Prefixes covering the memorization and legacy Hifz key namespaces. This

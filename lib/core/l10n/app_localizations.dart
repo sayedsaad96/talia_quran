@@ -7332,6 +7332,78 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'{count} تلميحات'**
   String parentHintUses(int count);
+
+  /// No description provided for @khatmahStartAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ ختمة'**
+  String get khatmahStartAction;
+
+  /// No description provided for @khatmahResumeAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'استئناف'**
+  String get khatmahResumeAction;
+
+  /// No description provided for @khatmahNoPlanTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد ختمة حالية'**
+  String get khatmahNoPlanTitle;
+
+  /// No description provided for @khatmahNoPlanDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ ختمة جديدة بالوتيرة التي تناسبك.'**
+  String get khatmahNoPlanDescription;
+
+  /// No description provided for @khatmahPausedSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمة متوقفة مؤقتاً — استأنف للمتابعة'**
+  String get khatmahPausedSummary;
+
+  /// No description provided for @khatmahExistingActivePlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'لديك ختمة نشطة بالفعل'**
+  String get khatmahExistingActivePlan;
+
+  /// No description provided for @khatmahExistingPausedPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'لديك ختمة متوقفة مؤقتاً بالفعل'**
+  String get khatmahExistingPausedPlan;
+
+  /// No description provided for @khatmahViewCurrentPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض الختمة الحالية'**
+  String get khatmahViewCurrentPlan;
+
+  /// No description provided for @khatmahEndCurrentPlan.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنهاء الختمة الحالية'**
+  String get khatmahEndCurrentPlan;
+
+  /// No description provided for @khatmahEndCurrentConfirmTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنهاء الختمة الحالية؟'**
+  String get khatmahEndCurrentConfirmTitle;
+
+  /// No description provided for @khatmahEndCurrentConfirmDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيتم حذف خطة \"{title}\". بعد ذلك يمكنك اختيار بدء خطة جديدة.'**
+  String khatmahEndCurrentConfirmDescription(String title);
+
+  /// No description provided for @khatmahEndPlanAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنهاء الختمة'**
+  String get khatmahEndPlanAction;
 }
 
 class _AppLocalizationsDelegate

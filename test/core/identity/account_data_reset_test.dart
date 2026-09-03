@@ -64,6 +64,9 @@ void main() {
         'custom_plan_cloud_conflict': '{}',
         'quran_bookmarks': '[{}]',
         'last_restorable_location': '/memorization-v2/session?surahId=67',
+        'khatmah_active_plan': '{"id":"account-a-plan"}',
+        'khatmah_history': '[{"id":"account-a-plan"}]',
+        'khatmah_cloud_dirty': true,
         'mem_plus_profile': '{}',
         'mem_plus_local_records_claimed_by': 'user-a',
         'mem_plus_review_identity_keys_v1': true,
@@ -162,6 +165,19 @@ void main() {
       expect(prefs.getString('last_restorable_location'), isNull);
       expect(prefs.getString('mem_plus_local_records_claimed_by'), isNull);
     });
+
+    test(
+      'clears account-owned Khatmah data while retaining device settings',
+      () async {
+        await AccountDataReset(isar, prefs).clearAccountOwnedData();
+
+        expect(prefs.getString('khatmah_active_plan'), isNull);
+        expect(prefs.getString('khatmah_history'), isNull);
+        expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
+        expect(prefs.getString('theme_mode'), 'dark');
+        expect(prefs.getString('locale'), 'ar');
+      },
+    );
 
     test('clears prefixed memorization and hifz keys', () async {
       await AccountDataReset(isar, prefs).clearAccountOwnedData();

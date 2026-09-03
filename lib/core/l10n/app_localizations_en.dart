@@ -4044,4 +4044,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String parentHintUses(int count) {
     return '$count hints used';
   }
+
+  @override
+  String get khatmahStartAction => 'Start Khatmah';
+
+  @override
+  String get khatmahResumeAction => 'Resume';
+
+  @override
+  String get khatmahNoPlanTitle => 'No Khatmah plan yet';
+
+  @override
+  String get khatmahNoPlanDescription =>
+      'Start a new Khatmah at a pace that suits you.';
+
+  @override
+  String get khatmahPausedSummary => 'Khatmah paused — Resume to continue';
+
+  @override
+  String get khatmahExistingActivePlan => 'You already have an active Khatmah';
+
+  @override
+  String get khatmahExistingPausedPlan => 'You already have a paused Khatmah';
+
+  @override
+  String get khatmahViewCurrentPlan => 'View current Khatmah';
+
+  @override
+  String get khatmahEndCurrentPlan => 'End current Khatmah';
+
+  @override
+  String get khatmahEndCurrentConfirmTitle => 'End current Khatmah?';
+
+  @override
+  String khatmahEndCurrentConfirmDescription(String title) {
+    return 'This deletes \"$title\". You can then choose to start a new plan.';
+  }
+
+  @override
+  String get khatmahEndPlanAction => 'End Khatmah';
 }

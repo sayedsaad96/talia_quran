@@ -1855,5 +1855,18 @@
   "parentAverageDuration": "{minutes} min average",
   "@parentAverageDuration": { "placeholders": { "minutes": { "type": "int" } } },
   "parentHintUses": "{count} hints used",
-  "@parentHintUses": { "placeholders": { "count": { "type": "int" } } }
+  "@parentHintUses": { "placeholders": { "count": { "type": "int" } } },
+  "khatmahStartAction": "Start Khatmah",
+  "khatmahResumeAction": "Resume",
+  "khatmahNoPlanTitle": "No Khatmah plan yet",
+  "khatmahNoPlanDescription": "Start a new Khatmah at a pace that suits you.",
+  "khatmahPausedSummary": "Khatmah paused — Resume to continue",
+  "khatmahExistingActivePlan": "You already have an active Khatmah",
+  "khatmahExistingPausedPlan": "You already have a paused Khatmah",
+  "khatmahViewCurrentPlan": "View current Khatmah",
+  "khatmahEndCurrentPlan": "End current Khatmah",
+  "khatmahEndCurrentConfirmTitle": "End current Khatmah?",
+  "khatmahEndCurrentConfirmDescription": "This deletes \"{title}\". You can then choose to start a new plan.",
+  "@khatmahEndCurrentConfirmDescription": { "placeholders": { "title": { "type": "String" } } },
+  "khatmahEndPlanAction": "End Khatmah"
 }

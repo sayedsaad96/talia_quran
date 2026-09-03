@@ -15,6 +15,8 @@ class HomeLoading extends HomeState {
   const HomeLoading();
 }
 
+enum HomeKhatmahPlanState { none, active, paused }
+
 class HomeLoaded extends HomeState {
   final UnifiedJourneyAction? heroAction;
 
@@ -61,7 +63,8 @@ class HomeLoaded extends HomeState {
       selectedTrack: selectedTrack ?? this.selectedTrack,
       isParentMode: isParentMode ?? this.isParentMode,
       isKids: isKids ?? this.isKids,
-      lastRestorableLocation: lastRestorableLocation ?? this.lastRestorableLocation,
+      lastRestorableLocation:
+          lastRestorableLocation ?? this.lastRestorableLocation,
       activityCountsByDay: activityCountsByDay ?? this.activityCountsByDay,
       activityStartDate: activityStartDate ?? this.activityStartDate,
       coachRecommendation: coachRecommendation ?? this.coachRecommendation,
@@ -91,6 +94,16 @@ class HomeLoaded extends HomeState {
   final SmartCoachRecommendation? coachRecommendation;
   final int totalXp;
   final KhatmahPlan? activeKhatmah;
+
+  HomeKhatmahPlanState get khatmahPlanState {
+    if (activeKhatmah == null) return HomeKhatmahPlanState.none;
+    return activeKhatmah!.status == KhatmahStatus.paused
+        ? HomeKhatmahPlanState.paused
+        : HomeKhatmahPlanState.active;
+  }
+
+  bool get canContinueKhatmahReading =>
+      khatmahPlanState == HomeKhatmahPlanState.active;
 
   @override
   List<Object?> get props => [

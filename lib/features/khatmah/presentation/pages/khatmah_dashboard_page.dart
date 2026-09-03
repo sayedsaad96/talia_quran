@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -104,6 +106,12 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
     );
   }
 
+  Future<void> _resumeAndOpenReader(int pageNumber) async {
+    await _cubit.resume();
+    if (!mounted || _cubit.state is! KhatmahActive) return;
+    unawaited(context.push('/quran/page/$pageNumber?mode=khatmah'));
+  }
+
   Widget _buildProgressFailureBanner(
     BuildContext context,
     KhatmahProgressFailure failure,
@@ -197,6 +205,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final isArabic = context.isArabic;
+    final l10n = context.l10n;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
 
@@ -273,23 +282,19 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
-                        Icons.pause_circle_outline_rounded,
+                        Icons.menu_book_outlined,
                         size: 64,
                         color: primary.withValues(alpha: 0.6),
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Text(
-                        isArabic
-                            ? 'الختمة متوقفة مؤقتاً أو لا توجد خطة نشطة'
-                            : 'Khatmah is paused or no active plan',
+                        l10n.khatmahNoPlanTitle,
                         style: AppTypography.titleMedium,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        isArabic
-                            ? 'يمكنك استئناف ختمتك الحالية في أي وقت أو بدء خطة جديدة بهدوء وسكينة'
-                            : 'You can resume your current khatmah anytime or set up a new serene plan.',
+                        l10n.khatmahNoPlanDescription,
                         style: AppTypography.bodySmall.copyWith(
                           color: isDark
                               ? AppColors.darkTextSecondary
@@ -298,29 +303,12 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppSpacing.xl),
-                      Wrap(
-                        spacing: AppSpacing.md,
-                        runSpacing: AppSpacing.sm,
-                        children: [
-                          FilledButton.icon(
-                            key: const Key(
-                              'khatmah_dashboard_pause_resume_button',
-                            ),
-                            onPressed: () => _cubit.resume(),
-                            style: FilledButton.styleFrom(
-                              backgroundColor: primary,
-                            ),
-                            icon: const Icon(Icons.play_arrow_rounded),
-                            label: Text(isArabic ? 'استئناف' : 'Resume'),
-                          ),
-                          OutlinedButton.icon(
-                            onPressed: () => context.go(AppRoutes.khatmahSetup),
-                            icon: const Icon(Icons.add_rounded),
-                            label: Text(
-                              isArabic ? 'بدء ختمة جديدة' : 'Start New Khatmah',
-                            ),
-                          ),
-                        ],
+                      FilledButton.icon(
+                        key: const Key('khatmah_dashboard_start_button'),
+                        onPressed: () => context.go(AppRoutes.khatmahSetup),
+                        style: FilledButton.styleFrom(backgroundColor: primary),
+                        icon: const Icon(Icons.add_rounded),
+                        label: Text(l10n.khatmahStartAction),
                       ),
                     ],
                   ),
@@ -370,6 +358,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
           }
 
           final wirdPagesCount = wirdEndPage - wirdStartPage + 1;
+          final isPaused = plan.status == KhatmahStatus.paused;
           final wirdStartStr = isArabic
               ? MushafHizbHelper.toArabicNumber(wirdStartPage)
               : wirdStartPage.toString();
@@ -518,11 +507,13 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                             key: const Key(
                               'khatmah_dashboard_continue_reading_button',
                             ),
-                            onPressed: () {
-                              context.push(
-                                '/quran/page/$wirdStartPage?mode=khatmah',
-                              );
-                            },
+                            onPressed: isPaused
+                                ? () => unawaited(
+                                    _resumeAndOpenReader(wirdStartPage),
+                                  )
+                                : () => context.push(
+                                    '/quran/page/$wirdStartPage?mode=khatmah',
+                                  ),
                             style: FilledButton.styleFrom(
                               backgroundColor: primary,
                               foregroundColor: Colors.white,
@@ -533,9 +524,17 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                                 ),
                               ),
                             ),
-                            icon: const Icon(Icons.menu_book_rounded),
+                            icon: Icon(
+                              isPaused
+                                  ? Icons.play_arrow_rounded
+                                  : Icons.menu_book_rounded,
+                            ),
                             label: Text(
-                              isArabic ? 'متابعة القراءة' : 'Continue Reading',
+                              isPaused
+                                  ? l10n.khatmahResumeAction
+                                  : (isArabic
+                                        ? 'متابعة القراءة'
+                                        : 'Continue Reading'),
                               style: AppTypography.labelLarge.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,

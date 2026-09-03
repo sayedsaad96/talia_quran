@@ -245,22 +245,21 @@ class _HomeContent extends StatelessWidget {
           ),
 
         // ─── Khatmah Hero Card ──────────────────────────────────────────────
-        if (state.activeKhatmah != null)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.md,
-                AppSpacing.pagePadding,
-                0,
-              ),
-              child: KhatmahHeroCard(
-                plan: state.activeKhatmah!,
-                isDark: isDark,
-                margin: EdgeInsets.zero,
-              ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.pagePadding,
+              AppSpacing.md,
+              AppSpacing.pagePadding,
+              0,
+            ),
+            child: KhatmahHeroCard(
+              plan: state.activeKhatmah,
+              isDark: isDark,
+              margin: EdgeInsets.zero,
             ),
           ),
+        ),
 
         // ─── Daily Wird Card ────────────────────────────────────────────────
         SliverToBoxAdapter(

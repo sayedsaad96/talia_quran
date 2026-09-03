@@ -4102,4 +4102,43 @@ class AppLocalizationsAr extends AppLocalizations {
   String parentHintUses(int count) {
     return '$count تلميحات';
   }
+
+  @override
+  String get khatmahStartAction => 'ابدأ ختمة';
+
+  @override
+  String get khatmahResumeAction => 'استئناف';
+
+  @override
+  String get khatmahNoPlanTitle => 'لا توجد ختمة حالية';
+
+  @override
+  String get khatmahNoPlanDescription =>
+      'ابدأ ختمة جديدة بالوتيرة التي تناسبك.';
+
+  @override
+  String get khatmahPausedSummary => 'الختمة متوقفة مؤقتاً — استأنف للمتابعة';
+
+  @override
+  String get khatmahExistingActivePlan => 'لديك ختمة نشطة بالفعل';
+
+  @override
+  String get khatmahExistingPausedPlan => 'لديك ختمة متوقفة مؤقتاً بالفعل';
+
+  @override
+  String get khatmahViewCurrentPlan => 'عرض الختمة الحالية';
+
+  @override
+  String get khatmahEndCurrentPlan => 'إنهاء الختمة الحالية';
+
+  @override
+  String get khatmahEndCurrentConfirmTitle => 'إنهاء الختمة الحالية؟';
+
+  @override
+  String khatmahEndCurrentConfirmDescription(String title) {
+    return 'سيتم حذف خطة \"$title\". بعد ذلك يمكنك اختيار بدء خطة جديدة.';
+  }
+
+  @override
+  String get khatmahEndPlanAction => 'إنهاء الختمة';
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_scheduling_engine.dart';
@@ -107,10 +108,21 @@ void main() {
             return Scaffold(body: Text('Page: $page, Mode: $mode'));
           },
         ),
+        GoRoute(
+          path: '/khatmah/setup',
+          builder: (context, state) {
+            onNavigate?.call('/khatmah/setup');
+            return const Scaffold(body: Text('Khatmah Setup Page'));
+          },
+        ),
       ],
     );
 
-    return MaterialApp.router(routerConfig: router);
+    return MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+    );
   }
 
   testWidgets(
@@ -406,7 +418,86 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text(paused.title), findsOneWidget);
-    expect(find.text('Resume'), findsOneWidget);
+    expect(
+      find.byKey(const Key('khatmah_dashboard_continue_reading_button')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('paused plan waits for successful resume before opening reader', (
+    tester,
+  ) async {
+    final paused = testPlan.copyWith(status: KhatmahStatus.paused);
+    final resume = Completer<KhatmahPlan>();
+    when(() => mockGetActive()).thenAnswer((_) async => paused);
+    when(() => mockPauseResume.resume(paused)).thenAnswer((_) => resume.future);
+    String? navigatedRoute;
+    final cubit = buildCubit();
+
+    await tester.pumpWidget(
+      buildWidget(cubit: cubit, onNavigate: (route) => navigatedRoute = route),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('khatmah_dashboard_continue_reading_button')),
+    );
+    await tester.pump();
+
+    expect(navigatedRoute, isNull);
+
+    resume.complete(testPlan);
+    await tester.pumpAndSettle();
+
+    expect(navigatedRoute, contains('?mode=khatmah'));
+  });
+
+  testWidgets(
+    'failed paused-plan resume stays visible and does not open reader',
+    (tester) async {
+      final paused = testPlan.copyWith(status: KhatmahStatus.paused);
+      when(() => mockGetActive()).thenAnswer((_) async => paused);
+      when(
+        () => mockPauseResume.resume(paused),
+      ).thenThrow(Exception('offline'));
+      String? navigatedRoute;
+      final cubit = buildCubit();
+
+      await tester.pumpWidget(
+        buildWidget(
+          cubit: cubit,
+          onNavigate: (route) => navigatedRoute = route,
+        ),
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(const Key('khatmah_dashboard_continue_reading_button')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(navigatedRoute, isNull);
+      expect(find.byKey(const Key('khatmah_dashboard_title')), findsOneWidget);
+      expect(
+        find.byKey(const Key('khatmah_dashboard_progress_failure_banner')),
+        findsOneWidget,
+      );
+    },
+  );
+
+  testWidgets('no plan offers Start Khatmah and routes to setup', (
+    tester,
+  ) async {
+    when(() => mockGetActive()).thenAnswer((_) async => null);
+    String? navigatedRoute;
+    final cubit = buildCubit();
+
+    await tester.pumpWidget(
+      buildWidget(cubit: cubit, onNavigate: (route) => navigatedRoute = route),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('khatmah_dashboard_start_button')));
+    await tester.pumpAndSettle();
+
+    expect(navigatedRoute, '/khatmah/setup');
   });
 
   testWidgets('pausing khatmah calls cubit.pause() and allows resume', (

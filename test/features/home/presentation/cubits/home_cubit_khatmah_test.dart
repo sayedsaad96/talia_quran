@@ -136,82 +136,122 @@ void main() {
     progressEvents.dispose();
   });
 
-  test('load() queries GetActiveKhatmahUsecase and emits activeKhatmah in HomeLoaded', () async {
-    fakeGetActiveKhatmah.planToReturn = testPlan;
+  test(
+    'load() queries GetActiveKhatmahUsecase and emits activeKhatmah in HomeLoaded',
+    () async {
+      fakeGetActiveKhatmah.planToReturn = testPlan;
 
-    cubit = HomeCubit(
-      mockGetProgress,
-      mockGetQuranPage,
-      mockGetCustomPlan,
-      mockMemRepo,
-      mockSessionService,
-      mockGetHeatmap,
-      mockPathResolver,
-      mockGetCoachRecommendation,
-      journeyEngine,
-      mockPrefs,
-      progressEvents,
-      xpService,
-      fakeGetActiveKhatmah,
-    );
+      cubit = HomeCubit(
+        mockGetProgress,
+        mockGetQuranPage,
+        mockGetCustomPlan,
+        mockMemRepo,
+        mockSessionService,
+        mockGetHeatmap,
+        mockPathResolver,
+        mockGetCoachRecommendation,
+        journeyEngine,
+        mockPrefs,
+        progressEvents,
+        xpService,
+        fakeGetActiveKhatmah,
+      );
 
-    await cubit!.load();
+      await cubit!.load();
 
-    expect(cubit!.state, isA<HomeLoaded>());
-    final loadedState = cubit!.state as HomeLoaded;
-    expect(loadedState.activeKhatmah, equals(testPlan));
-    expect(fakeGetActiveKhatmah.callCount, equals(1));
-  });
+      expect(cubit!.state, isA<HomeLoaded>());
+      final loadedState = cubit!.state as HomeLoaded;
+      expect(loadedState.activeKhatmah, equals(testPlan));
+      expect(fakeGetActiveKhatmah.callCount, equals(1));
+    },
+  );
 
-  test('load() emits null activeKhatmah when GetActiveKhatmahUsecase returns null', () async {
-    fakeGetActiveKhatmah.planToReturn = null;
+  test(
+    'load() emits null activeKhatmah when GetActiveKhatmahUsecase returns null',
+    () async {
+      fakeGetActiveKhatmah.planToReturn = null;
 
-    cubit = HomeCubit(
-      mockGetProgress,
-      mockGetQuranPage,
-      mockGetCustomPlan,
-      mockMemRepo,
-      mockSessionService,
-      mockGetHeatmap,
-      mockPathResolver,
-      mockGetCoachRecommendation,
-      journeyEngine,
-      mockPrefs,
-      progressEvents,
-      xpService,
-      fakeGetActiveKhatmah,
-    );
+      cubit = HomeCubit(
+        mockGetProgress,
+        mockGetQuranPage,
+        mockGetCustomPlan,
+        mockMemRepo,
+        mockSessionService,
+        mockGetHeatmap,
+        mockPathResolver,
+        mockGetCoachRecommendation,
+        journeyEngine,
+        mockPrefs,
+        progressEvents,
+        xpService,
+        fakeGetActiveKhatmah,
+      );
 
-    await cubit!.load();
+      await cubit!.load();
 
-    expect(cubit!.state, isA<HomeLoaded>());
-    final loadedState = cubit!.state as HomeLoaded;
-    expect(loadedState.activeKhatmah, isNull);
-    expect(fakeGetActiveKhatmah.callCount, equals(1));
-  });
+      expect(cubit!.state, isA<HomeLoaded>());
+      final loadedState = cubit!.state as HomeLoaded;
+      expect(loadedState.activeKhatmah, isNull);
+      expect(fakeGetActiveKhatmah.callCount, equals(1));
+    },
+  );
 
-  test('HomeCubit constructor works without GetActiveKhatmahUsecase (optional)', () async {
-    cubit = HomeCubit(
-      mockGetProgress,
-      mockGetQuranPage,
-      mockGetCustomPlan,
-      mockMemRepo,
-      mockSessionService,
-      mockGetHeatmap,
-      mockPathResolver,
-      mockGetCoachRecommendation,
-      journeyEngine,
-      mockPrefs,
-      progressEvents,
-      xpService,
-    );
+  test(
+    'load() surfaces a paused Khatmah distinctly from an immediately readable plan',
+    () async {
+      fakeGetActiveKhatmah.planToReturn = testPlan.copyWith(
+        status: KhatmahStatus.paused,
+      );
 
-    await cubit!.load();
+      cubit = HomeCubit(
+        mockGetProgress,
+        mockGetQuranPage,
+        mockGetCustomPlan,
+        mockMemRepo,
+        mockSessionService,
+        mockGetHeatmap,
+        mockPathResolver,
+        mockGetCoachRecommendation,
+        journeyEngine,
+        mockPrefs,
+        progressEvents,
+        xpService,
+        fakeGetActiveKhatmah,
+      );
 
-    expect(cubit!.state, isA<HomeLoaded>());
-    final loadedState = cubit!.state as HomeLoaded;
-    expect(loadedState.activeKhatmah, isNull);
-  });
+      await cubit!.load();
+
+      final loadedState = cubit!.state as HomeLoaded;
+      expect(loadedState.khatmahPlanState, HomeKhatmahPlanState.paused);
+      expect(loadedState.canContinueKhatmahReading, isFalse);
+    },
+  );
+
+  test(
+    'HomeCubit constructor works without GetActiveKhatmahUsecase (optional)',
+    () async {
+      cubit = HomeCubit(
+        mockGetProgress,
+        mockGetQuranPage,
+        mockGetCustomPlan,
+        mockMemRepo,
+        mockSessionService,
+        mockGetHeatmap,
+        mockPathResolver,
+        mockGetCoachRecommendation,
+        journeyEngine,
+        mockPrefs,
+        progressEvents,
+        xpService,
+      );
+
+      await cubit!.load();
+
+      expect(cubit!.state, isA<HomeLoaded>());
+      final loadedState = cubit!.state as HomeLoaded;
+      expect(loadedState.activeKhatmah, isNull);
+    },
+  );
 
   test('HomeLoaded copyWith updates activeKhatmah', () {
     final initialState = HomeLoaded(
