@@ -105,6 +105,49 @@ void main() {
       expect(retrieved, equals(testPlan));
     });
 
+    test('atomically creates once and returns conflict to a concurrent creator', () async {
+      final replacement = testPlan.copyWith(id: 'plan-2');
+
+      final results = await Future.wait([
+        repository.createPlanIfAbsent(testPlan),
+        repository.createPlanIfAbsent(replacement),
+      ]);
+
+      expect(results.whereType<KhatmahPlan>(), hasLength(1));
+      expect((await repository.getActivePlan())?.id, testPlan.id);
+    });
+
+    test('completed cleanup only deletes its expected stale plan before create', () async {
+      final staleCompleted = testPlan.copyWith(status: KhatmahStatus.completed);
+      await repository.createPlan(staleCompleted);
+      final replacement = testPlan.copyWith(id: 'replacement');
+
+      final conflict = await repository.createPlanIfAbsent(replacement);
+
+      expect(conflict, isNull);
+      expect((await repository.getActivePlan())?.id, replacement.id);
+    });
+
+    test('completed cleanup does not overwrite a replacement arriving before delete', () async {
+      final blocking = _BlockingDeleteDatasource(prefs);
+      final guarded = KhatmahRepositoryImpl(blocking);
+      await guarded.createPlan(testPlan.copyWith(status: KhatmahStatus.completed));
+      final creating = guarded.createPlanIfAbsent(testPlan.copyWith(id: 'requested'));
+      await blocking.deleteStarted.future;
+      final replacement = testPlan.copyWith(id: 'replacement');
+      await datasource.savePlan(KhatmahPlanModel.fromEntity(replacement));
+      blocking.releaseDelete.complete();
+      expect(await creating, replacement);
+      expect((await guarded.getActivePlan())?.id, 'replacement');
+    });
+
+    test('scoped abandon rejects a replacement without deleting it', () async {
+      await repository.createPlan(testPlan.copyWith(id: 'replacement'));
+      await expectLater(repository.deletePlan(expectedPlanId: 'old-plan'),
+        throwsA(isA<KhatmahProgressException>()));
+      expect((await repository.getActivePlan())?.id, 'replacement');
+    });
+
     test('updatePlan updates existing active plan', () async {
       await repository.createPlan(testPlan);
 

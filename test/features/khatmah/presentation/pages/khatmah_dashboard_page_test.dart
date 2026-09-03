@@ -483,6 +483,68 @@ void main() {
     },
   );
 
+  testWidgets('double resume navigates once using the persisted resumed plan', (
+    tester,
+  ) async {
+    final paused = testPlan.copyWith(status: KhatmahStatus.paused);
+    final resumed = testPlan.copyWith(
+      completedPages: {for (var page = 1; page <= 100; page++) page},
+    );
+    final resume = Completer<KhatmahPlan>();
+    when(() => mockGetActive()).thenAnswer((_) async => paused);
+    when(() => mockPauseResume.resume(paused)).thenAnswer((_) => resume.future);
+    String? navigatedRoute;
+    final cubit = buildCubit();
+    await tester.pumpWidget(
+      buildWidget(cubit: cubit, onNavigate: (route) => navigatedRoute = route),
+    );
+    await tester.pumpAndSettle();
+    final action = find.byKey(
+      const Key('khatmah_dashboard_continue_reading_button'),
+    );
+    final onPressed = tester.widget<FilledButton>(action).onPressed!;
+    onPressed();
+    onPressed();
+    await tester.pump();
+    verify(() => mockPauseResume.resume(paused)).called(1);
+    expect(navigatedRoute, isNull);
+    resume.complete(resumed);
+    await tester.pumpAndSettle();
+    expect(navigatedRoute, '/quran/page/101?mode=khatmah');
+    final router = GoRouter.of(
+      tester.element(find.text('Page: 101, Mode: khatmah')),
+    );
+    router.pop();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('khatmah_dashboard_title')), findsOneWidget);
+  });
+
+  testWidgets('resume completing after dashboard disposal never navigates', (
+    tester,
+  ) async {
+    final paused = testPlan.copyWith(status: KhatmahStatus.paused);
+    final resume = Completer<KhatmahPlan>();
+    when(() => mockGetActive()).thenAnswer((_) async => paused);
+    when(() => mockPauseResume.resume(paused)).thenAnswer((_) => resume.future);
+    String? navigatedRoute;
+    await tester.pumpWidget(
+      buildWidget(
+        cubit: buildCubit(),
+        onNavigate: (route) => navigatedRoute = route,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('khatmah_dashboard_continue_reading_button')),
+    );
+    await tester.pump();
+    await tester.pumpWidget(const SizedBox());
+    resume.complete(testPlan);
+    await tester.pumpAndSettle();
+    expect(navigatedRoute, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('no plan offers Start Khatmah and routes to setup', (
     tester,
   ) async {

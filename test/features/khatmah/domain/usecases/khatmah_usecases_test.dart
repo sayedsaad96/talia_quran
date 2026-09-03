@@ -71,19 +71,20 @@ void main() {
   });
 
   group('CreateKhatmahUsecase', () {
-    test('calls repository.createPlan with provided plan', () async {
-      when(() => mockRepository.getActivePlan()).thenAnswer((_) async => null);
-      when(() => mockRepository.createPlan(any())).thenAnswer((_) async {});
+    test('uses atomic repository creation for the provided plan', () async {
+      when(
+        () => mockRepository.createPlanIfAbsent(any()),
+      ).thenAnswer((_) async => null);
 
       final usecase = CreateKhatmahUsecase(mockRepository);
       await usecase(testPlan);
 
-      verify(() => mockRepository.createPlan(testPlan)).called(1);
+      verify(() => mockRepository.createPlanIfAbsent(testPlan)).called(1);
     });
 
     test('rejects creation when an active plan already exists', () async {
       when(
-        () => mockRepository.getActivePlan(),
+        () => mockRepository.createPlanIfAbsent(any()),
       ).thenAnswer((_) async => testPlan);
 
       final usecase = CreateKhatmahUsecase(mockRepository);
@@ -99,7 +100,7 @@ void main() {
     test('rejects creation when a paused plan already exists', () async {
       final paused = testPlan.copyWith(status: KhatmahStatus.paused);
       when(
-        () => mockRepository.getActivePlan(),
+        () => mockRepository.createPlanIfAbsent(any()),
       ).thenAnswer((_) async => paused);
 
       final usecase = CreateKhatmahUsecase(mockRepository);
@@ -112,23 +113,16 @@ void main() {
       verifyNever(() => mockRepository.createPlan(any()));
     });
 
-    test('clears a stale completed plan before creating a new plan', () async {
-      final completed = testPlan.copyWith(status: KhatmahStatus.completed);
+    test('allows creation after atomic terminal-plan cleanup', () async {
       when(
-        () => mockRepository.getActivePlan(),
-      ).thenAnswer((_) async => completed);
-      when(() => mockRepository.deletePlan()).thenAnswer((_) async {});
-      when(() => mockRepository.createPlan(any())).thenAnswer((_) async {});
+        () => mockRepository.createPlanIfAbsent(any()),
+      ).thenAnswer((_) async => null);
 
       final replacement = testPlan.copyWith(id: 'replacement-plan');
       final usecase = CreateKhatmahUsecase(mockRepository);
       await usecase(replacement);
 
-      verifyInOrder([
-        () => mockRepository.getActivePlan(),
-        () => mockRepository.deletePlan(),
-        () => mockRepository.createPlan(replacement),
-      ]);
+      verify(() => mockRepository.createPlanIfAbsent(replacement)).called(1);
     });
   });
 

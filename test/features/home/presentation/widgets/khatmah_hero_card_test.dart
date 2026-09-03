@@ -176,6 +176,22 @@ void main() {
     expect(navigatedRoute, '/khatmah/dashboard');
   });
 
+  testWidgets('completed Khatmah routes to setup, never to the reader', (
+    tester,
+  ) async {
+    String? navigatedRoute;
+    await tester.pumpWidget(
+      createWidgetUnderTest(
+        plan: testPlan.copyWith(status: KhatmahStatus.completed),
+        onNavigate: (route) => navigatedRoute = route,
+      ),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('khatmah_hero_start_button')));
+    await tester.pumpAndSettle();
+    expect(navigatedRoute, '/khatmah/setup');
+  });
+
   testWidgets('no Khatmah plan exposes Start Khatmah and routes to setup', (
     tester,
   ) async {

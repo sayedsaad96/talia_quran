@@ -56,6 +56,15 @@ class KhatmahPaused extends KhatmahState {
   List<Object?> get props => [plan];
 }
 
+class KhatmahResuming extends KhatmahState {
+  const KhatmahResuming({required this.plan});
+
+  final KhatmahPlan plan;
+
+  @override
+  List<Object?> get props => [plan];
+}
+
 class KhatmahWirdCompleted extends KhatmahState {
   const KhatmahWirdCompleted({required this.plan});
 
@@ -240,6 +249,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   Future<void> _recordTail = Future<void>.value();
   final _ShutdownSignal _shutdownSignal = _ShutdownSignal();
   Future<void>? _closeFuture;
+  Future<KhatmahPlan?>? _resumeInFlight;
   bool _closing = false;
 
   @override
@@ -510,15 +520,22 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     }
   }
 
-  Future<void> resume() async {
+  Future<KhatmahPlan?> resume() {
+    return _resumeInFlight ??= _resume();
+  }
+
+  Future<KhatmahPlan?> _resume() async {
     try {
       final plan = await _getActive();
       if (plan != null && plan.status == KhatmahStatus.paused) {
+        _emitIfOpen(KhatmahResuming(plan: plan));
         final resumed = await _pauseResume.resume(plan);
         _lastKnownPlan = resumed;
         _emitActive(resumed);
+        return resumed;
       } else {
         await load();
+        return null;
       }
     } catch (error) {
       _emitIfOpen(
@@ -529,6 +546,9 @@ class KhatmahCubit extends Cubit<KhatmahState> {
           error: error,
         ),
       );
+      return null;
+    } finally {
+      _resumeInFlight = null;
     }
   }
 

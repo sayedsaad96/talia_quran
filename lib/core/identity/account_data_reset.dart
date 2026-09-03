@@ -15,6 +15,16 @@ import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
 
+class AccountDataResetException implements Exception {
+  const AccountDataResetException(this.message, [this.cause]);
+
+  final String message;
+  final Object? cause;
+
+  @override
+  String toString() => 'AccountDataResetException: $message';
+}
+
 /// Clears every store that belongs to the departing account.
 ///
 /// This is a single explicit inventory rather than prefix matching alone.
@@ -180,7 +190,7 @@ class AccountDataReset {
       'mem_plus_local_records_claimed_by',
     };
     for (final key in cloudMetadata) {
-      await _prefs.remove(key);
+      await _removePreference(key);
     }
   }
 
@@ -221,7 +231,7 @@ class AccountDataReset {
     final legacyValue = _prefs.getString(legacyKey);
     if (legacyValue != null) {
       await _prefs.setString(guestKey, legacyValue);
-      await _prefs.remove(legacyKey);
+      await _removePreference(legacyKey);
     }
 
     final encrypted = _encryptedAccountPreferences;
@@ -274,7 +284,27 @@ class AccountDataReset {
         )
         .toList();
     for (final key in keys) {
-      await _prefs.remove(key);
+      await _removePreference(key);
+    }
+  }
+
+  Future<void> _removePreference(String key) async {
+    try {
+      final removed = await _prefs.remove(key);
+      if (!removed) {
+        throw AccountDataResetException('Failed to remove account data: $key');
+      }
+    } catch (error) {
+      try {
+        await _prefs.reload();
+      } catch (_) {
+        // Preserve the authoritative removal failure.
+      }
+      if (error is AccountDataResetException) rethrow;
+      throw AccountDataResetException(
+        'Failed to remove account data: $key',
+        error,
+      );
     }
   }
 

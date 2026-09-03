@@ -4,11 +4,13 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
 import 'package:talia_quran/core/identity/account_data_reset.dart';
 import 'package:talia_quran/core/identity/pending_bookmark_recovery_marker.dart';
 import 'package:talia_quran/core/memorization/review_record_identity.dart';
 import 'package:talia_quran/core/security/encrypted_account_preferences_store.dart';
 import 'package:talia_quran/core/sync/cloud_sync_queue_item.dart';
+import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:talia_quran/features/hifz/data/models/isar_ayah_progress.dart';
 import 'package:talia_quran/features/hifz/domain/entities/hifz_entities.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
@@ -222,6 +224,71 @@ void main() {
     });
 
     test(
+      'fails closed when removing Khatmah account data returns false',
+      () async {
+        final store = _RejectRemovalStore.withData({
+          'flutter.khatmah_active_plan':
+              '{"dedication":{"recipientName":"Mother"}}',
+          'flutter.khatmah_history':
+              '[{"dedication":{"recipientName":"Mother"}}]',
+        });
+        SharedPreferencesStorePlatform.instance = store;
+        SharedPreferences.resetStatic();
+        final rejectingPrefs = await SharedPreferences.getInstance();
+
+        await expectLater(
+          AccountDataReset(isar, rejectingPrefs).clearAccountOwnedData(),
+          throwsA(isA<AccountDataResetException>()),
+        );
+        expect(rejectingPrefs.getString('khatmah_active_plan'), isNotNull);
+        expect(rejectingPrefs.getString('khatmah_history'), isNotNull);
+      },
+    );
+
+    for (final throwsOnRemoval in [false, true]) {
+      test(
+        'partial reset failure blocks owner switch (throws: $throwsOnRemoval)',
+        () async {
+          SharedPreferencesStorePlatform.instance =
+              _RejectRemovalStore.withData({
+                'flutter.read_pages': '[1,2]',
+                'flutter.khatmah_active_plan': '{"id":"account-a-plan"}',
+                'flutter.khatmah_history': '[{"id":"account-a-plan"}]',
+                'flutter.auth_last_signed_in_user_id': 'user-a',
+                'flutter.theme_mode': 'dark',
+              }, throwsOnRemoval: throwsOnRemoval);
+          SharedPreferences.resetStatic();
+          final failingPrefs = await SharedPreferences.getInstance();
+          await expectLater(
+            AuthCubit.resolveOwnerChange(
+              prefs: failingPrefs,
+              userId: 'user-b',
+              onDepartingAccount: AccountDataReset(
+                isar,
+                failingPrefs,
+              ).clearAccountOwnedData,
+            ),
+            throwsA(isA<AccountDataResetException>()),
+          );
+          expect(failingPrefs.getString('read_pages'), isNull);
+          expect(
+            failingPrefs.getString('khatmah_active_plan'),
+            '{"id":"account-a-plan"}',
+          );
+          expect(
+            failingPrefs.getString('khatmah_history'),
+            '[{"id":"account-a-plan"}]',
+          );
+          expect(
+            failingPrefs.getString(AuthCubit.lastSignedInUserIdKey),
+            'user-a',
+          );
+          expect(failingPrefs.getString('theme_mode'), 'dark');
+        },
+      );
+    }
+
+    test(
       're-homes deleted-account progress as guest data without clearing it',
       () async {
         await seedAllCollections();
@@ -289,5 +356,21 @@ class _GuestWriteFailingEncryptedStore
       throw Exception('guest secure write failed');
     }
     _values['$ownerId/$key'] = value;
+  }
+}
+
+class _RejectRemovalStore extends InMemorySharedPreferencesStore {
+  _RejectRemovalStore.withData(super.data, {this.throwsOnRemoval = false})
+    : super.withData();
+
+  final bool throwsOnRemoval;
+
+  @override
+  Future<bool> remove(String key) async {
+    if (key.endsWith('khatmah_active_plan')) {
+      if (throwsOnRemoval) throw StateError('removal failed');
+      return false;
+    }
+    return super.remove(key);
   }
 }

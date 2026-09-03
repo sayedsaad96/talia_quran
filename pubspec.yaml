@@ -86,6 +86,7 @@ dev_dependencies:
   isar_generator: ^3.1.0+1
   mockito: ^5.4.4
   mocktail: ^1.0.5
+  shared_preferences_platform_interface: 2.4.2
 
 flutter_launcher_icons:
   android: "launcher_icon"

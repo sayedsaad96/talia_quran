@@ -253,6 +253,31 @@ void main() {
     },
   );
 
+  test('completed Khatmah is terminal rather than readable on Home', () async {
+    fakeGetActiveKhatmah.planToReturn = testPlan.copyWith(
+      status: KhatmahStatus.completed,
+    );
+    cubit = HomeCubit(
+      mockGetProgress,
+      mockGetQuranPage,
+      mockGetCustomPlan,
+      mockMemRepo,
+      mockSessionService,
+      mockGetHeatmap,
+      mockPathResolver,
+      mockGetCoachRecommendation,
+      journeyEngine,
+      mockPrefs,
+      progressEvents,
+      xpService,
+      fakeGetActiveKhatmah,
+    );
+    await cubit!.load();
+    final state = cubit!.state as HomeLoaded;
+    expect(state.khatmahPlanState, HomeKhatmahPlanState.none);
+    expect(state.canContinueKhatmahReading, isFalse);
+  });
+
   test('HomeLoaded copyWith updates activeKhatmah', () {
     final initialState = HomeLoaded(
       progress: const OverallProgress(

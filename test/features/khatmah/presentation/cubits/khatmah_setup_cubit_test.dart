@@ -235,7 +235,9 @@ void main() {
         when(
           () => mockCreateKhatmah(any()),
         ).thenThrow(KhatmahPlanAlreadyExistsException(existingPlan));
-        when(() => mockDeleteKhatmah()).thenAnswer((_) async {});
+        when(
+          () => mockDeleteKhatmah(expectedPlanId: 'active-plan'),
+        ).thenAnswer((_) async {});
         return buildCubit();
       },
       act: (cubit) async {
@@ -245,9 +247,57 @@ void main() {
       expect: () => [
         const KhatmahSetupSaving(),
         isA<KhatmahSetupConflict>(),
+        isA<KhatmahSetupConflict>().having(
+          (state) => state.isAbandoning,
+          'is abandoning',
+          isTrue,
+        ),
         const KhatmahSetupIdle(),
       ],
-      verify: (_) => verify(() => mockDeleteKhatmah()).called(1),
+      verify: (_) => verify(
+        () => mockDeleteKhatmah(expectedPlanId: 'active-plan'),
+      ).called(1),
+    );
+
+    test(
+      'deduplicates abandonment and preserves conflict when deletion fails',
+      () async {
+        final existingPlan = KhatmahPlan(
+          id: 'conflicted-plan',
+          title: 'Existing Khatmah',
+          targetPagesPerDay: 4,
+          targetDays: 151,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 6, 1),
+        );
+        when(
+          () => mockCreateKhatmah(any()),
+        ).thenThrow(KhatmahPlanAlreadyExistsException(existingPlan));
+        when(
+          () => mockDeleteKhatmah(expectedPlanId: existingPlan.id),
+        ).thenThrow(Exception('delete failed'));
+        final cubit = buildCubit();
+        await cubit.createPlan(pagesPerDay: 4);
+
+        final first = cubit.abandonExistingPlan();
+        final second = cubit.abandonExistingPlan();
+        expect(identical(first, second), isTrue);
+        await first;
+
+        expect(cubit.state, isA<KhatmahSetupConflict>());
+        final conflict = cubit.state as KhatmahSetupConflict;
+        expect(conflict.existingPlan, existingPlan);
+        expect(conflict.errorMessage, contains('delete failed'));
+        verify(
+          () => mockDeleteKhatmah(expectedPlanId: existingPlan.id),
+        ).called(1);
+        when(
+          () => mockDeleteKhatmah(expectedPlanId: existingPlan.id),
+        ).thenAnswer((_) async {});
+        await cubit.abandonExistingPlan();
+        expect(cubit.state, isA<KhatmahSetupIdle>());
+        await cubit.close();
+      },
     );
   });
 }

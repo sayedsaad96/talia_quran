@@ -34,6 +34,29 @@ class KhatmahRepositoryImpl implements KhatmahRepository {
   }
 
   @override
+  Future<KhatmahPlan?> createPlanIfAbsent(KhatmahPlan plan) {
+    return _enqueueMutation(() async {
+      final existing = (await _datasource.getActivePlan())?.toEntity();
+      if (existing != null &&
+          (existing.status == KhatmahStatus.active ||
+              existing.status == KhatmahStatus.paused)) {
+        return existing;
+      }
+      if (existing?.status == KhatmahStatus.completed) {
+        final removed = await _datasource.deletePlan(
+          expectedPlanId: existing!.id,
+        );
+        if (!removed) {
+          final replacement = (await _datasource.getActivePlan())?.toEntity();
+          if (replacement != null) return replacement;
+        }
+      }
+      await _datasource.savePlan(KhatmahPlanModel.fromEntity(plan));
+      return null;
+    });
+  }
+
+  @override
   Future<void> updatePlan(KhatmahPlan plan) async {
     await _enqueueMutation(
       () => _datasource.savePlan(KhatmahPlanModel.fromEntity(plan)),
@@ -41,8 +64,17 @@ class KhatmahRepositoryImpl implements KhatmahRepository {
   }
 
   @override
-  Future<void> deletePlan() async {
-    await _enqueueMutation(() => _datasource.deletePlan());
+  Future<void> deletePlan({String? expectedPlanId}) async {
+    await _enqueueMutation(() async {
+      final removed = await _datasource.deletePlan(
+        expectedPlanId: expectedPlanId,
+      );
+      if (!removed) {
+        throw const KhatmahProgressException(
+          'The current Khatmah changed. View it before ending a plan.',
+        );
+      }
+    });
   }
 
   @override

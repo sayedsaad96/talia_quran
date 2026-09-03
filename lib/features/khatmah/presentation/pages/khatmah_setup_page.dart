@@ -207,22 +207,37 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               state.existingPlan.title,
                               style: AppTypography.bodyMedium,
                             ),
+                            if (state.errorMessage != null) ...[
+                              const SizedBox(height: AppSpacing.xs),
+                              Text(
+                                state.errorMessage!,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                            ],
                             const SizedBox(height: AppSpacing.md),
                             Wrap(
                               spacing: AppSpacing.sm,
                               runSpacing: AppSpacing.sm,
                               children: [
                                 OutlinedButton(
-                                  onPressed: () =>
-                                      context.go(AppRoutes.khatmahDashboard),
+                                  onPressed: state.isAbandoning
+                                      ? null
+                                      : () => context.go(
+                                          AppRoutes.khatmahDashboard,
+                                        ),
                                   child: Text(l10n.khatmahViewCurrentPlan),
                                 ),
                                 TextButton(
                                   key: const Key(
                                     'khatmah_setup_abandon_existing_button',
                                   ),
-                                  onPressed: () =>
-                                      _showAbandonExistingConfirmDialog(state),
+                                  onPressed: state.isAbandoning
+                                      ? null
+                                      : () => _showAbandonExistingConfirmDialog(
+                                          state,
+                                        ),
                                   style: TextButton.styleFrom(
                                     foregroundColor: Theme.of(
                                       context,
@@ -421,7 +436,12 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                     // Submit Button ("ابدأ الختمة")
                     FilledButton.icon(
                       key: const Key('khatmah_setup_submit_button'),
-                      onPressed: isSaving ? null : _onSubmit,
+                      onPressed:
+                          isSaving ||
+                              (state is KhatmahSetupConflict &&
+                                  state.isAbandoning)
+                          ? null
+                          : _onSubmit,
                       style: FilledButton.styleFrom(
                         backgroundColor: primary,
                         foregroundColor: Colors.white,

@@ -24,7 +24,7 @@ class KhatmahHeroCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentPlan = plan;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    if (currentPlan == null) {
+    if (currentPlan == null || currentPlan.status == KhatmahStatus.completed) {
       return Card(
         margin: margin,
         color: isDark ? AppColors.darkCard : AppColors.lightCard,

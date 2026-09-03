@@ -97,9 +97,11 @@ class HomeLoaded extends HomeState {
 
   HomeKhatmahPlanState get khatmahPlanState {
     if (activeKhatmah == null) return HomeKhatmahPlanState.none;
-    return activeKhatmah!.status == KhatmahStatus.paused
-        ? HomeKhatmahPlanState.paused
-        : HomeKhatmahPlanState.active;
+    return switch (activeKhatmah!.status) {
+      KhatmahStatus.active => HomeKhatmahPlanState.active,
+      KhatmahStatus.paused => HomeKhatmahPlanState.paused,
+      KhatmahStatus.completed => HomeKhatmahPlanState.none,
+    };
   }
 
   bool get canContinueKhatmahReading =>

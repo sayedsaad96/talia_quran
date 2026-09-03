@@ -43,12 +43,25 @@ class KhatmahSetupError extends KhatmahSetupState {
 }
 
 class KhatmahSetupConflict extends KhatmahSetupState {
-  const KhatmahSetupConflict(this.existingPlan);
+  const KhatmahSetupConflict(
+    this.existingPlan, {
+    this.isAbandoning = false,
+    this.errorMessage,
+  });
 
   final KhatmahPlan existingPlan;
+  final bool isAbandoning;
+  final String? errorMessage;
+
+  KhatmahSetupConflict copyWith({bool? isAbandoning, String? errorMessage}) =>
+      KhatmahSetupConflict(
+        existingPlan,
+        isAbandoning: isAbandoning ?? this.isAbandoning,
+        errorMessage: errorMessage,
+      );
 
   @override
-  List<Object?> get props => [existingPlan];
+  List<Object?> get props => [existingPlan, isAbandoning, errorMessage];
 }
 
 // ─── Cubit ───────────────────────────────────────────────────────────────────
@@ -64,6 +77,7 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
   final CreateKhatmahUsecase _createKhatmah;
   final DeleteKhatmahUsecase? _deleteKhatmah;
   final Uuid _uuid;
+  Future<void>? _abandonInFlight;
 
   Future<void> createPlan({
     required int pagesPerDay,
@@ -108,13 +122,25 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
   /// Deletes a plan only after the UI has obtained explicit user confirmation.
   /// Returning to idle deliberately requires a separate, user-initiated retry
   /// to create the replacement plan.
-  Future<void> abandonExistingPlan() async {
-    if (state is! KhatmahSetupConflict || _deleteKhatmah == null) return;
+  Future<void> abandonExistingPlan() {
+    final conflict = state;
+    if (conflict is! KhatmahSetupConflict ||
+        conflict.isAbandoning ||
+        _deleteKhatmah == null) {
+      return _abandonInFlight ?? Future.value();
+    }
+    return _abandonInFlight ??= _abandon(conflict).whenComplete(() {
+      _abandonInFlight = null;
+    });
+  }
+
+  Future<void> _abandon(KhatmahSetupConflict conflict) async {
+    emit(conflict.copyWith(isAbandoning: true));
     try {
-      await _deleteKhatmah();
+      await _deleteKhatmah!(expectedPlanId: conflict.existingPlan.id);
       emit(const KhatmahSetupIdle());
     } catch (e) {
-      emit(KhatmahSetupError(e.toString()));
+      emit(conflict.copyWith(errorMessage: e.toString()));
     }
   }
 }

@@ -5,7 +5,7 @@ class DeleteKhatmahUsecase {
 
   final KhatmahRepository _repository;
 
-  Future<void> call() {
-    return _repository.deletePlan();
+  Future<void> call({String? expectedPlanId}) {
+    return _repository.deletePlan(expectedPlanId: expectedPlanId);
   }
 }

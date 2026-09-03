@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -181,7 +183,9 @@ void main() {
       when(
         () => mockCreateKhatmah(any()),
       ).thenThrow(KhatmahPlanAlreadyExistsException(existingPlan));
-      when(() => mockDeleteKhatmah()).thenAnswer((_) async {});
+      when(
+        () => mockDeleteKhatmah(expectedPlanId: 'existing-plan'),
+      ).thenAnswer((_) async {});
       final cubit = KhatmahSetupCubit(
         mockCreateKhatmah,
         deleteKhatmah: mockDeleteKhatmah,
@@ -203,11 +207,78 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      verify(() => mockDeleteKhatmah()).called(1);
+      verify(
+        () => mockDeleteKhatmah(expectedPlanId: 'existing-plan'),
+      ).called(1);
       expect(
         find.byKey(const Key('khatmah_setup_submit_button')),
         findsOneWidget,
       );
     },
   );
+  testWidgets('abandon failure retains choices and disables pending actions', (
+    tester,
+  ) async {
+    final existing = KhatmahPlan(
+      id: 'existing-plan',
+      title: 'Existing Khatmah',
+      targetPagesPerDay: 4,
+      targetDays: 151,
+      startDate: DateTime(2026, 1, 1),
+      expectedEndDate: DateTime(2026, 6, 1),
+    );
+    final deletion = Completer<void>();
+    when(
+      () => mockCreateKhatmah(any()),
+    ).thenThrow(KhatmahPlanAlreadyExistsException(existing));
+    when(
+      () => mockDeleteKhatmah(expectedPlanId: existing.id),
+    ).thenAnswer((_) => deletion.future);
+    final cubit = KhatmahSetupCubit(
+      mockCreateKhatmah,
+      deleteKhatmah: mockDeleteKhatmah,
+    );
+    addTearDown(cubit.close);
+    await tester.pumpWidget(buildWidget(cubit: cubit));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('khatmah_setup_submit_button')));
+    await tester.pumpAndSettle();
+    final end = find.byKey(const Key('khatmah_setup_abandon_existing_button'));
+    await tester.tap(end);
+    await tester.pumpAndSettle();
+    await tester.tap(
+      find.byKey(const Key('khatmah_setup_abandon_confirm_button')),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.widget<TextButton>(end).onPressed, isNull);
+    expect(
+      tester
+          .widget<FilledButton>(
+            find.byKey(const Key('khatmah_setup_submit_button')),
+          )
+          .onPressed,
+      isNull,
+    );
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.widgetWithText(OutlinedButton, 'View current Khatmah'),
+          )
+          .onPressed,
+      isNull,
+    );
+    deletion.completeError(Exception('delete failed'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('delete failed'), findsOneWidget);
+    expect(find.text('Existing Khatmah'), findsOneWidget);
+    expect(tester.widget<TextButton>(end).onPressed, isNotNull);
+    expect(
+      tester
+          .widget<OutlinedButton>(
+            find.widgetWithText(OutlinedButton, 'View current Khatmah'),
+          )
+          .onPressed,
+      isNotNull,
+    );
+  });
 }

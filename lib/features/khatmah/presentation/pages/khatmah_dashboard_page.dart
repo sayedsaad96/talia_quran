@@ -30,6 +30,7 @@ class KhatmahDashboardPage extends StatefulWidget {
 class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
   late final KhatmahCubit _cubit;
   bool _createdOwnCubit = false;
+  bool _resumeNavigationInFlight = false;
 
   @override
   void initState() {
@@ -106,10 +107,20 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
     );
   }
 
-  Future<void> _resumeAndOpenReader(int pageNumber) async {
-    await _cubit.resume();
-    if (!mounted || _cubit.state is! KhatmahActive) return;
-    unawaited(context.push('/quran/page/$pageNumber?mode=khatmah'));
+  Future<void> _resumeAndOpenReader() async {
+    if (_resumeNavigationInFlight) return;
+    _resumeNavigationInFlight = true;
+    try {
+      final resumed = await _cubit.resume();
+      if (!mounted || resumed == null) return;
+      final wird = KhatmahSchedulingEngine.todaysWird(
+        resumed.currentPage,
+        resumed.targetPagesPerDay,
+      );
+      await context.push('/quran/page/${wird.startPage}?mode=khatmah');
+    } finally {
+      _resumeNavigationInFlight = false;
+    }
   }
 
   Widget _buildProgressFailureBanner(
@@ -333,6 +344,14 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
             );
             wirdStartPage = wird.startPage;
             wirdEndPage = wird.endPage;
+          } else if (state is KhatmahResuming) {
+            plan = state.plan;
+            final wird = KhatmahSchedulingEngine.todaysWird(
+              plan.currentPage,
+              plan.targetPagesPerDay,
+            );
+            wirdStartPage = wird.startPage;
+            wirdEndPage = wird.endPage;
           } else if (state is KhatmahProgressFailure && state.plan != null) {
             plan = state.plan!;
             final wird = KhatmahSchedulingEngine.todaysWird(
@@ -359,6 +378,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
 
           final wirdPagesCount = wirdEndPage - wirdStartPage + 1;
           final isPaused = plan.status == KhatmahStatus.paused;
+          final isResuming = state is KhatmahResuming;
           final wirdStartStr = isArabic
               ? MushafHizbHelper.toArabicNumber(wirdStartPage)
               : wirdStartPage.toString();
@@ -507,10 +527,10 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                             key: const Key(
                               'khatmah_dashboard_continue_reading_button',
                             ),
-                            onPressed: isPaused
-                                ? () => unawaited(
-                                    _resumeAndOpenReader(wirdStartPage),
-                                  )
+                            onPressed: isResuming
+                                ? null
+                                : isPaused
+                                ? () => unawaited(_resumeAndOpenReader())
                                 : () => context.push(
                                     '/quran/page/$wirdStartPage?mode=khatmah',
                                   ),
@@ -524,13 +544,24 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                                 ),
                               ),
                             ),
-                            icon: Icon(
-                              isPaused
-                                  ? Icons.play_arrow_rounded
-                                  : Icons.menu_book_rounded,
-                            ),
+                            icon: isResuming
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Icon(
+                                    isPaused
+                                        ? Icons.play_arrow_rounded
+                                        : Icons.menu_book_rounded,
+                                  ),
                             label: Text(
-                              isPaused
+                              isResuming
+                                  ? (isArabic ? 'جارٍ الاستئناف' : 'Resuming…')
+                                  : isPaused
                                   ? l10n.khatmahResumeAction
                                   : (isArabic
                                         ? 'متابعة القراءة'
