@@ -331,6 +331,145 @@ void main() {
     await cubit.close();
   });
 
+  test('close drains accepted records in FIFO order before closing', () async {
+    final page2Write = Completer<KhatmahReadingResult>();
+    final page3Write = Completer<KhatmahReadingResult>();
+    final page2Plan = activePlan.recordPage(2);
+    final page3Plan = page2Plan.recordPage(3);
+    when(() => getActive()).thenAnswer((_) async => activePlan);
+    when(
+      () => recordReading(any(), any(), source: any(named: 'source')),
+    ).thenAnswer((invocation) {
+      final plan = invocation.positionalArguments[0] as KhatmahPlan;
+      final page = invocation.positionalArguments[1] as int;
+      if (page == 2) {
+        expect(plan, activePlan);
+        return page2Write.future;
+      }
+      expect(page, 3);
+      expect(plan, page2Plan);
+      return page3Write.future;
+    });
+    final cubit = buildCubit();
+    await cubit.load();
+
+    final first = cubit.recordDigitalPage(2);
+    final second = cubit.recordDigitalPage(3);
+    final closing = cubit.close();
+    await cubit.recordDigitalPage(4);
+    verifyNever(
+      () => recordReading(any(), 4, source: KhatmahReadingSource.digital),
+    );
+
+    page2Write.complete(
+      KhatmahReadingResult(plan: page2Plan, newlyCompletedPages: const {2}),
+    );
+    await Future<void>.delayed(Duration.zero);
+    verify(
+      () => recordReading(page2Plan, 3, source: KhatmahReadingSource.digital),
+    ).called(1);
+    page3Write.complete(
+      KhatmahReadingResult(plan: page3Plan, newlyCompletedPages: const {3}),
+    );
+    await Future.wait([first, second]);
+    await closing;
+    expect(cubit.isClosed, isTrue);
+  });
+
+  test(
+    'later success retains an earlier failure and retries it against latest plan',
+    () async {
+      final page2Write = Completer<KhatmahReadingResult>();
+      final page3Plan = activePlan.recordPage(3);
+      final retryPlan = page3Plan.recordPage(2);
+      var calls = 0;
+      when(() => getActive()).thenAnswer((_) async => activePlan);
+      when(
+        () => recordReading(any(), any(), source: any(named: 'source')),
+      ).thenAnswer((invocation) {
+        calls++;
+        final page = invocation.positionalArguments[1] as int;
+        if (calls == 1) return page2Write.future;
+        if (calls == 2) {
+          expect(page, 3);
+          return Future.value(
+            KhatmahReadingResult(
+              plan: page3Plan,
+              newlyCompletedPages: const {3},
+            ),
+          );
+        }
+        expect(page, 2);
+        expect(invocation.positionalArguments[0], page3Plan);
+        return Future.value(
+          KhatmahReadingResult(plan: retryPlan, newlyCompletedPages: const {2}),
+        );
+      });
+      final cubit = buildCubit();
+      await cubit.load();
+      final failed = cubit.recordDigitalPage(2);
+      final queued = cubit.recordDigitalPage(3);
+      page2Write.completeError(Exception('disk unavailable'));
+      await Future.wait([failed, queued]);
+
+      expect(cubit.state, isA<KhatmahProgressFailure>());
+      final failure = cubit.state as KhatmahProgressFailure;
+      expect(failure.pageNumber, 2);
+      expect(failure.plan, page3Plan);
+      await cubit.retryLastProgress();
+      expect(calls, 3);
+      expect(cubit.state, isA<KhatmahActive>());
+      expect(
+        (cubit.state as KhatmahActive).plan.completedPages,
+        containsAll([2, 3]),
+      );
+      await cubit.close();
+    },
+  );
+
+  test('distinct failures remain available for subsequent retries', () async {
+    final page2Write = Completer<KhatmahReadingResult>();
+    final page3Write = Completer<KhatmahReadingResult>();
+    final page2Plan = activePlan.recordPage(2);
+    final page3Plan = page2Plan.recordPage(3);
+    var calls = 0;
+    when(() => getActive()).thenAnswer((_) async => activePlan);
+    when(
+      () => recordReading(any(), any(), source: any(named: 'source')),
+    ).thenAnswer((invocation) {
+      calls++;
+      final page = invocation.positionalArguments[1] as int;
+      if (calls == 1) return page2Write.future;
+      if (calls == 2) return page3Write.future;
+      if (calls == 3) {
+        expect(page, 3);
+        return Future.value(
+          KhatmahReadingResult(plan: page3Plan, newlyCompletedPages: const {3}),
+        );
+      }
+      expect(page, 2);
+      return Future.value(
+        KhatmahReadingResult(plan: page3Plan, newlyCompletedPages: const {2}),
+      );
+    });
+    final cubit = buildCubit();
+    await cubit.load();
+    final page2 = cubit.recordDigitalPage(2);
+    final page3 = cubit.recordDigitalPage(3);
+    page2Write.completeError(Exception('page 2 failed'));
+    await Future<void>.delayed(Duration.zero);
+    page3Write.completeError(Exception('page 3 failed'));
+    await Future.wait([page2, page3]);
+
+    expect((cubit.state as KhatmahProgressFailure).pageNumber, 3);
+    await cubit.retryLastProgress();
+    expect((cubit.state as KhatmahProgressFailure).pageNumber, 2);
+    await cubit.retryLastProgress();
+    expect(calls, 4);
+    expect(cubit.state, isA<KhatmahActive>());
+    await cubit.close();
+  });
+
   test('physical progress dispatches the physical reading source', () async {
     final updated = activePlan.recordThroughPage(4);
     when(() => getActive()).thenAnswer((_) async => activePlan);

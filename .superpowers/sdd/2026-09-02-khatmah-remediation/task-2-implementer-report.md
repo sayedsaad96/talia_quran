@@ -98,3 +98,24 @@
 - Queue execution resolves the active plan from current state/cache after each prior result, so later pages persist against the newest authoritative coverage; failures complete their own request and do not poison the queue.
 - `_lastKnownPlan` transitions are updated only on successful load/record/pause/resume/schedule results and cleared on completed/abandoned plans; failure states retain that cache without fabricating a plan.
 - Schedule controls now emit/cache the plan returned by persistence. Dashboard failures retain the plan when known with a retry action, while null-plan load errors provide a dedicated reload state.
+
+## Fix Round 4 (2026-09-03)
+
+### RED evidence
+
+- Added deterministic close-drain coverage for a blocked page 2 followed by page 3: closing while page 2 is pending must drain both writes FIFO, resolve page 3 from page 2's authoritative result, reject page 4 after closing begins, and finish closed without an uncaught emission error.
+- Added durable failure coverage for page 2 failing while queued page 3 succeeds, proving the page 2 failure remains retryable with the latest plan; added a two-failure case proving one retry does not discard the other.
+- These regressions characterize the prior inherited-close/active-drain race and state-derived retry loss identified by the latest review.
+
+### GREEN evidence
+
+- Cubit suite: 22 passing (19 existing + 3 Fix Round 4 regressions).
+- Dashboard suite: 11 passing; reader suite: 11 passing; E2E suite: 3 passing; schedule suite: 3 passing.
+- Required combined four-file command: 47 passing, exit 0 (44-test pre-fix baseline plus the 3 new Cubit regressions).
+- Focused analyzer (`dart analyze lib/features/khatmah lib/features/quran lib/core/di/injection.dart lib/core/router/app_router.dart`): no issues.
+- `git diff --check`: clean. The user-owned Islamic UX plan remains unmodified and unstaged.
+
+### Lifecycle and retry design
+
+- `KhatmahCubit.close` gates new submissions, awaits the single tracked FIFO drain, and only then calls `super.close`; all emissions are guarded while closing/closed.
+- Internal authoritative plan cache drives queued requests independently of listeners. Failed requests are retained by `(source, page)` with insertion order; successful writes remove only their own key, and retry selects the most recent outstanding failure.
