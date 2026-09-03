@@ -131,6 +131,9 @@
 **Files:**
 - Modify: `lib/features/khatmah/domain/entities/khatmah_scheduling_engine.dart`
 - Modify: `lib/features/khatmah/domain/entities/khatmah_plan.dart`
+- Modify: `lib/features/khatmah/data/models/khatmah_plan_model.dart`
+- Modify: `lib/features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart`
+- Modify: `lib/features/khatmah/data/repositories/khatmah_repository_impl.dart`
 - Modify: `lib/features/khatmah/presentation/cubits/khatmah_cubit.dart`
 - Modify: `lib/features/khatmah/presentation/pages/khatmah_completion_page.dart`
 - Modify: `lib/features/khatmah/presentation/pages/khatmah_setup_page.dart`
@@ -139,6 +142,8 @@
 
 **Interfaces:**
 - Produces: inclusive `calculateEndDate`, stable daily target for a supplied local date, `actualElapsedDays(DateTime completedAt)`.
+- Persist a backward-compatible local target date and page-range anchor with the first reading write of that date. Keep it stable across partial reading, restart, extra reading, and same-day schedule changes; roll forward from `nextUnreadPage` only on a new date. Check explicit coverage of the whole target range. Legacy records without an anchor start from current coverage, without fabricating historical daily activity.
+- Include model round-trip, midnight rollover, sparse coverage, same-day reload, and persistence-failure regressions. Calculate calendar-day intervals without daylight-saving-hour truncation.
 
 - [ ] Write failing scheduling tests proving a 1-day plan ends on its start date, a 31-day plan ends at start+30, and completing today’s target does not create another target on the same date.
 - [ ] Run scheduling tests and confirm RED.
@@ -170,14 +175,14 @@
 - Test: `test/assets/corpus_integrity_test.dart`
 
 **Interfaces:**
-- Changes: dedication UI becomes optional neutral “pray for someone at completion” metadata; reward-transfer assertions are not emitted.
+- Changes: preserve optional Khatmah dedication for living and deceased recipients, as explicitly approved by the project owner after scholarly consultation; describe deceased recipients as preferred without inventing a reviewer identity or claiming unanimous agreement.
 - Changes: Khatm Dua metadata declares a suggested general supplication and governed review fields.
 
 - [ ] Write failing Arabic/English widget tests for every Khatmah entry surface, including the formerly English-only home text and Arabic-only completion heading.
 - [ ] Add ARB keys, regenerate localization output using the project’s normal Flutter generation command, and replace hardcoded UI strings.
 - [ ] Write failing large-text and semantics tests for progress gauge, physical range confirmation, and primary actions.
 - [ ] Add semantic labels and flexible layouts; run widget tests and confirm GREEN.
-- [ ] Write failing content-governance tests requiring Khatm Dua manifest membership and forbidding `مأثور`/reward-transfer claims in shipped Khatmah copy.
+- [ ] Write failing content-governance tests requiring Khatm Dua manifest membership, preventing unsupported `مأثور` claims, and preserving dedication for living and deceased recipients. Do not replace dedication with prayer-only metadata.
 - [ ] Update the asset metadata and UI wording to “دعاء عام مقترح بعد الختم”; remove duplicated hand-written religious templates from completion UI.
 - [ ] Run Task 5 tests and confirm GREEN.
 - [ ] Commit with `fix(khatmah): localize and govern completion content`.
@@ -194,4 +199,3 @@
 - [ ] Run `flutter test`; record any unrelated pre-existing failure separately and fix every failure caused by this plan.
 - [ ] Review `git diff --check`, `git status --short`, and the complete branch diff.
 - [ ] Commit verified cleanup with `test(khatmah): close remediation release gates` only if cleanup changes are required.
-
