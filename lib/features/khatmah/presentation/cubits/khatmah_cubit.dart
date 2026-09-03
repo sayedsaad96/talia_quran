@@ -98,24 +98,26 @@ class KhatmahCompleted extends KhatmahState {
 }
 
 class _RecordRequestKey {
-  const _RecordRequestKey(this.source, this.pageNumber);
+  const _RecordRequestKey(this.planId, this.source, this.pageNumber);
 
+  final String planId;
   final KhatmahReadingSource source;
   final int pageNumber;
 
   @override
   bool operator ==(Object other) =>
       other is _RecordRequestKey &&
+      other.planId == planId &&
       other.source == source &&
       other.pageNumber == pageNumber;
 
   @override
-  int get hashCode => Object.hash(source, pageNumber);
+  int get hashCode => Object.hash(planId, source, pageNumber);
 }
 
 class _RecordRequest {
-  _RecordRequest(this.source, this.pageNumber)
-    : key = _RecordRequestKey(source, pageNumber);
+  _RecordRequest(String planId, this.source, this.pageNumber)
+    : key = _RecordRequestKey(planId, source, pageNumber);
 
   final KhatmahReadingSource source;
   final int pageNumber;
@@ -135,9 +137,12 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     this._getActive,
     this._recordReading,
     this._pauseResume,
-    this._deleteKhatmah, [
-    this._updateSchedule,
-  ]) : super(const KhatmahInitial());
+    this._deleteKhatmah, {
+    UpdateKhatmahScheduleUsecase? updateSchedule,
+    Duration shutdownTimeout = const Duration(seconds: 2),
+  }) : _updateSchedule = updateSchedule,
+       _shutdownTimeout = shutdownTimeout,
+       super(const KhatmahInitial());
 
   final GetActiveKhatmahUsecase _getActive;
   final RecordKhatmahReadingUsecase _recordReading;
@@ -147,19 +152,31 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   // Retained only for the existing scheduling-adjustment controls. Reader
   // progress must use RecordKhatmahReadingUsecase through the methods below.
   final UpdateKhatmahScheduleUsecase? _updateSchedule;
+  final Duration _shutdownTimeout;
   KhatmahPlan? _lastKnownPlan;
-  final List<_RecordRequest> _recordQueue = [];
   final Map<_RecordRequestKey, Completer<void>> _pendingRecordRequests = {};
   final Map<_RecordRequestKey, _FailedRecordRequest> _failedRecordRequests = {};
-  Future<void>? _recordDrainFuture;
+  Future<void> _recordTail = Future<void>.value();
+  Future<void>? _closeFuture;
   bool _closing = false;
 
   @override
-  Future<void> close() async {
+  Future<void> close() {
+    final existing = _closeFuture;
+    if (existing != null) return existing;
+
     _closing = true;
-    final drain = _recordDrainFuture;
-    if (drain != null) await drain;
-    return super.close();
+    final acceptedTail = _recordTail
+        .timeout(_shutdownTimeout)
+        .then<void>(
+          (_) {},
+          onError: (Object _, StackTrace _) {
+            // Timeout or an unexpected tail error must not block final closure.
+          },
+        );
+    final closing = acceptedTail.then((_) => super.close());
+    _closeFuture = closing;
+    return closing;
   }
 
   Future<void> load() async {
@@ -167,12 +184,15 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     try {
       final plan = await _getActive();
       if (plan == null || plan.status == KhatmahStatus.completed) {
+        _failedRecordRequests.clear();
         _lastKnownPlan = null;
         _emitIfOpen(const KhatmahNoActivePlan());
       } else if (plan.status == KhatmahStatus.paused) {
+        _discardFailuresOutsidePlan(plan.id);
         _lastKnownPlan = plan;
         _emitIfOpen(KhatmahPaused(plan: plan));
       } else {
+        _discardFailuresOutsidePlan(plan.id);
         _lastKnownPlan = plan;
         _emitActive(plan);
       }
@@ -200,37 +220,29 @@ class KhatmahCubit extends Cubit<KhatmahState> {
       recordPhysicalThroughPage(pageNumber);
 
   Future<void> retryLastProgress() async {
-    final failed = _failedRecordRequests.isEmpty
-        ? null
-        : _failedRecordRequests.values.last;
+    final plan = _recordingPlan;
+    if (plan == null) return;
+    final failures = _failedRecordRequests.values.where(
+      (failed) => failed.request.key.planId == plan.id,
+    );
+    final failed = failures.isEmpty ? null : failures.last;
     if (failed != null) {
       await _recordCurrent(failed.request.pageNumber, failed.request.source);
-      return;
-    }
-    final current = state;
-    if (current is KhatmahProgressFailure &&
-        current.plan != null &&
-        current.pageNumber > 0) {
-      await _recordCurrent(current.pageNumber, current.source);
     }
   }
 
-  Future<void> _recordCurrent(
-    int pageNumber,
-    KhatmahReadingSource source,
-  ) async {
-    if (_closing || isClosed) return;
+  Future<void> _recordCurrent(int pageNumber, KhatmahReadingSource source) {
+    if (_closing || isClosed) return Future<void>.value();
     final plan = _recordingPlan;
-    if (plan == null) return;
+    if (plan == null) return Future<void>.value();
 
-    final key = _RecordRequestKey(source, pageNumber);
+    final key = _RecordRequestKey(plan.id, source, pageNumber);
     final pending = _pendingRecordRequests[key];
     if (pending != null) return pending.future;
 
-    final request = _RecordRequest(source, pageNumber);
+    final request = _RecordRequest(plan.id, source, pageNumber);
     _pendingRecordRequests[key] = request.completer;
-    _recordQueue.add(request);
-    _startRecordDrain();
+    _recordTail = _recordTail.then((_) => _executeRecord(request));
     return request.completer.future;
   }
 
@@ -246,54 +258,70 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     return plan?.status == KhatmahStatus.active ? plan : null;
   }
 
-  void _startRecordDrain() {
-    if (_recordDrainFuture != null) return;
-    final drain = _drainRecordQueue();
-    _recordDrainFuture = drain;
-    unawaited(
-      drain.whenComplete(() {
-        if (identical(_recordDrainFuture, drain)) _recordDrainFuture = null;
-        if (!_closing && _recordQueue.isNotEmpty) _startRecordDrain();
-      }),
-    );
-  }
+  Future<void> _executeRecord(_RecordRequest request) async {
+    try {
+      final plan = _recordingPlan;
+      if (plan == null || plan.id != request.key.planId) return;
 
-  Future<void> _drainRecordQueue() async {
-    while (_recordQueue.isNotEmpty) {
-      final request = _recordQueue.removeAt(0);
-      try {
-        final plan = _recordingPlan;
-        if (plan != null) {
-          try {
-            final result = await _recordReading(
-              plan,
-              request.pageNumber,
-              source: request.source,
-            );
-            _lastKnownPlan = result.plan;
-            _failedRecordRequests.remove(request.key);
-            _emitReadingResult(result);
-            _emitOutstandingFailure(result.plan);
-          } catch (error) {
-            _rememberFailure(request, error);
-            _emitOutstandingFailure(_lastKnownPlan);
-          }
-        }
-      } finally {
-        _pendingRecordRequests.remove(request.key);
-        if (!request.completer.isCompleted) request.completer.complete();
+      final result = await _recordReading(
+        plan,
+        request.pageNumber,
+        source: request.source,
+      );
+      final latestPlan = _recordingPlan;
+      if (latestPlan == null || latestPlan.id != request.key.planId) return;
+
+      _lastKnownPlan = result.plan;
+      _pruneCoveredFailures(result.plan);
+      if (result.completed) {
+        _clearFailuresForPlan(result.plan.id);
+        _emitReadingResult(result);
+        return;
       }
+
+      _emitReadingResult(result);
+      _emitOutstandingFailure(result.plan);
+    } catch (error) {
+      final plan = _recordingPlan;
+      if (plan != null && plan.id == request.key.planId) {
+        _rememberFailure(request, error);
+        _emitOutstandingFailure(plan);
+      }
+    } finally {
+      final pending = _pendingRecordRequests[request.key];
+      if (identical(pending, request.completer)) {
+        _pendingRecordRequests.remove(request.key);
+      }
+      if (!request.completer.isCompleted) request.completer.complete();
     }
   }
 
   void _rememberFailure(_RecordRequest request, Object error) {
-    _failedRecordRequests.remove(request.key);
     _failedRecordRequests[request.key] = _FailedRecordRequest(request, error);
   }
 
+  void _pruneCoveredFailures(KhatmahPlan plan) {
+    _failedRecordRequests.removeWhere(
+      (key, _) =>
+          key.planId == plan.id && plan.completedPages.contains(key.pageNumber),
+    );
+  }
+
+  void _clearFailuresForPlan(String planId) {
+    _failedRecordRequests.removeWhere((key, _) => key.planId == planId);
+  }
+
+  void _discardFailuresOutsidePlan(String planId) {
+    _failedRecordRequests.removeWhere((key, _) => key.planId != planId);
+  }
+
   void _emitOutstandingFailure(KhatmahPlan? plan) {
-    if (_failedRecordRequests.isEmpty) return;
-    final failed = _failedRecordRequests.values.last;
+    if (plan == null) return;
+    final failures = _failedRecordRequests.values.where(
+      (failed) => failed.request.key.planId == plan.id,
+    );
+    if (failures.isEmpty) return;
+    final failed = failures.last;
     _emitIfOpen(
       KhatmahProgressFailure(
         plan: plan,
@@ -429,6 +457,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   Future<void> abandonPlan() async {
     try {
       await _deleteKhatmah();
+      _failedRecordRequests.clear();
       _lastKnownPlan = null;
       _emitIfOpen(const KhatmahNoActivePlan());
     } catch (error) {

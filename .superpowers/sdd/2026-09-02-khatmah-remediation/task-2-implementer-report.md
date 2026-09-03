@@ -119,3 +119,23 @@
 
 - `KhatmahCubit.close` gates new submissions, awaits the single tracked FIFO drain, and only then calls `super.close`; all emissions are guarded while closing/closed.
 - Internal authoritative plan cache drives queued requests independently of listeners. Failed requests are retained by `(source, page)` with insertion order; successful writes remove only their own key, and retry selects the most recent outstanding failure.
+
+## Fix Round 5 (2026-09-03)
+
+### RED evidence
+
+- Added regressions for bounded shutdown with a never-resolving write, memoized double-close, completed physical coverage pruning an earlier digital failure, replacement-plan isolation, abandonment cleanup, and accumulated multi-failure retries.
+- Against the Round 4 drain loop, the focused suite failed four behaviors: stalled close exceeded the one-second test bound, double-close returned distinct futures, completion was overwritten by the retained digital failure, and a replacement plan remained contaminated by the old-plan failure.
+
+### GREEN evidence
+
+- Cubit suite: 29 passing; dashboard suite: 11 passing; reader suite: 11 passing; E2E suite: 3 passing; schedule suite: 3 passing.
+- Required combined four-file command: 54 passing, exit 0.
+- Focused analyzer (`dart analyze lib/features/khatmah lib/features/quran lib/core/di/injection.dart lib/core/router/app_router.dart`): no issues.
+
+### Simplification rationale
+
+- Replaced the mutable queue plus nullable drain/cleanup state with one always-settling `Future<void>` tail. Enqueueing installs a plan-scoped Completer before synchronously appending its closure, so deduplication, FIFO order, and close ownership have one source of truth and no restart race.
+- Request and failure identity is `(planId, source, page)`. Each closure revalidates the latest internal plan before and after persistence, catches its own failure, settles its request, and leaves the tail successful.
+- Successful results prune every covered failure for their plan; completion clears that plan's failures and remains the final emitted state. Successful load replacement/no-plan and abandonment discard stale failures, while retry considers only the active plan.
+- `close()` synchronously gates submissions, memoizes one Future, waits for the captured tail only up to the named production shutdown timeout, and calls `super.close()` once. Late storage completion performs safe internal cleanup without emitting to a closed Cubit.

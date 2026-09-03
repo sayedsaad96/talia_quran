@@ -666,7 +666,7 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<RecordKhatmahReadingUsecase>(),
       getIt<PauseResumeKhatmahUsecase>(),
       getIt<DeleteKhatmahUsecase>(),
-      getIt<UpdateKhatmahScheduleUsecase>(),
+      updateSchedule: getIt<UpdateKhatmahScheduleUsecase>(),
     ),
   );
   getIt.registerFactory<KhatmahSetupCubit>(

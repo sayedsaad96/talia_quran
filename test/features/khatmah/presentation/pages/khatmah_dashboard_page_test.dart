@@ -82,7 +82,7 @@ void main() {
       mockRecordReading,
       mockPauseResume,
       mockDelete,
-      mockUpdateSchedule,
+      updateSchedule: mockUpdateSchedule,
     );
     return createdCubit!;
   }
