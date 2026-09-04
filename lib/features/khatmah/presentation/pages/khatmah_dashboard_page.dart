@@ -16,6 +16,7 @@ import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
 import '../cubits/khatmah_cubit.dart';
+import '../khatmah_localizations.dart';
 import '../widgets/khatmah_progress_gauge.dart';
 
 class KhatmahDashboardPage extends StatefulWidget {
@@ -57,39 +58,33 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
   }
 
   void _showMushafLoggerDialog(BuildContext context, KhatmahPlan plan) {
-    final isArabic = context.isArabic;
     showDialog<bool>(
       context: context,
       builder: (ctx) => _PhysicalMushafLoggerDialog(cubit: _cubit, plan: plan),
     ).then((saved) {
       if (saved != true || !context.mounted) return;
       context.showSnackBar(
-        isArabic
-            ? 'تم تسجيل القراءة بنجاح'
-            : 'Physical Mushaf progress saved successfully',
+        context.l10n.khatmahPhysicalMushafProgressSavedSuccessfully,
       );
     });
   }
 
   void _showAbandonConfirmDialog(BuildContext context) {
-    final isArabic = context.isArabic;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(
-          isArabic ? 'إنهاء الختمة' : 'End Khatmah',
+          context.l10n.khatmahEndKhatmah,
           style: AppTypography.titleMedium,
         ),
         content: Text(
-          isArabic
-              ? 'هل أنت متأكد من رغبتك في إنهاء هذه الختمة؟ يمكنك دائماً البدء من جديد بهدوء وبدون أي حرج.'
-              : 'Are you sure you want to end this Khatmah? You can always start anew whenever you feel ready.',
+          context.l10n.khatmahAreYouSureYouWantToEndThis,
           style: AppTypography.bodyMedium,
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text(isArabic ? 'تراجع' : 'Cancel'),
+            child: Text(context.l10n.khatmahCancel),
           ),
           TextButton(
             key: const Key('khatmah_dashboard_abandon_confirm_button'),
@@ -100,7 +95,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
             ),
-            child: Text(isArabic ? 'إنهاء الختمة' : 'End Khatmah'),
+            child: Text(context.l10n.khatmahEndKhatmah),
           ),
         ],
       ),
@@ -123,7 +118,6 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
     BuildContext context,
     KhatmahProgressFailure failure,
   ) {
-    final isArabic = context.isArabic;
     final errorColor = Theme.of(context).colorScheme.error;
     final canRetryProgress = failure.plan != null && failure.pageNumber > 0;
     return Container(
@@ -141,9 +135,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              isArabic
-                  ? 'تعذر حفظ تقدم الختمة.'
-                  : 'Unable to save Khatmah progress.',
+              context.l10n.khatmahUnableToSaveKhatmahProgress,
               key: const Key('khatmah_dashboard_progress_failure_message'),
               style: AppTypography.bodySmall.copyWith(color: errorColor),
             ),
@@ -153,7 +145,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
             onPressed: canRetryProgress
                 ? _cubit.retryLastProgress
                 : _cubit.load,
-            child: Text(isArabic ? 'إعادة المحاولة' : 'Retry'),
+            child: Text(context.l10n.khatmahRetry),
           ),
         ],
       ),
@@ -166,15 +158,10 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
     bool isDark,
   ) {
     final recipient = dedication.recipientName ?? '';
-    String conditionLabel = '';
-    if (dedication.condition == DedicationCondition.alive) {
-      conditionLabel = isArabic ? 'حفظه الله' : 'Living';
-    } else if (dedication.condition == DedicationCondition.deceased) {
-      conditionLabel = isArabic ? 'رحمه الله' : 'Deceased';
-    } else if (dedication.condition == DedicationCondition.sick) {
-      conditionLabel = isArabic ? 'شفاه الله' : 'Healing';
-    }
-
+    final conditionLabel = localizedKhatmahCondition(
+      context,
+      dedication.condition,
+    );
     final fullText = conditionLabel.isNotEmpty
         ? '$recipient ($conditionLabel)'
         : recipient;
@@ -196,11 +183,13 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
         children: [
           const Icon(Icons.favorite_rounded, size: 14, color: AppColors.gold),
           const SizedBox(width: AppSpacing.xs),
-          Text(
-            isArabic ? 'مهداة إلى: $fullText' : 'Dedicated to: $fullText',
-            style: AppTypography.labelSmall.copyWith(
-              color: isDark ? AppColors.goldLight : AppColors.goldDark,
-              fontWeight: FontWeight.w600,
+          Flexible(
+            child: Text(
+              context.l10n.khatmahDedicatedTo((fullText).toString()),
+              style: AppTypography.labelSmall.copyWith(
+                color: isDark ? AppColors.goldLight : AppColors.goldDark,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -229,7 +218,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
           if (state is KhatmahProgressFailure && state.plan == null) {
             return Scaffold(
               appBar: AppBar(
-                title: Text(isArabic ? 'لوحة الختمة' : 'Khatmah Dashboard'),
+                title: Text(context.l10n.khatmahKhatmahDashboard),
                 centerTitle: true,
               ),
               body: Center(
@@ -246,17 +235,13 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                       ),
                       const SizedBox(height: AppSpacing.md),
                       Text(
-                        isArabic
-                            ? 'تعذر تحميل الختمة'
-                            : 'Unable to load your Khatmah',
+                        context.l10n.khatmahUnableToLoadYourKhatmah,
                         textAlign: TextAlign.center,
                         style: AppTypography.titleMedium,
                       ),
                       const SizedBox(height: AppSpacing.sm),
                       Text(
-                        isArabic
-                            ? 'تحقق من الاتصال وحاول مرة أخرى.'
-                            : 'Check your connection and try again.',
+                        context.l10n.khatmahCheckYourConnectionAndTryAgain,
                         textAlign: TextAlign.center,
                         style: AppTypography.bodySmall,
                       ),
@@ -267,7 +252,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                         ),
                         onPressed: _cubit.load,
                         icon: const Icon(Icons.refresh_rounded),
-                        label: Text(isArabic ? 'إعادة المحاولة' : 'Reload'),
+                        label: Text(context.l10n.khatmahReload),
                       ),
                     ],
                   ),
@@ -279,7 +264,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
           if (state is KhatmahNoActivePlan) {
             return Scaffold(
               appBar: AppBar(
-                title: Text(isArabic ? 'ختمة القرآن الكريم' : 'Quran Khatmah'),
+                title: Text(context.l10n.khatmahQuranKhatmah),
                 centerTitle: true,
               ),
               body: Center(
@@ -377,7 +362,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
           return Scaffold(
             appBar: AppBar(
               title: Text(
-                isArabic ? 'لوحة الختمة' : 'Khatmah Dashboard',
+                context.l10n.khatmahKhatmahDashboard,
                 style: AppTypography.titleMedium,
               ),
               centerTitle: true,
@@ -386,7 +371,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
               actions: [
                 IconButton(
                   key: const Key('khatmah_dashboard_abandon_button'),
-                  tooltip: isArabic ? 'إنهاء الختمة' : 'End Khatmah',
+                  tooltip: context.l10n.khatmahEndKhatmah,
                   icon: const Icon(Icons.close_rounded),
                   onPressed: () => _showAbandonConfirmDialog(context),
                 ),
@@ -478,23 +463,22 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                                 size: 22,
                               ),
                               const SizedBox(width: AppSpacing.sm),
-                              Text(
-                                dailyComplete
-                                    ? (isArabic
-                                          ? 'أتممت ورد اليوم'
-                                          : "Today's Wird completed")
-                                    : (isArabic
-                                          ? 'ورد اليوم'
-                                          : 'Today\'s Wird'),
-                                style: AppTypography.titleMedium.copyWith(
-                                  fontWeight: FontWeight.bold,
+                              Expanded(
+                                child: Text(
+                                  dailyComplete
+                                      ? (context
+                                            .l10n
+                                            .khatmahTodaySWirdCompleted)
+                                      : (context.l10n.khatmahTodaySWird),
+                                  style: AppTypography.titleMedium.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                              const Spacer(),
                               Text(
-                                isArabic
-                                    ? '$wirdPagesCountStr صفحات'
-                                    : '$wirdPagesCount pages',
+                                context.l10n.khatmahPages(
+                                  (wirdPagesCountStr).toString(),
+                                ),
                                 style: AppTypography.labelMedium.copyWith(
                                   color: AppColors.gold,
                                   fontWeight: FontWeight.bold,
@@ -504,9 +488,10 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
-                            isArabic
-                                ? 'من صفحة $wirdStartStr إلى صفحة $wirdEndStr'
-                                : 'Pages $wirdStartStr to $wirdEndStr',
+                            context.l10n.khatmahPagesTo(
+                              (wirdStartStr).toString(),
+                              (wirdEndStr).toString(),
+                            ),
                             style: AppTypography.bodyMedium.copyWith(
                               color: isDark
                                   ? AppColors.darkTextSecondary
@@ -551,12 +536,10 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                                   ),
                             label: Text(
                               isResuming
-                                  ? (isArabic ? 'جارٍ الاستئناف' : 'Resuming…')
+                                  ? (context.l10n.khatmahResuming)
                                   : isPaused
                                   ? l10n.khatmahResumeAction
-                                  : (isArabic
-                                        ? 'متابعة القراءة'
-                                        : 'Continue Reading'),
+                                  : (context.l10n.khatmahContinueReading),
                               style: AppTypography.labelLarge.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -580,40 +563,18 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                           color: primary.withValues(alpha: 0.15),
                         ),
                       ),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          const Icon(
-                            Icons.bookmark_added_rounded,
-                            color: AppColors.gold,
-                            size: 24,
+                          Text(
+                            context.l10n.khatmahReadFromPhysicalMushaf,
+                            style: AppTypography.labelLarge,
                           ),
-                          const SizedBox(width: AppSpacing.md),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  isArabic
-                                      ? 'قرأت من المصحف الورقي؟'
-                                      : 'Read from physical Mushaf?',
-                                  style: AppTypography.labelLarge.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  isArabic
-                                      ? 'سجّل آخر صفحة قرأتها لمزامنة تقدمك'
-                                      : 'Record your latest page to sync progress',
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: isDark
-                                        ? AppColors.darkTextSecondary
-                                        : AppColors.lightTextSecondary,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          Text(
+                            context.l10n.khatmahPhysicalRangeHint,
+                            style: AppTypography.bodySmall,
                           ),
+                          const SizedBox(height: AppSpacing.sm),
                           OutlinedButton(
                             key: const Key(
                               'khatmah_dashboard_log_mushaf_button',
@@ -630,7 +591,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                                 ),
                               ),
                             ),
-                            child: Text(isArabic ? 'تسجيل' : 'Log'),
+                            child: Text(context.l10n.khatmahLog),
                           ),
                         ],
                       ),
@@ -639,9 +600,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
 
                     // Adaptive Controls Section
                     Text(
-                      isArabic
-                          ? 'خيارات التكيّف الهادئ'
-                          : 'Calm Adaptive Controls',
+                      context.l10n.khatmahCalmAdaptiveControls,
                       style: AppTypography.labelLarge.copyWith(
                         fontWeight: FontWeight.w600,
                         color: isDark
@@ -662,9 +621,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                             onPressed: () {
                               _cubit.calmAdjustment();
                               context.showSnackBar(
-                                isArabic
-                                    ? 'تمت إعادة ضبط موعد الختام بهدوء وسكينة'
-                                    : 'End date recalibrated smoothly',
+                                context.l10n.khatmahEndDateRecalibratedSmoothly,
                               );
                             },
                             style: OutlinedButton.styleFrom(
@@ -680,7 +637,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                             ),
                             icon: const Icon(Icons.update_rounded, size: 18),
                             label: Text(
-                              isArabic ? 'تعديل هادئ' : 'Calm Adjust',
+                              context.l10n.khatmahCalmAdjust,
                               style: AppTypography.labelMedium,
                             ),
                           ),
@@ -695,9 +652,9 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                             onPressed: () {
                               _cubit.mildCompensation(1);
                               context.showSnackBar(
-                                isArabic
-                                    ? 'تمت إضافة صفحة يومياً للتعويض الخفيف'
-                                    : 'Added 1 page/day mild compensation',
+                                context
+                                    .l10n
+                                    .khatmahAdded1PageDayMildCompensation,
                               );
                             },
                             style: OutlinedButton.styleFrom(
@@ -716,7 +673,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                               size: 18,
                             ),
                             label: Text(
-                              isArabic ? 'تعويض خفيف' : 'Mild Boost',
+                              context.l10n.khatmahMildBoost,
                               style: AppTypography.labelMedium,
                             ),
                           ),
@@ -753,8 +710,8 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                       ),
                       label: Text(
                         plan.status == KhatmahStatus.active
-                            ? (isArabic ? 'إيقاف مؤقت' : 'Pause')
-                            : (isArabic ? 'استئناف' : 'Resume'),
+                            ? (context.l10n.khatmahPause)
+                            : (context.l10n.khatmahResume),
                         style: AppTypography.labelMedium,
                       ),
                     ),
@@ -784,7 +741,8 @@ class _PhysicalMushafLoggerDialogState
     extends State<_PhysicalMushafLoggerDialog> {
   late final TextEditingController _controller;
   bool _isSaving = false;
-  String? _saveError;
+  bool _saveFailed = false;
+  bool _pausedError = false;
 
   @override
   void initState() {
@@ -799,16 +757,16 @@ class _PhysicalMushafLoggerDialogState
   }
 
   Future<void> _save() async {
-    final page = int.tryParse(_controller.text.trim());
+    final page = parseKhatmahPageInput(_controller.text);
     if (page == null ||
-        page < 1 ||
+        page < widget.plan.nextUnreadPage ||
         page > KhatmahSchedulingEngine.totalPages ||
         _isSaving) {
       return;
     }
     setState(() {
       _isSaving = true;
-      _saveError = null;
+      _saveFailed = false;
     });
     await widget.cubit.recordPhysicalThroughPage(page);
     if (!mounted) return;
@@ -816,9 +774,8 @@ class _PhysicalMushafLoggerDialogState
     if (resultState is KhatmahProgressFailure || resultState is KhatmahPaused) {
       setState(() {
         _isSaving = false;
-        _saveError = resultState is KhatmahPaused
-            ? 'Khatmah is paused'
-            : 'Unable to save Khatmah progress. Please try again.';
+        _saveFailed = true;
+        _pausedError = resultState is KhatmahPaused;
       });
       return;
     }
@@ -828,6 +785,11 @@ class _PhysicalMushafLoggerDialogState
   @override
   Widget build(BuildContext context) {
     final isArabic = context.isArabic;
+    final page = parseKhatmahPageInput(_controller.text);
+    final validRange =
+        page != null && page >= widget.plan.nextUnreadPage && page <= 604;
+    String number(int value) =>
+        isArabic ? MushafHizbHelper.toArabicNumber(value) : value.toString();
     return AlertDialog(
       title: Row(
         children: [
@@ -835,9 +797,7 @@ class _PhysicalMushafLoggerDialogState
           const SizedBox(width: AppSpacing.sm),
           Expanded(
             child: Text(
-              isArabic
-                  ? 'تسجيل قراءة من المصحف'
-                  : 'Log Physical Mushaf Reading',
+              context.l10n.khatmahLogPhysicalMushafReading,
               style: AppTypography.titleMedium,
             ),
           ),
@@ -849,33 +809,50 @@ class _PhysicalMushafLoggerDialogState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isArabic
-                  ? 'أدخل رقم آخر صفحة قرأتها من المصحف الورقي (1 - 604):'
-                  : 'Enter the last page read from your physical Mushaf (1 - 604):',
+              context.l10n.khatmahEnterTheLastPageReadFromYourPhysical,
               style: AppTypography.bodyMedium,
             ),
             const SizedBox(height: AppSpacing.md),
             TextFormField(
               key: const Key('khatmah_dashboard_mushaf_page_input'),
               controller: _controller,
+              onChanged: (_) => setState(() {}),
               keyboardType: TextInputType.number,
               autofocus: true,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp('[0-9٠-٩]')),
+              ],
               decoration: InputDecoration(
-                labelText: isArabic ? 'رقم الصفحة' : 'Page number',
-                hintText: isArabic
-                    ? 'مثال: ${widget.plan.currentPage + 1}'
-                    : 'e.g. ${widget.plan.currentPage + 1}',
+                labelText: context.l10n.khatmahPageNumber,
+                hintText: context.l10n.khatmahEG(
+                  widget.plan.nextUnreadPage.toString(),
+                ),
                 prefixIcon: const Icon(Icons.bookmark_outline_rounded),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
               ),
             ),
-            if (_saveError != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                validRange
+                    ? context.l10n.khatmahConfirmRange(
+                        number(widget.plan.nextUnreadPage),
+                        number(page),
+                      )
+                    : context.l10n.khatmahRangeValidation(
+                        number(widget.plan.nextUnreadPage),
+                      ),
+              ),
+            ),
+            if (_saveFailed) ...[
               const SizedBox(height: AppSpacing.sm),
               Text(
-                _saveError!,
+                _pausedError
+                    ? context.l10n.khatmahIsPaused
+                    : context.l10n.khatmahUnableToSaveKhatmahProgress,
                 key: const Key('khatmah_dashboard_mushaf_save_error'),
                 style: AppTypography.bodySmall.copyWith(
                   color: Theme.of(context).colorScheme.error,
@@ -888,13 +865,17 @@ class _PhysicalMushafLoggerDialogState
       actions: [
         TextButton(
           onPressed: _isSaving ? null : () => Navigator.of(context).pop(false),
-          child: Text(isArabic ? 'إلغاء' : 'Cancel'),
+          child: Text(context.l10n.khatmahCancel),
         ),
         FilledButton(
           key: const Key('khatmah_dashboard_mushaf_save_button'),
-          onPressed: _save,
+          onPressed: _isSaving || !validRange ? null : _save,
           style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
-          child: Text(isArabic ? 'حفظ التقدم' : 'Save Progress'),
+          child: Text(
+            _isSaving
+                ? context.l10n.khatmahSaving
+                : context.l10n.khatmahSaveProgress,
+          ),
         ),
       ],
     );

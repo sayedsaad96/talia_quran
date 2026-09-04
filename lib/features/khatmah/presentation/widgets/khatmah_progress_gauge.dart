@@ -23,7 +23,9 @@ class KhatmahProgressGauge extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final isArabic = context.isArabic;
-    final percent = (plan.progressPercentage * 100).clamp(0, 100).toStringAsFixed(1);
+    final percent = (plan.progressPercentage * 100)
+        .clamp(0, 100)
+        .toStringAsFixed(1);
     final completedPages = isArabic
         ? MushafHizbHelper.toArabicNumber(plan.completedPagesCount)
         : plan.completedPagesCount.toString();
@@ -38,99 +40,124 @@ class KhatmahProgressGauge extends StatelessWidget {
         '${plan.expectedEndDate.year}/${plan.expectedEndDate.month.toString().padLeft(2, '0')}/${plan.expectedEndDate.day.toString().padLeft(2, '0')}';
     final formattedDate = isArabic ? _toArabicDigits(dateStr) : dateStr;
 
-    return Container(
-      key: const Key('khatmah_progress_gauge'),
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-      alignment: Alignment.center,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: size,
-            height: size,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // Custom arc gauge painter
-                CustomPaint(
-                  size: Size(size, size),
-                  painter: _GaugePainter(
-                    progress: plan.progressPercentage.clamp(0.0, 1.0),
-                    trackColor: isDark
-                        ? AppColors.darkSurfaceVariant
-                        : AppColors.lightSurfaceVariant,
-                    progressColor: AppColors.gold,
-                    progressEndColor: AppColors.goldLight,
+    return Semantics(
+      label: context.l10n.khatmahProgress,
+      value: context.l10n.khatmahProgressValue(
+        completedPages,
+        totalPages,
+        percent,
+      ),
+      excludeSemantics: true,
+      child: Container(
+        key: const Key('khatmah_progress_gauge'),
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: size,
+              height: math.max(
+                size,
+                MediaQuery.textScalerOf(context).scale(140),
+              ),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Custom arc gauge painter
+                  CustomPaint(
+                    size: Size(size, size),
+                    painter: _GaugePainter(
+                      progress: plan.progressPercentage.clamp(0.0, 1.0),
+                      trackColor: isDark
+                          ? AppColors.darkSurfaceVariant
+                          : AppColors.lightSurfaceVariant,
+                      progressColor: AppColors.gold,
+                      progressEndColor: AppColors.goldLight,
+                    ),
                   ),
+                  // Center content
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$percent%',
+                        key: const Key('khatmah_progress_percentage'),
+                        style: AppTypography.headlineMedium.copyWith(
+                          color: AppColors.gold,
+                          fontWeight: FontWeight.bold,
+                          height: 1.1,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '$completedPages / $totalPages',
+                        key: const Key('khatmah_progress_pages_count'),
+                        style: AppTypography.labelMedium.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextPrimary
+                              : AppColors.lightTextPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        context.l10n.khatmahPagesLeft(
+                          (remainingPages).toString(),
+                        ),
+                        key: const Key('khatmah_progress_remaining_pages'),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: isDark
+                              ? AppColors.darkTextSecondary
+                              : AppColors.lightTextSecondary,
+                          fontSize: 11,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.calendar_today_rounded,
+                  size: 14,
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
                 ),
-                // Center content
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '$percent%',
-                      key: const Key('khatmah_progress_percentage'),
-                      style: AppTypography.headlineMedium.copyWith(
-                        color: AppColors.gold,
-                        fontWeight: FontWeight.bold,
-                        height: 1.1,
-                      ),
+                const SizedBox(width: AppSpacing.xs),
+                Flexible(
+                  child: Text(
+                    context.l10n.khatmahEstCompletion(
+                      (formattedDate).toString(),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$completedPages / $totalPages',
-                      key: const Key('khatmah_progress_pages_count'),
-                      style: AppTypography.labelMedium.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextPrimary
-                            : AppColors.lightTextPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    key: const Key('khatmah_progress_end_date'),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                      fontWeight: FontWeight.w500,
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isArabic ? '$remainingPages صفحة متبقية' : '$remainingPages pages left',
-                      key: const Key('khatmah_progress_remaining_pages'),
-                      style: AppTypography.bodySmall.copyWith(
-                        color: isDark
-                            ? AppColors.darkTextSecondary
-                            : AppColors.lightTextSecondary,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: AppSpacing.sm),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.calendar_today_rounded,
-                size: 14,
-                color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-              ),
-              const SizedBox(width: AppSpacing.xs),
-              Text(
-                isArabic ? 'الختام المتوقع: $formattedDate' : 'Est. completion: $formattedDate',
-                key: const Key('khatmah_progress_end_date'),
-                style: AppTypography.bodySmall.copyWith(
-                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
   static String _toArabicDigits(String input) {
     const digits = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
-    return input.replaceAllMapped(RegExp(r'\d'), (m) => digits[int.parse(m.group(0)!)]);
+    return input.replaceAllMapped(
+      RegExp(r'\d'),
+      (m) => digits[int.parse(m.group(0)!)],
+    );
   }
 }
 

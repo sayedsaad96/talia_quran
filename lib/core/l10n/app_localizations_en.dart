@@ -4083,4 +4083,330 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get khatmahEndPlanAction => 'End Khatmah';
+
+  @override
+  String get khatmahStartNewKhatmah => 'Start New Khatmah';
+
+  @override
+  String get khatmahChooseYourDailyReadingPaceToCompleteThe =>
+      'Choose your daily reading pace to complete the Quran with serenity.';
+
+  @override
+  String get khatmahDailyPages => 'Daily Pages';
+
+  @override
+  String khatmahPages(String v1) {
+    return '$v1 pages';
+  }
+
+  @override
+  String get khatmahOrCustomPagesPerDay => 'Or custom pages per day';
+
+  @override
+  String get khatmahEG5 => 'e.g. 5';
+
+  @override
+  String get khatmahEstimatedDuration => 'Estimated Duration';
+
+  @override
+  String khatmahDays(String v1) {
+    return '$v1 days';
+  }
+
+  @override
+  String get khatmahExpectedCompletion => 'Expected Completion';
+
+  @override
+  String get khatmahStartKhatmah => 'Start Khatmah';
+
+  @override
+  String get khatmahPhysicalMushafProgressSavedSuccessfully =>
+      'Physical Mushaf progress saved successfully';
+
+  @override
+  String get khatmahEndKhatmah => 'End Khatmah';
+
+  @override
+  String get khatmahAreYouSureYouWantToEndThis =>
+      'Are you sure you want to end this Khatmah? You can always start anew whenever you feel ready.';
+
+  @override
+  String get khatmahCancel => 'Cancel';
+
+  @override
+  String get khatmahUnableToSaveKhatmahProgress =>
+      'Unable to save Khatmah progress.';
+
+  @override
+  String get khatmahRetry => 'Retry';
+
+  @override
+  String get khatmahLiving => 'Living';
+
+  @override
+  String get khatmahDeceased => 'Deceased';
+
+  @override
+  String khatmahDedicatedTo(String v1) {
+    return 'Dedicated to: $v1';
+  }
+
+  @override
+  String get khatmahKhatmahDashboard => 'Khatmah Dashboard';
+
+  @override
+  String get khatmahUnableToLoadYourKhatmah => 'Unable to load your Khatmah';
+
+  @override
+  String get khatmahCheckYourConnectionAndTryAgain =>
+      'Check your connection and try again.';
+
+  @override
+  String get khatmahReload => 'Reload';
+
+  @override
+  String get khatmahQuranKhatmah => 'Quran Khatmah';
+
+  @override
+  String get khatmahTodaySWirdCompleted => 'Today\'s Wird completed';
+
+  @override
+  String get khatmahTodaySWird => 'Today\'s Wird';
+
+  @override
+  String khatmahPagesTo(String v1, String v2) {
+    return 'Pages $v1 to $v2';
+  }
+
+  @override
+  String get khatmahResuming => 'Resuming…';
+
+  @override
+  String get khatmahContinueReading => 'Continue Reading';
+
+  @override
+  String get khatmahReadFromPhysicalMushaf => 'Read from physical Mushaf?';
+
+  @override
+  String get khatmahLog => 'Log';
+
+  @override
+  String get khatmahCalmAdaptiveControls => 'Calm Adaptive Controls';
+
+  @override
+  String get khatmahEndDateRecalibratedSmoothly =>
+      'End date recalibrated smoothly';
+
+  @override
+  String get khatmahCalmAdjust => 'Calm Adjust';
+
+  @override
+  String get khatmahAdded1PageDayMildCompensation =>
+      'Added 1 page/day mild compensation';
+
+  @override
+  String get khatmahMildBoost => 'Mild Boost';
+
+  @override
+  String get khatmahPause => 'Pause';
+
+  @override
+  String get khatmahResume => 'Resume';
+
+  @override
+  String get khatmahLogPhysicalMushafReading => 'Log Physical Mushaf Reading';
+
+  @override
+  String get khatmahEnterTheLastPageReadFromYourPhysical =>
+      'Enter the last page read from your physical Mushaf (1 - 604):';
+
+  @override
+  String get khatmahPageNumber => 'Page number';
+
+  @override
+  String khatmahEG(String v1) {
+    return 'e.g. $v1';
+  }
+
+  @override
+  String get khatmahSaveProgress => 'Save Progress';
+
+  @override
+  String get khatmahNoSavedCompletionAvailable =>
+      'No saved completion available';
+
+  @override
+  String get khatmahPagesLabel => 'Pages';
+
+  @override
+  String get khatmahDuration => 'Duration';
+
+  @override
+  String get khatmahCompleted => 'Completed';
+
+  @override
+  String get khatmahDedicationOfReward => 'Dedication of Reward';
+
+  @override
+  String get khatmahReadDuAKhatmAlQuran => 'Read Du\'a Khatm al-Quran';
+
+  @override
+  String get khatmahShareAchievement => 'Share Achievement';
+
+  @override
+  String get khatmahBackToHome => 'Back to Home';
+
+  @override
+  String get khatmahDuACopiedToClipboard => 'Du\'a copied to clipboard';
+
+  @override
+  String get khatmahDuAKhatmAlQuran => 'Du\'a Khatm al-Quran';
+
+  @override
+  String get khatmahDecreaseFontSize => 'Decrease font size';
+
+  @override
+  String get khatmahIncreaseFontSize => 'Increase font size';
+
+  @override
+  String get khatmahCopyDuA => 'Copy du\'a';
+
+  @override
+  String khatmahPagesLeft(String v1) {
+    return '$v1 pages left';
+  }
+
+  @override
+  String khatmahEstCompletion(String v1) {
+    return 'Est. completion: $v1';
+  }
+
+  @override
+  String get khatmahDedicateKhatmahToSomeone => 'Dedicate Khatmah to someone';
+
+  @override
+  String get khatmahRecipientName => 'Recipient Name';
+
+  @override
+  String get khatmahEGMyBelovedMother => 'e.g. My beloved mother';
+
+  @override
+  String get khatmahRelationship => 'Relationship';
+
+  @override
+  String get khatmahCondition => 'Condition';
+
+  @override
+  String get khatmahSickRecovery => 'Sick / Recovery';
+
+  @override
+  String get khatmahSpecialNoteDuAOptional => 'Special Note / Du\'a (Optional)';
+
+  @override
+  String khatmahPageOfOfTodaySWird(String v1, String v2, String v3) {
+    return 'page $v1 ($v2 of $v3 of today\'s wird)';
+  }
+
+  @override
+  String get khatmahSaveExit => 'Save & exit';
+
+  @override
+  String get khatmahCongratulations =>
+      'Congratulations on completing the Quran';
+
+  @override
+  String khatmahShareSummary(String title, String days) {
+    return 'Completed Quran Khatmah ($title) in $days days.\nVia Talia Quran App';
+  }
+
+  @override
+  String khatmahUserNote(String note) {
+    return 'Your personal note: $note';
+  }
+
+  @override
+  String khatmahTodayRange(String start, String end, String completed) {
+    return 'Today: pages $start - $end$completed';
+  }
+
+  @override
+  String get khatmahDailyCompletedSuffix => ' — completed';
+
+  @override
+  String get khatmahProgress => 'Khatmah progress';
+
+  @override
+  String khatmahProgressValue(String completed, String total, String percent) {
+    return '$completed of $total pages, $percent percent';
+  }
+
+  @override
+  String get khatmahSetupSaveError =>
+      'Unable to start Khatmah. Please try again.';
+
+  @override
+  String get khatmahEndError => 'Unable to end Khatmah. Please try again.';
+
+  @override
+  String get khatmahDedicationPreference =>
+      'Dedication is available for living and deceased recipients. Deceased recipients are preferred, based on scholarly consultation reported by the app owner.';
+
+  @override
+  String get khatmahWriteYourOwnNote => 'Write your personal note here';
+
+  @override
+  String get khatmahPhysicalRangeHint =>
+      'Record the pages you read, starting from the next unread page.';
+
+  @override
+  String khatmahConfirmRange(String start, String end) {
+    return 'Record pages $start to $end inclusive.';
+  }
+
+  @override
+  String khatmahRangeValidation(String start) {
+    return 'Enter a page from $start to 604 to confirm the range.';
+  }
+
+  @override
+  String get khatmahIsPaused => 'Khatmah is paused';
+
+  @override
+  String get khatmahProgressNotSaved => 'Progress was not saved';
+
+  @override
+  String get khatmahSaving => 'Saving…';
+
+  @override
+  String get khatmahDuaLoadError =>
+      'Unable to load the supplication. Please try again.';
+
+  @override
+  String get khatmahSuggestedDua =>
+      'Suggested general supplication after Khatmah';
+
+  @override
+  String get khatmahDuaPendingReview =>
+      'Text and source review pending. This is a suggested general supplication, not a prescribed Khatmah formula or a text attributed to the Prophet. Its source has not yet been verified.';
+
+  @override
+  String get khatmahGeneralGuidance => 'General supplication';
+
+  @override
+  String get khatmahRelationshipParent => 'Parent';
+
+  @override
+  String get khatmahRelationshipMother => 'Mother';
+
+  @override
+  String get khatmahRelationshipFather => 'Father';
+
+  @override
+  String get khatmahRelationshipFriend => 'Friend';
+
+  @override
+  String get khatmahRelationshipRelative => 'Relative';
+
+  @override
+  String get khatmahRelationshipOther => 'Other';
 }

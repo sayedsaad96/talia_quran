@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/presentation/widgets/khatmah_dedication_form.dart';
@@ -9,6 +10,8 @@ void main() {
     required ValueChanged<KhatmahDedication> onChanged,
   }) {
     return MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: SingleChildScrollView(
           child: KhatmahDedicationForm(
@@ -20,17 +23,20 @@ void main() {
     );
   }
 
-  testWidgets('starts disabled by default and expands on toggle', (tester) async {
+  testWidgets('starts disabled by default and expands on toggle', (
+    tester,
+  ) async {
     KhatmahDedication? latestDedication;
     await tester.pumpWidget(
-      buildWidget(
-        onChanged: (d) => latestDedication = d,
-      ),
+      buildWidget(onChanged: (d) => latestDedication = d),
     );
     await tester.pumpAndSettle();
 
     // Fields should not be visible when toggle is off
-    expect(find.byKey(const Key('khatmah_dedication_recipient_name')), findsNothing);
+    expect(
+      find.byKey(const Key('khatmah_dedication_recipient_name')),
+      findsNothing,
+    );
 
     // Toggle on
     final toggle = find.byKey(const Key('khatmah_dedication_toggle'));
@@ -39,7 +45,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // Fields should now appear
-    expect(find.byKey(const Key('khatmah_dedication_recipient_name')), findsOneWidget);
+    expect(
+      find.byKey(const Key('khatmah_dedication_recipient_name')),
+      findsOneWidget,
+    );
     expect(latestDedication, isNotNull);
     expect(latestDedication!.isDedicated, isTrue);
 
@@ -47,11 +56,16 @@ void main() {
     await tester.tap(toggle);
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('khatmah_dedication_recipient_name')), findsNothing);
+    expect(
+      find.byKey(const Key('khatmah_dedication_recipient_name')),
+      findsNothing,
+    );
     expect(latestDedication!.isDedicated, isFalse);
   });
 
-  testWidgets('filling recipient name invokes onChanged with updated name', (tester) async {
+  testWidgets('filling recipient name invokes onChanged with updated name', (
+    tester,
+  ) async {
     KhatmahDedication? latestDedication;
     await tester.pumpWidget(
       buildWidget(
@@ -61,7 +75,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final nameField = find.byKey(const Key('khatmah_dedication_recipient_name'));
+    final nameField = find.byKey(
+      const Key('khatmah_dedication_recipient_name'),
+    );
     expect(nameField, findsOneWidget);
 
     await tester.enterText(nameField, 'والدتي الغالية');
@@ -70,7 +86,9 @@ void main() {
     expect(latestDedication?.recipientName, 'والدتي الغالية');
   });
 
-  testWidgets('selecting condition choice chips updates condition', (tester) async {
+  testWidgets('selecting condition choice chips updates condition', (
+    tester,
+  ) async {
     KhatmahDedication? latestDedication;
     await tester.pumpWidget(
       buildWidget(
@@ -81,7 +99,9 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap deceased condition chip
-    final deceasedChip = find.byKey(const Key('khatmah_dedication_condition_deceased'));
+    final deceasedChip = find.byKey(
+      const Key('khatmah_dedication_condition_deceased'),
+    );
     expect(deceasedChip, findsOneWidget);
     await tester.tap(deceasedChip);
     await tester.pumpAndSettle();
@@ -97,7 +117,9 @@ void main() {
     expect(latestDedication?.condition, DedicationCondition.sick);
 
     // Tap alive condition chip
-    final aliveChip = find.byKey(const Key('khatmah_dedication_condition_alive'));
+    final aliveChip = find.byKey(
+      const Key('khatmah_dedication_condition_alive'),
+    );
     expect(aliveChip, findsOneWidget);
     await tester.tap(aliveChip);
     await tester.pumpAndSettle();
@@ -105,7 +127,9 @@ void main() {
     expect(latestDedication?.condition, DedicationCondition.alive);
   });
 
-  testWidgets('selecting relationship dropdown updates relationship', (tester) async {
+  testWidgets('selecting relationship dropdown updates relationship', (
+    tester,
+  ) async {
     KhatmahDedication? latestDedication;
     await tester.pumpWidget(
       buildWidget(
@@ -121,14 +145,16 @@ void main() {
     await tester.pumpAndSettle();
 
     // Select 'صديق' from dropdown
-    final item = find.text('صديق').last;
+    final item = find.text('Friend').last;
     await tester.tap(item);
     await tester.pumpAndSettle();
 
     expect(latestDedication?.relationship, 'صديق');
   });
 
-  testWidgets('entering custom note updates customNote in dedication', (tester) async {
+  testWidgets('entering custom note updates customNote in dedication', (
+    tester,
+  ) async {
     KhatmahDedication? latestDedication;
     await tester.pumpWidget(
       buildWidget(

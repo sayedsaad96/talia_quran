@@ -269,7 +269,10 @@ void main() {
     );
     deletion.completeError(Exception('delete failed'));
     await tester.pumpAndSettle();
-    expect(find.textContaining('delete failed'), findsOneWidget);
+    expect(
+      find.text('Unable to end Khatmah. Please try again.'),
+      findsOneWidget,
+    );
     expect(find.text('Existing Khatmah'), findsOneWidget);
     expect(tester.widget<TextButton>(end).onPressed, isNotNull);
     expect(

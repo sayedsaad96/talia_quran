@@ -118,12 +118,23 @@ class KhatmahHeroCard extends StatelessWidget {
               Text(
                 isPaused
                     ? context.l10n.khatmahPausedSummary
-                    : 'Today: pages ${wird.startPage} - ${wird.endPage}${dailyComplete ? ' — completed' : ''}',
+                    : context.l10n.khatmahTodayRange(
+                        wird.startPage.toString(),
+                        wird.endPage.toString(),
+                        dailyComplete
+                            ? context.l10n.khatmahDailyCompletedSuffix
+                            : '',
+                      ),
                 style: AppTypography.bodyMedium.copyWith(
                   color: isDark
                       ? AppColors.darkTextPrimary
                       : AppColors.lightTextPrimary,
                 ),
+              ),
+              Text(
+                isPaused
+                    ? context.l10n.khatmahResumeAction
+                    : context.l10n.khatmahContinueReading,
               ),
               if (currentPlan.dedication.isDedicated &&
                   currentPlan.dedication.recipientName != null &&
@@ -131,7 +142,9 @@ class KhatmahHeroCard extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: AppSpacing.xs),
                   child: Text(
-                    'Dedicated to: ${currentPlan.dedication.recipientName}',
+                    context.l10n.khatmahDedicatedTo(
+                      currentPlan.dedication.recipientName!,
+                    ),
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark
                           ? AppColors.darkTextSecondary

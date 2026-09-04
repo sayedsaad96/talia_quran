@@ -42,14 +42,14 @@ class KhatmahReaderSessionBar extends StatelessWidget {
         if (state is KhatmahPaused) {
           return _statusBar(
             context,
-            'Khatmah is paused',
+            context.l10n.khatmahIsPaused,
             Icons.pause_circle_outline_rounded,
           );
         }
         if (state is KhatmahProgressFailure) {
           return _statusBar(
             context,
-            'Progress was not saved',
+            context.l10n.khatmahProgressNotSaved,
             Icons.error_outline_rounded,
             onRetry: resolvedCubit!.retryLastProgress,
           );
@@ -84,17 +84,18 @@ class KhatmahReaderSessionBar extends StatelessWidget {
             ? MushafHizbHelper.toArabicNumber(dailyTarget)
             : dailyTarget.toString();
 
-        final pageInfo = isArabic
-            ? 'صفحة $pageNumStr ($wirdIndexStr من $dailyTargetStr من ورد اليوم)'
-            : 'page $pageNumStr ($wirdIndexStr of $dailyTargetStr of today\'s wird)';
+        final pageInfo = context.l10n.khatmahPageOfOfTodaySWird(
+          (pageNumStr).toString(),
+          (wirdIndexStr).toString(),
+          (dailyTargetStr).toString(),
+        );
 
         final hasRecipient =
             plan.dedication.recipientName?.trim().isNotEmpty ?? false;
         final hasDedication = plan.dedication.isDedicated && hasRecipient;
         final recipient = plan.dedication.recipientName?.trim() ?? '';
-        final dedicationPrefix = isArabic ? 'إهداء: ' : 'Dedicated to: ';
         final dedicationText = hasDedication
-            ? '$dedicationPrefix$recipient'
+            ? context.l10n.khatmahDedicatedTo(recipient)
             : null;
 
         return Container(
@@ -155,8 +156,6 @@ class KhatmahReaderSessionBar extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       pageInfo,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodySmall.copyWith(
                         color: isDark
                             ? Colors.white70
@@ -169,31 +168,32 @@ class KhatmahReaderSessionBar extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.xs),
-              TextButton.icon(
-                onPressed:
-                    onExit ??
-                    () {
-                      if (context.canPop()) {
-                        context.pop();
-                      } else {
-                        context.go('/');
-                      }
-                    },
-                icon: Icon(Icons.exit_to_app_rounded, size: 14, color: gold),
-                label: Text(
-                  isArabic ? 'حفظ وخروج' : 'Save & exit',
-                  style: AppTypography.labelSmall.copyWith(
-                    color: gold,
-                    fontWeight: FontWeight.w600,
+              Flexible(
+                child: TextButton.icon(
+                  onPressed:
+                      onExit ??
+                      () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go('/');
+                        }
+                      },
+                  icon: Icon(Icons.exit_to_app_rounded, size: 14, color: gold),
+                  label: Text(
+                    context.l10n.khatmahSaveExit,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: gold,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                style: TextButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    minimumSize: const Size(48, 48),
                   ),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
             ],
@@ -212,7 +212,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
     final isDark = context.isDark;
     final color = isDark ? AppColors.primaryLight : AppColors.primary;
     return Semantics(
-      label: message,
+      liveRegion: true,
       child: Container(
         margin: const EdgeInsets.fromLTRB(12, 4, 12, 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -226,7 +226,10 @@ class KhatmahReaderSessionBar extends StatelessWidget {
             const SizedBox(width: AppSpacing.sm),
             Expanded(child: Text(message, style: AppTypography.bodySmall)),
             if (onRetry != null)
-              TextButton(onPressed: onRetry, child: const Text('Retry')),
+              TextButton(
+                onPressed: onRetry,
+                child: Text(context.l10n.khatmahRetry),
+              ),
           ],
         ),
       ),

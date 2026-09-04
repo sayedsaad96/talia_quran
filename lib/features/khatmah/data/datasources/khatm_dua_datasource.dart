@@ -9,6 +9,10 @@ class KhatmDuaData {
     required this.sourceNote,
     required this.tier,
     required this.dedicationInserts,
+    this.reviewStatus = 'pendingReview',
+    this.reviewer,
+    this.sourceLocator,
+    this.version,
   });
 
   final String arabicText;
@@ -16,6 +20,10 @@ class KhatmDuaData {
   final String sourceNote;
   final String tier;
   final Map<String, String> dedicationInserts;
+  final String reviewStatus;
+  final String? reviewer;
+  final String? sourceLocator;
+  final String? version;
 
   factory KhatmDuaData.fromJson(Map<String, dynamic> json) {
     return KhatmDuaData(
@@ -23,28 +31,23 @@ class KhatmDuaData {
       source: json['source'] as String,
       sourceNote: json['sourceNote'] as String,
       tier: json['tier'] as String,
-      dedicationInserts:
-          Map<String, String>.from(json['dedicationInserts'] as Map),
+      reviewStatus: json['reviewStatus'] as String? ?? 'pendingReview',
+      reviewer: json['reviewer'] as String?,
+      sourceLocator: json['sourceLocator'] as String?,
+      version: json['version'] as String?,
+      dedicationInserts: Map<String, String>.from(
+        (json['quarantinedDedicationInserts'] ??
+                json['dedicationInserts'] ??
+                const {})
+            as Map,
+      ),
     );
   }
 
-  String getDedicationInsert(DedicationCondition condition, [String? name]) {
-    final key = switch (condition) {
-      DedicationCondition.alive => 'alive',
-      DedicationCondition.deceased => 'deceased',
-      DedicationCondition.sick => 'sick',
-    };
-
-    final template = dedicationInserts[key] ?? '';
-    final trimmedName = name?.trim();
-    if (trimmedName != null && trimmedName.isNotEmpty) {
-      return template.replaceAll('{name}', trimmedName);
-    }
-
-    return template
-        .replaceAll(' لِعَبْدِكَ {name}', '')
-        .replaceAll(' {name}', '');
-  }
+  /// Legacy templates are retained for review, never inferred from a name.
+  /// No gender is modeled and no exact personalized wording is approved.
+  String getDedicationInsert(DedicationCondition condition, [String? name]) =>
+      '';
 }
 
 class KhatmDuaDatasource {

@@ -282,6 +282,7 @@ void main() {
       find.byKey(const Key('khatmah_dashboard_mushaf_page_input')),
       '25',
     );
+    await tester.pump();
     await tester.tap(
       find.byKey(const Key('khatmah_dashboard_mushaf_save_button')),
     );
@@ -341,6 +342,7 @@ void main() {
         const Key('khatmah_dashboard_mushaf_page_input'),
       );
       await tester.enterText(input, '25');
+      await tester.pump();
       await tester.tap(
         find.byKey(const Key('khatmah_dashboard_mushaf_save_button')),
       );

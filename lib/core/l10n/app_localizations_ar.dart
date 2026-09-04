@@ -4141,4 +4141,324 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get khatmahEndPlanAction => 'إنهاء الختمة';
+
+  @override
+  String get khatmahStartNewKhatmah => 'بدء ختمة جديدة';
+
+  @override
+  String get khatmahChooseYourDailyReadingPaceToCompleteThe =>
+      'اختر خطتك اليومية المناسبة لقراءة القرآن الكريم بهدوء وسكينة';
+
+  @override
+  String get khatmahDailyPages => 'الصفحات اليومية';
+
+  @override
+  String khatmahPages(String v1) {
+    return '$v1 صفحات';
+  }
+
+  @override
+  String get khatmahOrCustomPagesPerDay => 'أو عدد مخصص يومياً';
+
+  @override
+  String get khatmahEG5 => 'مثال: 5';
+
+  @override
+  String get khatmahEstimatedDuration => 'المدة التقديرية';
+
+  @override
+  String khatmahDays(String v1) {
+    return '$v1 يوم';
+  }
+
+  @override
+  String get khatmahExpectedCompletion => 'موعد الختام المتوقع';
+
+  @override
+  String get khatmahStartKhatmah => 'ابدأ الختمة';
+
+  @override
+  String get khatmahPhysicalMushafProgressSavedSuccessfully =>
+      'تم تسجيل القراءة بنجاح';
+
+  @override
+  String get khatmahEndKhatmah => 'إنهاء الختمة';
+
+  @override
+  String get khatmahAreYouSureYouWantToEndThis =>
+      'هل أنت متأكد من رغبتك في إنهاء هذه الختمة؟ يمكنك دائماً البدء من جديد بهدوء وبدون أي حرج.';
+
+  @override
+  String get khatmahCancel => 'إلغاء';
+
+  @override
+  String get khatmahUnableToSaveKhatmahProgress => 'تعذر حفظ تقدم الختمة.';
+
+  @override
+  String get khatmahRetry => 'إعادة المحاولة';
+
+  @override
+  String get khatmahLiving => 'حي';
+
+  @override
+  String get khatmahDeceased => 'متوفى';
+
+  @override
+  String khatmahDedicatedTo(String v1) {
+    return 'إهداء إلى: $v1';
+  }
+
+  @override
+  String get khatmahKhatmahDashboard => 'لوحة الختمة';
+
+  @override
+  String get khatmahUnableToLoadYourKhatmah => 'تعذر تحميل الختمة';
+
+  @override
+  String get khatmahCheckYourConnectionAndTryAgain =>
+      'تحقق من الاتصال وحاول مرة أخرى.';
+
+  @override
+  String get khatmahReload => 'إعادة المحاولة';
+
+  @override
+  String get khatmahQuranKhatmah => 'ختمة القرآن الكريم';
+
+  @override
+  String get khatmahTodaySWirdCompleted => 'أتممت ورد اليوم';
+
+  @override
+  String get khatmahTodaySWird => 'ورد اليوم';
+
+  @override
+  String khatmahPagesTo(String v1, String v2) {
+    return 'من صفحة $v1 إلى صفحة $v2';
+  }
+
+  @override
+  String get khatmahResuming => 'جارٍ الاستئناف';
+
+  @override
+  String get khatmahContinueReading => 'متابعة القراءة';
+
+  @override
+  String get khatmahReadFromPhysicalMushaf => 'قرأت من المصحف الورقي؟';
+
+  @override
+  String get khatmahLog => 'تسجيل';
+
+  @override
+  String get khatmahCalmAdaptiveControls => 'خيارات التكيّف الهادئ';
+
+  @override
+  String get khatmahEndDateRecalibratedSmoothly =>
+      'تمت إعادة ضبط موعد الختام بهدوء وسكينة';
+
+  @override
+  String get khatmahCalmAdjust => 'تعديل هادئ';
+
+  @override
+  String get khatmahAdded1PageDayMildCompensation =>
+      'تمت إضافة صفحة يومياً للتعويض الخفيف';
+
+  @override
+  String get khatmahMildBoost => 'تعويض خفيف';
+
+  @override
+  String get khatmahPause => 'إيقاف مؤقت';
+
+  @override
+  String get khatmahResume => 'استئناف';
+
+  @override
+  String get khatmahLogPhysicalMushafReading => 'تسجيل قراءة من المصحف';
+
+  @override
+  String get khatmahEnterTheLastPageReadFromYourPhysical =>
+      'أدخل رقم آخر صفحة قرأتها من المصحف الورقي (1 - 604):';
+
+  @override
+  String get khatmahPageNumber => 'رقم الصفحة';
+
+  @override
+  String khatmahEG(String v1) {
+    return 'مثال: $v1';
+  }
+
+  @override
+  String get khatmahSaveProgress => 'حفظ التقدم';
+
+  @override
+  String get khatmahNoSavedCompletionAvailable => 'لا توجد ختمة مكتملة محفوظة';
+
+  @override
+  String get khatmahPagesLabel => 'الصفحات';
+
+  @override
+  String get khatmahDuration => 'المدة';
+
+  @override
+  String get khatmahCompleted => 'تاريخ الختام';
+
+  @override
+  String get khatmahDedicationOfReward => 'إهداء ثواب الختمة';
+
+  @override
+  String get khatmahReadDuAKhatmAlQuran => 'قراءة دعاء ختم القرآن';
+
+  @override
+  String get khatmahShareAchievement => 'مشاركة الإنجاز';
+
+  @override
+  String get khatmahBackToHome => 'العودة للرئيسية';
+
+  @override
+  String get khatmahDuACopiedToClipboard => 'تم نسخ الدعاء بنجاح';
+
+  @override
+  String get khatmahDuAKhatmAlQuran => 'دعاء ختم القرآن';
+
+  @override
+  String get khatmahDecreaseFontSize => 'تصغير الخط';
+
+  @override
+  String get khatmahIncreaseFontSize => 'تكبير الخط';
+
+  @override
+  String get khatmahCopyDuA => 'نسخ الدعاء';
+
+  @override
+  String khatmahPagesLeft(String v1) {
+    return '$v1 صفحة متبقية';
+  }
+
+  @override
+  String khatmahEstCompletion(String v1) {
+    return 'الختام المتوقع: $v1';
+  }
+
+  @override
+  String get khatmahDedicateKhatmahToSomeone => 'إهداء الختمة لشخص عزيز';
+
+  @override
+  String get khatmahRecipientName => 'اسم المهدى له';
+
+  @override
+  String get khatmahEGMyBelovedMother => 'مثال: والدتي الغالية';
+
+  @override
+  String get khatmahRelationship => 'صلة القرابة';
+
+  @override
+  String get khatmahCondition => 'الحالة';
+
+  @override
+  String get khatmahSickRecovery => 'مريض';
+
+  @override
+  String get khatmahSpecialNoteDuAOptional => 'ملاحظة أو دعاء خاص (اختياري)';
+
+  @override
+  String khatmahPageOfOfTodaySWird(String v1, String v2, String v3) {
+    return 'صفحة $v1 ($v2 من $v3 من ورد اليوم)';
+  }
+
+  @override
+  String get khatmahSaveExit => 'حفظ وخروج';
+
+  @override
+  String get khatmahCongratulations => 'مبارك ختم القرآن الكريم';
+
+  @override
+  String khatmahShareSummary(String title, String days) {
+    return 'أتممت ختمة القرآن الكريم ($title) في $days يوماً.\nعبر تطبيق تالية القرآني';
+  }
+
+  @override
+  String khatmahUserNote(String note) {
+    return 'ملاحظة شخصية كتبتها: $note';
+  }
+
+  @override
+  String khatmahTodayRange(String start, String end, String completed) {
+    return 'ورد اليوم: الصفحات $start - $end$completed';
+  }
+
+  @override
+  String get khatmahDailyCompletedSuffix => ' — مكتمل';
+
+  @override
+  String get khatmahProgress => 'تقدم الختمة';
+
+  @override
+  String khatmahProgressValue(String completed, String total, String percent) {
+    return '$completed من $total صفحة، $percent بالمئة';
+  }
+
+  @override
+  String get khatmahSetupSaveError => 'تعذر بدء الختمة. حاول مرة أخرى.';
+
+  @override
+  String get khatmahEndError => 'تعذر إنهاء الختمة. حاول مرة أخرى.';
+
+  @override
+  String get khatmahDedicationPreference =>
+      'إهداء الختمة متاح للحي والمتوفى، والمتوفى أولى؛ وفق مراجعة شرعية نقلها صاحب التطبيق.';
+
+  @override
+  String get khatmahWriteYourOwnNote => 'اكتب ملاحظتك الشخصية هنا';
+
+  @override
+  String get khatmahPhysicalRangeHint =>
+      'سجّل نطاق الصفحات الذي قرأته من الصفحة التالية غير المقروءة.';
+
+  @override
+  String khatmahConfirmRange(String start, String end) {
+    return 'سيتم تسجيل الصفحات من $start إلى $end شاملة الطرفين.';
+  }
+
+  @override
+  String khatmahRangeValidation(String start) {
+    return 'أدخل صفحة من $start إلى ٦٠٤ لتأكيد النطاق.';
+  }
+
+  @override
+  String get khatmahIsPaused => 'الختمة متوقفة مؤقتاً';
+
+  @override
+  String get khatmahProgressNotSaved => 'لم يتم حفظ التقدم';
+
+  @override
+  String get khatmahSaving => 'جارٍ الحفظ…';
+
+  @override
+  String get khatmahDuaLoadError => 'تعذر تحميل الدعاء. حاول مرة أخرى.';
+
+  @override
+  String get khatmahSuggestedDua => 'دعاء عام مقترح بعد الختم';
+
+  @override
+  String get khatmahDuaPendingReview =>
+      'مراجعة النص والمصدر معلّقة. هذا دعاء عام مقترح، وليس صيغة مخصوصة لازمة للختم أو منسوبة للنبي ﷺ. لم يوثّق مصدر هذا النص بعد.';
+
+  @override
+  String get khatmahGeneralGuidance => 'دعاء عام';
+
+  @override
+  String get khatmahRelationshipParent => 'والد / والدة';
+
+  @override
+  String get khatmahRelationshipMother => 'الأم';
+
+  @override
+  String get khatmahRelationshipFather => 'الأب';
+
+  @override
+  String get khatmahRelationshipFriend => 'صديق';
+
+  @override
+  String get khatmahRelationshipRelative => 'قريب';
+
+  @override
+  String get khatmahRelationshipOther => 'أخرى';
 }

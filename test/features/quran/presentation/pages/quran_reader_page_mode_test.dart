@@ -393,7 +393,7 @@ void main() {
         await tester.pump();
 
         expect(fixture.cubit.state, isA<KhatmahProgressFailure>());
-        expect(find.text('Progress was not saved'), findsOneWidget);
+        expect(find.text('لم يتم حفظ التقدم'), findsOneWidget);
 
         when(
           () => fixture.record(
@@ -407,7 +407,9 @@ void main() {
             newlyCompletedPages: const {},
           ),
         );
-        await tester.tap(find.widgetWithText(TextButton, 'Retry').first);
+        await tester.tap(
+          find.widgetWithText(TextButton, 'إعادة المحاولة').first,
+        );
         await tester.pump();
 
         verify(
@@ -524,6 +526,8 @@ void main() {
         ).thenReturn(KhatmahWirdCompleted(plan: anchored));
         await tester.pumpWidget(
           MaterialApp(
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
             home: Scaffold(
               body: KhatmahReaderSessionBar(cubit: mockKhatmahCubit),
             ),
@@ -577,7 +581,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(find.text('Test Khatmah'), findsOneWidget);
-      expect(find.text('إهداء: والدتي'), findsOneWidget);
+      expect(find.text('إهداء إلى: والدتي'), findsOneWidget);
       expect(find.text('صفحة ٤٢ (٢ من ٤ من ورد اليوم)'), findsOneWidget);
 
       final exitBtn = find.text('حفظ وخروج');

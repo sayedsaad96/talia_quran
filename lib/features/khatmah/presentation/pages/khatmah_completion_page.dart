@@ -4,12 +4,12 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../khatmah_localizations.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
-import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
 
@@ -71,26 +71,6 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }
 
-  String _getDedicationDua(KhatmahDedication dedication) {
-    final name = dedication.recipientName?.trim();
-    final hasName = name != null && name.isNotEmpty;
-    switch (dedication.condition) {
-      case DedicationCondition.deceased:
-        return hasName
-            ? 'اللَّهُمَّ اغْفِرْ لِعَبْدِكَ $name وَارْحَمْهُ، وَعَافِهِ وَاعْفُ عَنْهُ، وَأَكْرِمْ نُزُلَهُ، وَوَسِّعْ مُدْخَلَهُ، وَاجْعَلْ ثَوَابَ هَذِهِ الخَتْمَةِ نُوراً وَرَحْمَةً فِي قَبْرِهِ.'
-            : 'اللَّهُمَّ اغْفِرْ لَهُ وَارْحَمْهُ، وَعَافِهِ وَاعْفُ عَنْهُ، وَأَكْرِمْ نُزُلَهُ، وَوَسِّعْ مُدْخَلَهُ، وَاجْعَلْ ثَوَابَ هَذِهِ الخَتْمَةِ نُوراً وَرَحْمَةً فِي قَبْرِهِ.';
-      case DedicationCondition.sick:
-        return hasName
-            ? 'اللَّهُمَّ رَبَّ النَّاسِ أَذْهِبِ البَأْسَ، اشْفِ عَبْدَكَ $name أَنْتَ الشَّافِي لاَ شِفَاءَ إِلاَّ شِفَاؤُكَ، شِفَاءً لاَ يُغَادِرُ سَقَماً.'
-            : 'اللَّهُمَّ رَبَّ النَّاسِ أَذْهِبِ البَأْسَ، اشْفِهِ أَنْتَ الشَّافِي لاَ شِفَاءَ إِلاَّ شِفَاؤُكَ، شِفَاءً لاَ يُغَادِرُ سَقَماً.';
-      case DedicationCondition.alive:
-      case null:
-        return hasName
-            ? 'اللَّهُمَّ اجْعَلْ ثَوَابَ هَذِهِ التِّلَاوَةِ وَبَرَكَتَهَا لِعَبْدِكَ $name، اللَّهُمَّ بَارِكْ فِي عُمْرِهِ وَوَفِّقْهُ لِكُلِّ خَيْرٍ.'
-            : 'اللَّهُمَّ اجْعَلْ ثَوَابَ هَذِهِ التِّلَاوَةِ وَبَرَكَتَهَا لَهُ، اللَّهُمَّ بَارِكْ فِي عُمْرِهِ وَوَفِّقْهُ لِكُلِّ خَيْرٍ.';
-    }
-  }
-
   void _shareAchievement(KhatmahReadingResult completion, bool isArabic) {
     if (!completion.isValidCompletion) return;
     final plan = completion.plan;
@@ -105,29 +85,15 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
         ? MushafHizbHelper.toArabicNumber(totalDays)
         : totalDays.toString();
 
-    final buffer = StringBuffer();
-    if (isArabic) {
-      buffer.writeln('الحمد لله الذي بنعمته تتم الصالحات! 📖✨');
+    final buffer = StringBuffer(
+      context.l10n.khatmahShareSummary(title, totalDaysStr),
+    );
+    if (plan.dedication.isDedicated) {
+      buffer.writeln();
       buffer.writeln(
-        'أتممت بحمد الله وتوفيقه ختم القرآن الكريم ($title) في $totalDaysStr يوماً.',
+        context.l10n.khatmahDedicatedTo(plan.dedication.recipientName ?? ''),
       );
-      if (plan.dedication.isDedicated &&
-          plan.dedication.recipientName != null &&
-          plan.dedication.recipientName!.isNotEmpty) {
-        buffer.writeln('إهداء إلى: ${plan.dedication.recipientName}');
-      }
-      buffer.writeln('عبر تطبيق تالية القرآني 🌿');
-    } else {
-      buffer.writeln('All praise is due to Allah! 📖✨');
-      buffer.writeln('Completed Quran Khatmah ($title) in $totalDaysStr days.');
-      if (plan.dedication.isDedicated &&
-          plan.dedication.recipientName != null &&
-          plan.dedication.recipientName!.isNotEmpty) {
-        buffer.writeln('Dedicated to: ${plan.dedication.recipientName}');
-      }
-      buffer.writeln('Via Talia Quran App 🌿');
     }
-
     SharePlus.instance.share(ShareParams(text: buffer.toString()));
   }
 
@@ -144,11 +110,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
     if (completion == null || !completion.isValidCompletion) {
       return Scaffold(
         body: Center(
-          child: Text(
-            isArabic
-                ? 'لا توجد ختمة مكتملة محفوظة'
-                : 'No saved completion available',
-          ),
+          child: Text(context.l10n.khatmahNoSavedCompletionAvailable),
         ),
       );
     }
@@ -230,7 +192,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
 
                   // Congratulatory Title
                   Text(
-                    'مبارك ختم القرآن الكريم',
+                    context.l10n.khatmahCongratulations,
                     textAlign: TextAlign.center,
                     style: AppTypography.displaySmall.copyWith(
                       color: gold,
@@ -268,11 +230,13 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                         ),
                       ],
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    child: Wrap(
+                      alignment: WrapAlignment.spaceAround,
+                      runSpacing: AppSpacing.md,
+                      spacing: AppSpacing.md,
                       children: [
                         _StatItem(
-                          label: isArabic ? 'الصفحات' : 'Pages',
+                          label: context.l10n.khatmahPagesLabel,
                           value: isArabic
                               ? MushafHizbHelper.toArabicNumber(
                                   KhatmahSchedulingEngine.totalPages,
@@ -281,18 +245,18 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                           icon: Icons.auto_stories_rounded,
                           color: gold,
                         ),
-                        Container(width: 1, height: 40, color: border),
+
                         _StatItem(
-                          label: isArabic ? 'المدة' : 'Duration',
-                          value: isArabic
-                              ? '$daysTakenStr يوم'
-                              : '$daysTakenStr days',
+                          label: context.l10n.khatmahDuration,
+                          value: context.l10n.khatmahDays(
+                            (daysTakenStr).toString(),
+                          ),
                           icon: Icons.calendar_today_rounded,
                           color: AppColors.primaryLight,
                         ),
-                        Container(width: 1, height: 40, color: border),
+
                         _StatItem(
-                          label: isArabic ? 'تاريخ الختام' : 'Completed',
+                          label: context.l10n.khatmahCompleted,
                           value: completedDateStr,
                           icon: Icons.check_circle_outline_rounded,
                           color: Colors.green,
@@ -320,65 +284,39 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.card_giftcard_rounded,
-                                size: 22,
-                                color: gold,
-                              ),
-                              const SizedBox(width: AppSpacing.xs),
-                              Expanded(
-                                child: Text(
-                                  isArabic
-                                      ? 'إهداء ثواب الختمة'
-                                      : 'Dedication of Reward',
-                                  style: AppTypography.titleMedium.copyWith(
-                                    color: gold,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              if (dedication.relationship != null &&
-                                  dedication.relationship!.isNotEmpty)
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: gold.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(
-                                      AppSpacing.radiusFull,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    dedication.relationship!,
-                                    style: AppTypography.labelSmall.copyWith(
-                                      color: gold,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                            ],
+                          Text(
+                            context.l10n.khatmahDedicationOfReward,
+                            style: AppTypography.titleMedium.copyWith(
+                              color: gold,
+                            ),
                           ),
-                          if (dedication.recipientName != null &&
-                              dedication.recipientName!.isNotEmpty) ...[
-                            const SizedBox(height: AppSpacing.xs),
+                          if (dedication.relationship != null)
                             Text(
-                              dedication.recipientName!,
-                              style: AppTypography.titleLarge.copyWith(
-                                fontWeight: FontWeight.bold,
+                              localizedKhatmahRelationship(
+                                context,
+                                dedication.relationship,
                               ),
                             ),
-                          ],
-                          const SizedBox(height: AppSpacing.sm),
-                          const Divider(),
+                          if (dedication.condition != null)
+                            Text(
+                              localizedKhatmahCondition(
+                                context,
+                                dedication.condition,
+                              ),
+                            ),
+                          if (dedication.customNote?.isNotEmpty == true)
+                            Text(
+                              context.l10n.khatmahUserNote(
+                                dedication.customNote!,
+                              ),
+                            ),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
-                            _getDedicationDua(dedication),
+                            context.l10n.khatmahDedicatedTo(
+                              dedication.recipientName ?? '',
+                            ),
                             textAlign: TextAlign.center,
-                            textDirection: TextDirection.rtl,
+                            textDirection: context.textDirection,
                             style: TextStyle(
                               fontFamily: 'Noto_Naskh_Arabic',
                               fontSize: 16,
@@ -422,9 +360,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                     ),
                     icon: const Icon(Icons.menu_book_rounded),
                     label: Text(
-                      isArabic
-                          ? 'قراءة دعاء ختم القرآن'
-                          : 'Read Du\'a Khatm al-Quran',
+                      context.l10n.khatmahReadDuAKhatmAlQuran,
                       style: AppTypography.labelLarge.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -450,7 +386,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                     ),
                     icon: const Icon(Icons.share_rounded),
                     label: Text(
-                      isArabic ? 'مشاركة الإنجاز' : 'Share Achievement',
+                      context.l10n.khatmahShareAchievement,
                       style: AppTypography.labelLarge.copyWith(
                         color: gold,
                         fontWeight: FontWeight.bold,
@@ -475,7 +411,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                     ),
                     icon: const Icon(Icons.home_rounded),
                     label: Text(
-                      isArabic ? 'العودة للرئيسية' : 'Back to Home',
+                      context.l10n.khatmahBackToHome,
                       style: AppTypography.labelMedium.copyWith(
                         fontWeight: FontWeight.w600,
                       ),

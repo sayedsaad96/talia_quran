@@ -9,13 +9,10 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 import '../cubits/khatm_dua_cubit.dart';
+import '../khatmah_localizations.dart';
 
 class KhatmDuaPage extends StatefulWidget {
-  const KhatmDuaPage({
-    super.key,
-    this.cubit,
-    this.dedication,
-  });
+  const KhatmDuaPage({super.key, this.cubit, this.dedication});
 
   final KhatmDuaCubit? cubit;
   final KhatmahDedication? dedication;
@@ -60,16 +57,15 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
     buffer.writeln(arabicText);
     if (dedicationInsert != null && dedicationInsert.isNotEmpty) {
       buffer.writeln();
-      buffer.writeln('--- دعاء الإهداء ---');
+      buffer.writeln(context.l10n.khatmahDedicationOfReward);
       buffer.writeln(dedicationInsert);
     }
 
     Clipboard.setData(ClipboardData(text: buffer.toString()));
-    final isArabic = context.isArabic;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          isArabic ? 'تم نسخ الدعاء بنجاح' : 'Du\'a copied to clipboard',
+          context.l10n.khatmahDuACopiedToClipboard,
           style: AppTypography.bodyMedium.copyWith(color: Colors.white),
         ),
         backgroundColor: AppColors.primary,
@@ -81,7 +77,6 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
-    final isArabic = context.isArabic;
     final gold = isDark ? AppColors.goldLight : AppColors.gold;
     final bg = isDark ? AppColors.darkBackground : AppColors.lightBackground;
     final cardBg = isDark ? AppColors.darkCard : AppColors.lightCard;
@@ -91,54 +86,59 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
       backgroundColor: bg,
       appBar: AppBar(
         title: Text(
-          isArabic ? 'دعاء ختم القرآن' : 'Du\'a Khatm al-Quran',
+          context.l10n.khatmahDuAKhatmAlQuran,
           style: AppTypography.titleMedium,
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            key: const Key('khatm_dua_decrease_font'),
-            tooltip: isArabic ? 'تصغير الخط' : 'Decrease font size',
-            icon: const Icon(Icons.text_decrease_rounded),
-            onPressed: () => _cubit.decreaseFontSize(),
-          ),
-          IconButton(
-            key: const Key('khatm_dua_increase_font'),
-            tooltip: isArabic ? 'تكبير الخط' : 'Increase font size',
-            icon: const Icon(Icons.text_increase_rounded),
-            onPressed: () => _cubit.increaseFontSize(),
-          ),
-          BlocBuilder<KhatmDuaCubit, KhatmDuaState>(
-            bloc: _cubit,
-            builder: (context, state) {
-              if (state is! KhatmDuaLoaded) {
-                return const SizedBox.shrink();
-              }
-              final dedicationInsert = (widget.dedication != null &&
-                      widget.dedication!.isDedicated)
-                  ? state.data.getDedicationInsert(
-                      widget.dedication!.condition ?? DedicationCondition.alive,
-                      widget.dedication!.recipientName,
-                    )
-                  : null;
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(48),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                key: const Key('khatm_dua_decrease_font'),
+                tooltip: context.l10n.khatmahDecreaseFontSize,
+                icon: const Icon(Icons.text_decrease_rounded),
+                onPressed: () => _cubit.decreaseFontSize(),
+              ),
+              IconButton(
+                key: const Key('khatm_dua_increase_font'),
+                tooltip: context.l10n.khatmahIncreaseFontSize,
+                icon: const Icon(Icons.text_increase_rounded),
+                onPressed: () => _cubit.increaseFontSize(),
+              ),
+              BlocBuilder<KhatmDuaCubit, KhatmDuaState>(
+                bloc: _cubit,
+                builder: (context, state) {
+                  if (state is! KhatmDuaLoaded) {
+                    return const SizedBox.shrink();
+                  }
+                  final dedicationInsert =
+                      (widget.dedication != null &&
+                          widget.dedication!.isDedicated)
+                      ? context.l10n.khatmahDedicatedTo(
+                          widget.dedication!.recipientName ?? '',
+                        )
+                      : null;
 
-              return IconButton(
-                key: const Key('khatm_dua_copy_button'),
-                tooltip: isArabic ? 'نسخ الدعاء' : 'Copy du\'a',
-                icon: const Icon(Icons.copy_rounded),
-                onPressed: () => _copyDua(state.data.arabicText, dedicationInsert),
-              );
-            },
+                  return IconButton(
+                    key: const Key('khatm_dua_copy_button'),
+                    tooltip: context.l10n.khatmahCopyDuA,
+                    icon: const Icon(Icons.copy_rounded),
+                    onPressed: () =>
+                        _copyDua(state.data.arabicText, dedicationInsert),
+                  );
+                },
+              ),
+            ],
           ),
-        ],
+        ),
       ),
       body: BlocBuilder<KhatmDuaCubit, KhatmDuaState>(
         bloc: _cubit,
         builder: (context, state) {
           if (state is KhatmDuaLoading || state is KhatmDuaInitial) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (state is KhatmDuaError) {
@@ -148,18 +148,21 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.error_outline_rounded,
-                        size: 48, color: Colors.redAccent),
+                    const Icon(
+                      Icons.error_outline_rounded,
+                      size: 48,
+                      color: Colors.redAccent,
+                    ),
                     const SizedBox(height: AppSpacing.md),
                     Text(
-                      state.message,
+                      context.l10n.khatmahDuaLoadError,
                       textAlign: TextAlign.center,
                       style: AppTypography.bodyMedium,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     FilledButton(
                       onPressed: () => _cubit.load(),
-                      child: Text(isArabic ? 'إعادة المحاولة' : 'Retry'),
+                      child: Text(context.l10n.khatmahRetry),
                     ),
                   ],
                 ),
@@ -173,9 +176,8 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
             final hasDedication =
                 widget.dedication != null && widget.dedication!.isDedicated;
             final dedicationInsert = hasDedication
-                ? data.getDedicationInsert(
-                    widget.dedication!.condition ?? DedicationCondition.alive,
-                    widget.dedication!.recipientName,
+                ? context.l10n.khatmahDedicatedTo(
+                    widget.dedication!.recipientName ?? '',
                   )
                 : null;
 
@@ -208,32 +210,34 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                             const SizedBox(width: AppSpacing.xs),
                             Expanded(
                               child: Text(
-                                data.source,
+                                context.l10n.khatmahSuggestedDua,
                                 style: AppTypography.labelLarge.copyWith(
                                   fontWeight: FontWeight.bold,
                                   color: gold,
                                 ),
                               ),
                             ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: gold.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusFull,
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 2,
                                 ),
-                                border: Border.all(
-                                  color: gold.withValues(alpha: 0.3),
+                                decoration: BoxDecoration(
+                                  color: gold.withValues(alpha: 0.15),
+                                  borderRadius: BorderRadius.circular(
+                                    AppSpacing.radiusFull,
+                                  ),
+                                  border: Border.all(
+                                    color: gold.withValues(alpha: 0.3),
+                                  ),
                                 ),
-                              ),
                                 child: Text(
-                                  isArabic ? 'تصنيف: إرشاد' : 'Tier: Guidance (إرشاد)',
+                                  context.l10n.khatmahGeneralGuidance,
                                   style: AppTypography.labelSmall.copyWith(
-                                  color: gold,
-                                  fontWeight: FontWeight.bold,
+                                    color: gold,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
@@ -241,7 +245,7 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                         ),
                         const SizedBox(height: AppSpacing.xs),
                         Text(
-                          data.sourceNote,
+                          context.l10n.khatmahDuaPendingReview,
                           style: AppTypography.bodySmall.copyWith(
                             color: isDark
                                 ? AppColors.darkTextSecondary
@@ -297,8 +301,9 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                       padding: const EdgeInsets.all(AppSpacing.lg),
                       decoration: BoxDecoration(
                         color: gold.withValues(alpha: 0.08),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
                         border: Border.all(
                           color: gold.withValues(alpha: 0.5),
                           width: 1.5,
@@ -307,54 +312,37 @@ class _KhatmDuaPageState extends State<KhatmDuaPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.card_giftcard_rounded,
-                                size: 20,
-                                color: gold,
-                              ),
-                              const SizedBox(width: AppSpacing.xs),
-                              Expanded(
-                                child: Text(
-                                  isArabic
-                                      ? 'دعاء الإهداء المخصص'
-                                      : 'Dedication Supplication',
-                                  style: AppTypography.titleMedium.copyWith(
-                                    color: gold,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              if (widget.dedication!.relationship != null &&
-                                  widget.dedication!.relationship!.isNotEmpty)
-                                Text(
-                                  '(${widget.dedication!.relationship})',
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: gold,
-                                  ),
-                                ),
-                            ],
+                          Text(
+                            context.l10n.khatmahDedicationOfReward,
+                            style: AppTypography.titleMedium.copyWith(
+                              color: gold,
+                            ),
                           ),
-                          if (widget.dedication!.recipientName != null &&
-                              widget.dedication!.recipientName!.isNotEmpty) ...[
-                            const SizedBox(height: AppSpacing.xs),
+                          if (widget.dedication!.relationship != null)
                             Text(
-                              isArabic
-                                  ? 'المُهدى له: ${widget.dedication!.recipientName}'
-                                  : 'Dedicated to: ${widget.dedication!.recipientName}',
-                              style: AppTypography.labelMedium.copyWith(
-                                fontWeight: FontWeight.bold,
+                              localizedKhatmahRelationship(
+                                context,
+                                widget.dedication!.relationship,
                               ),
                             ),
-                          ],
-                          const SizedBox(height: AppSpacing.sm),
-                          const Divider(),
+                          if (widget.dedication!.condition != null)
+                            Text(
+                              localizedKhatmahCondition(
+                                context,
+                                widget.dedication!.condition,
+                              ),
+                            ),
+                          if (widget.dedication!.customNote?.isNotEmpty == true)
+                            Text(
+                              context.l10n.khatmahUserNote(
+                                widget.dedication!.customNote!,
+                              ),
+                            ),
                           const SizedBox(height: AppSpacing.sm),
                           Text(
                             dedicationInsert,
                             textAlign: TextAlign.center,
-                            textDirection: TextDirection.rtl,
+                            textDirection: context.textDirection,
                             style: TextStyle(
                               fontFamily: 'Noto_Naskh_Arabic',
                               fontSize: 18.0 * fontScale,

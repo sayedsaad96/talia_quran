@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/l10n/app_localizations_en.dart';
 import 'package:talia_quran/core/widgets/social_share/social_share_model.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
@@ -74,6 +75,28 @@ void main() {
       expect(shareText, contains(SocialShareData.landingPageUrl));
       expect(shareText, isNot(contains('إهداء')));
     });
+
+    test(
+      'English share localizes caption and retains dedication and actual days',
+      () {
+        final dedicatedPlan = basePlan.copyWith(
+          dedication: const KhatmahDedication(
+            isDedicated: true,
+            recipientName: 'فاطمة',
+            condition: DedicationCondition.alive,
+            customNote: 'A personal note',
+          ),
+        );
+        final data = SocialShareData.khatmah(
+          completion: completion(dedicatedPlan),
+          l10n: AppLocalizationsEn(),
+        );
+        expect(data.content, contains('in 5 days'));
+        expect(data.subtitle, contains('Dedicated to: فاطمة'));
+        expect(data.subtitle, contains('Your personal note: A personal note'));
+        expect(data.targetValue, 5);
+      },
+    );
 
     test('rejects completion sharing without matching persisted history', () {
       expect(

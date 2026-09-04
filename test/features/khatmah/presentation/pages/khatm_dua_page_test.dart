@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -15,12 +16,14 @@ void main() {
   late MockGetKhatmDuaUsecase mockGetKhatmDua;
 
   const sampleDuaData = KhatmDuaData(
-    arabicText: 'اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ، وَاجْعَلْهُ لِي إِمَاماً وَنُوراً',
+    arabicText:
+        'اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ، وَاجْعَلْهُ لِي إِمَاماً وَنُوراً',
     source: 'مصحف مجمع الملك فهد لطباعة المصحف الشريف',
     sourceNote: 'دعاء مأثور ومشهور مطبوع في ملحق المصحف الشريف',
     tier: 'guidance',
     dedicationInserts: {
-      'alive': 'اللَّهُمَّ اجْعَلْ ثَوَابَ هَذِهِ التِّلَاوَةِ لِعَبْدِكَ {name}',
+      'alive':
+          'اللَّهُمَّ اجْعَلْ ثَوَابَ هَذِهِ التِّلَاوَةِ لِعَبْدِكَ {name}',
       'deceased': 'اللَّهُمَّ اغْفِرْ لِعَبْدِكَ {name} وَارْحَمْهُ',
       'sick': 'اللَّهُمَّ اشْفِ عَبْدَكَ {name}',
     },
@@ -35,10 +38,9 @@ void main() {
     KhatmahDedication? dedication,
   }) {
     return MaterialApp(
-      home: KhatmDuaPage(
-        cubit: cubit,
-        dedication: dedication,
-      ),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      home: KhatmDuaPage(cubit: cubit, dedication: dedication),
     );
   }
 
@@ -56,20 +58,32 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
-  testWidgets('displays du\'a text, source attribution, and guidance tier badge when loaded', (tester) async {
-    when(() => mockGetKhatmDua()).thenAnswer((_) async => sampleDuaData);
-    final cubit = KhatmDuaCubit(mockGetKhatmDua);
-    await cubit.load();
+  testWidgets(
+    'displays du\'a text, source attribution, and guidance tier badge when loaded',
+    (tester) async {
+      when(() => mockGetKhatmDua()).thenAnswer((_) async => sampleDuaData);
+      final cubit = KhatmDuaCubit(mockGetKhatmDua);
+      await cubit.load();
 
-    await tester.pumpWidget(createWidget(cubit: cubit));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(createWidget(cubit: cubit));
+      await tester.pumpAndSettle();
 
-    expect(find.textContaining('اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ'), findsOneWidget);
-    expect(find.textContaining('مجمع الملك فهد'), findsOneWidget);
-    expect(find.textContaining('إرشاد'), findsOneWidget);
-  });
+      expect(
+        find.textContaining('اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('مجمع الملك فهد'), findsNothing);
+      expect(
+        find.textContaining('Text and source review pending'),
+        findsOneWidget,
+      );
+      expect(find.text('General supplication'), findsOneWidget);
+    },
+  );
 
-  testWidgets('increase and decrease font size buttons update font scale', (tester) async {
+  testWidgets('increase and decrease font size buttons update font scale', (
+    tester,
+  ) async {
     when(() => mockGetKhatmDua()).thenAnswer((_) async => sampleDuaData);
     final cubit = KhatmDuaCubit(mockGetKhatmDua);
     await cubit.load();
@@ -94,12 +108,14 @@ void main() {
 
   testWidgets('copy button copies text and displays snackbar', (tester) async {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(SystemChannels.platform, (MethodCall call) async {
-      if (call.method == 'Clipboard.setData') {
-        return null;
-      }
-      return null;
-    });
+        .setMockMethodCallHandler(SystemChannels.platform, (
+          MethodCall call,
+        ) async {
+          if (call.method == 'Clipboard.setData') {
+            return null;
+          }
+          return null;
+        });
 
     when(() => mockGetKhatmDua()).thenAnswer((_) async => sampleDuaData);
     final cubit = KhatmDuaCubit(mockGetKhatmDua);
@@ -117,7 +133,9 @@ void main() {
     expect(find.byType(SnackBar), findsOneWidget);
   });
 
-  testWidgets('renders dedication supplication when dedication is provided', (tester) async {
+  testWidgets('renders dedication supplication when dedication is provided', (
+    tester,
+  ) async {
     when(() => mockGetKhatmDua()).thenAnswer((_) async => sampleDuaData);
     final cubit = KhatmDuaCubit(mockGetKhatmDua);
     await cubit.load();
@@ -133,7 +151,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('khatm_dua_dedication_card')), findsOneWidget);
-    expect(find.textContaining('الوالد رحمه الله'), findsNWidgets(2));
-    expect(find.textContaining('اللَّهُمَّ اغْفِرْ لِعَبْدِكَ الوالد رحمه الله'), findsOneWidget);
+    expect(find.textContaining('الوالد رحمه الله'), findsOneWidget);
+    expect(find.textContaining('لِعَبْدِكَ'), findsNothing);
   });
 }

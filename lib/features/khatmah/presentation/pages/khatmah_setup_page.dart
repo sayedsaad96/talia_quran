@@ -144,7 +144,10 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
           if (state is KhatmahSetupDone) {
             context.go(AppRoutes.khatmahDashboard);
           } else if (state is KhatmahSetupError) {
-            context.showSnackBar(state.message, isError: true);
+            context.showSnackBar(
+              context.l10n.khatmahSetupSaveError,
+              isError: true,
+            );
           }
         },
         builder: (context, state) {
@@ -153,7 +156,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
           return Scaffold(
             appBar: AppBar(
               title: Text(
-                isArabic ? 'بدء ختمة جديدة' : 'Start New Khatmah',
+                context.l10n.khatmahStartNewKhatmah,
                 style: AppTypography.titleLarge,
               ),
               centerTitle: true,
@@ -168,9 +171,9 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                   children: [
                     // Subtitle intro
                     Text(
-                      isArabic
-                          ? 'اختر خطتك اليومية المناسبة لقراءة القرآن الكريم بهدوء وسكينة'
-                          : 'Choose your daily reading pace to complete the Quran with serenity.',
+                      context
+                          .l10n
+                          .khatmahChooseYourDailyReadingPaceToCompleteThe,
                       style: AppTypography.bodyMedium.copyWith(
                         color: isDark
                             ? AppColors.darkTextSecondary
@@ -210,7 +213,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                             if (state.errorMessage != null) ...[
                               const SizedBox(height: AppSpacing.xs),
                               Text(
-                                state.errorMessage!,
+                                context.l10n.khatmahEndError,
                                 style: AppTypography.bodyMedium.copyWith(
                                   color: Theme.of(context).colorScheme.error,
                                 ),
@@ -276,10 +279,12 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                                 size: 20,
                               ),
                               const SizedBox(width: AppSpacing.sm),
-                              Text(
-                                isArabic ? 'الصفحات اليومية' : 'Daily Pages',
-                                style: AppTypography.titleMedium.copyWith(
-                                  fontWeight: FontWeight.bold,
+                              Expanded(
+                                child: Text(
+                                  context.l10n.khatmahDailyPages,
+                                  style: AppTypography.titleMedium.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ],
@@ -300,7 +305,9 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               return ChoiceChip(
                                 key: Key('khatmah_setup_preset_$pages'),
                                 label: Text(
-                                  isArabic ? '$pagesStr صفحات' : '$pages pages',
+                                  context.l10n.khatmahPages(
+                                    (pagesStr).toString(),
+                                  ),
                                 ),
                                 selected: isSelected,
                                 selectedColor: AppColors.gold.withValues(
@@ -331,10 +338,9 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               FilteringTextInputFormatter.digitsOnly,
                             ],
                             decoration: InputDecoration(
-                              labelText: isArabic
-                                  ? 'أو عدد مخصص يومياً'
-                                  : 'Or custom pages per day',
-                              hintText: isArabic ? 'مثال: 5' : 'e.g. 5',
+                              labelText:
+                                  context.l10n.khatmahOrCustomPagesPerDay,
+                              hintText: context.l10n.khatmahEG5,
                               prefixIcon: const Icon(Icons.edit_outlined),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(
@@ -363,15 +369,15 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                           color: AppColors.gold.withValues(alpha: 0.3),
                         ),
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      child: Wrap(
+                        alignment: WrapAlignment.spaceAround,
+                        spacing: AppSpacing.md,
+                        runSpacing: AppSpacing.md,
                         children: [
                           Column(
                             children: [
                               Text(
-                                isArabic
-                                    ? 'المدة التقديرية'
-                                    : 'Estimated Duration',
+                                context.l10n.khatmahEstimatedDuration,
                                 style: AppTypography.bodySmall.copyWith(
                                   color: isDark
                                       ? AppColors.darkTextSecondary
@@ -380,9 +386,9 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                isArabic
-                                    ? '$daysDisplay يوماً'
-                                    : '$daysDisplay days',
+                                context.l10n.khatmahDays(
+                                  (daysDisplay).toString(),
+                                ),
                                 style: AppTypography.titleLarge.copyWith(
                                   color: AppColors.gold,
                                   fontWeight: FontWeight.bold,
@@ -390,17 +396,11 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                               ),
                             ],
                           ),
-                          Container(
-                            height: 36,
-                            width: 1,
-                            color: AppColors.gold.withValues(alpha: 0.2),
-                          ),
+
                           Column(
                             children: [
                               Text(
-                                isArabic
-                                    ? 'موعد الختام المتوقع'
-                                    : 'Expected Completion',
+                                context.l10n.khatmahExpectedCompletion,
                                 style: AppTypography.bodySmall.copyWith(
                                   color: isDark
                                       ? AppColors.darkTextSecondary
@@ -465,7 +465,7 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                             )
                           : const Icon(Icons.check_circle_outline_rounded),
                       label: Text(
-                        isArabic ? 'ابدأ الختمة' : 'Start Khatmah',
+                        context.l10n.khatmahStartKhatmah,
                         style: AppTypography.labelLarge.copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,

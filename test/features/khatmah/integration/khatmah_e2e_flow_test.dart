@@ -495,7 +495,7 @@ void main() {
       await khatmahCubit.close();
 
       // ───────────────────────────────────────────────────────────────────────
-      // STAGE 6: Verify authentic du'a loading from assets/data/khatm_dua.json
+      // STAGE 6: Load the governed suggested general supplication.
       // ───────────────────────────────────────────────────────────────────────
       final duaCubit = KhatmDuaCubit(getKhatmDuaUsecase);
       await duaCubit.load();
@@ -505,23 +505,19 @@ void main() {
       final duaData = duaLoaded.data;
 
       expect(duaData.tier, equals('guidance'));
-      expect(
-        duaData.source,
-        contains('مصحف مجمع الملك فهد لطباعة المصحف الشريف'),
-      );
+      expect(duaData.source, equals('دعاء عام مقترح بعد الختم'));
+      expect(duaData.reviewStatus, 'pendingReview');
+      expect(duaData.reviewer, isNull);
+      expect(duaData.sourceLocator, isNull);
       expect(duaData.sourceNote, isNotEmpty);
       expect(duaData.arabicText, contains('اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ'));
 
-      // Check dynamic deceased dedication insert with custom recipient name
+      // Unreviewed gendered templates never interpolate an arbitrary name.
       final insert = duaData.getDedicationInsert(
         DedicationCondition.deceased,
         'جدتي الغالية',
       );
-      expect(insert, contains('جدتي الغالية'));
-      expect(
-        insert,
-        contains('اللَّهُمَّ اغْفِرْ لِعَبْدِكَ جدتي الغالية وَارْحَمْهُ'),
-      );
+      expect(insert, isEmpty);
       await duaCubit.close();
 
       // ───────────────────────────────────────────────────────────────────────

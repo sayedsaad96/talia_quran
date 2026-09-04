@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -71,7 +72,12 @@ void main() {
       ],
     );
 
-    return MaterialApp.router(locale: const Locale('ar'), routerConfig: router);
+    return MaterialApp.router(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('en'),
+      routerConfig: router,
+    );
   }
 
   setUp(() {});
@@ -90,7 +96,11 @@ void main() {
     tester,
   ) async {
     await tester.pumpWidget(
-      const MaterialApp(home: KhatmahCompletionPage(enableConfetti: false)),
+      const MaterialApp(
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: KhatmahCompletionPage(enableConfetti: false),
+      ),
     );
     await tester.pumpAndSettle();
     expect(
@@ -129,6 +139,8 @@ void main() {
     for (final completion in invalid) {
       await tester.pumpWidget(
         MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: KhatmahCompletionPage(
             completion: completion,
             enableConfetti: false,
@@ -185,7 +197,10 @@ void main() {
     await tester.pumpWidget(createWidget(plan: testPlan));
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('مبارك ختم القرآن'), findsOneWidget);
+    expect(
+      find.textContaining('Congratulations on completing the Quran'),
+      findsOneWidget,
+    );
     expect(find.textContaining('ختمة رمضان المبارك'), findsOneWidget);
     expect(find.textContaining('604'), findsOneWidget);
   });
@@ -205,8 +220,8 @@ void main() {
       find.byKey(const Key('khatmah_completion_dedication_section')),
       findsOneWidget,
     );
-    expect(find.textContaining('الوالدة حفظها الله'), findsNWidgets(2));
-    expect(find.textContaining('الأم'), findsOneWidget);
+    expect(find.textContaining('الوالدة حفظها الله'), findsOneWidget);
+    expect(find.text('Mother'), findsOneWidget);
   });
 
   testWidgets('tapping read dua button invokes callback or navigates', (

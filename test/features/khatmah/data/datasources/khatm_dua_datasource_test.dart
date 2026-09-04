@@ -24,6 +24,18 @@ void main() {
 ''';
 
   group('KhatmDuaData', () {
+    test('unreviewed legacy templates cannot infer gender from a name', () {
+      final data = KhatmDuaData.fromJson({
+        'arabicText': 'text',
+        'source': 'unverified claim',
+        'sourceNote': 'note',
+        'tier': 'guidance',
+        'dedicationInserts': {'alive': 'لِعَبْدِكَ {name}'},
+      });
+      for (final condition in DedicationCondition.values) {
+        expect(data.getDedicationInsert(condition, 'فاطمة'), isEmpty);
+      }
+    });
     test('fromJson parses all fields correctly', () {
       final json = {
         'arabicText': 'اللَّهُمَّ ارْحَمْنِي بِالقُرْآنِ...',
@@ -48,7 +60,7 @@ void main() {
       expect(data.dedicationInserts['sick'], 'شفاء لـ {name}');
     });
 
-    test('getDedicationInsert formats condition and replaces {name}', () {
+    test('legacy templates stay quarantined for all recipient conditions', () {
       final data = KhatmDuaData.fromJson({
         'arabicText': 'text',
         'source': 'source',
@@ -61,18 +73,12 @@ void main() {
         },
       });
 
-      expect(
-        data.getDedicationInsert(DedicationCondition.alive, 'أحمد'),
-        'اللهم بارك في أحمد',
-      );
+      expect(data.getDedicationInsert(DedicationCondition.alive, 'أحمد'), '');
       expect(
         data.getDedicationInsert(DedicationCondition.deceased, 'فاطمة'),
-        'اللهم ارحم فاطمة',
+        '',
       );
-      expect(
-        data.getDedicationInsert(DedicationCondition.sick, 'سعيد'),
-        'اللهم اشف سعيد',
-      );
+      expect(data.getDedicationInsert(DedicationCondition.sick, 'سعيد'), '');
     });
   });
 
@@ -86,8 +92,9 @@ void main() {
     });
 
     test('loadDua loads JSON from bundle and caches response', () async {
-      when(() => mockBundle.loadString('assets/data/khatm_dua.json'))
-          .thenAnswer((_) async => sampleJsonString);
+      when(
+        () => mockBundle.loadString('assets/data/khatm_dua.json'),
+      ).thenAnswer((_) async => sampleJsonString);
 
       final data1 = await datasource.loadDua();
       final data2 = await datasource.loadDua();
@@ -95,8 +102,9 @@ void main() {
       expect(data1.tier, 'guidance');
       expect(data1.source, 'مصحف مجمع الملك فهد لطباعة المصحف الشريف');
       expect(identical(data1, data2), isTrue);
-      verify(() => mockBundle.loadString('assets/data/khatm_dua.json'))
-          .called(1);
+      verify(
+        () => mockBundle.loadString('assets/data/khatm_dua.json'),
+      ).called(1);
     });
   });
 }

@@ -67,6 +67,19 @@
       "reviewStatus": "approved",
       "reviewAuthority": "projectOwner",
       "reviewDate": "2026-08-31"
+    },
+    {
+      "path": "assets/data/khatm_dua.json",
+      "role": "suggested_general_khatm_dua",
+      "version": "1.0.0",
+      "sourceProvider": "unverified_existing_project_asset",
+      "sourceLocator": null,
+      "licenseStatus": "unknown_pendingReview",
+      "sha256": "f3e5bc5c672ad45f18e7af3af5235a0d5eae0cc732bb50661080ccce7f92e605",
+      "importDate": "2026-09-04 governance registration; existing text retained",
+      "reviewStatus": "pendingReview",
+      "reviewer": null,
+      "pendingReason": "Exact wording and source review pending; owner-reported scholar consultation approves the dedication feature only."
     }
   ]
 }

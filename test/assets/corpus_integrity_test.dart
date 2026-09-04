@@ -247,7 +247,7 @@ void main() {
       expect(manifest['reviewStatus'], isIn(allowedReviewStates));
     });
 
-    test('project owner approval closes the external review gate', () {
+    test('owner approval remains scoped to the original approved corpus', () {
       expect(manifest['reviewStatus'], 'approved');
       expect(manifest['reviewAuthority'], 'projectOwner');
       expect(manifest['externalReviewerRequired'], isFalse);
@@ -260,6 +260,13 @@ void main() {
 
       for (final item
           in (manifest['items'] as List).cast<Map<String, dynamic>>()) {
+        if (item['path'] == 'assets/data/khatm_dua.json') {
+          expect(item['reviewStatus'], 'pendingReview');
+          expect(item['reviewer'], isNull);
+          expect(item['sourceLocator'], isNull);
+          expect(item['pendingReason'], isNotEmpty);
+          continue;
+        }
         expect(
           item['reviewStatus'],
           'approved',

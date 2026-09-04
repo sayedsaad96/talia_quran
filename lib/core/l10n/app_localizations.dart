@@ -7404,6 +7404,570 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'إنهاء الختمة'**
   String get khatmahEndPlanAction;
+
+  /// No description provided for @khatmahStartNewKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'بدء ختمة جديدة'**
+  String get khatmahStartNewKhatmah;
+
+  /// No description provided for @khatmahChooseYourDailyReadingPaceToCompleteThe.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر خطتك اليومية المناسبة لقراءة القرآن الكريم بهدوء وسكينة'**
+  String get khatmahChooseYourDailyReadingPaceToCompleteThe;
+
+  /// No description provided for @khatmahDailyPages.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصفحات اليومية'**
+  String get khatmahDailyPages;
+
+  /// No description provided for @khatmahPages.
+  ///
+  /// In ar, this message translates to:
+  /// **'{v1} صفحات'**
+  String khatmahPages(String v1);
+
+  /// No description provided for @khatmahOrCustomPagesPerDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'أو عدد مخصص يومياً'**
+  String get khatmahOrCustomPagesPerDay;
+
+  /// No description provided for @khatmahEG5.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثال: 5'**
+  String get khatmahEG5;
+
+  /// No description provided for @khatmahEstimatedDuration.
+  ///
+  /// In ar, this message translates to:
+  /// **'المدة التقديرية'**
+  String get khatmahEstimatedDuration;
+
+  /// No description provided for @khatmahDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'{v1} يوم'**
+  String khatmahDays(String v1);
+
+  /// No description provided for @khatmahExpectedCompletion.
+  ///
+  /// In ar, this message translates to:
+  /// **'موعد الختام المتوقع'**
+  String get khatmahExpectedCompletion;
+
+  /// No description provided for @khatmahStartKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ الختمة'**
+  String get khatmahStartKhatmah;
+
+  /// No description provided for @khatmahPhysicalMushafProgressSavedSuccessfully.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تسجيل القراءة بنجاح'**
+  String get khatmahPhysicalMushafProgressSavedSuccessfully;
+
+  /// No description provided for @khatmahEndKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنهاء الختمة'**
+  String get khatmahEndKhatmah;
+
+  /// No description provided for @khatmahAreYouSureYouWantToEndThis.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل أنت متأكد من رغبتك في إنهاء هذه الختمة؟ يمكنك دائماً البدء من جديد بهدوء وبدون أي حرج.'**
+  String get khatmahAreYouSureYouWantToEndThis;
+
+  /// No description provided for @khatmahCancel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء'**
+  String get khatmahCancel;
+
+  /// No description provided for @khatmahUnableToSaveKhatmahProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر حفظ تقدم الختمة.'**
+  String get khatmahUnableToSaveKhatmahProgress;
+
+  /// No description provided for @khatmahRetry.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get khatmahRetry;
+
+  /// No description provided for @khatmahLiving.
+  ///
+  /// In ar, this message translates to:
+  /// **'حي'**
+  String get khatmahLiving;
+
+  /// No description provided for @khatmahDeceased.
+  ///
+  /// In ar, this message translates to:
+  /// **'متوفى'**
+  String get khatmahDeceased;
+
+  /// No description provided for @khatmahDedicatedTo.
+  ///
+  /// In ar, this message translates to:
+  /// **'إهداء إلى: {v1}'**
+  String khatmahDedicatedTo(String v1);
+
+  /// No description provided for @khatmahKhatmahDashboard.
+  ///
+  /// In ar, this message translates to:
+  /// **'لوحة الختمة'**
+  String get khatmahKhatmahDashboard;
+
+  /// No description provided for @khatmahUnableToLoadYourKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحميل الختمة'**
+  String get khatmahUnableToLoadYourKhatmah;
+
+  /// No description provided for @khatmahCheckYourConnectionAndTryAgain.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحقق من الاتصال وحاول مرة أخرى.'**
+  String get khatmahCheckYourConnectionAndTryAgain;
+
+  /// No description provided for @khatmahReload.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get khatmahReload;
+
+  /// No description provided for @khatmahQuranKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختمة القرآن الكريم'**
+  String get khatmahQuranKhatmah;
+
+  /// No description provided for @khatmahTodaySWirdCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت ورد اليوم'**
+  String get khatmahTodaySWirdCompleted;
+
+  /// No description provided for @khatmahTodaySWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد اليوم'**
+  String get khatmahTodaySWird;
+
+  /// No description provided for @khatmahPagesTo.
+  ///
+  /// In ar, this message translates to:
+  /// **'من صفحة {v1} إلى صفحة {v2}'**
+  String khatmahPagesTo(String v1, String v2);
+
+  /// No description provided for @khatmahResuming.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارٍ الاستئناف'**
+  String get khatmahResuming;
+
+  /// No description provided for @khatmahContinueReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة القراءة'**
+  String get khatmahContinueReading;
+
+  /// No description provided for @khatmahReadFromPhysicalMushaf.
+  ///
+  /// In ar, this message translates to:
+  /// **'قرأت من المصحف الورقي؟'**
+  String get khatmahReadFromPhysicalMushaf;
+
+  /// No description provided for @khatmahLog.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل'**
+  String get khatmahLog;
+
+  /// No description provided for @khatmahCalmAdaptiveControls.
+  ///
+  /// In ar, this message translates to:
+  /// **'خيارات التكيّف الهادئ'**
+  String get khatmahCalmAdaptiveControls;
+
+  /// No description provided for @khatmahEndDateRecalibratedSmoothly.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت إعادة ضبط موعد الختام بهدوء وسكينة'**
+  String get khatmahEndDateRecalibratedSmoothly;
+
+  /// No description provided for @khatmahCalmAdjust.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعديل هادئ'**
+  String get khatmahCalmAdjust;
+
+  /// No description provided for @khatmahAdded1PageDayMildCompensation.
+  ///
+  /// In ar, this message translates to:
+  /// **'تمت إضافة صفحة يومياً للتعويض الخفيف'**
+  String get khatmahAdded1PageDayMildCompensation;
+
+  /// No description provided for @khatmahMildBoost.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعويض خفيف'**
+  String get khatmahMildBoost;
+
+  /// No description provided for @khatmahPause.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف مؤقت'**
+  String get khatmahPause;
+
+  /// No description provided for @khatmahResume.
+  ///
+  /// In ar, this message translates to:
+  /// **'استئناف'**
+  String get khatmahResume;
+
+  /// No description provided for @khatmahLogPhysicalMushafReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسجيل قراءة من المصحف'**
+  String get khatmahLogPhysicalMushafReading;
+
+  /// No description provided for @khatmahEnterTheLastPageReadFromYourPhysical.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل رقم آخر صفحة قرأتها من المصحف الورقي (1 - 604):'**
+  String get khatmahEnterTheLastPageReadFromYourPhysical;
+
+  /// No description provided for @khatmahPageNumber.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الصفحة'**
+  String get khatmahPageNumber;
+
+  /// No description provided for @khatmahEG.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثال: {v1}'**
+  String khatmahEG(String v1);
+
+  /// No description provided for @khatmahSaveProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ التقدم'**
+  String get khatmahSaveProgress;
+
+  /// No description provided for @khatmahNoSavedCompletionAvailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد ختمة مكتملة محفوظة'**
+  String get khatmahNoSavedCompletionAvailable;
+
+  /// No description provided for @khatmahPagesLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'الصفحات'**
+  String get khatmahPagesLabel;
+
+  /// No description provided for @khatmahDuration.
+  ///
+  /// In ar, this message translates to:
+  /// **'المدة'**
+  String get khatmahDuration;
+
+  /// No description provided for @khatmahCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاريخ الختام'**
+  String get khatmahCompleted;
+
+  /// No description provided for @khatmahDedicationOfReward.
+  ///
+  /// In ar, this message translates to:
+  /// **'إهداء ثواب الختمة'**
+  String get khatmahDedicationOfReward;
+
+  /// No description provided for @khatmahReadDuAKhatmAlQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة دعاء ختم القرآن'**
+  String get khatmahReadDuAKhatmAlQuran;
+
+  /// No description provided for @khatmahShareAchievement.
+  ///
+  /// In ar, this message translates to:
+  /// **'مشاركة الإنجاز'**
+  String get khatmahShareAchievement;
+
+  /// No description provided for @khatmahBackToHome.
+  ///
+  /// In ar, this message translates to:
+  /// **'العودة للرئيسية'**
+  String get khatmahBackToHome;
+
+  /// No description provided for @khatmahDuACopiedToClipboard.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم نسخ الدعاء بنجاح'**
+  String get khatmahDuACopiedToClipboard;
+
+  /// No description provided for @khatmahDuAKhatmAlQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعاء ختم القرآن'**
+  String get khatmahDuAKhatmAlQuran;
+
+  /// No description provided for @khatmahDecreaseFontSize.
+  ///
+  /// In ar, this message translates to:
+  /// **'تصغير الخط'**
+  String get khatmahDecreaseFontSize;
+
+  /// No description provided for @khatmahIncreaseFontSize.
+  ///
+  /// In ar, this message translates to:
+  /// **'تكبير الخط'**
+  String get khatmahIncreaseFontSize;
+
+  /// No description provided for @khatmahCopyDuA.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسخ الدعاء'**
+  String get khatmahCopyDuA;
+
+  /// No description provided for @khatmahPagesLeft.
+  ///
+  /// In ar, this message translates to:
+  /// **'{v1} صفحة متبقية'**
+  String khatmahPagesLeft(String v1);
+
+  /// No description provided for @khatmahEstCompletion.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختام المتوقع: {v1}'**
+  String khatmahEstCompletion(String v1);
+
+  /// No description provided for @khatmahDedicateKhatmahToSomeone.
+  ///
+  /// In ar, this message translates to:
+  /// **'إهداء الختمة لشخص عزيز'**
+  String get khatmahDedicateKhatmahToSomeone;
+
+  /// No description provided for @khatmahRecipientName.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسم المهدى له'**
+  String get khatmahRecipientName;
+
+  /// No description provided for @khatmahEGMyBelovedMother.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثال: والدتي الغالية'**
+  String get khatmahEGMyBelovedMother;
+
+  /// No description provided for @khatmahRelationship.
+  ///
+  /// In ar, this message translates to:
+  /// **'صلة القرابة'**
+  String get khatmahRelationship;
+
+  /// No description provided for @khatmahCondition.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحالة'**
+  String get khatmahCondition;
+
+  /// No description provided for @khatmahSickRecovery.
+  ///
+  /// In ar, this message translates to:
+  /// **'مريض'**
+  String get khatmahSickRecovery;
+
+  /// No description provided for @khatmahSpecialNoteDuAOptional.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة أو دعاء خاص (اختياري)'**
+  String get khatmahSpecialNoteDuAOptional;
+
+  /// No description provided for @khatmahPageOfOfTodaySWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'صفحة {v1} ({v2} من {v3} من ورد اليوم)'**
+  String khatmahPageOfOfTodaySWird(String v1, String v2, String v3);
+
+  /// No description provided for @khatmahSaveExit.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ وخروج'**
+  String get khatmahSaveExit;
+
+  /// No description provided for @khatmahCongratulations.
+  ///
+  /// In ar, this message translates to:
+  /// **'مبارك ختم القرآن الكريم'**
+  String get khatmahCongratulations;
+
+  /// No description provided for @khatmahShareSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممت ختمة القرآن الكريم ({title}) في {days} يوماً.\nعبر تطبيق تالية القرآني'**
+  String khatmahShareSummary(String title, String days);
+
+  /// No description provided for @khatmahUserNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'ملاحظة شخصية كتبتها: {note}'**
+  String khatmahUserNote(String note);
+
+  /// No description provided for @khatmahTodayRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد اليوم: الصفحات {start} - {end}{completed}'**
+  String khatmahTodayRange(String start, String end, String completed);
+
+  /// No description provided for @khatmahDailyCompletedSuffix.
+  ///
+  /// In ar, this message translates to:
+  /// **' — مكتمل'**
+  String get khatmahDailyCompletedSuffix;
+
+  /// No description provided for @khatmahProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقدم الختمة'**
+  String get khatmahProgress;
+
+  /// No description provided for @khatmahProgressValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'{completed} من {total} صفحة، {percent} بالمئة'**
+  String khatmahProgressValue(String completed, String total, String percent);
+
+  /// No description provided for @khatmahSetupSaveError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر بدء الختمة. حاول مرة أخرى.'**
+  String get khatmahSetupSaveError;
+
+  /// No description provided for @khatmahEndError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر إنهاء الختمة. حاول مرة أخرى.'**
+  String get khatmahEndError;
+
+  /// No description provided for @khatmahDedicationPreference.
+  ///
+  /// In ar, this message translates to:
+  /// **'إهداء الختمة متاح للحي والمتوفى، والمتوفى أولى؛ وفق مراجعة شرعية نقلها صاحب التطبيق.'**
+  String get khatmahDedicationPreference;
+
+  /// No description provided for @khatmahWriteYourOwnNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتب ملاحظتك الشخصية هنا'**
+  String get khatmahWriteYourOwnNote;
+
+  /// No description provided for @khatmahPhysicalRangeHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل نطاق الصفحات الذي قرأته من الصفحة التالية غير المقروءة.'**
+  String get khatmahPhysicalRangeHint;
+
+  /// No description provided for @khatmahConfirmRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'سيتم تسجيل الصفحات من {start} إلى {end} شاملة الطرفين.'**
+  String khatmahConfirmRange(String start, String end);
+
+  /// No description provided for @khatmahRangeValidation.
+  ///
+  /// In ar, this message translates to:
+  /// **'أدخل صفحة من {start} إلى ٦٠٤ لتأكيد النطاق.'**
+  String khatmahRangeValidation(String start);
+
+  /// No description provided for @khatmahIsPaused.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمة متوقفة مؤقتاً'**
+  String get khatmahIsPaused;
+
+  /// No description provided for @khatmahProgressNotSaved.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم حفظ التقدم'**
+  String get khatmahProgressNotSaved;
+
+  /// No description provided for @khatmahSaving.
+  ///
+  /// In ar, this message translates to:
+  /// **'جارٍ الحفظ…'**
+  String get khatmahSaving;
+
+  /// No description provided for @khatmahDuaLoadError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحميل الدعاء. حاول مرة أخرى.'**
+  String get khatmahDuaLoadError;
+
+  /// No description provided for @khatmahSuggestedDua.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعاء عام مقترح بعد الختم'**
+  String get khatmahSuggestedDua;
+
+  /// No description provided for @khatmahDuaPendingReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة النص والمصدر معلّقة. هذا دعاء عام مقترح، وليس صيغة مخصوصة لازمة للختم أو منسوبة للنبي ﷺ. لم يوثّق مصدر هذا النص بعد.'**
+  String get khatmahDuaPendingReview;
+
+  /// No description provided for @khatmahGeneralGuidance.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعاء عام'**
+  String get khatmahGeneralGuidance;
+
+  /// No description provided for @khatmahRelationshipParent.
+  ///
+  /// In ar, this message translates to:
+  /// **'والد / والدة'**
+  String get khatmahRelationshipParent;
+
+  /// No description provided for @khatmahRelationshipMother.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأم'**
+  String get khatmahRelationshipMother;
+
+  /// No description provided for @khatmahRelationshipFather.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأب'**
+  String get khatmahRelationshipFather;
+
+  /// No description provided for @khatmahRelationshipFriend.
+  ///
+  /// In ar, this message translates to:
+  /// **'صديق'**
+  String get khatmahRelationshipFriend;
+
+  /// No description provided for @khatmahRelationshipRelative.
+  ///
+  /// In ar, this message translates to:
+  /// **'قريب'**
+  String get khatmahRelationshipRelative;
+
+  /// No description provided for @khatmahRelationshipOther.
+  ///
+  /// In ar, this message translates to:
+  /// **'أخرى'**
+  String get khatmahRelationshipOther;
 }
 
 class _AppLocalizationsDelegate

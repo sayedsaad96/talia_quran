@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../l10n/app_localizations.dart';
+import '../../l10n/app_localizations_ar.dart';
 
 import '../../utils/quran_ayah_display_text.dart';
 import '../../../../features/azkar/domain/entities/azkar_entities.dart';
@@ -396,11 +398,13 @@ class SocialShareData {
   /// Factory for Khatmah completion share from domain model
   factory SocialShareData.khatmah({
     required KhatmahReadingResult completion,
+    AppLocalizations? l10n,
     String? userName,
     String? customTitle,
     String? customContent,
     bool showCharacter = false,
   }) {
+    final copy = l10n ?? AppLocalizationsAr();
     final daysTaken = completion.actualElapsedDays;
     final plan = completion.plan;
     String? dedicationSubtitle;
@@ -408,10 +412,11 @@ class SocialShareData {
         plan.dedication.recipientName != null &&
         plan.dedication.recipientName!.trim().isNotEmpty) {
       final name = plan.dedication.recipientName!.trim();
-      dedicationSubtitle = 'إهداء إلى: $name';
+      dedicationSubtitle = copy.khatmahDedicatedTo(name);
       if (plan.dedication.customNote != null &&
           plan.dedication.customNote!.trim().isNotEmpty) {
-        dedicationSubtitle += ' - ${plan.dedication.customNote!.trim()}';
+        dedicationSubtitle +=
+            ' - ${copy.khatmahUserNote(plan.dedication.customNote!.trim())}';
       }
     }
 
@@ -419,10 +424,10 @@ class SocialShareData {
         customTitle ??
         (plan.title.trim().isNotEmpty
             ? plan.title.trim()
-            : 'ختمة القرآن الكريم');
+            : copy.khatmahQuranKhatmah);
     final shareContent =
         customContent ??
-        'أتممت بحمد الله وتوفيقه ختم القرآن الكريم في $daysTaken يوماً';
+        copy.khatmahShareSummary(shareTitle, daysTaken.toString());
 
     return SocialShareData(
       content: shareContent,
