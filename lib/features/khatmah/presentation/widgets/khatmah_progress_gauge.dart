@@ -39,14 +39,18 @@ class KhatmahProgressGauge extends StatelessWidget {
     final dateStr =
         '${plan.expectedEndDate.year}/${plan.expectedEndDate.month.toString().padLeft(2, '0')}/${plan.expectedEndDate.day.toString().padLeft(2, '0')}';
     final formattedDate = isArabic ? _toArabicDigits(dateStr) : dateStr;
+    final expectedCompletionLabel = context.l10n.khatmahEstCompletion(
+      formattedDate,
+    );
+    final progressValue = context.l10n.khatmahProgressValue(
+      completedPages,
+      totalPages,
+      percent,
+    );
 
     return Semantics(
       label: context.l10n.khatmahProgress,
-      value: context.l10n.khatmahProgressValue(
-        completedPages,
-        totalPages,
-        percent,
-      ),
+      value: '$progressValue. $expectedCompletionLabel',
       excludeSemantics: true,
       child: Container(
         key: const Key('khatmah_progress_gauge'),
@@ -132,9 +136,7 @@ class KhatmahProgressGauge extends StatelessWidget {
                 const SizedBox(width: AppSpacing.xs),
                 Flexible(
                   child: Text(
-                    context.l10n.khatmahEstCompletion(
-                      (formattedDate).toString(),
-                    ),
+                    expectedCompletionLabel,
                     key: const Key('khatmah_progress_end_date'),
                     style: AppTypography.bodySmall.copyWith(
                       color: isDark

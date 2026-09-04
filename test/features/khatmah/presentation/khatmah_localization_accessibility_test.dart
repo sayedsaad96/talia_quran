@@ -216,6 +216,12 @@ void main() {
         expect(
           value,
           contains(
+            ar ? 'الختام المتوقع: ٢٠٢٦/٠٦/٠١' : 'Est. completion: 2026/06/01',
+          ),
+        );
+        expect(
+          value,
+          contains(
             count == 0
                 ? '0.0'
                 : count == 2
