@@ -24,6 +24,7 @@ class KhatmahPlan extends Equatable {
     this.dailyTargetStartPage,
     this.dailyTargetEndPage,
     this.pausedAt,
+    this.authority,
   }) : completedPages = Set.unmodifiable(
          _normalizeCompletedPages(completedPages ?? const <int>{}),
        ),
@@ -47,6 +48,9 @@ class KhatmahPlan extends Equatable {
   final int? dailyTargetStartPage;
   final int? dailyTargetEndPage;
   final DateTime? pausedAt;
+
+  /// Runtime-only authority of the load; never serialized or shared.
+  final Object? authority;
 
   int get completedPagesCount => completedPages.length;
 
@@ -144,6 +148,7 @@ class KhatmahPlan extends Equatable {
     int? dailyTargetEndPage,
     DateTime? pausedAt,
     bool clearPausedAt = false,
+    Object? authority,
   }) {
     return KhatmahPlan(
       id: id ?? this.id,
@@ -161,6 +166,7 @@ class KhatmahPlan extends Equatable {
       dailyTargetStartPage: dailyTargetStartPage ?? this.dailyTargetStartPage,
       dailyTargetEndPage: dailyTargetEndPage ?? this.dailyTargetEndPage,
       pausedAt: clearPausedAt ? null : (pausedAt ?? this.pausedAt),
+      authority: authority ?? this.authority,
     );
   }
 

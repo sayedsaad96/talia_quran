@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import '../../../../core/identity/account_data_barrier.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,6 +48,8 @@ class HomeCubit extends Cubit<HomeState> {
   late final StreamSubscription<void> _pathChangesSub;
   late final StreamSubscription<ProgressChangedReason> _progressChangesSub;
   Timer? _reloadDebounce;
+  StreamSubscription<void>? _khatmahChangesSub;
+  int _khatmahRevision = 0;
 
   HomeCubit(
     this._getProgress,
@@ -69,6 +72,40 @@ class HomeCubit extends Cubit<HomeState> {
       }
     });
     _progressChangesSub = _progressEvents.changes.listen(_onProgressChanged);
+    _khatmahChangesSub = _getActiveKhatmah?.changes?.listen((_) {
+      if (isClosed) return;
+      final current = state;
+      if (current is HomeLoaded) {
+        try {
+          _checkKhatmahAuthority(current.activeKhatmah);
+        } catch (error) {
+          emit(current.copyWith(activeKhatmah: null, khatmahError: error));
+        }
+        unawaited(_refreshKhatmah());
+      }
+    });
+  }
+
+  void _checkKhatmahAuthority(KhatmahPlan? plan) {
+    final authority = plan?.authority;
+    if (authority is AccountDataLease) authority.check();
+  }
+
+  Future<void> _refreshKhatmah() async {
+    final revision = ++_khatmahRevision;
+    KhatmahPlan? plan;
+    Object? error;
+    try {
+      plan = await _getActiveKhatmah?.call();
+      _checkKhatmahAuthority(plan);
+    } catch (failure) {
+      error = failure;
+      plan = null;
+    }
+    final current = state;
+    if (!isClosed && revision == _khatmahRevision && current is HomeLoaded) {
+      emit(current.copyWith(activeKhatmah: plan, khatmahError: error));
+    }
   }
 
   void _onProgressChanged(ProgressChangedReason reason) {
@@ -104,6 +141,7 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   Future<void> load() async {
+    if (isClosed) return;
     emit(const HomeLoading());
 
     final now = DateTime.now();
@@ -117,7 +155,16 @@ class HomeCubit extends Cubit<HomeState> {
     final planFuture = _getCustomPlan();
     final heatmapFuture = _getHeatmap();
     final coachFuture = _getCoachRecommendation();
-    final khatmahFuture = _getActiveKhatmah?.call();
+    // Attach the error handler immediately: this optional future starts before
+    // the other Home awaits and may fail synchronously.
+    Object? khatmahError;
+    final khatmahFuture =
+        Future<KhatmahPlan?>.sync(() => _getActiveKhatmah?.call()).catchError((
+          Object error,
+        ) {
+          khatmahError = error;
+          return null;
+        });
 
     final progressResult = await progressFuture;
     OverallProgress? overallProgress;
@@ -133,7 +180,7 @@ class HomeCubit extends Cubit<HomeState> {
     SmartCoachRecommendation? coachRecommendation;
     final coachResult = await coachFuture;
     coachResult.fold((_) => null, (r) => coachRecommendation = r);
-    final activeKhatmah = await khatmahFuture;
+    var activeKhatmah = await khatmahFuture;
 
     // Load last restorable location for "Continue Reading" chip
     final lastLocation = _sessionService.getLastRestorableLocation();
@@ -174,6 +221,12 @@ class HomeCubit extends Cubit<HomeState> {
     if (isClosed) return;
     final totalXp = await _xpService.getTotalXp();
     if (isClosed) return;
+    try {
+      _checkKhatmahAuthority(activeKhatmah);
+    } catch (error) {
+      activeKhatmah = null;
+      khatmahError = error;
+    }
     progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
       emit(
         HomeLoaded(
@@ -191,6 +244,7 @@ class HomeCubit extends Cubit<HomeState> {
           heroAction: heroAction,
           totalXp: totalXp,
           activeKhatmah: activeKhatmah,
+          khatmahError: khatmahError,
         ),
       );
     });
@@ -312,6 +366,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   @override
   Future<void> close() async {
+    await _khatmahChangesSub?.cancel();
     _reloadDebounce?.cancel();
     await _pathChangesSub.cancel();
     await _progressChangesSub.cancel();

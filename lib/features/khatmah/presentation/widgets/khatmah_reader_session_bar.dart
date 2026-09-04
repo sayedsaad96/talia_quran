@@ -68,7 +68,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
         final current = plan.currentPage;
         final target = state is KhatmahActive
             ? (startPage: state.wirdStartPage, endPage: state.wirdEndPage)
-            : plan.dailyTargetFor(DateTime.now());
+            : plan.dailyTargetFor(resolvedCubit!.displayDate);
         final dailyTarget = target.endPage - target.startPage + 1;
         final wirdIndex = plan.completedPages
             .where((page) => page >= target.startPage && page <= target.endPage)

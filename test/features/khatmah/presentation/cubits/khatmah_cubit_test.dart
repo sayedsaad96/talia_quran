@@ -723,7 +723,9 @@ void main() {
     when(
       () => recordReading(activePlan, 2, source: KhatmahReadingSource.digital),
     ).thenThrow(Exception('write failed'));
-    when(() => deleteKhatmah()).thenAnswer((_) async {});
+    when(
+      () => deleteKhatmah(expectedPlanId: activePlan.id),
+    ).thenAnswer((_) async {});
     final cubit = buildCubit();
     await cubit.load();
     await cubit.recordDigitalPage(2);
@@ -887,7 +889,9 @@ void main() {
     'load failure after abandonment does not resurrect the old plan',
     () async {
       when(() => getActive()).thenAnswer((_) async => activePlan);
-      when(() => deleteKhatmah()).thenAnswer((_) async {});
+      when(
+        () => deleteKhatmah(expectedPlanId: activePlan.id),
+      ).thenAnswer((_) async {});
       final cubit = buildCubit();
       await cubit.load();
       await cubit.abandonPlan();
@@ -899,10 +903,14 @@ void main() {
   );
 
   test('abandon deletes the plan and emits no-active state', () async {
-    when(() => deleteKhatmah()).thenAnswer((_) async {});
+    when(() => getActive()).thenAnswer((_) async => activePlan);
+    when(
+      () => deleteKhatmah(expectedPlanId: activePlan.id),
+    ).thenAnswer((_) async {});
     final cubit = buildCubit();
+    await cubit.load();
     await cubit.abandonPlan();
-    verify(() => deleteKhatmah()).called(1);
+    verify(() => deleteKhatmah(expectedPlanId: activePlan.id)).called(1);
     expect(cubit.state, const KhatmahNoActivePlan());
     await cubit.close();
   });

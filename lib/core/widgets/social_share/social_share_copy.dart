@@ -69,8 +69,7 @@ class SocialShareCopy {
   String get progressBadge => isArabic ? 'حصاد التقدم' : 'Progress snapshot';
   String get certificateBadge =>
       isArabic ? 'شهادة إتمام ومواظبة' : 'Completion certificate';
-  String get khatmahBadge =>
-      isArabic ? 'ختمة القرآن' : 'Quran Khatmah';
+  String get khatmahBadge => isArabic ? 'ختمة القرآن' : 'Quran Khatmah';
 
   String localizedBadge(SocialShareCategory category) {
     switch (category) {

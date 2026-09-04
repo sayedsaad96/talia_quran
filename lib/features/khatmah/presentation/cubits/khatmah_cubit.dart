@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 
 import '../../domain/entities/khatmah_history_entry.dart';
 import '../../domain/entities/khatmah_plan.dart';
@@ -125,8 +126,9 @@ class _RecordRequestKey {
 }
 
 class _RecordRequest {
-  _RecordRequest(String planId, this.source, this.pageNumber)
-    : key = _RecordRequestKey(planId, source, pageNumber);
+  _RecordRequest(this.plan, this.source, this.pageNumber)
+    : key = _RecordRequestKey(plan.id, source, pageNumber);
+  final KhatmahPlan plan;
 
   final KhatmahReadingSource source;
   final int pageNumber;
@@ -235,7 +237,77 @@ class KhatmahCubit extends Cubit<KhatmahState> {
        _now = now ?? DateTime.now,
        _readingClock = now,
        _shutdownTimeout = shutdownTimeout,
-       super(const KhatmahInitial());
+       super(const KhatmahInitial()) {
+    _authority = _getActive.authority;
+    _displayDate = _now();
+    _changesSub = _getActive.changes?.listen((_) {
+      if (_closing || isClosed) return;
+      try {
+        _checkAuthority();
+      } catch (error) {
+        _loadVersion++;
+        _lastKnownPlan = null;
+        _failedRecordRequests.clear();
+        _emitIfOpen(
+          KhatmahProgressFailure(
+            plan: null,
+            pageNumber: 0,
+            source: KhatmahReadingSource.digital,
+            error: error,
+          ),
+        );
+        return;
+      }
+      if (_pendingRecordRequests.isEmpty && state is! KhatmahCompleted) {
+        unawaited(load());
+      }
+    });
+  }
+
+  StreamSubscription<void>? _changesSub;
+  Object? _authority;
+  void _checkAuthority() {
+    final authority = _authority;
+    if (authority is AccountDataLease) authority.check();
+  }
+
+  Timer? _rollover;
+  late DateTime _displayDate;
+  int _loadVersion = 0;
+  int _calendarWatchers = 0;
+  DateTime get displayDate => _displayDate;
+  void watchCalendar() {
+    _calendarWatchers++;
+    refreshDate();
+  }
+
+  void unwatchCalendar() {
+    if (_calendarWatchers > 0) _calendarWatchers--;
+    if (_calendarWatchers == 0) _rollover?.cancel();
+  }
+
+  void refreshDate() {
+    final today = _now();
+    if (KhatmahSchedulingEngine.localDate(today) !=
+        KhatmahSchedulingEngine.localDate(_displayDate)) {
+      _displayDate = today;
+      final plan = _lastKnownPlan;
+      if (plan != null &&
+          plan.status == KhatmahStatus.active &&
+          state is! KhatmahCompleted) {
+        _emitActive(plan);
+      }
+    }
+    _scheduleRollover();
+  }
+
+  void _scheduleRollover() {
+    _rollover?.cancel();
+    if (_closing || isClosed || _calendarWatchers == 0) return;
+    final now = _now();
+    final next = DateTime(now.year, now.month, now.day + 1);
+    _rollover = Timer(next.difference(now), refreshDate);
+  }
 
   final GetActiveKhatmahUsecase _getActive;
   final RecordKhatmahReadingUsecase _recordReading;
@@ -249,6 +321,8 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   final DateTime Function() _now;
   final DateTime Function()? _readingClock;
   KhatmahPlan? _lastKnownPlan;
+  ({String planId, KhatmahPlan Function(KhatmahPlan) transform})?
+  _failedSchedule;
   final Map<_RecordRequestKey, Completer<bool>> _pendingRecordRequests = {};
   final Map<_RecordRequestKey, _FailedRecordRequest> _failedRecordRequests = {};
   Future<void> _recordTail = Future<void>.value();
@@ -263,6 +337,9 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     if (existing != null) return existing;
 
     _closing = true;
+    _rollover?.cancel();
+    unawaited(_changesSub?.cancel());
+    _loadVersion++;
     final settledTail = _settleTailForClose(_recordTail);
     final closing = settledTail.then((_) => super.close());
     _closeFuture = closing;
@@ -289,9 +366,14 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   }
 
   Future<void> load() async {
+    final version = ++_loadVersion;
     _emitIfOpen(const KhatmahLoading());
     try {
+      _checkAuthority();
       final plan = await _getActive();
+      _checkAuthority();
+      if (version != _loadVersion || _closing || isClosed) return;
+      _displayDate = _now();
       if (plan == null || plan.status == KhatmahStatus.completed) {
         _failedRecordRequests.clear();
         _lastKnownPlan = null;
@@ -306,6 +388,8 @@ class KhatmahCubit extends Cubit<KhatmahState> {
         _emitActive(plan);
       }
     } catch (error) {
+      if (version != _loadVersion) return;
+      if (error is AccountDataUnavailableException) _lastKnownPlan = null;
       _emitIfOpen(
         KhatmahProgressFailure(
           plan: _lastKnownPlan,
@@ -323,6 +407,9 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   Future<bool> recordPhysicalThroughPage(int pageNumber) =>
       _recordCurrent(pageNumber, KhatmahReadingSource.physical);
 
+  Future<bool> recordPhysicalRange(KhatmahPlan confirmedPlan, int pageNumber) =>
+      _recordCurrent(pageNumber, KhatmahReadingSource.physical, confirmedPlan);
+
   /// Legacy dashboard entry point. A physical logger records an explicit range,
   /// never a fabricated cursor jump.
   Future<bool> advancePage(int pageNumber) =>
@@ -331,25 +418,40 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   Future<void> retryLastProgress() async {
     final plan = _recordingPlan;
     if (plan == null) return;
+    final schedule = _failedSchedule;
+    if (schedule != null && schedule.planId == plan.id) {
+      await _adjustSchedule(schedule.transform);
+      return;
+    }
     final failures = _failedRecordRequests.values.where(
       (failed) => failed.request.key.planId == plan.id,
     );
     final failed = failures.isEmpty ? null : failures.last;
     if (failed != null) {
-      await _recordCurrent(failed.request.pageNumber, failed.request.source);
+      await _recordCurrent(
+        failed.request.pageNumber,
+        failed.request.source,
+        failed.request.plan,
+      );
+    } else {
+      await load();
     }
   }
 
-  Future<bool> _recordCurrent(int pageNumber, KhatmahReadingSource source) {
+  Future<bool> _recordCurrent(
+    int pageNumber,
+    KhatmahReadingSource source, [
+    KhatmahPlan? confirmedPlan,
+  ]) {
     if (_closing || isClosed) return Future<bool>.value(false);
-    final plan = _recordingPlan;
+    final plan = confirmedPlan ?? _recordingPlan;
     if (plan == null) return Future<bool>.value(false);
 
     final key = _RecordRequestKey(plan.id, source, pageNumber);
     final pending = _pendingRecordRequests[key];
     if (pending != null) return pending.future;
 
-    final request = _RecordRequest(plan.id, source, pageNumber);
+    final request = _RecordRequest(plan, source, pageNumber);
     _pendingRecordRequests[key] = request.completer;
     final operationTail = _recordTail.then((_) => _executeRecord(request));
     _recordTail = operationTail.then<void>(
@@ -391,8 +493,10 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   Future<bool> _executeRecord(_RecordRequest request) async {
     try {
       if (_shutdownSignal.isSignalled) return false;
-      final plan = _recordingPlan;
-      if (plan == null || plan.id != request.key.planId) return false;
+      final plan = request.source == KhatmahReadingSource.physical
+          ? request.plan
+          : (_recordingPlan ?? request.plan);
+      if (_recordingPlan?.id != request.key.planId) return false;
 
       final operation = _readingClock == null
           ? _recordReading(plan, request.pageNumber, source: request.source)
@@ -526,7 +630,9 @@ class KhatmahCubit extends Cubit<KhatmahState> {
 
   Future<KhatmahPlan?> _resume() async {
     try {
+      _checkAuthority();
       final plan = await _getActive();
+      _checkAuthority();
       if (plan != null && plan.status == KhatmahStatus.paused) {
         _emitIfOpen(KhatmahResuming(plan: plan));
         final resumed = await _pauseResume.resume(plan);
@@ -552,7 +658,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     }
   }
 
-  Future<void> calmAdjustment() => _adjustSchedule((plan) {
+  Future<bool> calmAdjustment() => _adjustSchedule((plan) {
     final days = KhatmahSchedulingEngine.calculateDaysFromPages(
       plan.remainingPages,
       plan.targetPagesPerDay,
@@ -565,7 +671,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     );
   });
 
-  Future<void> mildCompensation([int extraPages = 1]) => _adjustSchedule((
+  Future<bool> mildCompensation([int extraPages = 1]) => _adjustSchedule((
     plan,
   ) {
     final target = plan.targetPagesPerDay + extraPages;
@@ -582,22 +688,26 @@ class KhatmahCubit extends Cubit<KhatmahState> {
     );
   });
 
-  Future<void> _adjustSchedule(
+  Future<bool> _adjustSchedule(
     KhatmahPlan Function(KhatmahPlan) transform,
   ) async {
     final plan = _recordingPlan;
-    if (plan == null || _updateSchedule == null) return;
+    if (plan == null || _updateSchedule == null) return false;
     final adjusted = transform(plan);
     try {
+      _checkAuthority();
       final updated = await _updateSchedule(
         planId: plan.id,
         targetPagesPerDay: adjusted.targetPagesPerDay,
         targetDays: adjusted.targetDays,
         expectedEndDate: adjusted.expectedEndDate,
       );
+      _failedSchedule = null;
       _lastKnownPlan = updated;
       _emitActive(updated);
+      return true;
     } catch (error) {
+      _failedSchedule = (planId: plan.id, transform: transform);
       _emitIfOpen(
         KhatmahProgressFailure(
           plan: _lastKnownPlan,
@@ -606,12 +716,17 @@ class KhatmahCubit extends Cubit<KhatmahState> {
           error: error,
         ),
       );
+      return false;
     }
   }
 
-  Future<void> abandonPlan() async {
+  Future<void> abandonPlan({KhatmahPlan? expectedPlan}) async {
+    final plan = expectedPlan ?? _lastKnownPlan;
+    if (plan == null) return;
     try {
-      await _deleteKhatmah();
+      final authority = plan.authority;
+      if (authority is AccountDataLease) authority.check();
+      await _deleteKhatmah(expectedPlanId: plan.id);
       _failedRecordRequests.clear();
       _lastKnownPlan = null;
       _emitIfOpen(const KhatmahNoActivePlan());
@@ -629,6 +744,7 @@ class KhatmahCubit extends Cubit<KhatmahState> {
 
   void _emitActive(KhatmahPlan plan) {
     final today = _now();
+    _displayDate = today;
     if (plan.isDailyTargetComplete(today)) {
       _emitIfOpen(KhatmahWirdCompleted(plan: plan));
       return;
@@ -644,6 +760,21 @@ class KhatmahCubit extends Cubit<KhatmahState> {
   }
 
   void _emitIfOpen(KhatmahState next) {
-    if (!_closing && !isClosed) emit(next);
+    if (_closing || isClosed) return;
+    try {
+      _checkAuthority();
+    } catch (error) {
+      _lastKnownPlan = null;
+      emit(
+        KhatmahProgressFailure(
+          plan: null,
+          pageNumber: 0,
+          source: KhatmahReadingSource.digital,
+          error: error,
+        ),
+      );
+      return;
+    }
+    emit(next);
   }
 }

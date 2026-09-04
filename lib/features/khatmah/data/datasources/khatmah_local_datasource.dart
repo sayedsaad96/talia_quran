@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
 import '../models/khatmah_history_model.dart';
 import '../models/khatmah_plan_model.dart';
@@ -8,6 +9,7 @@ class KhatmahLocalDatasource {
   KhatmahLocalDatasource(this._prefs);
 
   final SharedPreferences _prefs;
+  AccountDataBarrier get barrier => AccountDataBarrier.forPreferences(_prefs);
 
   static const _kActivePlan = 'khatmah_active_plan';
   static const _kHistory = 'khatmah_history';
@@ -90,6 +92,30 @@ class KhatmahLocalDatasource {
       throw const KhatmahStorageException('Failed to save Khatmah history.');
     }
     return entry;
+  }
+
+  /// Backfills only the local deterministic link on an existing archive row.
+  Future<KhatmahHistoryModel> linkCertificate(String planId) async {
+    final history = await getHistory();
+    final index = history.indexWhere((entry) => entry.id == planId);
+    if (index < 0) {
+      throw const KhatmahStorageException('Completion is missing.');
+    }
+    final json = history[index].toJson();
+    json['certificateId'] = 'khatmah-$planId';
+    final updated = KhatmahHistoryModel.fromJson(json);
+    history[index] = updated;
+    final saved = await _prefs.setString(
+      _kHistory,
+      jsonEncode(history.map((e) => e.toJson()).toList()),
+    );
+    if (!saved) {
+      await _restoreAuthoritativeCache();
+      throw const KhatmahStorageException(
+        'Failed to link the local certificate.',
+      );
+    }
+    return updated;
   }
 
   Future<void> _restoreAuthoritativeCache() async {

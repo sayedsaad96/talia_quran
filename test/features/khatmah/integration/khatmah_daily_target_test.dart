@@ -151,6 +151,8 @@ void main() {
         lastReadDate: DateTime(2026, 4, 24, 1, 10),
         completedPages: {for (var p = 1; p <= 604; p++) p},
       );
+      await repository.deletePlan(expectedPlanId: plan.id);
+      await repository.createPlan(completion);
       final history = await repository.completePlan(completion);
       expect(history.totalDays, 2);
     },

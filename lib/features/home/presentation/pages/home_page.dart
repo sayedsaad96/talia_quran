@@ -255,6 +255,8 @@ class _HomeContent extends StatelessWidget {
             ),
             child: KhatmahHeroCard(
               plan: state.activeKhatmah,
+              error: state.khatmahError,
+              onRetry: context.read<HomeCubit>().load,
               isDark: isDark,
               margin: EdgeInsets.zero,
             ),

@@ -1,16 +1,13 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/features/khatmah/data/datasources/khatmah_local_datasource.dart';
+import 'package:talia_quran/features/khatmah/data/repositories/khatmah_repository_impl.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
-import 'package:talia_quran/features/khatmah/domain/repositories/khatmah_repository.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/update_khatmah_schedule_usecase.dart';
 
-class MockKhatmahRepository extends Mock implements KhatmahRepository {}
-
-class FakeKhatmahPlan extends Fake implements KhatmahPlan {}
-
 void main() {
-  late MockKhatmahRepository repository;
+  late KhatmahRepositoryImpl repository;
   late UpdateKhatmahScheduleUsecase usecase;
 
   final activePlan = KhatmahPlan(
@@ -24,10 +21,11 @@ void main() {
     status: KhatmahStatus.active,
   );
 
-  setUpAll(() => registerFallbackValue(FakeKhatmahPlan()));
-
-  setUp(() {
-    repository = MockKhatmahRepository();
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    repository = KhatmahRepositoryImpl(
+      KhatmahLocalDatasource(await SharedPreferences.getInstance()),
+    );
     usecase = UpdateKhatmahScheduleUsecase(repository);
   });
 
@@ -35,10 +33,7 @@ void main() {
     'updates schedule metadata on the authoritative repository plan',
     () async {
       final newEnd = DateTime(2026, 4, 1);
-      when(
-        () => repository.getActivePlan(),
-      ).thenAnswer((_) async => activePlan);
-      when(() => repository.updatePlan(any())).thenAnswer((_) async {});
+      await repository.createPlan(activePlan);
 
       final result = await usecase(
         planId: activePlan.id,
@@ -47,9 +42,7 @@ void main() {
         expectedEndDate: newEnd,
       );
 
-      final persisted =
-          verify(() => repository.updatePlan(captureAny())).captured.single
-              as KhatmahPlan;
+      final persisted = (await repository.getActivePlan())!;
       expect(persisted.completedPages, const {1, 100});
       expect(persisted.status, KhatmahStatus.active);
       expect(persisted.targetPagesPerDay, 6);
@@ -59,7 +52,7 @@ void main() {
   );
 
   test('rejects a schedule update for a mismatched plan id', () async {
-    when(() => repository.getActivePlan()).thenAnswer((_) async => activePlan);
+    await repository.createPlan(activePlan);
 
     await expectLater(
       usecase(
@@ -70,12 +63,10 @@ void main() {
       ),
       throwsA(isA<KhatmahProgressException>()),
     );
-    verifyNever(() => repository.updatePlan(any()));
+    expect(await repository.getActivePlan(), activePlan);
   });
 
   test('rejects a schedule update when no active plan exists', () async {
-    when(() => repository.getActivePlan()).thenAnswer((_) async => null);
-
     await expectLater(
       usecase(
         planId: activePlan.id,
@@ -85,6 +76,6 @@ void main() {
       ),
       throwsA(isA<KhatmahProgressException>()),
     );
-    verifyNever(() => repository.updatePlan(any()));
+    expect(await repository.getActivePlan(), isNull);
   });
 }

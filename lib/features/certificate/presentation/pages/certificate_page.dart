@@ -91,9 +91,10 @@ class _CertificatePageState extends State<CertificatePage> {
         ),
         CertificateType.halfQuran => l10n.shareCertificateHalfQuran,
         CertificateType.fullQuran => l10n.shareCertificateFullQuran,
-        CertificateType.khatmahReading => isArabic
-            ? 'أتممت بحمد الله ختم تلاوة القرآن الكريم كاملاً عبر تطبيق تالية'
-            : 'I completed reading the Holy Quran with Talia App',
+        CertificateType.khatmahReading =>
+          isArabic
+              ? 'أتممت بحمد الله ختم تلاوة القرآن الكريم كاملاً عبر تطبيق تالية'
+              : 'I completed reading the Holy Quran with Talia App',
       };
 
       final bytes = await _captureCertificateBytes();

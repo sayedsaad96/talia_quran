@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -57,20 +57,24 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final cubit = context.read<AuthCubit>();
-    if (_isSignUp) {
-      cubit.signUp(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        displayName: _nameController.text.trim(),
-      );
-    } else {
-      cubit.signIn(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
+    try {
+      if (_isSignUp) {
+        await cubit.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          displayName: _nameController.text.trim(),
+        );
+      } else {
+        await cubit.signIn(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      }
+    } catch (_) {
+      _showSyncFailure();
     }
   }
 
@@ -172,6 +176,9 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               );
             }
+            if (state is AuthOwnerDataFailure) {
+              _showSyncFailure();
+            }
             if (state is AuthError) {
               // Resolve the stable error code; unknown/legacy messages fall
               // back to a generic localized error â€” never raw backend text.
@@ -233,9 +240,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         const SizedBox(height: AppSpacing.pagePadding),
                         FilledButton(
-                          onPressed: () => unawaited(
-                            _routeAfterLogin(context),
-                          ),
+                          onPressed: () => unawaited(_routeAfterLogin(context)),
                           child: Text(context.l10n.retrySyncAfterError),
                         ),
                       ],
@@ -254,235 +259,243 @@ class _LoginPageState extends State<LoginPage> {
                       horizontal: AppSpacing.xl,
                     ),
                     child: Form(
-                  key: _formKey,
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 60),
-                      Image.asset(
-                        'assets/images/logo.png',
-                        width: 120,
-                        height: 120,
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-
-                      Text(
-                        context.l10n.syncProgressDesc,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                      if (_feedback != null) ...[
-                        ErrorInfoBanner(
-                          type: _feedback!.type,
-                          title:
-                              _feedback!.title ??
-                              (_feedback!.type == ErrorInfoBannerType.success
-                                  ? context.l10n.confirmationEmailSent
-                                  : context.l10n.authGenericError),
-                          message: _feedback!.message,
-                          actionLabel: _feedback!.showResend
-                              ? context.l10n.resendConfirmation
-                              : null,
-                          onAction: _feedback!.showResend
-                              ? () => context
-                                    .read<AuthCubit>()
-                                    .resendConfirmation(
-                                      _emailController.text.trim(),
-                                    )
-                              : null,
-                          onDismissed: () => setState(() => _feedback = null),
-                        ),
-                        const SizedBox(height: 18),
-                      ],
-
-                      // Sign In / Sign Up toggle
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                      key: _formKey,
+                      child: Column(
                         children: [
-                          _buildToggle(
-                            context.l10n.signIn,
-                            !_isSignUp,
-                            cs,
-                            isLoading
-                                ? null
-                                : () => setState(() => _isSignUp = false),
+                          const SizedBox(height: 60),
+                          Image.asset(
+                            'assets/images/logo.png',
+                            width: 120,
+                            height: 120,
                           ),
-                          const SizedBox(width: AppSpacing.sm),
-                          _buildToggle(
-                            context.l10n.signUp,
-                            _isSignUp,
-                            cs,
-                            isLoading
-                                ? null
-                                : () => setState(() => _isSignUp = true),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.lg),
+                          const SizedBox(height: AppSpacing.md),
 
-                      // Name field (sign up only)
-                      if (_isSignUp) ...[
-                        TextFormField(
-                          textCapitalization: TextCapitalization.words,
-                          controller: _nameController,
-                          decoration: InputDecoration(
-                            labelText: context.l10n.name,
-                            prefixIcon: const Icon(
-                              Icons.person_outline_rounded,
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
+                          Text(
+                            context.l10n.syncProgressDesc,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                            textAlign: TextAlign.center,
                           ),
-                          validator: (v) => (v == null || v.trim().isEmpty)
-                              ? context.l10n.enterName
-                              : null,
-                        ),
-                        const SizedBox(height: 14),
-                      ],
+                          const SizedBox(height: AppSpacing.xl),
+                          if (_feedback != null) ...[
+                            ErrorInfoBanner(
+                              type: _feedback!.type,
+                              title:
+                                  _feedback!.title ??
+                                  (_feedback!.type ==
+                                          ErrorInfoBannerType.success
+                                      ? context.l10n.confirmationEmailSent
+                                      : context.l10n.authGenericError),
+                              message: _feedback!.message,
+                              actionLabel: _feedback!.showResend
+                                  ? context.l10n.resendConfirmation
+                                  : null,
+                              onAction: _feedback!.showResend
+                                  ? () => context
+                                        .read<AuthCubit>()
+                                        .resendConfirmation(
+                                          _emailController.text.trim(),
+                                        )
+                                  : null,
+                              onDismissed: () =>
+                                  setState(() => _feedback = null),
+                            ),
+                            const SizedBox(height: 18),
+                          ],
 
-                      // Email
-                      TextFormField(
-                        controller: _emailController,
-                        keyboardType: TextInputType.emailAddress,
-                        decoration: InputDecoration(
-                          labelText: context.l10n.email,
-                          prefixIcon: const Icon(Icons.email_outlined),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                          // Sign In / Sign Up toggle
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _buildToggle(
+                                context.l10n.signIn,
+                                !_isSignUp,
+                                cs,
+                                isLoading
+                                    ? null
+                                    : () => setState(() => _isSignUp = false),
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              _buildToggle(
+                                context.l10n.signUp,
+                                _isSignUp,
+                                cs,
+                                isLoading
+                                    ? null
+                                    : () => setState(() => _isSignUp = true),
+                              ),
+                            ],
                           ),
-                        ),
-                        validator: (v) {
-                          if (v == null || v.trim().isEmpty) {
-                            return context.l10n.enterEmail;
-                          }
-                          final emailRegex = RegExp(
-                            r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-                          );
-                          if (!emailRegex.hasMatch(v.trim())) {
-                            return context.l10n.invalidEmail;
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 14),
+                          const SizedBox(height: AppSpacing.lg),
 
-                      // Password
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: _obscurePassword,
-                        decoration: InputDecoration(
-                          labelText: context.l10n.password,
-                          prefixIcon: const Icon(Icons.lock_outline_rounded),
-                          suffixIcon: IconButton(
-                            icon: Icon(
-                              _obscurePassword
-                                  ? Icons.visibility_off_rounded
-                                  : Icons.visibility_rounded,
+                          // Name field (sign up only)
+                          if (_isSignUp) ...[
+                            TextFormField(
+                              textCapitalization: TextCapitalization.words,
+                              controller: _nameController,
+                              decoration: InputDecoration(
+                                labelText: context.l10n.name,
+                                prefixIcon: const Icon(
+                                  Icons.person_outline_rounded,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? context.l10n.enterName
+                                  : null,
                             ),
-                            tooltip: _obscurePassword
-                                ? context.l10n.showPassword
-                                : context.l10n.hidePassword,
-                            onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword,
+                            const SizedBox(height: 14),
+                          ],
+
+                          // Email
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              labelText: context.l10n.email,
+                              prefixIcon: const Icon(Icons.email_outlined),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                             ),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return context.l10n.enterPassword;
-                          }
-                          if (_isSignUp && v.length < 6) {
-                            return context.l10n.passwordTooShort;
-                          }
-                          return null;
-                        },
-                      ),
-                      if (!_isSignUp) ...[
-                        Align(
-                          alignment: AlignmentDirectional.centerEnd,
-                          child: TextButton(
-                            onPressed: () {
-                              final email = _emailController.text.trim();
-                              if (email.isEmpty ||
-                                  !email.contains('@') ||
-                                  !email.contains('.')) {
-                                setState(
-                                  () => _feedback = _AuthFeedback(
-                                    message:
-                                        context.l10n.forgotPasswordEnterEmail,
-                                    type: ErrorInfoBannerType.error,
-                                  ),
-                                );
-                                return;
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) {
+                                return context.l10n.enterEmail;
                               }
-                              context.read<AuthCubit>().resetPassword(email);
+                              final emailRegex = RegExp(
+                                r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                              );
+                              if (!emailRegex.hasMatch(v.trim())) {
+                                return context.l10n.invalidEmail;
+                              }
+                              return null;
                             },
+                          ),
+                          const SizedBox(height: 14),
+
+                          // Password
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              labelText: context.l10n.password,
+                              prefixIcon: const Icon(
+                                Icons.lock_outline_rounded,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded,
+                                ),
+                                tooltip: _obscurePassword
+                                    ? context.l10n.showPassword
+                                    : context.l10n.hidePassword,
+                                onPressed: () => setState(
+                                  () => _obscurePassword = !_obscurePassword,
+                                ),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            validator: (v) {
+                              if (v == null || v.isEmpty) {
+                                return context.l10n.enterPassword;
+                              }
+                              if (_isSignUp && v.length < 6) {
+                                return context.l10n.passwordTooShort;
+                              }
+                              return null;
+                            },
+                          ),
+                          if (!_isSignUp) ...[
+                            Align(
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: TextButton(
+                                onPressed: () {
+                                  final email = _emailController.text.trim();
+                                  if (email.isEmpty ||
+                                      !email.contains('@') ||
+                                      !email.contains('.')) {
+                                    setState(
+                                      () => _feedback = _AuthFeedback(
+                                        message: context
+                                            .l10n
+                                            .forgotPasswordEnterEmail,
+                                        type: ErrorInfoBannerType.error,
+                                      ),
+                                    );
+                                    return;
+                                  }
+                                  context.read<AuthCubit>().resetPassword(
+                                    email,
+                                  );
+                                },
+                                child: Text(
+                                  context.l10n.forgotPassword,
+                                  style: AppTypography.labelMedium.copyWith(
+                                    color: cs.primary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: AppSpacing.lg),
+
+                          // Submit
+                          SizedBox(
+                            width: double.infinity,
+                            child: FilledButton(
+                              onPressed: isLoading ? null : _submit,
+                              style: FilledButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 14,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: isLoading
+                                  ? const SizedBox(
+                                      width: 22,
+                                      height: 22,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Colors.white,
+                                      ),
+                                    )
+                                  : Text(
+                                      _isSignUp
+                                          ? context.l10n.createAccount
+                                          : context.l10n.signIn,
+                                      style: AppTypography.labelLarge.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.itemGap),
+                          TextButton(
+                            onPressed: () => context.go('/'),
                             child: Text(
-                              context.l10n.forgotPassword,
-                              style: AppTypography.labelMedium.copyWith(
-                                color: cs.primary,
+                              context.l10n.skip,
+                              style: AppTypography.labelLarge.copyWith(
+                                color: cs.onSurfaceVariant,
                               ),
                             ),
                           ),
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.lg),
-
-                      // Submit
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: isLoading ? null : _submit,
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: isLoading
-                              ? const SizedBox(
-                                  width: 22,
-                                  height: 22,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(
-                                  _isSignUp
-                                      ? context.l10n.createAccount
-                                      : context.l10n.signIn,
-                                  style: AppTypography.labelLarge.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                        ),
+                          const SizedBox(height: AppSpacing.xl),
+                        ],
                       ),
-                      const SizedBox(height: AppSpacing.itemGap),
-                      TextButton(
-                        onPressed: () => context.go('/'),
-                        child: Text(
-                          context.l10n.skip,
-                          style: AppTypography.labelLarge.copyWith(
-                            color: cs.onSurfaceVariant,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xl),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
-        );
-      },
+            );
+          },
         ),
       ),
     );

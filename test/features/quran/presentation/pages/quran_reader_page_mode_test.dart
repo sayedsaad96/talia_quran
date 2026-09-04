@@ -145,6 +145,7 @@ void main() {
     mockSaveRead = MockSaveReadPageUsecase();
     mockStreak = MockStreakService();
     mockKhatmahCubit = MockKhatmahCubit();
+    when(() => mockKhatmahCubit.displayDate).thenAnswer((_) => DateTime.now());
 
     when(() => mockSessionService.saveLocation(any())).thenAnswer((_) async {});
     when(
@@ -190,6 +191,7 @@ void main() {
     required int pageNumber,
     QuranReaderMode readerMode = QuranReaderMode.free,
     KhatmahCubit? khatmahCubit,
+    Locale locale = const Locale('ar'),
   }) {
     return MultiBlocProvider(
       providers: [
@@ -198,7 +200,7 @@ void main() {
           BlocProvider<KhatmahCubit>.value(value: khatmahCubit),
       ],
       child: MaterialApp(
-        locale: const Locale('ar'),
+        locale: locale,
         supportedLocales: AppLocalizations.supportedLocales,
         localizationsDelegates: const [
           AppLocalizations.delegate,
@@ -223,13 +225,19 @@ void main() {
   }
 
   Future<({KhatmahCubit cubit, MockRecordKhatmahReadingUsecase record})>
-  buildRealKhatmahCubit() async {
+  buildRealKhatmahCubit({KhatmahPlan? plan, DateTime Function()? now}) async {
     final getActive = MockGetActiveKhatmahUsecase();
     final record = MockRecordKhatmahReadingUsecase();
     final pauseResume = MockPauseResumeKhatmahUsecase();
     final delete = MockDeleteKhatmahUsecase();
-    when(() => getActive()).thenAnswer((_) async => testPlan);
-    final cubit = KhatmahCubit(getActive, record, pauseResume, delete);
+    when(() => getActive()).thenAnswer((_) async => plan ?? testPlan);
+    final cubit = KhatmahCubit(
+      getActive,
+      record,
+      pauseResume,
+      delete,
+      now: now,
+    );
     await cubit.load();
     return (cubit: cubit, record: record);
   }
@@ -367,6 +375,80 @@ void main() {
       await fixture.cubit.close();
     });
 
+    testWidgets(
+      'retained reader refreshes its target at midnight without reload',
+      (tester) async {
+        var now = DateTime(2026, 9, 4, 23, 59);
+        final fixture = await buildRealKhatmahCubit(
+          now: () => now,
+          plan: testPlan.copyWith(
+            completedPages: {1, 2, 3, 4},
+            dailyTargetDate: DateTime(2026, 9, 4),
+            dailyTargetStartPage: 1,
+            dailyTargetEndPage: 4,
+          ),
+        );
+        await tester.pumpWidget(
+          buildReaderApp(
+            pageNumber: 5,
+            readerMode: QuranReaderMode.khatmah,
+            khatmahCubit: fixture.cubit,
+            locale: const Locale('en'),
+          ),
+        );
+        await tester.pump();
+        now = DateTime(2026, 9, 5);
+        await tester.pump(const Duration(minutes: 1));
+        expect(fixture.cubit.state, isA<KhatmahActive>());
+        expect((fixture.cubit.state as KhatmahActive).wirdStartPage, 5);
+        await tester.pumpWidget(const SizedBox.shrink());
+        await fixture.cubit.close();
+      },
+    );
+    for (final locale in ['ar', 'en']) {
+      testWidgets(
+        'reader snackbar failure and retry are localized in $locale',
+        (tester) async {
+          final fixture = await buildRealKhatmahCubit();
+          await tester.pumpWidget(
+            buildReaderApp(
+              pageNumber: 42,
+              readerMode: QuranReaderMode.khatmah,
+              khatmahCubit: fixture.cubit,
+              locale: Locale(locale),
+            ),
+          );
+          await tester.pump();
+          fixture.cubit.emit(
+            KhatmahProgressFailure(
+              plan: testPlan,
+              pageNumber: 42,
+              source: KhatmahReadingSource.digital,
+              error: Exception('disk'),
+            ),
+          );
+          await tester.pump();
+          final context = tester.element(find.byType(QuranReaderPage));
+          final l10n = AppLocalizations.of(context);
+          expect(
+            find.descendant(
+              of: find.byType(SnackBar),
+              matching: find.text(l10n.khatmahUnableToSaveKhatmahProgress),
+            ),
+            findsOneWidget,
+          );
+          expect(
+            find.descendant(
+              of: find.byType(SnackBar),
+              matching: find.text(l10n.khatmahRetry),
+            ),
+            findsOneWidget,
+          );
+          await tester.pumpWidget(const SizedBox.shrink());
+          await fixture.cubit.close();
+        },
+      );
+    }
     testWidgets(
       'progress failure stays visible and retry records the same page once',
       (tester) async {

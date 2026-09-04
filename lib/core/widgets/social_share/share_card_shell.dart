@@ -660,7 +660,9 @@ class ParchmentShareFooter extends StatelessWidget {
                     ),
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: TaliaShareColors.parchmentInk.withValues(alpha: 0.18),
+                      color: TaliaShareColors.parchmentInk.withValues(
+                        alpha: 0.18,
+                      ),
                       width: 0.8,
                     ),
                   ),
@@ -689,7 +691,9 @@ class ParchmentShareFooter extends StatelessWidget {
                         height: 2.5,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: TaliaShareColors.parchmentInk.withValues(alpha: 0.4),
+                          color: TaliaShareColors.parchmentInk.withValues(
+                            alpha: 0.4,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 5),
@@ -892,8 +896,7 @@ class TaliaCharacterHero extends StatelessWidget {
               width: height * 0.66,
               height: 16,
               decoration: BoxDecoration(
-                borderRadius:
-                    const BorderRadius.all(Radius.elliptical(44, 8)),
+                borderRadius: const BorderRadius.all(Radius.elliptical(44, 8)),
                 gradient: RadialGradient(
                   colors: [
                     TaliaShareColors.lanternGlow.withValues(alpha: 0.4),

@@ -124,7 +124,11 @@ class SocialShareTheme {
 
   static const SocialShareTheme emeraldDark = SocialShareTheme(
     type: SocialShareThemeType.emeraldDark,
-    backgroundGradient: [Color(0xFF041F1A), Color(0xFF0D3B33), Color(0xFF041915)],
+    backgroundGradient: [
+      Color(0xFF041F1A),
+      Color(0xFF0D3B33),
+      Color(0xFF041915),
+    ],
     cardBackground: Color(0xFF0A2B24),
     borderColor: Color(0xD6D4AF37), // Metallic Gold border
     accentColor: Color(0xFFE5C158),
@@ -139,7 +143,11 @@ class SocialShareTheme {
 
   static const SocialShareTheme midnightGold = SocialShareTheme(
     type: SocialShareThemeType.midnightGold,
-    backgroundGradient: [Color(0xFF0B101D), Color(0xFF141C30), Color(0xFF080C16)],
+    backgroundGradient: [
+      Color(0xFF0B101D),
+      Color(0xFF141C30),
+      Color(0xFF080C16),
+    ],
     cardBackground: Color(0xFF121B2E),
     borderColor: Color(0xFFE5C158),
     accentColor: Color(0xFFF8E089),
@@ -154,7 +162,11 @@ class SocialShareTheme {
 
   static const SocialShareTheme dawnLight = SocialShareTheme(
     type: SocialShareThemeType.dawnLight,
-    backgroundGradient: [Color(0xFFFCFAF5), Color(0xFFF4ECE1), Color(0xFFFAF6EE)],
+    backgroundGradient: [
+      Color(0xFFFCFAF5),
+      Color(0xFFF4ECE1),
+      Color(0xFFFAF6EE),
+    ],
     cardBackground: Color(0xFFFFFFFF),
     borderColor: Color(0xFF0D5C53),
     accentColor: Color(0xFF0D5C53),
@@ -172,7 +184,11 @@ class SocialShareTheme {
   /// gold accents, staying inside the Talia visual identity.
   static const SocialShareTheme tealTwilight = SocialShareTheme(
     type: SocialShareThemeType.tealTwilight,
-    backgroundGradient: [Color(0xFF052E2B), Color(0xFF0F5550), Color(0xFF0A3B37)],
+    backgroundGradient: [
+      Color(0xFF052E2B),
+      Color(0xFF0F5550),
+      Color(0xFF0A3B37),
+    ],
     cardBackground: Color(0xFF0E4640),
     borderColor: Color(0xFF7FCBBB),
     accentColor: Color(0xFF7EE0C9),
@@ -187,7 +203,11 @@ class SocialShareTheme {
 
   static const SocialShareTheme parchmentGold = SocialShareTheme(
     type: SocialShareThemeType.parchmentGold,
-    backgroundGradient: [Color(0xFFF5EDD6), Color(0xFFEDE4C8), Color(0xFFE5DAAF)],
+    backgroundGradient: [
+      Color(0xFFF5EDD6),
+      Color(0xFFEDE4C8),
+      Color(0xFFE5DAAF),
+    ],
     cardBackground: Color(0xFFFAF5E8),
     borderColor: Color(0xFFC8A97A),
     accentColor: Color(0xFF8B6914),
@@ -204,7 +224,11 @@ class SocialShareTheme {
   /// evokes early morning light. Perfect for dua and personal milestone shares.
   static const SocialShareTheme roseDawn = SocialShareTheme(
     type: SocialShareThemeType.roseDawn,
-    backgroundGradient: [Color(0xFF2E1018), Color(0xFF4A1E2B), Color(0xFF1F0B12)],
+    backgroundGradient: [
+      Color(0xFF2E1018),
+      Color(0xFF4A1E2B),
+      Color(0xFF1F0B12),
+    ],
     cardBackground: Color(0xFF3A1622),
     borderColor: Color(0xFFE8C4A0),
     accentColor: Color(0xFFF2C4A4),
@@ -222,7 +246,11 @@ class SocialShareTheme {
   /// and certificate shares.
   static const SocialShareTheme desertSand = SocialShareTheme(
     type: SocialShareThemeType.desertSand,
-    backgroundGradient: [Color(0xFFF2E4C4), Color(0xFFE8D4A8), Color(0xFFF5EAD0)],
+    backgroundGradient: [
+      Color(0xFFF2E4C4),
+      Color(0xFFE8D4A8),
+      Color(0xFFF5EAD0),
+    ],
     cardBackground: Color(0xFFFAF0DC),
     borderColor: Color(0xFFB87A38),
     accentColor: Color(0xFF9C5E1A),
@@ -240,7 +268,11 @@ class SocialShareTheme {
   /// achievement shares.
   static const SocialShareTheme midnightNavy = SocialShareTheme(
     type: SocialShareThemeType.midnightNavy,
-    backgroundGradient: [Color(0xFF060B18), Color(0xFF0D1530), Color(0xFF080E22)],
+    backgroundGradient: [
+      Color(0xFF060B18),
+      Color(0xFF0D1530),
+      Color(0xFF080E22),
+    ],
     cardBackground: Color(0xFF0E1838),
     borderColor: Color(0xFF6B80C8),
     accentColor: Color(0xFF8CA0E8),

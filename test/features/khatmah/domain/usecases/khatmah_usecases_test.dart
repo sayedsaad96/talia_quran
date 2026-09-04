@@ -1,5 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/features/khatmah/data/datasources/khatmah_local_datasource.dart';
+import 'package:talia_quran/features/khatmah/data/repositories/khatmah_repository_impl.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
@@ -203,50 +206,36 @@ void main() {
   });
 
   group('PauseResumeKhatmahUsecase', () {
-    test(
-      'pause sets status=paused, pausedAt=now, calls repository.updatePlan, and returns paused plan',
-      () async {
-        when(() => mockRepository.updatePlan(any())).thenAnswer((_) async {});
+    late KhatmahRepositoryImpl realRepository;
+    setUp(() async {
+      SharedPreferences.setMockInitialValues({});
+      realRepository = KhatmahRepositoryImpl(
+        KhatmahLocalDatasource(await SharedPreferences.getInstance()),
+      );
+    });
+    test('pause durably sets status=paused and pausedAt=now', () async {
+      await realRepository.createPlan(testPlan);
+      final usecase = PauseResumeKhatmahUsecase(realRepository);
+      final paused = await usecase.pause(testPlan);
 
-        final usecase = PauseResumeKhatmahUsecase(mockRepository);
-        final paused = await usecase.pause(testPlan);
-
-        expect(paused.status, KhatmahStatus.paused);
-        expect(paused.pausedAt, isNotNull);
-        verify(
-          () => mockRepository.updatePlan(
-            any(
-              that: isA<KhatmahPlan>()
-                  .having((p) => p.status, 'status', KhatmahStatus.paused)
-                  .having((p) => p.pausedAt, 'pausedAt', isNotNull),
-            ),
-          ),
-        ).called(1);
-      },
-    );
+      expect(paused.status, KhatmahStatus.paused);
+      expect(paused.pausedAt, isNotNull);
+      expect(await realRepository.getActivePlan(), paused);
+    });
 
     test('pause respects custom pause date when provided', () async {
-      when(() => mockRepository.updatePlan(any())).thenAnswer((_) async {});
-
-      final usecase = PauseResumeKhatmahUsecase(mockRepository);
+      await realRepository.createPlan(testPlan);
+      final usecase = PauseResumeKhatmahUsecase(realRepository);
       final pauseDate = DateTime(2026, 2, 1, 12, 0);
       final paused = await usecase.pause(testPlan, pauseDate);
 
       expect(paused.status, KhatmahStatus.paused);
       expect(paused.pausedAt, equals(pauseDate));
-      verify(
-        () => mockRepository.updatePlan(
-          any(
-            that: isA<KhatmahPlan>()
-                .having((p) => p.status, 'status', KhatmahStatus.paused)
-                .having((p) => p.pausedAt, 'pausedAt', pauseDate),
-          ),
-        ),
-      ).called(1);
+      expect(await realRepository.getActivePlan(), paused);
     });
 
     test(
-      'resume recalculates expectedEndDate, clears pausedAt, sets status=active, calls repository.updatePlan, and returns resumed plan',
+      'resume durably recalculates expectedEndDate, clears pausedAt, and activates plan',
       () async {
         when(() => mockRepository.updatePlan(any())).thenAnswer((_) async {});
 
@@ -255,7 +244,8 @@ void main() {
           pausedAt: DateTime(2026, 2, 1),
         );
 
-        final usecase = PauseResumeKhatmahUsecase(mockRepository);
+        await realRepository.createPlan(pausedPlan);
+        final usecase = PauseResumeKhatmahUsecase(realRepository);
         final resumeDate = DateTime(2026, 2, 10);
         final resumed = await usecase.resume(pausedPlan, resumeDate);
 
@@ -268,20 +258,7 @@ void main() {
           resumeDate,
         );
         expect(resumed.expectedEndDate, equals(expectedEnd));
-        verify(
-          () => mockRepository.updatePlan(
-            any(
-              that: isA<KhatmahPlan>()
-                  .having((p) => p.status, 'status', KhatmahStatus.active)
-                  .having((p) => p.pausedAt, 'pausedAt', isNull)
-                  .having(
-                    (p) => p.expectedEndDate,
-                    'expectedEndDate',
-                    expectedEnd,
-                  ),
-            ),
-          ),
-        ).called(1);
+        expect(await realRepository.getActivePlan(), resumed);
       },
     );
   });

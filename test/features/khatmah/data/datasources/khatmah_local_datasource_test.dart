@@ -63,117 +63,135 @@ void main() {
       expect(plan, isNull);
     });
 
-    test('savePlan saves the plan without persisting a cloud-sync flag', () async {
-      final plan = KhatmahPlanModel(
-        id: 'plan-1',
-        title: 'Active Plan',
-        startPage: 1,
-        completedPages: {for (var page = 1; page <= 15; page++) page},
-        targetPagesPerDay: 4,
-        targetDays: 151,
-        startDate: DateTime(2026, 1, 1),
-        expectedEndDate: DateTime(2026, 6, 1),
-        status: 'active',
-        dedication: KhatmahDedicationModel(isDedicated: false),
-      );
+    test(
+      'savePlan saves the plan without persisting a cloud-sync flag',
+      () async {
+        final plan = KhatmahPlanModel(
+          id: 'plan-1',
+          title: 'Active Plan',
+          startPage: 1,
+          completedPages: {for (var page = 1; page <= 15; page++) page},
+          targetPagesPerDay: 4,
+          targetDays: 151,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 6, 1),
+          status: 'active',
+          dedication: KhatmahDedicationModel(isDedicated: false),
+        );
 
-      await datasource.savePlan(plan);
+        await datasource.savePlan(plan);
 
-      final retrieved = await datasource.getActivePlan();
-      expect(retrieved, isNotNull);
-      expect(retrieved!.id, 'plan-1');
-      expect(retrieved.currentPage, 15);
-      expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
-    });
+        final retrieved = await datasource.getActivePlan();
+        expect(retrieved, isNotNull);
+        expect(retrieved!.id, 'plan-1');
+        expect(retrieved.currentPage, 15);
+        expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
+      },
+    );
 
-    test('deletePlan removes the active plan without persisting a cloud-sync flag', () async {
-      final plan = KhatmahPlanModel(
-        id: 'plan-1',
-        title: 'Active Plan',
-        startPage: 1,
-        completedPages: {for (var page = 1; page <= 15; page++) page},
-        targetPagesPerDay: 4,
-        targetDays: 151,
-        startDate: DateTime(2026, 1, 1),
-        expectedEndDate: DateTime(2026, 6, 1),
-        status: 'active',
-        dedication: KhatmahDedicationModel(isDedicated: false),
-      );
+    test(
+      'deletePlan removes the active plan without persisting a cloud-sync flag',
+      () async {
+        final plan = KhatmahPlanModel(
+          id: 'plan-1',
+          title: 'Active Plan',
+          startPage: 1,
+          completedPages: {for (var page = 1; page <= 15; page++) page},
+          targetPagesPerDay: 4,
+          targetDays: 151,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 6, 1),
+          status: 'active',
+          dedication: KhatmahDedicationModel(isDedicated: false),
+        );
 
-      await datasource.savePlan(plan);
-      expect(await datasource.getActivePlan(), isNotNull);
+        await datasource.savePlan(plan);
+        expect(await datasource.getActivePlan(), isNotNull);
 
-      await datasource.deletePlan();
+        await datasource.deletePlan();
 
-      expect(await datasource.getActivePlan(), isNull);
-      expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
-    });
+        expect(await datasource.getActivePlan(), isNull);
+        expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
+      },
+    );
 
-    test('deletePlan preserves the replacement when an expected id does not match', () async {
-      final original = KhatmahPlanModel(
-        id: 'original',
-        title: 'Original',
-        targetPagesPerDay: 4,
-        targetDays: 151,
-        startDate: DateTime(2026, 1, 1),
-        expectedEndDate: DateTime(2026, 6, 1),
-        status: 'active',
-        dedication: KhatmahDedicationModel(isDedicated: false),
-      );
-      final replacement = KhatmahPlanModel(
-        id: 'replacement',
-        title: original.title,
-        targetPagesPerDay: original.targetPagesPerDay,
-        targetDays: original.targetDays,
-        startDate: original.startDate,
-        expectedEndDate: original.expectedEndDate,
-        status: original.status,
-        dedication: original.dedication,
-      );
+    test(
+      'deletePlan preserves the replacement when an expected id does not match',
+      () async {
+        final original = KhatmahPlanModel(
+          id: 'original',
+          title: 'Original',
+          targetPagesPerDay: 4,
+          targetDays: 151,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 6, 1),
+          status: 'active',
+          dedication: KhatmahDedicationModel(isDedicated: false),
+        );
+        final replacement = KhatmahPlanModel(
+          id: 'replacement',
+          title: original.title,
+          targetPagesPerDay: original.targetPagesPerDay,
+          targetDays: original.targetDays,
+          startDate: original.startDate,
+          expectedEndDate: original.expectedEndDate,
+          status: original.status,
+          dedication: original.dedication,
+        );
 
-      await datasource.savePlan(original);
-      await datasource.savePlan(replacement);
+        await datasource.savePlan(original);
+        await datasource.savePlan(replacement);
 
-      expect(await datasource.deletePlan(expectedPlanId: original.id), isFalse);
-      expect((await datasource.getActivePlan())?.id, replacement.id);
-    });
+        expect(
+          await datasource.deletePlan(expectedPlanId: original.id),
+          isFalse,
+        );
+        expect((await datasource.getActivePlan())?.id, replacement.id);
+      },
+    );
 
-    test('savePlan surfaces a typed error when preferences reject a write', () async {
-      SharedPreferencesStorePlatform.instance = _RejectingPreferencesStore(
-        rejectWrites: true,
-        rejectRemovals: false,
-      );
-      final rejectingDatasource = KhatmahLocalDatasource(prefs);
-      final plan = KhatmahPlanModel(
-        id: 'write-failure',
-        title: 'Write failure',
-        targetPagesPerDay: 1,
-        targetDays: 1,
-        startDate: DateTime(2026, 1, 1),
-        expectedEndDate: DateTime(2026, 1, 2),
-        status: 'active',
-        dedication: KhatmahDedicationModel(isDedicated: false),
-      );
+    test(
+      'savePlan surfaces a typed error when preferences reject a write',
+      () async {
+        SharedPreferencesStorePlatform.instance = _RejectingPreferencesStore(
+          rejectWrites: true,
+          rejectRemovals: false,
+        );
+        final rejectingDatasource = KhatmahLocalDatasource(prefs);
+        final plan = KhatmahPlanModel(
+          id: 'write-failure',
+          title: 'Write failure',
+          targetPagesPerDay: 1,
+          targetDays: 1,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 1, 2),
+          status: 'active',
+          dedication: KhatmahDedicationModel(isDedicated: false),
+        );
 
-      await expectLater(
-        () => rejectingDatasource.savePlan(plan),
-        throwsA(isA<KhatmahStorageException>()),
-      );
-    });
+        await expectLater(
+          () => rejectingDatasource.savePlan(plan),
+          throwsA(isA<KhatmahStorageException>()),
+        );
+      },
+    );
 
-    test('deletePlan surfaces a typed error when preferences reject deletion', () async {
-      SharedPreferencesStorePlatform.instance = _RejectingPreferencesStore(
-        rejectWrites: false,
-        rejectRemovals: true,
-      );
-      final rejectingDatasource = KhatmahLocalDatasource(prefs);
-      await prefs.setString('khatmah_active_plan', '{}');
+    test(
+      'deletePlan surfaces a typed error when preferences reject deletion',
+      () async {
+        SharedPreferencesStorePlatform.instance = _RejectingPreferencesStore(
+          rejectWrites: false,
+          rejectRemovals: true,
+        );
+        final rejectingDatasource = KhatmahLocalDatasource(prefs);
+        await prefs.setString('khatmah_active_plan', '{}');
 
-      await expectLater(
-        rejectingDatasource.deletePlan,
-        throwsA(isA<KhatmahStorageException>()),
-      );
-    });
+        await expectLater(
+          rejectingDatasource.deletePlan,
+          throwsA(isA<KhatmahStorageException>()),
+        );
+      },
+    );
 
     test('reloads rejected deletion before a later retry', () async {
       final plan = KhatmahPlanModel(
@@ -203,21 +221,24 @@ void main() {
       expect(await retryDatasource.getActivePlan(), isNull);
     });
 
-    test('getActivePlan surfaces typed storage error when stored JSON is corrupted', () async {
-      await prefs.setString('khatmah_active_plan', '{broken json...');
+    test(
+      'getActivePlan surfaces typed storage error when stored JSON is corrupted',
+      () async {
+        await prefs.setString('khatmah_active_plan', '{broken json...');
 
-      await expectLater(
-        datasource.getActivePlan,
-        throwsA(isA<KhatmahStorageException>()),
-      );
-    });
+        await expectLater(
+          datasource.getActivePlan,
+          throwsA(isA<KhatmahStorageException>()),
+        );
+      },
+    );
 
     test('surfaces malformed completedPages instead of returning null', () async {
       await prefs.setString(
         'khatmah_active_plan',
         '{"id":"bad","title":"Bad","targetPagesPerDay":4,"targetDays":1,'
-        '"startDate":"2026-01-01T00:00:00.000","expectedEndDate":"2026-01-01T00:00:00.000",'
-        '"dedication":{},"completedPages":[1,"2"]}',
+            '"startDate":"2026-01-01T00:00:00.000","expectedEndDate":"2026-01-01T00:00:00.000",'
+            '"dedication":{},"completedPages":[1,"2"]}',
       );
 
       await expectLater(
@@ -262,36 +283,42 @@ void main() {
       expect(prefs.getBool('khatmah_cloud_dirty'), isNull);
     });
 
-    test('getHistory surfaces typed storage error when stored JSON is corrupted', () async {
-      await prefs.setString('khatmah_history', 'corrupted data');
+    test(
+      'getHistory surfaces typed storage error when stored JSON is corrupted',
+      () async {
+        await prefs.setString('khatmah_history', 'corrupted data');
 
-      await expectLater(
-        datasource.getHistory,
-        throwsA(isA<KhatmahStorageException>()),
-      );
-    });
+        await expectLater(
+          datasource.getHistory,
+          throwsA(isA<KhatmahStorageException>()),
+        );
+      },
+    );
 
-    test('data isolation: khatmah keys do not interfere with read_pages', () async {
-      await prefs.setString('read_pages', '[1, 2, 3]');
+    test(
+      'data isolation: khatmah keys do not interfere with read_pages',
+      () async {
+        await prefs.setString('read_pages', '[1, 2, 3]');
 
-      final plan = KhatmahPlanModel(
-        id: 'plan-isolated',
-        title: 'Isolated',
-        startPage: 1,
-        completedPages: {for (var page = 1; page <= 5; page++) page},
-        targetPagesPerDay: 5,
-        targetDays: 120,
-        startDate: DateTime(2026, 1, 1),
-        expectedEndDate: DateTime(2026, 5, 1),
-        status: 'active',
-        dedication: KhatmahDedicationModel(isDedicated: false),
-      );
+        final plan = KhatmahPlanModel(
+          id: 'plan-isolated',
+          title: 'Isolated',
+          startPage: 1,
+          completedPages: {for (var page = 1; page <= 5; page++) page},
+          targetPagesPerDay: 5,
+          targetDays: 120,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 5, 1),
+          status: 'active',
+          dedication: KhatmahDedicationModel(isDedicated: false),
+        );
 
-      await datasource.savePlan(plan);
-      expect(prefs.getString('read_pages'), '[1, 2, 3]');
+        await datasource.savePlan(plan);
+        expect(prefs.getString('read_pages'), '[1, 2, 3]');
 
-      await datasource.deletePlan();
-      expect(prefs.getString('read_pages'), '[1, 2, 3]');
-    });
+        await datasource.deletePlan();
+        expect(prefs.getString('read_pages'), '[1, 2, 3]');
+      },
+    );
   });
 }

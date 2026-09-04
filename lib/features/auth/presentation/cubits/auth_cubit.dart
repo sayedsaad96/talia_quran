@@ -23,6 +23,7 @@ import '../../../../core/sync/cloud_sync_queue.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/identity/account_data_reset.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 
 import '../../../../core/error/app_failure.dart';
 
@@ -82,7 +83,11 @@ class AuthCubit extends Cubit<AuthState> {
         if (_isUpdatingPassword) return;
 
         if (user != null) {
-          emit(AuthAuthenticated(user: user));
+          if (_requiresOwnerCleanup(user.id)) {
+            emit(const AuthLoading());
+          } else {
+            emit(AuthAuthenticated(user: user));
+          }
 
           final isSameActiveSession = _activeAuthSessionOwnerId == user.id;
           _activeAuthSessionOwnerId = user.id;
@@ -130,7 +135,11 @@ class AuthCubit extends Cubit<AuthState> {
 
     if (currentUser != null) {
       _activeAuthSessionOwnerId = currentUser.id;
-      emit(AuthAuthenticated(user: currentUser));
+      emit(
+        _requiresOwnerCleanup(currentUser.id)
+            ? const AuthLoading()
+            : AuthAuthenticated(user: currentUser),
+      );
 
       unawaited(_runCloudSync());
     } else {
@@ -145,12 +154,29 @@ class AuthCubit extends Cubit<AuthState> {
       return active;
     }
     final previous = active ?? Future<void>.value();
+    _ownerReadyFailure = null;
     _syncTailOwnerId = requestedOwnerId;
     late final Future<void> tail;
     tail = previous
         .then((_) async {
           if (_authRepository.currentUser?.id != requestedOwnerId) return;
-          await _handleAccountOwnerChange(userId: requestedOwnerId);
+          _ownerReadyFailure = null;
+          try {
+            await _handleAccountOwnerChange(userId: requestedOwnerId);
+          } catch (error) {
+            if (_authRepository.currentUser?.id == requestedOwnerId) {
+              _ownerReadyFailure = error;
+              if (!isClosed) emit(const AuthOwnerDataFailure());
+            }
+            rethrow;
+          }
+          if (_authRepository.currentUser?.id != requestedOwnerId || isClosed) {
+            return;
+          }
+          final user = _authRepository.currentUser;
+          if (user != null && _controlledIdentityTransitionDepth == 0) {
+            emit(AuthAuthenticated(user: user));
+          }
           await _cloudSyncCoordinator.run();
         })
         .catchError((Object error, StackTrace stackTrace) {
@@ -172,6 +198,9 @@ class AuthCubit extends Cubit<AuthState> {
   /// available by the time routing logic reads it. On cold start this is not
   /// awaited (local data is still on-device).
   Future<void> ensureCloudSyncComplete() async {
+    if (_ownerReadyFailure != null && _syncInFlight == null) {
+      await _runCloudSync();
+    }
     while (true) {
       final transition = _controlledIdentityTransitionCompleter?.future;
       if (transition != null) {
@@ -179,12 +208,24 @@ class AuthCubit extends Cubit<AuthState> {
         continue;
       }
       final syncTail = _syncInFlight;
-      if (syncTail == null) return;
+      if (syncTail == null) {
+        final failure = _ownerReadyFailure;
+        if (failure != null) throw failure;
+        return;
+      }
       await syncTail;
     }
   }
 
   static const lastSignedInUserIdKey = 'auth_last_signed_in_user_id';
+  Object? _ownerReadyFailure;
+  bool _requiresOwnerCleanup(String ownerId) {
+    final previous = _prefs?.getString(lastSignedInUserIdKey);
+    return _ownerReadyFailure != null ||
+        (_prefs != null &&
+            (previous != ownerId ||
+                !AccountDataBarrier.forPreferences(_prefs).isReady));
+  }
 
   /// Decides whether [userId] is a different account than the one last seen on
   /// this device, and clears the departing account's data if so.
@@ -207,7 +248,12 @@ class AuthCubit extends Cubit<AuthState> {
         await onDepartingAccount();
       }
     }
-    await prefs.setString(lastSignedInUserIdKey, userId);
+    if (!await prefs.setString(lastSignedInUserIdKey, userId)) {
+      await prefs.reload();
+      throw const AccountDataResetException(
+        'Failed to persist account ownership.',
+      );
+    }
     return changed;
   }
 
@@ -226,20 +272,39 @@ class AuthCubit extends Cubit<AuthState> {
     final prefs = _prefs;
     final reset = _accountDataReset;
     if (prefs == null || reset == null || userId == null) return;
-    final switched = await resolveOwnerChange(
-      prefs: prefs,
-      userId: userId,
-      onDepartingAccount: reset.clearAccountOwnedData,
-      onDepartingOwner: (departingOwnerId) =>
-          reset.clearAccountOwnedData(departingOwnerId: departingOwnerId),
-    );
-    if (switched) {
-      TaliaLogger.i('Account switch detected; cleared departing account data');
-      _progressEvents?.notify(ProgressChangedReason.certificate);
-      final user = _authRepository.currentUser;
-      if (user != null && !isClosed) {
-        emit(AuthAccountDataDiscarded(user: user));
+    final barrier = AccountDataBarrier.forPreferences(prefs);
+    if (prefs.getString(lastSignedInUserIdKey) == userId &&
+        _ownerReadyFailure == null &&
+        barrier.isReady) {
+      return;
+    }
+    barrier.prepareOwner(userId);
+    try {
+      final switched = await resolveOwnerChange(
+        prefs: prefs,
+        userId: userId,
+        onDepartingAccount: reset.clearAccountOwnedData,
+        onDepartingOwner: (departingOwnerId) =>
+            reset.clearAccountOwnedData(departingOwnerId: departingOwnerId),
+      );
+      await barrier.markOwnerReady(userId);
+      if (switched) {
+        TaliaLogger.i(
+          'Account switch detected; cleared departing account data',
+        );
+        _progressEvents?.notify(ProgressChangedReason.certificate);
+        final user = _authRepository.currentUser;
+        if (user != null && user.id == userId && !isClosed) {
+          emit(AuthAccountDataDiscarded(user: user));
+        }
       }
+    } catch (error) {
+      barrier.invalidate();
+      if (_authRepository.currentUser?.id == userId) {
+        _ownerReadyFailure = error;
+        if (!isClosed) emit(const AuthOwnerDataFailure());
+      }
+      rethrow;
     }
   }
 

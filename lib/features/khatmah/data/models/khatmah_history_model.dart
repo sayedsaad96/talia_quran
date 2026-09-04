@@ -32,33 +32,34 @@ class KhatmahHistoryModel {
       totalDays: json['totalDays'] as int,
       dedication: json['dedication'] != null
           ? KhatmahDedicationModel.fromJson(
-              json['dedication'] as Map<String, dynamic>)
+              json['dedication'] as Map<String, dynamic>,
+            )
           : null,
       certificateId: json['certificateId'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'khatmahNumber': khatmahNumber,
-        'title': title,
-        'startDate': startDate.toIso8601String(),
-        'completedDate': completedDate.toIso8601String(),
-        'totalDays': totalDays,
-        'dedication': dedication?.toJson(),
-        'certificateId': certificateId,
-      };
+    'id': id,
+    'khatmahNumber': khatmahNumber,
+    'title': title,
+    'startDate': startDate.toIso8601String(),
+    'completedDate': completedDate.toIso8601String(),
+    'totalDays': totalDays,
+    'dedication': dedication?.toJson(),
+    'certificateId': certificateId,
+  };
 
   KhatmahHistoryEntry toEntity() => KhatmahHistoryEntry(
-        id: id,
-        khatmahNumber: khatmahNumber,
-        title: title,
-        startDate: startDate,
-        completedDate: completedDate,
-        totalDays: totalDays,
-        dedication: dedication?.toEntity(),
-        certificateId: certificateId,
-      );
+    id: id,
+    khatmahNumber: khatmahNumber,
+    title: title,
+    startDate: startDate,
+    completedDate: completedDate,
+    totalDays: totalDays,
+    dedication: dedication?.toEntity(),
+    certificateId: certificateId,
+  );
 
   factory KhatmahHistoryModel.fromEntity(KhatmahHistoryEntry entity) {
     return KhatmahHistoryModel(

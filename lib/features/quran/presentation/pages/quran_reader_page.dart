@@ -56,7 +56,8 @@ class QuranReaderPage extends StatefulWidget {
   State<QuranReaderPage> createState() => _QuranReaderPageState();
 }
 
-class _QuranReaderPageState extends State<QuranReaderPage> {
+class _QuranReaderPageState extends State<QuranReaderPage>
+    with WidgetsBindingObserver {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
   final _highlights = const <qcf.HighlightVerse>[];
 
@@ -83,6 +84,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _quranPageCubit = getIt<QuranPageCubit>();
 
     if (widget.readerMode == QuranReaderMode.khatmah) {
@@ -97,6 +99,7 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
       }
     }
 
+    _khatmahCubit?.watchCalendar();
     _khatmahSubscription = _khatmahCubit?.stream.listen((state) {
       if (mounted) {
         _handleKhatmahState(context, state);
@@ -123,6 +126,8 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _khatmahCubit?.unwatchCalendar();
     _readTimer?.cancel();
     _readConfirmedFeedbackTimer?.cancel();
     _khatmahSubscription?.cancel();
@@ -133,6 +138,11 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
       _khatmahCubit?.close();
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _khatmahCubit?.refreshDate();
   }
 
   void _openAtPage(int pageNumber) {
@@ -229,11 +239,9 @@ class _QuranReaderPageState extends State<QuranReaderPage> {
     if (state is KhatmahProgressFailure) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text(
-            'Unable to save Khatmah progress. Please try again.',
-          ),
+          content: Text(context.l10n.khatmahUnableToSaveKhatmahProgress),
           action: SnackBarAction(
-            label: 'Retry',
+            label: context.l10n.khatmahRetry,
             onPressed: () => _khatmahCubit?.retryLastProgress(),
           ),
         ),

@@ -124,20 +124,56 @@ class CertificateFramePainter extends CustomPainter {
 
     // 1. Outer & Inner Frame Lines
     const margin = 12.0;
-    final outerRect = Rect.fromLTWH(margin, margin, size.width - margin * 2, size.height - margin * 2);
-    final innerRect = Rect.fromLTWH(margin + 6, margin + 6, size.width - (margin + 6) * 2, size.height - (margin + 6) * 2);
+    final outerRect = Rect.fromLTWH(
+      margin,
+      margin,
+      size.width - margin * 2,
+      size.height - margin * 2,
+    );
+    final innerRect = Rect.fromLTWH(
+      margin + 6,
+      margin + 6,
+      size.width - (margin + 6) * 2,
+      size.height - (margin + 6) * 2,
+    );
 
-    canvas.drawRRect(RRect.fromRectAndRadius(outerRect, const Radius.circular(8)), outerBorderPaint);
-    canvas.drawRRect(RRect.fromRectAndRadius(innerRect, const Radius.circular(6)), innerBorderPaint);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(outerRect, const Radius.circular(8)),
+      outerBorderPaint,
+    );
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(innerRect, const Radius.circular(6)),
+      innerBorderPaint,
+    );
 
     // 2. Corner Ornaments (Custom Geometric Arches)
     _drawCornerOrnament(canvas, const Offset(14, 14), 0, size.width * 0.15);
-    _drawCornerOrnament(canvas, Offset(size.width - margin - 2, margin + 2), math.pi / 2, size.width * 0.15);
-    _drawCornerOrnament(canvas, Offset(margin + 2, size.height - margin - 2), -math.pi / 2, size.width * 0.15);
-    _drawCornerOrnament(canvas, Offset(size.width - margin - 2, size.height - margin - 2), math.pi, size.width * 0.15);
+    _drawCornerOrnament(
+      canvas,
+      Offset(size.width - margin - 2, margin + 2),
+      math.pi / 2,
+      size.width * 0.15,
+    );
+    _drawCornerOrnament(
+      canvas,
+      Offset(margin + 2, size.height - margin - 2),
+      -math.pi / 2,
+      size.width * 0.15,
+    );
+    _drawCornerOrnament(
+      canvas,
+      Offset(size.width - margin - 2, size.height - margin - 2),
+      math.pi,
+      size.width * 0.15,
+    );
   }
 
-  void _drawCornerOrnament(Canvas canvas, Offset corner, double rotation, double ornamentSize) {
+  void _drawCornerOrnament(
+    Canvas canvas,
+    Offset corner,
+    double rotation,
+    double ornamentSize,
+  ) {
     canvas.save();
     canvas.translate(corner.dx, corner.dy);
     canvas.rotate(rotation);
@@ -148,20 +184,33 @@ class CertificateFramePainter extends CustomPainter {
       ..strokeWidth = 1.2;
 
     for (int i = 1; i <= 3; i++) {
-      final rect = Rect.fromLTWH(4.0 * i, 4.0 * i, ornamentSize - 8.0 * i, ornamentSize - 8.0 * i);
-      canvas.drawRRect(RRect.fromRectAndRadius(rect, Radius.circular(3.0 * i)), paint);
+      final rect = Rect.fromLTWH(
+        4.0 * i,
+        4.0 * i,
+        ornamentSize - 8.0 * i,
+        ornamentSize - 8.0 * i,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, Radius.circular(3.0 * i)),
+        paint,
+      );
     }
 
     final dotPaint = Paint()
       ..color = theme.accentGold
       ..style = PaintingStyle.fill;
-    canvas.drawCircle(Offset(ornamentSize * 0.3, ornamentSize * 0.3), 2.5, dotPaint);
+    canvas.drawCircle(
+      Offset(ornamentSize * 0.3, ornamentSize * 0.3),
+      2.5,
+      dotPaint,
+    );
 
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(CertificateFramePainter old) => old.theme.type != theme.type;
+  bool shouldRepaint(CertificateFramePainter old) =>
+      old.theme.type != theme.type;
 }
 
 // ─── Certificate Widget ───────────────────────────────────────────────────
@@ -425,7 +474,12 @@ class CertificateWidget extends StatelessWidget {
                                 decoration: BoxDecoration(
                                   color: theme.badgeBg,
                                   borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(color: theme.accentGold.withValues(alpha: 0.5), width: 1),
+                                  border: Border.all(
+                                    color: theme.accentGold.withValues(
+                                      alpha: 0.5,
+                                    ),
+                                    width: 1,
+                                  ),
                                 ),
                                 child: Text(
                                   _achievementText,
@@ -462,7 +516,9 @@ class CertificateWidget extends StatelessWidget {
                                       Container(
                                         width: 90,
                                         height: 1,
-                                        color: theme.primaryText.withValues(alpha: 0.5),
+                                        color: theme.primaryText.withValues(
+                                          alpha: 0.5,
+                                        ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
@@ -479,10 +535,7 @@ class CertificateWidget extends StatelessWidget {
                                   const SizedBox(width: 180),
 
                                   // ختم التطبيق الرسمى (يسار)
-                                  _AppSeal(
-                                    size: 104,
-                                    theme: theme,
-                                  ),
+                                  _AppSeal(size: 104, theme: theme),
                                 ],
                               ),
                             ],
@@ -572,7 +625,11 @@ class _RoyalRibbonBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.workspace_premium_rounded, size: 16, color: Colors.white),
+          const Icon(
+            Icons.workspace_premium_rounded,
+            size: 16,
+            color: Colors.white,
+          ),
           const SizedBox(width: 4),
           Text(
             'وسام ختم القرآن',
@@ -590,10 +647,7 @@ class _RoyalRibbonBadge extends StatelessWidget {
 }
 
 class _AppSeal extends StatelessWidget {
-  const _AppSeal({
-    required this.size,
-    required this.theme,
-  });
+  const _AppSeal({required this.size, required this.theme});
 
   final double size;
   final CertificateStyleTheme theme;

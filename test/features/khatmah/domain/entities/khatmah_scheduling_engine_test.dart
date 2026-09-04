@@ -4,7 +4,7 @@ import 'package:talia_quran/features/khatmah/domain/entities/khatmah_scheduling_
 void main() {
   group('KhatmahSchedulingEngine', () {
     test(
-      'end date is a local calendar date across the Cairo DST transition',
+      'end date uses calendar dates across late April on the host timezone',
       () {
         expect(
           KhatmahSchedulingEngine.calculateEndDate(

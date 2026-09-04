@@ -35,6 +35,7 @@ class HomeLoaded extends HomeState {
     this.heroAction,
     this.totalXp = 0,
     this.activeKhatmah,
+    this.khatmahError,
   });
 
   static const Object _khatmahSentinel = Object();
@@ -54,6 +55,7 @@ class HomeLoaded extends HomeState {
     UnifiedJourneyAction? heroAction,
     int? totalXp,
     Object? activeKhatmah = _khatmahSentinel,
+    Object? khatmahError = _khatmahSentinel,
   }) {
     return HomeLoaded(
       progress: progress ?? this.progress,
@@ -73,6 +75,9 @@ class HomeLoaded extends HomeState {
       activeKhatmah: identical(activeKhatmah, _khatmahSentinel)
           ? this.activeKhatmah
           : activeKhatmah as KhatmahPlan?,
+      khatmahError: identical(khatmahError, _khatmahSentinel)
+          ? this.khatmahError
+          : khatmahError,
     );
   }
 
@@ -94,6 +99,7 @@ class HomeLoaded extends HomeState {
   final SmartCoachRecommendation? coachRecommendation;
   final int totalXp;
   final KhatmahPlan? activeKhatmah;
+  final Object? khatmahError;
 
   HomeKhatmahPlanState get khatmahPlanState {
     if (activeKhatmah == null) return HomeKhatmahPlanState.none;
@@ -123,6 +129,7 @@ class HomeLoaded extends HomeState {
     heroAction,
     totalXp,
     activeKhatmah,
+    khatmahError,
   ];
 }
 

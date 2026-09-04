@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'khatmah_dedication.dart';
+import '../../../certificate/domain/entities/certificate_award.dart';
 
 class KhatmahHistoryEntry extends Equatable {
   const KhatmahHistoryEntry({
@@ -22,15 +23,26 @@ class KhatmahHistoryEntry extends Equatable {
   final KhatmahDedication? dedication;
   final String? certificateId;
 
+  /// Local issuance lives in the durable archive, never in cloud award lists.
+  CertificateAward? get certificate => certificateId == 'khatmah-$id'
+      ? CertificateAward(
+          id: certificateId!,
+          titleAr: CertificateType.khatmahReading.titleAr,
+          titleEn: CertificateType.khatmahReading.titleEn,
+          type: CertificateType.khatmahReading,
+          earnedAt: completedDate,
+        )
+      : null;
+
   @override
   List<Object?> get props => [
-        id,
-        khatmahNumber,
-        title,
-        startDate,
-        completedDate,
-        totalDays,
-        dedication,
-        certificateId,
-      ];
+    id,
+    khatmahNumber,
+    title,
+    startDate,
+    completedDate,
+    totalDays,
+    dedication,
+    certificateId,
+  ];
 }

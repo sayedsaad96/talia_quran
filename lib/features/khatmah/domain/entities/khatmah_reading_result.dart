@@ -1,5 +1,6 @@
 import 'khatmah_history_entry.dart';
 import 'khatmah_plan.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 
 enum KhatmahReadingSource { digital, physical }
 
@@ -36,6 +37,14 @@ class KhatmahReadingResult {
 
   /// Celebration requires matching persisted history and complete coverage.
   bool get isValidCompletion {
+    final authority = plan.authority;
+    if (authority is AccountDataLease) {
+      try {
+        authority.check();
+      } catch (_) {
+        return false;
+      }
+    }
     final history = historyEntry;
     return history != null &&
         history.id == plan.id &&

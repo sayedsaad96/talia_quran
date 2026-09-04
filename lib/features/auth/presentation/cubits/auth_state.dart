@@ -15,6 +15,11 @@ class AuthLoading extends AuthState {
   const AuthLoading();
 }
 
+/// Local owner cleanup failed; account data is not ready for navigation.
+class AuthOwnerDataFailure extends AuthState {
+  const AuthOwnerDataFailure();
+}
+
 class AuthAuthenticated extends AuthState {
   const AuthAuthenticated({required this.user});
   final AppUser user;

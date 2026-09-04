@@ -26,12 +26,12 @@ class KhatmahDedicationModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'isDedicated': isDedicated,
-        'recipientName': recipientName,
-        'relationship': relationship,
-        'condition': condition,
-        'customNote': customNote,
-      };
+    'isDedicated': isDedicated,
+    'recipientName': recipientName,
+    'relationship': relationship,
+    'condition': condition,
+    'customNote': customNote,
+  };
 
   factory KhatmahDedicationModel.fromEntity(KhatmahDedication entity) {
     return KhatmahDedicationModel(
@@ -44,15 +44,15 @@ class KhatmahDedicationModel {
   }
 
   KhatmahDedication toEntity() => KhatmahDedication(
-        isDedicated: isDedicated,
-        recipientName: recipientName,
-        relationship: relationship,
-        condition: condition != null
-            ? DedicationCondition.values.firstWhere(
-                (e) => e.name == condition,
-                orElse: () => DedicationCondition.alive,
-              )
-            : null,
-        customNote: customNote,
-      );
+    isDedicated: isDedicated,
+    recipientName: recipientName,
+    relationship: relationship,
+    condition: condition != null
+        ? DedicationCondition.values.firstWhere(
+            (e) => e.name == condition,
+            orElse: () => DedicationCondition.alive,
+          )
+        : null,
+    customNote: customNote,
+  );
 }

@@ -7,6 +7,7 @@ import '../sync/cloud_sync_queue_item.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../memorization/review_record_identity.dart';
 import 'record_owner_provider.dart';
+import 'account_data_barrier.dart';
 import 'pending_bookmark_recovery_marker.dart';
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
@@ -89,6 +90,7 @@ class AccountDataReset {
     'khatmah_active_plan',
     'khatmah_history',
     'khatmah_cloud_dirty',
+    'khatmah_owner',
   };
 
   /// Prefixes covering the memorization and legacy Hifz key namespaces. This
@@ -112,6 +114,16 @@ class AccountDataReset {
   Future<void> clearAccountOwnedData({
     String? departingOwnerId,
     bool preservePendingBookmarkRecovery = true,
+  }) => AccountDataBarrier.forPreferences(_prefs).clear(
+    () => _clearAccountOwnedData(
+      departingOwnerId: departingOwnerId,
+      preservePendingBookmarkRecovery: preservePendingBookmarkRecovery,
+    ),
+  );
+
+  Future<void> _clearAccountOwnedData({
+    String? departingOwnerId,
+    required bool preservePendingBookmarkRecovery,
   }) async {
     final ownerId = departingOwnerId ?? _owner?.currentOwnerId;
     if (!preservePendingBookmarkRecovery && ownerId != null) {

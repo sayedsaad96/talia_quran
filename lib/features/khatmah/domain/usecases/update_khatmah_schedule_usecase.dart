@@ -22,12 +22,13 @@ class UpdateKhatmahScheduleUsecase {
         'Only the current active Khatmah schedule can be changed.',
       );
     }
-    final updated = current.copyWith(
-      targetPagesPerDay: targetPagesPerDay,
-      targetDays: targetDays,
-      expectedEndDate: expectedEndDate,
-    );
-    await _repository.updatePlan(updated);
-    return updated;
+    return (await _repository.mutatePlan(
+      current,
+      (latest) => latest.copyWith(
+        targetPagesPerDay: targetPagesPerDay,
+        targetDays: targetDays,
+        expectedEndDate: expectedEndDate,
+      ),
+    )).plan;
   }
 }

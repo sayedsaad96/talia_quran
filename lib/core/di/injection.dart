@@ -102,6 +102,7 @@ import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/application/cloud_sync_coordinator.dart';
 import '../identity/account_data_reset.dart';
+import '../identity/account_data_barrier.dart';
 import '../../features/auth/presentation/cubits/auth_cubit.dart';
 import '../../features/khatmah/data/datasources/khatmah_local_datasource.dart';
 import '../../features/khatmah/data/repositories/khatmah_repository_impl.dart';
@@ -150,6 +151,8 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<RecordOwnerProvider>(
     () => const SupabaseRecordOwnerProvider(),
   );
+  AccountDataBarrier.forPreferences(sharedPrefs).owner =
+      getIt<RecordOwnerProvider>();
   getIt.registerLazySingleton<ParentPinSecureStore>(
     () => FlutterParentPinSecureStore(),
   );

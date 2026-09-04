@@ -14,6 +14,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_plan.dart';
+import '../../domain/entities/khatmah_reading_result.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
 import '../cubits/khatmah_cubit.dart';
 import '../khatmah_localizations.dart';
@@ -28,14 +29,19 @@ class KhatmahDashboardPage extends StatefulWidget {
   State<KhatmahDashboardPage> createState() => _KhatmahDashboardPageState();
 }
 
-class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
+class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
+    with WidgetsBindingObserver {
   late final KhatmahCubit _cubit;
   bool _createdOwnCubit = false;
   bool _resumeNavigationInFlight = false;
+  bool _mushafDialogOpen = false;
+  bool _hasNavigatedToCompletion = false;
+  bool _adjusting = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (widget.cubit != null) {
       _cubit = widget.cubit!;
     } else {
@@ -47,29 +53,46 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
       }
     }
     _cubit.load();
+    _cubit.watchCalendar();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _cubit.unwatchCalendar();
     if (_createdOwnCubit) {
       _cubit.close();
     }
     super.dispose();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) _cubit.refreshDate();
+  }
+
   void _showMushafLoggerDialog(BuildContext context, KhatmahPlan plan) {
+    _mushafDialogOpen = true;
     showDialog<bool>(
       context: context,
       builder: (ctx) => _PhysicalMushafLoggerDialog(cubit: _cubit, plan: plan),
     ).then((saved) {
+      _mushafDialogOpen = false;
       if (saved != true || !context.mounted) return;
+      if (_cubit.state is KhatmahCompleted) {
+        _openCompletion(_cubit.state as KhatmahCompleted);
+        return;
+      }
       context.showSnackBar(
         context.l10n.khatmahPhysicalMushafProgressSavedSuccessfully,
       );
     });
   }
 
-  void _showAbandonConfirmDialog(BuildContext context) {
+  void _showAbandonConfirmDialog(
+    BuildContext context,
+    KhatmahPlan confirmedPlan,
+  ) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -90,7 +113,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
             key: const Key('khatmah_dashboard_abandon_confirm_button'),
             onPressed: () {
               Navigator.of(ctx).pop();
-              _cubit.abandonPlan();
+              _cubit.abandonPlan(expectedPlan: confirmedPlan);
             },
             style: TextButton.styleFrom(
               foregroundColor: Theme.of(context).colorScheme.error,
@@ -109,8 +132,39 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
       final resumed = await _cubit.resume();
       if (!mounted || resumed == null) return;
       await context.push('/quran/page/${resumed.nextUnreadPage}?mode=khatmah');
+      if (mounted) await _cubit.load();
     } finally {
       _resumeNavigationInFlight = false;
+    }
+  }
+
+  void _openCompletion(KhatmahCompleted state) {
+    if (!mounted || _mushafDialogOpen || _hasNavigatedToCompletion) return;
+    _hasNavigatedToCompletion = true;
+    context.go(
+      AppRoutes.khatmahCompletion,
+      extra: KhatmahReadingResult(
+        plan: state.plan,
+        historyEntry: state.historyEntry,
+        newlyCompletedPages: state.newlyCompletedPages,
+      ),
+    );
+  }
+
+  Future<void> _adjust(bool compensation) async {
+    if (_adjusting) return;
+    setState(() => _adjusting = true);
+    final saved = compensation
+        ? await _cubit.mildCompensation(1)
+        : await _cubit.calmAdjustment();
+    if (!mounted) return;
+    setState(() => _adjusting = false);
+    if (saved) {
+      context.showSnackBar(
+        compensation
+            ? context.l10n.khatmahAdded1PageDayMildCompensation
+            : context.l10n.khatmahEndDateRecalibratedSmoothly,
+      );
     }
   }
 
@@ -119,7 +173,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
     KhatmahProgressFailure failure,
   ) {
     final errorColor = Theme.of(context).colorScheme.error;
-    final canRetryProgress = failure.plan != null && failure.pageNumber > 0;
+    final canRetryProgress = failure.plan != null;
     return Container(
       key: const Key('khatmah_dashboard_progress_failure_banner'),
       padding: const EdgeInsets.all(AppSpacing.md),
@@ -207,7 +261,10 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
 
     return BlocProvider<KhatmahCubit>.value(
       value: _cubit,
-      child: BlocBuilder<KhatmahCubit, KhatmahState>(
+      child: BlocConsumer<KhatmahCubit, KhatmahState>(
+        listener: (_, state) {
+          if (state is KhatmahCompleted) _openCompletion(state);
+        },
         builder: (context, state) {
           if (state is KhatmahLoading || state is KhatmahInitial) {
             return const Scaffold(
@@ -319,22 +376,22 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
             wirdEndPage = state.wirdEndPage;
           } else if (state is KhatmahPaused) {
             plan = state.plan;
-            final wird = plan.dailyTargetFor(DateTime.now());
+            final wird = plan.dailyTargetFor(_cubit.displayDate);
             wirdStartPage = wird.startPage;
             wirdEndPage = wird.endPage;
           } else if (state is KhatmahResuming) {
             plan = state.plan;
-            final wird = plan.dailyTargetFor(DateTime.now());
+            final wird = plan.dailyTargetFor(_cubit.displayDate);
             wirdStartPage = wird.startPage;
             wirdEndPage = wird.endPage;
           } else if (state is KhatmahProgressFailure && state.plan != null) {
             plan = state.plan!;
-            final wird = plan.dailyTargetFor(DateTime.now());
+            final wird = plan.dailyTargetFor(_cubit.displayDate);
             wirdStartPage = wird.startPage;
             wirdEndPage = wird.endPage;
           } else if (state is KhatmahWirdCompleted) {
             plan = state.plan;
-            final wird = plan.dailyTargetFor(DateTime.now());
+            final wird = plan.dailyTargetFor(_cubit.displayDate);
             wirdStartPage = wird.startPage;
             wirdEndPage = wird.endPage;
           } else if (state is KhatmahCompleted) {
@@ -348,7 +405,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
           final wirdPagesCount = wirdEndPage - wirdStartPage + 1;
           final isPaused = plan.status == KhatmahStatus.paused;
           final isResuming = state is KhatmahResuming;
-          final dailyComplete = plan.isDailyTargetComplete(DateTime.now());
+          final dailyComplete = plan.isDailyTargetComplete(_cubit.displayDate);
           final wirdStartStr = isArabic
               ? MushafHizbHelper.toArabicNumber(wirdStartPage)
               : wirdStartPage.toString();
@@ -373,7 +430,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                   key: const Key('khatmah_dashboard_abandon_button'),
                   tooltip: context.l10n.khatmahEndKhatmah,
                   icon: const Icon(Icons.close_rounded),
-                  onPressed: () => _showAbandonConfirmDialog(context),
+                  onPressed: () => _showAbandonConfirmDialog(context, plan),
                 ),
               ],
             ),
@@ -618,12 +675,11 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                             key: const Key(
                               'khatmah_dashboard_calm_adjustment_button',
                             ),
-                            onPressed: () {
-                              _cubit.calmAdjustment();
-                              context.showSnackBar(
-                                context.l10n.khatmahEndDateRecalibratedSmoothly,
-                              );
-                            },
+                            onPressed:
+                                plan.status != KhatmahStatus.active ||
+                                    _adjusting
+                                ? null
+                                : () => _adjust(false),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                 vertical: AppSpacing.sm,
@@ -649,14 +705,11 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage> {
                             key: const Key(
                               'khatmah_dashboard_mild_compensation_button',
                             ),
-                            onPressed: () {
-                              _cubit.mildCompensation(1);
-                              context.showSnackBar(
-                                context
-                                    .l10n
-                                    .khatmahAdded1PageDayMildCompensation,
-                              );
-                            },
+                            onPressed:
+                                plan.status != KhatmahStatus.active ||
+                                    _adjusting
+                                ? null
+                                : () => _adjust(true),
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(
                                 vertical: AppSpacing.sm,
@@ -768,10 +821,12 @@ class _PhysicalMushafLoggerDialogState
       _isSaving = true;
       _saveFailed = false;
     });
-    await widget.cubit.recordPhysicalThroughPage(page);
+    final saved = await widget.cubit.recordPhysicalRange(widget.plan, page);
     if (!mounted) return;
     final resultState = widget.cubit.state;
-    if (resultState is KhatmahProgressFailure || resultState is KhatmahPaused) {
+    if (!saved ||
+        resultState is KhatmahProgressFailure ||
+        resultState is KhatmahPaused) {
       setState(() {
         _isSaving = false;
         _saveFailed = true;

@@ -93,10 +93,13 @@ void main() {
       ),
     );
 
-    test('getActivePlan returns null when datasource has no active plan', () async {
-      final plan = await repository.getActivePlan();
-      expect(plan, isNull);
-    });
+    test(
+      'getActivePlan returns null when datasource has no active plan',
+      () async {
+        final plan = await repository.getActivePlan();
+        expect(plan, isNull);
+      },
+    );
 
     test('createPlan saves plan and getActivePlan retrieves it', () async {
       await repository.createPlan(testPlan);
@@ -105,46 +108,63 @@ void main() {
       expect(retrieved, equals(testPlan));
     });
 
-    test('atomically creates once and returns conflict to a concurrent creator', () async {
-      final replacement = testPlan.copyWith(id: 'plan-2');
+    test(
+      'atomically creates once and returns conflict to a concurrent creator',
+      () async {
+        final replacement = testPlan.copyWith(id: 'plan-2');
 
-      final results = await Future.wait([
-        repository.createPlanIfAbsent(testPlan),
-        repository.createPlanIfAbsent(replacement),
-      ]);
+        final results = await Future.wait([
+          repository.createPlanIfAbsent(testPlan),
+          repository.createPlanIfAbsent(replacement),
+        ]);
 
-      expect(results.whereType<KhatmahPlan>(), hasLength(1));
-      expect((await repository.getActivePlan())?.id, testPlan.id);
-    });
+        expect(results.whereType<KhatmahPlan>(), hasLength(1));
+        expect((await repository.getActivePlan())?.id, testPlan.id);
+      },
+    );
 
-    test('completed cleanup only deletes its expected stale plan before create', () async {
-      final staleCompleted = testPlan.copyWith(status: KhatmahStatus.completed);
-      await repository.createPlan(staleCompleted);
-      final replacement = testPlan.copyWith(id: 'replacement');
+    test(
+      'completed cleanup only deletes its expected stale plan before create',
+      () async {
+        final staleCompleted = testPlan.copyWith(
+          status: KhatmahStatus.completed,
+        );
+        await repository.createPlan(staleCompleted);
+        final replacement = testPlan.copyWith(id: 'replacement');
 
-      final conflict = await repository.createPlanIfAbsent(replacement);
+        final conflict = await repository.createPlanIfAbsent(replacement);
 
-      expect(conflict, isNull);
-      expect((await repository.getActivePlan())?.id, replacement.id);
-    });
+        expect(conflict, isNull);
+        expect((await repository.getActivePlan())?.id, replacement.id);
+      },
+    );
 
-    test('completed cleanup does not overwrite a replacement arriving before delete', () async {
-      final blocking = _BlockingDeleteDatasource(prefs);
-      final guarded = KhatmahRepositoryImpl(blocking);
-      await guarded.createPlan(testPlan.copyWith(status: KhatmahStatus.completed));
-      final creating = guarded.createPlanIfAbsent(testPlan.copyWith(id: 'requested'));
-      await blocking.deleteStarted.future;
-      final replacement = testPlan.copyWith(id: 'replacement');
-      await datasource.savePlan(KhatmahPlanModel.fromEntity(replacement));
-      blocking.releaseDelete.complete();
-      expect(await creating, replacement);
-      expect((await guarded.getActivePlan())?.id, 'replacement');
-    });
+    test(
+      'completed cleanup does not overwrite a replacement arriving before delete',
+      () async {
+        final blocking = _BlockingDeleteDatasource(prefs);
+        final guarded = KhatmahRepositoryImpl(blocking);
+        await guarded.createPlan(
+          testPlan.copyWith(status: KhatmahStatus.completed),
+        );
+        final creating = guarded.createPlanIfAbsent(
+          testPlan.copyWith(id: 'requested'),
+        );
+        await blocking.deleteStarted.future;
+        final replacement = testPlan.copyWith(id: 'replacement');
+        await datasource.savePlan(KhatmahPlanModel.fromEntity(replacement));
+        blocking.releaseDelete.complete();
+        expect(await creating, replacement);
+        expect((await guarded.getActivePlan())?.id, 'replacement');
+      },
+    );
 
     test('scoped abandon rejects a replacement without deleting it', () async {
       await repository.createPlan(testPlan.copyWith(id: 'replacement'));
-      await expectLater(repository.deletePlan(expectedPlanId: 'old-plan'),
-        throwsA(isA<KhatmahProgressException>()));
+      await expectLater(
+        repository.deletePlan(expectedPlanId: 'old-plan'),
+        throwsA(isA<KhatmahProgressException>()),
+      );
       expect((await repository.getActivePlan())?.id, 'replacement');
     });
 
@@ -166,149 +186,196 @@ void main() {
       expect(await repository.getActivePlan(), isNull);
     });
 
-    test('completePlan records history entry with correct khatmahNumber and deletes active plan', () async {
-      final completedPlan = testPlan.recordThroughPage(604);
-      await repository.createPlan(completedPlan);
+    test(
+      'completePlan records history entry with correct khatmahNumber and deletes active plan',
+      () async {
+        final completedPlan = testPlan.recordThroughPage(604);
+        await repository.createPlan(completedPlan);
 
-      await repository.completePlan(completedPlan);
+        await repository.completePlan(completedPlan);
 
-      // Active plan should be deleted
-      expect(await repository.getActivePlan(), isNull);
+        // Active plan should be deleted
+        expect(await repository.getActivePlan(), isNull);
 
-      // History should have 1 entry with khatmahNumber = 1
-      final history = await repository.getHistory();
-      expect(history.length, 1);
-      expect(history.first.id, completedPlan.id);
-      expect(history.first.khatmahNumber, 1);
-      expect(history.first.title, completedPlan.title);
-      expect(history.first.startDate, completedPlan.startDate);
-      expect(history.first.totalDays, greaterThanOrEqualTo(1));
-      expect(history.first.dedication?.recipientName, 'Father');
+        // History should have 1 entry with khatmahNumber = 1
+        final history = await repository.getHistory();
+        expect(history.length, 1);
+        expect(history.first.id, completedPlan.id);
+        expect(history.first.khatmahNumber, 1);
+        expect(history.first.title, completedPlan.title);
+        expect(history.first.startDate, completedPlan.startDate);
+        expect(history.first.totalDays, greaterThanOrEqualTo(1));
+        expect(history.first.dedication?.recipientName, 'Father');
 
-      // Completed count should be 1
-      expect(await repository.getCompletedCount(), 1);
-    });
+        // Completed count should be 1
+        expect(await repository.getCompletedCount(), 1);
+      },
+    );
 
-    test('completePlan increments khatmahNumber on subsequent completions', () async {
-      final completedPlan = testPlan.recordThroughPage(604);
-      await repository.completePlan(completedPlan);
+    test(
+      'completePlan increments khatmahNumber on subsequent completions',
+      () async {
+        final completedPlan = testPlan.recordThroughPage(604);
+        await repository.createPlan(completedPlan);
+        await repository.completePlan(completedPlan);
 
-      final secondPlan = completedPlan.copyWith(id: 'plan-2', title: 'Second Khatmah');
-      await repository.completePlan(secondPlan);
+        final secondPlan = completedPlan.copyWith(
+          id: 'plan-2',
+          title: 'Second Khatmah',
+        );
+        await repository.createPlan(secondPlan);
+        await repository.completePlan(secondPlan);
 
-      final history = await repository.getHistory();
-      expect(history.length, 2);
-      expect(history[0].khatmahNumber, 1);
-      expect(history[1].khatmahNumber, 2);
-      expect(await repository.getCompletedCount(), 2);
-    });
+        final history = await repository.getHistory();
+        expect(history.length, 2);
+        expect(history[0].khatmahNumber, 1);
+        expect(history[1].khatmahNumber, 2);
+        expect(await repository.getCompletedCount(), 2);
+      },
+    );
 
-    test('completePlan rejects incomplete coverage without mutating storage', () async {
-      final incompletePlan = testPlan.recordPage(100);
-      await repository.createPlan(incompletePlan);
+    test(
+      'completePlan rejects incomplete coverage without mutating storage',
+      () async {
+        final incompletePlan = testPlan.recordPage(100);
+        await repository.createPlan(incompletePlan);
 
-      await expectLater(
-        () => repository.completePlan(incompletePlan),
-        throwsA(isA<KhatmahProgressException>()),
-      );
+        await expectLater(
+          () => repository.completePlan(incompletePlan),
+          throwsA(isA<KhatmahProgressException>()),
+        );
 
-      expect(await repository.getActivePlan(), incompletePlan);
-      expect(await repository.getHistory(), isEmpty);
-    });
+        expect(await repository.getActivePlan(), incompletePlan);
+        expect(await repository.getHistory(), isEmpty);
+      },
+    );
 
-    test('completePlan returns the same persisted entry when retried by plan id', () async {
-      final completedPlan = testPlan.recordThroughPage(604);
-      final first = await repository.completePlan(completedPlan);
-      final retried = await repository.completePlan(completedPlan);
+    test(
+      'completePlan returns the same persisted entry when retried by plan id',
+      () async {
+        final completedPlan = testPlan.recordThroughPage(604);
+        await repository.createPlan(completedPlan);
+        final first = await repository.completePlan(completedPlan);
+        final retried = await repository.completePlan(completedPlan);
 
-      expect(retried, first);
-      final history = await repository.getHistory();
-      expect(history, hasLength(1));
-      expect(history.single, first);
-    });
+        expect(retried, first);
+        final history = await repository.getHistory();
+        expect(history, hasLength(1));
+        expect(history.single, first);
+      },
+    );
 
-    test('concurrent completion retries for one plan return one persisted entry', () async {
-      final completedPlan = testPlan.recordThroughPage(604);
+    test(
+      'concurrent completion retries for one plan return one persisted entry',
+      () async {
+        final completedPlan = testPlan.recordThroughPage(604);
+        await repository.createPlan(completedPlan);
 
-      final results = await Future.wait([
-        repository.completePlan(completedPlan),
-        repository.completePlan(completedPlan),
-      ]);
+        final results = await Future.wait([
+          repository.completePlan(completedPlan),
+          repository.completePlan(completedPlan),
+        ]);
 
-      expect(results[0], results[1]);
-      expect(await repository.getHistory(), hasLength(1));
-    });
+        expect(results[0], results[1]);
+        expect(await repository.getHistory(), hasLength(1));
+      },
+    );
 
-    test('serializes different completion writes without losing history entries', () async {
-      final firstPlan = testPlan.recordThroughPage(604);
-      final secondPlan = firstPlan.copyWith(id: 'plan-2', title: 'Second');
+    test(
+      'serializes different completion writes without losing history entries',
+      () async {
+        final firstPlan = testPlan.recordThroughPage(604);
+        final secondPlan = firstPlan.copyWith(id: 'plan-2', title: 'Second');
 
-      await Future.wait([
-        repository.completePlan(firstPlan),
-        repository.completePlan(secondPlan),
-      ]);
+        await repository.createPlan(firstPlan);
+        final first = repository.completePlan(firstPlan);
+        final second = () async {
+          await repository.createPlan(secondPlan);
+          return repository.completePlan(secondPlan);
+        }();
+        await Future.wait([first, second]);
 
-      final history = await repository.getHistory();
-      expect(history.map((entry) => entry.id), containsAll(['plan-1', 'plan-2']));
-      expect(history.map((entry) => entry.khatmahNumber), {1, 2});
-    });
+        final history = await repository.getHistory();
+        expect(
+          history.map((entry) => entry.id),
+          containsAll(['plan-1', 'plan-2']),
+        );
+        expect(history.map((entry) => entry.khatmahNumber), {1, 2});
+      },
+    );
 
-    test('waits for completion delete before saving a replacement plan', () async {
-      final blockingDatasource = _BlockingDeleteDatasource(prefs);
-      final queuedRepository = KhatmahRepositoryImpl(blockingDatasource);
-      final completedPlan = testPlan.recordThroughPage(604);
-      final replacementPlan = completedPlan.copyWith(id: 'replacement');
+    test(
+      'waits for completion delete before saving a replacement plan',
+      () async {
+        final blockingDatasource = _BlockingDeleteDatasource(prefs);
+        final queuedRepository = KhatmahRepositoryImpl(blockingDatasource);
+        final completedPlan = testPlan.recordThroughPage(604);
+        final replacementPlan = completedPlan.copyWith(id: 'replacement');
 
-      final completion = queuedRepository.completePlan(completedPlan);
-      await blockingDatasource.deleteStarted.future;
-      final replacement = queuedRepository.updatePlan(replacementPlan);
+        await queuedRepository.createPlan(completedPlan);
+        final completion = queuedRepository.completePlan(completedPlan);
+        await blockingDatasource.deleteStarted.future;
+        final replacement = queuedRepository.createPlan(replacementPlan);
 
-      await Future<void>.delayed(Duration.zero);
-      expect(blockingDatasource.savedPlanIds, isEmpty);
+        await Future<void>.delayed(Duration.zero);
+        expect(blockingDatasource.savedPlanIds, [completedPlan.id]);
 
-      blockingDatasource.releaseDelete.complete();
-      await completion;
-      await replacement;
-      expect((await queuedRepository.getActivePlan())?.id, replacementPlan.id);
-    });
+        blockingDatasource.releaseDelete.complete();
+        await completion;
+        await replacement;
+        expect(
+          (await queuedRepository.getActivePlan())?.id,
+          replacementPlan.id,
+        );
+      },
+    );
 
-    test('continues with queued mutations after a completion failure', () async {
-      final failingDatasource = _FailOnceDeleteDatasource(prefs);
-      final queuedRepository = KhatmahRepositoryImpl(failingDatasource);
-      final completedPlan = testPlan.recordThroughPage(604);
-      final replacementPlan = completedPlan.copyWith(id: 'replacement');
-      await queuedRepository.createPlan(completedPlan);
+    test(
+      'continues with queued mutations after a completion failure',
+      () async {
+        final failingDatasource = _FailOnceDeleteDatasource(prefs);
+        final queuedRepository = KhatmahRepositoryImpl(failingDatasource);
+        final completedPlan = testPlan.recordThroughPage(604);
+        final replacementPlan = completedPlan.copyWith(id: 'replacement');
+        await queuedRepository.createPlan(completedPlan);
 
-      final completion = queuedRepository.completePlan(completedPlan);
-      final replacement = queuedRepository.updatePlan(replacementPlan);
+        final completion = queuedRepository.completePlan(completedPlan);
+        final replacement = queuedRepository.createPlan(replacementPlan);
 
-      await expectLater(completion, throwsA(isA<KhatmahStorageException>()));
-      await replacement;
-      expect((await queuedRepository.getActivePlan())?.id, replacementPlan.id);
-    });
+        await expectLater(completion, throwsA(isA<KhatmahStorageException>()));
+        await replacement;
+        expect(
+          (await queuedRepository.getActivePlan())?.id,
+          replacementPlan.id,
+        );
+      },
+    );
 
-    test('reloads rejected history writes before retrying completion', () async {
-      final store = _RejectOnceHistoryStore();
-      SharedPreferencesStorePlatform.instance = store;
-      SharedPreferences.resetStatic();
-      final rejectingPrefs = await SharedPreferences.getInstance();
-      final rejectingDatasource = KhatmahLocalDatasource(rejectingPrefs);
-      final retryRepository = KhatmahRepositoryImpl(rejectingDatasource);
-      final completedPlan = testPlan.recordThroughPage(604);
-      expect(await retryRepository.getHistory(), isEmpty);
-      await retryRepository.createPlan(completedPlan);
+    test(
+      'reloads rejected history writes before retrying completion',
+      () async {
+        final store = _RejectOnceHistoryStore();
+        SharedPreferencesStorePlatform.instance = store;
+        SharedPreferences.resetStatic();
+        final rejectingPrefs = await SharedPreferences.getInstance();
+        final rejectingDatasource = KhatmahLocalDatasource(rejectingPrefs);
+        final retryRepository = KhatmahRepositoryImpl(rejectingDatasource);
+        final completedPlan = testPlan.recordThroughPage(604);
+        expect(await retryRepository.getHistory(), isEmpty);
+        await retryRepository.createPlan(completedPlan);
 
-      await expectLater(
-        () => retryRepository.completePlan(completedPlan),
-        throwsA(isA<KhatmahStorageException>()),
-      );
-      expect(await retryRepository.getHistory(), isEmpty);
+        await expectLater(
+          () => retryRepository.completePlan(completedPlan),
+          throwsA(isA<KhatmahStorageException>()),
+        );
+        expect(await retryRepository.getHistory(), isEmpty);
 
-      final entry = await retryRepository.completePlan(completedPlan);
-      expect(entry.id, completedPlan.id);
-      expect(await retryRepository.getHistory(), hasLength(1));
-      expect(await retryRepository.getActivePlan(), isNull);
-    });
+        final entry = await retryRepository.completePlan(completedPlan);
+        expect(entry.id, completedPlan.id);
+        expect(await retryRepository.getHistory(), hasLength(1));
+        expect(await retryRepository.getActivePlan(), isNull);
+      },
+    );
 
     test('uses lastReadDate as the persisted completion date', () async {
       final readAt = DateTime(2026, 2, 1, 10);
@@ -316,50 +383,58 @@ void main() {
           .recordThroughPage(604)
           .copyWith(lastReadDate: readAt);
 
+      await repository.createPlan(completedPlan);
       final entry = await repository.completePlan(completedPlan);
 
       expect(entry.completedDate, readAt);
     });
 
-    test('retry after deletion failure returns the persisted entry and keeps a replacement plan', () async {
-      final failingDatasource = _FailOnceDeleteDatasource(prefs);
-      final retryRepository = KhatmahRepositoryImpl(failingDatasource);
-      final completedPlan = testPlan.recordThroughPage(604);
-      final replacementPlan = completedPlan.copyWith(id: 'replacement');
+    test(
+      'retry after deletion failure returns the persisted entry and keeps a replacement plan',
+      () async {
+        final failingDatasource = _FailOnceDeleteDatasource(prefs);
+        final retryRepository = KhatmahRepositoryImpl(failingDatasource);
+        final completedPlan = testPlan.recordThroughPage(604);
+        final replacementPlan = completedPlan.copyWith(id: 'replacement');
 
-      await retryRepository.createPlan(completedPlan);
-      await expectLater(
-        () => retryRepository.completePlan(completedPlan),
-        throwsA(isA<KhatmahStorageException>()),
-      );
+        await retryRepository.createPlan(completedPlan);
+        await expectLater(
+          () => retryRepository.completePlan(completedPlan),
+          throwsA(isA<KhatmahStorageException>()),
+        );
 
-      expect(await retryRepository.getHistory(), hasLength(1));
-      await retryRepository.updatePlan(replacementPlan);
+        expect(await retryRepository.getHistory(), hasLength(1));
+        await retryRepository.createPlan(replacementPlan);
 
-      final retried = await retryRepository.completePlan(completedPlan);
+        final retried = await retryRepository.completePlan(completedPlan);
 
-      expect(retried.id, completedPlan.id);
-      expect(await retryRepository.getHistory(), hasLength(1));
-      expect((await retryRepository.getActivePlan())?.id, replacementPlan.id);
-    });
+        expect(retried.id, completedPlan.id);
+        expect(await retryRepository.getHistory(), hasLength(1));
+        expect((await retryRepository.getActivePlan())?.id, replacementPlan.id);
+      },
+    );
 
-    test('completePlan sets dedication to null when isDedicated is false', () async {
-      final nonDedicatedPlan = KhatmahPlan(
-        id: 'plan-no-ded',
-        title: 'Solo',
-        startPage: 1,
-        completedPages: {for (var page = 1; page <= 604; page++) page},
-        targetPagesPerDay: 20,
-        targetDays: 31,
-        startDate: DateTime(2026, 1, 1),
-        expectedEndDate: DateTime(2026, 2, 1),
-        dedication: const KhatmahDedication(isDedicated: false),
-      );
+    test(
+      'completePlan sets dedication to null when isDedicated is false',
+      () async {
+        final nonDedicatedPlan = KhatmahPlan(
+          id: 'plan-no-ded',
+          title: 'Solo',
+          startPage: 1,
+          completedPages: {for (var page = 1; page <= 604; page++) page},
+          targetPagesPerDay: 20,
+          targetDays: 31,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 2, 1),
+          dedication: const KhatmahDedication(isDedicated: false),
+        );
 
-      await repository.completePlan(nonDedicatedPlan);
+        await repository.createPlan(nonDedicatedPlan);
+        await repository.completePlan(nonDedicatedPlan);
 
-      final history = await repository.getHistory();
-      expect(history.first.dedication, isNull);
-    });
+        final history = await repository.getHistory();
+        expect(history.first.dedication, isNull);
+      },
+    );
   });
 }

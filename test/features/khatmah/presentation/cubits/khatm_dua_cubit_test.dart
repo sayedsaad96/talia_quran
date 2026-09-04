@@ -36,6 +36,16 @@ void main() {
     expect(cubit.state, const KhatmDuaInitial());
   });
 
+  test('pending Dua load settles safely after owned cubit disposal', () async {
+    final load = Completer<KhatmDuaData>();
+    when(() => mockGetKhatmDua()).thenAnswer((_) => load.future);
+    final pending = cubit.load();
+    await cubit.close();
+    load.complete(testData);
+    await expectLater(pending, completes);
+    expect(cubit.state, isA<KhatmDuaLoading>());
+  });
+
   test('load() emits [KhatmDuaLoading, KhatmDuaLoaded] on success', () async {
     when(() => mockGetKhatmDua()).thenAnswer((_) async => testData);
 

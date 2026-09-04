@@ -38,21 +38,24 @@ void main() {
       expect(model.customNote, isNull);
     });
 
-    test('fromEntity and toEntity round trip with DedicationCondition enum', () {
-      const entity = KhatmahDedication(
-        isDedicated: true,
-        recipientName: 'Mom',
-        relationship: 'Mother',
-        condition: DedicationCondition.alive,
-        customNote: 'Love you Mom',
-      );
+    test(
+      'fromEntity and toEntity round trip with DedicationCondition enum',
+      () {
+        const entity = KhatmahDedication(
+          isDedicated: true,
+          recipientName: 'Mom',
+          relationship: 'Mother',
+          condition: DedicationCondition.alive,
+          customNote: 'Love you Mom',
+        );
 
-      final model = KhatmahDedicationModel.fromEntity(entity);
-      expect(model.condition, 'alive');
+        final model = KhatmahDedicationModel.fromEntity(entity);
+        expect(model.condition, 'alive');
 
-      final restored = model.toEntity();
-      expect(restored, entity);
-    });
+        final restored = model.toEntity();
+        expect(restored, entity);
+      },
+    );
 
     test('toEntity defaults unknown condition string to alive if non-null', () {
       final model = KhatmahDedicationModel(
@@ -63,10 +66,7 @@ void main() {
     });
 
     test('toEntity keeps condition null when condition string is null', () {
-      final model = KhatmahDedicationModel(
-        isDedicated: false,
-        condition: null,
-      );
+      final model = KhatmahDedicationModel(isDedicated: false, condition: null);
       expect(model.toEntity().condition, isNull);
     });
   });
@@ -158,23 +158,26 @@ void main() {
       expect(model.toEntity().completedPages, model.completedPages);
     });
 
-    test('migrates legacy coverage from startPage and derives global cursor', () {
-      final model = KhatmahPlanModel.fromJson({
-        'id': 'legacy-started-late',
-        'title': 'Legacy',
-        'startPage': 11,
-        'currentPage': 15,
-        'targetPagesPerDay': 4,
-        'targetDays': 151,
-        'startDate': '2026-01-01T00:00:00.000',
-        'expectedEndDate': '2026-06-01T00:00:00.000',
-        'dedication': <String, dynamic>{},
-      });
+    test(
+      'migrates legacy coverage from startPage and derives global cursor',
+      () {
+        final model = KhatmahPlanModel.fromJson({
+          'id': 'legacy-started-late',
+          'title': 'Legacy',
+          'startPage': 11,
+          'currentPage': 15,
+          'targetPagesPerDay': 4,
+          'targetDays': 151,
+          'startDate': '2026-01-01T00:00:00.000',
+          'expectedEndDate': '2026-06-01T00:00:00.000',
+          'dedication': <String, dynamic>{},
+        });
 
-      expect(model.completedPages, {11, 12, 13, 14, 15});
-      expect(model.currentPage, 0);
-      expect(model.toJson()['currentPage'], 0);
-    });
+        expect(model.completedPages, {11, 12, 13, 14, 15});
+        expect(model.currentPage, 0);
+        expect(model.toJson()['currentPage'], 0);
+      },
+    );
 
     test('derives serialized currentPage from normalized coverage', () {
       final model = KhatmahPlanModel(
@@ -208,7 +211,10 @@ void main() {
         throwsA(isA<KhatmahStorageException>()),
       );
       expect(
-        () => KhatmahPlanModel.fromJson({...baseJson, 'completedPages': [1, '2']}),
+        () => KhatmahPlanModel.fromJson({
+          ...baseJson,
+          'completedPages': [1, '2'],
+        }),
         throwsA(isA<KhatmahStorageException>()),
       );
     });

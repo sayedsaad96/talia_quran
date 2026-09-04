@@ -20,6 +20,11 @@ class KhatmahDedication extends Equatable {
   static const none = KhatmahDedication();
 
   @override
-  List<Object?> get props =>
-      [isDedicated, recipientName, relationship, condition, customNote];
+  List<Object?> get props => [
+    isDedicated,
+    recipientName,
+    relationship,
+    condition,
+    customNote,
+  ];
 }

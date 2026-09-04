@@ -7,14 +7,17 @@ class PauseResumeKhatmahUsecase {
   final KhatmahRepository _repository;
 
   Future<KhatmahPlan> pause(KhatmahPlan plan, [DateTime? pausedAt]) async {
-    final pausedPlan = plan.pause(at: pausedAt);
-    await _repository.updatePlan(pausedPlan);
-    return pausedPlan;
+    return (await _repository.mutatePlan(
+      plan,
+      (current) => current.pause(at: pausedAt),
+    )).plan;
   }
 
   Future<KhatmahPlan> resume(KhatmahPlan plan, [DateTime? fromDate]) async {
-    final resumedPlan = plan.resume(fromDate: fromDate);
-    await _repository.updatePlan(resumedPlan);
-    return resumedPlan;
+    return (await _repository.mutatePlan(
+      plan,
+      (current) => current.resume(fromDate: fromDate),
+      requiredStatus: KhatmahStatus.paused,
+    )).plan;
   }
 }

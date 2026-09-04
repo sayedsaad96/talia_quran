@@ -15,6 +15,8 @@ class CreateKhatmahUsecase {
   const CreateKhatmahUsecase(this._repository);
 
   final KhatmahRepository _repository;
+  Object? get authority => _repository.authority;
+  Stream<void>? get changes => _repository.changes;
 
   Future<void> call(KhatmahPlan plan) async {
     final existingPlan = await _repository.createPlanIfAbsent(plan);

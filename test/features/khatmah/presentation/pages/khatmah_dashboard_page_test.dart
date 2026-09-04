@@ -636,7 +636,9 @@ void main() {
     tester,
   ) async {
     when(() => mockGetActive()).thenAnswer((_) async => testPlan);
-    when(() => mockDelete()).thenAnswer((_) async {});
+    when(
+      () => mockDelete(expectedPlanId: testPlan.id),
+    ).thenAnswer((_) async {});
 
     final cubit = buildCubit();
 
@@ -660,7 +662,7 @@ void main() {
     await tester.tap(confirmBtn);
     await tester.pumpAndSettle();
 
-    verify(() => mockDelete()).called(1);
+    verify(() => mockDelete(expectedPlanId: testPlan.id)).called(1);
   });
 
   testWidgets(

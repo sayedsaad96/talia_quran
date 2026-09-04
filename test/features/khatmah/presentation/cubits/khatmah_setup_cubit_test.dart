@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
@@ -30,6 +31,20 @@ void main() {
 
   KhatmahSetupCubit buildCubit() =>
       KhatmahSetupCubit(mockCreateKhatmah, deleteKhatmah: mockDeleteKhatmah);
+
+  test(
+    'pending setup save settles safely after owned cubit disposal',
+    () async {
+      final save = Completer<void>();
+      when(() => mockCreateKhatmah(any())).thenAnswer((_) => save.future);
+      final cubit = buildCubit();
+      final pending = cubit.createPlan(pagesPerDay: 4);
+      await cubit.close();
+      save.complete();
+      await expectLater(pending, completes);
+      expect(cubit.state, isA<KhatmahSetupSaving>());
+    },
+  );
 
   group('KhatmahSetupCubit Initial State', () {
     test('initial state is KhatmahSetupIdle', () {

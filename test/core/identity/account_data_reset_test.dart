@@ -1,5 +1,12 @@
 import 'dart:ffi' show Abi;
 import 'dart:io';
+import 'dart:async';
+import 'package:talia_quran/features/khatmah/data/datasources/khatmah_local_datasource.dart';
+import 'package:talia_quran/features/khatmah/data/models/khatmah_plan_model.dart';
+import 'package:talia_quran/features/khatmah/data/repositories/khatmah_repository_impl.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
@@ -20,6 +27,21 @@ import 'package:talia_quran/features/streak/data/models/streak_isar.dart';
 import 'package:talia_quran/features/xp/data/models/xp_isar.dart';
 
 bool _isarCoreInitialized = false;
+
+class _HeldKhatmahWrite extends KhatmahLocalDatasource {
+  _HeldKhatmahWrite(super.prefs);
+  bool hold = false;
+  final started = Completer<void>();
+  final release = Completer<void>();
+  @override
+  Future<void> savePlan(KhatmahPlanModel plan) async {
+    if (hold) {
+      if (!started.isCompleted) started.complete();
+      await release.future;
+    }
+    await super.savePlan(plan);
+  }
+}
 
 Future<void> _initializeIsarCoreForTests() async {
   if (_isarCoreInitialized) return;
@@ -45,6 +67,51 @@ void main() {
     late Isar isar;
     late SharedPreferences prefs;
     late Directory dir;
+
+    test(
+      'reset drains accepted Khatmah writes and rejects queued old work',
+      () async {
+        final data = _HeldKhatmahWrite(prefs);
+        final repository = KhatmahRepositoryImpl(data);
+        final plan = KhatmahPlan(
+          id: 'departing',
+          title: 'Private',
+          targetPagesPerDay: 4,
+          targetDays: 151,
+          startDate: DateTime(2026, 1, 1),
+          expectedEndDate: DateTime(2026, 6, 1),
+        );
+        await prefs.remove('khatmah_active_plan');
+        await prefs.remove('khatmah_history');
+        await repository.createPlan(plan);
+        final old = (await repository.getActivePlan())!;
+        data.hold = true;
+        final record = RecordKhatmahReadingUsecase(repository);
+        final first = record(
+          old,
+          1,
+          source: KhatmahReadingSource.digital,
+        ).then<Object?>((_) => null, onError: (Object e) => e);
+        await data.started.future;
+        final queued = record(
+          old,
+          2,
+          source: KhatmahReadingSource.digital,
+        ).then<Object?>((_) => null, onError: (Object e) => e);
+        final reset = AccountDataReset(isar, prefs).clearAccountOwnedData();
+        await Future<void>.delayed(Duration.zero);
+        data.release.complete();
+        await reset;
+        await first;
+        await queued;
+        expect(prefs.getString('khatmah_active_plan'), isNull);
+        expect(prefs.getString('khatmah_history'), isNull);
+        await expectLater(
+          record(old, 3, source: KhatmahReadingSource.digital),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
 
     setUp(() async {
       await _initializeIsarCoreForTests();

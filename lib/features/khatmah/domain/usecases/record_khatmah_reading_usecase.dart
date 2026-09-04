@@ -27,34 +27,24 @@ class RecordKhatmahReadingUsecase {
     }
 
     final readingDate = readAt ?? DateTime.now();
-    final anchoredPlan = plan.anchorDailyTarget(readingDate);
-    final coveredPlan = switch (source) {
-      KhatmahReadingSource.digital => anchoredPlan.recordPage(pageNumber),
-      KhatmahReadingSource.physical => anchoredPlan.recordThroughPage(
-        pageNumber,
-      ),
-    };
-    final newlyCompletedPages = coveredPlan.completedPages.difference(
-      plan.completedPages,
-    );
-    final updatedPlan = coveredPlan.copyWith(
-      lastReadDate: readingDate,
-      status: coveredPlan.isComplete ? KhatmahStatus.completed : null,
-    );
-
-    if (!updatedPlan.isComplete) {
-      await _repository.updatePlan(updatedPlan);
-      return KhatmahReadingResult(
-        plan: updatedPlan,
-        newlyCompletedPages: newlyCompletedPages,
+    final confirmedStart = plan.nextUnreadPage;
+    return _repository.mutatePlan(plan, (current) {
+      final anchoredPlan = current.anchorDailyTarget(readingDate);
+      final coveredPlan = switch (source) {
+        KhatmahReadingSource.digital => anchoredPlan.recordPage(pageNumber),
+        KhatmahReadingSource.physical => anchoredPlan.copyWith(
+          completedPages: {
+            ...anchoredPlan.completedPages,
+            for (var page = confirmedStart; page <= pageNumber; page++) page,
+          },
+        ),
+      };
+      final updatedPlan = coveredPlan.copyWith(
+        lastReadDate: readingDate,
+        status: coveredPlan.isComplete ? KhatmahStatus.completed : null,
       );
-    }
 
-    final historyEntry = await _repository.completePlan(updatedPlan);
-    return KhatmahReadingResult(
-      plan: updatedPlan,
-      historyEntry: historyEntry,
-      newlyCompletedPages: newlyCompletedPages,
-    );
+      return updatedPlan;
+    });
   }
 }

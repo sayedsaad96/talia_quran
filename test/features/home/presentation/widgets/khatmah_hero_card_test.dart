@@ -8,6 +8,78 @@ import 'package:talia_quran/features/khatmah/domain/entities/khatmah_scheduling_
 import 'package:talia_quran/features/khatmah/presentation/widgets/khatmah_hero_card.dart';
 
 void main() {
+  for (final locale in ['ar', 'en']) {
+    testWidgets(
+      'Home Khatmah error in $locale is distinct from no plan and retryable',
+      (tester) async {
+        var failed = true;
+        await tester.pumpWidget(
+          MaterialApp(
+            locale: Locale(locale),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            home: StatefulBuilder(
+              builder: (context, setState) => Scaffold(
+                body: KhatmahHeroCard(
+                  isDark: false,
+                  error: failed ? const FormatException('corrupt') : null,
+                  onRetry: () => setState(() => failed = false),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('khatmah_hero_start_button')),
+          findsNothing,
+        );
+        final l10n = AppLocalizations.of(
+          tester.element(find.byType(KhatmahHeroCard)),
+        );
+        expect(find.text(l10n.khatmahUnableToLoadYourKhatmah), findsOneWidget);
+        await tester.tap(find.text(l10n.khatmahRetry));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('khatmah_hero_start_button')),
+          findsOneWidget,
+        );
+      },
+    );
+  }
+  testWidgets(
+    'retained Home target rolls to next day without explicit reload',
+    (tester) async {
+      var now = DateTime(2026, 9, 4, 23, 59);
+      final plan = KhatmahPlan(
+        id: 'p',
+        title: 'P',
+        completedPages: {1, 2, 3, 4},
+        targetPagesPerDay: 4,
+        targetDays: 151,
+        startDate: DateTime(2026, 9, 1),
+        expectedEndDate: DateTime(2027, 1, 1),
+        dailyTargetDate: DateTime(2026, 9, 4),
+        dailyTargetStartPage: 1,
+        dailyTargetEndPage: 4,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: KhatmahHeroCard(plan: plan, isDark: false, now: () => now),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.textContaining('1 - 4'), findsOneWidget);
+      now = DateTime(2026, 9, 5);
+      await tester.pump(const Duration(minutes: 1));
+      expect(find.text('Today: pages 5 - 8'), findsOneWidget);
+    },
+  );
   final testPlan = KhatmahPlan(
     id: 'khatmah-1',
     title: 'Ramadan Khatmah',

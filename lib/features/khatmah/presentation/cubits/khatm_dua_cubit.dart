@@ -19,18 +19,12 @@ class KhatmDuaLoading extends KhatmDuaState {
 }
 
 class KhatmDuaLoaded extends KhatmDuaState {
-  const KhatmDuaLoaded({
-    required this.data,
-    this.fontScale = 1.0,
-  });
+  const KhatmDuaLoaded({required this.data, this.fontScale = 1.0});
 
   final KhatmDuaData data;
   final double fontScale;
 
-  KhatmDuaLoaded copyWith({
-    KhatmDuaData? data,
-    double? fontScale,
-  }) {
+  KhatmDuaLoaded copyWith({KhatmDuaData? data, double? fontScale}) {
     return KhatmDuaLoaded(
       data: data ?? this.data,
       fontScale: fontScale ?? this.fontScale,
@@ -60,19 +54,23 @@ class KhatmDuaCubit extends Cubit<KhatmDuaState> {
   static const double fontScaleStep = 0.1;
 
   Future<void> load() async {
+    if (isClosed) return;
     emit(const KhatmDuaLoading());
     try {
       final data = await _getKhatmDua();
-      emit(KhatmDuaLoaded(data: data));
+      if (!isClosed) emit(KhatmDuaLoaded(data: data));
     } catch (e) {
-      emit(KhatmDuaError(e.toString()));
+      if (!isClosed) emit(KhatmDuaError(e.toString()));
     }
   }
 
   void increaseFontSize() {
     final current = state;
     if (current is KhatmDuaLoaded) {
-      final next = (current.fontScale + fontScaleStep).clamp(minFontScale, maxFontScale);
+      final next = (current.fontScale + fontScaleStep).clamp(
+        minFontScale,
+        maxFontScale,
+      );
       emit(current.copyWith(fontScale: double.parse(next.toStringAsFixed(1))));
     }
   }
@@ -80,7 +78,10 @@ class KhatmDuaCubit extends Cubit<KhatmDuaState> {
   void decreaseFontSize() {
     final current = state;
     if (current is KhatmDuaLoaded) {
-      final next = (current.fontScale - fontScaleStep).clamp(minFontScale, maxFontScale);
+      final next = (current.fontScale - fontScaleStep).clamp(
+        minFontScale,
+        maxFontScale,
+      );
       emit(current.copyWith(fontScale: double.parse(next.toStringAsFixed(1))));
     }
   }

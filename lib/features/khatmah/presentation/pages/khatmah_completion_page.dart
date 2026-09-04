@@ -335,6 +335,24 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                   const SizedBox(height: AppSpacing.xxl),
 
                   // Action Buttons
+                  if (completion.historyEntry?.certificate != null) ...[
+                    OutlinedButton.icon(
+                      key: const Key('khatmah_completion_certificate_button'),
+                      onPressed: () {
+                        if (!completion.isValidCompletion) return;
+                        context.push(
+                          AppRoutes.certificate,
+                          extra: <String, dynamic>{
+                            'award': completion.historyEntry!.certificate!,
+                            'userName': context.l10n.taliaUser,
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.workspace_premium_outlined),
+                      label: Text(context.l10n.myCertificates),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                  ],
                   // 1. Read Du'a Khatm al-Quran
                   FilledButton.icon(
                     key: const Key('khatmah_completion_read_dua_button'),

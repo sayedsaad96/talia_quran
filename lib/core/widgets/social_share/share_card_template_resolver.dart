@@ -18,55 +18,27 @@ abstract class ShareCardTemplateResolver {
   }) {
     switch (data.category) {
       case SocialShareCategory.quranAyah:
-        return QuranVerseTemplate(
-          data: data,
-          theme: theme,
-          format: format,
-        );
+        return QuranVerseTemplate(data: data, theme: theme, format: format);
 
       case SocialShareCategory.achievement:
       case SocialShareCategory.khatmah:
-        return AchievementTemplate(
-          data: data,
-          theme: theme,
-          format: format,
-        );
+        return AchievementTemplate(data: data, theme: theme, format: format);
 
       case SocialShareCategory.dua:
       case SocialShareCategory.azkar:
-        return DuaZikrTemplate(
-          data: data,
-          theme: theme,
-          format: format,
-        );
+        return DuaZikrTemplate(data: data, theme: theme, format: format);
 
       case SocialShareCategory.memorization:
-        return MemorizationTemplate(
-          data: data,
-          theme: theme,
-          format: format,
-        );
+        return MemorizationTemplate(data: data, theme: theme, format: format);
 
       case SocialShareCategory.streak:
-        return StreakTemplate(
-          data: data,
-          theme: theme,
-          format: format,
-        );
+        return StreakTemplate(data: data, theme: theme, format: format);
 
       case SocialShareCategory.progress:
-        return ProgressTemplate(
-          data: data,
-          theme: theme,
-          format: format,
-        );
+        return ProgressTemplate(data: data, theme: theme, format: format);
 
       case SocialShareCategory.certificate:
-        return CertificateTemplate(
-          data: data,
-          theme: theme,
-          format: format,
-        );
+        return CertificateTemplate(data: data, theme: theme, format: format);
     }
   }
 }

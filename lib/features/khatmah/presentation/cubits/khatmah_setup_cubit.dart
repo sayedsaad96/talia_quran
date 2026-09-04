@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 // ignore: depend_on_referenced_packages
 import 'package:uuid/uuid.dart';
 import '../../domain/entities/khatmah_dedication.dart';
@@ -72,17 +73,20 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
     Uuid? uuid,
   }) : _deleteKhatmah = deleteKhatmah,
        _uuid = uuid ?? const Uuid(),
+       _authority = _createKhatmah.authority,
        super(const KhatmahSetupIdle());
 
   final CreateKhatmahUsecase _createKhatmah;
   final DeleteKhatmahUsecase? _deleteKhatmah;
   final Uuid _uuid;
+  final Object? _authority;
   Future<void>? _abandonInFlight;
 
   Future<void> createPlan({
     required int pagesPerDay,
     KhatmahDedication dedication = const KhatmahDedication(),
   }) async {
+    if (isClosed || state is KhatmahSetupSaving) return;
     emit(const KhatmahSetupSaving());
     try {
       final now = DateTime.now();
@@ -108,14 +112,15 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
         startDate: today,
         expectedEndDate: endDate,
         dedication: dedication,
+        authority: _authority,
       );
 
       await _createKhatmah(plan);
-      emit(KhatmahSetupDone(plan));
+      if (!isClosed) emit(KhatmahSetupDone(plan));
     } on KhatmahPlanAlreadyExistsException catch (e) {
-      emit(KhatmahSetupConflict(e.existingPlan));
+      if (!isClosed) emit(KhatmahSetupConflict(e.existingPlan));
     } catch (e) {
-      emit(KhatmahSetupError(e.toString()));
+      if (!isClosed) emit(KhatmahSetupError(e.toString()));
     }
   }
 
@@ -135,12 +140,18 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
   }
 
   Future<void> _abandon(KhatmahSetupConflict conflict) async {
+    if (isClosed) return;
     emit(conflict.copyWith(isAbandoning: true));
     try {
+      final authority = _authority;
+      if (authority is AccountDataLease) authority.check();
       await _deleteKhatmah!(expectedPlanId: conflict.existingPlan.id);
-      emit(const KhatmahSetupIdle());
+      if (authority is AccountDataLease) authority.check();
+      if (!isClosed) emit(const KhatmahSetupIdle());
+    } on AccountDataUnavailableException catch (e) {
+      if (!isClosed) emit(KhatmahSetupError(e.toString()));
     } catch (e) {
-      emit(conflict.copyWith(errorMessage: e.toString()));
+      if (!isClosed) emit(conflict.copyWith(errorMessage: e.toString()));
     }
   }
 }

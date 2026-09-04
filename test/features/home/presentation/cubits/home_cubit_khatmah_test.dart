@@ -2,6 +2,8 @@ import 'dart:async';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
 
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/journey/unified_journey_engine.dart';
@@ -21,11 +23,17 @@ class FakeGetActiveKhatmahUsecase extends Fake
     implements GetActiveKhatmahUsecase {
   KhatmahPlan? planToReturn;
   int callCount = 0;
+  Object? error;
+  Stream<void>? changeEvents;
+  Future<KhatmahPlan?>? pending;
+  @override
+  Stream<void>? get changes => changeEvents;
 
   @override
   Future<KhatmahPlan?> call() async {
     callCount++;
-    return planToReturn;
+    if (error != null) throw error!;
+    return pending ?? planToReturn;
   }
 }
 
@@ -135,6 +143,108 @@ void main() {
     await cubit?.close();
     progressEvents.dispose();
   });
+
+  test(
+    'retained Home immediately hides invalidated Khatmah and retry recovers',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final barrier = AccountDataBarrier.forPreferences(
+        await SharedPreferences.getInstance(),
+      );
+      fakeGetActiveKhatmah.changeEvents = barrier.changes;
+      fakeGetActiveKhatmah.planToReturn = testPlan.copyWith(
+        authority: barrier.capture(),
+      );
+      cubit = HomeCubit(
+        mockGetProgress,
+        mockGetQuranPage,
+        mockGetCustomPlan,
+        mockMemRepo,
+        mockSessionService,
+        mockGetHeatmap,
+        mockPathResolver,
+        mockGetCoachRecommendation,
+        journeyEngine,
+        mockPrefs,
+        progressEvents,
+        xpService,
+        fakeGetActiveKhatmah,
+      );
+      await cubit!.load();
+      fakeGetActiveKhatmah.error = const AccountDataUnavailableException();
+      barrier.invalidate();
+      await Future<void>.delayed(Duration.zero);
+      expect((cubit!.state as HomeLoaded).activeKhatmah, isNull);
+      expect((cubit!.state as HomeLoaded).khatmahError, isNotNull);
+      fakeGetActiveKhatmah.error = null;
+      fakeGetActiveKhatmah.planToReturn = testPlan.copyWith(id: 'new-owner');
+      await cubit!.load();
+      expect((cubit!.state as HomeLoaded).activeKhatmah!.id, 'new-owner');
+      expect((cubit!.state as HomeLoaded).khatmahError, isNull);
+    },
+  );
+  test('pending Home load cannot restore invalidated old Khatmah', () async {
+    SharedPreferences.setMockInitialValues({});
+    final barrier = AccountDataBarrier.forPreferences(
+      await SharedPreferences.getInstance(),
+    );
+    final old = testPlan.copyWith(authority: barrier.capture());
+    final pending = Completer<KhatmahPlan?>();
+    fakeGetActiveKhatmah.pending = pending.future;
+    cubit = HomeCubit(
+      mockGetProgress,
+      mockGetQuranPage,
+      mockGetCustomPlan,
+      mockMemRepo,
+      mockSessionService,
+      mockGetHeatmap,
+      mockPathResolver,
+      mockGetCoachRecommendation,
+      journeyEngine,
+      mockPrefs,
+      progressEvents,
+      xpService,
+      fakeGetActiveKhatmah,
+    );
+    final loading = cubit!.load();
+    barrier.invalidate();
+    pending.complete(old);
+    await loading;
+    expect((cubit!.state as HomeLoaded).activeKhatmah, isNull);
+    expect((cubit!.state as HomeLoaded).khatmahError, isNotNull);
+  });
+
+  test(
+    'corrupt optional Khatmah keeps Home usable and recovers on retry',
+    () async {
+      fakeGetActiveKhatmah.error = const FormatException('corrupt Khatmah');
+      cubit = HomeCubit(
+        mockGetProgress,
+        mockGetQuranPage,
+        mockGetCustomPlan,
+        mockMemRepo,
+        mockSessionService,
+        mockGetHeatmap,
+        mockPathResolver,
+        mockGetCoachRecommendation,
+        journeyEngine,
+        mockPrefs,
+        progressEvents,
+        xpService,
+        fakeGetActiveKhatmah,
+      );
+      final failure = await cubit!.load().then<Object?>(
+        (_) => null,
+        onError: (Object e) => e,
+      );
+      expect(failure, isNull);
+      expect(cubit!.state, isA<HomeLoaded>());
+      fakeGetActiveKhatmah.error = null;
+      fakeGetActiveKhatmah.planToReturn = testPlan;
+      await cubit!.load();
+      expect((cubit!.state as HomeLoaded).activeKhatmah, testPlan);
+    },
+  );
 
   test(
     'load() queries GetActiveKhatmahUsecase and emits activeKhatmah in HomeLoaded',

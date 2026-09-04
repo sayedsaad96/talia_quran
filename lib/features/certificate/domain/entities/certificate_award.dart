@@ -15,28 +15,28 @@ enum CertificateType {
   khatmahReading;
 
   String get verificationPrefix => switch (this) {
-        CertificateType.juz => 'J',
-        CertificateType.surah => 'S',
-        CertificateType.halfQuran => 'HQ',
-        CertificateType.fullQuran => 'FQ',
-        CertificateType.khatmahReading => 'KR',
-      };
+    CertificateType.juz => 'J',
+    CertificateType.surah => 'S',
+    CertificateType.halfQuran => 'HQ',
+    CertificateType.fullQuran => 'FQ',
+    CertificateType.khatmahReading => 'KR',
+  };
 
   String get titleAr => switch (this) {
-        CertificateType.juz => 'شهادة حفظ جزء من القرآن',
-        CertificateType.surah => 'شهادة حفظ سورة من القرآن',
-        CertificateType.halfQuran => 'شهادة حفظ نصف القرآن الكريم',
-        CertificateType.fullQuran => 'شهادة ختم القرآن الكريم كاملاً',
-        CertificateType.khatmahReading => 'شهادة إتمام ختمة تلاوة القرآن الكريم',
-      };
+    CertificateType.juz => 'شهادة حفظ جزء من القرآن',
+    CertificateType.surah => 'شهادة حفظ سورة من القرآن',
+    CertificateType.halfQuran => 'شهادة حفظ نصف القرآن الكريم',
+    CertificateType.fullQuran => 'شهادة ختم القرآن الكريم كاملاً',
+    CertificateType.khatmahReading => 'شهادة إتمام ختمة تلاوة القرآن الكريم',
+  };
 
   String get titleEn => switch (this) {
-        CertificateType.juz => 'Juz Memorization Certificate',
-        CertificateType.surah => 'Surah Memorization Certificate',
-        CertificateType.halfQuran => 'Half Quran Memorization Certificate',
-        CertificateType.fullQuran => 'Full Quran Memorization Certificate',
-        CertificateType.khatmahReading => 'Quran Recitation Khatmah Certificate',
-      };
+    CertificateType.juz => 'Juz Memorization Certificate',
+    CertificateType.surah => 'Surah Memorization Certificate',
+    CertificateType.halfQuran => 'Half Quran Memorization Certificate',
+    CertificateType.fullQuran => 'Full Quran Memorization Certificate',
+    CertificateType.khatmahReading => 'Quran Recitation Khatmah Certificate',
+  };
 
   String get labelAr => titleAr;
   String get labelEn => titleEn;

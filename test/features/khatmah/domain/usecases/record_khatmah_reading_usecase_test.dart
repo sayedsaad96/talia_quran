@@ -1,147 +1,109 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/features/khatmah/data/datasources/khatmah_local_datasource.dart';
+import 'package:talia_quran/features/khatmah/data/repositories/khatmah_repository_impl.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
-import 'package:talia_quran/features/khatmah/domain/repositories/khatmah_repository.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart';
 
-class _MockKhatmahRepository extends Mock implements KhatmahRepository {}
-
-class _FakeKhatmahPlan extends Fake implements KhatmahPlan {}
-
 void main() {
-  late _MockKhatmahRepository repository;
+  late KhatmahRepositoryImpl repository;
   late RecordKhatmahReadingUsecase usecase;
-
-  KhatmahPlan makePlan({
-    KhatmahStatus status = KhatmahStatus.active,
-    Iterable<int>? completedPages,
-  }) {
-    return KhatmahPlan(
-      id: 'plan-1',
-      title: 'Ramadan Khatmah',
-      completedPages: completedPages ?? const <int>{},
-      targetPagesPerDay: 4,
-      targetDays: 151,
-      startDate: DateTime(2026, 1, 1),
-      expectedEndDate: DateTime(2026, 6, 1),
-      status: status,
+  final plan = KhatmahPlan(
+    id: 'plan-1',
+    title: 'Ramadan Khatmah',
+    targetPagesPerDay: 4,
+    targetDays: 151,
+    startDate: DateTime(2026, 1, 1),
+    expectedEndDate: DateTime(2026, 6, 1),
+  );
+  setUp(() async {
+    SharedPreferences.setMockInitialValues({});
+    repository = KhatmahRepositoryImpl(
+      KhatmahLocalDatasource(await SharedPreferences.getInstance()),
     );
-  }
-
-  setUpAll(() {
-    registerFallbackValue(_FakeKhatmahPlan());
-  });
-
-  setUp(() {
-    repository = _MockKhatmahRepository();
     usecase = RecordKhatmahReadingUsecase(repository);
-    when(() => repository.updatePlan(any())).thenAnswer((_) async {});
   });
-
-  test('digital reading records exactly the requested page', () async {
+  test('digital reading records exactly the requested page durably', () async {
+    await repository.createPlan(plan);
     final result = await usecase(
-      makePlan(),
+      (await repository.getActivePlan())!,
       100,
       source: KhatmahReadingSource.digital,
       readAt: DateTime(2026, 2, 1),
     );
-
-    expect(result.plan.completedPages, {100});
     expect(result.newlyCompletedPages, {100});
-    expect(result.historyEntry, isNull);
-    verify(
-      () => repository.updatePlan(
-        any(
-          that: isA<KhatmahPlan>()
-              .having((plan) => plan.completedPages, 'completedPages', {100})
-              .having(
-                (plan) => plan.lastReadDate,
-                'lastReadDate',
-                DateTime(2026, 2, 1),
-              ),
-        ),
-      ),
-    ).called(1);
-    verifyNever(() => repository.completePlan(any()));
+    final persisted = (await repository.getActivePlan())!;
+    expect(persisted.completedPages, {100});
+    expect(persisted.lastReadDate, DateTime(2026, 2, 1));
+    expect(await repository.getHistory(), isEmpty);
   });
-
   test(
     'physical reading records the inclusive range from next unread page',
     () async {
+      await repository.createPlan(plan.copyWith(completedPages: {1}));
       final result = await usecase(
-        makePlan(completedPages: {1}),
+        (await repository.getActivePlan())!,
         4,
         source: KhatmahReadingSource.physical,
       );
-
-      expect(result.plan.completedPages, {1, 2, 3, 4});
       expect(result.newlyCompletedPages, {2, 3, 4});
+      expect((await repository.getActivePlan())!.completedPages, {1, 2, 3, 4});
     },
   );
-
   test('paused plans reject progress without persisting', () async {
+    await repository.createPlan(plan.copyWith(status: KhatmahStatus.paused));
+    final paused = (await repository.getActivePlan())!;
     await expectLater(
-      () => usecase(
-        makePlan(status: KhatmahStatus.paused),
-        1,
-        source: KhatmahReadingSource.digital,
-      ),
+      usecase(paused, 1, source: KhatmahReadingSource.digital),
       throwsA(isA<KhatmahProgressException>()),
     );
-
-    verifyNever(() => repository.updatePlan(any()));
+    expect((await repository.getActivePlan())!.completedPages, isEmpty);
+    expect((await repository.getActivePlan())!.status, KhatmahStatus.paused);
   });
-
   test('rejects page numbers outside the Quran bounds', () async {
-    await expectLater(
-      () => usecase(makePlan(), 0, source: KhatmahReadingSource.digital),
-      throwsA(isA<KhatmahProgressException>()),
-    );
-    await expectLater(
-      () => usecase(makePlan(), 605, source: KhatmahReadingSource.digital),
-      throwsA(isA<KhatmahProgressException>()),
-    );
+    await repository.createPlan(plan);
+    for (final page in [0, 605]) {
+      await expectLater(
+        usecase(
+          (await repository.getActivePlan())!,
+          page,
+          source: KhatmahReadingSource.digital,
+        ),
+        throwsA(isA<KhatmahProgressException>()),
+      );
+    }
+    expect((await repository.getActivePlan())!.completedPages, isEmpty);
   });
-
   test('persists incomplete readings without completing the plan', () async {
+    await repository.createPlan(plan);
     final result = await usecase(
-      makePlan(),
+      (await repository.getActivePlan())!,
       1,
       source: KhatmahReadingSource.digital,
     );
-
     expect(result.completed, isFalse);
-    verify(() => repository.updatePlan(result.plan)).called(1);
-    verifyNever(() => repository.completePlan(any()));
+    expect((await repository.getActivePlan())!.completedPages, {1});
+    expect(await repository.getHistory(), isEmpty);
   });
-
   test(
     'returns the persisted history entry when final coverage completes',
     () async {
-      final historyEntry = KhatmahHistoryEntry(
-        id: 'plan-1',
-        khatmahNumber: 1,
-        title: 'Ramadan Khatmah',
-        startDate: DateTime(2026, 1, 1),
-        completedDate: DateTime(2026, 2, 1),
-        totalDays: 32,
+      await repository.createPlan(
+        plan.copyWith(completedPages: {for (var p = 1; p < 604; p++) p}),
       );
-      when(
-        () => repository.completePlan(any()),
-      ).thenAnswer((_) async => historyEntry);
-
       final result = await usecase(
-        makePlan(completedPages: {for (var page = 1; page < 604; page++) page}),
+        (await repository.getActivePlan())!,
         604,
         source: KhatmahReadingSource.digital,
+        readAt: DateTime(2026, 2, 1),
       );
-
       expect(result.completed, isTrue);
-      expect(result.historyEntry, historyEntry);
       expect(result.plan.status, KhatmahStatus.completed);
-      verify(() => repository.completePlan(result.plan)).called(1);
+      expect(result.historyEntry, (await repository.getHistory()).single);
+      expect(result.historyEntry!.completedDate, DateTime(2026, 2, 1));
+      expect(result.historyEntry!.certificateId, 'khatmah-plan-1');
+      expect(await repository.getActivePlan(), isNull);
     },
   );
 }
