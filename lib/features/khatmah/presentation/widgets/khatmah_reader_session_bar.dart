@@ -8,6 +8,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../cubits/khatmah_cubit.dart';
+import '../khatmah_localizations.dart';
 
 class KhatmahReaderSessionBar extends StatelessWidget {
   const KhatmahReaderSessionBar({
@@ -126,7 +127,7 @@ class KhatmahReaderSessionBar extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            plan.title,
+                            localizedKhatmahPlanTitle(context, plan.title),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.labelMedium.copyWith(

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -110,6 +111,41 @@ void main() {
           );
         }
       });
+    });
+
+    test('Khatmah chrome stays in its selected language', () {
+      final arabic =
+          jsonDecode(File('lib/core/l10n/app_ar.arb').readAsStringSync())
+              as Map<String, dynamic>;
+      final english =
+          jsonDecode(File('lib/core/l10n/app_en.arb').readAsStringSync())
+              as Map<String, dynamic>;
+      final placeholders = RegExp(r'\{[^}]+\}');
+      final latinLetters = RegExp(r'[A-Za-z]');
+      final arabicLetters = RegExp(r'[\u0600-\u06FF]');
+
+      for (final key in english.keys.where(
+        (key) => key.startsWith('khatmah') && !key.startsWith('@'),
+      )) {
+        final arabicValue = (arabic[key] as String).replaceAll(
+          placeholders,
+          '',
+        );
+        final englishValue = (english[key] as String).replaceAll(
+          placeholders,
+          '',
+        );
+        expect(
+          latinLetters.hasMatch(arabicValue),
+          isFalse,
+          reason: 'Arabic Khatmah chrome must not contain Latin text: $key',
+        );
+        expect(
+          arabicLetters.hasMatch(englishValue),
+          isFalse,
+          reason: 'English Khatmah chrome must not contain Arabic text: $key',
+        );
+      }
     });
   });
 }

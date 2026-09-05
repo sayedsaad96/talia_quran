@@ -115,7 +115,7 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
               dedication.recipientName != null &&
               dedication.recipientName!.trim().isNotEmpty
           ? dedication.recipientName!.trim()
-          : 'Khatmah';
+          : KhatmahPlan.defaultTitle;
 
       final plan = KhatmahPlan(
         id: _uuid.v4(),

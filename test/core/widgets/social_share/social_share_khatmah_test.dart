@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/l10n/app_localizations_ar.dart';
 import 'package:talia_quran/core/l10n/app_localizations_en.dart';
 import 'package:talia_quran/core/widgets/social_share/social_share_model.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
@@ -148,6 +149,25 @@ void main() {
 
       expect(data.title, isNotEmpty);
       expect(data.title, contains('ختمة'));
+    });
+
+    test('localizes the stored system title in Arabic and English', () {
+      final systemPlan = basePlan.copyWith(title: KhatmahPlan.defaultTitle);
+
+      expect(
+        SocialShareData.khatmah(
+          completion: completion(systemPlan),
+          l10n: AppLocalizationsAr(),
+        ).title,
+        'ختمة القرآن الكريم',
+      );
+      expect(
+        SocialShareData.khatmah(
+          completion: completion(systemPlan),
+          l10n: AppLocalizationsEn(),
+        ).title,
+        'Quran Khatmah',
+      );
     });
   });
 }

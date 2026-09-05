@@ -6,6 +6,7 @@ import '../../utils/quran_ayah_display_text.dart';
 import '../../../../features/azkar/domain/entities/azkar_entities.dart';
 import '../../../../features/certificate/domain/entities/certificate_award.dart';
 import '../../../../features/khatmah/domain/entities/khatmah_reading_result.dart';
+import '../../../../features/khatmah/domain/entities/khatmah_plan.dart';
 import '../../../../features/progress/domain/entities/progress_entities.dart';
 import '../../../../features/quran/domain/entities/quran_entities.dart';
 
@@ -420,11 +421,12 @@ class SocialShareData {
       }
     }
 
+    final storedTitle = plan.title.trim();
     final shareTitle =
         customTitle ??
-        (plan.title.trim().isNotEmpty
-            ? plan.title.trim()
-            : copy.khatmahQuranKhatmah);
+        (storedTitle.isEmpty || storedTitle == KhatmahPlan.defaultTitle
+            ? copy.khatmahQuranKhatmah
+            : storedTitle);
     final shareContent =
         customContent ??
         copy.khatmahShareSummary(shareTitle, daysTaken.toString());

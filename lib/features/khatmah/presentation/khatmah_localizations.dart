@@ -2,6 +2,14 @@ import 'package:flutter/widgets.dart';
 
 import '../../../core/extensions/context_extensions.dart';
 import '../domain/entities/khatmah_dedication.dart';
+import '../domain/entities/khatmah_plan.dart';
+
+/// Localize only the stable system title. Recipient names and user-authored
+/// titles remain exactly as entered by the user.
+String localizedKhatmahPlanTitle(BuildContext context, String title) =>
+    title.trim() == KhatmahPlan.defaultTitle
+    ? context.l10n.khatmahQuranKhatmah
+    : title;
 
 /// Physical-page entry accepts both the Arabic and Western numeric keyboards.
 int? parseKhatmahPageInput(String input) => int.tryParse(

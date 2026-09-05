@@ -1063,9 +1063,8 @@ void main() {
               captureTree = buildSocialShareCaptureTree(
                 context: context,
                 child: Builder(
-                  builder: (captureContext) => Text(
-                    Localizations.localeOf(captureContext).languageCode,
-                  ),
+                  builder: (captureContext) =>
+                      Text(Localizations.localeOf(captureContext).languageCode),
                 ),
               );
               return const SizedBox.shrink();

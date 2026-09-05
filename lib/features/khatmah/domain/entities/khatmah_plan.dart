@@ -8,6 +8,11 @@ enum KhatmahStatus { active, paused, completed }
 enum QuranReaderMode { free, khatmah }
 
 class KhatmahPlan extends Equatable {
+  /// Stable storage value for a system-created plan without a recipient title.
+  /// Presentation localizes this value at display time, so changing the app
+  /// language never leaves the default title in the language of its creation.
+  static const defaultTitle = 'Khatmah';
+
   KhatmahPlan({
     required this.id,
     required this.title,

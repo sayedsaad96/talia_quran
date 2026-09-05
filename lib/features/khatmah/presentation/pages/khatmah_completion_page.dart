@@ -90,7 +90,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
       return;
     }
 
-    final title = plan.title;
+    final title = localizedKhatmahPlanTitle(context, plan.title);
     final totalDays = completion.actualElapsedDays;
     final totalDaysStr = isArabic
         ? MushafHizbHelper.toArabicNumber(totalDays)
@@ -126,7 +126,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
       );
     }
     final plan = completion.plan;
-    final title = plan.title;
+    final title = localizedKhatmahPlanTitle(context, plan.title);
     final daysTaken = completion.actualElapsedDays;
     final daysTakenStr = isArabic
         ? MushafHizbHelper.toArabicNumber(daysTaken)

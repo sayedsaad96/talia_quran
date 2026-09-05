@@ -6,7 +6,9 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../domain/entities/khatmah_plan.dart';
+import '../khatmah_localizations.dart';
 
 class KhatmahHeroCard extends StatefulWidget {
   const KhatmahHeroCard({
@@ -127,6 +129,7 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
     }
 
     final today = _now;
+    final isArabic = context.isArabic;
     final wird = currentPlan.dailyTargetFor(today);
     final dailyComplete = currentPlan.isDailyTargetComplete(today);
     final isPaused = currentPlan.status == KhatmahStatus.paused;
@@ -157,7 +160,7 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
                   const SizedBox(width: AppSpacing.sm),
                   Expanded(
                     child: Text(
-                      currentPlan.title,
+                      localizedKhatmahPlanTitle(context, currentPlan.title),
                       style: AppTypography.labelLarge.copyWith(color: primary),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -190,8 +193,12 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
                 isPaused
                     ? context.l10n.khatmahPausedSummary
                     : context.l10n.khatmahTodayRange(
-                        wird.startPage.toString(),
-                        wird.endPage.toString(),
+                        isArabic
+                            ? MushafHizbHelper.toArabicNumber(wird.startPage)
+                            : wird.startPage.toString(),
+                        isArabic
+                            ? MushafHizbHelper.toArabicNumber(wird.endPage)
+                            : wird.endPage.toString(),
                         dailyComplete
                             ? context.l10n.khatmahDailyCompletedSuffix
                             : '',

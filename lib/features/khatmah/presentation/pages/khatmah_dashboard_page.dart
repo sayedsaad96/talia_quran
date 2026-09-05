@@ -468,7 +468,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            plan.title,
+                            localizedKhatmahPlanTitle(context, plan.title),
                             key: const Key('khatmah_dashboard_title'),
                             style: AppTypography.headlineSmall.copyWith(
                               fontWeight: FontWeight.bold,

@@ -13,6 +13,7 @@ import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../domain/entities/khatmah_dedication.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
+import '../khatmah_localizations.dart';
 import '../cubits/khatmah_setup_cubit.dart';
 import '../widgets/khatmah_dedication_form.dart';
 
@@ -88,7 +89,9 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
       builder: (dialogContext) => AlertDialog(
         title: Text(l10n.khatmahEndCurrentConfirmTitle),
         content: Text(
-          l10n.khatmahEndCurrentConfirmDescription(conflict.existingPlan.title),
+          l10n.khatmahEndCurrentConfirmDescription(
+            localizedKhatmahPlanTitle(context, conflict.existingPlan.title),
+          ),
         ),
         actions: [
           TextButton(
@@ -207,7 +210,10 @@ class _KhatmahSetupPageState extends State<KhatmahSetupPage> {
                             ),
                             const SizedBox(height: AppSpacing.xs),
                             Text(
-                              state.existingPlan.title,
+                              localizedKhatmahPlanTitle(
+                                context,
+                                state.existingPlan.title,
+                              ),
                               style: AppTypography.bodyMedium,
                             ),
                             if (state.errorMessage != null) ...[

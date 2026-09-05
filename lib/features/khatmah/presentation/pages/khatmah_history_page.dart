@@ -207,7 +207,10 @@ class _HistoryCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(entry.title, style: AppTypography.titleMedium),
+            Text(
+              localizedKhatmahPlanTitle(context, entry.title),
+              style: AppTypography.titleMedium,
+            ),
             const SizedBox(height: AppSpacing.xs),
             Text(context.l10n.khatmahCompletedOn(date)),
             if (dedicationText != null) ...[
