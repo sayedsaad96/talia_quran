@@ -500,6 +500,8 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> signOut({bool force = false}) async {
     emit(const AuthLoading());
     await _beginControlledIdentityTransition();
+    AccountDataBarrier? preservedDataBarrier;
+    String? preservedOwnerId;
     try {
       final flushed = await _flushBeforeExplicitSignOut();
       if (!force && !flushed) {
@@ -514,6 +516,12 @@ class AuthCubit extends Cubit<AuthState> {
       }
 
       if (force && !flushed) {
+        preservedOwnerId = _authRepository.currentUser?.id;
+        final prefs = _prefs;
+        if (prefs != null && preservedOwnerId != null) {
+          preservedDataBarrier = AccountDataBarrier.forPreferences(prefs);
+          preservedDataBarrier.prepareOwner(preservedOwnerId);
+        }
         await _cloudSyncCoordinator.preservePendingSignOutWork();
       }
 
@@ -523,9 +531,22 @@ class AuthCubit extends Cubit<AuthState> {
 
       if (isClosed) return;
 
-      result.fold((failure) => emit(AuthError(failure.toString())), (_) {
-        // Auth state stream emits AuthUnauthenticated when Supabase session clears.
-      });
+      final failure = result.fold<Failure?>((failure) => failure, (_) => null);
+      if (failure != null) {
+        if (preservedDataBarrier != null &&
+            _authRepository.currentUser?.id == preservedOwnerId) {
+          try {
+            await preservedDataBarrier.markOwnerReady(preservedOwnerId!);
+          } catch (error) {
+            _ownerReadyFailure = error;
+            emit(const AuthOwnerDataFailure());
+            return;
+          }
+        }
+        emit(AuthError(failure.toString()));
+      }
+      // On success the auth stream publishes unauthenticated state. A
+      // forced-preserve barrier deliberately stays blocked for guest access.
     } finally {
       _endControlledIdentityTransition();
     }

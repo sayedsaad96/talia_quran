@@ -1,4 +1,6 @@
 import 'package:confetti/confetti.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
@@ -12,6 +14,7 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
 import '../../domain/entities/khatmah_scheduling_engine.dart';
+import '../../../../core/identity/account_data_barrier.dart';
 
 class KhatmahCompletionPage extends StatefulWidget {
   const KhatmahCompletionPage({
@@ -35,6 +38,7 @@ class KhatmahCompletionPage extends StatefulWidget {
 
 class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
   late final ConfettiController _confettiController;
+  StreamSubscription<void>? _authorityChanges;
   bool _confettiStarted = false;
 
   @override
@@ -43,6 +47,12 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
     _confettiController = ConfettiController(
       duration: const Duration(seconds: 3),
     );
+    final authority = widget.completion?.plan.authority;
+    if (authority is AccountDataLease) {
+      _authorityChanges = authority.changes.listen((_) {
+        if (mounted) setState(() {});
+      });
+    }
   }
 
   @override
@@ -60,6 +70,7 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
 
   @override
   void dispose() {
+    unawaited(_authorityChanges?.cancel());
     _confettiController.dispose();
     super.dispose();
   }

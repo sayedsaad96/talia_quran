@@ -4461,4 +4461,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get khatmahRelationshipOther => 'أخرى';
+
+  @override
+  String get khatmahRecentCompletions => 'الختمات المكتملة حديثاً';
+
+  @override
+  String get khatmahHistoryEmpty => 'لا توجد شهادات ختمة محفوظة بعد.';
+
+  @override
+  String get khatmahHistoryLoadError =>
+      'تعذر تحميل شهادات الختمة المحفوظة. حاول مرة أخرى.';
+
+  @override
+  String get khatmahReopenCertificate => 'فتح الشهادة مجدداً';
+
+  @override
+  String khatmahCompletedOn(String date) {
+    return 'اكتملت في $date';
+  }
 }

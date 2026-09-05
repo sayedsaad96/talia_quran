@@ -88,6 +88,22 @@ void main() {
       await setup.close();
     },
   );
+  test(
+    'retained setup conflict is cleared immediately on invalidation',
+    () async {
+      final setup = KhatmahSetupCubit(CreateKhatmahUsecase(repository));
+      await setup.createPlan(pagesPerDay: 4);
+      expect(setup.state, isA<KhatmahSetupConflict>());
+
+      AccountDataBarrier.forPreferences(
+        await SharedPreferences.getInstance(),
+      ).invalidate();
+      await Future<void>.delayed(Duration.zero);
+
+      expect(setup.state, isA<KhatmahSetupIdle>());
+      await setup.close();
+    },
+  );
   test('retained setup abandonment cannot delete a later generation', () async {
     final setup = KhatmahSetupCubit(
       CreateKhatmahUsecase(repository),

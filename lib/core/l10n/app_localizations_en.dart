@@ -4409,4 +4409,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get khatmahRelationshipOther => 'Other';
+
+  @override
+  String get khatmahRecentCompletions => 'Recent Khatmah completions';
+
+  @override
+  String get khatmahHistoryEmpty => 'No saved Khatmah certificates yet.';
+
+  @override
+  String get khatmahHistoryLoadError =>
+      'Unable to load saved Khatmah certificates. Please try again.';
+
+  @override
+  String get khatmahReopenCertificate => 'Reopen certificate';
+
+  @override
+  String khatmahCompletedOn(String date) {
+    return 'Completed on $date';
+  }
 }

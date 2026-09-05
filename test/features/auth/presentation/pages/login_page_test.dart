@@ -122,6 +122,48 @@ void main() {
       expect(homeRouteResolutions, 0);
     },
   );
+
+  testWidgets(
+    'late-mounted login shows cached owner failure and retries until ready',
+    (tester) async {
+      final authCubit = _RecoveringLoginPageAuthCubit()..emitOwnerFailure();
+      final prefs = await SharedPreferences.getInstance();
+      final profileCubit = ProfileCubit(prefs)..loadProfile();
+      final repository = _TrackingMemorizationRepository();
+      var homeRouteResolutions = 0;
+      final router = _loginRouter(
+        onHomeRouteResolved: () => homeRouteResolutions += 1,
+      );
+      addTearDown(router.dispose);
+      addTearDown(authCubit.close);
+      addTearDown(profileCubit.close);
+      getIt.registerSingleton<SharedPreferences>(prefs);
+      getIt.registerSingleton<MemorizationPlusRepository>(repository);
+
+      await _pumpLoginPage(
+        tester,
+        router: router,
+        authCubit: authCubit,
+        profileCubit: profileCubit,
+      );
+
+      final l10n = AppLocalizations.of(tester.element(find.byType(LoginPage)));
+      expect(find.text(l10n.retrySyncAfterError), findsOneWidget);
+      expect(homeRouteResolutions, 0);
+
+      await tester.tap(find.text(l10n.retrySyncAfterError));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.retrySyncAfterError), findsOneWidget);
+      expect(authCubit.ensureCloudSyncCalls, 1);
+      expect(homeRouteResolutions, 0);
+
+      await tester.tap(find.text(l10n.retrySyncAfterError));
+      await tester.pumpAndSettle();
+      expect(authCubit.ensureCloudSyncCalls, 2);
+      expect(homeRouteResolutions, 1);
+      expect(find.text('home route'), findsOneWidget);
+    },
+  );
 }
 
 const _accountB = AppUser(
@@ -199,6 +241,20 @@ class _LoginPageAuthCubit extends AuthCubit {
 
   void emitAuthenticated(AppUser user) {
     emit(AuthAuthenticated(user: user));
+  }
+}
+
+class _RecoveringLoginPageAuthCubit extends AuthCubit {
+  _RecoveringLoginPageAuthCubit() : super(const _PageAuthRepository());
+
+  int ensureCloudSyncCalls = 0;
+
+  void emitOwnerFailure() => emit(const AuthOwnerDataFailure());
+
+  @override
+  Future<void> ensureCloudSyncComplete() async {
+    ensureCloudSyncCalls += 1;
+    if (ensureCloudSyncCalls == 1) throw StateError('owner reset failed');
   }
 }
 

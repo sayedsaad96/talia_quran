@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/auth/presentation/pages/login_page.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/profile_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,9 +15,23 @@ import 'package:shared_preferences_platform_interface/shared_preferences_platfor
 import 'package:talia_quran/core/identity/account_data_reset.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
+import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
 import 'package:talia_quran/features/auth/domain/repositories/auth_repository.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
+import 'package:talia_quran/features/auth/application/cloud_sync_coordinator.dart';
+import 'package:talia_quran/features/khatmah/data/datasources/khatmah_local_datasource.dart';
+import 'package:talia_quran/features/khatmah/data/repositories/khatmah_repository_impl.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/create_khatmah_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart';
+import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_cubit.dart';
+import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_setup_cubit.dart';
 
 class _Auth extends Mock implements AuthRepository {}
 
@@ -40,7 +55,379 @@ class _Owner implements RecordOwnerProvider {
   bool get isSignedIn => currentOwnerId != 'local';
 }
 
+class _ForcedPreserveCoordinator extends CloudSyncCoordinator {
+  _ForcedPreserveCoordinator(AuthRepository authRepository)
+    : super(authRepository: authRepository);
+
+  @override
+  Future<bool> flushBeforeSignOut() async => false;
+
+  @override
+  Future<void> preservePendingSignOutWork() async {}
+
+  @override
+  Future<void> run() async {}
+}
+
 void main() {
+  test(
+    'forced-preserve signout invalidates runtime authority before repository signout',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        AuthCubit.lastSignedInUserIdKey: 'a',
+        'khatmah_owner': 'a',
+        'khatmah_active_plan': 'private-a',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final barrier = AccountDataBarrier.forPreferences(prefs)
+        ..owner = _Owner('a');
+      final retainedLease = barrier.capture();
+      final auth = _Auth();
+      final reset = _Reset();
+      const user = AppUser(id: 'a', email: 'a@test.invalid', displayName: 'A');
+      final signOutStarted = Completer<void>();
+      final releaseSignOut = Completer<void>();
+      when(() => auth.currentUser).thenReturn(user);
+      when(() => auth.authStateChanges).thenAnswer((_) => const Stream.empty());
+      when(
+        () => auth.passwordRecoveryChanges,
+      ).thenAnswer((_) => const Stream.empty());
+      when(() => auth.signOut(preserveAccountData: true)).thenAnswer((_) async {
+        signOutStarted.complete();
+        await releaseSignOut.future;
+        return const Right(unit);
+      });
+      final cubit = AuthCubit(
+        auth,
+        null,
+        null,
+        null,
+        null,
+        prefs,
+        reset,
+        _ForcedPreserveCoordinator(auth),
+      );
+      addTearDown(() async {
+        if (!releaseSignOut.isCompleted) releaseSignOut.complete();
+        await cubit.close();
+      });
+
+      final signOut = cubit.signOut(force: true);
+      await signOutStarted.future;
+
+      expect(
+        retainedLease.check,
+        throwsA(isA<AccountDataUnavailableException>()),
+      );
+      expect(prefs.getString('khatmah_active_plan'), 'private-a');
+
+      releaseSignOut.complete();
+      await signOut;
+    },
+  );
+
+  test(
+    'failed forced-preserve signout restores fresh authority for the same session',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        AuthCubit.lastSignedInUserIdKey: 'a',
+        'khatmah_owner': 'a',
+        'khatmah_active_plan': 'private-a',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final barrier = AccountDataBarrier.forPreferences(prefs)
+        ..owner = _Owner('a');
+      final staleLease = barrier.capture();
+      final auth = _Auth();
+      final reset = _Reset();
+      const user = AppUser(id: 'a', email: 'a@test.invalid', displayName: 'A');
+      when(() => auth.currentUser).thenReturn(user);
+      when(() => auth.authStateChanges).thenAnswer((_) => const Stream.empty());
+      when(
+        () => auth.passwordRecoveryChanges,
+      ).thenAnswer((_) => const Stream.empty());
+      when(
+        () => auth.signOut(preserveAccountData: true),
+      ).thenAnswer((_) async => const Left(UnknownFailure('still signed in')));
+      final cubit = AuthCubit(
+        auth,
+        null,
+        null,
+        null,
+        null,
+        prefs,
+        reset,
+        _ForcedPreserveCoordinator(auth),
+      );
+      addTearDown(cubit.close);
+
+      await cubit.signOut(force: true);
+
+      expect(cubit.state, isA<AuthError>());
+      expect(staleLease.check, throwsA(isA<AccountDataUnavailableException>()));
+      expect(barrier.isReady, isTrue);
+      expect(barrier.capture().check, returnsNormally);
+      expect(prefs.getString('khatmah_active_plan'), 'private-a');
+    },
+  );
+
+  test(
+    'forced-preserve auth null is published only after runtime invalidation',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        AuthCubit.lastSignedInUserIdKey: 'a',
+        'khatmah_owner': 'a',
+        'khatmah_active_plan': 'private-a',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final barrier = AccountDataBarrier.forPreferences(prefs)
+        ..owner = _Owner('a');
+      final auth = _Auth();
+      final reset = _Reset();
+      const user = AppUser(id: 'a', email: 'a@test.invalid', displayName: 'A');
+      AppUser? current = user;
+      final events = StreamController<AppUser?>.broadcast(sync: true);
+      when(() => auth.currentUser).thenAnswer((_) => current);
+      when(() => auth.authStateChanges).thenAnswer((_) => events.stream);
+      when(
+        () => auth.passwordRecoveryChanges,
+      ).thenAnswer((_) => const Stream.empty());
+      when(() => auth.signOut(preserveAccountData: true)).thenAnswer((_) async {
+        current = null;
+        events.add(null);
+        return const Right(unit);
+      });
+      final cubit = AuthCubit(
+        auth,
+        null,
+        null,
+        null,
+        null,
+        prefs,
+        reset,
+        _ForcedPreserveCoordinator(auth),
+      );
+      addTearDown(() async {
+        await cubit.close();
+        await events.close();
+      });
+      bool? readyWhenUnauthenticated;
+      final sub = cubit.stream.listen((state) {
+        if (state is AuthUnauthenticated) {
+          readyWhenUnauthenticated = barrier.isReady;
+        }
+      });
+      addTearDown(sub.cancel);
+
+      await cubit.signOut(force: true);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(readyWhenUnauthenticated, isFalse);
+      expect(barrier.isReady, isFalse);
+      expect(prefs.getString('khatmah_active_plan'), 'private-a');
+    },
+  );
+
+  test(
+    'actual forced-preserve signout neutralizes retained Khatmah states and rejects writes',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        AuthCubit.lastSignedInUserIdKey: 'a',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final owner = _Owner('a');
+      final barrier = AccountDataBarrier.forPreferences(prefs)..owner = owner;
+      final repository = KhatmahRepositoryImpl(KhatmahLocalDatasource(prefs));
+      final plan = KhatmahPlan(
+        id: 'private-plan',
+        title: 'Private for Mother',
+        targetPagesPerDay: 4,
+        targetDays: 151,
+        startDate: DateTime(2026, 9, 1),
+        expectedEndDate: DateTime(2027, 1, 29),
+        dedication: const KhatmahDedication(
+          isDedicated: true,
+          recipientName: 'Mother',
+          relationship: 'Mother',
+          condition: DedicationCondition.alive,
+        ),
+      );
+      await repository.createPlan(plan);
+      final dashboard = KhatmahCubit(
+        GetActiveKhatmahUsecase(repository),
+        RecordKhatmahReadingUsecase(repository),
+        PauseResumeKhatmahUsecase(repository),
+        DeleteKhatmahUsecase(repository),
+      );
+      final setup = KhatmahSetupCubit(CreateKhatmahUsecase(repository));
+      await dashboard.load();
+      await setup.createPlan(pagesPerDay: 4);
+      expect(dashboard.state, isA<KhatmahActive>());
+      expect(setup.state, isA<KhatmahSetupConflict>());
+
+      final auth = _Auth();
+      final reset = _Reset();
+      const user = AppUser(id: 'a', email: 'a@test.invalid', displayName: 'A');
+      AppUser? current = user;
+      final events = StreamController<AppUser?>.broadcast(sync: true);
+      when(() => auth.currentUser).thenAnswer((_) => current);
+      when(() => auth.authStateChanges).thenAnswer((_) => events.stream);
+      when(
+        () => auth.passwordRecoveryChanges,
+      ).thenAnswer((_) => const Stream.empty());
+      when(() => auth.signOut(preserveAccountData: true)).thenAnswer((_) async {
+        current = null;
+        owner.currentOwnerId = 'local';
+        events.add(null);
+        return const Right(unit);
+      });
+      final authCubit = AuthCubit(
+        auth,
+        null,
+        null,
+        null,
+        null,
+        prefs,
+        reset,
+        _ForcedPreserveCoordinator(auth),
+      );
+      addTearDown(() async {
+        await authCubit.close();
+        await dashboard.close();
+        await setup.close();
+        await events.close();
+      });
+
+      await authCubit.signOut(force: true);
+      await Future<void>.delayed(Duration.zero);
+
+      expect(authCubit.state, isA<AuthUnauthenticated>());
+      expect(dashboard.state, isA<KhatmahProgressFailure>());
+      expect((dashboard.state as KhatmahProgressFailure).plan, isNull);
+      expect(setup.state, isA<KhatmahSetupIdle>());
+      expect(barrier.isReady, isFalse);
+      expect(prefs.getString('khatmah_active_plan'), contains('Mother'));
+      await expectLater(
+        repository.createPlan(plan.copyWith(id: 'guest-write')),
+        throwsA(isA<KhatmahProgressException>()),
+      );
+      await expectLater(
+        repository.getActivePlan(),
+        throwsA(isA<KhatmahProgressException>()),
+      );
+    },
+  );
+
+  testWidgets(
+    'cached Home owner failure redirects to late-mounted recovery and retries until ready',
+    (tester) async {
+      await getIt.reset();
+      SharedPreferences.setMockInitialValues({
+        AuthCubit.lastSignedInUserIdKey: 'a',
+        'khatmah_owner': 'a',
+        'khatmah_active_plan': 'private-a',
+      });
+      final prefs = await SharedPreferences.getInstance();
+      getIt.registerSingleton<SharedPreferences>(prefs);
+      final owner = _Owner('b');
+      final barrier = AccountDataBarrier.forPreferences(prefs)..owner = owner;
+      final auth = _Auth();
+      final reset = _Reset();
+      const b = AppUser(id: 'b', email: 'b@test.invalid', displayName: 'B');
+      var resetAttempts = 0;
+      when(() => auth.currentUser).thenReturn(b);
+      when(() => auth.authStateChanges).thenAnswer((_) => const Stream.empty());
+      when(
+        () => auth.passwordRecoveryChanges,
+      ).thenAnswer((_) => const Stream.empty());
+      when(
+        () => auth.pullProgressFromCloud(),
+      ).thenAnswer((_) async => const Right(unit));
+      when(
+        () => auth.syncProgressToCloud(),
+      ).thenAnswer((_) async => const Right(unit));
+      when(() => reset.clearAccountOwnedData(departingOwnerId: 'a')).thenAnswer(
+        (_) => barrier.clear(() async {
+          resetAttempts++;
+          if (resetAttempts < 3) {
+            throw const AccountDataResetException('denied');
+          }
+          await prefs.remove('khatmah_active_plan');
+        }),
+      );
+      final cubit = AuthCubit(auth, null, null, null, null, prefs, reset);
+      final profile = ProfileCubit(prefs)..loadProfile();
+
+      await expectLater(
+        cubit.ensureCloudSyncComplete(),
+        throwsA(isA<AccountDataResetException>()),
+      );
+      expect(cubit.state, isA<AuthOwnerDataFailure>());
+      expect(barrier.isReady, isFalse);
+
+      final refresh = ChangeNotifier();
+      final refreshSub = cubit.stream.listen((_) => refresh.notifyListeners());
+      final router = GoRouter(
+        initialLocation: AppRoutes.home,
+        refreshListenable: refresh,
+        redirect: (_, state) =>
+            AppRouter.redirectForAuth(cubit.state, state.matchedLocation),
+        routes: [
+          GoRoute(path: AppRoutes.login, builder: (_, _) => const LoginPage()),
+          GoRoute(
+            path: AppRoutes.home,
+            builder: (_, _) => const Scaffold(body: Text('ready home')),
+          ),
+        ],
+      );
+      addTearDown(() async {
+        router.dispose();
+        await refreshSub.cancel();
+        refresh.dispose();
+        await cubit.close();
+        await profile.close();
+        await getIt.reset();
+      });
+
+      await tester.pumpWidget(
+        MultiBlocProvider(
+          providers: [
+            BlocProvider<AuthCubit>.value(value: cubit),
+            BlocProvider<ProfileCubit>.value(value: profile),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+            locale: const Locale('en'),
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('ready home'), findsNothing);
+      expect(find.byType(LoginPage), findsOneWidget);
+      final l10n = AppLocalizations.of(tester.element(find.byType(LoginPage)));
+      expect(find.text(l10n.retrySyncAfterError), findsOneWidget);
+      expect(prefs.getString('khatmah_active_plan'), 'private-a');
+
+      await tester.tap(find.text(l10n.retrySyncAfterError));
+      await tester.pumpAndSettle();
+      expect(resetAttempts, 2);
+      expect(find.byType(LoginPage), findsOneWidget);
+      expect(find.text('ready home'), findsNothing);
+      expect(barrier.isReady, isFalse);
+      expect(prefs.getString('khatmah_active_plan'), 'private-a');
+
+      await tester.tap(find.text(l10n.retrySyncAfterError));
+      await tester.pumpAndSettle();
+      expect(resetAttempts, 3);
+      expect(find.text('ready home'), findsOneWidget);
+      expect(barrier.isReady, isTrue);
+      expect(prefs.getString('khatmah_active_plan'), isNull);
+    },
+  );
+
   testWidgets(
     'actual login cleanup failure stays on login and retry routes only after ready',
     (tester) async {

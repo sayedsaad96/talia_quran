@@ -211,8 +211,24 @@ class KhatmahRepositoryImpl implements KhatmahRepository {
   Future<List<KhatmahHistoryEntry>> getHistory() => _run((lease) async {
     final history = await _datasource.getHistory();
     lease.check();
-    return history.map((m) => m.toEntity()).toList();
+    final recovered = <KhatmahHistoryModel>[];
+    for (final entry in history) {
+      if (entry.certificateId == null && _canRecoverCertificate(entry)) {
+        recovered.add(await _datasource.linkCertificate(entry.id));
+        lease.check();
+      } else {
+        recovered.add(entry);
+      }
+    }
+    return recovered.map((m) => m.toEntity()).toList();
   });
+
+  bool _canRecoverCertificate(KhatmahHistoryModel entry) =>
+      entry.id.trim().isNotEmpty &&
+      entry.khatmahNumber > 0 &&
+      entry.title.trim().isNotEmpty &&
+      entry.totalDays > 0 &&
+      !entry.completedDate.isBefore(entry.startDate);
   @override
   Future<int> getCompletedCount() async => (await getHistory()).length;
 }

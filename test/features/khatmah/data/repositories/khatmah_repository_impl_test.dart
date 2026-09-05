@@ -94,6 +94,29 @@ void main() {
     );
 
     test(
+      'authorized history load backfills a valid legacy certificate once',
+      () async {
+        await prefs.setString(
+          'khatmah_history',
+          '[{"id":"legacy-plan","khatmahNumber":1,"title":"Legacy Khatmah",'
+              '"startDate":"2026-01-01T00:00:00.000",'
+              '"completedDate":"2026-01-31T00:00:00.000",'
+              '"totalDays":31,"dedication":null,"certificateId":null}]',
+        );
+
+        final first = await repository.getHistory();
+        final second = await repository.getHistory();
+
+        expect(first.single.certificate?.id, 'khatmah-legacy-plan');
+        expect(second, first);
+        expect(
+          prefs.getString('khatmah_history'),
+          contains('"certificateId":"khatmah-legacy-plan"'),
+        );
+      },
+    );
+
+    test(
       'getActivePlan returns null when datasource has no active plan',
       () async {
         final plan = await repository.getActivePlan();

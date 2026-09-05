@@ -110,11 +110,13 @@ import '../../features/khatmah/domain/repositories/khatmah_repository.dart';
 import '../../features/khatmah/domain/usecases/create_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
+import '../../features/khatmah/domain/usecases/get_khatmah_history_usecase.dart';
 import '../../features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart';
 import '../../features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
 import '../../features/khatmah/domain/usecases/update_khatmah_schedule_usecase.dart';
 import '../../features/khatmah/presentation/cubits/khatmah_cubit.dart';
 import '../../features/khatmah/presentation/cubits/khatmah_setup_cubit.dart';
+import '../../features/khatmah/presentation/cubits/khatmah_history_cubit.dart';
 import '../../features/khatmah/data/datasources/khatm_dua_datasource.dart';
 import '../../features/khatmah/domain/usecases/get_khatm_dua_usecase.dart';
 import '../../features/khatmah/presentation/cubits/khatm_dua_cubit.dart';
@@ -484,6 +486,9 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<GetActiveKhatmahUsecase>(
     () => GetActiveKhatmahUsecase(getIt<KhatmahRepository>()),
   );
+  getIt.registerLazySingleton<GetKhatmahHistoryUsecase>(
+    () => GetKhatmahHistoryUsecase(getIt<KhatmahRepository>()),
+  );
   getIt.registerLazySingleton<CreateKhatmahUsecase>(
     () => CreateKhatmahUsecase(getIt<KhatmahRepository>()),
   );
@@ -671,6 +676,9 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<DeleteKhatmahUsecase>(),
       updateSchedule: getIt<UpdateKhatmahScheduleUsecase>(),
     ),
+  );
+  getIt.registerFactory<KhatmahHistoryCubit>(
+    () => KhatmahHistoryCubit(getIt<GetKhatmahHistoryUsecase>()),
   );
   getIt.registerFactory<KhatmahSetupCubit>(
     () => KhatmahSetupCubit(

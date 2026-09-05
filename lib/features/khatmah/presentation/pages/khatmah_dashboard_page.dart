@@ -38,6 +38,15 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
   bool _hasNavigatedToCompletion = false;
   bool _adjusting = false;
 
+  List<Widget> _historyAction(BuildContext context) => [
+    IconButton(
+      key: const Key('khatmah_dashboard_history_button'),
+      tooltip: context.l10n.khatmahRecentCompletions,
+      onPressed: () => context.push(AppRoutes.khatmahHistory),
+      icon: const Icon(Icons.history_rounded),
+    ),
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -277,6 +286,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
               appBar: AppBar(
                 title: Text(context.l10n.khatmahKhatmahDashboard),
                 centerTitle: true,
+                actions: _historyAction(context),
               ),
               body: Center(
                 child: Padding(
@@ -323,6 +333,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
               appBar: AppBar(
                 title: Text(context.l10n.khatmahQuranKhatmah),
                 centerTitle: true,
+                actions: _historyAction(context),
               ),
               body: Center(
                 child: Padding(
@@ -426,6 +437,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
               backgroundColor: Colors.transparent,
               elevation: 0,
               actions: [
+                ..._historyAction(context),
                 IconButton(
                   key: const Key('khatmah_dashboard_abandon_button'),
                   tooltip: context.l10n.khatmahEndKhatmah,

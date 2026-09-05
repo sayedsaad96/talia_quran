@@ -1911,5 +1911,11 @@
   "khatmahRelationshipFather": "الأب",
   "khatmahRelationshipFriend": "صديق",
   "khatmahRelationshipRelative": "قريب",
-  "khatmahRelationshipOther": "أخرى"
+  "khatmahRelationshipOther": "أخرى",
+  "khatmahRecentCompletions": "الختمات المكتملة حديثاً",
+  "khatmahHistoryEmpty": "لا توجد شهادات ختمة محفوظة بعد.",
+  "khatmahHistoryLoadError": "تعذر تحميل شهادات الختمة المحفوظة. حاول مرة أخرى.",
+  "khatmahReopenCertificate": "فتح الشهادة مجدداً",
+  "khatmahCompletedOn": "اكتملت في {date}",
+  "@khatmahCompletedOn": {"placeholders":{"date":{"type":"String"}}}
 }

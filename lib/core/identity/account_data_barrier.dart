@@ -137,6 +137,7 @@ class AccountDataLease {
   const AccountDataLease._(this._barrier, this._generation);
   final AccountDataBarrier _barrier;
   final int _generation;
+  Stream<void> get changes => _barrier.changes;
   void check() {
     _barrier._checkOwner();
     if (_barrier._blocked || _generation != _barrier._generation) {

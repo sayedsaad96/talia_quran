@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/identity/account_data_barrier.dart';
@@ -74,12 +76,23 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
   }) : _deleteKhatmah = deleteKhatmah,
        _uuid = uuid ?? const Uuid(),
        _authority = _createKhatmah.authority,
-       super(const KhatmahSetupIdle());
+       super(const KhatmahSetupIdle()) {
+    _changes = _createKhatmah.changes?.listen((_) {
+      final authority = _authority;
+      if (isClosed || authority is! AccountDataLease) return;
+      try {
+        authority.check();
+      } catch (_) {
+        emit(const KhatmahSetupIdle());
+      }
+    });
+  }
 
   final CreateKhatmahUsecase _createKhatmah;
   final DeleteKhatmahUsecase? _deleteKhatmah;
   final Uuid _uuid;
   final Object? _authority;
+  StreamSubscription<void>? _changes;
   Future<void>? _abandonInFlight;
 
   Future<void> createPlan({
@@ -153,5 +166,11 @@ class KhatmahSetupCubit extends Cubit<KhatmahSetupState> {
     } catch (e) {
       if (!isClosed) emit(conflict.copyWith(errorMessage: e.toString()));
     }
+  }
+
+  @override
+  Future<void> close() {
+    unawaited(_changes?.cancel());
+    return super.close();
   }
 }

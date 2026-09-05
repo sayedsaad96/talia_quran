@@ -1976,5 +1976,11 @@
   "khatmahRelationshipFather": "Father",
   "khatmahRelationshipFriend": "Friend",
   "khatmahRelationshipRelative": "Relative",
-  "khatmahRelationshipOther": "Other"
+  "khatmahRelationshipOther": "Other",
+  "khatmahRecentCompletions": "Recent Khatmah completions",
+  "khatmahHistoryEmpty": "No saved Khatmah certificates yet.",
+  "khatmahHistoryLoadError": "Unable to load saved Khatmah certificates. Please try again.",
+  "khatmahReopenCertificate": "Reopen certificate",
+  "khatmahCompletedOn": "Completed on {date}",
+  "@khatmahCompletedOn": {"placeholders":{"date":{"type":"String"}}}
 }

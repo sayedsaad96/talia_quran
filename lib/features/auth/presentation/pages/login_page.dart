@@ -50,6 +50,12 @@ class _LoginPageState extends State<LoginPage> {
   _AuthFeedback? _feedback;
 
   @override
+  void initState() {
+    super.initState();
+    _syncFailed = context.read<AuthCubit>().state is AuthOwnerDataFailure;
+  }
+
+  @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:go_router/go_router.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
@@ -109,6 +111,56 @@ void main() {
     );
     expect(find.textContaining('مبارك ختم القرآن'), findsNothing);
   });
+
+  testWidgets(
+    'retained completion hides certificate and recipient on invalidation',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final barrier = AccountDataBarrier.forPreferences(
+        await SharedPreferences.getInstance(),
+      );
+      final authorizedPlan = testPlan.copyWith(authority: barrier.capture());
+      final completion = KhatmahReadingResult(
+        plan: authorizedPlan,
+        newlyCompletedPages: const {604},
+        historyEntry: KhatmahHistoryEntry(
+          id: authorizedPlan.id,
+          khatmahNumber: 1,
+          title: authorizedPlan.title,
+          startDate: authorizedPlan.startDate,
+          completedDate: DateTime(2026, 3, 5),
+          totalDays: 5,
+          certificateId: 'khatmah-${authorizedPlan.id}',
+        ),
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: KhatmahCompletionPage(
+            completion: completion,
+            enableConfetti: false,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('khatmah_completion_certificate_button')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('الوالدة حفظها الله'), findsWidgets);
+
+      barrier.invalidate();
+      await tester.pump();
+
+      expect(
+        find.byKey(const Key('khatmah_completion_certificate_button')),
+        findsNothing,
+      );
+      expect(find.textContaining('الوالدة حفظها الله'), findsNothing);
+      expect(find.text('No saved completion available'), findsOneWidget);
+    },
+  );
 
   testWidgets('invalid completion inputs never expose celebration or sharing', (
     tester,

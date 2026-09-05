@@ -7968,6 +7968,36 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'أخرى'**
   String get khatmahRelationshipOther;
+
+  /// No description provided for @khatmahRecentCompletions.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمات المكتملة حديثاً'**
+  String get khatmahRecentCompletions;
+
+  /// No description provided for @khatmahHistoryEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد شهادات ختمة محفوظة بعد.'**
+  String get khatmahHistoryEmpty;
+
+  /// No description provided for @khatmahHistoryLoadError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحميل شهادات الختمة المحفوظة. حاول مرة أخرى.'**
+  String get khatmahHistoryLoadError;
+
+  /// No description provided for @khatmahReopenCertificate.
+  ///
+  /// In ar, this message translates to:
+  /// **'فتح الشهادة مجدداً'**
+  String get khatmahReopenCertificate;
+
+  /// No description provided for @khatmahCompletedOn.
+  ///
+  /// In ar, this message translates to:
+  /// **'اكتملت في {date}'**
+  String khatmahCompletedOn(String date);
 }
 
 class _AppLocalizationsDelegate

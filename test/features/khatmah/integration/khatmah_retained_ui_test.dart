@@ -8,6 +8,8 @@ import 'package:talia_quran/features/khatmah/data/datasources/khatmah_local_data
 import 'package:talia_quran/features/khatmah/data/models/khatmah_plan_model.dart';
 import 'package:talia_quran/features/khatmah/data/repositories/khatmah_repository_impl.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
@@ -75,6 +77,10 @@ void main() {
             return const Scaffold(body: Text('persisted completion route'));
           },
         ),
+        GoRoute(
+          path: '/khatmah/history',
+          builder: (_, _) => const Scaffold(body: Text('recent completions')),
+        ),
       ],
     );
     addTearDown(router.dispose);
@@ -88,6 +94,52 @@ void main() {
     );
     await tester.pumpAndSettle();
   }
+
+  testWidgets('dashboard exposes the production recent-completions path', (
+    tester,
+  ) async {
+    await pump(tester);
+
+    final history = find.byKey(const Key('khatmah_dashboard_history_button'));
+    expect(history, findsOneWidget);
+    await tester.tap(history);
+    await tester.pumpAndSettle();
+
+    expect(find.text('recent completions'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    await cubit.close();
+  });
+
+  testWidgets('retained dashboard removes recipient text on invalidation', (
+    tester,
+  ) async {
+    await repository.createPlan(
+      plan.copyWith(
+        title: 'Private for Mother',
+        dedication: const KhatmahDedication(
+          isDedicated: true,
+          recipientName: 'Mother',
+          relationship: 'Mother',
+          condition: DedicationCondition.alive,
+        ),
+      ),
+    );
+    await pump(tester);
+    expect(find.textContaining('Mother'), findsWidgets);
+
+    AccountDataBarrier.forPreferences(
+      await SharedPreferences.getInstance(),
+    ).invalidate();
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('Mother'), findsNothing);
+    expect(
+      find.byKey(const Key('khatmah_dashboard_load_failure')),
+      findsOneWidget,
+    );
+    await tester.pumpWidget(const SizedBox.shrink());
+    await cubit.close();
+  });
 
   testWidgets('physical page604 delivers persisted completion exactly once', (
     tester,

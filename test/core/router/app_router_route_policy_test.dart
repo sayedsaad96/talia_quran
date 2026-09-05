@@ -13,6 +13,33 @@ class _FakeAuthCubit extends Cubit<AuthState> implements AuthCubit {
 
 void main() {
   group('AppRouter route policy', () {
+    test(
+      'owner-data failure redirects any current screen to recovery login',
+      () {
+        expect(
+          AppRouter.redirectForAuth(
+            const AuthOwnerDataFailure(),
+            AppRoutes.home,
+          ),
+          AppRoutes.login,
+        );
+        expect(
+          AppRouter.redirectForAuth(
+            const AuthOwnerDataFailure(),
+            AppRoutes.khatmahDashboard,
+          ),
+          AppRoutes.login,
+        );
+        expect(
+          AppRouter.redirectForAuth(
+            const AuthOwnerDataFailure(),
+            AppRoutes.login,
+          ),
+          isNull,
+        );
+      },
+    );
+
     test('guest users can open local-first memorization routes', () {
       const localRoutes = [
         AppRoutes.memorizationHub,

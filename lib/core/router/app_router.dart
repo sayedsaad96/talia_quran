@@ -22,6 +22,7 @@ import '../../features/khatmah/domain/entities/khatmah_reading_result.dart';
 import '../../features/khatmah/presentation/pages/khatm_dua_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_completion_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_dashboard_page.dart';
+import '../../features/khatmah/presentation/pages/khatmah_history_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/practice_surah_page.dart';
 import '../../features/azkar/presentation/pages/azkar_page.dart';
@@ -102,6 +103,7 @@ abstract class AppRoutes {
   static const String khatmahDashboard = '/khatmah/dashboard';
   static const String khatmDua = '/quran/khatm-dua';
   static const String khatmahCompletion = '/khatmah/completion';
+  static const String khatmahHistory = '/khatmah/history';
 }
 
 /// Bridges [AuthCubit] state stream into a [Listenable] so [GoRouter]
@@ -145,6 +147,7 @@ final _publicRoutes = <String>[
   AppRoutes.khatmahDashboard,
   AppRoutes.khatmDua,
   AppRoutes.khatmahCompletion,
+  AppRoutes.khatmahHistory,
   if (kDebugMode) AppRoutes.qcfRenderingPoc,
 ];
 
@@ -332,6 +335,24 @@ abstract class AppRouter {
   // UX-4 FIX: Removed _shellNavigatorKey — no longer needed with StatefulShellRoute.
   static final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
+  static String? redirectForAuth(AuthState authState, String location) {
+    if (authState is AuthOwnerDataFailure) {
+      return location == AppRoutes.login ? null : AppRoutes.login;
+    }
+    if (requiresAuthentication(location)) {
+      if (authState is AuthAuthenticated || authState is AuthInitial) {
+        return null;
+      }
+      return AppRoutes.login;
+    }
+    if (isPublicLocation(location) ||
+        authState is AuthAuthenticated ||
+        authState is AuthInitial) {
+      return null;
+    }
+    return AppRoutes.login;
+  }
+
   /// Minimal router used before DI is initialized.
   /// Only contains the splash route — no auth guards or DI dependencies.
   static final GoRouter splashOnlyRouter = GoRouter(
@@ -354,15 +375,7 @@ abstract class AppRouter {
     redirect: (context, state) {
       final authState = getIt<AuthCubit>().state;
       final location = state.matchedLocation;
-      if (requiresAuthentication(location)) {
-        if (authState is AuthAuthenticated) return null;
-        if (authState is AuthInitial) return null;
-        return AppRoutes.login;
-      }
-      if (isPublicLocation(location)) return null;
-      if (authState is AuthAuthenticated) return null;
-      if (authState is AuthInitial) return null; // still initialising
-      return AppRoutes.login; // unauthenticated on protected route
+      return redirectForAuth(authState, location);
     },
     // OFFLINE-SAFE: GoRouter wraps any exception thrown inside an async
     // redirect as a GoException and re-throws it as an uncaught async error.
@@ -507,6 +520,11 @@ abstract class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.khatmahDashboard,
         builder: (context, state) => const KhatmahDashboardPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.khatmahHistory,
+        builder: (context, state) => const KhatmahHistoryPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
