@@ -1915,6 +1915,7 @@
   "khatmahRecentCompletions": "الختمات المكتملة حديثاً",
   "khatmahHistoryEmpty": "لا توجد شهادات ختمة محفوظة بعد.",
   "khatmahHistoryLoadError": "تعذر تحميل شهادات الختمة المحفوظة. حاول مرة أخرى.",
+  "khatmahHistoryCorrupt": "بعض شهادات الختمة المحفوظة غير صالحة وتم حجبها. حاول مرة أخرى بعد استعادة بياناتك.",
   "khatmahReopenCertificate": "فتح الشهادة مجدداً",
   "khatmahCompletedOn": "اكتملت في {date}",
   "@khatmahCompletedOn": {"placeholders":{"date":{"type":"String"}}}

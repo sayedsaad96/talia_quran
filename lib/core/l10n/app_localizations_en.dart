@@ -4421,6 +4421,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unable to load saved Khatmah certificates. Please try again.';
 
   @override
+  String get khatmahHistoryCorrupt =>
+      'Some saved Khatmah certificates are invalid and were withheld. Please retry after restoring your data.';
+
+  @override
   String get khatmahReopenCertificate => 'Reopen certificate';
 
   @override

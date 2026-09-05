@@ -7987,6 +7987,12 @@ abstract class AppLocalizations {
   /// **'تعذر تحميل شهادات الختمة المحفوظة. حاول مرة أخرى.'**
   String get khatmahHistoryLoadError;
 
+  /// No description provided for @khatmahHistoryCorrupt.
+  ///
+  /// In ar, this message translates to:
+  /// **'بعض شهادات الختمة المحفوظة غير صالحة وتم حجبها. حاول مرة أخرى بعد استعادة بياناتك.'**
+  String get khatmahHistoryCorrupt;
+
   /// No description provided for @khatmahReopenCertificate.
   ///
   /// In ar, this message translates to:

@@ -1980,6 +1980,7 @@
   "khatmahRecentCompletions": "Recent Khatmah completions",
   "khatmahHistoryEmpty": "No saved Khatmah certificates yet.",
   "khatmahHistoryLoadError": "Unable to load saved Khatmah certificates. Please try again.",
+  "khatmahHistoryCorrupt": "Some saved Khatmah certificates are invalid and were withheld. Please retry after restoring your data.",
   "khatmahReopenCertificate": "Reopen certificate",
   "khatmahCompletedOn": "Completed on {date}",
   "@khatmahCompletedOn": {"placeholders":{"date":{"type":"String"}}}

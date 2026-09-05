@@ -9,6 +9,7 @@ import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/auth/presentation/pages/login_page.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/profile_cubit.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart' as mockito;
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_platform_interface.dart';
@@ -16,6 +17,9 @@ import 'package:talia_quran/core/identity/account_data_reset.dart';
 import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/journey/unified_journey_engine.dart';
+import 'package:talia_quran/core/progress/progress_events_bus.dart';
+import 'package:talia_quran/core/services/xp_service.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
 import 'package:talia_quran/features/auth/domain/repositories/auth_repository.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
@@ -25,13 +29,23 @@ import 'package:talia_quran/features/khatmah/data/repositories/khatmah_repositor
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_dedication.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
+import 'package:talia_quran/features/khatmah/domain/repositories/khatmah_repository.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/create_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/delete_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
+import 'package:talia_quran/features/khatmah/domain/usecases/get_khatmah_history_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/pause_resume_khatmah_usecase.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_cubit.dart';
+import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_history_cubit.dart';
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_setup_cubit.dart';
+import 'package:talia_quran/features/khatmah/presentation/pages/khatmah_completion_page.dart';
+import 'package:talia_quran/features/home/presentation/cubits/home_cubit.dart';
+import 'package:talia_quran/features/home/domain/usecases/get_activity_heatmap_usecase.dart';
+import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/progress/domain/entities/progress_entities.dart';
+
+import '../home/presentation/cubits/home_cubit_test.mocks.dart';
 
 class _Auth extends Mock implements AuthRepository {}
 
@@ -59,14 +73,51 @@ class _ForcedPreserveCoordinator extends CloudSyncCoordinator {
   _ForcedPreserveCoordinator(AuthRepository authRepository)
     : super(authRepository: authRepository);
 
+  bool flushResult = false;
+
   @override
-  Future<bool> flushBeforeSignOut() async => false;
+  Future<bool> flushBeforeSignOut() async => flushResult;
 
   @override
   Future<void> preservePendingSignOutWork() async {}
 
   @override
   Future<void> run() async {}
+}
+
+class _TestXpService extends Fake implements XpService {
+  @override
+  Future<int> getTotalXp() async => 0;
+}
+
+class _PendingGetRepository implements KhatmahRepository {
+  _PendingGetRepository(this.delegate);
+
+  final KhatmahRepository delegate;
+  bool blockNext = false;
+  Completer<void> started = Completer<void>();
+  Completer<void> release = Completer<void>();
+
+  @override
+  Stream<void>? get changes => delegate.changes;
+
+  @override
+  Object? get authority => delegate.authority;
+
+  @override
+  Future<KhatmahPlan?> getActivePlan() async {
+    if (blockNext) {
+      blockNext = false;
+      final captured = await delegate.getActivePlan();
+      if (!started.isCompleted) started.complete();
+      await release.future;
+      return captured;
+    }
+    return delegate.getActivePlan();
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 void main() {
@@ -228,16 +279,36 @@ void main() {
     },
   );
 
-  test(
-    'actual forced-preserve signout neutralizes retained Khatmah states and rejects writes',
-    () async {
+  testWidgets(
+    'actual forced-preserve signout neutralizes retained production consumers and recovers safely',
+    (tester) async {
       SharedPreferences.setMockInitialValues({
         AuthCubit.lastSignedInUserIdKey: 'a',
+        'theme_mode': 'dark',
       });
       final prefs = await SharedPreferences.getInstance();
       final owner = _Owner('a');
       final barrier = AccountDataBarrier.forPreferences(prefs)..owner = owner;
       final repository = KhatmahRepositoryImpl(KhatmahLocalDatasource(prefs));
+      final completedPlan = KhatmahPlan(
+        id: 'completed-private-plan',
+        title: 'Completed private Khatmah',
+        completedPages: {for (var page = 1; page <= 604; page++) page},
+        targetPagesPerDay: 4,
+        targetDays: 151,
+        startDate: DateTime(2026, 1, 1),
+        expectedEndDate: DateTime(2026, 6, 1),
+        status: KhatmahStatus.completed,
+        lastReadDate: DateTime(2026, 5, 31),
+        dedication: const KhatmahDedication(
+          isDedicated: true,
+          recipientName: 'Completed Mother',
+          relationship: 'Mother',
+          condition: DedicationCondition.alive,
+        ),
+      );
+      await repository.createPlan(completedPlan);
+      final completedHistory = await repository.completePlan(completedPlan);
       final plan = KhatmahPlan(
         id: 'private-plan',
         title: 'Private for Mother',
@@ -253,6 +324,7 @@ void main() {
         ),
       );
       await repository.createPlan(plan);
+
       final dashboard = KhatmahCubit(
         GetActiveKhatmahUsecase(repository),
         RecordKhatmahReadingUsecase(repository),
@@ -260,10 +332,118 @@ void main() {
         DeleteKhatmahUsecase(repository),
       );
       final setup = KhatmahSetupCubit(CreateKhatmahUsecase(repository));
+      final history = KhatmahHistoryCubit(GetKhatmahHistoryUsecase(repository));
       await dashboard.load();
       await setup.createPlan(pagesPerDay: 4);
+      await history.load();
       expect(dashboard.state, isA<KhatmahActive>());
       expect(setup.state, isA<KhatmahSetupConflict>());
+      expect(history.state, isA<KhatmahHistoryLoaded>());
+
+      final pendingRepository = _PendingGetRepository(repository);
+      final mockGetProgress = MockGetProgressUsecase();
+      final mockGetQuranPage = MockGetQuranPageUsecase();
+      final mockGetCustomPlan = MockGetCustomPlanUsecase();
+      final mockMemRepository = MockMemorizationPlusRepository();
+      final mockSessionService = MockAppSessionService();
+      final mockGetHeatmap = MockGetActivityHeatmapUsecase();
+      final mockPathResolver = MockMemorizationPathResolver();
+      final mockGetCoachRecommendation =
+          MockGetSmartCoachRecommendationUsecase();
+      final progressEvents = ProgressEventsBus();
+      mockito
+          .when(mockPathResolver.changes)
+          .thenAnswer((_) => const Stream.empty());
+      mockito
+          .when(mockGetProgress.call())
+          .thenAnswer(
+            (_) async => const Right(
+              OverallProgress(
+                memorizedAyahs: 0,
+                totalAyahs: 6236,
+                memorizedSurahs: 0,
+                totalSurahs: 114,
+                memorizedJuz: 0,
+                totalJuz: 30,
+                readAyahs: 0,
+                readSurahs: 0,
+                readJuz: 0,
+                streakDays: 0,
+                lastActiveDate: null,
+                achievements: [],
+                readPagesCount: 0,
+                totalQuranPages: 604,
+                learningAyahs: 0,
+                reviewAyahs: 0,
+              ),
+            ),
+          );
+      mockito
+          .when(mockGetQuranPage.call(mockito.any))
+          .thenAnswer((_) async => const Left(CacheFailure('no cache')));
+      mockito
+          .when(mockGetCustomPlan.call())
+          .thenAnswer((_) async => const Right(null));
+      mockito
+          .when(mockGetHeatmap.call())
+          .thenAnswer(
+            (_) async => ActivityHeatmapData(
+              countsByDay: const {},
+              startDate: DateTime(2026, 1, 1),
+            ),
+          );
+      mockito
+          .when(mockGetCoachRecommendation.call())
+          .thenAnswer((_) async => const Right(null));
+      mockito
+          .when(mockSessionService.getLastRestorableLocation())
+          .thenReturn(null);
+      mockito
+          .when(mockMemRepository.getMemorizationProfile())
+          .thenAnswer((_) async => Right(MemorizationProfile.empty()));
+      mockito
+          .when(mockMemRepository.getAllReviewRecords())
+          .thenAnswer((_) async => const Right([]));
+      final home = HomeCubit(
+        mockGetProgress,
+        mockGetQuranPage,
+        mockGetCustomPlan,
+        mockMemRepository,
+        mockSessionService,
+        mockGetHeatmap,
+        mockPathResolver,
+        mockGetCoachRecommendation,
+        const UnifiedJourneyEngine(),
+        prefs,
+        progressEvents,
+        _TestXpService(),
+        GetActiveKhatmahUsecase(pendingRepository),
+      );
+      await home.load();
+      expect((home.state as HomeLoaded).activeKhatmah?.id, plan.id);
+
+      final completion = KhatmahReadingResult(
+        plan: completedPlan.copyWith(authority: barrier.capture()),
+        newlyCompletedPages: const {604},
+        historyEntry: completedHistory,
+      );
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: KhatmahCompletionPage(
+            completion: completion,
+            enableConfetti: false,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('khatmah_completion_certificate_button')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('Completed Mother'), findsWidgets);
 
       final auth = _Auth();
       final reset = _Reset();
@@ -281,6 +461,21 @@ void main() {
         events.add(null);
         return const Right(unit);
       });
+      when(() => auth.signOut(preserveAccountData: false)).thenAnswer((
+        _,
+      ) async {
+        owner.currentOwnerId = 'local';
+        current = null;
+        await barrier.clear(() async {
+          await prefs.remove('khatmah_active_plan');
+          await prefs.remove('khatmah_history');
+          await prefs.remove('khatmah_owner');
+        });
+        events.add(null);
+        return const Right(unit);
+      });
+      final coordinator = _ForcedPreserveCoordinator(auth);
+      KhatmahCubit? recoveredDashboard;
       final authCubit = AuthCubit(
         auth,
         null,
@@ -289,24 +484,47 @@ void main() {
         null,
         prefs,
         reset,
-        _ForcedPreserveCoordinator(auth),
+        coordinator,
       );
       addTearDown(() async {
+        if (!pendingRepository.release.isCompleted) {
+          pendingRepository.release.complete();
+        }
         await authCubit.close();
+        await recoveredDashboard?.close();
+        await home.close();
         await dashboard.close();
         await setup.close();
+        await history.close();
         await events.close();
+        progressEvents.dispose();
       });
 
+      pendingRepository.blockNext = true;
+      final pendingHomeLoad = home.load();
+      await pendingRepository.started.future;
       await authCubit.signOut(force: true);
-      await Future<void>.delayed(Duration.zero);
+      await tester.pump();
+      pendingRepository.release.complete();
+      await pendingHomeLoad;
+      await tester.pump();
 
       expect(authCubit.state, isA<AuthUnauthenticated>());
       expect(dashboard.state, isA<KhatmahProgressFailure>());
       expect((dashboard.state as KhatmahProgressFailure).plan, isNull);
       expect(setup.state, isA<KhatmahSetupIdle>());
+      expect(history.state, isA<KhatmahHistoryFailure>());
+      expect((home.state as HomeLoaded).activeKhatmah, isNull);
+      expect((home.state as HomeLoaded).khatmahError, isNotNull);
+      expect(
+        find.byKey(const Key('khatmah_completion_certificate_button')),
+        findsNothing,
+      );
+      expect(find.textContaining('Completed Mother'), findsNothing);
       expect(barrier.isReady, isFalse);
       expect(prefs.getString('khatmah_active_plan'), contains('Mother'));
+      expect(prefs.getString('khatmah_history'), contains('Completed Mother'));
+      expect(prefs.getString('theme_mode'), 'dark');
       await expectLater(
         repository.createPlan(plan.copyWith(id: 'guest-write')),
         throwsA(isA<KhatmahProgressException>()),
@@ -315,6 +533,45 @@ void main() {
         repository.getActivePlan(),
         throwsA(isA<KhatmahProgressException>()),
       );
+
+      current = user;
+      owner.currentOwnerId = 'a';
+      events.add(user);
+      await tester.pump();
+      await authCubit.ensureCloudSyncComplete();
+      await history.load();
+      await home.load();
+      recoveredDashboard = KhatmahCubit(
+        GetActiveKhatmahUsecase(repository),
+        RecordKhatmahReadingUsecase(repository),
+        PauseResumeKhatmahUsecase(repository),
+        DeleteKhatmahUsecase(repository),
+      );
+      await recoveredDashboard.load();
+      await tester.pump();
+
+      expect(authCubit.state, isA<AuthAuthenticated>());
+      expect(barrier.isReady, isTrue);
+      expect(dashboard.state, isA<KhatmahProgressFailure>());
+      expect(recoveredDashboard.state, isA<KhatmahActive>());
+      expect(history.state, isA<KhatmahHistoryLoaded>());
+      expect((home.state as HomeLoaded).activeKhatmah?.id, plan.id);
+      expect(
+        find.byKey(const Key('khatmah_completion_certificate_button')),
+        findsNothing,
+      );
+
+      coordinator.flushResult = true;
+      await authCubit.signOut();
+      await tester.pump();
+
+      expect(authCubit.state, isA<AuthUnauthenticated>());
+      expect(barrier.isReady, isTrue);
+      expect(prefs.getString('khatmah_active_plan'), isNull);
+      expect(prefs.getString('khatmah_history'), isNull);
+      expect(prefs.getString('theme_mode'), 'dark');
+      expect(await repository.getActivePlan(), isNull);
+      expect(await repository.getHistory(), isEmpty);
     },
   );
 

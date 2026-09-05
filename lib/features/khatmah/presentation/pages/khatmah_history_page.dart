@@ -64,17 +64,85 @@ class _KhatmahHistoryPageState extends State<KhatmahHistoryPage> {
               label: Text(context.l10n.khatmahRetry),
             ),
           ),
-          KhatmahHistoryLoaded(:final entries) => ListView.separated(
-            padding: const EdgeInsets.all(AppSpacing.pagePadding),
-            itemCount: entries.length,
-            separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-            itemBuilder: (context, index) =>
-                _HistoryCard(entry: entries[index]),
+          KhatmahHistoryCorrupt(:final validEntries) =>
+            validEntries.isEmpty
+                ? _HistoryMessage(
+                    key: const Key('khatmah_history_corrupt'),
+                    icon: Icons.warning_amber_rounded,
+                    message: context.l10n.khatmahHistoryCorrupt,
+                    action: _HistoryRetryButton(onPressed: _cubit.load),
+                  )
+                : _HistoryList(
+                    entries: validEntries,
+                    corruptWarning: context.l10n.khatmahHistoryCorrupt,
+                    onRetry: _cubit.load,
+                  ),
+          KhatmahHistoryLoaded(:final entries) => _HistoryList(
+            entries: entries,
           ),
         },
       ),
     ),
   );
+}
+
+class _HistoryRetryButton extends StatelessWidget {
+  const _HistoryRetryButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => FilledButton.icon(
+    key: const Key('khatmah_history_retry'),
+    onPressed: onPressed,
+    icon: const Icon(Icons.refresh_rounded),
+    label: Text(context.l10n.khatmahRetry),
+  );
+}
+
+class _HistoryList extends StatelessWidget {
+  const _HistoryList({
+    required this.entries,
+    this.corruptWarning,
+    this.onRetry,
+  });
+
+  final List<KhatmahHistoryEntry> entries;
+  final String? corruptWarning;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasWarning = corruptWarning != null;
+    return ListView.separated(
+      padding: const EdgeInsets.all(AppSpacing.pagePadding),
+      itemCount: entries.length + (hasWarning ? 1 : 0),
+      separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+      itemBuilder: (context, index) {
+        if (hasWarning && index == 0) {
+          return Card(
+            key: const Key('khatmah_history_corrupt'),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    corruptWarning!,
+                    textAlign: TextAlign.center,
+                    style: AppTypography.bodyLarge,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _HistoryRetryButton(onPressed: onRetry!),
+                ],
+              ),
+            ),
+          );
+        }
+        return _HistoryCard(entry: entries[index - (hasWarning ? 1 : 0)]);
+      },
+    );
+  }
 }
 
 class _HistoryMessage extends StatelessWidget {

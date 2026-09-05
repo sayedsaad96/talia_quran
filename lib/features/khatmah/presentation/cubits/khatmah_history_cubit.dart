@@ -34,6 +34,15 @@ class KhatmahHistoryLoaded extends KhatmahHistoryState {
   List<Object?> get props => [entries];
 }
 
+class KhatmahHistoryCorrupt extends KhatmahHistoryState {
+  const KhatmahHistoryCorrupt(this.validEntries);
+
+  final List<KhatmahHistoryEntry> validEntries;
+
+  @override
+  List<Object?> get props => [validEntries];
+}
+
 class KhatmahHistoryFailure extends KhatmahHistoryState {
   const KhatmahHistoryFailure(this.error);
 
@@ -66,7 +75,9 @@ class KhatmahHistoryCubit extends Cubit<KhatmahHistoryState> {
               .toList(growable: false)
             ..sort((a, b) => b.completedDate.compareTo(a.completedDate));
       emit(
-        awarded.isEmpty
+        awarded.length != entries.length
+            ? KhatmahHistoryCorrupt(awarded)
+            : awarded.isEmpty
             ? const KhatmahHistoryEmpty()
             : KhatmahHistoryLoaded(awarded),
       );

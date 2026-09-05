@@ -4473,6 +4473,10 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذر تحميل شهادات الختمة المحفوظة. حاول مرة أخرى.';
 
   @override
+  String get khatmahHistoryCorrupt =>
+      'بعض شهادات الختمة المحفوظة غير صالحة وتم حجبها. حاول مرة أخرى بعد استعادة بياناتك.';
+
+  @override
   String get khatmahReopenCertificate => 'فتح الشهادة مجدداً';
 
   @override

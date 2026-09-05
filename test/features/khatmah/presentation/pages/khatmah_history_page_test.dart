@@ -1,10 +1,13 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/di/injection.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
@@ -33,8 +36,251 @@ class _LifecycleHistoryRepository implements KhatmahRepository {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+class _MutableOwner implements RecordOwnerProvider {
+  _MutableOwner(this.currentOwnerId);
+
+  @override
+  String currentOwnerId;
+
+  @override
+  bool get isSignedIn => currentOwnerId != 'local';
+}
+
+Map<String, Object?> _historyRow({
+  required String id,
+  required String title,
+  String? certificateId,
+  int khatmahNumber = 1,
+  int totalDays = 31,
+}) => {
+  'id': id,
+  'khatmahNumber': khatmahNumber,
+  'title': title,
+  'startDate': '2026-01-01T00:00:00.000',
+  'completedDate': '2026-01-31T00:00:00.000',
+  'totalDays': totalDays,
+  'dedication': null,
+  'certificateId': certificateId,
+};
+
+Future<void> _pumpHistoryPage(
+  WidgetTester tester,
+  KhatmahHistoryCubit cubit, {
+  Locale locale = const Locale('en'),
+  Size? size,
+  double textScale = 1,
+}) async {
+  if (size != null) {
+    tester.view.physicalSize = size;
+    tester.view.devicePixelRatio = 1;
+  }
+  await tester.pumpWidget(
+    MaterialApp(
+      locale: locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      builder: textScale == 1
+          ? null
+          : (context, child) => MediaQuery(
+              data: MediaQuery.of(
+                context,
+              ).copyWith(textScaler: TextScaler.linear(textScale)),
+              child: child!,
+            ),
+      home: KhatmahHistoryPage(cubit: cubit),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+
+  testWidgets(
+    'mismatched-only history is corrupt instead of a false empty state',
+    (tester) async {
+      final rawHistory = jsonEncode([
+        {
+          'id': 'mismatched-plan',
+          'khatmahNumber': 1,
+          'title': 'Private mismatched completion',
+          'startDate': '2026-01-01T00:00:00.000',
+          'completedDate': '2026-01-31T00:00:00.000',
+          'totalDays': 31,
+          'dedication': null,
+          'certificateId': 'khatmah-someone-else',
+        },
+      ]);
+      SharedPreferences.setMockInitialValues({'khatmah_history': rawHistory});
+      final prefs = await SharedPreferences.getInstance();
+      final repository = KhatmahRepositoryImpl(KhatmahLocalDatasource(prefs));
+      final cubit = KhatmahHistoryCubit(GetKhatmahHistoryUsecase(repository));
+      addTearDown(cubit.close);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: KhatmahHistoryPage(cubit: cubit),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('khatmah_history_corrupt')), findsOneWidget);
+      expect(find.byKey(const Key('khatmah_history_empty')), findsNothing);
+      expect(find.text('Private mismatched completion'), findsNothing);
+      expect(find.byKey(const Key('khatmah_history_retry')), findsOneWidget);
+      expect(prefs.getString('khatmah_history'), rawHistory);
+    },
+  );
+
+  testWidgets(
+    'malformed storage is a retryable failure distinct from semantic corruption',
+    (tester) async {
+      SharedPreferences.setMockInitialValues({'khatmah_history': '{broken'});
+      final prefs = await SharedPreferences.getInstance();
+      final repository = KhatmahRepositoryImpl(KhatmahLocalDatasource(prefs));
+      final cubit = KhatmahHistoryCubit(GetKhatmahHistoryUsecase(repository));
+      addTearDown(cubit.close);
+
+      await _pumpHistoryPage(tester, cubit);
+
+      expect(find.byKey(const Key('khatmah_history_failure')), findsOneWidget);
+      expect(find.byKey(const Key('khatmah_history_corrupt')), findsNothing);
+      expect(find.byKey(const Key('khatmah_history_empty')), findsNothing);
+
+      await prefs.setString(
+        'khatmah_history',
+        jsonEncode([
+          _historyRow(
+            id: 'recovered-plan',
+            title: 'Recovered completion',
+            certificateId: 'khatmah-recovered-plan',
+          ),
+        ]),
+      );
+      await tester.tap(find.byKey(const Key('khatmah_history_retry')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('khatmah_history_reopen_recovered-plan')),
+        findsOneWidget,
+      );
+      expect(find.text('Recovered completion'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'mixed history shows valid certificate with warning and withholds invalid metadata',
+    (tester) async {
+      final history = [
+        _historyRow(
+          id: 'valid-plan',
+          title: 'Valid completion',
+          certificateId: 'khatmah-valid-plan',
+        ),
+        _historyRow(
+          id: 'mismatched-plan',
+          title: 'Private mismatched completion',
+          certificateId: 'khatmah-another-plan',
+        ),
+        _historyRow(id: '', title: 'Partial private completion'),
+      ];
+      SharedPreferences.setMockInitialValues({
+        'khatmah_history': jsonEncode(history),
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final repository = KhatmahRepositoryImpl(KhatmahLocalDatasource(prefs));
+      final cubit = KhatmahHistoryCubit(GetKhatmahHistoryUsecase(repository));
+      addTearDown(cubit.close);
+
+      await _pumpHistoryPage(tester, cubit);
+
+      expect(find.byKey(const Key('khatmah_history_corrupt')), findsOneWidget);
+      expect(
+        find.byKey(const Key('khatmah_history_reopen_valid-plan')),
+        findsOneWidget,
+      );
+      expect(find.text('Valid completion'), findsOneWidget);
+      expect(find.text('Private mismatched completion'), findsNothing);
+      expect(find.text('Partial private completion'), findsNothing);
+      expect(find.byKey(const Key('khatmah_history_retry')), findsOneWidget);
+      final persisted = prefs.getString('khatmah_history')!;
+      expect(persisted, contains('khatmah-another-plan'));
+      expect(persisted, contains('"certificateId":null'));
+    },
+  );
+
+  testWidgets('old-owner history exposes no award or private metadata', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'auth_last_signed_in_user_id': 'a',
+      'khatmah_owner': 'a',
+      'khatmah_history': jsonEncode([
+        _historyRow(
+          id: 'owner-a-plan',
+          title: 'Owner A private completion',
+          certificateId: 'khatmah-owner-a-plan',
+        ),
+      ]),
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final owner = _MutableOwner('b');
+    AccountDataBarrier.forPreferences(prefs).owner = owner;
+    final repository = KhatmahRepositoryImpl(KhatmahLocalDatasource(prefs));
+    final cubit = KhatmahHistoryCubit(GetKhatmahHistoryUsecase(repository));
+    addTearDown(cubit.close);
+
+    await _pumpHistoryPage(tester, cubit);
+
+    expect(find.byKey(const Key('khatmah_history_failure')), findsOneWidget);
+    expect(find.text('Owner A private completion'), findsNothing);
+    expect(
+      find.byKey(const Key('khatmah_history_reopen_owner-a-plan')),
+      findsNothing,
+    );
+  });
+
+  testWidgets('long Arabic certificate action fits at 320px and 2x text', (
+    tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({
+      'khatmah_history': jsonEncode([
+        _historyRow(
+          id: 'arabic-plan',
+          title: 'ختمة طويلة العنوان لاختبار العرض العربي الضيق',
+          certificateId: 'khatmah-arabic-plan',
+        ),
+      ]),
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final repository = KhatmahRepositoryImpl(KhatmahLocalDatasource(prefs));
+    final cubit = KhatmahHistoryCubit(GetKhatmahHistoryUsecase(repository));
+    addTearDown(cubit.close);
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pumpHistoryPage(
+      tester,
+      cubit,
+      locale: const Locale('ar'),
+      size: const Size(320, 640),
+      textScale: 2,
+    );
+
+    expect(
+      find.byKey(const Key('khatmah_history_reopen_arabic-plan')),
+      findsOneWidget,
+    );
+    expect(find.text('فتح الشهادة مجدداً'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    expect(
+      Directionality.of(tester.element(find.byType(KhatmahHistoryPage))),
+      TextDirection.rtl,
+    );
+  });
 
   testWidgets(
     'persisted completion reopens the same award after feature restart',
