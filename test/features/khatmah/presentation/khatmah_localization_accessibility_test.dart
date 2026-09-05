@@ -60,6 +60,25 @@ void main() {
     ),
   );
 
+  testWidgets('Arabic Home localizes the stored default Khatmah title', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      localized(
+        Scaffold(
+          body: KhatmahHeroCard(
+            plan: plan.copyWith(title: 'Khatmah'),
+            isDark: false,
+          ),
+        ),
+        'ar',
+      ),
+    );
+
+    expect(find.text('ختمة القرآن الكريم'), findsOneWidget);
+    expect(find.text('Khatmah'), findsNothing);
+  });
+
   void narrow(WidgetTester tester) {
     tester.view.physicalSize = const Size(320, 900);
     tester.view.devicePixelRatio = 1;
