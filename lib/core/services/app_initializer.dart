@@ -12,6 +12,7 @@ import '../services/notification_scheduler.dart';
 import '../services/notification_service.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../utils/talia_logger.dart';
+import '../../features/quran/data/datasources/bookmark_service.dart';
 import '../../features/quran/data/services/quran_warmup_service.dart';
 
 /// Handles heavy app initialization that was previously blocking `runApp()`.
@@ -83,6 +84,7 @@ class AppInitializer {
         // background. The service delays itself so it never competes with
         // the first frames of the home screen.
         unawaited(getIt<QuranWarmupService>().warmUp());
+        unawaited(getIt<BookmarkService>().ensureLoaded());
       }
 
       // Step 5: Register the durable background task entrypoint before any

@@ -278,19 +278,25 @@ class LocaleOption extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      label,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: textColor,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.w500,
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        label,
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: textColor,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                        ),
                       ),
                     ),
-                    Text(
-                      sublabel,
-                      style: AppTypography.labelSmall.copyWith(
-                        color: subtextColor,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        sublabel,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: subtextColor,
+                        ),
                       ),
                     ),
                   ],

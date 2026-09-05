@@ -173,102 +173,118 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
       backgroundColor: Colors.transparent,
       builder: (sheetContext) => BlocProvider.value(
         value: context.read<FamilyDashboardCubit>(),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          decoration: BoxDecoration(
-            color: context.isDark
-                ? AppColors.darkBackground
-                : AppColors.lightBackground,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: Material(
+          color: context.isDark
+              ? AppColors.darkBackground
+              : AppColors.lightBackground,
+          clipBehavior: Clip.antiAlias,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
           ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                context.l10n.kidsJourneyBetaTitle,
-                style: AppTypography.titleMedium,
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              SwitchListTile(
-                title: Text(context.l10n.kidsJourneyBetaTitle),
-                subtitle: Text(context.l10n.kidsJourneyBetaDescription),
-                value: settings.kidsHifzV2Enabled,
-                onChanged: (value) async {
-                  await sheetContext.read<FamilyDashboardCubit>().saveSettings(
-                    settings.copyWith(kidsHifzV2Enabled: value),
-                  );
-                  if (sheetContext.mounted) Navigator.pop(sheetContext);
-                },
-              ),
-              SwitchListTile(
-                title: Text(context.l10n.kidsGuidanceAudioTitle),
-                subtitle: Text(context.l10n.kidsGuidanceAudioDescription),
-                value: settings.guidanceAudioEnabled ?? true,
-                onChanged: (value) async {
-                  await sheetContext.read<FamilyDashboardCubit>().saveSettings(
-                    settings.copyWith(guidanceAudioEnabled: value),
-                  );
-                  if (sheetContext.mounted) Navigator.pop(sheetContext);
-                },
-              ),
-              ListTile(
-                title: Text(context.l10n.kidsSessionGoalTitle),
-                trailing: DropdownButton<int>(
-                  value: settings.sessionGoalMinutes ?? 6,
-                  items: [6, 8, 10]
-                      .map(
-                        (minutes) => DropdownMenuItem(
-                          value: minutes,
-                          child: Text(
-                            context.l10n.kidsSessionGoalValue(minutes),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (minutes) async {
-                    if (minutes == null) return;
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.kidsJourneyBetaTitle,
+                  style: AppTypography.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SwitchListTile(
+                  title: Text(context.l10n.kidsJourneyBetaTitle),
+                  subtitle: Text(context.l10n.kidsJourneyBetaDescription),
+                  value: settings.kidsHifzV2Enabled,
+                  onChanged: (value) async {
                     await sheetContext
                         .read<FamilyDashboardCubit>()
                         .saveSettings(
-                          settings.copyWith(sessionGoalMinutes: minutes),
+                          settings.copyWith(kidsHifzV2Enabled: value),
                         );
                     if (sheetContext.mounted) Navigator.pop(sheetContext);
                   },
                 ),
-              ),
-              const Divider(),
-              Text(
-                context.l10n.parentDashboardReminders,
-                style: AppTypography.titleMedium,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              SwitchListTile(
-                title: Text(context.l10n.parentDashboardDailyReminder),
-                subtitle: Text(
-                  settings.reminderEnabled
-                      ? '${settings.reminderHour}:${settings.reminderMinute.toString().padLeft(2, '0')}'
-                      : context.l10n.parentDashboardNotSet,
+                SwitchListTile(
+                  title: Text(context.l10n.kidsGuidanceAudioTitle),
+                  subtitle: Text(context.l10n.kidsGuidanceAudioDescription),
+                  value: settings.guidanceAudioEnabled ?? true,
+                  onChanged: (value) async {
+                    await sheetContext
+                        .read<FamilyDashboardCubit>()
+                        .saveSettings(
+                          settings.copyWith(guidanceAudioEnabled: value),
+                        );
+                    if (sheetContext.mounted) Navigator.pop(sheetContext);
+                  },
                 ),
-                value: settings.reminderEnabled,
-                onChanged: (val) async {
-                  final cubit = sheetContext.read<FamilyDashboardCubit>();
-                  final l10n = sheetContext.l10n;
-                  if (val) {
-                    final time = await showTimePicker(
-                      context: sheetContext,
-                      initialTime: TimeOfDay(
-                        hour: settings.reminderHour,
-                        minute: settings.reminderMinute,
-                      ),
-                    );
-                    if (time != null && sheetContext.mounted) {
-                      await cubit.saveSettings(
-                        settings.copyWith(
-                          reminderEnabled: true,
-                          reminderHour: time.hour,
-                          reminderMinute: time.minute,
+                ListTile(
+                  title: Text(context.l10n.kidsSessionGoalTitle),
+                  trailing: DropdownButton<int>(
+                    value: settings.sessionGoalMinutes ?? 6,
+                    items: [6, 8, 10]
+                        .map(
+                          (minutes) => DropdownMenuItem(
+                            value: minutes,
+                            child: Text(
+                              context.l10n.kidsSessionGoalValue(minutes),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (minutes) async {
+                      if (minutes == null) return;
+                      await sheetContext
+                          .read<FamilyDashboardCubit>()
+                          .saveSettings(
+                            settings.copyWith(sessionGoalMinutes: minutes),
+                          );
+                      if (sheetContext.mounted) Navigator.pop(sheetContext);
+                    },
+                  ),
+                ),
+                const Divider(),
+                Text(
+                  context.l10n.parentDashboardReminders,
+                  style: AppTypography.titleMedium,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                SwitchListTile(
+                  title: Text(context.l10n.parentDashboardDailyReminder),
+                  subtitle: Text(
+                    settings.reminderEnabled
+                        ? '${settings.reminderHour}:${settings.reminderMinute.toString().padLeft(2, '0')}'
+                        : context.l10n.parentDashboardNotSet,
+                  ),
+                  value: settings.reminderEnabled,
+                  onChanged: (val) async {
+                    final cubit = sheetContext.read<FamilyDashboardCubit>();
+                    final l10n = sheetContext.l10n;
+                    if (val) {
+                      final time = await showTimePicker(
+                        context: sheetContext,
+                        initialTime: TimeOfDay(
+                          hour: settings.reminderHour,
+                          minute: settings.reminderMinute,
                         ),
+                      );
+                      if (time != null && sheetContext.mounted) {
+                        await cubit.saveSettings(
+                          settings.copyWith(
+                            reminderEnabled: true,
+                            reminderHour: time.hour,
+                            reminderMinute: time.minute,
+                          ),
+                        );
+                        await getIt<NotificationScheduler>()
+                            .refreshNotifications(l10n);
+                        if (sheetContext.mounted) {
+                          Navigator.pop(sheetContext);
+                        }
+                      }
+                    } else {
+                      await cubit.saveSettings(
+                        settings.copyWith(reminderEnabled: false),
                       );
                       await getIt<NotificationScheduler>().refreshNotifications(
                         l10n,
@@ -277,35 +293,25 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                         Navigator.pop(sheetContext);
                       }
                     }
-                  } else {
-                    await cubit.saveSettings(
-                      settings.copyWith(reminderEnabled: false),
-                    );
-                    await getIt<NotificationScheduler>().refreshNotifications(
-                      l10n,
-                    );
-                    if (sheetContext.mounted) {
-                      Navigator.pop(sheetContext);
-                    }
-                  }
-                },
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.pop(sheetContext);
-                    context.read<FamilyDashboardCubit>().resetAccess();
                   },
-                  child: Text(context.l10n.parentDashboardResetPin),
                 ),
-              ),
-              SizedBox(
-                height:
-                    MediaQuery.paddingOf(sheetContext).bottom + AppSpacing.md,
-              ),
-            ],
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.pop(sheetContext);
+                      context.read<FamilyDashboardCubit>().resetAccess();
+                    },
+                    child: Text(context.l10n.parentDashboardResetPin),
+                  ),
+                ),
+                SizedBox(
+                  height:
+                      MediaQuery.paddingOf(sheetContext).bottom + AppSpacing.md,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -822,46 +828,49 @@ void _showAddChildOptions(BuildContext context) {
   showModalBottomSheet(
     context: context,
     backgroundColor: Colors.transparent,
-    builder: (sheetContext) => Container(
-      padding: const EdgeInsets.all(AppSpacing.lg),
-      decoration: BoxDecoration(
-        color: context.isDark
-            ? AppColors.darkBackground
-            : AppColors.lightBackground,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+    builder: (sheetContext) => Material(
+      color: context.isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
+      clipBehavior: Clip.antiAlias,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            context.l10n.familyDashboardAddChild,
-            style: AppTypography.titleMedium,
-          ),
-          const SizedBox(height: AppSpacing.md),
-          ListTile(
-            leading: const Icon(
-              Icons.qr_code_scanner_rounded,
-              color: AppColors.primary,
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              context.l10n.familyDashboardAddChild,
+              style: AppTypography.titleMedium,
             ),
-            title: Text(context.l10n.parentDashboardScanQr),
-            onTap: () {
-              Navigator.pop(sheetContext);
-              _openScanner(context);
-            },
-          ),
-          ListTile(
-            leading: const Icon(
-              Icons.keyboard_rounded,
-              color: AppColors.primary,
+            const SizedBox(height: AppSpacing.md),
+            ListTile(
+              leading: const Icon(
+                Icons.qr_code_scanner_rounded,
+                color: AppColors.primary,
+              ),
+              title: Text(context.l10n.parentDashboardScanQr),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _openScanner(context);
+              },
             ),
-            title: Text(context.l10n.parentDashboardEnterLinkingCode),
-            onTap: () {
-              Navigator.pop(sheetContext);
-              _showManualTokenDialog(context);
-            },
-          ),
-          SizedBox(height: MediaQuery.paddingOf(sheetContext).bottom),
-        ],
+            ListTile(
+              leading: const Icon(
+                Icons.keyboard_rounded,
+                color: AppColors.primary,
+              ),
+              title: Text(context.l10n.parentDashboardEnterLinkingCode),
+              onTap: () {
+                Navigator.pop(sheetContext);
+                _showManualTokenDialog(context);
+              },
+            ),
+            SizedBox(height: MediaQuery.paddingOf(sheetContext).bottom),
+          ],
+        ),
       ),
     ),
   );

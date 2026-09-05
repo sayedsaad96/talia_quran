@@ -91,18 +91,36 @@ class BookmarkService extends ChangeNotifier {
     }
   }
 
+  bool _isLoaded = false;
+
+  /// Whether records have been loaded from storage into memory for the active session.
+  bool get isLoaded => _isLoaded;
+
+  /// Loads bookmarks for the active owner into memory from secure storage.
+  /// Safe to call multiple times.
+  Future<void> ensureLoaded() async {
+    final ownerId = _owner.currentOwnerId;
+    await _serialize(ownerId, () async {
+      await _loadRecords(ownerId);
+      _isLoaded = true;
+    });
+    notifyListeners();
+  }
+
   bool isBookmarked(int surahId, int ayahNumber) {
     return getAll().any(
       (b) => b.surahId == surahId && b.ayahNumber == ayahNumber,
     );
   }
 
-  Future<void> toggle(BookmarkEntry entry) {
+  /// Toggles the bookmark state for [entry].
+  /// Returns `true` if the bookmark was added, or `false` if it was removed.
+  Future<bool> toggle(BookmarkEntry entry) {
     final ownerId = _owner.currentOwnerId;
     return _serialize(ownerId, () => _toggle(ownerId, entry));
   }
 
-  Future<void> _toggle(String ownerId, BookmarkEntry entry) async {
+  Future<bool> _toggle(String ownerId, BookmarkEntry entry) async {
     _ensureActiveOwner(ownerId);
     await _loadRecords(ownerId, refresh: true);
     final records = await _recordsForMutation(ownerId);
@@ -111,9 +129,10 @@ class BookmarkService extends ChangeNotifier {
     );
     final existing = existingIndex < 0 ? null : records[existingIndex];
     final revision = _nextRevision(existing?.revision ?? 0);
+    final willBeDeleted = existing != null && !existing.isDeleted;
     final next = entry.copyWith(
       revision: revision,
-      isDeleted: existing != null && !existing.isDeleted,
+      isDeleted: willBeDeleted,
       isSynced: false,
     );
     if (existingIndex < 0) {
@@ -124,7 +143,9 @@ class BookmarkService extends ChangeNotifier {
     await _writeRecords(ownerId, records);
     await _finishLegacyMigration(ownerId);
     await _schedulePush(ownerId);
+    _isLoaded = true;
     notifyListeners();
+    return !willBeDeleted;
   }
 
   Future<void> clear() {
@@ -324,6 +345,15 @@ class BookmarkService extends ChangeNotifier {
           if (raw != null) {
             await encrypted.write(ownerId, _encryptedStorageKey, raw);
             await encrypted.delete(ownerId, _storageKeyFor(ownerId));
+          }
+        }
+        if (raw == null) {
+          final prefsRaw = _prefs.getString(_storageKeyFor(ownerId)) ??
+              _prefs.getString(_legacyStorageKey);
+          if (prefsRaw != null) {
+            raw = prefsRaw;
+            await encrypted.write(ownerId, _encryptedStorageKey, prefsRaw);
+            await _prefs.remove(_storageKeyFor(ownerId));
           }
         }
       }

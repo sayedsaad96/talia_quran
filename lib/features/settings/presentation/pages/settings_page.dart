@@ -290,8 +290,8 @@ class _SettingsView extends StatelessWidget {
         tooltip: MaterialLocalizations.of(context).backButtonTooltip,
         icon: Icon(
           Directionality.of(context) == TextDirection.rtl
-              ? Icons.arrow_forward_rounded
-              : Icons.arrow_back_rounded,
+              ? Icons.arrow_back_rounded
+              : Icons.arrow_forward_rounded,
           color: Colors.white,
           size: 20,
         ),

@@ -228,7 +228,6 @@ class _AzkarPageState extends State<AzkarPage> {
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         context.l10n.azkar,

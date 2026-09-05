@@ -113,6 +113,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       _surahDetailCubit = getIt<SurahDetailCubit>()..loadSurah(widget.surahId!);
     }
     unawaited(_loadLongPressHintState());
+    unawaited(getIt<BookmarkService>().ensureLoaded());
   }
 
   @override
@@ -1088,31 +1089,24 @@ class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
                         ayahText: widget.ayah.text,
                         savedAt: DateTime.now().toUtc(),
                       );
-                      final wasBookmarked = bookmarkService.isBookmarked(
-                        entry.surahId,
-                        entry.ayahNumber,
-                      );
-                      await bookmarkService.toggle(entry);
-                      if (!wasBookmarked) {
+                      final isAdded = await bookmarkService.toggle(entry);
+                      if (isAdded) {
                         unawaited(HapticFeedback.mediumImpact());
                       }
                       if (context.mounted) {
-                        final messenger = ScaffoldMessenger.of(context);
                         final navigator = Navigator.of(context);
-                        final message = wasBookmarked
-                            ? context.l10n.bookmarkRemoved
-                            : context.l10n.bookmarkAdded;
+                        final message = isAdded
+                            ? context.l10n.bookmarkAdded
+                            : context.l10n.bookmarkRemoved;
                         final undoLabel = context.l10n.undo;
                         navigator.pop();
-                        messenger.showSnackBar(
-                          SnackBar(
-                            content: Text(message),
-                            action: SnackBarAction(
-                              label: undoLabel,
-                              onPressed: () {
-                                unawaited(bookmarkService.toggle(entry));
-                              },
-                            ),
+                        context.showAutoDismissSnackBar(
+                          message,
+                          action: SnackBarAction(
+                            label: undoLabel,
+                            onPressed: () {
+                              unawaited(bookmarkService.toggle(entry));
+                            },
                           ),
                         );
                       }

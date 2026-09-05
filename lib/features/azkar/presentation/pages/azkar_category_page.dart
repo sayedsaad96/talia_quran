@@ -281,105 +281,108 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
       builder: (sheetContext) {
         return Directionality(
           textDirection: Directionality.of(context),
-          child: Container(
-            constraints: const BoxConstraints(maxHeight: 460),
-            decoration: BoxDecoration(
-              color: surfaceColor,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(28),
-              ),
+          child: Material(
+            color: surfaceColor,
+            clipBehavior: Clip.antiAlias,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             ),
-            child: Column(
-              children: [
-                const SizedBox(height: 10),
-                Container(
-                  width: 44,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color:
-                        (isDark
-                                ? AppColors.darkTextHint
-                                : AppColors.lightTextHint)
-                            .withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
-                  child: Text(
-                    context.l10n.azkarIndex,
-                    style: AppTypography.headlineSmall.copyWith(
-                      color: textColor,
-                      fontFamily: 'Amiri',
+            child: Container(
+              constraints: const BoxConstraints(maxHeight: 460),
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color:
+                          (isDark
+                                  ? AppColors.darkTextHint
+                                  : AppColors.lightTextHint)
+                              .withValues(alpha: 0.4),
+                      borderRadius: BorderRadius.circular(99),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                    itemCount: widget.state.sessions.length,
-                    separatorBuilder: (_, _) => Divider(
-                      color: (isDark
-                          ? AppColors.darkDivider
-                          : AppColors.lightDivider),
-                      height: 1,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 8),
+                    child: Text(
+                      context.l10n.azkarIndex,
+                      style: AppTypography.headlineSmall.copyWith(
+                        color: textColor,
+                        fontFamily: 'Amiri',
+                      ),
                     ),
-                    itemBuilder: (context, index) {
-                      final session = widget.state.sessions[index];
-                      final selected = index == widget.state.currentIndex;
-                      return ListTile(
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        leading: CircleAvatar(
-                          backgroundColor: selected
-                              ? AppColors.primary
-                              : (isDark
-                                    ? AppColors.darkSurfaceVariant
-                                    : AppColors.lightSurfaceVariant),
-                          foregroundColor: selected ? Colors.white : textColor,
-                          child: Text('${index + 1}'),
-                        ),
-                        title: Text(
-                          session.zikr.reference.isNotEmpty
-                              ? session.zikr.reference
-                              : context.l10n.zikrNumber(index + 1),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: textColor,
-                            fontWeight: selected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                          ),
-                        ),
-                        subtitle: Text(
-                          context.l10n.miniProgressOf(
-                            session.zikr.totalCount,
-                            session.currentCount,
-                          ),
-                          style: AppTypography.labelSmall.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
-                        ),
-                        trailing: session.isDone
-                            ? const Icon(
-                                Icons.check_circle,
-                                color: AppColors.success,
-                              )
-                            : null,
-                        onTap: () {
-                          Navigator.pop(sheetContext);
-                          cubit.goTo(index);
-                        },
-                      );
-                    },
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                      itemCount: widget.state.sessions.length,
+                      separatorBuilder: (_, _) => Divider(
+                        color: (isDark
+                            ? AppColors.darkDivider
+                            : AppColors.lightDivider),
+                        height: 1,
+                      ),
+                      itemBuilder: (context, index) {
+                        final session = widget.state.sessions[index];
+                        final selected = index == widget.state.currentIndex;
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          leading: CircleAvatar(
+                            backgroundColor: selected
+                                ? AppColors.primary
+                                : (isDark
+                                      ? AppColors.darkSurfaceVariant
+                                      : AppColors.lightSurfaceVariant),
+                            foregroundColor: selected
+                                ? Colors.white
+                                : textColor,
+                            child: Text('${index + 1}'),
+                          ),
+                          title: Text(
+                            session.zikr.reference.isNotEmpty
+                                ? session.zikr.reference
+                                : context.l10n.zikrNumber(index + 1),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: textColor,
+                              fontWeight: selected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                            ),
+                          ),
+                          subtitle: Text(
+                            context.l10n.miniProgressOf(
+                              session.zikr.totalCount,
+                              session.currentCount,
+                            ),
+                            style: AppTypography.labelSmall.copyWith(
+                              color: isDark
+                                  ? AppColors.darkTextSecondary
+                                  : AppColors.lightTextSecondary,
+                            ),
+                          ),
+                          trailing: session.isDone
+                              ? const Icon(
+                                  Icons.check_circle,
+                                  color: AppColors.success,
+                                )
+                              : null,
+                          onTap: () {
+                            Navigator.pop(sheetContext);
+                            cubit.goTo(index);
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );

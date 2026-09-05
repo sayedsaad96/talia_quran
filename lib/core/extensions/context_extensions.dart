@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 
@@ -35,6 +37,34 @@ extension BuildContextX on BuildContext {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
+  }
+
+  /// Shows a SnackBar that is guaranteed to auto-hide after [duration]
+  /// (default 4 seconds).
+  ///
+  /// In Flutter, SnackBars with an [action] default to `persist = true`,
+  /// which stops Flutter from auto-dismissing them. This wrapper enforces
+  /// `persist: false`, clears any existing SnackBar, and provides a guaranteed
+  /// fallback timer so the SnackBar never stays permanently on screen.
+  void showAutoDismissSnackBar(
+    String message, {
+    Duration duration = const Duration(seconds: 4),
+    SnackBarAction? action,
+  }) {
+    final messenger = ScaffoldMessenger.of(this);
+    messenger.hideCurrentSnackBar();
+    final snackBar = SnackBar(
+      content: Text(message),
+      duration: duration,
+      action: action,
+      persist: false,
+    );
+    final controller = messenger.showSnackBar(snackBar);
+    Timer(duration + const Duration(milliseconds: 200), () {
+      try {
+        controller.close();
+      } catch (_) {}
+    });
   }
 
   String localizeLevelName(String name) {

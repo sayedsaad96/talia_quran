@@ -501,6 +501,63 @@ void main() {
         expect(PendingBookmarkRecoveryMarker.contains(prefs, ownerId), isFalse);
       },
     );
+
+    test('toggle returns true when added and false when removed', () async {
+      final entry = createEntry(surahId: 1, ayahNumber: 1);
+      final added = await service.toggle(entry);
+      expect(added, isTrue);
+      expect(service.isBookmarked(1, 1), isTrue);
+
+      final removed = await service.toggle(entry);
+      expect(removed, isFalse);
+      expect(service.isBookmarked(1, 1), isFalse);
+    });
+
+    test('ensureLoaded loads bookmarks into memory for encrypted storage', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final encrypted = _MemoryEncryptedAccountPreferencesStore();
+      const owner = FixedRecordOwnerProvider('user-loaded');
+      final first = BookmarkService(
+        prefs,
+        owner: owner,
+        encryptedAccountPreferences: encrypted,
+      );
+      await first.toggle(createEntry(surahId: 18, ayahNumber: 10));
+
+      final second = BookmarkService(
+        prefs,
+        owner: owner,
+        encryptedAccountPreferences: encrypted,
+      );
+      expect(second.isLoaded, isFalse);
+      expect(second.getAll(), isEmpty);
+
+      await second.ensureLoaded();
+      expect(second.isLoaded, isTrue);
+      expect(second.isBookmarked(18, 10), isTrue);
+    });
+
+    test('ensureLoaded migrates legacy SharedPreferences data if encrypted store was empty', () async {
+      final prefs = await SharedPreferences.getInstance();
+      final encrypted = _MemoryEncryptedAccountPreferencesStore();
+      const ownerId = 'migrated-user';
+      final entry = createEntry(surahId: 2, ayahNumber: 255);
+      await prefs.setString(
+        'quran_bookmarks_owner_$ownerId',
+        jsonEncode([entry.toJson()]),
+      );
+
+      final secondService = BookmarkService(
+        prefs,
+        owner: const FixedRecordOwnerProvider(ownerId),
+        encryptedAccountPreferences: encrypted,
+      );
+
+      await secondService.ensureLoaded();
+      expect(secondService.isBookmarked(2, 255), isTrue);
+      expect(prefs.getString('quran_bookmarks_owner_$ownerId'), isNull);
+      expect(await encrypted.read(ownerId, 'quran_bookmarks'), isNotNull);
+    });
   });
 
   group('BookmarkEntry', () {

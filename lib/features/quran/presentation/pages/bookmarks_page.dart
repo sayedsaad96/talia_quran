@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -22,6 +24,12 @@ class BookmarksTab extends StatefulWidget {
 }
 
 class _BookmarksTabState extends State<BookmarksTab> {
+  @override
+  void initState() {
+    super.initState();
+    unawaited(getIt<BookmarkService>().ensureLoaded());
+  }
+
   Future<void> _removeBookmark(BookmarkEntry entry) async {
     await getIt<BookmarkService>().toggle(entry);
   }
@@ -33,7 +41,11 @@ class _BookmarksTabState extends State<BookmarksTab> {
     return ListenableBuilder(
       listenable: getIt<BookmarkService>(),
       builder: (context, _) {
-        final bookmarks = getIt<BookmarkService>().getAll();
+        final service = getIt<BookmarkService>();
+        if (!service.isLoaded) {
+          return const Center(child: CircularProgressIndicator.adaptive());
+        }
+        final bookmarks = service.getAll();
 
         if (bookmarks.isEmpty) {
           return _EmptyBookmarks(isDark: isDark);
