@@ -11,6 +11,98 @@ void main() {
   });
 
   group('UnifiedJourneyEngine Priority and Intent Resolution', () {
+    test('resume remains primary when an active Khatmah is available', () {
+      const input = UnifiedJourneyInput(
+        lastRestorableLocation: '/quran/page/18',
+        khatmahCandidate: KhatmahJourneyCandidate(
+          route: '/quran/page/42?mode=khatmah',
+        ),
+      );
+      final result = engine.resolve(input);
+      expect(result.primary.route, '/quran/page/18');
+      expect(result.primary.priority, UnifiedJourneyPriority.p1ActiveSession);
+    });
+
+    test(
+      'overdue review remains primary when an active Khatmah is available',
+      () {
+        const input = UnifiedJourneyInput(
+          hasReviewBacklog: true,
+          overdueAyahs: 3,
+          khatmahCandidate: KhatmahJourneyCandidate(
+            route: '/quran/page/42?mode=khatmah',
+          ),
+        );
+        final result = engine.resolve(input);
+        expect(result.primary.route, '/memorization');
+        expect(result.primary.priority, UnifiedJourneyPriority.p3ReviewBacklog);
+      },
+    );
+
+    test('reading goal prioritizes active Khatmah before daily wird', () {
+      const input = UnifiedJourneyInput(
+        userGoal: 'reading',
+        hasDailyWird: true,
+        dailyWirdPageNumber: 12,
+        khatmahCandidate: KhatmahJourneyCandidate(
+          route: '/quran/page/42?mode=khatmah',
+        ),
+      );
+      final result = engine.resolve(input);
+      expect(result.primary.route, '/quran/page/42?mode=khatmah');
+      expect(
+        result.primary.actionType,
+        UnifiedJourneyActionType.khatmahReading,
+      );
+      expect(result.secondary?.route, '/quran/page/12');
+    });
+
+    test('memorization goal prioritizes Smart Coach before active Khatmah', () {
+      const input = UnifiedJourneyInput(
+        userGoal: 'memorization',
+        hasSmartPlan: true,
+        smartPlanRoute: '/memorization/coach',
+        khatmahCandidate: KhatmahJourneyCandidate(
+          route: '/quran/page/42?mode=khatmah',
+        ),
+      );
+      final result = engine.resolve(input);
+      expect(result.primary.route, '/memorization/coach');
+      expect(result.primary.actionType, UnifiedJourneyActionType.smartPlan);
+      expect(result.secondary?.route, '/quran/page/42?mode=khatmah');
+    });
+
+    test(
+      'does not duplicate a primary destination as its secondary action',
+      () {
+        const input = UnifiedJourneyInput(
+          hasSmartPlan: true,
+          smartPlanRoute: '/quran/page/42?mode=khatmah',
+          khatmahCandidate: KhatmahJourneyCandidate(
+            route: '/quran/page/42?mode=khatmah',
+          ),
+        );
+        final result = engine.resolve(input);
+        expect(result.primary.route, '/quran/page/42?mode=khatmah');
+        expect(result.secondary?.route, isNot(result.primary.route));
+        expect(result.secondary?.route, '/quran');
+      },
+    );
+
+    test('child mission remains ahead of adult journey candidates', () {
+      const input = UnifiedJourneyInput(
+        isKids: true,
+        hasSmartPlan: true,
+        smartPlanRoute: '/memorization/coach',
+        khatmahCandidate: KhatmahJourneyCandidate(
+          route: '/quran/page/42?mode=khatmah',
+        ),
+      );
+      final result = engine.resolve(input);
+      expect(result.primary.route, '/memorization');
+      expect(result.primary.source, 'KidsMode');
+    });
+
     test('Priority 1: Active Session -> resume', () {
       const input = UnifiedJourneyInput(
         lastRestorableLocation: '/some_route',
@@ -68,7 +160,7 @@ void main() {
       expect(result.priority, UnifiedJourneyPriority.p4SmartPlan);
       expect(result.intent, JourneyIntent.review);
     });
-    
+
     test('Priority 4: Smart Plan (Memorize) -> memorize', () {
       const input = UnifiedJourneyInput(
         hasSmartPlan: true,
@@ -96,9 +188,7 @@ void main() {
     });
 
     test('Priority 6: Kids Mode Fallback -> explore', () {
-      const input = UnifiedJourneyInput(
-        isKids: true,
-      );
+      const input = UnifiedJourneyInput(isKids: true);
 
       final result = engine.evaluate(input);
 
@@ -107,9 +197,7 @@ void main() {
     });
 
     test('Priority 6: Azkar Goal Fallback -> azkar', () {
-      const input = UnifiedJourneyInput(
-        userGoal: 'azkar',
-      );
+      const input = UnifiedJourneyInput(userGoal: 'azkar');
 
       final result = engine.evaluate(input);
 

@@ -10,7 +10,10 @@ import 'resume_session_presentation_mapper.dart';
 class UnifiedJourneyActionMapper {
   const UnifiedJourneyActionMapper();
 
-  JourneyPresentationData map(BuildContext context, UnifiedJourneyAction action) {
+  JourneyPresentationData map(
+    BuildContext context,
+    UnifiedJourneyAction action,
+  ) {
     if (action.actionType == UnifiedJourneyActionType.resumeSession) {
       return const ResumeSessionPresentationMapper().map(
         ResumeSessionPresentationInput(
@@ -56,6 +59,11 @@ class UnifiedJourneyActionMapper {
           title = context.l10n.smartPlanTodayTitle;
         }
         subtitle = context.l10n.smartPlanSubtitle;
+        break;
+
+      case UnifiedJourneyActionType.khatmahReading:
+        title = context.l10n.exploreQuranTitle;
+        subtitle = context.l10n.exploreQuranSubtitle;
         break;
 
       case UnifiedJourneyActionType.dailyReading:

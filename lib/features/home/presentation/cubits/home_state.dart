@@ -19,6 +19,7 @@ enum HomeKhatmahPlanState { none, active, paused }
 
 class HomeLoaded extends HomeState {
   final UnifiedJourneyAction? heroAction;
+  final UnifiedJourneyResolution? journeyResolution;
 
   const HomeLoaded({
     required this.progress,
@@ -33,6 +34,7 @@ class HomeLoaded extends HomeState {
     required this.activityStartDate,
     this.coachRecommendation,
     this.heroAction,
+    this.journeyResolution,
     this.totalXp = 0,
     this.activeKhatmah,
     this.khatmahError,
@@ -53,6 +55,7 @@ class HomeLoaded extends HomeState {
     DateTime? activityStartDate,
     SmartCoachRecommendation? coachRecommendation,
     UnifiedJourneyAction? heroAction,
+    UnifiedJourneyResolution? journeyResolution,
     int? totalXp,
     Object? activeKhatmah = _khatmahSentinel,
     Object? khatmahError = _khatmahSentinel,
@@ -71,6 +74,7 @@ class HomeLoaded extends HomeState {
       activityStartDate: activityStartDate ?? this.activityStartDate,
       coachRecommendation: coachRecommendation ?? this.coachRecommendation,
       heroAction: heroAction ?? this.heroAction,
+      journeyResolution: journeyResolution ?? this.journeyResolution,
       totalXp: totalXp ?? this.totalXp,
       activeKhatmah: identical(activeKhatmah, _khatmahSentinel)
           ? this.activeKhatmah
@@ -127,6 +131,7 @@ class HomeLoaded extends HomeState {
     activityStartDate,
     coachRecommendation,
     heroAction,
+    journeyResolution,
     totalXp,
     activeKhatmah,
     khatmahError,

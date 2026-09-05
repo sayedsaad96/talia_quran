@@ -181,6 +181,12 @@ class HomeCubit extends Cubit<HomeState> {
     final coachResult = await coachFuture;
     coachResult.fold((_) => null, (r) => coachRecommendation = r);
     var activeKhatmah = await khatmahFuture;
+    try {
+      _checkKhatmahAuthority(activeKhatmah);
+    } catch (error) {
+      activeKhatmah = null;
+      khatmahError = error;
+    }
 
     // Load last restorable location for "Continue Reading" chip
     final lastLocation = _sessionService.getLastRestorableLocation();
@@ -203,15 +209,16 @@ class HomeCubit extends Cubit<HomeState> {
     // 7 awaits above. Emitting on a closed cubit throws a StateError.
     if (isClosed) return;
     // Sprint C: Unified Journey Hero Action Evaluation
-    UnifiedJourneyAction? heroAction;
+    UnifiedJourneyResolution? journeyResolution;
     try {
-      heroAction = await _evaluateUnifiedAction(
+      journeyResolution = await _evaluateJourneyResolution(
         lastLocation: lastLocation,
         coachRecommendation: coachRecommendation,
         customPlan: customPlan,
         dailyWirdDetail: dailyWirdDetail,
         isKids: isKids,
         overallProgress: overallProgress,
+        activeKhatmah: activeKhatmah,
       );
     } catch (e, s) {
       TaliaLogger.w('Failed to evaluate hero action', e, s);
@@ -221,12 +228,6 @@ class HomeCubit extends Cubit<HomeState> {
     if (isClosed) return;
     final totalXp = await _xpService.getTotalXp();
     if (isClosed) return;
-    try {
-      _checkKhatmahAuthority(activeKhatmah);
-    } catch (error) {
-      activeKhatmah = null;
-      khatmahError = error;
-    }
     progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
       emit(
         HomeLoaded(
@@ -241,7 +242,8 @@ class HomeCubit extends Cubit<HomeState> {
           activityCountsByDay: heatmap.countsByDay,
           activityStartDate: heatmap.startDate,
           coachRecommendation: coachRecommendation,
-          heroAction: heroAction,
+          heroAction: journeyResolution?.primary,
+          journeyResolution: journeyResolution,
           totalXp: totalXp,
           activeKhatmah: activeKhatmah,
           khatmahError: khatmahError,
@@ -250,13 +252,14 @@ class HomeCubit extends Cubit<HomeState> {
     });
   }
 
-  Future<UnifiedJourneyAction?> _evaluateUnifiedAction({
+  Future<UnifiedJourneyResolution?> _evaluateJourneyResolution({
     required String? lastLocation,
     required SmartCoachRecommendation? coachRecommendation,
     required CustomMemorizationPlan? customPlan,
     required QuranPageDetail? dailyWirdDetail,
     required bool isKids,
     required OverallProgress? overallProgress,
+    required KhatmahPlan? activeKhatmah,
   }) async {
     try {
       final isEnabled = _prefs.getBool('unified_journey_enabled') ?? true;
@@ -308,6 +311,12 @@ class HomeCubit extends Cubit<HomeState> {
                     SmartCoachRecommendationKind.memorizedReviewDue ||
                 coachRecommendation.kind ==
                     SmartCoachRecommendationKind.reviewWeakAyah),
+        khatmahCandidate: activeKhatmah?.status == KhatmahStatus.active
+            ? KhatmahJourneyCandidate(
+                route:
+                    '/quran/page/${activeKhatmah!.nextUnreadPage}?mode=khatmah',
+              )
+            : null,
         smartPlanType: customPlan != null
             ? SmartPlanType.customPlan
             : (coachRecommendation != null ? SmartPlanType.reviewPlan : null),
@@ -320,10 +329,17 @@ class HomeCubit extends Cubit<HomeState> {
         userGoal: _prefs.getString('user_primary_goal'),
       );
 
-      final unifiedAction = _journeyEngine.evaluate(input);
-      return _resolveHeroAction(
-        unifiedAction: unifiedAction,
+      final resolution = _journeyEngine.resolve(input);
+      final heroAction = _resolveHeroAction(
+        unifiedAction: resolution.primary,
         coachRecommendation: coachRecommendation,
+      );
+      if (heroAction == null) return null;
+      return UnifiedJourneyResolution(
+        primaryAction: heroAction,
+        secondaryAction: resolution.secondary?.route == heroAction.route
+            ? null
+            : resolution.secondary,
       );
     } catch (e, s) {
       TaliaLogger.w('Failed to evaluate UnifiedJourneyEngine input', e, s);

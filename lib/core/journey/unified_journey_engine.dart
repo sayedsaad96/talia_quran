@@ -40,9 +40,7 @@ class UnifiedJourneyEngine {
         source: 'AdaptiveRecommendations',
         actionType: UnifiedJourneyActionType.reviewBacklog,
         intent: JourneyIntent.review,
-        metadata: {
-          'overdueAyahs': input.overdueAyahs.toString(),
-        },
+        metadata: {'overdueAyahs': input.overdueAyahs.toString()},
       );
     }
 
@@ -53,7 +51,9 @@ class UnifiedJourneyEngine {
         priority: UnifiedJourneyPriority.p4SmartPlan,
         source: 'SmartCoach',
         actionType: UnifiedJourneyActionType.smartPlan,
-        intent: input.isSmartPlanReview ? JourneyIntent.review : JourneyIntent.memorize,
+        intent: input.isSmartPlanReview
+            ? JourneyIntent.review
+            : JourneyIntent.memorize,
         metadata: {
           if (input.smartPlanType != null)
             'smartPlanType': input.smartPlanType!.name,
@@ -92,7 +92,7 @@ class UnifiedJourneyEngine {
         intent: JourneyIntent.azkar,
       );
     }
-    
+
     if (input.userGoal == 'child') {
       return const UnifiedJourneyAction(
         route: '/memorization',
@@ -112,10 +112,128 @@ class UnifiedJourneyEngine {
     );
   }
 
+  /// Resolves the focused destination and one distinct follow-up. P1–P3
+  /// continue to use [evaluate], preserving their existing behavior exactly.
+  UnifiedJourneyResolution resolve(UnifiedJourneyInput input) {
+    final candidates = _goalCandidates(input);
+    final hasUrgentAction =
+        input.lastRestorableLocation != null ||
+        input.hasCriticalLearningAlert ||
+        input.hasHighPriorityLearningAlert ||
+        (input.hasReviewBacklog && input.overdueAyahs > 0);
+
+    if (hasUrgentAction) {
+      return _resolution(evaluate(input), candidates);
+    }
+
+    return _resolution(candidates.first, candidates.skip(1));
+  }
+
+  List<UnifiedJourneyAction> _goalCandidates(UnifiedJourneyInput input) {
+    final smartPlan = input.hasSmartPlan
+        ? UnifiedJourneyAction(
+            route: input.smartPlanRoute ?? '/memorization',
+            priority: UnifiedJourneyPriority.p4SmartPlan,
+            source: 'SmartCoach',
+            actionType: UnifiedJourneyActionType.smartPlan,
+            intent: input.isSmartPlanReview
+                ? JourneyIntent.review
+                : JourneyIntent.memorize,
+            metadata: {
+              if (input.smartPlanType != null)
+                'smartPlanType': input.smartPlanType!.name,
+            },
+          )
+        : null;
+    final khatmah = input.khatmahCandidate == null
+        ? null
+        : UnifiedJourneyAction(
+            route: input.khatmahCandidate!.route,
+            priority: UnifiedJourneyPriority.p4SmartPlan,
+            source: 'Khatmah',
+            actionType: UnifiedJourneyActionType.khatmahReading,
+            intent: JourneyIntent.reading,
+          );
+    final dailyWird = input.hasDailyWird && input.dailyWirdPageNumber != null
+        ? UnifiedJourneyAction(
+            route: '/quran/page/${input.dailyWirdPageNumber}',
+            priority: UnifiedJourneyPriority.p5DailyGoal,
+            source: 'DailyWird',
+            actionType: UnifiedJourneyActionType.dailyReading,
+            intent: JourneyIntent.reading,
+          )
+        : null;
+
+    if (input.isKids || input.userGoal == 'child') {
+      return const [
+        UnifiedJourneyAction(
+          route: '/memorization',
+          priority: UnifiedJourneyPriority.p6FreeExploration,
+          source: 'KidsMode',
+          actionType: UnifiedJourneyActionType.explore,
+          intent: JourneyIntent.explore,
+        ),
+      ];
+    }
+
+    if (input.userGoal == 'azkar') {
+      return [
+        const UnifiedJourneyAction(
+          route: '/azkar',
+          priority: UnifiedJourneyPriority.p6FreeExploration,
+          source: 'UserGoal',
+          actionType: UnifiedJourneyActionType.explore,
+          intent: JourneyIntent.azkar,
+        ),
+        ?khatmah,
+        ?dailyWird,
+        ?smartPlan,
+        _defaultAction,
+      ];
+    }
+
+    final readingGoal = input.userGoal == 'reading';
+    final memorizationGoal = input.userGoal == 'memorization';
+    return [
+      if (readingGoal) ?khatmah,
+      if (memorizationGoal) ?smartPlan,
+      if (readingGoal) ?dailyWird,
+      if (!readingGoal && !memorizationGoal) ?smartPlan,
+      ?khatmah,
+      ?dailyWird,
+      _defaultAction,
+    ];
+  }
+
+  UnifiedJourneyResolution _resolution(
+    UnifiedJourneyAction primary,
+    Iterable<UnifiedJourneyAction> candidates,
+  ) {
+    UnifiedJourneyAction? secondary;
+    for (final candidate in candidates) {
+      if (candidate.route != primary.route) {
+        secondary = candidate;
+        break;
+      }
+    }
+    return UnifiedJourneyResolution(
+      primaryAction: primary,
+      secondaryAction: secondary,
+    );
+  }
+
+  static const _defaultAction = UnifiedJourneyAction(
+    route: '/quran',
+    priority: UnifiedJourneyPriority.p6FreeExploration,
+    source: 'Default',
+    actionType: UnifiedJourneyActionType.explore,
+    intent: JourneyIntent.explore,
+  );
+
   Map<String, String> _parseResumeMetadata(String location) {
     final uri = Uri.tryParse(location);
     if (uri == null) return {};
-    
+
     final metadata = <String, String>{};
     if (uri.queryParameters.containsKey('surahId')) {
       metadata['surahId'] = uri.queryParameters['surahId']!;
