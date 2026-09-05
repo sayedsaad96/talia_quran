@@ -91,9 +91,12 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/images/logo_icon_padded.png"
-  adaptive_icon_background: "#061811" # لون أخضر داكن جداً يطابق خلفية الشعار
+  image_path: "assets/images/launcher_icon_ios.png"
+  remove_alpha_ios: true
+  adaptive_icon_background: "#061811"
   adaptive_icon_foreground: "assets/images/logo_icon_padded.png"
+  adaptive_icon_foreground_inset: 0
+  adaptive_icon_monochrome: "assets/images/launcher_monochrome.png"
 
 flutter_native_splash:
   color: "#061811"

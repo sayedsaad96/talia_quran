@@ -78,9 +78,6 @@ class _SplashPageState extends State<SplashPage> {
         ? const Color(0xFF061811)
         : AppColors.lightBackground;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
     final subTextColor = isDark
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
@@ -98,7 +95,7 @@ class _SplashPageState extends State<SplashPage> {
                   end: Alignment.bottomCenter,
                   colors: [
                     background,
-                    isDark ? const Color(0xFF0D251F) : const Color(0xFFF4F7F4),
+                    isDark ? const Color(0xFF0A221C) : const Color(0xFFF4F7F4),
                     background,
                   ],
                 ),
@@ -116,17 +113,17 @@ class _SplashPageState extends State<SplashPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Spacer(flex: 3),
-                    // Logo with soft ambient breathing aura
+                    // Dedicated hero emblem with soft ambient breathing aura
                     Stack(
                       alignment: Alignment.center,
                       children: [
                         Container(
-                              width: 140,
-                              height: 140,
+                              width: 170,
+                              height: 170,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: primary.withValues(
-                                  alpha: isDark ? 0.08 : 0.05,
+                                  alpha: isDark ? 0.10 : 0.06,
                                 ),
                               ),
                             )
@@ -136,52 +133,33 @@ class _SplashPageState extends State<SplashPage> {
                               },
                             )
                             .scaleXY(
-                              begin: 0.95,
-                              end: 1.15,
-                              duration: 2400.ms,
+                              begin: 0.94,
+                              end: 1.12,
+                              duration: animate ? 2400.ms : Duration.zero,
                               curve: Curves.easeInOutSine,
                             )
-                            .fadeIn(duration: 800.ms),
+                            .fadeIn(duration: animate ? 800.ms : Duration.zero),
                         Image.asset(
-                              'assets/images/logo_new_padded.png',
-                              width: 110,
-                              height: 110,
+                              'assets/images/splash_hero.png',
+                              width: 140,
+                              height: 140,
+                              fit: BoxFit.contain,
                             )
                             .animate()
                             .fadeIn(
-                              duration: 700.ms,
+                              duration: animate ? 700.ms : Duration.zero,
                               curve: Curves.easeOutCubic,
                             )
                             .scaleXY(
-                              begin: 0.88,
+                              begin: 0.90,
                               end: 1.0,
-                              duration: 700.ms,
+                              duration: animate ? 700.ms : Duration.zero,
                               curve: Curves.easeOutCubic,
                             ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.lg),
-                    // Brand Name (Amiri Calligraphy)
-                    Text(
-                          'تالية',
-                          textAlign: TextAlign.center,
-                          style: AppTypography.displayMedium.copyWith(
-                            color: textColor,
-                            fontFamily: 'Amiri',
-                            fontWeight: FontWeight.w800,
-                            fontSize: 38,
-                            letterSpacing: -0.5,
-                          ),
-                        )
-                        .animate(delay: 200.ms)
-                        .fadeIn(duration: 600.ms, curve: Curves.easeOut)
-                        .slideY(
-                          begin: 0.15,
-                          end: 0,
-                          curve: Curves.easeOutCubic,
-                        ),
-                    const SizedBox(height: AppSpacing.xs),
-                    // Tagline
+                    const SizedBox(height: AppSpacing.xl),
+                    // Poetic Brand Tagline
                     Text(
                           context.l10n.splashTagline,
                           textAlign: TextAlign.center,
@@ -189,12 +167,17 @@ class _SplashPageState extends State<SplashPage> {
                             color: isDark ? AppColors.primaryLight : primary,
                             fontFamily: 'Amiri',
                             fontWeight: FontWeight.w700,
+                            fontSize: 20,
+                            letterSpacing: 0.2,
                           ),
                         )
-                        .animate(delay: 350.ms)
-                        .fadeIn(duration: 600.ms, curve: Curves.easeOut)
+                        .animate(delay: animate ? 250.ms : Duration.zero)
+                        .fadeIn(
+                          duration: animate ? 700.ms : Duration.zero,
+                          curve: Curves.easeOut,
+                        )
                         .slideY(
-                          begin: 0.15,
+                          begin: 0.12,
                           end: 0,
                           curve: Curves.easeOutCubic,
                         ),
@@ -241,16 +224,29 @@ class _SplashPageState extends State<SplashPage> {
                             ),
                           ],
                         ),
-                      ).animate().fadeIn(duration: 300.ms),
+                      ).animate().fadeIn(
+                        duration: animate ? 300.ms : Duration.zero,
+                      ),
                     ] else ...[
-                      // Gentle, non-technical breathing glow dot
+                      // Gentle, radiant breathing pulse dot
                       Container(
-                            width: 6,
-                            height: 6,
+                            width: 8,
+                            height: 8,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: (isDark ? AppColors.primaryLight : primary)
-                                  .withValues(alpha: 0.6),
+                                  .withValues(alpha: 0.7),
+                              boxShadow: [
+                                BoxShadow(
+                                  color:
+                                      (isDark
+                                              ? AppColors.primaryLight
+                                              : primary)
+                                          .withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  spreadRadius: 2,
+                                ),
+                              ],
                             ),
                           )
                           .animate(
@@ -260,11 +256,15 @@ class _SplashPageState extends State<SplashPage> {
                           )
                           .scaleXY(
                             begin: 0.8,
-                            end: 1.5,
-                            duration: 1200.ms,
+                            end: 1.4,
+                            duration: animate ? 1400.ms : Duration.zero,
                             curve: Curves.easeInOutSine,
                           )
-                          .fade(begin: 0.2, end: 0.8, duration: 1200.ms),
+                          .fade(
+                            begin: 0.3,
+                            end: 0.9,
+                            duration: animate ? 1400.ms : Duration.zero,
+                          ),
                     ],
                     const SizedBox(height: AppSpacing.xl),
                   ],

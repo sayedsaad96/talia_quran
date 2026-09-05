@@ -52,22 +52,23 @@ void main() {
   });
 
   group('Streamlined 2-step onboarding flow', () {
-    testWidgets('adult guest flow routes directly to Home and saves preferences', (
-      tester,
-    ) async {
-      final repo = await _registerCore();
-      await _pumpOnboarding(tester);
+    testWidgets(
+      'adult guest flow routes directly to Home and saves preferences',
+      (tester) async {
+        final repo = await _registerCore();
+        await _pumpOnboarding(tester);
 
-      // Step 1: Welcome -> Start Journey
-      await _tapVisible(tester, 'Start Your Journey');
-      // Step 2: Adult is selected by default -> Continue as guest
-      await _tapVisible(tester, 'Continue as guest');
-      await tester.pumpAndSettle();
+        // Step 1: Welcome -> Start Journey
+        await _tapVisible(tester, 'Start Your Journey');
+        // Step 2: Adult is selected by default -> Continue as guest
+        await _tapVisible(tester, 'Continue as guest');
+        await tester.pumpAndSettle();
 
-      expect(find.text('home route'), findsOneWidget);
-      expect(repo.selectedPaths, isEmpty);
-      _expectCompletedPrefs(goal: 'reading', userType: 'adult');
-    });
+        expect(find.text('home route'), findsOneWidget);
+        expect(repo.selectedPaths, isEmpty);
+        _expectCompletedPrefs(goal: 'reading', userType: 'adult');
+      },
+    );
 
     testWidgets('adult sign-in routes to Login and saves preferences', (
       tester,
@@ -84,21 +85,22 @@ void main() {
       _expectCompletedPrefs(goal: 'reading', userType: 'adult');
     });
 
-    testWidgets('child guest sets child path and routes directly to kids destination', (
-      tester,
-    ) async {
-      final repo = await _registerCore();
-      await _pumpOnboarding(tester);
+    testWidgets(
+      'child guest sets child path and routes directly to kids destination',
+      (tester) async {
+        final repo = await _registerCore();
+        await _pumpOnboarding(tester);
 
-      await _tapVisible(tester, 'Start Your Journey');
-      await _tapVisible(tester, 'Kids & Buds Journey');
-      await _tapVisible(tester, 'Continue as guest');
-      await tester.pumpAndSettle();
+        await _tapVisible(tester, 'Start Your Journey');
+        await _tapVisible(tester, 'Kids & Buds Journey');
+        await _tapVisible(tester, 'Continue as guest');
+        await tester.pumpAndSettle();
 
-      expect(find.text('kids home route'), findsOneWidget);
-      expect(repo.selectedPaths, [MemorizationPath.child]);
-      _expectCompletedPrefs(goal: 'child_journey', userType: 'child');
-    });
+        expect(find.text('kids home route'), findsOneWidget);
+        expect(repo.selectedPaths, [MemorizationPath.child]);
+        _expectCompletedPrefs(goal: 'child_journey', userType: 'child');
+      },
+    );
 
     testWidgets('child sign-in sets child path and routes to Login', (
       tester,
@@ -448,6 +450,10 @@ class _FakeMemorizationRepository implements MemorizationPlusRepository {
   }
 
   @override
+  Future<Either<Failure, ParentSettings>> getParentSettings() async =>
+      const Right(ParentSettings());
+
+  @override
   Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() async =>
       const Right(null);
 
@@ -462,8 +468,7 @@ class _FakeMemorizationRepository implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
     ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
-  }) async =>
-      const Right([]);
+  }) async => const Right([]);
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
