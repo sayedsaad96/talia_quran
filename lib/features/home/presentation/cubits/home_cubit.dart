@@ -77,18 +77,13 @@ class HomeCubit extends Cubit<HomeState> {
       if (isClosed) return;
       final current = state;
       if (current is HomeLoaded) {
+        Object? error;
         try {
           _checkKhatmahAuthority(current.activeKhatmah);
-        } catch (error) {
-          emit(
-            current.copyWith(
-              activeKhatmah: null,
-              khatmahError: error,
-              heroAction: null,
-              journeyResolution: null,
-            ),
-          );
+        } catch (failure) {
+          error = failure;
         }
+        emit(_withoutStaleKhatmahAction(current, error));
         unawaited(_refreshKhatmah(revision));
       } else {
         _scheduleFullReload();
@@ -113,16 +108,41 @@ class HomeCubit extends Cubit<HomeState> {
     }
     final current = state;
     if (!isClosed && revision == _khatmahRevision && current is HomeLoaded) {
-      emit(
-        current.copyWith(
-          activeKhatmah: plan,
-          khatmahError: error,
-          heroAction: null,
-          journeyResolution: null,
-        ),
-      );
+      emit(current.copyWith(activeKhatmah: plan, khatmahError: error));
       _scheduleFullReload();
     }
+  }
+
+  HomeLoaded _withoutStaleKhatmahAction(HomeLoaded current, Object? error) {
+    final resolution = _withoutKhatmahAction(current.journeyResolution);
+    final heroAction =
+        current.heroAction?.actionType ==
+            UnifiedJourneyActionType.khatmahReading
+        ? resolution?.primary
+        : current.heroAction;
+    return current.copyWith(
+      activeKhatmah: null,
+      khatmahError: error,
+      heroAction: heroAction,
+      journeyResolution: resolution,
+    );
+  }
+
+  UnifiedJourneyResolution? _withoutKhatmahAction(
+    UnifiedJourneyResolution? resolution,
+  ) {
+    if (resolution == null) return null;
+    final primary = resolution.primary;
+    final secondary = resolution.secondary;
+    if (primary.actionType == UnifiedJourneyActionType.khatmahReading) {
+      return secondary == null
+          ? null
+          : UnifiedJourneyResolution(primaryAction: secondary);
+    }
+    if (secondary?.actionType == UnifiedJourneyActionType.khatmahReading) {
+      return UnifiedJourneyResolution(primaryAction: primary);
+    }
+    return resolution;
   }
 
   void _onProgressChanged(ProgressChangedReason reason) {
