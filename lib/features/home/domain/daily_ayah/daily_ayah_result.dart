@@ -23,13 +23,7 @@ class DailyAyahResolved extends DailyAyahResult {
   String? get readerLocation {
     final pageNumber = ayah.page;
     if (pageNumber == null) return null;
-    return Uri(
-      path: '/quran/page/$pageNumber',
-      queryParameters: {
-        'surahId': '${reference.surahId}',
-        'ayahNumber': '${reference.ayahNumber}',
-      },
-    ).toString();
+    return '/quran/page/$pageNumber';
   }
 }
 

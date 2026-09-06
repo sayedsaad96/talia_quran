@@ -21,6 +21,7 @@ class HomeLoaded extends HomeState {
   final UnifiedJourneyAction? heroAction;
   final UnifiedJourneyResolution? journeyResolution;
 
+  static const Object _dailyAyahSentinel = Object();
   const HomeLoaded({
     required this.progress,
     required this.greeting,
@@ -38,6 +39,7 @@ class HomeLoaded extends HomeState {
     this.totalXp = 0,
     this.activeKhatmah,
     this.khatmahError,
+    this.dailyAyah,
   });
 
   static const Object _khatmahSentinel = Object();
@@ -60,6 +62,7 @@ class HomeLoaded extends HomeState {
     int? totalXp,
     Object? activeKhatmah = _khatmahSentinel,
     Object? khatmahError = _khatmahSentinel,
+    Object? dailyAyah = _dailyAyahSentinel,
   }) {
     return HomeLoaded(
       progress: progress ?? this.progress,
@@ -87,6 +90,9 @@ class HomeLoaded extends HomeState {
       khatmahError: identical(khatmahError, _khatmahSentinel)
           ? this.khatmahError
           : khatmahError,
+      dailyAyah: identical(dailyAyah, _dailyAyahSentinel)
+          ? this.dailyAyah
+          : dailyAyah as DailyAyahResult?,
     );
   }
 
@@ -109,6 +115,7 @@ class HomeLoaded extends HomeState {
   final int totalXp;
   final KhatmahPlan? activeKhatmah;
   final Object? khatmahError;
+  final DailyAyahResult? dailyAyah;
 
   HomeKhatmahPlanState get khatmahPlanState {
     if (activeKhatmah == null) return HomeKhatmahPlanState.none;
@@ -140,6 +147,7 @@ class HomeLoaded extends HomeState {
     totalXp,
     activeKhatmah,
     khatmahError,
+    dailyAyah,
   ];
 }
 

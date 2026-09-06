@@ -28,6 +28,8 @@ import '../../../memorization_plus/domain/services/memorization_insights_aggrega
 import '../../../../core/utils/talia_logger.dart';
 import '../../../khatmah/domain/entities/khatmah_plan.dart';
 import '../../../khatmah/domain/usecases/get_active_khatmah_usecase.dart';
+import '../../domain/daily_ayah/daily_ayah_resolver.dart';
+import '../../domain/daily_ayah/daily_ayah_result.dart';
 
 part 'home_state.dart';
 
@@ -45,6 +47,9 @@ class HomeCubit extends Cubit<HomeState> {
   final ProgressEventsBus _progressEvents;
   final XpService _xpService;
   final GetActiveKhatmahUsecase? _getActiveKhatmah;
+  final DailyAyahResolver? _dailyAyahResolver;
+  Timer? _dailyAyahRefreshTimer;
+  int _dailyAyahRevision = 0;
   late final StreamSubscription<void> _pathChangesSub;
   late final StreamSubscription<ProgressChangedReason> _progressChangesSub;
   Timer? _reloadDebounce;
@@ -65,6 +70,7 @@ class HomeCubit extends Cubit<HomeState> {
     this._progressEvents,
     this._xpService, [
     this._getActiveKhatmah,
+    this._dailyAyahResolver,
   ]) : super(const HomeInitial()) {
     _pathChangesSub = _pathResolver.changes.listen((_) {
       if (!isClosed) {
@@ -89,6 +95,7 @@ class HomeCubit extends Cubit<HomeState> {
         _scheduleFullReload();
       }
     });
+    _scheduleDailyAyahRefresh();
   }
 
   void _checkKhatmahAuthority(KhatmahPlan? plan) {
@@ -153,6 +160,35 @@ class HomeCubit extends Cubit<HomeState> {
       return UnifiedJourneyResolution(primaryAction: primary);
     }
     return resolution;
+  }
+
+  void _scheduleDailyAyahRefresh() {
+    if (_dailyAyahResolver == null) return;
+    _dailyAyahRefreshTimer?.cancel();
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+    _dailyAyahRefreshTimer = Timer(nextMidnight.difference(now), () {
+      unawaited(_refreshDailyAyah());
+      _scheduleDailyAyahRefresh();
+    });
+  }
+
+  /// Resolves separately from the main dashboard load so an unavailable
+  /// daily verse can never delay the user's primary journey action.
+  Future<void> _refreshDailyAyah() async {
+    final resolver = _dailyAyahResolver;
+    if (resolver == null || isClosed) return;
+    final revision = ++_dailyAyahRevision;
+    DailyAyahResult? result;
+    try {
+      result = await resolver.resolveFor(DateTime.now());
+    } catch (_) {
+      return;
+    }
+    final current = state;
+    if (!isClosed && revision == _dailyAyahRevision && current is HomeLoaded) {
+      emit(current.copyWith(dailyAyah: result));
+    }
   }
 
   void _onProgressChanged(ProgressChangedReason reason) {
@@ -312,6 +348,7 @@ class HomeCubit extends Cubit<HomeState> {
           khatmahError: khatmahError,
         ),
       );
+      unawaited(_refreshDailyAyah());
     });
   }
 
@@ -446,6 +483,7 @@ class HomeCubit extends Cubit<HomeState> {
   @override
   Future<void> close() async {
     await _khatmahChangesSub?.cancel();
+    _dailyAyahRefreshTimer?.cancel();
     _reloadDebounce?.cancel();
     await _pathChangesSub.cancel();
     await _progressChangesSub.cancel();

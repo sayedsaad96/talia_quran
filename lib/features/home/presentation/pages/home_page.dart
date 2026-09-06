@@ -26,6 +26,7 @@ import '../../../../core/services/app_session_service.dart';
 import '../../../../core/journey/unified_journey_action.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../widgets/unified_hero_action_card.dart';
+import '../widgets/daily_ayah_card.dart';
 import '../../../../core/journey/unified_journey_action_mapper.dart';
 import '../../../../core/journey/resume_session_presentation_mapper.dart';
 import '../../../../core/journey/resume_session_presentation_input.dart';
@@ -39,7 +40,6 @@ import '../cubits/home_cubit.dart';
 import '../../../khatmah/presentation/widgets/khatmah_hero_card.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
-import '../../domain/daily_ayah/daily_ayah_resolver.dart';
 import '../../domain/daily_ayah/daily_ayah_result.dart';
 part 'home_page_widgets.dart';
 
@@ -185,7 +185,9 @@ class _HomeContent extends StatelessWidget {
 
         // ─── Sign-In Nudge Banner ───────────────────────────────────────────
         if (JourneyFeatureFlags.unifiedJourneyEnabled &&
-            state.heroAction != null)
+            state.heroAction != null &&
+            state.heroAction!.actionType !=
+                UnifiedJourneyActionType.khatmahReading)
           Builder(
             builder: (context) {
               final action = state.heroAction!;
@@ -211,6 +213,9 @@ class _HomeContent extends StatelessWidget {
               );
             },
           )
+        else if (state.heroAction?.actionType ==
+            UnifiedJourneyActionType.khatmahReading)
+          const SliverToBoxAdapter(child: SizedBox.shrink())
         else if (state.lastRestorableLocation != null)
           SliverToBoxAdapter(
             child: Padding(
@@ -248,7 +253,9 @@ class _HomeContent extends StatelessWidget {
           ),
 
         if (JourneyFeatureFlags.unifiedJourneyEnabled &&
-            state.journeyResolution?.secondaryAction != null)
+            state.journeyResolution?.secondaryAction != null &&
+            state.journeyResolution!.secondaryAction!.actionType !=
+                UnifiedJourneyActionType.khatmahReading)
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -293,7 +300,10 @@ class _HomeContent extends StatelessWidget {
               AppSpacing.pagePadding,
               0,
             ),
-            child: const _DailyAyahCard(),
+            child: DailyAyahCard(
+              result: state.dailyAyah,
+              onRetry: context.read<HomeCubit>().load,
+            ),
           ),
         ),
 

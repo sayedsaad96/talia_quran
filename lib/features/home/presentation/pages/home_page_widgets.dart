@@ -1800,8 +1800,7 @@ class _DailyAyahCardState extends State<_DailyAyahCard> {
   }
 
   Future<DailyAyahResult?> _resolve() {
-    if (!getIt.isRegistered<DailyAyahResolver>()) return Future.value(null);
-    return getIt<DailyAyahResolver>().resolveFor(DateTime.now());
+    return Future.value(null);
   }
 
   void _retry() => setState(() => _result = _resolve());
@@ -1916,8 +1915,6 @@ class _DailyAyahCardState extends State<_DailyAyahCard> {
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     result.ayah.text,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
                     textDirection: TextDirection.rtl,
                     style: AppTypography.titleMedium.copyWith(
                       color: textColor,

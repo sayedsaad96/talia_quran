@@ -103,8 +103,7 @@ void main() {
       final location = Uri.parse(result.readerLocation!);
 
       expect(location.path, '/quran/page/42');
-      expect(location.queryParameters['surahId'], '${reference.surahId}');
-      expect(location.queryParameters['ayahNumber'], '${reference.ayahNumber}');
+      expect(location.hasQuery, isFalse);
     });
   });
 }

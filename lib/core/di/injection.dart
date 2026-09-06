@@ -668,6 +668,7 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<ProgressEventsBus>(),
       getIt<XpService>(),
       getIt<GetActiveKhatmahUsecase>(),
+      getIt<DailyAyahResolver>(),
     ),
   );
   getIt.registerFactory<StreakCubit>(
