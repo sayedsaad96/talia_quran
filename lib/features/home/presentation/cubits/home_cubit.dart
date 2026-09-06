@@ -109,9 +109,19 @@ class HomeCubit extends Cubit<HomeState> {
     final current = state;
     if (!isClosed && revision == _khatmahRevision && current is HomeLoaded) {
       emit(current.copyWith(activeKhatmah: plan, khatmahError: error));
-      _scheduleFullReload();
+      if (!_isUrgentJourneyAction(current.journeyResolution?.primary)) {
+        _scheduleFullReload();
+      }
     }
   }
+
+  bool _isUrgentJourneyAction(UnifiedJourneyAction? action) =>
+      switch (action?.priority) {
+        UnifiedJourneyPriority.p1ActiveSession ||
+        UnifiedJourneyPriority.p2CriticalAlert ||
+        UnifiedJourneyPriority.p3ReviewBacklog => true,
+        _ => false,
+      };
 
   HomeLoaded _withoutStaleKhatmahAction(HomeLoaded current, Object? error) {
     final resolution = _withoutKhatmahAction(current.journeyResolution);
