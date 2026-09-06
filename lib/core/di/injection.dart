@@ -71,7 +71,6 @@ import '../../features/home/presentation/cubits/home_cubit.dart';
 import '../../features/home/data/repositories/heatmap_repository_impl.dart';
 import '../../features/home/domain/repositories/heatmap_repository.dart';
 import '../../features/home/domain/usecases/get_activity_heatmap_usecase.dart';
-import '../../features/home/domain/daily_ayah/daily_ayah_resolver.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import '../../features/memorization_plus/data/models/isar_v2_session.dart';
@@ -454,9 +453,6 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<GetActivityHeatmapUsecase>(
     () => GetActivityHeatmapUsecase(getIt<HeatmapRepository>()),
   );
-  getIt.registerLazySingleton<DailyAyahResolver>(
-    () => DailyAyahResolver(getIt<QuranRepository>()),
-  );
   getIt.registerLazySingleton<GetAzkarUsecase>(
     () => GetAzkarUsecase(getIt<AzkarRepository>()),
   );
@@ -518,7 +514,6 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<GetProgressUsecase>(),
       getIt<MemorizationPathResolver>(),
       getIt<ProgressEventsBus>(),
-      getIt<GetActivityHeatmapUsecase>(),
     ),
   );
   getIt.registerFactory<SurahListCubit>(
@@ -668,7 +663,6 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<ProgressEventsBus>(),
       getIt<XpService>(),
       getIt<GetActiveKhatmahUsecase>(),
-      getIt<DailyAyahResolver>(),
     ),
   );
   getIt.registerFactory<StreakCubit>(

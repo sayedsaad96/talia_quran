@@ -1,6 +1,10 @@
 import '../../features/memorization_plus/domain/entities/memorization_recommendation.dart';
 
-enum SmartPlanType { continueMemorization, reviewPlan, customPlan }
+enum SmartPlanType {
+  continueMemorization,
+  reviewPlan,
+  customPlan,
+}
 
 class UnifiedJourneyInput {
   const UnifiedJourneyInput({
@@ -13,7 +17,6 @@ class UnifiedJourneyInput {
     this.overdueAyahs = 0,
     this.hasSmartPlan = false,
     this.isSmartPlanReview = false,
-    this.khatmahCandidate,
     this.smartPlanType,
     this.smartPlanRoute,
     this.hasDailyWird = false,
@@ -37,10 +40,6 @@ class UnifiedJourneyInput {
   // Smart Plan / Coach (Priority 4)
   final bool hasSmartPlan;
   final bool isSmartPlanReview;
-
-  /// Active reader destination supplied by the Khatmah feature.
-  final KhatmahJourneyCandidate? khatmahCandidate;
-
   final SmartPlanType? smartPlanType;
   final String? smartPlanRoute;
 
@@ -51,15 +50,4 @@ class UnifiedJourneyInput {
   // Fallbacks / Context (Priority 6)
   final bool isKids;
   final String? userGoal;
-}
-
-/// Immutable, feature-neutral Khatmah reader candidate.
-///
-/// Its presence means the Khatmah feature has already established that the
-/// current plan is active and safe to continue. The journey engine never
-/// controls Khatmah state transitions.
-class KhatmahJourneyCandidate {
-  const KhatmahJourneyCandidate({required this.route});
-
-  final String route;
 }

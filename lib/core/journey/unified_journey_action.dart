@@ -1,4 +1,11 @@
-enum JourneyIntent { resume, review, memorize, reading, azkar, explore }
+enum JourneyIntent {
+  resume,
+  review,
+  memorize,
+  reading,
+  azkar,
+  explore,
+}
 
 enum UnifiedJourneyPriority {
   p1ActiveSession,
@@ -14,7 +21,6 @@ enum UnifiedJourneyActionType {
   criticalAlert,
   reviewBacklog,
   smartPlan,
-  khatmahReading,
   dailyReading,
   explore,
 }
@@ -36,18 +42,3 @@ class UnifiedJourneyAction {
   final JourneyIntent intent;
   final Map<String, String> metadata;
 }
-
-/// The calm, ordered journey actions exposed to Home.
-class JourneyResolution {
-  const JourneyResolution({required this.primaryAction, this.secondaryAction});
-
-  final UnifiedJourneyAction primaryAction;
-  final UnifiedJourneyAction? secondaryAction;
-
-  /// Short aliases keep the resolution comfortable to consume in UI code.
-  UnifiedJourneyAction get primary => primaryAction;
-  UnifiedJourneyAction? get secondary => secondaryAction;
-}
-
-/// Temporary compatibility name while Home migrates to [JourneyResolution].
-typedef UnifiedJourneyResolution = JourneyResolution;

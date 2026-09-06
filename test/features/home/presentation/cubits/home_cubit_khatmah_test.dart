@@ -176,14 +176,6 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect((cubit!.state as HomeLoaded).activeKhatmah, isNull);
       expect((cubit!.state as HomeLoaded).khatmahError, isNotNull);
-      expect(
-        (cubit!.state as HomeLoaded).heroAction?.route,
-        isNot(contains('mode=khatmah')),
-      );
-      expect(
-        (cubit!.state as HomeLoaded).journeyResolution?.primary.route,
-        isNot(contains('mode=khatmah')),
-      );
       fakeGetActiveKhatmah.error = null;
       fakeGetActiveKhatmah.planToReturn = testPlan.copyWith(id: 'new-owner');
       await cubit!.load();
@@ -191,49 +183,6 @@ void main() {
       expect((cubit!.state as HomeLoaded).khatmahError, isNull);
     },
   );
-
-  test('Khatmah refresh keeps the active resume action visible', () async {
-    final changes = StreamController<void>();
-    addTearDown(changes.close);
-    fakeGetActiveKhatmah.changeEvents = changes.stream;
-    fakeGetActiveKhatmah.planToReturn = testPlan;
-    when(
-      mockSessionService.getLastRestorableLocation(),
-    ).thenReturn('/quran/page/99');
-    cubit = HomeCubit(
-      mockGetProgress,
-      mockGetQuranPage,
-      mockGetCustomPlan,
-      mockMemRepo,
-      mockSessionService,
-      mockGetHeatmap,
-      mockPathResolver,
-      mockGetCoachRecommendation,
-      journeyEngine,
-      mockPrefs,
-      progressEvents,
-      xpService,
-      fakeGetActiveKhatmah,
-    );
-
-    await cubit!.load();
-    expect((cubit!.state as HomeLoaded).heroAction?.route, '/quran/page/99');
-
-    fakeGetActiveKhatmah.planToReturn = testPlan.copyWith(
-      status: KhatmahStatus.paused,
-    );
-    changes.add(null);
-    await Future<void>.delayed(Duration.zero);
-
-    final state = cubit!.state as HomeLoaded;
-    expect(state.heroAction?.route, '/quran/page/99');
-    expect(state.journeyResolution?.primary.route, '/quran/page/99');
-    await Future<void>.delayed(const Duration(milliseconds: 350));
-    final delayedState = cubit!.state as HomeLoaded;
-    expect(delayedState.heroAction?.route, '/quran/page/99');
-    expect(delayedState.journeyResolution?.primary.route, '/quran/page/99');
-    expect(delayedState.journeyResolution?.secondary, isNull);
-  });
   test('pending Home load cannot restore invalidated old Khatmah', () async {
     SharedPreferences.setMockInitialValues({});
     final barrier = AccountDataBarrier.forPreferences(

@@ -24,8 +24,6 @@ import 'package:talia_quran/features/progress/domain/entities/progress_entities.
 import 'package:talia_quran/features/progress/domain/usecases/get_progress_usecase.dart';
 import 'package:talia_quran/features/quran/domain/usecases/get_surahs_usecase.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
-import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
-import 'package:talia_quran/features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 
 import 'home_cubit_test.mocks.dart';
 
@@ -41,16 +39,6 @@ import 'home_cubit_test.mocks.dart';
   SharedPreferences,
 ])
 void main() {
-  final activeKhatmah = KhatmahPlan(
-    id: 'reading-khatmah',
-    title: 'Reading plan',
-    completedPages: {1, 2, 3},
-    targetPagesPerDay: 4,
-    targetDays: 151,
-    startDate: DateTime(2026, 1, 1),
-    expectedEndDate: DateTime(2026, 6, 1),
-  );
-
   late HomeCubit cubit;
   late MockGetProgressUsecase mockGetProgress;
   late MockGetQuranPageUsecase mockGetQuranPage;
@@ -157,39 +145,6 @@ void main() {
     if (!cubit.isClosed) await cubit.close();
     progressEvents.dispose();
   });
-
-  test(
-    'reading goal exposes active Khatmah as the journey primary action',
-    () async {
-      when(mockPrefs.getString('user_primary_goal')).thenReturn('reading');
-      final activeKhatmahUsecase = _FakeGetActiveKhatmahUsecase(activeKhatmah);
-      await cubit.close();
-      cubit = HomeCubit(
-        mockGetProgress,
-        mockGetQuranPage,
-        mockGetCustomPlan,
-        mockMemRepo,
-        mockSessionService,
-        mockGetHeatmap,
-        mockPathResolver,
-        mockGetCoachRecommendation,
-        journeyEngine,
-        mockPrefs,
-        progressEvents,
-        xpService,
-        activeKhatmahUsecase,
-      );
-
-      await cubit.load();
-      final state = cubit.state as HomeLoaded;
-
-      expect(
-        state.journeyResolution?.primary.route,
-        '/quran/page/4?mode=khatmah',
-      );
-      expect(state.heroAction?.route, '/quran/page/4?mode=khatmah');
-    },
-  );
 
   test('Scenario 1: Resume Session emits P1 Action', () async {
     when(
@@ -408,19 +363,6 @@ void main() {
 
     await expectLater(load, completes);
   });
-}
-
-class _FakeGetActiveKhatmahUsecase extends Fake
-    implements GetActiveKhatmahUsecase {
-  _FakeGetActiveKhatmahUsecase(this.plan);
-
-  final KhatmahPlan? plan;
-
-  @override
-  Stream<void>? get changes => null;
-
-  @override
-  Future<KhatmahPlan?> call() async => plan;
 }
 
 class _FakeXpService implements XpService {

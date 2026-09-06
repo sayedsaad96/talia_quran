@@ -28,8 +28,6 @@ import '../../../memorization_plus/domain/services/memorization_insights_aggrega
 import '../../../../core/utils/talia_logger.dart';
 import '../../../khatmah/domain/entities/khatmah_plan.dart';
 import '../../../khatmah/domain/usecases/get_active_khatmah_usecase.dart';
-import '../../domain/daily_ayah/daily_ayah_resolver.dart';
-import '../../domain/daily_ayah/daily_ayah_result.dart';
 
 part 'home_state.dart';
 
@@ -47,9 +45,6 @@ class HomeCubit extends Cubit<HomeState> {
   final ProgressEventsBus _progressEvents;
   final XpService _xpService;
   final GetActiveKhatmahUsecase? _getActiveKhatmah;
-  final DailyAyahResolver? _dailyAyahResolver;
-  Timer? _dailyAyahRefreshTimer;
-  int _dailyAyahRevision = 0;
   late final StreamSubscription<void> _pathChangesSub;
   late final StreamSubscription<ProgressChangedReason> _progressChangesSub;
   Timer? _reloadDebounce;
@@ -70,7 +65,6 @@ class HomeCubit extends Cubit<HomeState> {
     this._progressEvents,
     this._xpService, [
     this._getActiveKhatmah,
-    this._dailyAyahResolver,
   ]) : super(const HomeInitial()) {
     _pathChangesSub = _pathResolver.changes.listen((_) {
       if (!isClosed) {
@@ -79,23 +73,17 @@ class HomeCubit extends Cubit<HomeState> {
     });
     _progressChangesSub = _progressEvents.changes.listen(_onProgressChanged);
     _khatmahChangesSub = _getActiveKhatmah?.changes?.listen((_) {
-      final revision = ++_khatmahRevision;
       if (isClosed) return;
       final current = state;
       if (current is HomeLoaded) {
-        Object? error;
         try {
           _checkKhatmahAuthority(current.activeKhatmah);
-        } catch (failure) {
-          error = failure;
+        } catch (error) {
+          emit(current.copyWith(activeKhatmah: null, khatmahError: error));
         }
-        emit(_withoutStaleKhatmahAction(current, error));
-        unawaited(_refreshKhatmah(revision));
-      } else {
-        _scheduleFullReload();
+        unawaited(_refreshKhatmah());
       }
     });
-    _scheduleDailyAyahRefresh();
   }
 
   void _checkKhatmahAuthority(KhatmahPlan? plan) {
@@ -103,7 +91,8 @@ class HomeCubit extends Cubit<HomeState> {
     if (authority is AccountDataLease) authority.check();
   }
 
-  Future<void> _refreshKhatmah(int revision) async {
+  Future<void> _refreshKhatmah() async {
+    final revision = ++_khatmahRevision;
     KhatmahPlan? plan;
     Object? error;
     try {
@@ -116,78 +105,6 @@ class HomeCubit extends Cubit<HomeState> {
     final current = state;
     if (!isClosed && revision == _khatmahRevision && current is HomeLoaded) {
       emit(current.copyWith(activeKhatmah: plan, khatmahError: error));
-      if (!_isUrgentJourneyAction(current.journeyResolution?.primary)) {
-        _scheduleFullReload();
-      }
-    }
-  }
-
-  bool _isUrgentJourneyAction(UnifiedJourneyAction? action) =>
-      switch (action?.priority) {
-        UnifiedJourneyPriority.p1ActiveSession ||
-        UnifiedJourneyPriority.p2CriticalAlert ||
-        UnifiedJourneyPriority.p3ReviewBacklog => true,
-        _ => false,
-      };
-
-  HomeLoaded _withoutStaleKhatmahAction(HomeLoaded current, Object? error) {
-    final resolution = _withoutKhatmahAction(current.journeyResolution);
-    final heroAction =
-        current.heroAction?.actionType ==
-            UnifiedJourneyActionType.khatmahReading
-        ? resolution?.primary
-        : current.heroAction;
-    return current.copyWith(
-      activeKhatmah: null,
-      khatmahError: error,
-      heroAction: heroAction,
-      journeyResolution: resolution,
-    );
-  }
-
-  UnifiedJourneyResolution? _withoutKhatmahAction(
-    UnifiedJourneyResolution? resolution,
-  ) {
-    if (resolution == null) return null;
-    final primary = resolution.primary;
-    final secondary = resolution.secondary;
-    if (primary.actionType == UnifiedJourneyActionType.khatmahReading) {
-      return secondary == null
-          ? null
-          : UnifiedJourneyResolution(primaryAction: secondary);
-    }
-    if (secondary?.actionType == UnifiedJourneyActionType.khatmahReading) {
-      return UnifiedJourneyResolution(primaryAction: primary);
-    }
-    return resolution;
-  }
-
-  void _scheduleDailyAyahRefresh() {
-    if (_dailyAyahResolver == null) return;
-    _dailyAyahRefreshTimer?.cancel();
-    final now = DateTime.now();
-    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
-    _dailyAyahRefreshTimer = Timer(nextMidnight.difference(now), () {
-      unawaited(_refreshDailyAyah());
-      _scheduleDailyAyahRefresh();
-    });
-  }
-
-  /// Resolves separately from the main dashboard load so an unavailable
-  /// daily verse can never delay the user's primary journey action.
-  Future<void> _refreshDailyAyah() async {
-    final resolver = _dailyAyahResolver;
-    if (resolver == null || isClosed) return;
-    final revision = ++_dailyAyahRevision;
-    DailyAyahResult? result;
-    try {
-      result = await resolver.resolveFor(DateTime.now());
-    } catch (_) {
-      return;
-    }
-    final current = state;
-    if (!isClosed && revision == _dailyAyahRevision && current is HomeLoaded) {
-      emit(current.copyWith(dailyAyah: result));
     }
   }
 
@@ -225,7 +142,6 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> load() async {
     if (isClosed) return;
-    final khatmahRevisionAtLoad = _khatmahRevision;
     emit(const HomeLoading());
 
     final now = DateTime.now();
@@ -265,12 +181,6 @@ class HomeCubit extends Cubit<HomeState> {
     final coachResult = await coachFuture;
     coachResult.fold((_) => null, (r) => coachRecommendation = r);
     var activeKhatmah = await khatmahFuture;
-    try {
-      _checkKhatmahAuthority(activeKhatmah);
-    } catch (error) {
-      activeKhatmah = null;
-      khatmahError = error;
-    }
 
     // Load last restorable location for "Continue Reading" chip
     final lastLocation = _sessionService.getLastRestorableLocation();
@@ -292,24 +202,16 @@ class HomeCubit extends Cubit<HomeState> {
     // P1-05 FIX: Guard against emitting after the cubit was closed during the
     // 7 awaits above. Emitting on a closed cubit throws a StateError.
     if (isClosed) return;
-    if (khatmahRevisionAtLoad != _khatmahRevision) return;
-    try {
-      _checkKhatmahAuthority(activeKhatmah);
-    } catch (error) {
-      activeKhatmah = null;
-      khatmahError = error;
-    }
     // Sprint C: Unified Journey Hero Action Evaluation
-    UnifiedJourneyResolution? journeyResolution;
+    UnifiedJourneyAction? heroAction;
     try {
-      journeyResolution = await _evaluateJourneyResolution(
+      heroAction = await _evaluateUnifiedAction(
         lastLocation: lastLocation,
         coachRecommendation: coachRecommendation,
         customPlan: customPlan,
         dailyWirdDetail: dailyWirdDetail,
         isKids: isKids,
         overallProgress: overallProgress,
-        activeKhatmah: activeKhatmah,
       );
     } catch (e, s) {
       TaliaLogger.w('Failed to evaluate hero action', e, s);
@@ -319,13 +221,11 @@ class HomeCubit extends Cubit<HomeState> {
     if (isClosed) return;
     final totalXp = await _xpService.getTotalXp();
     if (isClosed) return;
-    if (khatmahRevisionAtLoad != _khatmahRevision) return;
     try {
       _checkKhatmahAuthority(activeKhatmah);
     } catch (error) {
       activeKhatmah = null;
       khatmahError = error;
-      journeyResolution = null;
     }
     progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
       emit(
@@ -341,25 +241,22 @@ class HomeCubit extends Cubit<HomeState> {
           activityCountsByDay: heatmap.countsByDay,
           activityStartDate: heatmap.startDate,
           coachRecommendation: coachRecommendation,
-          heroAction: journeyResolution?.primary,
-          journeyResolution: journeyResolution,
+          heroAction: heroAction,
           totalXp: totalXp,
           activeKhatmah: activeKhatmah,
           khatmahError: khatmahError,
         ),
       );
-      unawaited(_refreshDailyAyah());
     });
   }
 
-  Future<UnifiedJourneyResolution?> _evaluateJourneyResolution({
+  Future<UnifiedJourneyAction?> _evaluateUnifiedAction({
     required String? lastLocation,
     required SmartCoachRecommendation? coachRecommendation,
     required CustomMemorizationPlan? customPlan,
     required QuranPageDetail? dailyWirdDetail,
     required bool isKids,
     required OverallProgress? overallProgress,
-    required KhatmahPlan? activeKhatmah,
   }) async {
     try {
       final isEnabled = _prefs.getBool('unified_journey_enabled') ?? true;
@@ -411,12 +308,6 @@ class HomeCubit extends Cubit<HomeState> {
                     SmartCoachRecommendationKind.memorizedReviewDue ||
                 coachRecommendation.kind ==
                     SmartCoachRecommendationKind.reviewWeakAyah),
-        khatmahCandidate: activeKhatmah?.status == KhatmahStatus.active
-            ? KhatmahJourneyCandidate(
-                route:
-                    '/quran/page/${activeKhatmah!.nextUnreadPage}?mode=khatmah',
-              )
-            : null,
         smartPlanType: customPlan != null
             ? SmartPlanType.customPlan
             : (coachRecommendation != null ? SmartPlanType.reviewPlan : null),
@@ -429,17 +320,10 @@ class HomeCubit extends Cubit<HomeState> {
         userGoal: _prefs.getString('user_primary_goal'),
       );
 
-      final resolution = _journeyEngine.resolve(input);
-      final heroAction = _resolveHeroAction(
-        unifiedAction: resolution.primary,
+      final unifiedAction = _journeyEngine.evaluate(input);
+      return _resolveHeroAction(
+        unifiedAction: unifiedAction,
         coachRecommendation: coachRecommendation,
-      );
-      if (heroAction == null) return null;
-      return UnifiedJourneyResolution(
-        primaryAction: heroAction,
-        secondaryAction: resolution.secondary?.route == heroAction.route
-            ? null
-            : resolution.secondary,
       );
     } catch (e, s) {
       TaliaLogger.w('Failed to evaluate UnifiedJourneyEngine input', e, s);
@@ -483,7 +367,6 @@ class HomeCubit extends Cubit<HomeState> {
   @override
   Future<void> close() async {
     await _khatmahChangesSub?.cancel();
-    _dailyAyahRefreshTimer?.cancel();
     _reloadDebounce?.cancel();
     await _pathChangesSub.cancel();
     await _progressChangesSub.cancel();

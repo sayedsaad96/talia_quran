@@ -19,9 +19,7 @@ enum HomeKhatmahPlanState { none, active, paused }
 
 class HomeLoaded extends HomeState {
   final UnifiedJourneyAction? heroAction;
-  final UnifiedJourneyResolution? journeyResolution;
 
-  static const Object _dailyAyahSentinel = Object();
   const HomeLoaded({
     required this.progress,
     required this.greeting,
@@ -35,15 +33,12 @@ class HomeLoaded extends HomeState {
     required this.activityStartDate,
     this.coachRecommendation,
     this.heroAction,
-    this.journeyResolution,
     this.totalXp = 0,
     this.activeKhatmah,
     this.khatmahError,
-    this.dailyAyah,
   });
 
   static const Object _khatmahSentinel = Object();
-  static const Object _journeyActionSentinel = Object();
 
   HomeLoaded copyWith({
     OverallProgress? progress,
@@ -57,12 +52,10 @@ class HomeLoaded extends HomeState {
     Map<String, int>? activityCountsByDay,
     DateTime? activityStartDate,
     SmartCoachRecommendation? coachRecommendation,
-    Object? heroAction = _journeyActionSentinel,
-    Object? journeyResolution = _journeyActionSentinel,
+    UnifiedJourneyAction? heroAction,
     int? totalXp,
     Object? activeKhatmah = _khatmahSentinel,
     Object? khatmahError = _khatmahSentinel,
-    Object? dailyAyah = _dailyAyahSentinel,
   }) {
     return HomeLoaded(
       progress: progress ?? this.progress,
@@ -77,12 +70,7 @@ class HomeLoaded extends HomeState {
       activityCountsByDay: activityCountsByDay ?? this.activityCountsByDay,
       activityStartDate: activityStartDate ?? this.activityStartDate,
       coachRecommendation: coachRecommendation ?? this.coachRecommendation,
-      heroAction: identical(heroAction, _journeyActionSentinel)
-          ? this.heroAction
-          : heroAction as UnifiedJourneyAction?,
-      journeyResolution: identical(journeyResolution, _journeyActionSentinel)
-          ? this.journeyResolution
-          : journeyResolution as UnifiedJourneyResolution?,
+      heroAction: heroAction ?? this.heroAction,
       totalXp: totalXp ?? this.totalXp,
       activeKhatmah: identical(activeKhatmah, _khatmahSentinel)
           ? this.activeKhatmah
@@ -90,9 +78,6 @@ class HomeLoaded extends HomeState {
       khatmahError: identical(khatmahError, _khatmahSentinel)
           ? this.khatmahError
           : khatmahError,
-      dailyAyah: identical(dailyAyah, _dailyAyahSentinel)
-          ? this.dailyAyah
-          : dailyAyah as DailyAyahResult?,
     );
   }
 
@@ -115,7 +100,6 @@ class HomeLoaded extends HomeState {
   final int totalXp;
   final KhatmahPlan? activeKhatmah;
   final Object? khatmahError;
-  final DailyAyahResult? dailyAyah;
 
   HomeKhatmahPlanState get khatmahPlanState {
     if (activeKhatmah == null) return HomeKhatmahPlanState.none;
@@ -143,11 +127,9 @@ class HomeLoaded extends HomeState {
     activityStartDate,
     coachRecommendation,
     heroAction,
-    journeyResolution,
     totalXp,
     activeKhatmah,
     khatmahError,
-    dailyAyah,
   ];
 }
 
