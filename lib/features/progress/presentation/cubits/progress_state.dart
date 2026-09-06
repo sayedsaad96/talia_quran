@@ -20,13 +20,23 @@ class ProgressLoaded extends ProgressState {
     required this.progress,
     this.selectedPath,
     this.isKids = false,
+    this.activityCountsByDay = const {},
+    this.activityStartDate,
   });
   final OverallProgress progress;
   final MemorizationPath? selectedPath;
   final bool isKids;
+  final Map<String, int> activityCountsByDay;
+  final DateTime? activityStartDate;
 
   @override
-  List<Object?> get props => [progress, selectedPath, isKids];
+  List<Object?> get props => [
+    progress,
+    selectedPath,
+    isKids,
+    activityCountsByDay,
+    activityStartDate,
+  ];
 }
 
 class ProgressError extends ProgressState {

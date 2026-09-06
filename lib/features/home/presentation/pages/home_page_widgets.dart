@@ -1,5 +1,8 @@
 part of 'home_page.dart';
 
+// Legacy widgets remain source-compatible while the reduced Home composition
+// no longer instantiates them; they can be removed in a dedicated cleanup.
+// ignore_for_file: unused_element, unused_element_parameter
 class _HeroHeader extends StatefulWidget {
   const _HeroHeader({required this.state, required this.isDark});
 
@@ -127,11 +130,6 @@ class _HeroHeaderState extends State<_HeroHeader> {
                         fit: BoxFit.contain,
                       ),
                     ],
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  _AchievementRow(
-                    progress: widget.state.progress,
-                    isKids: widget.state.isKids,
                   ),
                 ],
               ),
@@ -1705,6 +1703,284 @@ class _HomeActivityHeatmapSection extends StatelessWidget {
             startDate: state.activityStartDate,
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SecondaryJourneyAction extends StatelessWidget {
+  const _SecondaryJourneyAction({required this.action, required this.isDark});
+
+  final UnifiedJourneyAction action;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = const UnifiedJourneyActionMapper().map(context, action);
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        onTap: () => context.push(action.route),
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.md,
+            vertical: AppSpacing.sm + 4,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(color: primary.withValues(alpha: 0.18)),
+          ),
+          child: Row(
+            children: [
+              Icon(data.icon, color: primary, size: 22),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      data.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.titleSmall.copyWith(
+                        color: textColor,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Text(
+                      data.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: subtextColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                context.isArabic
+                    ? Icons.arrow_back_ios_new_rounded
+                    : Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: primary,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DailyAyahCard extends StatefulWidget {
+  const _DailyAyahCard();
+
+  @override
+  State<_DailyAyahCard> createState() => _DailyAyahCardState();
+}
+
+class _DailyAyahCardState extends State<_DailyAyahCard> {
+  late Future<DailyAyahResult?> _result;
+
+  @override
+  void initState() {
+    super.initState();
+    _result = _resolve();
+  }
+
+  Future<DailyAyahResult?> _resolve() {
+    if (!getIt.isRegistered<DailyAyahResolver>()) return Future.value(null);
+    return getIt<DailyAyahResolver>().resolveFor(DateTime.now());
+  }
+
+  void _retry() => setState(() => _result = _resolve());
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.isDark;
+    final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
+
+    return FutureBuilder<DailyAyahResult?>(
+      future: _result,
+      builder: (context, snapshot) {
+        final result = snapshot.data;
+        if (result is DailyAyahUnavailable || snapshot.hasError) {
+          return Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.menu_book_outlined, color: AppColors.primary),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    context.isArabic
+                        ? 'يتعذر عرض آية اليوم الآن'
+                        : 'Daily Ayah is unavailable right now',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: subtextColor,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: _retry,
+                  child: Text(context.isArabic ? 'إعادة المحاولة' : 'Retry'),
+                ),
+              ],
+            ),
+          );
+        }
+        if (snapshot.connectionState == ConnectionState.done &&
+            result == null) {
+          return const SizedBox.shrink();
+        }
+        if (result is! DailyAyahResolved) {
+          return Container(
+            height: 112,
+            decoration: BoxDecoration(
+              color: surface,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            ),
+            alignment: Alignment.center,
+            child: const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          );
+        }
+
+        final surahName = context.isArabic
+            ? result.surah.nameAr
+            : result.surah.nameEn;
+        return Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            onTap: result.readerLocation == null
+                ? null
+                : () => context.push(result.readerLocation!),
+            child: Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: AppDecorations.bentoCard(
+                isDark: isDark,
+                accentGlow: AppColors.gold.withValues(alpha: 0.08),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.auto_stories_rounded,
+                        color: AppColors.gold,
+                        size: 20,
+                      ),
+                      const SizedBox(width: AppSpacing.xs + 2),
+                      Text(
+                        context.isArabic ? 'آية اليوم' : 'Daily Ayah',
+                        style: AppTypography.labelLarge.copyWith(
+                          color: AppColors.gold,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        '$surahName · ${result.reference.ayahNumber}',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: subtextColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    result.ayah.text,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    textDirection: TextDirection.rtl,
+                    style: AppTypography.titleMedium.copyWith(
+                      color: textColor,
+                      fontFamily: 'Amiri',
+                      height: 1.7,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CompactProgressLink extends StatelessWidget {
+  const _CompactProgressLink({required this.isDark});
+
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        onTap: () => context.go(AppRoutes.progress),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCard : AppColors.lightCard,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(color: primary.withValues(alpha: 0.16)),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.insights_rounded, color: primary),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text(
+                  context.isArabic ? 'عرض تقدّمك' : 'View your progress',
+                  style: AppTypography.titleSmall.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Icon(
+                context.isArabic
+                    ? Icons.arrow_back_ios_new_rounded
+                    : Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: primary,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

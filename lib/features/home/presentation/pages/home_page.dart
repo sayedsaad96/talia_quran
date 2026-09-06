@@ -23,6 +23,7 @@ import '../../../../core/journey/journey_feature_flags.dart';
 import '../../../../core/memorization/smart_coach_recommendation.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/services/app_session_service.dart';
+import '../../../../core/journey/unified_journey_action.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
 import '../widgets/unified_hero_action_card.dart';
 import '../../../../core/journey/unified_journey_action_mapper.dart';
@@ -38,6 +39,8 @@ import '../cubits/home_cubit.dart';
 import '../../../khatmah/presentation/widgets/khatmah_hero_card.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
+import '../../domain/daily_ayah/daily_ayah_resolver.dart';
+import '../../domain/daily_ayah/daily_ayah_result.dart';
 part 'home_page_widgets.dart';
 
 class HomePage extends StatefulWidget {
@@ -244,6 +247,23 @@ class _HomeContent extends StatelessWidget {
             ),
           ),
 
+        if (JourneyFeatureFlags.unifiedJourneyEnabled &&
+            state.journeyResolution?.secondaryAction != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.sm,
+                AppSpacing.pagePadding,
+                0,
+              ),
+              child: _SecondaryJourneyAction(
+                action: state.journeyResolution!.secondaryAction!,
+                isDark: isDark,
+              ),
+            ),
+          ),
+
         // ─── Khatmah Hero Card ──────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
@@ -263,23 +283,21 @@ class _HomeContent extends StatelessWidget {
           ),
         ),
 
-        // ─── Daily Wird Card ────────────────────────────────────────────────
+        // The card resolves independently, so Quran data failure never hides
+        // the learner's journey action above.
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.pagePadding,
-              AppSpacing.md,
+              AppSpacing.sm,
               AppSpacing.pagePadding,
               0,
             ),
-            child: _DailyWirdCard(state: state, isDark: isDark),
+            child: const _DailyAyahCard(),
           ),
         ),
 
-        // Support prompts follow today's prescribed practice, so they never
-        // compete with the first action a learner sees.
-        SliverToBoxAdapter(child: _SignInNudgeBanner(isDark: isDark)),
-
+        // Keep one contextual helper prompt below the practice cards.
         if (state.lastRestorableLocation == null)
           SliverToBoxAdapter(child: _TutorialPromptBanner(isDark: isDark)),
 
@@ -303,7 +321,7 @@ class _HomeContent extends StatelessWidget {
             ),
           ),
 
-        // ─── Engagement Stats ─────────────────────────────────────────────
+        // Detailed metrics and activity history are available from Progress.
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(
@@ -312,53 +330,7 @@ class _HomeContent extends StatelessWidget {
               AppSpacing.pagePadding,
               0,
             ),
-            child: _HomeEngagementSection(state: state, isDark: isDark),
-          ),
-        ),
-
-        // ─── Activity Heatmap ───────────────────────────────────────────────
-        if (state.activityCountsByDay.isNotEmpty)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.lg,
-                AppSpacing.pagePadding,
-                0,
-              ),
-              child: _HomeActivityHeatmapSection(state: state, isDark: isDark),
-            ),
-          ),
-
-        // ─── Progress Section ────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.lg,
-              AppSpacing.pagePadding,
-              0,
-            ),
-            child: _ProgressSection(
-              progress: state.progress,
-              totalXp: state.totalXp,
-              isDark: isDark,
-              isKids: isKids,
-              kidsPoints: state.progress.kidsPoints,
-            ),
-          ),
-        ),
-
-        // ─── Quick Actions ───────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.lg,
-              AppSpacing.pagePadding,
-              0,
-            ),
-            child: _QuickActionsGrid(isDark: isDark),
+            child: _CompactProgressLink(isDark: isDark),
           ),
         ),
 

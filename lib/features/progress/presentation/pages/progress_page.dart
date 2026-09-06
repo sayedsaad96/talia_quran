@@ -17,6 +17,7 @@ import '../../../../core/widgets/state_widgets.dart';
 import '../../../../core/services/achievement_service.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
 import '../../../../core/progress/progress_events_bus.dart';
+import '../../../../core/widgets/activity_heatmap.dart';
 import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../domain/entities/progress_entities.dart';
 import '../cubits/progress_cubit.dart';
@@ -71,6 +72,8 @@ class _ProgressView extends StatelessWidget {
                     progress: state.progress,
                     isKids: state.isKids,
                     isDark: isDark,
+                    activityCountsByDay: state.activityCountsByDay,
+                    activityStartDate: state.activityStartDate,
                   ),
                 ),
               ],
@@ -101,26 +104,37 @@ class _ProgressView extends StatelessWidget {
             tooltip: context.l10n.shareProgress,
             onSelected: (type) {
               final profileState = context.read<ProfileCubit>().state;
-              final name = profileState is ProfileLoaded && profileState.profile.hasName
+              final name =
+                  profileState is ProfileLoaded && profileState.profile.hasName
                   ? profileState.profile.displayName
                   : null;
               final data = switch (type) {
-                SocialShareCategory.progress => SocialShareData.progress(progress: state.progress, userName: name),
-                SocialShareCategory.memorization => SocialShareData.memorization(
+                SocialShareCategory.progress => SocialShareData.progress(
+                  progress: state.progress,
+                  userName: name,
+                ),
+                SocialShareCategory.memorization =>
+                  SocialShareData.memorization(
                     ayahsCount: state.progress.memorizedAyahs,
                     surahsCount: state.progress.memorizedSurahs,
                     userName: name,
                   ),
                 SocialShareCategory.streak => SocialShareData.streak(
-                    streakDays: state.progress.streakDays,
-                    userName: name,
-                  ),
-                _ => SocialShareData.progress(progress: state.progress, userName: name),
+                  streakDays: state.progress.streakDays,
+                  userName: name,
+                ),
+                _ => SocialShareData.progress(
+                  progress: state.progress,
+                  userName: name,
+                ),
               };
               SocialShareSheet.show(context, data);
             },
             itemBuilder: (context) => [
-              PopupMenuItem(value: SocialShareCategory.progress, child: Text(context.l10n.shareProgress)),
+              PopupMenuItem(
+                value: SocialShareCategory.progress,
+                child: Text(context.l10n.shareProgress),
+              ),
               PopupMenuItem(
                 value: SocialShareCategory.memorization,
                 child: Text(context.l10n.shareMemorizationMilestone),
@@ -189,11 +203,15 @@ class _ProgressContent extends StatefulWidget {
     required this.progress,
     required this.isKids,
     required this.isDark,
+    required this.activityCountsByDay,
+    required this.activityStartDate,
   });
 
   final OverallProgress progress;
   final bool isKids;
   final bool isDark;
+  final Map<String, int> activityCountsByDay;
+  final DateTime? activityStartDate;
 
   @override
   State<_ProgressContent> createState() => _ProgressContentState();
@@ -315,6 +333,33 @@ class _ProgressContentState extends State<_ProgressContent>
                   ),
                 ],
               ),
+
+              if (widget.activityCountsByDay.isNotEmpty &&
+                  widget.activityStartDate != null) ...[
+                const SizedBox(height: AppSpacing.sectionGap),
+                SectionHeader(
+                  title: context.l10n.homeActivityHeatmapTitle,
+                  padding: EdgeInsets.zero,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkCard : AppColors.lightCard,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    border: Border.all(
+                      color: isDark
+                          ? AppColors.darkDivider
+                          : AppColors.lightDivider,
+                      width: 0.5,
+                    ),
+                  ),
+                  child: ActivityHeatmap(
+                    activityCountsByDay: widget.activityCountsByDay,
+                    startDate: widget.activityStartDate!,
+                  ),
+                ),
+              ],
 
               const SizedBox(height: AppSpacing.sectionGap),
 
