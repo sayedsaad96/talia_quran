@@ -229,7 +229,10 @@ void main() {
     expect(state.heroAction?.route, '/quran/page/99');
     expect(state.journeyResolution?.primary.route, '/quran/page/99');
     await Future<void>.delayed(const Duration(milliseconds: 350));
-    expect((cubit!.state as HomeLoaded).heroAction?.route, '/quran/page/99');
+    final delayedState = cubit!.state as HomeLoaded;
+    expect(delayedState.heroAction?.route, '/quran/page/99');
+    expect(delayedState.journeyResolution?.primary.route, '/quran/page/99');
+    expect(delayedState.journeyResolution?.secondary, isNull);
   });
   test('pending Home load cannot restore invalidated old Khatmah', () async {
     SharedPreferences.setMockInitialValues({});
