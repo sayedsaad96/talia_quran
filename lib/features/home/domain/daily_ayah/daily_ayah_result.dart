@@ -17,6 +17,20 @@ class DailyAyahResolved extends DailyAyahResult {
 
   final Surah surah;
   final Ayah ayah;
+
+  /// Exact reader location. A missing page keeps the card non-navigable
+  /// instead of guessing a Quran location.
+  String? get readerLocation {
+    final pageNumber = ayah.page;
+    if (pageNumber == null) return null;
+    return Uri(
+      path: '/quran/page/$pageNumber',
+      queryParameters: {
+        'surahId': '${reference.surahId}',
+        'ayahNumber': '${reference.ayahNumber}',
+      },
+    ).toString();
+  }
 }
 
 class DailyAyahUnavailable extends DailyAyahResult {

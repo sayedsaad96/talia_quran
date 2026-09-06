@@ -44,13 +44,14 @@ class DailyAyahResolver {
   ];
 
   DailyAyahReference referenceFor(DateTime localDate) {
-    final normalizedDate = DateTime(
+    final normalizedDate = DateTime.utc(
       localDate.year,
       localDate.month,
       localDate.day,
     );
     final index =
-        normalizedDate.difference(DateTime(2024)).inDays % references.length;
+        normalizedDate.difference(DateTime.utc(2024)).inDays %
+        references.length;
     return references[index];
   }
 
