@@ -41,6 +41,7 @@ class HomeLoaded extends HomeState {
   });
 
   static const Object _khatmahSentinel = Object();
+  static const Object _journeyActionSentinel = Object();
 
   HomeLoaded copyWith({
     OverallProgress? progress,
@@ -54,8 +55,8 @@ class HomeLoaded extends HomeState {
     Map<String, int>? activityCountsByDay,
     DateTime? activityStartDate,
     SmartCoachRecommendation? coachRecommendation,
-    UnifiedJourneyAction? heroAction,
-    UnifiedJourneyResolution? journeyResolution,
+    Object? heroAction = _journeyActionSentinel,
+    Object? journeyResolution = _journeyActionSentinel,
     int? totalXp,
     Object? activeKhatmah = _khatmahSentinel,
     Object? khatmahError = _khatmahSentinel,
@@ -73,8 +74,12 @@ class HomeLoaded extends HomeState {
       activityCountsByDay: activityCountsByDay ?? this.activityCountsByDay,
       activityStartDate: activityStartDate ?? this.activityStartDate,
       coachRecommendation: coachRecommendation ?? this.coachRecommendation,
-      heroAction: heroAction ?? this.heroAction,
-      journeyResolution: journeyResolution ?? this.journeyResolution,
+      heroAction: identical(heroAction, _journeyActionSentinel)
+          ? this.heroAction
+          : heroAction as UnifiedJourneyAction?,
+      journeyResolution: identical(journeyResolution, _journeyActionSentinel)
+          ? this.journeyResolution
+          : journeyResolution as UnifiedJourneyResolution?,
       totalXp: totalXp ?? this.totalXp,
       activeKhatmah: identical(activeKhatmah, _khatmahSentinel)
           ? this.activeKhatmah

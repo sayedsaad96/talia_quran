@@ -73,15 +73,25 @@ class HomeCubit extends Cubit<HomeState> {
     });
     _progressChangesSub = _progressEvents.changes.listen(_onProgressChanged);
     _khatmahChangesSub = _getActiveKhatmah?.changes?.listen((_) {
+      final revision = ++_khatmahRevision;
       if (isClosed) return;
       final current = state;
       if (current is HomeLoaded) {
         try {
           _checkKhatmahAuthority(current.activeKhatmah);
         } catch (error) {
-          emit(current.copyWith(activeKhatmah: null, khatmahError: error));
+          emit(
+            current.copyWith(
+              activeKhatmah: null,
+              khatmahError: error,
+              heroAction: null,
+              journeyResolution: null,
+            ),
+          );
         }
-        unawaited(_refreshKhatmah());
+        unawaited(_refreshKhatmah(revision));
+      } else {
+        _scheduleFullReload();
       }
     });
   }
@@ -91,8 +101,7 @@ class HomeCubit extends Cubit<HomeState> {
     if (authority is AccountDataLease) authority.check();
   }
 
-  Future<void> _refreshKhatmah() async {
-    final revision = ++_khatmahRevision;
+  Future<void> _refreshKhatmah(int revision) async {
     KhatmahPlan? plan;
     Object? error;
     try {
@@ -104,7 +113,15 @@ class HomeCubit extends Cubit<HomeState> {
     }
     final current = state;
     if (!isClosed && revision == _khatmahRevision && current is HomeLoaded) {
-      emit(current.copyWith(activeKhatmah: plan, khatmahError: error));
+      emit(
+        current.copyWith(
+          activeKhatmah: plan,
+          khatmahError: error,
+          heroAction: null,
+          journeyResolution: null,
+        ),
+      );
+      _scheduleFullReload();
     }
   }
 
@@ -142,6 +159,7 @@ class HomeCubit extends Cubit<HomeState> {
 
   Future<void> load() async {
     if (isClosed) return;
+    final khatmahRevisionAtLoad = _khatmahRevision;
     emit(const HomeLoading());
 
     final now = DateTime.now();
@@ -208,6 +226,13 @@ class HomeCubit extends Cubit<HomeState> {
     // P1-05 FIX: Guard against emitting after the cubit was closed during the
     // 7 awaits above. Emitting on a closed cubit throws a StateError.
     if (isClosed) return;
+    if (khatmahRevisionAtLoad != _khatmahRevision) return;
+    try {
+      _checkKhatmahAuthority(activeKhatmah);
+    } catch (error) {
+      activeKhatmah = null;
+      khatmahError = error;
+    }
     // Sprint C: Unified Journey Hero Action Evaluation
     UnifiedJourneyResolution? journeyResolution;
     try {
@@ -228,6 +253,14 @@ class HomeCubit extends Cubit<HomeState> {
     if (isClosed) return;
     final totalXp = await _xpService.getTotalXp();
     if (isClosed) return;
+    if (khatmahRevisionAtLoad != _khatmahRevision) return;
+    try {
+      _checkKhatmahAuthority(activeKhatmah);
+    } catch (error) {
+      activeKhatmah = null;
+      khatmahError = error;
+      journeyResolution = null;
+    }
     progressResult.fold((f) => emit(HomeError(f.message)), (progress) {
       emit(
         HomeLoaded(

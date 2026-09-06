@@ -176,6 +176,8 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect((cubit!.state as HomeLoaded).activeKhatmah, isNull);
       expect((cubit!.state as HomeLoaded).khatmahError, isNotNull);
+      expect((cubit!.state as HomeLoaded).heroAction, isNull);
+      expect((cubit!.state as HomeLoaded).journeyResolution, isNull);
       fakeGetActiveKhatmah.error = null;
       fakeGetActiveKhatmah.planToReturn = testPlan.copyWith(id: 'new-owner');
       await cubit!.load();
