@@ -12,6 +12,7 @@ import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/core/services/quran_reciter_service.dart';
 import 'package:talia_quran/core/services/streak_service.dart';
 import 'package:talia_quran/features/progress/domain/usecases/save_read_page_usecase.dart';
+import 'package:talia_quran/features/quran/data/datasources/bookmark_service.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 import 'package:talia_quran/features/quran/presentation/cubits/quran_page_cubit.dart';
@@ -100,6 +101,7 @@ void main() {
     getIt
       ..registerSingleton<SharedPreferences>(prefs)
       ..registerSingleton<AppSessionService>(AppSessionService(prefs))
+      ..registerSingleton<BookmarkService>(BookmarkService(prefs))
       ..registerSingleton<QuranReciterService>(reciterService)
       ..registerSingleton<QuranPageCubit>(
         QuranPageCubit(

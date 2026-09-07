@@ -118,8 +118,9 @@ void main() {
       await tester.pumpWidget(_buildSplashTestApp(locale: const Locale('en')));
       await tester.pumpAndSettle();
 
+      // The brand tagline intentionally remains Arabic in every locale.
       expect(
-        find.text('Your Companion in the Journey of the Quran'),
+        find.text('رفيقك في رحاب القرآن'),
         findsOneWidget,
       );
     });
