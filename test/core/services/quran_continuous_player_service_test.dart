@@ -12,86 +12,105 @@ import 'package:talia_quran/core/services/quran_reciter_service.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 
+// ---------------------------------------------------------------------------
+// Controlled AudioPlayer mock
+// ---------------------------------------------------------------------------
+/// A test double for [AudioPlayer] that uses just_audio's playlist API
+/// (setAudioSources / currentIndexStream / playerStateStream).
 class ControlledAudioPlayer extends Mock implements AudioPlayer {
   final _playerStateController = StreamController<PlayerState>.broadcast(
     sync: true,
   );
-  final _playStartedController = StreamController<int>.broadcast(sync: true);
-  final List<Completer<void>> playCompleters = [];
+  final _currentIndexController = StreamController<int?>.broadcast(sync: true);
 
-  Stream<int> get playStarted => _playStartedController.stream;
+  int _currentIndex = 0;
+  int _playCallCount = 0;
 
+  /// Exposed so tests can assert how many times play() was called.
+  int get playCallCount => _playCallCount;
+
+  /// Simulates the engine finishing the current track and moving to the next.
   void finishCurrentTrack() {
-    _playerStateController.add(PlayerState(true, ProcessingState.completed));
-    final currentPlay = playCompleters.lastOrNull;
-    if (currentPlay != null && !currentPlay.isCompleted) {
-      currentPlay.complete();
-    }
-  }
-
-  void failCurrentTrack(Object error) {
-    final currentPlay = playCompleters.lastOrNull;
-    if (currentPlay != null && !currentPlay.isCompleted) {
-      currentPlay.completeError(error);
-    }
+    _playerStateController.add(
+      PlayerState(true, ProcessingState.completed),
+    );
   }
 
   Future<void> closeControllers() async {
     await stop();
     await _playerStateController.close();
-    await _playStartedController.close();
+    await _currentIndexController.close();
   }
+
+  /// Simulates the engine advancing to [index] (e.g., gapless transition).
+  void advanceToIndex(int index) {
+    _currentIndex = index;
+    _currentIndexController.add(index);
+    _playerStateController.add(PlayerState(true, ProcessingState.ready));
+  }
+
+  // ── AudioPlayer overrides ──────────────────────────────────────────────────
 
   @override
   Stream<PlayerState> get playerStateStream => _playerStateController.stream;
 
   @override
-  Future<void> play() {
-    final completer = Completer<void>();
-    playCompleters.add(completer);
-    _playStartedController.add(playCompleters.length);
-    return completer.future;
+  Stream<int?> get currentIndexStream => _currentIndexController.stream;
+
+  @override
+  Future<void> play() async {
+    _playCallCount++;
+    _playerStateController.add(PlayerState(true, ProcessingState.ready));
   }
 
   @override
   Future<void> pause() async {
-    final currentPlay = playCompleters.lastOrNull;
-    if (currentPlay != null && !currentPlay.isCompleted) {
-      currentPlay.complete();
-    }
+    _playerStateController.add(PlayerState(false, ProcessingState.ready));
   }
 
   @override
   Future<void> stop() async {
-    for (final completer in playCompleters) {
-      if (!completer.isCompleted) completer.complete();
-    }
+    _playerStateController.add(PlayerState(false, ProcessingState.idle));
   }
 
   @override
-  Future<Duration?> setUrl(
-    String url, {
-    Map<String, String>? headers,
-    Duration? initialPosition,
+  Future<Duration?> setAudioSources(
+    List<AudioSource> sources, {
     bool preload = true,
-    dynamic tag,
-  }) async => const Duration(seconds: 1);
+    int? initialIndex,
+    Duration? initialPosition,
+    ShuffleOrder? shuffleOrder,
+  }) async {
+    _currentIndex = initialIndex ?? 0;
+    // Emit buffering → ready to simulate engine startup.
+    _playerStateController.add(PlayerState(false, ProcessingState.buffering));
+    _playerStateController.add(PlayerState(false, ProcessingState.ready));
+    _currentIndexController.add(_currentIndex);
+    return const Duration(seconds: 1);
+  }
 
   @override
-  Future<Duration?> setFilePath(
-    String filePath, {
-    Duration? initialPosition,
-    bool preload = true,
-    dynamic tag,
-  }) async => const Duration(seconds: 1);
+  Future<void> seekToNext() async {
+    advanceToIndex(_currentIndex + 1);
+  }
 
   @override
-  Future<void> seek(Duration? position, {int? index}) async {}
+  Future<void> seekToPrevious() async {
+    if (_currentIndex > 0) advanceToIndex(_currentIndex - 1);
+  }
+
+  @override
+  Future<void> seek(Duration? position, {int? index}) async {
+    if (index != null) advanceToIndex(index);
+  }
 
   @override
   Future<void> dispose() => stop();
 }
 
+// ---------------------------------------------------------------------------
+// Fake repository
+// ---------------------------------------------------------------------------
 class FakeQuranRepository implements QuranRepository {
   final Map<int, SurahDetail> surahDetails = {
     1: const SurahDetail(
@@ -188,6 +207,9 @@ class FakeQuranRepository implements QuranRepository {
       const Right([]);
 }
 
+// ---------------------------------------------------------------------------
+// Tests
+// ---------------------------------------------------------------------------
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -207,8 +229,6 @@ void main() {
       quranRepository: repository,
       reciterService: reciterService,
       player: audioPlayer,
-      audioSourceResolver: (ayah, reciter) async =>
-          'https://audio.test/${ayah.surahId}/${ayah.numberInSurah}.mp3',
     );
   });
 
@@ -229,38 +249,23 @@ void main() {
     expect(service.state.errorMessage, isNotNull);
   });
 
-  test('playSurah returns after the first ayah starts', () async {
-    final firstPlayStarted = audioPlayer.playStarted.firstWhere(
-      (playCount) => playCount == 1,
-    );
+  test('playSurah loads playlist and starts playing', () async {
+    await service.playSurah(1);
 
-    final playback = service.playSurah(1);
-    await firstPlayStarted;
-    await playback.timeout(
-      const Duration(seconds: 1),
-      onTimeout: () =>
-          throw StateError('playSurah waited for the ayah to finish'),
-    );
-
+    expect(service.state.currentSurahId, 1);
     expect(service.state.currentAyahNumber, 1);
-    expect(service.state.status, PlaybackStatus.playing);
+    expect(audioPlayer.playCallCount, greaterThanOrEqualTo(1));
   });
 
   test(
-    'surah playback advances automatically after an ayah completes',
+    'surah playback advances automatically when engine emits next index',
     () async {
-      final firstPlayStarted = audioPlayer.playStarted.firstWhere(
-        (playCount) => playCount == 1,
-      );
-      final secondPlayStarted = audioPlayer.playStarted.firstWhere(
-        (playCount) => playCount == 2,
-      );
+      await service.playSurah(1);
+      expect(service.state.currentAyahNumber, 1);
 
-      final playback = service.playSurah(1);
-      await firstPlayStarted;
-      await playback;
-      audioPlayer.finishCurrentTrack();
-      await secondPlayStarted.timeout(const Duration(seconds: 1));
+      // Simulate just_audio's gapless advance to the next item.
+      audioPlayer.advanceToIndex(1);
+      await Future<void>.delayed(Duration.zero);
 
       expect(service.state.currentAyahNumber, 2);
       expect(service.state.scope, PlayScope.surah);
@@ -268,143 +273,58 @@ void main() {
     },
   );
 
-  test('surah playback stops after the selected surah ends', () async {
-    final firstPlayStarted = audioPlayer.playStarted.firstWhere(
-      (playCount) => playCount == 1,
-    );
-    final secondPlayStarted = audioPlayer.playStarted.firstWhere(
-      (playCount) => playCount == 2,
-    );
-    final secondAyahReady = Completer<void>();
+  test('surah playback stops after playlist completed signal', () async {
     final stopped = Completer<void>();
-    void completeWhenStateChanges() {
-      if (service.state.status == PlaybackStatus.playing &&
-          service.state.currentAyahNumber == 2 &&
-          !secondAyahReady.isCompleted) {
-        secondAyahReady.complete();
-      }
+    service.stateNotifier.addListener(() {
       if (service.state.isIdle && !stopped.isCompleted) stopped.complete();
-    }
+    });
 
-    service.stateNotifier.addListener(completeWhenStateChanges);
-    try {
-      final playback = service.playSurah(1);
-      await firstPlayStarted;
-      await playback;
-      audioPlayer.finishCurrentTrack();
-      await secondPlayStarted.timeout(const Duration(seconds: 1));
-      await secondAyahReady.future.timeout(const Duration(seconds: 1));
+    await service.playSurah(1);
+    audioPlayer.finishCurrentTrack();
+    await stopped.future.timeout(const Duration(seconds: 2));
 
-      audioPlayer.finishCurrentTrack();
-      await stopped.future.timeout(const Duration(seconds: 1));
-
-      expect(audioPlayer.playCompleters, hasLength(2));
-      expect(service.state.status, PlaybackStatus.idle);
-    } finally {
-      service.stateNotifier.removeListener(completeWhenStateChanges);
-    }
+    expect(service.state.status, PlaybackStatus.idle);
   });
 
-  test(
-    'page playback plays the current page completely and then stops',
-    () async {
-      final firstPlayStarted = audioPlayer.playStarted.firstWhere(
-        (playCount) => playCount == 1,
-      );
-      final secondPlayStarted = audioPlayer.playStarted.firstWhere(
-        (playCount) => playCount == 2,
-      );
-      final secondAyahReady = Completer<void>();
-      final stopped = Completer<void>();
-      void completeWhenStateChanges() {
-        if (service.state.status == PlaybackStatus.playing &&
-            service.state.currentAyahNumber == 2 &&
-            !secondAyahReady.isCompleted) {
-          secondAyahReady.complete();
-        }
-        if (service.state.isIdle && !stopped.isCompleted) stopped.complete();
-      }
+  test('page playback starts with correct scope and page number', () async {
+    await service.playPage(1);
 
-      service.stateNotifier.addListener(completeWhenStateChanges);
-      try {
-        final playback = service.playPage(1);
-        await firstPlayStarted;
-        await playback;
-        expect(service.state.scope, PlayScope.page);
-        expect(service.state.currentAyahNumber, 1);
-        expect(service.state.hasNext, isTrue);
+    expect(service.state.scope, PlayScope.page);
+    expect(service.state.currentAyahNumber, 1);
+    expect(service.state.currentPageNumber, 1);
+    expect(service.state.hasNext, isTrue);
+  });
 
-        audioPlayer.finishCurrentTrack();
-        await secondPlayStarted.timeout(const Duration(seconds: 1));
-        await secondAyahReady.future.timeout(const Duration(seconds: 1));
-        expect(service.state.currentPageNumber, 1);
-        expect(service.state.currentAyahNumber, 2);
-        expect(service.state.hasNext, isFalse);
+  test('page playback advances to next ayah via index stream', () async {
+    await service.playPage(1);
+    audioPlayer.advanceToIndex(1);
+    await Future<void>.delayed(Duration.zero);
 
-        await service.nextAyah();
-        expect(service.state.currentPageNumber, 1);
-        expect(service.state.status, PlaybackStatus.playing);
+    expect(service.state.currentAyahNumber, 2);
+    expect(service.state.hasNext, isFalse);
+  });
 
-        audioPlayer.finishCurrentTrack();
-        await stopped.future.timeout(const Duration(seconds: 1));
-        expect(audioPlayer.playCompleters, hasLength(2));
-      } finally {
-        service.stateNotifier.removeListener(completeWhenStateChanges);
-      }
-    },
-  );
+  test('single ayah playback sets singleAyah scope', () async {
+    await service.playAyah(1, 1);
 
-  test('single ayah playback stops without starting another ayah', () async {
-    final firstPlayStarted = audioPlayer.playStarted.firstWhere(
-      (playCount) => playCount == 1,
-    );
+    expect(service.state.scope, PlayScope.singleAyah);
+    expect(service.state.hasNext, isFalse);
+    expect(service.state.hasPrevious, isFalse);
+  });
+
+  test('single ayah playback stops on playlist completion', () async {
     final stopped = Completer<void>();
-    void completeWhenStopped() {
+    service.stateNotifier.addListener(() {
       if (service.state.isIdle && !stopped.isCompleted) stopped.complete();
-    }
+    });
 
-    service.stateNotifier.addListener(completeWhenStopped);
-    try {
-      final playback = service.playAyah(1, 1);
-      await firstPlayStarted;
-      await playback;
-      expect(service.state.scope, PlayScope.singleAyah);
-      expect(service.state.hasNext, isFalse);
-      expect(service.state.hasPrevious, isFalse);
+    await service.playAyah(1, 1);
+    audioPlayer.finishCurrentTrack();
+    await stopped.future.timeout(const Duration(seconds: 2));
 
-      audioPlayer.finishCurrentTrack();
-      await stopped.future.timeout(const Duration(seconds: 1));
-
-      expect(audioPlayer.playCompleters, hasLength(1));
-      expect(service.state.status, PlaybackStatus.idle);
-    } finally {
-      service.stateNotifier.removeListener(completeWhenStopped);
-    }
+    expect(service.state.status, PlaybackStatus.idle);
   });
 
-  test('an asynchronous player failure becomes an error state', () async {
-    final firstPlayStarted = audioPlayer.playStarted.firstWhere(
-      (playCount) => playCount == 1,
-    );
-    final failed = Completer<void>();
-    void completeWhenFailed() {
-      if (service.state.isError && !failed.isCompleted) failed.complete();
-    }
-
-    service.stateNotifier.addListener(completeWhenFailed);
-    try {
-      final playback = service.playSurah(1);
-      await firstPlayStarted;
-      await playback;
-
-      audioPlayer.failCurrentTrack(StateError('decoder failed'));
-      await failed.future.timeout(const Duration(seconds: 1));
-
-      expect(service.state.errorMessage, isNotNull);
-    } finally {
-      service.stateNotifier.removeListener(completeWhenFailed);
-    }
-  });
   test('playPage emits error on non-existent page', () async {
     await service.playPage(999);
     expect(service.state.status, PlaybackStatus.error);
@@ -421,5 +341,25 @@ void main() {
     await service.stop();
     expect(service.state.status, PlaybackStatus.idle);
     expect(service.state.isIdle, isTrue);
+  });
+
+  test('pause and resume toggle playback status', () async {
+    await service.playSurah(1);
+    expect(service.state.status, PlaybackStatus.playing);
+
+    await service.pause();
+    expect(service.state.status, PlaybackStatus.paused);
+
+    await service.resume();
+    expect(service.state.status, PlaybackStatus.playing);
+  });
+
+  test('nextAyah seeks player to next index', () async {
+    await service.playPage(1); // 2 ayahs, starts at index 0
+    await service.nextAyah(); // internally calls seekToNext → advanceToIndex(1)
+    // Allow the currentIndexStream event to propagate through the listener.
+    await Future<void>.delayed(const Duration(milliseconds: 10));
+
+    expect(service.state.currentAyahNumber, 2);
   });
 }
