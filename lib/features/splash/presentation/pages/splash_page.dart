@@ -28,6 +28,8 @@ class _SplashPageState extends State<SplashPage> {
   bool _hasNavigated = false;
   bool _initError = false;
 
+  static const Duration _minDisplayDuration = Duration(milliseconds: 2500);
+
   @override
   void initState() {
     super.initState();
@@ -35,20 +37,32 @@ class _SplashPageState extends State<SplashPage> {
   }
 
   Future<void> _runInitialization() async {
+    final stopwatch = Stopwatch()..start();
+
     if (AppInitializer.isInitialized) {
-      // Already initialized (e.g. hot restart / returning) — route smoothly after frame.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Already initialized (e.g. hot restart / returning) — display for minimum duration.
+      await Future.delayed(_minDisplayDuration);
+      if (mounted) {
         _navigateToNextScreen();
-      });
+      }
       return;
     }
 
     try {
       await AppInitializer.initialize();
 
+      // Ensure splash screen remains visible for at least _minDisplayDuration
+      // so users can comfortably appreciate the serene branding and animations.
+      final elapsed = stopwatch.elapsed;
+      if (elapsed < _minDisplayDuration) {
+        await Future.delayed(_minDisplayDuration - elapsed);
+      }
+
       // Signal to TaliaApp that initialization is complete so it can rebuild
       // into the full BlocProvider tree and GoRouter without navigation race conditions.
-      appInitializedNotifier.value = true;
+      if (mounted) {
+        appInitializedNotifier.value = true;
+      }
     } catch (error, stack) {
       TaliaLogger.e('Splash initialization failed', error, stack);
       if (mounted) {
@@ -70,23 +84,26 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
     // Honor the system "remove animations" accessibility setting.
     final animate = !MediaQuery.disableAnimationsOf(context);
-    // Align background with Android/iOS native splash (#061811 in dark) to prevent visual flash
-    final background = isDark
-        ? const Color(0xFF061811)
-        : AppColors.lightBackground;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final subTextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    // Align background with deep nocturnal palette to prevent any bright visual flash
+    const background = Color(0xFF030D09);
+    const primary = Color(0xFF5CD2A5);
+    const subTextColor = Color(0xFFD4E0D9);
 
     return Scaffold(
       backgroundColor: background,
       body: Stack(
         children: [
-          // Subtle ambient backdrop gradient
+          // Serene vertical mosque background
+          Positioned.fill(
+            child: Image.asset(
+              'assets/images/mosque_bg_vertical.jpg',
+              fit: BoxFit.cover,
+              alignment: Alignment.center,
+            ),
+          ),
+          // Subtle atmospheric overlay ensuring smooth legibility and depth
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
@@ -94,10 +111,11 @@ class _SplashPageState extends State<SplashPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    background,
-                    isDark ? const Color(0xFF0A221C) : const Color(0xFFF4F7F4),
-                    background,
+                    Colors.black.withValues(alpha: 0.20),
+                    Colors.transparent,
+                    Colors.black.withValues(alpha: 0.40),
                   ],
+                  stops: const [0.0, 0.45, 1.0],
                 ),
               ),
             ),
@@ -122,9 +140,7 @@ class _SplashPageState extends State<SplashPage> {
                               height: 170,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: primary.withValues(
-                                  alpha: isDark ? 0.10 : 0.06,
-                                ),
+                                color: primary.withValues(alpha: 0.12),
                               ),
                             )
                             .animate(
@@ -159,16 +175,23 @@ class _SplashPageState extends State<SplashPage> {
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xl),
-                    // Poetic Brand Tagline
+                    // Poetic Brand Tagline (always in Arabic)
                     Text(
-                          context.l10n.splashTagline,
+                          'رفيقك في رحاب القرآن',
                           textAlign: TextAlign.center,
                           style: AppTypography.titleMedium.copyWith(
-                            color: isDark ? AppColors.primaryLight : primary,
+                            color: const Color(0xFFEAEAEA),
                             fontFamily: 'Amiri',
                             fontWeight: FontWeight.w700,
-                            fontSize: 20,
+                            fontSize: 22,
                             letterSpacing: 0.2,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withValues(alpha: 0.65),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
                         )
                         .animate(delay: animate ? 250.ms : Duration.zero)
@@ -190,14 +213,12 @@ class _SplashPageState extends State<SplashPage> {
                           vertical: AppSpacing.sm,
                         ),
                         decoration: BoxDecoration(
-                          color: isDark
-                              ? AppColors.darkCard
-                              : AppColors.lightCard,
+                          color: const Color(0xFF071B14).withValues(alpha: 0.92),
                           borderRadius: BorderRadius.circular(
                             AppSpacing.radiusMd,
                           ),
                           border: Border.all(
-                            color: AppColors.error.withValues(alpha: 0.3),
+                            color: AppColors.error.withValues(alpha: 0.35),
                           ),
                         ),
                         child: Column(
@@ -234,15 +255,10 @@ class _SplashPageState extends State<SplashPage> {
                             height: 8,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: (isDark ? AppColors.primaryLight : primary)
-                                  .withValues(alpha: 0.7),
+                              color: primary.withValues(alpha: 0.85),
                               boxShadow: [
                                 BoxShadow(
-                                  color:
-                                      (isDark
-                                              ? AppColors.primaryLight
-                                              : primary)
-                                          .withValues(alpha: 0.3),
+                                  color: primary.withValues(alpha: 0.4),
                                   blurRadius: 8,
                                   spreadRadius: 2,
                                 ),

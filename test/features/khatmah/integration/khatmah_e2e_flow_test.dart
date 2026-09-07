@@ -50,6 +50,7 @@ import 'package:talia_quran/features/memorization_plus/domain/usecases/memorizat
 import 'package:talia_quran/features/progress/domain/entities/progress_entities.dart';
 import 'package:talia_quran/features/progress/domain/usecases/get_progress_usecase.dart';
 import 'package:talia_quran/features/progress/domain/usecases/save_read_page_usecase.dart';
+import 'package:talia_quran/features/quran/data/datasources/bookmark_service.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 import 'package:talia_quran/features/quran/domain/usecases/get_surahs_usecase.dart';
@@ -274,6 +275,7 @@ void main() {
     getIt
       ..registerSingleton<SharedPreferences>(prefs)
       ..registerSingleton<AppSessionService>(appSessionService)
+      ..registerSingleton<BookmarkService>(BookmarkService(prefs))
       ..registerSingleton<QuranReciterService>(reciterService)
       ..registerSingleton<AuthCubit>(_FakeAuthCubit())
       ..registerSingleton<GetActiveKhatmahUsecase>(getActiveKhatmahUsecase)

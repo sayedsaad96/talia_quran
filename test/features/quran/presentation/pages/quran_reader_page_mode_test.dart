@@ -28,6 +28,7 @@ import 'package:talia_quran/features/khatmah/domain/usecases/record_khatmah_read
 import 'package:talia_quran/features/khatmah/presentation/cubits/khatmah_cubit.dart';
 import 'package:talia_quran/features/khatmah/presentation/widgets/khatmah_reader_session_bar.dart';
 import 'package:talia_quran/features/progress/domain/usecases/save_read_page_usecase.dart';
+import 'package:talia_quran/features/quran/data/datasources/bookmark_service.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 import 'package:talia_quran/features/quran/presentation/cubits/quran_audio_player_cubit.dart';
@@ -174,6 +175,7 @@ void main() {
     getIt
       ..registerSingleton<SharedPreferences>(prefs)
       ..registerSingleton<AppSessionService>(mockSessionService)
+      ..registerSingleton<BookmarkService>(BookmarkService(prefs))
       ..registerSingleton<QuranReciterService>(reciterService)
       ..registerSingleton<AuthCubit>(_FakeAuthCubit())
       ..registerFactory<QuranPageCubit>(

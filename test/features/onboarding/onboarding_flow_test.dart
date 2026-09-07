@@ -36,7 +36,8 @@ void main() {
       await _registerCore();
       await tester.pumpWidget(_TestRouterApp(router: _splashRouter()));
       await tester.pump();
-      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(milliseconds: 2600));
+      await tester.pump();
 
       expect(find.text('onboarding route'), findsOneWidget);
     });
@@ -45,7 +46,8 @@ void main() {
       await _registerCore(initialPrefs: {'isFirstTimeAppOpen': false});
       await tester.pumpWidget(_TestRouterApp(router: _splashRouter()));
       await tester.pump();
-      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(milliseconds: 2600));
+      await tester.pump();
 
       expect(find.text('home route'), findsOneWidget);
     });

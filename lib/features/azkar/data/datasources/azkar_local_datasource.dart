@@ -10,22 +10,26 @@ abstract class AzkarLocalDatasource {
 }
 
 class AzkarLocalDatasourceImpl implements AzkarLocalDatasource {
-  Map<String, dynamic>? _cache;
+  AzkarLocalDatasourceImpl({AssetBundle? assetBundle})
+    : _assetBundle = assetBundle ?? rootBundle;
+
+  final AssetBundle _assetBundle;
+  Future<Map<String, dynamic>>? _cacheFuture;
 
   @override
   Future<List<ZikrModel>> getAzkar(AzkarCategory category) async {
+    final cacheFuture = _cacheFuture ??= _loadReleaseData();
+    late Map<String, dynamic> cache;
     try {
-      if (_cache == null) {
-        final jsonStr = await rootBundle.loadString(
-          'assets/data/azkar_release.json',
-        );
-        _cache = await compute(
-          (String str) => jsonDecode(str) as Map<String, dynamic>,
-          jsonStr,
-        );
-        _validateUniqueReleaseIds(_cache!);
+      cache = await cacheFuture;
+    } catch (e) {
+      if (identical(_cacheFuture, cacheFuture)) {
+        _cacheFuture = null;
       }
+      throw CacheFailure('Failed to load azkar: $e');
+    }
 
+    try {
       final key = switch (category) {
         AzkarCategory.morning => 'morning',
         AzkarCategory.evening => 'evening',
@@ -33,13 +37,25 @@ class AzkarLocalDatasourceImpl implements AzkarLocalDatasource {
         AzkarCategory.duas => 'duas',
       };
 
-      final list = _cache![key] as List<dynamic>;
+      final list = cache[key] as List<dynamic>;
       return list
           .map((e) => ZikrModel.fromJson(e as Map<String, dynamic>, category))
           .toList();
     } catch (e) {
       throw CacheFailure('Failed to load azkar: $e');
     }
+  }
+
+  Future<Map<String, dynamic>> _loadReleaseData() async {
+    final jsonStr = await _assetBundle.loadString(
+      'assets/data/azkar_release.json',
+    );
+    final cache = await compute(
+      (String str) => jsonDecode(str) as Map<String, dynamic>,
+      jsonStr,
+    );
+    _validateUniqueReleaseIds(cache);
+    return cache;
   }
 
   void _validateUniqueReleaseIds(Map<String, dynamic> source) {

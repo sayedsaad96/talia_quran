@@ -43,6 +43,18 @@ class AudioCacheService {
     return url;
   }
 
+  /// Returns the local cached file path if this ayah is already downloaded,
+  /// or [null] if it is not yet cached. Does NOT trigger a download.
+  Future<String?> getCachedFilePath(
+    int surahId,
+    int ayahNumber, {
+    QuranReciter? reciter,
+  }) async {
+    final url = QuranAudioService.buildUrl(surahId, ayahNumber, reciter: reciter);
+    final fileInfo = await _cacheManager.getFileFromCache(url);
+    return fileInfo?.file.path;
+  }
+
   /// Pre-downloads audio files for an upcoming session.
   Future<void> prefetchSession({
     required int surahId,

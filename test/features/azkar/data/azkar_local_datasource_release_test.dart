@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,16 +30,57 @@ void main() {
 
       final datasource = AzkarLocalDatasourceImpl();
 
-      expect(
+      await expectLater(
         datasource.getAzkar(AzkarCategory.morning),
         throwsA(isA<CacheFailure>()),
       );
     },
   );
+
+  test(
+    'shares the initial release-asset load across concurrent categories',
+    () async {
+      final source = jsonEncode({
+        'morning': [_approvedRecord(id: 'morning-001')],
+        'evening': [_approvedRecord(id: 'evening-001')],
+        'general': [_approvedRecord(id: 'general-001')],
+        'duas': [_approvedRecord(id: 'duas-001')],
+      });
+      final assetBundle = _CountingAssetBundle(source);
+
+      final datasource = AzkarLocalDatasourceImpl(assetBundle: assetBundle);
+      const categories = AzkarCategory.values;
+      final results = await Future.wait(categories.map(datasource.getAzkar));
+
+      expect(results.map((items) => items.single.id), [
+        'morning-001',
+        'evening-001',
+        'general-001',
+        'duas-001',
+      ]);
+      expect(assetBundle.loadCount, 1);
+    },
+  );
 }
 
-Map<String, dynamic> _approvedRecord() => {
-  'id': 'morning-001',
+class _CountingAssetBundle extends AssetBundle {
+  _CountingAssetBundle(this._source);
+
+  final String _source;
+  int loadCount = 0;
+
+  @override
+  Future<ByteData> load(String key) async {
+    expect(key, 'assets/data/azkar_release.json');
+    loadCount++;
+    await Future<void>.delayed(Duration.zero);
+    final bytes = Uint8List.fromList(utf8.encode(_source));
+    return ByteData.view(bytes.buffer);
+  }
+}
+
+Map<String, dynamic> _approvedRecord({String id = 'morning-001'}) => {
+  'id': id,
   'text': 'نص معتمد',
   'count': 1,
   'citation': 'Quran 2:201',
