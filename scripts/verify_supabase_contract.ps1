@@ -284,7 +284,7 @@ Check 'bookmark direct DML revoked' "SELECT NOT has_table_privilege('authenticat
 Check 'review events direct DML revoked' "SELECT NOT has_table_privilege('authenticated','public.ayah_review_events','INSERT,UPDATE,DELETE')"
 Check 'parent rewards child read policy' "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='parent_rewards' AND policyname='parent_rewards_child_read')"
 Check 'bookmark owner read policy' "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='quran_bookmarks_cloud' AND policyname='quran_bookmarks_cloud_owner_read')"
-Check 'review events guardian read policy' "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='ayah_review_events' AND policyname='ayah_review_events_linked_parent_read')"
+Check 'review events owner and guardian read policy' "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='ayah_review_events' AND policyname='ayah_review_events_read' AND qual LIKE '%auth.uid()%parent_child_links%')"
 if ($anyFailed) { throw 'Supabase contract verification failed.' }
 Write-Host 'PASS: Supabase contract verified'
 } finally {
