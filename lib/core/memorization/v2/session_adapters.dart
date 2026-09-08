@@ -76,6 +76,12 @@ final class V2SessionReviewAdapter {
       scope: readScope,
     );
 
+    final readFailure = existingResult.fold<Failure?>(
+      (failure) => failure,
+      (_) => null,
+    );
+    if (readFailure != null) return Left(readFailure);
+
     final now = DateTime.now().toUtc();
     final existing = existingResult.fold((_) => null, (record) => record);
 
@@ -106,12 +112,26 @@ final class V2SessionReviewAdapter {
     final markPlan = _markDailyPlanCompleted;
     if (markPlan != null &&
         createdByMode != ReviewRecordCreatedByMode.kidsMode) {
-      await markPlan(
-        MarkDailyPlanAyahCompletedParams(
-          surahId: surahId,
-          ayahNumber: ayahNumber,
-        ),
-      );
+      // The review projection is already durable at this point. A daily-plan
+      // cache write is not an idempotent part of the SRS operation yet, so
+      // reporting it as a failed review would invite a retry that schedules
+      // the same successful recitation twice. The event transaction added in
+      // the next delivery makes both effects atomic; until then, retain the
+      // durable review and let plan reconciliation repair its cache.
+      try {
+        await markPlan(
+          MarkDailyPlanAyahCompletedParams(
+            surahId: surahId,
+            ayahNumber: ayahNumber,
+          ),
+        );
+      } catch (error, stack) {
+        TaliaLogger.w(
+          'V2: review saved but daily-plan cache update failed',
+          error,
+          stack,
+        );
+      }
     }
     return const Right(null);
   }
@@ -120,20 +140,23 @@ final class V2SessionReviewAdapter {
   ///
   /// Marks each weak ayah with [PerformanceRating.weak] so Smart Coach
   /// picks them up as priority items in subsequent sessions.
-  Future<void> recordWeakAyahs(
+  Future<Either<Failure, void>> recordWeakAyahs(
     V2AyahFailureTracker tracker, {
     required Set<int> passedAyahNumbers,
     ReviewRecordCreatedByMode createdByMode =
         ReviewRecordCreatedByMode.v2Session,
   }) async {
     for (final record in tracker.weakAyahsExcluding(passedAyahNumbers)) {
-      await recordPass(
+      final result = await recordPass(
         surahId: record.surahId,
         ayahNumber: record.ayahNumber,
         hintLevel: V2HintLevel.fullAyah,
         createdByMode: createdByMode,
       );
+      final failure = result.fold((value) => value, (_) => null);
+      if (failure != null) return Left(failure);
     }
+    return const Right(null);
   }
 }
 
@@ -211,8 +234,37 @@ final class V2SessionProgressAdapter {
       if (ayah != null) restoredBlock.add(ayah);
     }
 
+    // A malformed persisted block must never be interpreted as a partially
+    // completed task. The caller normally starts a fresh session when the
+    // stored block is empty; this guard also makes direct restore safe.
+    if (restoredBlock.isEmpty) {
+      final fallbackBlock = blockAyahs.isEmpty
+          ? const <Ayah>[]
+          : <Ayah>[blockAyahs.first];
+      return V2SessionState(
+        surahId: saved.surahId,
+        blockAyahs: fallbackBlock,
+        currentAyahIndex: 0,
+        phase: V2SessionPhase.learning,
+        passedAyahNumbers: const {},
+        hintTracker: V2HintTracker.empty,
+        failureTracker: V2AyahFailureTracker.empty,
+        blockReviewRequired: saved.blockReviewRequired,
+      );
+    }
+
+    final restoredNumbers = restoredBlock
+        .map((ayah) => ayah.numberInSurah)
+        .toSet();
+    // Never trust persisted passes outside the parsed block. Filtering can
+    // only require the learner to repeat work; it can never skip an ayah.
+    final safePassed = saved.passedAyahNumbers
+        .where(restoredNumbers.contains)
+        .toSet();
+
     var failureTracker = const V2AyahFailureTracker();
     saved.failureCounts.forEach((ayahNumber, count) {
+      if (!restoredNumbers.contains(ayahNumber)) return;
       for (var i = 0; i < count; i++) {
         failureTracker = failureTracker.recordFailure(
           surahId: saved.surahId,
@@ -223,6 +275,11 @@ final class V2SessionProgressAdapter {
 
     var hintTracker = const V2HintTracker();
     saved.hintLevels.forEach((ayahNumber, levelIndex) {
+      if (!restoredNumbers.contains(ayahNumber) ||
+          levelIndex < 0 ||
+          levelIndex >= V2HintLevel.values.length) {
+        return;
+      }
       final level = V2HintLevel.values[levelIndex];
       hintTracker = hintTracker.record(
         surahId: saved.surahId,
@@ -233,10 +290,9 @@ final class V2SessionProgressAdapter {
 
     // Clamp the restored index in case the persisted block shrank (e.g. data
     // edited out-of-band). Defensive — should not happen in normal use.
-    final clampedIndex = saved.currentAyahIndex.clamp(
-      0,
-      restoredBlock.isEmpty ? 0 : restoredBlock.length - 1,
-    );
+    final rawIndex = saved.currentAyahIndex;
+    final hasValidIndex = rawIndex >= 0 && rawIndex < restoredBlock.length;
+    var safeIndex = hasValidIndex ? rawIndex : 0;
 
     // Defensive phaseIndex guard: a corrupted or future-enum persisted index
     // would otherwise throw RangeError and crash startSession(). Fall back to
@@ -245,7 +301,7 @@ final class V2SessionProgressAdapter {
     // gates. The Cubit has already filtered out terminal/pre-start phases.
     const phaseValues = V2SessionPhase.values;
     final savedPhaseIndex = saved.phaseIndex;
-    final phase = savedPhaseIndex >= 0 && savedPhaseIndex < phaseValues.length
+    var phase = savedPhaseIndex >= 0 && savedPhaseIndex < phaseValues.length
         ? phaseValues[savedPhaseIndex]
         : (() {
             TaliaLogger.w(
@@ -255,16 +311,41 @@ final class V2SessionProgressAdapter {
             return V2SessionPhase.learning;
           })();
 
+    // Block-review phases require evidence that every ayah was individually
+    // passed. A corrupt session must return to learning, never bypass the
+    // individual recitation gate. Terminal/created rows are likewise restored
+    // as the earliest safe in-flight phase.
+    final needsAllPasses =
+        phase == V2SessionPhase.blockReviewPending ||
+        phase == V2SessionPhase.blockReview ||
+        phase == V2SessionPhase.completed;
+    if (needsAllPasses && safePassed.length != restoredBlock.length) {
+      phase = V2SessionPhase.learning;
+      safeIndex = _firstUnpassedIndex(restoredBlock, safePassed);
+    } else if (phase == V2SessionPhase.created ||
+        phase == V2SessionPhase.completed ||
+        !hasValidIndex) {
+      phase = V2SessionPhase.learning;
+      safeIndex = _firstUnpassedIndex(restoredBlock, safePassed);
+    }
+
     return V2SessionState(
       surahId: saved.surahId,
       blockAyahs: restoredBlock,
-      currentAyahIndex: clampedIndex,
+      currentAyahIndex: safeIndex,
       phase: phase,
-      passedAyahNumbers: saved.passedAyahNumbers,
+      passedAyahNumbers: safePassed,
       hintTracker: hintTracker,
       failureTracker: failureTracker,
       blockReviewRequired: saved.blockReviewRequired,
     );
+  }
+
+  static int _firstUnpassedIndex(List<Ayah> block, Set<int> passed) {
+    for (var index = 0; index < block.length; index++) {
+      if (!passed.contains(block[index].numberInSurah)) return index;
+    }
+    return 0;
   }
 
   /// Deletes the saved session after completion or explicit abandon.

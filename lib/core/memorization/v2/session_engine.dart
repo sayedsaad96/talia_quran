@@ -76,10 +76,7 @@ final class V2SessionEngine {
   V2SessionState evaluateRecitation(V2SessionState state, String spokenText) {
     if (state.phase != V2SessionPhase.reciting) return state;
 
-    final result = _evaluator.evaluate(
-      targetText: state.currentAyah.text,
-      spokenText: spokenText,
-    );
+    final result = evaluateRecitationAttempt(state, spokenText);
 
     // No-attempt: STT returned empty — don't penalize.
     if (result.isNoAttempt) {
@@ -94,6 +91,20 @@ final class V2SessionEngine {
       return _handleFail(stateWithResult);
     }
   }
+
+  /// Returns the exact automatic metric used by [evaluateRecitation].
+  ///
+  /// The Cubit captures this before the state transition because a successful
+  /// non-final ayah deliberately clears its transient UI result while moving
+  /// to the next learning phase. Only the numeric score is persisted; never
+  /// the spoken/recognized text.
+  V2RecitationResult evaluateRecitationAttempt(
+    V2SessionState state,
+    String spokenText,
+  ) => _evaluator.evaluate(
+    targetText: state.currentAyah.text,
+    spokenText: spokenText,
+  );
 
   /// Evaluates a block review recitation.
   ///
@@ -176,14 +187,13 @@ final class V2SessionEngine {
     );
   }
 
-  static V2RecitationResult _manualPassResult() =>
-      const V2RecitationResult(
-        passed: true,
-        similarityScore: null,
-        normalizedTarget: '',
-        normalizedSpoken: '',
-        assessmentMethod: V2AssessmentMethod.manual,
-      );
+  static V2RecitationResult _manualPassResult() => const V2RecitationResult(
+    passed: true,
+    similarityScore: null,
+    normalizedTarget: '',
+    normalizedSpoken: '',
+    assessmentMethod: V2AssessmentMethod.manual,
+  );
 
   // ── Private Helpers ──────────────────────────────────────
 

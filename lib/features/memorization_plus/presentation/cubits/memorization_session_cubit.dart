@@ -19,6 +19,9 @@ import 'package:speech_to_text/speech_to_text.dart';
 import '../../../../core/constants/speech_constants.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/memorization/v2/hint_usage.dart';
+import '../../../../core/memorization/v2/review_effect_outbox_processor.dart';
+import '../../../../core/memorization/v2/review_outcome_committer.dart';
+import '../../../../core/memorization/v2/recitation_evaluator.dart';
 import '../../../../core/memorization/v2/session_adapters.dart';
 import '../../../../core/memorization/v2/session_engine.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
@@ -67,6 +70,7 @@ class MSActive extends MemorizationSessionState {
     required this.recognizedText,
     required this.isEvaluating,
     this.speechIssue,
+    this.persistenceIssue,
     this.audioFailed = false,
   });
 
@@ -78,6 +82,9 @@ class MSActive extends MemorizationSessionState {
 
   /// Non-null when STT encounters a permission or availability error.
   final V2SpeechIssue? speechIssue;
+
+  /// A durable review/checkpoint write failed. The state remains retryable.
+  final String? persistenceIssue;
   final bool audioFailed;
 
   MSActive copyWith({
@@ -89,6 +96,8 @@ class MSActive extends MemorizationSessionState {
     bool? isEvaluating,
     V2SpeechIssue? speechIssue,
     bool clearSpeechIssue = false,
+    String? persistenceIssue,
+    bool clearPersistenceIssue = false,
     bool? audioFailed,
   }) {
     return MSActive(
@@ -100,6 +109,9 @@ class MSActive extends MemorizationSessionState {
           : (recognizedText ?? this.recognizedText),
       isEvaluating: isEvaluating ?? this.isEvaluating,
       speechIssue: clearSpeechIssue ? null : (speechIssue ?? this.speechIssue),
+      persistenceIssue: clearPersistenceIssue
+          ? null
+          : (persistenceIssue ?? this.persistenceIssue),
       audioFailed: audioFailed ?? this.audioFailed,
     );
   }
@@ -112,6 +124,7 @@ class MSActive extends MemorizationSessionState {
     recognizedText,
     isEvaluating,
     speechIssue,
+    persistenceIssue,
     audioFailed,
   ];
 }
@@ -145,6 +158,8 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     required V2SessionReviewAdapter reviewAdapter,
     required V2SessionProgressAdapter progressAdapter,
     required V2SessionGamificationAdapter gamificationAdapter,
+    V2ReviewOutcomeCommitter? reviewOutcomeCommitter,
+    V2ReviewEffectOutboxProcessor? effectOutboxProcessor,
     AudioPlayer? audioPlayer,
     SpeechToText? speechToText,
     AudioCacheService? audioCacheService,
@@ -155,6 +170,8 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
        _reviewAdapter = reviewAdapter,
        _progressAdapter = progressAdapter,
        _gamificationAdapter = gamificationAdapter,
+       _reviewOutcomeCommitter = reviewOutcomeCommitter,
+       _effectOutboxProcessor = effectOutboxProcessor,
        _player = audioPlayer ?? AudioPlayer(),
        _speechToText = speechToText ?? SpeechToText(),
        _audioCache = audioCacheService ?? AudioCacheService.instance,
@@ -177,12 +194,18 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   final V2SessionReviewAdapter _reviewAdapter;
   final V2SessionProgressAdapter _progressAdapter;
   final V2SessionGamificationAdapter _gamificationAdapter;
+
+  /// Null only in existing unit-test construction. Production DI always
+  /// supplies this and therefore never follows the non-atomic legacy path.
+  final V2ReviewOutcomeCommitter? _reviewOutcomeCommitter;
+  final V2ReviewEffectOutboxProcessor? _effectOutboxProcessor;
   final AppSessionService? _appSessionService;
 
   // ── STT ──────────────────────────────────────────────────────────────────
 
   final SpeechToText _speechToText;
   bool _speechEnabled = false;
+  bool _evaluationInFlight = false;
 
   Future<void> _initSpeech() async {
     try {
@@ -237,6 +260,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     int blockSize = 5,
   }) async {
     emit(const MSLoading());
+    // Effects are durable and account-scoped. Replaying a previously committed
+    // receipt here heals an interrupted session without duplicating rewards.
+    unawaited(_processPendingEffects());
 
     // 1. Determine blockReviewRequired from profile.
     bool blockReviewRequired = true; // safe default
@@ -259,14 +285,17 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     );
 
     // Resume check: if a persisted session exists for this surah and is in a
-    // restorable phase, rehydrate it instead of starting fresh. Terminal
-    // (completed) and pre-start (created) phases are never restored — a stale
-    // completed row is cleared defensively to avoid double gamification awards.
+    // restorable phase, rehydrate it instead of starting fresh. A terminal
+    // checkpoint is safe to clear here only because the production committer
+    // has already durably written its evidence and completion effect.
     final savedOpt = await _progressAdapter.loadIfExists(surahId);
     final saved = savedOpt.fold(() => null, (s) => s);
     if (saved != null) {
-      final savedPhase = V2SessionPhase.values[saved.phaseIndex];
+      final savedPhase = _phaseFromPersistedIndex(saved.phaseIndex);
       if (savedPhase == V2SessionPhase.completed) {
+        // The event and outbox row—not this resumable UI checkpoint—are the
+        // durable proof of completion. Clearing the checkpoint lets a learner
+        // begin the next block without replaying the old result.
         await _progressAdapter.clear(surahId);
       } else if (savedPhase != V2SessionPhase.created &&
           saved.blockAyahNumbers.isNotEmpty) {
@@ -433,7 +462,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   }
 
   /// Stops STT and evaluates the recitation.
-  Future<void> stopRecording() async {
+  Future<void> stopRecording() => _runEvaluationExclusive(() async {
     _assertActive();
     final st = state as MSActive;
     if (!st.isRecording) return;
@@ -444,7 +473,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     // Brief UI delay for "Evaluating..." feedback.
     await Future.delayed(const Duration(milliseconds: 500));
     await _evaluateCurrentRecitation();
-  }
+  });
 
   /// V1-M8 — manual/self-grade route.
   ///
@@ -452,14 +481,14 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   /// from memory. Used when the microphone is denied, the recognizer is
   /// unavailable, or recognition keeps failing. No automatic score is
   /// fabricated; review scheduling behaves exactly like a normal pass.
-  Future<void> submitManualRecall() async {
+  Future<void> submitManualRecall() => _runEvaluationExclusive(() async {
     _assertActive();
     final st = state as MSActive;
     if (st.isRecording || st.isEvaluating) return;
 
     emit(st.copyWith(isEvaluating: true));
     await _evaluateCurrentRecitation(manualGrade: true);
-  }
+  });
 
   // ── Audio playback ────────────────────────────────────────────────────────
 
@@ -536,8 +565,33 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         sessionState: _sessionState!,
         clearRecognizedText: clearRecognizedText,
         clearSpeechIssue: clearSpeechIssue,
+        clearPersistenceIssue: true,
       ),
     );
+  }
+
+  V2SessionPhase? _phaseFromPersistedIndex(int phaseIndex) {
+    if (phaseIndex >= 0 && phaseIndex < V2SessionPhase.values.length) {
+      return V2SessionPhase.values[phaseIndex];
+    }
+    TaliaLogger.w(
+      'V2: persisted phaseIndex=$phaseIndex is invalid; restoring from learning',
+    );
+    // Null is deliberately restorable. restore() falls back to learning, a
+    // safe phase that cannot skip recitation or block review.
+    return null;
+  }
+
+  Future<void> _runEvaluationExclusive(
+    Future<void> Function() operation,
+  ) async {
+    if (_evaluationInFlight) return;
+    _evaluationInFlight = true;
+    try {
+      await operation();
+    } finally {
+      _evaluationInFlight = false;
+    }
   }
 
   /// Evaluates the current recitation based on session phase.
@@ -547,6 +601,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     final previousState = _sessionState!;
 
     V2SessionState newState;
+    V2RecitationResult? automaticEvidence;
     if (manualGrade) {
       switch (previousState.phase) {
         case V2SessionPhase.reciting:
@@ -559,6 +614,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
           return;
       }
     } else if (previousState.phase == V2SessionPhase.reciting) {
+      automaticEvidence = _engine.evaluateRecitationAttempt(
+        previousState,
+        spokenText,
+      );
       newState = _engine.evaluateRecitation(previousState, spokenText);
     } else if (previousState.phase == V2SessionPhase.blockReview) {
       newState = _engine.evaluateBlockReview(previousState, spokenText);
@@ -568,102 +627,231 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       return;
     }
 
-    _sessionState = newState;
     final noSpeech =
         !manualGrade &&
         spokenText.trim().isEmpty &&
         newState.phase == previousState.phase &&
         newState.lastRecitationResult == previousState.lastRecitationResult;
+
+    // Never expose a progress transition before its review/checkpoint writes
+    // succeed. This keeps the currently displayed state retryable after a
+    // local-storage or SRS failure.
+    final persisted = await _handlePostEvaluation(
+      previousState,
+      newState,
+      manuallyAssessed: manualGrade,
+      similarityScore: automaticEvidence?.similarityScore,
+    );
+    if (!persisted) {
+      _restoreAfterPersistenceFailure(previousState);
+      return;
+    }
+
+    if (newState.phase == V2SessionPhase.completed) {
+      final completed = await _onBlockCompleted(newState);
+      if (!completed) _restoreAfterPersistenceFailure(previousState);
+      return;
+    }
+
+    _sessionState = newState;
     emit(
       (state as MSActive).copyWith(
         sessionState: newState,
         isEvaluating: false,
         speechIssue: noSpeech ? V2SpeechIssue.noSpeech : null,
         clearSpeechIssue: manualGrade || !noSpeech,
+        clearPersistenceIssue: true,
       ),
     );
-
-    // Handle post-evaluation side effects.
-    await _handlePostEvaluation(previousState, newState);
   }
 
   /// Persists records and handles phase transitions after evaluation.
-  Future<void> _handlePostEvaluation(
+  Future<bool> _handlePostEvaluation(
     V2SessionState previousState,
-    V2SessionState newState,
-  ) async {
-    final lastResult = newState.lastRecitationResult;
+    V2SessionState newState, {
+    bool manuallyAssessed = false,
+    double? similarityScore,
+  }) async {
     final passedAyah = previousState.currentAyah;
-    final alreadyRecorded = previousState.passedAyahNumbers.contains(
-      passedAyah.numberInSurah,
+    final newlyPassedAyahs = newState.passedAyahNumbers.difference(
+      previousState.passedAyahNumbers,
     );
     final shouldRecordPass =
         previousState.phase == V2SessionPhase.reciting &&
-        lastResult != null &&
-        lastResult.passed &&
-        !alreadyRecorded;
+        newlyPassedAyahs.contains(passedAyah.numberInSurah);
+    final isAutomaticRecitationFailure =
+        !manuallyAssessed &&
+        (previousState.phase == V2SessionPhase.reciting ||
+            previousState.phase == V2SessionPhase.blockReview) &&
+        newState.failureTracker.totalFailures >
+            previousState.failureTracker.totalFailures;
+    // Individual-pass transitions intentionally clear their transient result
+    // while moving to the next ayah. Block-review failures retain it, so use
+    // the direct pre-transition metric when available and the persisted metric
+    // otherwise.
+    final evidenceSimilarity =
+        similarityScore ?? newState.lastRecitationResult?.similarityScore;
 
-    // Persist the passed-ayah set before the SRS write so a crash between
-    // the two cannot replay the same recitation as a second review.
-    if (newState.phase != V2SessionPhase.completed) {
-      await _progressAdapter.save(newState);
-    }
+    try {
+      if (shouldRecordPass) {
+        final committer = _reviewOutcomeCommitter;
+        if (committer != null) {
+          await committer.commitAutomaticPass(
+            previousState: previousState,
+            nextState: newState,
+            taskId: 'ayah:${previousState.surahId}:${passedAyah.numberInSurah}',
+            manuallyAssessed: manuallyAssessed,
+            similarityScore: evidenceSimilarity,
+          );
+          // The completion screen owns terminal processing so certificate
+          // awards are delivered with that screen rather than racing a
+          // fire-and-forget processor call.
+          if (newState.phase != V2SessionPhase.completed) {
+            unawaited(_processPendingEffects());
+          }
+          return true;
+        }
+        // Compatibility only for historical unit tests that construct this
+        // Cubit without DI. App production registers a committer and cannot
+        // take this two-store path.
+        final result = await _reviewAdapter.recordPass(
+          surahId: previousState.surahId,
+          ayahNumber: passedAyah.numberInSurah,
+          hintLevel: previousState.hintTracker.levelFor(
+            previousState.surahId,
+            passedAyah.numberInSurah,
+          ),
+        );
+        if (result.isLeft()) return false;
+      } else if (newState.phase == V2SessionPhase.completed &&
+          _reviewOutcomeCommitter != null) {
+        await _reviewOutcomeCommitter.commitBlockReviewCompletion(
+          previousState: previousState,
+          nextState: newState,
+          taskId: 'block-review:${previousState.surahId}',
+          manuallyAssessed: manuallyAssessed,
+          similarityScore: evidenceSimilarity,
+        );
+        return true;
+      } else if (isAutomaticRecitationFailure &&
+          _reviewOutcomeCommitter != null) {
+        final taskId = previousState.phase == V2SessionPhase.blockReview
+            ? 'block-review:${previousState.surahId}'
+            : 'ayah:${previousState.surahId}:${passedAyah.numberInSurah}';
+        await _reviewOutcomeCommitter.commitFailedAutomaticAttempt(
+          previousState: previousState,
+          nextState: newState,
+          taskId: taskId,
+          similarityScore: evidenceSimilarity,
+        );
+        unawaited(_processPendingEffects());
+        return true;
+      }
 
-    if (shouldRecordPass) {
-      await _reviewAdapter.recordPass(
-        surahId: previousState.surahId,
-        ayahNumber: passedAyah.numberInSurah,
-        hintLevel: previousState.hintTracker.levelFor(
-          previousState.surahId,
-          passedAyah.numberInSurah,
-        ),
-      );
-    }
-
-    // Block review completed — persist all records + gamification.
-    if (newState.phase == V2SessionPhase.completed) {
-      await _onBlockCompleted(newState);
+      // A terminal state is never checkpointed: resume would discard it and
+      // falsely look completed if finalization failed. It is cleared only
+      // after all required review writes succeed.
+      if (newState.phase != V2SessionPhase.completed) {
+        await _progressAdapter.save(newState);
+      }
+      return true;
+    } catch (error, stack) {
+      TaliaLogger.e('V2: Failed to persist recitation outcome', error, stack);
+      return false;
     }
   }
 
   /// Called when the session reaches the completed phase.
-  Future<void> _onBlockCompleted(V2SessionState finalState) async {
-    // Signal weak ayahs to Smart Coach.
-    await _reviewAdapter.recordWeakAyahs(
-      finalState.failureTracker,
-      passedAyahNumbers: finalState.passedAyahNumbers,
+  Future<bool> _onBlockCompleted(V2SessionState finalState) async {
+    try {
+      if (_reviewOutcomeCommitter != null) {
+        // A terminal checkpoint and a completion receipt were committed before
+        // this UI transition. Effects stay deferred to the durable Outbox;
+        // clearing the UI checkpoint cannot lose them.
+        try {
+          await _progressAdapter.clear(finalState.surahId);
+          await _appSessionService?.clearLastRestorableLocation();
+        } catch (error, stack) {
+          // A stale checkpoint is recoverable because its evidence/effects are
+          // already durable. Completion itself must not be reported as failed
+          // or cause the learner to repeat a committed recitation.
+          TaliaLogger.w(
+            'V2: terminal checkpoint cleanup deferred',
+            error,
+            stack,
+          );
+        }
+        final awards = await _processPendingEffects();
+        emit(MSCompleted(finalState: finalState, awards: awards));
+        return true;
+      }
+      final weakResult = await _reviewAdapter.recordWeakAyahs(
+        finalState.failureTracker,
+        passedAyahNumbers: finalState.passedAyahNumbers,
+      );
+      if (weakResult.isLeft()) return false;
+
+      // Do this before any repeatable gamification effects. If it fails, keep
+      // the in-flight session visible rather than granting a false completion.
+      await _progressAdapter.clear(finalState.surahId);
+      await _appSessionService?.clearLastRestorableLocation();
+
+      final awards = await _gamificationAdapter.onBlockCompleted(finalState);
+      emit(MSCompleted(finalState: finalState, awards: awards));
+      return true;
+    } catch (error, stack) {
+      TaliaLogger.e('V2: Failed to finalize completed block', error, stack);
+      return false;
+    }
+  }
+
+  void _restoreAfterPersistenceFailure(V2SessionState durableState) {
+    _sessionState = durableState;
+    if (state is! MSActive) return;
+    emit(
+      (state as MSActive).copyWith(
+        sessionState: durableState,
+        isRecording: false,
+        isEvaluating: false,
+        persistenceIssue: CubitMessageCodes.hifzReviewSaveFailed,
+      ),
     );
+  }
 
-    // Gamification (streak, XP, certificates).
-    final awards = await _gamificationAdapter.onBlockCompleted(finalState);
-
-    // Clear persisted session.
-    await _progressAdapter.clear(finalState.surahId);
-
-    // B8: prevent ghost resume banner after successful completion.
-    await _appSessionService?.clearLastRestorableLocation();
-
-    emit(MSCompleted(finalState: finalState, awards: awards));
+  Future<List<CertificateAward>> _processPendingEffects() async {
+    final processor = _effectOutboxProcessor;
+    if (processor == null) return const [];
+    try {
+      return await processor.processPending();
+    } catch (error, stack) {
+      // Evidence and receipts remain durable; a later app entry can retry.
+      TaliaLogger.w('V2: Deferred review effects remain pending', error, stack);
+      return const [];
+    }
   }
 
   /// Exposed for B8 regression tests only.
   @visibleForTesting
-  Future<void> onBlockCompletedForTesting(V2SessionState finalState) =>
-      _onBlockCompleted(finalState);
+  Future<void> onBlockCompletedForTesting(V2SessionState finalState) async {
+    await _onBlockCompleted(finalState);
+  }
 
   @visibleForTesting
-  Future<void> evaluateCurrentRecitationForTesting([String? spokenText]) async {
-    if (spokenText != null && state is MSActive) {
-      emit((state as MSActive).copyWith(recognizedText: spokenText));
-    }
-    await _evaluateCurrentRecitation();
-  }
+  Future<void> evaluateCurrentRecitationForTesting([String? spokenText]) =>
+      _runEvaluationExclusive(() async {
+        if (spokenText != null && state is MSActive) {
+          emit((state as MSActive).copyWith(recognizedText: spokenText));
+        }
+        await _evaluateCurrentRecitation();
+      });
 
   @visibleForTesting
   Future<void> handlePostEvaluationForTesting(
     V2SessionState previousState,
     V2SessionState newState,
-  ) => _handlePostEvaluation(previousState, newState);
+  ) async {
+    await _handlePostEvaluation(previousState, newState);
+  }
 
   /// Prefetches audio for all ayahs in the block.
   Future<void> _prefetchBlockAudio(int surahId, List<Ayah> blockAyahs) async {

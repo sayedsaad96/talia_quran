@@ -1568,6 +1568,19 @@ class MockV2SessionLocalDatasource extends _i1.Mock
       ) as String);
 
   @override
+  _i10.Future<_i20.IsarV2Session?> getLatestSession(
+          {_i3.MemorizationAudience? audience =
+              _i3.MemorizationAudience.adult}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getLatestSession,
+          [],
+          {#audience: audience},
+        ),
+        returnValue: _i10.Future<_i20.IsarV2Session?>.value(),
+      ) as _i10.Future<_i20.IsarV2Session?>);
+
+  @override
   _i10.Future<_i20.IsarV2Session?> getSession(
     int? surahId, {
     _i3.MemorizationAudience? audience = _i3.MemorizationAudience.adult,

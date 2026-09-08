@@ -248,38 +248,181 @@ void main() {
   });
 
   group('post-evaluation SRS writes', () {
-    test('saves passed ayahs before recording the review', () async {
-      await _startSession(cubit);
-      stubReviewWrite();
+    test(
+      'REGRESSION: real engine transitions persist every automatic pass in blocks 1, 5, and 7',
+      () async {
+        // The engine deliberately clears lastRecitationResult while it moves
+        // from one ayah to the next. This exercises that real transition so a
+        // Cubit that keys persistence from the cleared UI result loses the
+        // first N-1 review records.
+        for (final blockSize in [1, 5, 7]) {
+          clearInteractions(mockMemRepo);
+          stubReviewWrite();
 
-      final previous = (cubit.state as MSActive).sessionState.copyWith(
-        phase: V2SessionPhase.reciting,
-      );
-      final next = previous.copyWith(
-        phase: V2SessionPhase.learning,
-        passedAyahNumbers: {1},
-        lastRecitationResult: const V2RecitationResult(
-          passed: true,
-          similarityScore: 1,
-          normalizedTarget: 'ayah 1',
-          normalizedSpoken: 'ayah 1',
-        ),
-      );
+          await cubit.startSession(
+            surahId: 1,
+            startAyah: 1,
+            blockSize: blockSize,
+          );
 
-      final events = <String>[];
-      when(mockLocalDatasource.saveSession(any)).thenAnswer((invocation) async {
-        final session = invocation.positionalArguments.first as IsarV2Session;
-        events.add('save:${session.passedAyahNumbersCsv}');
-      });
-      when(mockMemRepo.saveReviewRecord(any)).thenAnswer((_) async {
-        events.add('recordPass');
-        return const Right(null);
-      });
+          for (var ayahNumber = 1; ayahNumber <= blockSize; ayahNumber++) {
+            await cubit.advanceToMemorizing();
+            await cubit.advanceToReciting();
+            await cubit.evaluateCurrentRecitationForTesting('Ayah $ayahNumber');
+          }
 
-      await cubit.handlePostEvaluationForTesting(previous, next);
+          final recorded = verify(
+            mockMemRepo.saveReviewRecord(captureAny),
+          ).captured.cast<AyahReviewRecord>();
+          expect(
+            recorded.map((record) => record.ayahNumber).toList(),
+            List<int>.generate(blockSize, (index) => index + 1),
+            reason:
+                'a passed ayah must be scheduled once even when the engine '
+                'clears its ephemeral recitation result before the next ayah',
+          );
 
-      expect(events, ['save:1', 'recordPass']);
-    });
+          await cubit.close();
+          cubit = MemorizationSessionCubit(
+            quranRepository: mockQuranRepo,
+            memorizationRepository: mockMemRepo,
+            sessionEngine: realEngine,
+            reviewAdapter: realReviewAdapter,
+            progressAdapter: realProgressAdapter,
+            gamificationAdapter: realGamificationAdapter,
+            audioPlayer: mockAudioPlayer,
+            speechToText: mockSpeechToText,
+            audioCacheService: mockAudioCache,
+          );
+        }
+      },
+    );
+
+    test(
+      'REGRESSION: a failed review-record read does not fabricate a fresh SRS baseline',
+      () async {
+        stubReviewWrite();
+        when(
+          mockMemRepo.getReviewRecord(any, any, scope: anyNamed('scope')),
+        ).thenAnswer((_) async => const Left(CacheFailure()));
+
+        final outcome = await realReviewAdapter.recordPass(
+          surahId: 1,
+          ayahNumber: 1,
+          hintLevel: V2HintLevel.none,
+        );
+
+        expect(outcome.isLeft(), isTrue);
+        verifyNever(mockMemRepo.saveReviewRecord(any));
+      },
+    );
+
+    test(
+      'REGRESSION: an SRS failure leaves the completed ayah resumable and grants no rewards',
+      () async {
+        stubReviewWrite();
+        final childProfile = MemorizationProfile(
+          schemaVersion: 1,
+          selectedPath: MemorizationPath.child,
+          guardianLinkStatus: GuardianLinkStatus.none,
+          guardianOnboardingStatus: GuardianOnboardingStatus.required,
+          isParentGuardian: false,
+          createdAt: DateTime.utc(2026),
+          updatedAt: DateTime.utc(2026),
+          childAge: 7,
+        );
+        when(
+          mockMemRepo.getMemorizationProfile(),
+        ).thenAnswer((_) async => Right(childProfile));
+        when(
+          mockMemRepo.getReviewRecord(any, any, scope: anyNamed('scope')),
+        ).thenAnswer((_) async => const Left(CacheFailure()));
+
+        await cubit.startSession(surahId: 1, startAyah: 1, blockSize: 1);
+        await cubit.advanceToMemorizing();
+        await cubit.advanceToReciting();
+        await cubit.evaluateCurrentRecitationForTesting('Ayah 1');
+
+        expect(cubit.state, isA<MSActive>());
+        final active = cubit.state as MSActive;
+        expect(active.sessionState.phase, V2SessionPhase.reciting);
+        expect(active.sessionState.passedAyahNumbers, isEmpty);
+        verifyNever(mockLocalDatasource.clearSession(1));
+        verifyNever(mockXPService.addXp(any));
+        verifyNever(
+          mockStreakService.recordActivity(
+            activityDelta: anyNamed('activityDelta'),
+          ),
+        );
+      },
+    );
+
+    test(
+      'REGRESSION: a checkpoint write failure keeps the pre-evaluation state and never completes',
+      () async {
+        stubReviewWrite();
+        await cubit.startSession(surahId: 1, startAyah: 1, blockSize: 1);
+        await cubit.advanceToMemorizing();
+        await cubit.advanceToReciting();
+
+        when(
+          mockLocalDatasource.saveSession(any),
+        ).thenThrow(StateError('Isar checkpoint unavailable'));
+
+        await cubit.evaluateCurrentRecitationForTesting('Ayah 1');
+
+        expect(cubit.state, isA<MSActive>());
+        final active = cubit.state as MSActive;
+        expect(active.sessionState.phase, V2SessionPhase.reciting);
+        expect(active.sessionState.passedAyahNumbers, isEmpty);
+        expect(active.persistenceIssue, isNotNull);
+        verifyNever(mockLocalDatasource.clearSession(1));
+        verifyNever(mockXPService.addXp(any));
+        verifyNever(
+          mockStreakService.recordActivity(
+            activityDelta: anyNamed('activityDelta'),
+          ),
+        );
+      },
+    );
+
+    test(
+      'records the review before checkpointing a newly passed ayah',
+      () async {
+        await _startSession(cubit);
+        stubReviewWrite();
+
+        final previous = (cubit.state as MSActive).sessionState.copyWith(
+          phase: V2SessionPhase.reciting,
+        );
+        final next = previous.copyWith(
+          phase: V2SessionPhase.learning,
+          passedAyahNumbers: {1},
+          lastRecitationResult: const V2RecitationResult(
+            passed: true,
+            similarityScore: 1,
+            normalizedTarget: 'ayah 1',
+            normalizedSpoken: 'ayah 1',
+          ),
+        );
+
+        final events = <String>[];
+        when(mockLocalDatasource.saveSession(any)).thenAnswer((
+          invocation,
+        ) async {
+          final session = invocation.positionalArguments.first as IsarV2Session;
+          events.add('save:${session.passedAyahNumbersCsv}');
+        });
+        when(mockMemRepo.saveReviewRecord(any)).thenAnswer((_) async {
+          events.add('recordPass');
+          return const Right(null);
+        });
+
+        await cubit.handlePostEvaluationForTesting(previous, next);
+
+        expect(events, ['recordPass', 'save:1']);
+      },
+    );
 
     test(
       'skips recordPass when the ayah already passed in this session',
@@ -371,6 +514,35 @@ void main() {
       expect(result?.assessmentMethod, V2AssessmentMethod.manual);
       verify(mockMemRepo.saveReviewRecord(any)).called(1);
     });
+  });
+
+  group('resume corruption guard', () {
+    test(
+      'REGRESSION: a corrupt persisted phase index resumes safely without bypassing review',
+      () async {
+        final corrupt = IsarV2Session.create(
+          surahId: 1,
+          blockAyahNumbers: const [1, 2],
+          currentAyahIndex: 99,
+          phaseIndex: 999,
+          passedAyahNumbers: const {1},
+          failureCounts: const {},
+          hintLevels: const {},
+          blockReviewRequired: true,
+        );
+        when(
+          mockLocalDatasource.getSession(1),
+        ).thenAnswer((_) async => corrupt);
+
+        await cubit.startSession(surahId: 1, startAyah: 1, blockSize: 2);
+
+        expect(cubit.state, isA<MSActive>());
+        final restored = (cubit.state as MSActive).sessionState;
+        expect(restored.phase, V2SessionPhase.learning);
+        expect(restored.currentAyah.numberInSurah, 2);
+        expect(restored.passedAyahNumbers, {1});
+      },
+    );
   });
 }
 

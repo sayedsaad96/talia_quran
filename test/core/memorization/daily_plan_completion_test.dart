@@ -94,6 +94,91 @@ void main() {
       expect(cached?.completedAyahNums, isEmpty);
     });
 
+    test('retention review is required and can complete a retention-only plan',
+        () async {
+      final plan = DailyPlan(
+        generatedAt: DateTime.now().toUtc(),
+        surahId: 67,
+        newAyahs: const [],
+        nearRevision: const [],
+        farRevision: const [],
+        retentionReview: const [
+          DailyPlanAyah(
+            surahId: 67,
+            ayahNumber: 3,
+            ayahText: 'text',
+            record: null,
+          ),
+        ],
+        completedAyahNums: const [],
+      );
+      await datasource.saveDailyPlan(DailyPlanModel.fromEntity(plan));
+
+      expect(plan.totalItems, 1);
+      expect(plan.requiredCompletedCount, 0);
+      expect(plan.isRequiredPlanCompleted, isFalse);
+
+      expect(
+        await repository.markDailyPlanAyahCompleted(
+          surahId: 67,
+          ayahNumber: 3,
+        ),
+        const Right(true),
+      );
+
+      final cached = await datasource.getCachedDailyPlan();
+      expect(cached?.requiredCompletedCount, 1);
+      expect(cached?.isRequiredPlanCompleted, isTrue);
+    });
+
+    test(
+      'marks a review from another surah without colliding on ayah number',
+      () async {
+        final plan = DailyPlan(
+          generatedAt: DateTime.now().toUtc(),
+          surahId: 1,
+          newAyahs: const [],
+          nearRevision: const [
+            DailyPlanAyah(
+              surahId: 36,
+              ayahNumber: 2,
+              ayahText: 'text',
+              record: null,
+            ),
+            DailyPlanAyah(
+              surahId: 67,
+              ayahNumber: 2,
+              ayahText: 'text',
+              record: null,
+            ),
+          ],
+          farRevision: const [],
+          completedAyahNums: const [],
+        );
+        await datasource.saveDailyPlan(DailyPlanModel.fromEntity(plan));
+
+        expect(
+          await repository.markDailyPlanAyahCompleted(
+            surahId: 36,
+            ayahNumber: 2,
+          ),
+          const Right(true),
+        );
+        expect(
+          await repository.markDailyPlanAyahCompleted(
+            surahId: 67,
+            ayahNumber: 2,
+          ),
+          const Right(true),
+        );
+
+        final cached = await datasource.getCachedDailyPlan();
+        expect(cached?.isAyahCompleted(36, 2), isTrue);
+        expect(cached?.isAyahCompleted(67, 2), isTrue);
+        expect(cached?.requiredCompletedCount, 2);
+      },
+    );
+
     test('V2SessionReviewAdapter marks plan after recordPass', () async {
       final plan = DailyPlan(
         generatedAt: DateTime.now().toUtc(),
@@ -133,40 +218,43 @@ void main() {
       expect(reasons, contains(ProgressChangedReason.reviewRecord));
     });
 
-    test('V2SessionReviewAdapter does not mark adult plan for kids pass', () async {
-      final plan = DailyPlan(
-        generatedAt: DateTime.now().toUtc(),
-        surahId: 1,
-        newAyahs: const [
-          DailyPlanAyah(
-            surahId: 1,
-            ayahNumber: 2,
-            ayahText: 'text',
-            record: null,
-          ),
-        ],
-        nearRevision: const [],
-        farRevision: const [],
-        completedAyahNums: const [],
-      );
-      await datasource.saveDailyPlan(DailyPlanModel.fromEntity(plan));
+    test(
+      'V2SessionReviewAdapter does not mark adult plan for kids pass',
+      () async {
+        final plan = DailyPlan(
+          generatedAt: DateTime.now().toUtc(),
+          surahId: 1,
+          newAyahs: const [
+            DailyPlanAyah(
+              surahId: 1,
+              ayahNumber: 2,
+              ayahText: 'text',
+              record: null,
+            ),
+          ],
+          nearRevision: const [],
+          farRevision: const [],
+          completedAyahNums: const [],
+        );
+        await datasource.saveDailyPlan(DailyPlanModel.fromEntity(plan));
 
-      final adapter = V2SessionReviewAdapter(
-        repository: repository,
-        scheduler: const ScheduleNextReviewUsecase(),
-        markDailyPlanCompleted: MarkDailyPlanAyahCompletedUsecase(repository),
-      );
+        final adapter = V2SessionReviewAdapter(
+          repository: repository,
+          scheduler: const ScheduleNextReviewUsecase(),
+          markDailyPlanCompleted: MarkDailyPlanAyahCompletedUsecase(repository),
+        );
 
-      await adapter.recordPass(
-        surahId: 1,
-        ayahNumber: 2,
-        hintLevel: V2HintLevel.none,
-        createdByMode: ReviewRecordCreatedByMode.kidsMode,
-      );
+        await adapter.recordPass(
+          surahId: 1,
+          ayahNumber: 2,
+          hintLevel: V2HintLevel.none,
+          createdByMode: ReviewRecordCreatedByMode.kidsMode,
+        );
 
-      final cached = await datasource.getCachedDailyPlan();
-      expect(cached?.completedAyahNums, isEmpty);
-    });
+        final cached = await datasource.getCachedDailyPlan();
+        expect(cached?.completedAyahNums, isEmpty);
+      },
+    );
   });
 }
 

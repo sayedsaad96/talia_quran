@@ -556,6 +556,23 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         0,
         DateTime.now().toUtc().difference(startedAt).inSeconds,
       );
+      final reviewResult = await _reviewAdapter.recordPass(
+        surahId: st.surahId,
+        ayahNumber: st.ayahNumber,
+        hintLevel: effectiveHint,
+        createdByMode: ReviewRecordCreatedByMode.kidsMode,
+      );
+      final reviewFailure = reviewResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
+      if (reviewFailure != null) {
+        emit(
+          st.copyWith(recordingError: CubitMessageCodes.hifzReviewSaveFailed),
+        );
+        return;
+      }
+
       final result = await _awardPoints(
         AwardKidsPointsParams(
           sessionId: _sessionId,
@@ -578,22 +595,6 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       if (completion == null) return;
 
       if (completion.alreadyCompleted) {
-        final reviewResult = await _reviewAdapter.recordPass(
-          surahId: st.surahId,
-          ayahNumber: st.ayahNumber,
-          hintLevel: effectiveHint,
-          createdByMode: ReviewRecordCreatedByMode.kidsMode,
-        );
-        final reviewFailure = reviewResult.fold(
-          (failure) => failure,
-          (_) => null,
-        );
-        if (reviewFailure != null) {
-          emit(
-            st.copyWith(recordingError: CubitMessageCodes.hifzReviewSaveFailed),
-          );
-          return;
-        }
         final completedSession = _completeV2Session(
           st.sessionState,
           manualGrade: manualGrade,
@@ -609,29 +610,6 @@ class KidsModeCubit extends Cubit<KidsModeState> {
             sessionState: completedSession,
             sessionStarsEarned: 0,
             clearRecordingError: true,
-          ),
-        );
-        return;
-      }
-
-      final reviewResult = await _reviewAdapter.recordPass(
-        surahId: st.surahId,
-        ayahNumber: st.ayahNumber,
-        hintLevel: effectiveHint,
-        createdByMode: ReviewRecordCreatedByMode.kidsMode,
-      );
-      final reviewFailure = reviewResult.fold(
-        (failure) => failure,
-        (_) => null,
-      );
-      if (reviewFailure != null) {
-        await _clearKidsSession(st.surahId);
-        emit(
-          st.copyWith(
-            progress: completion.progress,
-            isCompleted: true,
-            sessionStarsEarned: completion.starsEarned,
-            recordingError: CubitMessageCodes.hifzReviewSaveFailed,
           ),
         );
         return;

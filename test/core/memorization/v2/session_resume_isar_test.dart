@@ -16,6 +16,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/memorization/v2/ayah_failure_tracker.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
@@ -83,6 +84,39 @@ void main() {
       // (memorization_session_cubit.dart loadIfExists consumer).
       expect(opt.fold(() => false, (_) => true), isFalse);
     });
+
+    test(
+      'an ownerless legacy session is not silently claimed by an account',
+      () async {
+        await isar.writeTxn(() async {
+          await isar.isarV2Sessions.put(
+            IsarV2Session()
+              ..surahId = 1
+              ..blockAyahNumbersCsv = '1,2,3'
+              ..currentAyahIndex = 1
+              ..phaseIndex = V2SessionPhase.reciting.index
+              ..passedAyahNumbersCsv = '1'
+              ..failureCountsCsv = ''
+              ..hintLevelsCsv = ''
+              ..blockReviewRequired = true
+              ..savedAt = DateTime.utc(2026, 9, 8),
+          );
+        });
+        final accountDatasource = V2SessionLocalDatasource(
+          isar,
+          owner: const FixedRecordOwnerProvider('account-b'),
+        );
+        final accountAdapter = V2SessionProgressAdapter(
+          datasource: accountDatasource,
+        );
+
+        final loaded = await accountAdapter.loadIfExists(1);
+        final legacy = await isar.isarV2Sessions.where().findFirst();
+        expect(loaded.fold(() => null, (value) => value), isNull);
+        expect(legacy?.ownerId, isNull);
+        expect(legacy?.sessionKey, isNull);
+      },
+    );
 
     test(
       'save → reopen → loadIfExists → restore round-trips a full in-flight state',

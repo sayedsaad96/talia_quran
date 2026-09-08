@@ -67,13 +67,18 @@ const IsarV2SessionSchema = CollectionSchema(
       name: r'savedAt',
       type: IsarType.dateTime,
     ),
-    r'sessionKey': PropertySchema(
+    r'sessionId': PropertySchema(
       id: 10,
+      name: r'sessionId',
+      type: IsarType.string,
+    ),
+    r'sessionKey': PropertySchema(
+      id: 11,
       name: r'sessionKey',
       type: IsarType.string,
     ),
     r'surahId': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'surahId',
       type: IsarType.long,
     )
@@ -92,6 +97,19 @@ const IsarV2SessionSchema = CollectionSchema(
       properties: [
         IndexPropertySchema(
           name: r'sessionKey',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'sessionId': IndexSchema(
+      id: 6949518585047923839,
+      name: r'sessionId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'sessionId',
           type: IndexType.hash,
           caseSensitive: true,
         )
@@ -136,6 +154,12 @@ int _isarV2SessionEstimateSize(
   }
   bytesCount += 3 + object.passedAyahNumbersCsv.length * 3;
   {
+    final value = object.sessionId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  {
     final value = object.sessionKey;
     if (value != null) {
       bytesCount += 3 + value.length * 3;
@@ -160,8 +184,9 @@ void _isarV2SessionSerialize(
   writer.writeString(offsets[7], object.passedAyahNumbersCsv);
   writer.writeLong(offsets[8], object.phaseIndex);
   writer.writeDateTime(offsets[9], object.savedAt);
-  writer.writeString(offsets[10], object.sessionKey);
-  writer.writeLong(offsets[11], object.surahId);
+  writer.writeString(offsets[10], object.sessionId);
+  writer.writeString(offsets[11], object.sessionKey);
+  writer.writeLong(offsets[12], object.surahId);
 }
 
 IsarV2Session _isarV2SessionDeserialize(
@@ -182,8 +207,9 @@ IsarV2Session _isarV2SessionDeserialize(
   object.passedAyahNumbersCsv = reader.readString(offsets[7]);
   object.phaseIndex = reader.readLong(offsets[8]);
   object.savedAt = reader.readDateTime(offsets[9]);
-  object.sessionKey = reader.readStringOrNull(offsets[10]);
-  object.surahId = reader.readLong(offsets[11]);
+  object.sessionId = reader.readStringOrNull(offsets[10]);
+  object.sessionKey = reader.readStringOrNull(offsets[11]);
+  object.surahId = reader.readLong(offsets[12]);
   return object;
 }
 
@@ -217,6 +243,8 @@ P _isarV2SessionDeserializeProp<P>(
     case 10:
       return (reader.readStringOrNull(offset)) as P;
     case 11:
+      return (reader.readStringOrNull(offset)) as P;
+    case 12:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -441,6 +469,73 @@ extension IsarV2SessionQueryWhere
               indexName: r'sessionKey',
               lower: [],
               upper: [sessionKey],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterWhereClause>
+      sessionIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'sessionId',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterWhereClause>
+      sessionIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'sessionId',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterWhereClause>
+      sessionIdEqualTo(String? sessionId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'sessionId',
+        value: [sessionId],
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterWhereClause>
+      sessionIdNotEqualTo(String? sessionId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'sessionId',
+              lower: [],
+              upper: [sessionId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'sessionId',
+              lower: [sessionId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'sessionId',
+              lower: [sessionId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'sessionId',
+              lower: [],
+              upper: [sessionId],
               includeUpper: false,
             ));
       }
@@ -1528,6 +1623,160 @@ extension IsarV2SessionQueryFilter
   }
 
   QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'sessionId',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'sessionId',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'sessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'sessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'sessionId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'sessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'sessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'sessionId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'sessionId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'sessionId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
+      sessionIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'sessionId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterFilterCondition>
       sessionKeyIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1881,6 +2130,19 @@ extension IsarV2SessionQuerySortBy
     });
   }
 
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterSortBy> sortBySessionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sessionId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterSortBy>
+      sortBySessionIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sessionId', Sort.desc);
+    });
+  }
+
   QueryBuilder<IsarV2Session, IsarV2Session, QAfterSortBy> sortBySessionKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sessionKey', Sort.asc);
@@ -2056,6 +2318,19 @@ extension IsarV2SessionQuerySortThenBy
     });
   }
 
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterSortBy> thenBySessionId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sessionId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IsarV2Session, IsarV2Session, QAfterSortBy>
+      thenBySessionIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'sessionId', Sort.desc);
+    });
+  }
+
   QueryBuilder<IsarV2Session, IsarV2Session, QAfterSortBy> thenBySessionKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'sessionKey', Sort.asc);
@@ -2156,6 +2431,13 @@ extension IsarV2SessionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<IsarV2Session, IsarV2Session, QDistinct> distinctBySessionId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'sessionId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<IsarV2Session, IsarV2Session, QDistinct> distinctBySessionKey(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -2241,6 +2523,12 @@ extension IsarV2SessionQueryProperty
   QueryBuilder<IsarV2Session, DateTime, QQueryOperations> savedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'savedAt');
+    });
+  }
+
+  QueryBuilder<IsarV2Session, String?, QQueryOperations> sessionIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'sessionId');
     });
   }
 

@@ -11,7 +11,10 @@ import 'account_data_barrier.dart';
 import 'pending_bookmark_recovery_marker.dart';
 import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
+import '../../features/memorization_plus/data/models/isar_review_effect_outbox.dart';
+import '../../features/memorization_plus/data/models/isar_review_evidence_event.dart';
 import '../../features/memorization_plus/data/models/isar_v2_session.dart';
+import '../../features/memorization_plus/domain/entities/kids_session_policy.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
@@ -161,6 +164,8 @@ class AccountDataReset {
 
     await _backgroundSyncScheduler?.cancelAccountSync(departingOwnerId);
     await _rehomeReviewRecordsAsGuest(departingOwnerId);
+    await _rehomeV2SessionsAsGuest(departingOwnerId);
+    await _rehomeReviewEvidenceAsGuest(departingOwnerId);
     await _copyBookmarksToGuest(departingOwnerId);
 
     await _isar.writeTxn(() async {
@@ -263,6 +268,77 @@ class AccountDataReset {
     await encrypted.delete(departingOwnerId, key);
   }
 
+  /// Preserves an interrupted session for the guest profile after account
+  /// deletion. A later signed-in account cannot see it because session reads
+  /// are owner-scoped; it remains available only through explicit guest
+  /// recovery.
+  Future<void> _rehomeV2SessionsAsGuest(String departingOwnerId) async {
+    await _isar.writeTxn(() async {
+      final rows = await _isar.isarV2Sessions
+          .filter()
+          .ownerIdEqualTo(departingOwnerId)
+          .findAll();
+      for (final row in rows) {
+        final audience =
+            MemorizationAudience.values[row.audienceIndex.clamp(
+              0,
+              MemorizationAudience.values.length - 1,
+            )];
+        final guestKey = IsarV2Session.keyFor(
+          ownerId: ReviewRecordIdentity.localOwnerId,
+          audience: audience,
+          surahId: row.surahId,
+        );
+        final existing = await _isar.isarV2Sessions
+            .filter()
+            .sessionKeyEqualTo(guestKey)
+            .findFirst();
+        if (existing != null && existing.id != row.id) {
+          if (!row.savedAt.isAfter(existing.savedAt)) {
+            await _isar.isarV2Sessions.delete(row.id);
+            continue;
+          }
+          await _isar.isarV2Sessions.delete(existing.id);
+        }
+        row.ownerId = ReviewRecordIdentity.localOwnerId;
+        row.sessionKey = guestKey;
+        await _isar.isarV2Sessions.put(row);
+      }
+    });
+  }
+
+  /// Keeps offline-only evidence for the local guest while ensuring none of
+  /// the deleted account's pending cloud operations can be delivered later.
+  Future<void> _rehomeReviewEvidenceAsGuest(String departingOwnerId) async {
+    await _runWhenCollectionSchemaAvailable(() async {
+      await _isar.writeTxn(() async {
+        final events = await _isar.isarReviewEvidenceEvents
+            .filter()
+            .ownerIdEqualTo(departingOwnerId)
+            .findAll();
+        for (final event in events) {
+          event.ownerId = ReviewRecordIdentity.localOwnerId;
+          await _isar.isarReviewEvidenceEvents.put(event);
+        }
+
+        final effects = await _isar.isarReviewEffectOutboxs
+            .filter()
+            .ownerIdEqualTo(departingOwnerId)
+            .findAll();
+        for (final effect in effects) {
+          // An event must never be uploaded as the deleted account or silently
+          // reassigned to a future signed-in user.
+          if (effect.effectType == 'sync') {
+            await _isar.isarReviewEffectOutboxs.delete(effect.id);
+            continue;
+          }
+          effect.ownerId = ReviewRecordIdentity.localOwnerId;
+          await _isar.isarReviewEffectOutboxs.put(effect);
+        }
+      });
+    });
+  }
+
   Future<void> _clearParentPin(String? ownerId) async {
     final secureStore = _parentPinStore;
     if (secureStore == null || ownerId == null) return;
@@ -323,6 +399,17 @@ class AccountDataReset {
   Future<void> _clearCollections(Set<String> protectedOwners) async {
     await _isar.writeTxn(() async {
       await _isar.isarAyahReviewRecords.clear();
+      // These collections were introduced after the original account-reset
+      // schema. An in-flight upgrade (and older test/database schemas) may
+      // not contain them yet. In that case there is nothing to clear; every
+      // other Isar failure remains fatal so logout never pretends to have
+      // removed account data when it has not.
+      await _runWhenCollectionSchemaAvailable(
+        () => _isar.isarReviewEvidenceEvents.clear(),
+      );
+      await _runWhenCollectionSchemaAvailable(
+        () => _isar.isarReviewEffectOutboxs.clear(),
+      );
       await _isar.isarAyahProgress.clear();
       await _isar.isarV2Sessions.clear();
       await _isar.streakIsars.clear();
@@ -339,5 +426,15 @@ class AccountDataReset {
         await _isar.cloudSyncQueueItems.deleteAll(removableIds);
       }
     });
+  }
+
+  Future<void> _runWhenCollectionSchemaAvailable(
+    Future<void> Function() action,
+  ) async {
+    try {
+      await action();
+    } on IsarError catch (error) {
+      if (!error.toString().contains('Missing TypeSchema')) rethrow;
+    }
   }
 }

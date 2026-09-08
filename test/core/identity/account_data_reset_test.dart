@@ -21,6 +21,8 @@ import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:talia_quran/features/hifz/data/models/isar_ayah_progress.dart';
 import 'package:talia_quran/features/hifz/domain/entities/hifz_entities.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
+import 'package:talia_quran/features/memorization_plus/data/models/isar_review_effect_outbox.dart';
+import 'package:talia_quran/features/memorization_plus/data/models/isar_review_evidence_event.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_v2_session.dart';
 import 'package:talia_quran/features/streak/data/models/daily_activity_isar.dart';
 import 'package:talia_quran/features/streak/data/models/streak_isar.dart';
@@ -153,6 +155,8 @@ void main() {
         [
           IsarAyahProgressSchema,
           IsarAyahReviewRecordSchema,
+          IsarReviewEvidenceEventSchema,
+          IsarReviewEffectOutboxSchema,
           IsarV2SessionSchema,
           StreakIsarSchema,
           XpIsarSchema,
@@ -200,6 +204,49 @@ void main() {
             ..nextRetryAt = DateTime.utc(2026, 8, 8)
             ..createdAt = DateTime.utc(2026, 8, 8),
         );
+        await isar.isarReviewEvidenceEvents.put(
+          IsarReviewEvidenceEvent()
+            ..eventId = 'event-user-a'
+            ..idempotencyKey = 'session-a|task-a|final'
+            ..sessionId = 'session-a'
+            ..taskId = 'task-a'
+            ..ownerId = 'user-a'
+            ..audience = 'adult'
+            ..surahId = 1
+            ..ayahNumber = 1
+            ..eventTypeIndex = ReviewEvidenceEventType.finalOutcome.index
+            ..assessmentIndex = ReviewEvidenceAssessment.automatic.index
+            ..outcomeIndex = ReviewEvidenceOutcome.passed.index
+            ..attemptCount = 1
+            ..failureCount = 0
+            ..hintLevelIndex = 0
+            ..occurredAt = DateTime.utc(2026, 8, 8)
+            ..committedAt = DateTime.utc(2026, 8, 8)
+            ..studyDayKey = '2026-08-08',
+        );
+        await isar.isarReviewEffectOutboxs.put(
+          IsarReviewEffectOutbox()
+            ..receiptKey = 'sync:event-user-a'
+            ..eventId = 'event-user-a'
+            ..ownerId = 'user-a'
+            ..audience = 'adult'
+            ..effectType = 'sync'
+            ..createdAt = DateTime.utc(2026, 8, 8),
+        );
+        await isar.isarV2Sessions.put(
+          IsarV2Session.create(
+            surahId: 1,
+            blockAyahNumbers: const [1],
+            currentAyahIndex: 0,
+            phaseIndex: 3,
+            passedAyahNumbers: const {},
+            failureCounts: const {},
+            hintLevels: const {},
+            blockReviewRequired: true,
+            sessionId: 'session-a',
+            ownerId: 'user-a',
+          ),
+        );
       });
     }
 
@@ -207,6 +254,8 @@ void main() {
       await seedAllCollections();
       await AccountDataReset(isar, prefs).clearAccountOwnedData();
       expect(await isar.isarAyahReviewRecords.where().count(), 0);
+      expect(await isar.isarReviewEvidenceEvents.where().count(), 0);
+      expect(await isar.isarReviewEffectOutboxs.where().count(), 0);
       expect(await isar.isarAyahProgress.where().count(), 0);
       expect(await isar.isarV2Sessions.where().count(), 0);
       expect(await isar.streakIsars.where().count(), 0);
@@ -370,6 +419,9 @@ void main() {
         expect(review!.ownerUserId, ReviewRecordIdentity.localOwnerId);
         expect(review.compositeKey, 'local|adult|1|1');
         expect(review.cloudDirty, isFalse);
+        final session = await isar.isarV2Sessions.where().findFirst();
+        expect(session?.ownerId, ReviewRecordIdentity.localOwnerId);
+        expect(session?.sessionKey, 'local|adult|1');
         expect(await isar.isarAyahProgress.where().count(), 1);
         expect(await isar.cloudSyncQueueItems.where().count(), 1);
         expect(prefs.getString('read_pages'), '[1,2]');

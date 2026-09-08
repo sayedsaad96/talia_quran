@@ -1570,6 +1570,19 @@ class MockV2SessionLocalDatasource extends _i1.Mock
       ) as String);
 
   @override
+  _i10.Future<_i20.IsarV2Session?> getLatestSession(
+          {_i3.MemorizationAudience? audience =
+              _i3.MemorizationAudience.adult}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getLatestSession,
+          [],
+          {#audience: audience},
+        ),
+        returnValue: _i10.Future<_i20.IsarV2Session?>.value(),
+      ) as _i10.Future<_i20.IsarV2Session?>);
+
+  @override
   _i10.Future<_i20.IsarV2Session?> getSession(
     int? surahId, {
     _i3.MemorizationAudience? audience = _i3.MemorizationAudience.adult,
@@ -2880,6 +2893,24 @@ class MockAudioCacheService extends _i1.Mock implements _i27.AudioCacheService {
           ),
         )),
       ) as _i10.Future<String>);
+
+  @override
+  _i10.Future<String?> getCachedFilePath(
+    int? surahId,
+    int? ayahNumber, {
+    _i28.QuranReciter? reciter,
+  }) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #getCachedFilePath,
+          [
+            surahId,
+            ayahNumber,
+          ],
+          {#reciter: reciter},
+        ),
+        returnValue: _i10.Future<String?>.value(),
+      ) as _i10.Future<String?>);
 
   @override
   _i10.Future<void> prefetchSession({

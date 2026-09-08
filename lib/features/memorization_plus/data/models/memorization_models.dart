@@ -554,10 +554,12 @@ class DailyPlanModel extends DailyPlan {
     required super.generatedAt,
     required super.surahId,
     required super.newAyahs,
+    super.weakRecovery = const [],
     required super.nearRevision,
     required super.farRevision,
     required super.completedAyahNums,
     super.retentionReview = const [],
+    super.completedAyahKeys = const [],
   });
 
   factory DailyPlanModel.fromJson(Map<String, dynamic> json) {
@@ -579,11 +581,15 @@ class DailyPlanModel extends DailyPlan {
       generatedAt: DateTime.parse(json['generatedAt'] as String),
       surahId: json['surahId'] as int,
       newAyahs: parseList(json['newAyahs'] as List<dynamic>?),
+      weakRecovery: parseList(json['weakRecovery'] as List<dynamic>?),
       nearRevision: parseList(json['nearRevision'] as List<dynamic>?),
       farRevision: parseList(json['farRevision'] as List<dynamic>?),
       completedAyahNums: (json['completedAyahNums'] as List<dynamic>? ?? [])
           .cast<int>(),
       retentionReview: parseList(json['retentionReview'] as List<dynamic>?),
+      completedAyahKeys: (json['completedAyahKeys'] as List<dynamic>? ?? [])
+          .whereType<String>()
+          .toList(),
     );
   }
 
@@ -602,9 +608,11 @@ class DailyPlanModel extends DailyPlan {
       'generatedAt': generatedAt.toIso8601String(),
       'surahId': surahId,
       'newAyahs': toList(newAyahs),
+      'weakRecovery': toList(weakRecovery),
       'nearRevision': toList(nearRevision),
       'farRevision': toList(farRevision),
       'completedAyahNums': completedAyahNums,
+      'completedAyahKeys': completedAyahKeys,
       'retentionReview': toList(retentionReview),
     };
   }
@@ -613,10 +621,12 @@ class DailyPlanModel extends DailyPlan {
     generatedAt: p.generatedAt,
     surahId: p.surahId,
     newAyahs: p.newAyahs,
+    weakRecovery: p.weakRecovery,
     nearRevision: p.nearRevision,
     farRevision: p.farRevision,
     completedAyahNums: p.completedAyahNums,
     retentionReview: p.retentionReview,
+    completedAyahKeys: p.completedAyahKeys,
   );
 }
 

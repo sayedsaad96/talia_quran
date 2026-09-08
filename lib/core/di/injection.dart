@@ -30,6 +30,8 @@ import '../memorization/memorization_progress_reader.dart';
 import '../memorization/progress_metrics_service.dart';
 import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
+import '../memorization/v2/review_effect_outbox_processor.dart';
+import '../memorization/v2/review_outcome_committer.dart';
 import '../memorization/v2/session_engine.dart';
 import '../memorization/v2/session_phase.dart';
 import '../progress/progress_events_bus.dart';
@@ -73,6 +75,8 @@ import '../../features/home/domain/repositories/heatmap_repository.dart';
 import '../../features/home/domain/usecases/get_activity_heatmap_usecase.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
+import '../../features/memorization_plus/data/models/isar_review_effect_outbox.dart';
+import '../../features/memorization_plus/data/models/isar_review_evidence_event.dart';
 import '../../features/memorization_plus/data/models/isar_v2_session.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
@@ -133,6 +137,8 @@ Future<void> configureDependencies({bool background = false}) async {
     IsarAyahProgressSchema,
     IsarAyahReviewRecordSchema,
     IsarV2SessionSchema, // V2 session persistence
+    IsarReviewEvidenceEventSchema,
+    IsarReviewEffectOutboxSchema,
     StreakIsarSchema,
     XpIsarSchema,
     DailyActivityIsarSchema, // For yearly activity heatmap
@@ -394,6 +400,24 @@ Future<void> configureDependencies({bool background = false}) async {
       ),
     ),
   );
+  getIt.registerLazySingleton<V2ReviewOutcomeCommitter>(
+    () => V2ReviewOutcomeCommitter(
+      isar: getIt<Isar>(),
+      owner: getIt<RecordOwnerProvider>(),
+      scheduler: getIt<ScheduleNextReviewUsecase>(),
+    ),
+  );
+  getIt.registerLazySingleton<V2ReviewEffectOutboxProcessor>(
+    () => V2ReviewEffectOutboxProcessor(
+      isar: getIt<Isar>(),
+      owner: getIt<RecordOwnerProvider>(),
+      markDailyPlanCompleted: MarkDailyPlanAyahCompletedUsecase(
+        getIt<MemorizationPlusRepository>(),
+      ),
+      achievements: getIt<AchievementService>(),
+      progressEvents: getIt<ProgressEventsBus>(),
+    ),
+  );
   getIt.registerLazySingleton<PendingAyahResolver>(
     () => const PendingAyahResolver(),
   );
@@ -642,6 +666,8 @@ Future<void> configureDependencies({bool background = false}) async {
       reviewAdapter: getIt<V2SessionReviewAdapter>(),
       progressAdapter: getIt<V2SessionProgressAdapter>(),
       gamificationAdapter: getIt<V2SessionGamificationAdapter>(),
+      reviewOutcomeCommitter: getIt<V2ReviewOutcomeCommitter>(),
+      effectOutboxProcessor: getIt<V2ReviewEffectOutboxProcessor>(),
       appSessionService: getIt<AppSessionService>(),
     ),
   );

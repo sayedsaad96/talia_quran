@@ -65,8 +65,10 @@ class AchievementService {
   static const _newBadgeKeyAdult = 'has_new_certificate';
   static const _newBadgeKeyKids = 'has_new_certificate_kids';
 
-  String _getEarnedKey(bool isKids) => isKids ? _earnedKeyKids : _earnedKeyAdult;
-  String _getNewBadgeKey(bool isKids) => isKids ? _newBadgeKeyKids : _newBadgeKeyAdult;
+  String _getEarnedKey(bool isKids) =>
+      isKids ? _earnedKeyKids : _earnedKeyAdult;
+  String _getNewBadgeKey(bool isKids) =>
+      isKids ? _newBadgeKeyKids : _newBadgeKeyAdult;
 
   // ── Public API ─────────────────────────────────────────────────────────────
 
@@ -141,143 +143,155 @@ class AchievementService {
   /// certificates for the specified path.
   /// Call this after every successful ayah memorization in any memorization
   /// path.
-  Future<List<CertificateAward>> checkAndUnlockCertificates({required bool isKids}) async {
+  Future<List<CertificateAward>> checkAndUnlockCertificates({
+    required bool isKids,
+  }) async {
     try {
-      final alreadyEarnedIds = getEarnedCertificates(isKids: isKids).map((c) => c.id).toSet();
-
-      final memPlusRecords = await _memPlusDs.getAllReviewRecords(
-        scope: AchievementServiceScope.forIsKids(isKids),
-      );
-      final structure = await QuranStructureMaps.load(_quranDs);
-      final surahs = await _quranDs.getSurahs();
-      final surahAyahCounts = structure.surahAyahCounts;
-      final ayahKeysByJuz = structure.ayahKeysByJuz;
-      final ayahsByJuz = structure.ayahsByJuz;
-      final ayahsBySurah = <int, List<dynamic>>{};
-      for (final entry in ayahsByJuz.entries) {
-        for (final ayah in entry.value) {
-          ayahsBySurah.putIfAbsent(ayah.surahId, () => []).add(ayah);
-        }
-      }
-
-      final audience = AchievementServiceScope.audienceForIsKids(isKids);
-
-      final metrics = _metrics.calculate(
-        records: memPlusRecords,
-        now: DateTime.now().toUtc(),
-        audience: audience,
-        surahAyahCounts: surahAyahCounts,
-        ayahKeysByJuz: ayahKeysByJuz,
-        totalJuz: 30,
-      );
-      final memorizedKeys = metrics.memorizedKeys;
-
-      final earned = <CertificateAward>[];
-
-      // ── 1. Juz certificates (Juz 1-30, accurate ayah-to-juz mapping) ───────
-      for (int juz = 1; juz <= 30; juz++) {
-        final ayahs = ayahsByJuz[juz] ?? const [];
-        final isComplete =
-            ayahs.isNotEmpty &&
-            ayahs.every(
-              (ayah) => memorizedKeys.contains(
-                '${ayah.surahId}_${ayah.numberInSurah}',
-              ),
-            );
-
-        if (isComplete) {
-          final id = 'cert_juz_$juz';
-          if (!alreadyEarnedIds.contains(id)) {
-            final award = CertificateAward(
-              id: id,
-              titleAr: 'شهادة حفظ الجزء ${_juzNames[juz - 1]}',
-              type: CertificateType.juz,
-              earnedAt: DateTime.now().toUtc(),
-              juzNumber: juz,
-            );
-            earned.add(award);
-            alreadyEarnedIds.add(id);
-            await _saveEarned(award, isKids);
-          }
-        }
-      }
-
-      // ── 2. Surah certificates (all surahs, 100% completion only) ──────────
-      for (final surah in surahs) {
-        final ayahs = ayahsBySurah[surah.id];
-        final isComplete = ayahs != null && ayahs.isNotEmpty
-            ? ayahs.every(
-                (ayah) => memorizedKeys.contains(
-                  '${ayah.surahId}_${ayah.numberInSurah}',
-                ),
-              )
-            : surah.ayahCount > 0 &&
-                  List.generate(surah.ayahCount, (index) => index + 1).every(
-                    (ayahNumber) =>
-                        memorizedKeys.contains('${surah.id}_$ayahNumber'),
-                  );
-
-        if (isComplete) {
-          final id = 'cert_surah_${surah.id}';
-          if (!alreadyEarnedIds.contains(id)) {
-            final award = CertificateAward(
-              id: id,
-              titleAr: 'شهادة حفظ سورة ${surah.nameAr}',
-              type: CertificateType.surah,
-              earnedAt: DateTime.now().toUtc(),
-              surahId: surah.id,
-              surahNameAr: surah.nameAr,
-              surahNameEn: surah.nameEn,
-            );
-            earned.add(award);
-            alreadyEarnedIds.add(id);
-            await _saveEarned(award, isKids);
-          }
-        }
-      }
-
-      // ── 3. Half and Full Quran certificates (100% threshold) ──────────────
-      final fullyMemorizedJuzCount = metrics.memorizedJuz;
-
-      if (fullyMemorizedJuzCount >= 15) {
-        const id = 'cert_half_quran';
-        if (!alreadyEarnedIds.contains(id)) {
-          final award = CertificateAward(
-            id: id,
-            titleAr: 'شهادة حفظ نصف القرآن الكريم',
-            type: CertificateType.halfQuran,
-            earnedAt: DateTime.now().toUtc(),
-          );
-          earned.add(award);
-          alreadyEarnedIds.add(id);
-          await _saveEarned(award, isKids);
-        }
-      }
-
-      if (fullyMemorizedJuzCount == 30) {
-        const id = 'cert_full_quran';
-        if (!alreadyEarnedIds.contains(id)) {
-          final award = CertificateAward(
-            id: id,
-            titleAr: 'شهادة ختم القرآن الكريم كاملاً',
-            type: CertificateType.fullQuran,
-            earnedAt: DateTime.now().toUtc(),
-          );
-          earned.add(award);
-          alreadyEarnedIds.add(id);
-          await _saveEarned(award, isKids);
-        }
-      }
-
-      if (earned.isNotEmpty) {
-        await _prefs.setBool(_getNewBadgeKey(isKids), true);
-      }
-
-      return earned;
+      return await checkAndUnlockCertificatesStrict(isKids: isKids);
     } catch (e, stack) {
       TaliaLogger.w('Achievement check failed', e, stack);
       return [];
     }
+  }
+
+  /// The durable review-outbox path needs a distinguishable failure so it can
+  /// retain its receipt and retry instead of silently losing a certificate.
+  Future<List<CertificateAward>> checkAndUnlockCertificatesStrict({
+    required bool isKids,
+  }) async {
+    final alreadyEarnedIds = getEarnedCertificates(
+      isKids: isKids,
+    ).map((c) => c.id).toSet();
+
+    final memPlusRecords = await _memPlusDs.getAllReviewRecords(
+      scope: AchievementServiceScope.forIsKids(isKids),
+    );
+    final structure = await QuranStructureMaps.load(_quranDs);
+    final surahs = await _quranDs.getSurahs();
+    final surahAyahCounts = structure.surahAyahCounts;
+    final ayahKeysByJuz = structure.ayahKeysByJuz;
+    final ayahsByJuz = structure.ayahsByJuz;
+    final ayahsBySurah = <int, List<dynamic>>{};
+    for (final entry in ayahsByJuz.entries) {
+      for (final ayah in entry.value) {
+        ayahsBySurah.putIfAbsent(ayah.surahId, () => []).add(ayah);
+      }
+    }
+
+    final audience = AchievementServiceScope.audienceForIsKids(isKids);
+
+    final metrics = _metrics.calculate(
+      records: memPlusRecords,
+      now: DateTime.now().toUtc(),
+      audience: audience,
+      surahAyahCounts: surahAyahCounts,
+      ayahKeysByJuz: ayahKeysByJuz,
+      totalJuz: 30,
+    );
+    final memorizedKeys = metrics.memorizedKeys;
+
+    final earned = <CertificateAward>[];
+
+    // ── 1. Juz certificates (Juz 1-30, accurate ayah-to-juz mapping) ───────
+    for (int juz = 1; juz <= 30; juz++) {
+      final ayahs = ayahsByJuz[juz] ?? const [];
+      final isComplete =
+          ayahs.isNotEmpty &&
+          ayahs.every(
+            (ayah) =>
+                memorizedKeys.contains('${ayah.surahId}_${ayah.numberInSurah}'),
+          );
+
+      if (isComplete) {
+        final id = 'cert_juz_$juz';
+        if (!alreadyEarnedIds.contains(id)) {
+          final award = CertificateAward(
+            id: id,
+            titleAr: 'شهادة حفظ الجزء ${_juzNames[juz - 1]}',
+            type: CertificateType.juz,
+            earnedAt: DateTime.now().toUtc(),
+            juzNumber: juz,
+          );
+          earned.add(award);
+          alreadyEarnedIds.add(id);
+          await _saveEarned(award, isKids);
+        }
+      }
+    }
+
+    // ── 2. Surah certificates (all surahs, 100% completion only) ──────────
+    for (final surah in surahs) {
+      final ayahs = ayahsBySurah[surah.id];
+      final isComplete = ayahs != null && ayahs.isNotEmpty
+          ? ayahs.every(
+              (ayah) => memorizedKeys.contains(
+                '${ayah.surahId}_${ayah.numberInSurah}',
+              ),
+            )
+          : surah.ayahCount > 0 &&
+                List.generate(surah.ayahCount, (index) => index + 1).every(
+                  (ayahNumber) =>
+                      memorizedKeys.contains('${surah.id}_$ayahNumber'),
+                );
+
+      if (isComplete) {
+        final id = 'cert_surah_${surah.id}';
+        if (!alreadyEarnedIds.contains(id)) {
+          final award = CertificateAward(
+            id: id,
+            titleAr: 'شهادة حفظ سورة ${surah.nameAr}',
+            type: CertificateType.surah,
+            earnedAt: DateTime.now().toUtc(),
+            surahId: surah.id,
+            surahNameAr: surah.nameAr,
+            surahNameEn: surah.nameEn,
+          );
+          earned.add(award);
+          alreadyEarnedIds.add(id);
+          await _saveEarned(award, isKids);
+        }
+      }
+    }
+
+    // ── 3. Half and Full Quran certificates (100% threshold) ──────────────
+    final fullyMemorizedJuzCount = metrics.memorizedJuz;
+
+    if (fullyMemorizedJuzCount >= 15) {
+      const id = 'cert_half_quran';
+      if (!alreadyEarnedIds.contains(id)) {
+        final award = CertificateAward(
+          id: id,
+          titleAr: 'شهادة حفظ نصف القرآن الكريم',
+          type: CertificateType.halfQuran,
+          earnedAt: DateTime.now().toUtc(),
+        );
+        earned.add(award);
+        alreadyEarnedIds.add(id);
+        await _saveEarned(award, isKids);
+      }
+    }
+
+    if (fullyMemorizedJuzCount == 30) {
+      const id = 'cert_full_quran';
+      if (!alreadyEarnedIds.contains(id)) {
+        final award = CertificateAward(
+          id: id,
+          titleAr: 'شهادة ختم القرآن الكريم كاملاً',
+          type: CertificateType.fullQuran,
+          earnedAt: DateTime.now().toUtc(),
+        );
+        earned.add(award);
+        alreadyEarnedIds.add(id);
+        await _saveEarned(award, isKids);
+      }
+    }
+
+    if (earned.isNotEmpty) {
+      final marked = await _prefs.setBool(_getNewBadgeKey(isKids), true);
+      if (!marked) throw StateError('certificate_badge_write_failed');
+    }
+
+    return earned;
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
@@ -285,10 +299,11 @@ class AchievementService {
   Future<void> _saveEarned(CertificateAward award, bool isKids) async {
     final existing = getEarnedCertificates(isKids: isKids);
     existing.insert(0, award);
-    await _prefs.setString(
+    final saved = await _prefs.setString(
       _getEarnedKey(isKids),
       jsonEncode(existing.map((c) => c.toJson()).toList()),
     );
+    if (!saved) throw StateError('certificate_write_failed');
     _progressEvents.notify(ProgressChangedReason.certificate);
     final queue = _cloudSyncQueue;
     if (queue != null) {

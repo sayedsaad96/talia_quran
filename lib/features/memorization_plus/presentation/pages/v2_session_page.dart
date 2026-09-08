@@ -118,8 +118,10 @@ class _V2SessionViewState extends State<_V2SessionView> {
         final prevActive = previous is MSActive ? previous : null;
         final currActive = current is MSActive ? current : null;
         return currActive != null &&
-            currActive.audioFailed &&
-            prevActive?.audioFailed != true;
+            ((currActive.audioFailed && prevActive?.audioFailed != true) ||
+                (currActive.persistenceIssue != null &&
+                    currActive.persistenceIssue !=
+                        prevActive?.persistenceIssue));
       },
       listener: (context, state) {
         if (state is MSError) {
@@ -130,7 +132,17 @@ class _V2SessionViewState extends State<_V2SessionView> {
           return;
         }
         if (state is MSActive && state.audioFailed) {
-          context.showSnackBar(context.l10n.v2AudioPlaybackFailed, isError: true);
+          context.showSnackBar(
+            context.l10n.v2AudioPlaybackFailed,
+            isError: true,
+          );
+          return;
+        }
+        if (state is MSActive && state.persistenceIssue != null) {
+          context.showSnackBar(
+            context.localizedCubitMessage(state.persistenceIssue!),
+            isError: true,
+          );
           return;
         }
         if (state is MSCompleted && state.awards.isNotEmpty) {

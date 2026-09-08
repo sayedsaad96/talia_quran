@@ -210,7 +210,7 @@ void main() {
       expect(savedAfterCompletion.fold(() => false, (_) => true), isFalse);
     });
     test(
-      'review record failure still awards points then emits error',
+      'review record failure preserves the resumable session without awards',
       () async {
         repository.reviewWriteFailure = const CacheFailure(
           'review write failed',
@@ -234,11 +234,11 @@ void main() {
 
         expect(cubit.state, isA<KidsModeLoaded>());
         final loaded = cubit.state as KidsModeLoaded;
-        expect(loaded.isCompleted, isTrue);
+        expect(loaded.isCompleted, isFalse);
         expect(loaded.recordingError, CubitMessageCodes.hifzReviewSaveFailed);
         expect(repository.markCalls, 1);
-        expect(repository.awardCalls, 1);
-        expect(repository.awardLogWrites, 1);
+        expect(repository.awardCalls, 0);
+        expect(repository.awardLogWrites, 0);
         expect(repository.saveLogCalls, 0);
       },
     );

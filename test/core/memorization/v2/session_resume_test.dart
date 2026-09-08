@@ -30,13 +30,17 @@ void main() {
             phase == V2SessionPhase.completed) {
           continue; // non-restorable — covered in the rejection group.
         }
+        final passed = phase == V2SessionPhase.blockReviewPending ||
+                phase == V2SessionPhase.blockReview
+            ? const {1, 2, 3}
+            : const {1};
 
         final saved = IsarV2Session.create(
           surahId: 1,
           blockAyahNumbers: const [1, 2, 3],
           currentAyahIndex: 1,
           phaseIndex: phase.index,
-          passedAyahNumbers: const {1},
+          passedAyahNumbers: passed,
           failureCounts: const {2: 2},
           // fullAyah is V2HintLevel index 2 — stored as the raw int in the
           // CSV persistence format, so we use the literal here.
@@ -60,7 +64,7 @@ void main() {
         );
         expect(
           restored.passedAyahNumbers,
-          {1},
+          passed,
           reason: 'passedAyahNumbers mismatch for $phase',
         );
         expect(
@@ -120,8 +124,9 @@ void main() {
 
       final restored = V2SessionProgressAdapter.restore(saved, _allAyahs);
 
-      expect(restored.currentAyahIndex, 2); // clamped to last valid index
-      expect(restored.currentAyah.numberInSurah, 3);
+      expect(restored.phase, V2SessionPhase.learning);
+      expect(restored.currentAyahIndex, 0);
+      expect(restored.currentAyah.numberInSurah, 1);
     });
 
     test('falls back to learning on out-of-range phaseIndex', () {
@@ -193,7 +198,7 @@ void main() {
         blockAyahs: _blockAyahs,
         currentAyahIndex: 1,
         phase: V2SessionPhase.blockReviewPending,
-        passedAyahNumbers: const {1, 2},
+        passedAyahNumbers: const {1, 2, 3},
         hintTracker: const V2HintTracker()
             .record(surahId: 1, ayahNumber: 2, level: V2HintLevel.firstWord),
         failureTracker: const V2AyahFailureTracker()

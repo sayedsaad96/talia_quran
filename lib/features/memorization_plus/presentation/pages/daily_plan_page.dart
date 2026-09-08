@@ -49,8 +49,9 @@ class _DailyPlanPageState extends State<DailyPlanPage> {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
+      backgroundColor: isDark
+          ? AppColors.darkBackground
+          : AppColors.lightBackground,
       appBar: AppBar(
         title: Text(context.l10n.dailyPlanHeaderTitle),
         backgroundColor: isDark ? AppColors.darkSurface : AppColors.primary,
@@ -157,6 +158,13 @@ class _DailyPlanBody extends StatelessWidget {
             plan: plan,
             isDark: isDark,
           ),
+        if (plan.weakRecovery.isNotEmpty)
+          _PlanBucketSection(
+            title: context.l10n.performanceWeak,
+            ayahs: plan.weakRecovery,
+            plan: plan,
+            isDark: isDark,
+          ),
         if (plan.nearRevision.isNotEmpty)
           _PlanBucketSection(
             title: context.l10n.dailyPlanNearRevision,
@@ -168,6 +176,13 @@ class _DailyPlanBody extends StatelessWidget {
           _PlanBucketSection(
             title: context.l10n.dailyPlanFarRevision,
             ayahs: plan.farRevision,
+            plan: plan,
+            isDark: isDark,
+          ),
+        if (plan.retentionReview.isNotEmpty)
+          _PlanBucketSection(
+            title: context.l10n.dailyPlanRetentionReview,
+            ayahs: plan.retentionReview,
             plan: plan,
             isDark: isDark,
           ),
@@ -216,7 +231,7 @@ class _PlanBucketSection extends StatelessWidget {
           for (final ayah in ayahs)
             _PlanAyahTile(
               ayah: ayah,
-              isCompleted: plan.completedAyahNums.contains(ayah.ayahNumber),
+              isCompleted: plan.isAyahCompleted(ayah.surahId, ayah.ayahNumber),
               isDark: isDark,
             ),
         ],
@@ -243,7 +258,9 @@ class _PlanAyahTile extends StatelessWidget {
       color: isDark ? AppColors.darkCard : AppColors.lightCard,
       child: ListTile(
         leading: Icon(
-          isCompleted ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+          isCompleted
+              ? Icons.check_circle_rounded
+              : Icons.radio_button_unchecked,
           color: isCompleted ? AppColors.success : AppColors.primary,
         ),
         title: Text(

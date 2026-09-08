@@ -17,7 +17,7 @@ void main() {
     record: null,
   );
 
-  // Plan with 1 required ayah (#1) and 1 optional retention ayah (#2).
+  // Plan with 1 new ayah (#1) and 1 required retention ayah (#2).
   DailyPlan mixedPlan({List<int> completed = const []}) => DailyPlan(
     generatedAt: DateTime.utc(2026, 6, 10),
     surahId: 67,
@@ -38,7 +38,7 @@ void main() {
     completedAyahNums: completed,
   );
 
-  // Retention-only day: all ayahs are memorized — no required workload.
+  // Retention-only day: consolidation is still required work.
   DailyPlan retentionOnlyPlan({List<int> completed = const []}) => DailyPlan(
     generatedAt: DateTime.utc(2026, 6, 10),
     surahId: 67,
@@ -49,20 +49,19 @@ void main() {
     retentionReview: const [retentionAyah],
   );
 
-  // ── P0 hotfix: required-only progress entity tests ──────────────────────────
+  // ── Required retention progress entity tests ────────────────────────────────
 
-  group('P0-1 hotfix: required progress must exclude retention', () {
+  group('required progress includes scheduled retention', () {
     // Test 1
-    test('requiredCompletedCount ignores completed retention ayah', () {
-      // Only retention ayah (#2) is completed — required ayah (#1) is not.
+    test('requiredCompletedCount includes completed retention ayah', () {
       final plan = mixedPlan(completed: [2]);
-      expect(plan.requiredCompletedCount, 0);
+      expect(plan.requiredCompletedCount, 1);
     });
 
     // Test 2
-    test('requiredProgress ignores completed retention ayah', () {
+    test('requiredProgress includes completed retention ayah', () {
       final plan = mixedPlan(completed: [2]);
-      expect(plan.requiredProgress, 0.0);
+      expect(plan.requiredProgress, 0.5);
     });
 
     // Test 3
@@ -76,21 +75,21 @@ void main() {
 
     // Test 4
     test(
-      'isRequiredPlanCompleted is true when all required ayahs are done',
+      'isRequiredPlanCompleted waits for new and retention ayahs',
       () {
         final plan = mixedPlan(completed: [1]);
-        expect(plan.isRequiredPlanCompleted, isTrue);
+        expect(plan.isRequiredPlanCompleted, isFalse);
       },
     );
 
     // Test 5
     test(
-      'retention-only day: totalItems==0, requiredProgress==0, isRequiredPlanCompleted==false',
+      'retention-only day is complete after its required review',
       () {
         final plan = retentionOnlyPlan(completed: [2]);
-        expect(plan.totalItems, 0);
-        expect(plan.requiredProgress, 0.0);
-        expect(plan.isRequiredPlanCompleted, isFalse);
+        expect(plan.totalItems, 1);
+        expect(plan.requiredProgress, 1.0);
+        expect(plan.isRequiredPlanCompleted, isTrue);
         expect(plan.hasRetentionReview, isTrue);
       },
     );
@@ -109,10 +108,10 @@ void main() {
     });
 
     test(
-      'completing required ayah AND retention does not double-count required',
+      'completing new ayah and retention completes both tasks',
       () {
         final plan = mixedPlan(completed: [1, 2]);
-        expect(plan.requiredCompletedCount, 1);
+        expect(plan.requiredCompletedCount, 2);
         expect(plan.requiredProgress, 1.0);
         expect(plan.isRequiredPlanCompleted, isTrue);
       },
@@ -152,7 +151,7 @@ void main() {
       expect(plan.hasRetentionReview, isFalse);
     });
 
-    test('totalItems excludes retention', () {
+    test('totalItems includes required retention', () {
       final plan = basePlan(
         retention: const [
           DailyPlanAyah(
@@ -163,11 +162,11 @@ void main() {
           ),
         ],
       );
-      expect(plan.totalItems, 1);
+      expect(plan.totalItems, 2);
       expect(plan.optionalRetentionCount, 1);
     });
 
-    test('progress excludes retention (required-only)', () {
+    test('progress remains complete when every required task is complete', () {
       final plan = basePlan().withCompleted(1);
       // progress now delegates to requiredProgress
       expect(plan.progress, 1.0);
@@ -180,8 +179,7 @@ void main() {
       expect(updated.retentionReview, hasLength(1));
     });
 
-    test('completedRetentionCount tracks optional completions', () {
-      // legacyAyah (#1) is both required and retention in this legacy test
+    test('an ayah duplicated across buckets counts as one required task', () {
       final plan = basePlan(retention: [legacyAyah]).withCompleted(1);
       expect(plan.completedRetentionCount, 1);
       expect(plan.completedCount, 1);

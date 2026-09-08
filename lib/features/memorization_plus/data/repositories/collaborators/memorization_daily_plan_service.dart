@@ -11,6 +11,7 @@ import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
 import '../../../../../core/memorization/plan_cloud_dirty_keys.dart';
+import 'daily_plan_review_queue.dart';
 
 /// Daily-plan domain: generates today's memorization plan (direction-aware,
 /// custom-plan aware), serves the cached plan with same-day staleness handling,
@@ -38,15 +39,28 @@ class MemorizationDailyPlanService {
     try {
       final allRecords = (await _datasource.getAllReviewRecords(
         scope: ReviewRecordReadScope.adult,
-      ))
-          .where(ReviewRecordFilters.isAdultCompatible)
-          .toList();
+      )).where(ReviewRecordFilters.isAdultCompatible).toList();
 
       // BUG-7 FIX: Read custom plan settings and apply them
       final customPlan = await _datasource.getCustomPlan();
       final effectiveNewPerDay = customPlan?.newAyahsPerDay ?? newAyahsPerDay;
       final nearRevisionLimit = customPlan?.nearRevisionCount ?? 10;
       final farRevisionLimit = customPlan?.farRevisionCount ?? 5;
+      final reviewSelection = DailyPlanReviewQueue.select(
+        records: allRecords,
+        now: DateTime.now().toUtc(),
+        nearLimit: nearRevisionLimit,
+        farLimit: farRevisionLimit,
+        retentionLimit: _retentionReviewLimit,
+        includeNear: customPlan?.enableNearRevision != false,
+        includeFar: customPlan?.enableFarRevision != false,
+      );
+      final weakRecovery = await _planAyahsForRecords(reviewSelection.weak);
+      final nearRevision = await _planAyahsForRecords(reviewSelection.near);
+      final farRevision = await _planAyahsForRecords(reviewSelection.far);
+      final retentionReview = await _planAyahsForRecords(
+        reviewSelection.retention,
+      );
 
       // Direction-aware memorization:
       //   startSurahId = where memorization BEGINS  (the "من" surah)
@@ -66,9 +80,11 @@ class MemorizationDailyPlanService {
         currentSurahId = surahId;
       }
 
-      DailyPlan? bestPlan;
+      final List<DailyPlanAyah> newAyahs = [];
+      var planSurahId = currentSurahId;
 
-      // Direction-aware loop
+      // New material remains direction-aware. Global reviews are selected
+      // above, independently of this resume cursor.
       while (isDescending
           ? currentSurahId >= planEndSurahId
           : currentSurahId <= planEndSurahId) {
@@ -87,11 +103,6 @@ class MemorizationDailyPlanService {
           ayahs = detail.ayahs;
         });
 
-        final List<DailyPlanAyah> newAyahs = [];
-        final List<DailyPlanAyah> nearRevision = [];
-        final List<DailyPlanAyah> farRevision = [];
-        final List<DailyPlanAyah> retentionReview = [];
-
         // startAyah applies only to the first surah in the memorization order
         // (i.e. startSurahId itself), not to any other surah in the range.
         final firstAyah =
@@ -107,7 +118,8 @@ class MemorizationDailyPlanService {
             ayahText = ayahs.firstWhere((a) => a.numberInSurah == i).text;
           } catch (_) {}
 
-          if (record == null || record.isNew) {
+          if (!reviewSelection.blocksNewMemorization &&
+              (record == null || record.isNew)) {
             if (newAyahs.length < effectiveNewPerDay) {
               newAyahs.add(
                 DailyPlanAyah(
@@ -118,62 +130,10 @@ class MemorizationDailyPlanService {
                 ),
               );
             }
-          } else {
-            final classification = record.reviewClassification;
-            if (!classification.isDue) continue;
-            final planAyah = DailyPlanAyah(
-              surahId: currentSurahId,
-              ayahNumber: i,
-              ayahText: ayahText,
-              record: record,
-            );
-            // BUG-7 FIX: apply custom plan revision limits
-            if (customPlan?.enableNearRevision != false &&
-                classification.isNearRevision &&
-                nearRevision.length < nearRevisionLimit) {
-              nearRevision.add(planAyah);
-            } else if (customPlan?.enableFarRevision != false &&
-                classification.isFarRevision &&
-                farRevision.length < farRevisionLimit) {
-              farRevision.add(planAyah);
-            }
           }
         }
-
-        final retentionCandidates =
-            surahRecords.values
-                .where(ReviewRecordFilters.isDailyPlanRetentionEligible)
-                .toList()
-              ..sort(ReviewRecordFilters.compareMemorizedDue);
-        for (final record in retentionCandidates.take(_retentionReviewLimit)) {
-          String ayahText = 'النص غير متوفر';
-          try {
-            ayahText = ayahs
-                .firstWhere((a) => a.numberInSurah == record.ayahNumber)
-                .text;
-          } catch (_) {}
-          retentionReview.add(
-            DailyPlanAyah(
-              surahId: currentSurahId,
-              ayahNumber: record.ayahNumber,
-              ayahText: ayahText,
-              record: record,
-            ),
-          );
-        }
-
-        bestPlan = DailyPlan(
-          // UTC so the same-day stale check in getCachedDailyPlan is timezone-safe.
-          generatedAt: DateTime.now().toUtc(),
-          surahId: currentSurahId,
-          newAyahs: newAyahs,
-          nearRevision: nearRevision,
-          farRevision: farRevision,
-          completedAyahNums: const [],
-          retentionReview: retentionReview,
-        );
-
-        if (bestPlan.totalItems > 0 || bestPlan.hasRetentionReview) {
+        planSurahId = currentSurahId;
+        if (newAyahs.isNotEmpty || reviewSelection.blocksNewMemorization) {
           break;
         }
 
@@ -185,14 +145,15 @@ class MemorizationDailyPlanService {
         }
       }
 
-      bestPlan ??= DailyPlan(
+      final bestPlan = DailyPlan(
         generatedAt: DateTime.now().toUtc(),
-        surahId: planEndSurahId,
-        newAyahs: const [],
-        nearRevision: const [],
-        farRevision: const [],
+        surahId: planSurahId,
+        newAyahs: newAyahs,
+        weakRecovery: weakRecovery,
+        nearRevision: nearRevision,
+        farRevision: farRevision,
         completedAyahNums: const [],
-        retentionReview: const [],
+        retentionReview: retentionReview,
       );
 
       // Cache the plan and mark it dirty so offline generates upload on reconnect.
@@ -203,6 +164,38 @@ class MemorizationDailyPlanService {
     } catch (e) {
       return Left(CacheFailure.from(e));
     }
+  }
+
+  Future<List<DailyPlanAyah>> _planAyahsForRecords(
+    Iterable<AyahReviewRecord> records,
+  ) async {
+    final selected = records.toList();
+    final details = await Future.wait(
+      selected
+          .map((record) => record.surahId)
+          .toSet()
+          .map(_quranRepository.getSurahDetail),
+    );
+    final textByKey = <String, String>{};
+    for (final result in details) {
+      result.fold((_) {}, (detail) {
+        for (final ayah in detail.ayahs) {
+          textByKey['${ayah.surahId}:${ayah.numberInSurah}'] = ayah.text;
+        }
+      });
+    }
+    return selected
+        .map(
+          (record) => DailyPlanAyah(
+            surahId: record.surahId,
+            ayahNumber: record.ayahNumber,
+            ayahText:
+                textByKey['${record.surahId}:${record.ayahNumber}'] ??
+                'النص غير متوفر',
+            record: record,
+          ),
+        )
+        .toList();
   }
 
   Future<Either<Failure, DailyPlan?>> getCachedDailyPlan() async {
@@ -259,21 +252,23 @@ class MemorizationDailyPlanService {
       final folded = await cachedResult.fold<Future<Either<Failure, bool>>>(
         (failure) async => Left(failure),
         (plan) async {
-          if (plan == null || plan.surahId != surahId) {
+          if (plan == null) {
             return const Right(false);
           }
-          if (plan.isCompleted(ayahNumber)) return const Right(false);
+          if (plan.isAyahCompleted(surahId, ayahNumber)) {
+            return const Right(false);
+          }
 
           final inRequired = plan.requiredAyahs.any(
-            (ayah) => ayah.ayahNumber == ayahNumber,
+            (ayah) => ayah.surahId == surahId && ayah.ayahNumber == ayahNumber,
           );
           final inRetention = plan.retentionReview.any(
-            (ayah) => ayah.ayahNumber == ayahNumber,
+            (ayah) => ayah.surahId == surahId && ayah.ayahNumber == ayahNumber,
           );
           if (!inRequired && !inRetention) return const Right(false);
 
           final saveResult = await saveDailyPlan(
-            plan.withCompleted(ayahNumber),
+            plan.withCompleted(ayahNumber, ayahSurahId: surahId),
           );
           return saveResult.fold(Left.new, (_) {
             _progressEvents.notify(ProgressChangedReason.dailyPlan);

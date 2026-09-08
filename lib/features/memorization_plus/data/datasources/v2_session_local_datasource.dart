@@ -14,6 +14,7 @@ class V2SessionLocalDatasource {
 
   final Isar _isar;
   final RecordOwnerProvider _owner;
+  static int _sessionNonce = 0;
 
   String get currentOwnerId => _owner.currentOwnerId;
 
@@ -33,7 +34,8 @@ class V2SessionLocalDatasource {
             )
             .toList()
           ..sort((a, b) => b.savedAt.compareTo(a.savedAt));
-    return owned.isEmpty ? null : owned.first;
+    if (owned.isEmpty) return null;
+    return _backfillSessionIdIfNeeded(owned.first);
   }
 
   Future<IsarV2Session?> getSession(
@@ -47,30 +49,49 @@ class V2SessionLocalDatasource {
     );
     final sessions = await _isar.isarV2Sessions.where().findAll();
     for (final session in sessions) {
-      if (session.sessionKey == key) return session;
+      if (session.sessionKey == key) return _backfillSessionIdIfNeeded(session);
     }
 
-    // A pre-migration row had no owner/audience. Claim it only for the active
-    // adult owner; a legacy row is never silently exposed to the child path.
-    if (audience == MemorizationAudience.adult) {
-      for (final session in sessions) {
-        if (session.surahId == surahId && session.sessionKey == null) {
-          session
-            ..sessionKey = key
-            ..ownerId = currentOwnerId
-            ..audienceIndex = MemorizationAudience.adult.index;
-          await saveSession(session);
-          return session;
-        }
-      }
-    }
+    // Never assign an ownerless legacy session to whichever account happens
+    // to sign in next. There is no evidence that it belongs to that account;
+    // treating it as resumable could expose another learner's memorization
+    // state. A later guided verification migration can offer recovery without
+    // silently claiming the state.
     return null;
   }
 
   Future<void> saveSession(IsarV2Session session) async {
     await _isar.writeTxn(() async {
+      // `create()` does not know the old opaque id. Preserve it under the
+      // stable sessionKey so every checkpoint in one session shares evidence.
+      final existing = await _isar.isarV2Sessions
+          .filter()
+          .sessionKeyEqualTo(session.sessionKey)
+          .findFirst();
+      if (existing != null) {
+        session.id = existing.id;
+        session.sessionId ??= existing.sessionId;
+      }
+      session.sessionId ??= _newSessionId();
       await _isar.isarV2Sessions.put(session);
     });
+  }
+
+  Future<IsarV2Session> _backfillSessionIdIfNeeded(
+    IsarV2Session session,
+  ) async {
+    if (session.sessionId != null && session.sessionId!.isNotEmpty) {
+      return session;
+    }
+    session.sessionId = _newSessionId();
+    await saveSession(session);
+    return session;
+  }
+
+  static String _newSessionId() {
+    final nonce = ++_sessionNonce;
+    final micros = DateTime.now().toUtc().microsecondsSinceEpoch;
+    return 'v2-$micros-${nonce.toRadixString(36)}';
   }
 
   Future<void> clearSession(

@@ -16,10 +16,18 @@ part 'isar_v2_session.g.dart';
 class IsarV2Session {
   Id id = Isar.autoIncrement;
 
-  /// Account + audience + surah identity. Nullable only for legacy rows, which
-  /// are migrated to the active adult owner on first read.
+  /// Account + audience + surah identity. Nullable only for legacy rows.
+  ///
+  /// Legacy rows are intentionally not claimed by whichever account opens the
+  /// app next; recovery is handled as an explicit verification task.
   @Index(unique: true, replace: true)
   String? sessionKey;
+
+  /// Opaque stable id shared by evidence events for this resumable session.
+  /// Null is accepted only for pre-event-sourcing rows and is backfilled on
+  /// first read/write by [V2SessionLocalDatasource].
+  @Index()
+  String? sessionId;
 
   String? ownerId;
 
@@ -55,37 +63,51 @@ class IsarV2Session {
   // ── Helpers (ignored by Isar generator) ────────────────
 
   @ignore
-  List<int> get blockAyahNumbers => blockAyahNumbersCsv.isEmpty
-      ? []
-      : blockAyahNumbersCsv.split(',').map(int.parse).toList();
+  List<int> get blockAyahNumbers => _parsePositiveCsv(blockAyahNumbersCsv);
 
   @ignore
-  Set<int> get passedAyahNumbers => passedAyahNumbersCsv.isEmpty
-      ? {}
-      : passedAyahNumbersCsv.split(',').map(int.parse).toSet();
+  Set<int> get passedAyahNumbers =>
+      _parsePositiveCsv(passedAyahNumbersCsv).toSet();
 
   /// Returns failure counts as `Map<ayahNumber, count>`.
   @ignore
   Map<int, int> get failureCounts {
-    if (failureCountsCsv.isEmpty) return {};
-    return Map.fromEntries(
-      failureCountsCsv.split(',').map((entry) {
-        final parts = entry.split(':');
-        return MapEntry(int.parse(parts[0]), int.parse(parts[1]));
-      }),
-    );
+    return _parseCountMap(failureCountsCsv);
   }
 
   /// Returns hint levels as `Map<ayahNumber, hintLevelIndex>`.
   @ignore
   Map<int, int> get hintLevels {
-    if (hintLevelsCsv.isEmpty) return {};
-    return Map.fromEntries(
-      hintLevelsCsv.split(',').map((entry) {
-        final parts = entry.split(':');
-        return MapEntry(int.parse(parts[0]), int.parse(parts[1]));
-      }),
-    );
+    return _parseCountMap(hintLevelsCsv);
+  }
+
+  /// Invalid persisted CSV never partially advances a session. A malformed
+  /// block returns an empty list so the caller starts a fresh safe block;
+  /// malformed pass/failure/hint entries are ignored rather than throwing.
+  static List<int> _parsePositiveCsv(String raw) {
+    if (raw.trim().isEmpty) return const [];
+    final parsed = <int>[];
+    for (final token in raw.split(',')) {
+      final value = int.tryParse(token.trim());
+      if (value == null || value <= 0) return const [];
+      parsed.add(value);
+    }
+    if (parsed.toSet().length != parsed.length) return const [];
+    return parsed;
+  }
+
+  static Map<int, int> _parseCountMap(String raw) {
+    if (raw.trim().isEmpty) return const {};
+    final result = <int, int>{};
+    for (final entry in raw.split(',')) {
+      final parts = entry.split(':');
+      if (parts.length != 2) continue;
+      final key = int.tryParse(parts[0].trim());
+      final value = int.tryParse(parts[1].trim());
+      if (key == null || key <= 0 || value == null || value < 0) continue;
+      result[key] = value;
+    }
+    return result;
   }
 
   // ── Factory ──────────────────────────────────────────────
@@ -104,11 +126,17 @@ class IsarV2Session {
     required Map<int, int> failureCounts,
     required Map<int, int> hintLevels,
     required bool blockReviewRequired,
+    String? sessionId,
     String ownerId = ReviewRecordIdentity.localOwnerId,
     MemorizationAudience audience = MemorizationAudience.adult,
   }) {
     return IsarV2Session()
-      ..sessionKey = keyFor(ownerId: ownerId, audience: audience, surahId: surahId)
+      ..sessionKey = keyFor(
+        ownerId: ownerId,
+        audience: audience,
+        surahId: surahId,
+      )
+      ..sessionId = sessionId
       ..ownerId = ownerId
       ..audienceIndex = audience.index
       ..surahId = surahId
@@ -116,10 +144,12 @@ class IsarV2Session {
       ..currentAyahIndex = currentAyahIndex
       ..phaseIndex = phaseIndex
       ..passedAyahNumbersCsv = passedAyahNumbers.join(',')
-      ..failureCountsCsv =
-          failureCounts.entries.map((e) => '${e.key}:${e.value}').join(',')
-      ..hintLevelsCsv =
-          hintLevels.entries.map((e) => '${e.key}:${e.value}').join(',')
+      ..failureCountsCsv = failureCounts.entries
+          .map((e) => '${e.key}:${e.value}')
+          .join(',')
+      ..hintLevelsCsv = hintLevels.entries
+          .map((e) => '${e.key}:${e.value}')
+          .join(',')
       ..blockReviewRequired = blockReviewRequired
       ..savedAt = DateTime.now().toUtc();
   }

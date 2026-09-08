@@ -244,7 +244,7 @@ function Check([string] $label, [string] $query) {
   if ($LASTEXITCODE -ne 0 -or $value -ne 't') { Write-Host "FAIL: $label"; $script:anyFailed = $true } else { Write-Host "PASS: $label" }
 }
 
-@('profiles','parent_child_links','kids_progress_cloud','kids_session_logs','parent_rewards','streaks','xp','daily_activities','ayah_review_records_cloud','daily_plans_cloud','custom_plans_cloud','certificate_awards_cloud','reading_progress_cloud','quran_bookmarks_cloud') | ForEach-Object {
+@('profiles','parent_child_links','kids_progress_cloud','kids_session_logs','parent_rewards','streaks','xp','daily_activities','ayah_review_records_cloud','ayah_review_events','daily_plans_cloud','custom_plans_cloud','certificate_awards_cloud','reading_progress_cloud','quran_bookmarks_cloud') | ForEach-Object {
   Check "table public.$_" "SELECT to_regclass('public.$_') IS NOT NULL"
   Check "RLS public.$_" "SELECT relrowsecurity FROM pg_class WHERE oid='public.$_'::regclass"
 }
@@ -265,6 +265,8 @@ function Check([string] $label, [string] $query) {
   'unlock_parent_reward' = "SELECT pg_get_function_result('public.unlock_parent_reward(bigint)'::regprocedure)='SETOF public.parent_rewards' AND has_function_privilege('authenticated','public.unlock_parent_reward(bigint)','EXECUTE')"
   'claim_parent_reward' = "SELECT pg_get_function_result('public.claim_parent_reward(bigint)'::regprocedure)='SETOF public.parent_rewards' AND has_function_privilege('authenticated','public.claim_parent_reward(bigint)','EXECUTE')"
   'insert_kids_session_logs_batch' = "SELECT pg_get_function_result('public.insert_kids_session_logs_batch(jsonb)'::regprocedure) LIKE 'TABLE(local_id text, surah_id integer, ayah_number integer)' AND has_function_privilege('authenticated','public.insert_kids_session_logs_batch(jsonb)','EXECUTE')"
+  'append_ayah_review_events_v1' = "SELECT pg_get_function_result('public.append_ayah_review_events_v1(jsonb)'::regprocedure) LIKE 'TABLE(event_id text, result text, server_sequence bigint)' AND has_function_privilege('authenticated','public.append_ayah_review_events_v1(jsonb)','EXECUTE') AND NOT has_function_privilege('anon','public.append_ayah_review_events_v1(jsonb)','EXECUTE')"
+  'pull_ayah_review_events_since' = "SELECT pg_get_function_result('public.pull_ayah_review_events_since(uuid,bigint,text,integer)'::regprocedure)='SETOF public.ayah_review_events' AND has_function_privilege('authenticated','public.pull_ayah_review_events_since(uuid,bigint,text,integer)','EXECUTE') AND NOT has_function_privilege('anon','public.pull_ayah_review_events_since(uuid,bigint,text,integer)','EXECUTE')"
   'revoke_guardian_link' = "SELECT pg_get_function_result('public.revoke_guardian_link(uuid)'::regprocedure)='void' AND pg_get_function_arguments('public.revoke_guardian_link(uuid)'::regprocedure)='p_counterpart_user_id uuid' AND has_function_privilege('authenticated','public.revoke_guardian_link(uuid)','EXECUTE') AND NOT has_function_privilege('anon','public.revoke_guardian_link(uuid)','EXECUTE') AND NOT has_function_privilege('service_role','public.revoke_guardian_link(uuid)','EXECUTE')"
 }.GetEnumerator() | ForEach-Object { Check "RPC $($_.Key)" $_.Value }
 
@@ -279,8 +281,10 @@ Check 'parent_rewards direct DML revoked' "SELECT NOT has_table_privilege('authe
 Check 'daily plans direct DML revoked' "SELECT NOT has_table_privilege('authenticated','public.daily_plans_cloud','INSERT,UPDATE,DELETE')"
 Check 'custom plans direct DML revoked' "SELECT NOT has_table_privilege('authenticated','public.custom_plans_cloud','INSERT,UPDATE,DELETE')"
 Check 'bookmark direct DML revoked' "SELECT NOT has_table_privilege('authenticated','public.quran_bookmarks_cloud','INSERT,UPDATE,DELETE')"
+Check 'review events direct DML revoked' "SELECT NOT has_table_privilege('authenticated','public.ayah_review_events','INSERT,UPDATE,DELETE')"
 Check 'parent rewards child read policy' "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='parent_rewards' AND policyname='parent_rewards_child_read')"
 Check 'bookmark owner read policy' "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='quran_bookmarks_cloud' AND policyname='quran_bookmarks_cloud_owner_read')"
+Check 'review events guardian read policy' "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname='public' AND tablename='ayah_review_events' AND policyname='ayah_review_events_linked_parent_read')"
 if ($anyFailed) { throw 'Supabase contract verification failed.' }
 Write-Host 'PASS: Supabase contract verified'
 } finally {
