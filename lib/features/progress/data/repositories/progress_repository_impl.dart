@@ -109,6 +109,7 @@ class ProgressRepositoryImpl implements ProgressRepository {
           lastMemorizedAyahNumber: metrics.lastMemorizedAyahNumber,
           totalAyahs: AppConstants.totalAyahs,
           memorizedSurahs: metrics.memorizedSurahs,
+          inProgressSurahs: metrics.inProgressSurahs,
           totalSurahs: AppConstants.totalSurahs,
           memorizedJuz: metrics.memorizedJuz,
           totalJuz: AppConstants.totalJuz,

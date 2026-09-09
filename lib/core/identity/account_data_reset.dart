@@ -6,6 +6,7 @@ import '../security/encrypted_account_preferences_store.dart';
 import '../sync/cloud_sync_queue_item.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../memorization/review_record_identity.dart';
+import '../services/audio_resume_store.dart';
 import 'record_owner_provider.dart';
 import 'account_data_barrier.dart';
 import 'pending_bookmark_recovery_marker.dart';
@@ -16,6 +17,7 @@ import '../../features/memorization_plus/data/models/isar_review_evidence_event.
 import '../../features/memorization_plus/data/models/isar_v2_session.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_policy.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
+import '../../features/home/data/models/activity_event_isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
 
@@ -47,10 +49,12 @@ class AccountDataReset {
     EncryptedAccountPreferencesStore? encryptedAccountPreferences,
     RecordOwnerProvider? owner,
     BackgroundSyncScheduler? backgroundSyncScheduler,
+    AudioResumeStore? audioResumeStore,
   }) : _parentPinStore = parentPinStore,
        _encryptedAccountPreferences = encryptedAccountPreferences,
        _owner = owner,
-       _backgroundSyncScheduler = backgroundSyncScheduler;
+       _backgroundSyncScheduler = backgroundSyncScheduler,
+       _audioResumeStore = audioResumeStore;
 
   final Isar _isar;
   final SharedPreferences _prefs;
@@ -58,6 +62,7 @@ class AccountDataReset {
   final EncryptedAccountPreferencesStore? _encryptedAccountPreferences;
   final RecordOwnerProvider? _owner;
   final BackgroundSyncScheduler? _backgroundSyncScheduler;
+  final AudioResumeStore? _audioResumeStore;
 
   /// Individual account-owned preference keys.
   static const Set<String> clearedPreferenceKeys = {
@@ -67,6 +72,8 @@ class AccountDataReset {
     'read_pages',
     // Cloud dirty flag for reading progress (pushed on next login/resume).
     'read_pages_cloud_dirty',
+    // Last Quran playback position is account-owned.
+    'audio_resume_position',
     // Delta-pull bookkeeping. Retaining these made the next account resume
     // from the previous account's cursor and restore an incomplete dataset.
     'ayah_review_pull_cursor',
@@ -102,6 +109,9 @@ class AccountDataReset {
     'mem_plus_',
     'hifz_',
     'quran_bookmarks_owner_',
+    // Day-scoped reading proof and its fixed ordinary-wird target.
+    'daily_read_pages_',
+    'daily_wird_target_',
   };
 
   /// Device-level preferences that must survive a logout.
@@ -138,6 +148,7 @@ class AccountDataReset {
     if (ownerId != null) {
       await _backgroundSyncScheduler?.cancelAccountSync(ownerId);
     }
+    await _audioResumeStore?.stopPlaybackForAccountReset();
     await _clearPreferences(protectedOwners);
     await _clearCollections(protectedOwners);
     await _clearParentPin(ownerId);
@@ -415,6 +426,9 @@ class AccountDataReset {
       await _isar.streakIsars.clear();
       await _isar.xpIsars.clear();
       await _isar.dailyActivityIsars.clear();
+      await _runWhenCollectionSchemaAvailable(
+        () => _isar.activityEventIsars.clear(),
+      );
       if (protectedOwners.isEmpty) {
         await _isar.cloudSyncQueueItems.clear();
       } else {

@@ -16,6 +16,18 @@ import '../../domain/entities/bookmark_entry.dart';
 import '../../domain/bookmark_reader_location.dart';
 
 /// Dedicated bookmarks browser showing all saved ayahs grouped by Surah.
+class BookmarksPage extends StatelessWidget {
+  const BookmarksPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(context.l10n.bookmark)),
+      body: const BookmarksTab(),
+    );
+  }
+}
+
 class BookmarksTab extends StatefulWidget {
   const BookmarksTab({super.key});
 

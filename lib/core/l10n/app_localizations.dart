@@ -8004,6 +8004,594 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'اكتملت في {date}'**
   String khatmahCompletedOn(String date);
+
+  /// No description provided for @brandName.
+  ///
+  /// In ar, this message translates to:
+  /// **'تاليــة'**
+  String get brandName;
+
+  /// No description provided for @xpLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'XP'**
+  String get xpLabel;
+
+  /// No description provided for @homeTodayTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اليوم'**
+  String get homeTodayTitle;
+
+  /// No description provided for @homeTodayReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد القراءة'**
+  String get homeTodayReading;
+
+  /// No description provided for @homeTodayMemorize.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحفظ'**
+  String get homeTodayMemorize;
+
+  /// No description provided for @homeTodayReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'المراجعة'**
+  String get homeTodayReview;
+
+  /// No description provided for @homeTodayAzkar.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأذكار'**
+  String get homeTodayAzkar;
+
+  /// No description provided for @homeTodayDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكتمل'**
+  String get homeTodayDone;
+
+  /// No description provided for @homeTodayTodo.
+  ///
+  /// In ar, this message translates to:
+  /// **'متبقٍ'**
+  String get homeTodayTodo;
+
+  /// No description provided for @homeStreakAtRisk.
+  ///
+  /// In ar, this message translates to:
+  /// **'سلسلتك في خطر'**
+  String get homeStreakAtRisk;
+
+  /// No description provided for @homeFreezesAvailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} تجميد متاح'**
+  String homeFreezesAvailable(int count);
+
+  /// No description provided for @homeAyahOfDay.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية اليوم'**
+  String get homeAyahOfDay;
+
+  /// No description provided for @homeResumeListening.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل الاستماع · {surah}'**
+  String homeResumeListening(String surah);
+
+  /// No description provided for @homeSomethingElse.
+  ///
+  /// In ar, this message translates to:
+  /// **'شيء آخر'**
+  String get homeSomethingElse;
+
+  /// No description provided for @homeMinutes.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} د'**
+  String homeMinutes(int count);
+
+  /// No description provided for @homeOccasionFriday.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجمعة · سورة الكهف'**
+  String get homeOccasionFriday;
+
+  /// No description provided for @homeOccasionRamadan.
+  ///
+  /// In ar, this message translates to:
+  /// **'رمضان'**
+  String get homeOccasionRamadan;
+
+  /// No description provided for @homeOccasionLastTenNights.
+  ///
+  /// In ar, this message translates to:
+  /// **'العشر الأواخر'**
+  String get homeOccasionLastTenNights;
+
+  /// No description provided for @homeSlotFridayTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة الكهف'**
+  String get homeSlotFridayTitle;
+
+  /// No description provided for @homeSlotFridayBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'يستحب قراءة سورة الكهف يوم الجمعة.'**
+  String get homeSlotFridayBody;
+
+  /// No description provided for @homeSlotRamadanTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة رمضان'**
+  String get homeSlotRamadanTitle;
+
+  /// No description provided for @homeSlotRamadanBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'شهر مبارك — واصل وردك اليومي.'**
+  String get homeSlotRamadanBody;
+
+  /// No description provided for @homeSlotLastTenTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'العشر الأواخر'**
+  String get homeSlotLastTenTitle;
+
+  /// No description provided for @homeSlotLastTenBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'التمس ليلة القدر بمزيد من القراءة والقيام.'**
+  String get homeSlotLastTenBody;
+
+  /// No description provided for @homeSlotStreakBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'سجّل نشاط اليوم قبل منتصف الليل لتحافظ على سلسلتك.'**
+  String get homeSlotStreakBody;
+
+  /// No description provided for @homeSlotKhatmahTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمة قاربت الاكتمال'**
+  String get homeSlotKhatmahTitle;
+
+  /// No description provided for @homeSlotKhatmahBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنت قريب من إتمام هذه الختمة.'**
+  String get homeSlotKhatmahBody;
+
+  /// No description provided for @homeSlotOpen.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح'**
+  String get homeSlotOpen;
+
+  /// No description provided for @homeWeeklyReflectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'هذا الأسبوع'**
+  String get homeWeeklyReflectionTitle;
+
+  /// No description provided for @homeWeeklyReflectionBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'{days} أيام نشاط · {count} أعمال'**
+  String homeWeeklyReflectionBody(int days, int count);
+
+  /// No description provided for @homeFirstRunTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ خطوتك الأولى'**
+  String get homeFirstRunTitle;
+
+  /// No description provided for @homeFirstRunBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ صفحة، أو ابدأ الحفظ، أو ابدأ ختمة.'**
+  String get homeFirstRunBody;
+
+  /// No description provided for @homeFirstRunRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ القرآن'**
+  String get homeFirstRunRead;
+
+  /// No description provided for @homeFirstRunMemorize.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ الحفظ'**
+  String get homeFirstRunMemorize;
+
+  /// No description provided for @homeChildStreak.
+  ///
+  /// In ar, this message translates to:
+  /// **'سلسلة {count} يوم'**
+  String homeChildStreak(int count);
+
+  /// No description provided for @homeSearchTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'البحث في القرآن'**
+  String get homeSearchTitle;
+
+  /// No description provided for @homeSearchNoResults.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد سور أو آيات مطابقة'**
+  String get homeSearchNoResults;
+
+  /// No description provided for @homePrayerTimes.
+  ///
+  /// In ar, this message translates to:
+  /// **'مواقيت الصلاة'**
+  String get homePrayerTimes;
+
+  /// No description provided for @homePrayerTimesEnabled.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار الصلاة التالية في الرئيسية'**
+  String get homePrayerTimesEnabled;
+
+  /// No description provided for @homePrayerCity.
+  ///
+  /// In ar, this message translates to:
+  /// **'المدينة'**
+  String get homePrayerCity;
+
+  /// No description provided for @homePrayerMethod.
+  ///
+  /// In ar, this message translates to:
+  /// **'طريقة الحساب'**
+  String get homePrayerMethod;
+
+  /// No description provided for @homePrayerChip.
+  ///
+  /// In ar, this message translates to:
+  /// **'{name} بعد {minutes} د'**
+  String homePrayerChip(String name, int minutes);
+
+  /// No description provided for @prayerFajr.
+  ///
+  /// In ar, this message translates to:
+  /// **'الفجر'**
+  String get prayerFajr;
+
+  /// No description provided for @prayerSunrise.
+  ///
+  /// In ar, this message translates to:
+  /// **'الشروق'**
+  String get prayerSunrise;
+
+  /// No description provided for @prayerDhuhr.
+  ///
+  /// In ar, this message translates to:
+  /// **'الظهر'**
+  String get prayerDhuhr;
+
+  /// No description provided for @prayerAsr.
+  ///
+  /// In ar, this message translates to:
+  /// **'العصر'**
+  String get prayerAsr;
+
+  /// No description provided for @prayerMaghrib.
+  ///
+  /// In ar, this message translates to:
+  /// **'المغرب'**
+  String get prayerMaghrib;
+
+  /// No description provided for @prayerIsha.
+  ///
+  /// In ar, this message translates to:
+  /// **'العشاء'**
+  String get prayerIsha;
+
+  /// No description provided for @prayerMethodMwl.
+  ///
+  /// In ar, this message translates to:
+  /// **'رابطة العالم الإسلامي'**
+  String get prayerMethodMwl;
+
+  /// No description provided for @prayerMethodEgyptian.
+  ///
+  /// In ar, this message translates to:
+  /// **'الهيئة المصرية'**
+  String get prayerMethodEgyptian;
+
+  /// No description provided for @prayerMethodUmmAlQura.
+  ///
+  /// In ar, this message translates to:
+  /// **'أم القرى'**
+  String get prayerMethodUmmAlQura;
+
+  /// No description provided for @prayerMethodKarachi.
+  ///
+  /// In ar, this message translates to:
+  /// **'كراتشي'**
+  String get prayerMethodKarachi;
+
+  /// No description provided for @prayerMethodNorthAmerica.
+  ///
+  /// In ar, this message translates to:
+  /// **'إسنا'**
+  String get prayerMethodNorthAmerica;
+
+  /// No description provided for @homeBrandSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تالية قرآن'**
+  String get homeBrandSubtitle;
+
+  /// No description provided for @homeWelcomeUser.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرحبا بك {name}'**
+  String homeWelcomeUser(String name);
+
+  /// No description provided for @homeContinueRecitation.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل تلاوتك'**
+  String get homeContinueRecitation;
+
+  /// No description provided for @homeContinueAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة'**
+  String get homeContinueAction;
+
+  /// No description provided for @homeAyahRange.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآيات {start} إلى {end}'**
+  String homeAyahRange(int start, int end);
+
+  /// No description provided for @homeAyahProgressCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{current} من {total} آيات'**
+  String homeAyahProgressCount(int current, int total);
+
+  /// No description provided for @homePageProgressCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'{current} من {total} صفحات'**
+  String homePageProgressCount(int current, int total);
+
+  /// No description provided for @homeTileListen.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسميع'**
+  String get homeTileListen;
+
+  /// No description provided for @homeTileListenHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'استمع وسمّع'**
+  String get homeTileListenHint;
+
+  /// No description provided for @homeTileReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة'**
+  String get homeTileReview;
+
+  /// No description provided for @homeTileReviewHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'ثبّت ما حفظت'**
+  String get homeTileReviewHint;
+
+  /// No description provided for @homeTileMemorize.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ'**
+  String get homeTileMemorize;
+
+  /// No description provided for @homeTileMemorizeHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'أضف آيات جديدة'**
+  String get homeTileMemorizeHint;
+
+  /// No description provided for @homeTileRead.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة'**
+  String get homeTileRead;
+
+  /// No description provided for @homeTileReadHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'افتح المصحف'**
+  String get homeTileReadHint;
+
+  /// No description provided for @homeDailyChallenge.
+  ///
+  /// In ar, this message translates to:
+  /// **'التحدي اليومي'**
+  String get homeDailyChallenge;
+
+  /// No description provided for @homeDailyChallengePages.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل {count} صفحات اليوم'**
+  String homeDailyChallengePages(int count);
+
+  /// No description provided for @homeDailyChallengeTasks.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل مهام اليوم'**
+  String get homeDailyChallengeTasks;
+
+  /// No description provided for @homeChallengeProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'{current} من {total}'**
+  String homeChallengeProgress(int current, int total);
+
+  /// No description provided for @homeStreakDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} يوم مواظبة'**
+  String homeStreakDays(int count);
+
+  /// No description provided for @homeQuranJourney.
+  ///
+  /// In ar, this message translates to:
+  /// **'رحلتك مع القرآن'**
+  String get homeQuranJourney;
+
+  /// No description provided for @homeJourneyMemorization.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحفظ'**
+  String get homeJourneyMemorization;
+
+  /// No description provided for @homeJourneyKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'الختمة'**
+  String get homeJourneyKhatmah;
+
+  /// No description provided for @homeJourneyMemorizedAyahs.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} آية محفوظة'**
+  String homeJourneyMemorizedAyahs(int count);
+
+  /// No description provided for @homeJourneyKhatmahPages.
+  ///
+  /// In ar, this message translates to:
+  /// **'{current} من {total} صفحة'**
+  String homeJourneyKhatmahPages(int current, int total);
+
+  /// No description provided for @homeJourneyNotStartedTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم تبدأ رحلتك بعد'**
+  String get homeJourneyNotStartedTitle;
+
+  /// No description provided for @homeJourneyNotStartedBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ الحفظ أو افتح ختمة، وسيتابع التطبيق تقدّمك الفعلي هنا'**
+  String get homeJourneyNotStartedBody;
+
+  /// No description provided for @homeJourneyStartMemorization.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ الحفظ'**
+  String get homeJourneyStartMemorization;
+
+  /// No description provided for @homeSurahsCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكتمل'**
+  String get homeSurahsCompleted;
+
+  /// No description provided for @homeSurahsInProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'جاري'**
+  String get homeSurahsInProgress;
+
+  /// No description provided for @homeSurahsRemaining.
+  ///
+  /// In ar, this message translates to:
+  /// **'متبقٍ'**
+  String get homeSurahsRemaining;
+
+  /// No description provided for @homeRecentActivity.
+  ///
+  /// In ar, this message translates to:
+  /// **'نشاطك الأخير'**
+  String get homeRecentActivity;
+
+  /// No description provided for @homeActivityViewAll.
+  ///
+  /// In ar, this message translates to:
+  /// **'عرض الكل'**
+  String get homeActivityViewAll;
+
+  /// No description provided for @homeActivityEmpty.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ القراءة أو الحفظ ليظهر نشاطك هنا'**
+  String get homeActivityEmpty;
+
+  /// No description provided for @homeActivityReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة'**
+  String get homeActivityReading;
+
+  /// No description provided for @homeActivityMemorize.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ'**
+  String get homeActivityMemorize;
+
+  /// No description provided for @homeActivityReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة'**
+  String get homeActivityReview;
+
+  /// No description provided for @homeActivityKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'ختمة'**
+  String get homeActivityKhatmah;
+
+  /// No description provided for @homeActivityJustNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'الآن'**
+  String get homeActivityJustNow;
+
+  /// No description provided for @homeActivityMinutesAgo.
+  ///
+  /// In ar, this message translates to:
+  /// **'قبل {count} د'**
+  String homeActivityMinutesAgo(int count);
+
+  /// No description provided for @homeActivityHoursAgo.
+  ///
+  /// In ar, this message translates to:
+  /// **'قبل {count} س'**
+  String homeActivityHoursAgo(int count);
+
+  /// No description provided for @homeActivityYesterday.
+  ///
+  /// In ar, this message translates to:
+  /// **'أمس'**
+  String get homeActivityYesterday;
+
+  /// No description provided for @homeActivityDaysAgo.
+  ///
+  /// In ar, this message translates to:
+  /// **'قبل {count} يوم'**
+  String homeActivityDaysAgo(int count);
+
+  /// No description provided for @homeActivityCompleted.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكتمل'**
+  String get homeActivityCompleted;
+
+  /// No description provided for @homeFooterTagline.
+  ///
+  /// In ar, this message translates to:
+  /// **'بالقرآن .. نحيا أجمل'**
+  String get homeFooterTagline;
 }
 
 class _AppLocalizationsDelegate

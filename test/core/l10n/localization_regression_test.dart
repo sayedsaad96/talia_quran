@@ -28,7 +28,7 @@ const _removedLiterals = <String, List<String>>{
       ['اكتملت الجلسة', 'Session complete'],
   'lib/features/memorization_plus/presentation/widgets/kids_loading_widget.dart':
       ['جاري التحضير...', 'يبدو أن شيئاً ما حدث!', 'حاول مرة أخرى'],
-  'lib/features/home/presentation/pages/home_page_widgets.dart': [
+  'lib/features/home/presentation/widgets/next_best_action_card.dart': [
     'راجع قبل الحفظ الجديد',
     'Review before new content',
     'مراجعة بعيدة مستحقة',

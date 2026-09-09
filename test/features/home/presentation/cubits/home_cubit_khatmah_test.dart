@@ -93,6 +93,7 @@ void main() {
 
     when(mockPathResolver.changes).thenAnswer((_) => const Stream.empty());
     when(mockPrefs.getString(any)).thenReturn(null);
+    when(mockPrefs.getBool(any)).thenReturn(false);
     when(mockPrefs.getBool('unified_journey_enabled')).thenReturn(true);
 
     when(mockGetProgress.call()).thenAnswer(

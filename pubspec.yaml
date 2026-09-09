@@ -67,6 +67,8 @@ dependencies:
   pdf: ^3.12.0
   printing: ^5.14.3
   package_info_plus: ^10.1.0
+  hijri: ^3.0.0
+  adhan: ^2.0.0+1
 
 
 dev_dependencies:
@@ -127,6 +129,8 @@ flutter:
     - assets/data/content_manifest.json
     - assets/data/azkar_release.json
     - assets/data/khatm_dua.json
+    - assets/data/daily_ayahs.json
+    - assets/data/prayer_cities.json
     - assets/fonts/
     - assets/images/
     - assets/images/character/

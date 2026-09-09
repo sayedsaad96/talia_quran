@@ -15,6 +15,9 @@ extension BuildContextX on BuildContext {
   bool get isArabic => Localizations.localeOf(this).languageCode == 'ar';
   TextDirection get textDirection =>
       isArabic ? TextDirection.rtl : TextDirection.ltr;
+  IconData get forwardChevron => isArabic
+      ? Icons.arrow_back_ios_new_rounded
+      : Icons.arrow_forward_ios_rounded;
 
   // ─── Sizing ──────────────────────────────────────────────────────────────────
   Size get screenSize => MediaQuery.sizeOf(this);

@@ -36,6 +36,24 @@ class HomeLoaded extends HomeState {
     this.totalXp = 0,
     this.activeKhatmah,
     this.khatmahError,
+    this.isRefreshing = false,
+    this.todayChecklist,
+    this.ayahOfDay,
+    this.streakRisk,
+    this.audioResume,
+    this.alternativeActions = const [],
+    this.occasion = HomeOccasion.none,
+    this.hijriLabel = '',
+    this.gregorianLabel = '',
+    this.activeSlot,
+    this.familyChildren = const [],
+    this.prayerSnapshot,
+    this.weeklyActiveDays = 0,
+    this.weeklyActivityCount = 0,
+    this.recentBookmarkRoute,
+    this.heroMinutes = 0,
+    this.continueRecitation,
+    this.recentActivity = const [],
   });
 
   static const Object _khatmahSentinel = Object();
@@ -56,6 +74,24 @@ class HomeLoaded extends HomeState {
     int? totalXp,
     Object? activeKhatmah = _khatmahSentinel,
     Object? khatmahError = _khatmahSentinel,
+    bool? isRefreshing,
+    TodayChecklist? todayChecklist,
+    AyahOfDay? ayahOfDay,
+    StreakRisk? streakRisk,
+    AudioResumePosition? audioResume,
+    List<UnifiedJourneyAction>? alternativeActions,
+    HomeOccasion? occasion,
+    String? hijriLabel,
+    String? gregorianLabel,
+    HomeSlotCandidate? activeSlot,
+    List<FamilyChildEntry>? familyChildren,
+    PrayerTimesSnapshot? prayerSnapshot,
+    int? weeklyActiveDays,
+    int? weeklyActivityCount,
+    String? recentBookmarkRoute,
+    int? heroMinutes,
+    ContinueRecitation? continueRecitation,
+    List<ActivityEvent>? recentActivity,
   }) {
     return HomeLoaded(
       progress: progress ?? this.progress,
@@ -78,21 +114,34 @@ class HomeLoaded extends HomeState {
       khatmahError: identical(khatmahError, _khatmahSentinel)
           ? this.khatmahError
           : khatmahError,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+      todayChecklist: todayChecklist ?? this.todayChecklist,
+      ayahOfDay: ayahOfDay ?? this.ayahOfDay,
+      streakRisk: streakRisk ?? this.streakRisk,
+      audioResume: audioResume ?? this.audioResume,
+      alternativeActions: alternativeActions ?? this.alternativeActions,
+      occasion: occasion ?? this.occasion,
+      hijriLabel: hijriLabel ?? this.hijriLabel,
+      gregorianLabel: gregorianLabel ?? this.gregorianLabel,
+      activeSlot: activeSlot ?? this.activeSlot,
+      familyChildren: familyChildren ?? this.familyChildren,
+      prayerSnapshot: prayerSnapshot ?? this.prayerSnapshot,
+      weeklyActiveDays: weeklyActiveDays ?? this.weeklyActiveDays,
+      weeklyActivityCount: weeklyActivityCount ?? this.weeklyActivityCount,
+      recentBookmarkRoute: recentBookmarkRoute ?? this.recentBookmarkRoute,
+      heroMinutes: heroMinutes ?? this.heroMinutes,
+      continueRecitation: continueRecitation ?? this.continueRecitation,
+      recentActivity: recentActivity ?? this.recentActivity,
     );
   }
 
   final OverallProgress progress;
-  final String greeting; // 'morning' | 'afternoon' | 'evening' | 'night'
+  final String greeting;
   final QuranPageDetail? dailyWirdPageDetail;
   final CustomMemorizationPlan? customPlan;
   final MemorizationTrack? selectedTrack;
   final bool isParentMode;
-
-  /// Whether the active memorization profile is a child/kids path.
   final bool isKids;
-
-  /// Last restorable GoRouter path, e.g. `/quran/page/42`.
-  /// Null when the user has never read anything.
   final String? lastRestorableLocation;
   final Map<String, int> activityCountsByDay;
   final DateTime activityStartDate;
@@ -100,6 +149,24 @@ class HomeLoaded extends HomeState {
   final int totalXp;
   final KhatmahPlan? activeKhatmah;
   final Object? khatmahError;
+  final bool isRefreshing;
+  final TodayChecklist? todayChecklist;
+  final AyahOfDay? ayahOfDay;
+  final StreakRisk? streakRisk;
+  final AudioResumePosition? audioResume;
+  final List<UnifiedJourneyAction> alternativeActions;
+  final HomeOccasion occasion;
+  final String hijriLabel;
+  final String gregorianLabel;
+  final HomeSlotCandidate? activeSlot;
+  final List<FamilyChildEntry> familyChildren;
+  final PrayerTimesSnapshot? prayerSnapshot;
+  final int weeklyActiveDays;
+  final int weeklyActivityCount;
+  final String? recentBookmarkRoute;
+  final int heroMinutes;
+  final ContinueRecitation? continueRecitation;
+  final List<ActivityEvent> recentActivity;
 
   HomeKhatmahPlanState get khatmahPlanState {
     if (activeKhatmah == null) return HomeKhatmahPlanState.none;
@@ -112,6 +179,13 @@ class HomeLoaded extends HomeState {
 
   bool get canContinueKhatmahReading =>
       khatmahPlanState == HomeKhatmahPlanState.active;
+
+  bool get isFirstRun =>
+      progress.readPagesCount == 0 &&
+      progress.memorizedAyahs == 0 &&
+      activeKhatmah == null &&
+      customPlan == null &&
+      lastRestorableLocation == null;
 
   @override
   List<Object?> get props => [
@@ -130,6 +204,24 @@ class HomeLoaded extends HomeState {
     totalXp,
     activeKhatmah,
     khatmahError,
+    isRefreshing,
+    todayChecklist,
+    ayahOfDay,
+    streakRisk,
+    audioResume,
+    alternativeActions,
+    occasion,
+    hijriLabel,
+    gregorianLabel,
+    activeSlot,
+    familyChildren,
+    prayerSnapshot,
+    weeklyActiveDays,
+    weeklyActivityCount,
+    recentBookmarkRoute,
+    heroMinutes,
+    continueRecitation,
+    recentActivity,
   ];
 }
 

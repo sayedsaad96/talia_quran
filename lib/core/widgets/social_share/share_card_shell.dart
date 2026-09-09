@@ -306,12 +306,12 @@ class ShareCardShell extends StatelessWidget {
                                 ),
                                 if (_usesCharacterHero)
                                   Positioned(
-                                    right: format == SocialShareFormat.square
+                                    left: format == SocialShareFormat.square
                                         ? -2
                                         : 2,
                                     bottom: format == SocialShareFormat.story
-                                        ? 2
-                                        : -3,
+                                        ? -8
+                                        : -12,
                                     child: TaliaCharacterHero(
                                       key: const ValueKey(
                                         'share-character-image',
@@ -319,10 +319,10 @@ class ShareCardShell extends StatelessWidget {
                                       assetPath:
                                           data.effectiveCharacterAssetPath,
                                       height: format == SocialShareFormat.story
-                                          ? 230
+                                          ? 260
                                           : format == SocialShareFormat.square
-                                          ? 128
-                                          : 174,
+                                          ? 140
+                                          : 200,
                                     ),
                                   ),
                               ],
@@ -336,6 +336,8 @@ class ShareCardShell extends StatelessWidget {
                         userName: data.userName,
                         copy: copy,
                         isCompact: format == SocialShareFormat.square,
+                        category: data.category,
+                        isKids: _isKids,
                       ),
                     ],
                   ),
@@ -587,12 +589,16 @@ class ParchmentShareFooter extends StatelessWidget {
   final String? userName;
   final bool isCompact;
   final SocialShareCopy copy;
+  final SocialShareCategory category;
+  final bool isKids;
 
   const ParchmentShareFooter({
     super.key,
     required this.theme,
     this.userName,
     required this.copy,
+    required this.category,
+    required this.isKids,
     this.isCompact = false,
   });
 
@@ -633,80 +639,119 @@ class ParchmentShareFooter extends StatelessWidget {
                   ),
                   SizedBox(height: isCompact ? 1 : 2),
                 ],
-                Text(
-                  isCompact ? copy.compactBrandPromise : copy.brandPromise,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TaliaShareTypography.badge(
-                    color: TaliaShareColors.parchmentInk,
-                    fontSize: isCompact ? 7.5 : 9.5,
-                  ),
-                ),
-                SizedBox(height: isCompact ? 3 : 4),
-                // ─── Marketing CTA pill — replaces plain domain text ────────
-                // This converts every shared card into an app install driver.
+                if (isKids) ...[
+                  _KidsBrandPromiseIcons(isCompact: isCompact, copy: copy),
+                  SizedBox(height: isCompact ? 3 : 5),
+                ],
+                // ─── Marketing CTA pill ────────
                 Container(
                   padding: EdgeInsets.symmetric(
-                    horizontal: isCompact ? 9 : 12,
-                    vertical: isCompact ? 2.5 : 3.5,
+                    horizontal: isCompact ? 11 : 16,
+                    vertical: isCompact ? 3.5 : 5.0,
                   ),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        TaliaShareColors.royalTeal.withValues(alpha: 0.25),
-                        TaliaShareColors.royalTealLight.withValues(alpha: 0.18),
-                      ],
-                    ),
+                    color: TaliaShareColors.royalTeal,
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(
-                      color: TaliaShareColors.parchmentInk.withValues(
-                        alpha: 0.18,
+                      color: TaliaShareColors.luminousTurquoise.withValues(
+                        alpha: 0.3,
                       ),
-                      width: 0.8,
+                      width: 1.0,
                     ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: TaliaShareColors.royalTeal.withValues(alpha: 0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ],
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         Icons.download_rounded,
-                        color: TaliaShareColors.parchmentInk,
-                        size: isCompact ? 8 : 10,
+                        color: TaliaShareColors.pureWhite,
+                        size: isCompact ? 10 : 12,
                       ),
-                      const SizedBox(width: 4),
+                      const SizedBox(width: 5),
                       Text(
                         isCompact ? copy.downloadCTAShort : copy.downloadCTA,
                         textDirection: TextDirection.ltr,
                         style: TaliaShareTypography.badge(
-                          color: TaliaShareColors.parchmentInk,
-                          fontSize: isCompact ? 7 : 8.5,
+                          color: TaliaShareColors.pureWhite,
+                          fontSize: isCompact ? 9 : 10.5,
                           fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      // Subtle separator dot.
-                      Container(
-                        width: 2.5,
-                        height: 2.5,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: TaliaShareColors.parchmentInk.withValues(
-                            alpha: 0.4,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        copy.appDomain,
-                        textDirection: TextDirection.ltr,
-                        style: TaliaShareTypography.badge(
-                          color: TaliaShareColors.parchmentInkSoft,
-                          fontSize: isCompact ? 6.5 : 8,
                         ),
                       ),
                     ],
                   ),
+                ),
+                SizedBox(height: isCompact ? 3 : 5),
+                // App domain below the CTA
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.language_rounded,
+                      color: TaliaShareColors.parchmentInkSoft,
+                      size: isCompact ? 8 : 10,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      copy.appDomain,
+                      textDirection: TextDirection.ltr,
+                      style: TaliaShareTypography.badge(
+                        color: TaliaShareColors.parchmentInkSoft,
+                        fontSize: isCompact ? 7.5 : 9,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: isCompact ? 3 : 5),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Expanded(
+                      child: Divider(
+                        color: TaliaShareColors.warmGold,
+                        thickness: 0.5,
+                        endIndent: 8,
+                      ),
+                    ),
+                    Icon(
+                      Icons.star_border_rounded,
+                      color: TaliaShareColors.warmGold,
+                      size: isCompact ? 8 : 10,
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        isCompact ? copy.compactBrandPromise(isKids, category) : copy.brandPromise(isKids, category),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TaliaShareTypography.title(
+                          color: TaliaShareColors.parchmentInk,
+                          fontSize: isCompact ? 9 : 11,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Icon(
+                      Icons.star_border_rounded,
+                      color: TaliaShareColors.warmGold,
+                      size: isCompact ? 8 : 10,
+                    ),
+                    const Expanded(
+                      child: Divider(
+                        color: TaliaShareColors.warmGold,
+                        thickness: 0.5,
+                        indent: 8,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -826,6 +871,78 @@ class _ParchmentCurvePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _ParchmentCurvePainter oldDelegate) =>
       oldDelegate.gold != gold || oldDelegate.curveDepth != curveDepth;
+}
+
+class _KidsBrandPromiseIcons extends StatelessWidget {
+  final bool isCompact;
+  final SocialShareCopy copy;
+
+  const _KidsBrandPromiseIcons({required this.isCompact, required this.copy});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _buildIcon(Icons.star_rounded, copy.isArabic ? 'أتقن' : 'Retain'),
+        _buildSeparator(),
+        _buildIcon(Icons.bar_chart_rounded, copy.isArabic ? 'راجع' : 'Review'),
+        _buildSeparator(),
+        _buildIcon(Icons.menu_book_rounded, copy.isArabic ? 'احفظ' : 'Memorize'),
+        _buildSeparator(),
+        _buildIcon(Icons.assignment_rounded, copy.isArabic ? 'خطط' : 'Plan'),
+      ],
+    );
+  }
+
+  Widget _buildIcon(IconData icon, String label) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: isCompact ? 24 : 28,
+          height: isCompact ? 24 : 28,
+          decoration: BoxDecoration(
+            color: const Color(0xFFFDE8C4).withValues(alpha: 0.6),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: const Color(0xFFFDE8C4),
+              width: 1,
+            ),
+          ),
+          child: Icon(
+            icon,
+            size: isCompact ? 13 : 15,
+            color: TaliaShareColors.royalTeal,
+          ),
+        ),
+        SizedBox(height: isCompact ? 3 : 4),
+        Text(
+          label,
+          style: TaliaShareTypography.badge(
+            color: TaliaShareColors.parchmentInk,
+            fontSize: isCompact ? 8 : 10,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSeparator() {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: isCompact ? 6 : 8),
+      child: Container(
+        width: 3,
+        height: 3,
+        decoration: BoxDecoration(
+          color: TaliaShareColors.parchmentInk.withValues(alpha: 0.3),
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
 }
 
 /// Reusable mihrab-like hero frame shared by every dynamic card template.

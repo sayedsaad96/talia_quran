@@ -2,11 +2,17 @@ import '../entities/khatmah_plan.dart';
 import '../entities/khatmah_reading_result.dart';
 import '../entities/khatmah_scheduling_engine.dart';
 import '../repositories/khatmah_repository.dart';
+import '../../../../core/services/activity_event_recorder.dart';
+import '../../../home/domain/entities/activity_event.dart';
 
 class RecordKhatmahReadingUsecase {
-  const RecordKhatmahReadingUsecase(this._repository);
+  const RecordKhatmahReadingUsecase(
+    this._repository, [
+    this._activityRecorder,
+  ]);
 
   final KhatmahRepository _repository;
+  final ActivityEventRecorder? _activityRecorder;
 
   Future<KhatmahReadingResult> call(
     KhatmahPlan plan,
@@ -28,7 +34,7 @@ class RecordKhatmahReadingUsecase {
 
     final readingDate = readAt ?? DateTime.now();
     final confirmedStart = plan.nextUnreadPage;
-    return _repository.mutatePlan(plan, (current) {
+    final result = await _repository.mutatePlan(plan, (current) {
       final anchoredPlan = current.anchorDailyTarget(readingDate);
       final coveredPlan = switch (source) {
         KhatmahReadingSource.digital => anchoredPlan.recordPage(pageNumber),
@@ -46,5 +52,17 @@ class RecordKhatmahReadingUsecase {
 
       return updatedPlan;
     });
+    for (final page in result.newlyCompletedPages) {
+      await _activityRecorder?.record(
+        ActivityEvent(
+          occurredAt: readingDate,
+          kind: ActivityEventKind.khatmah,
+          idempotencyKey:
+              'khatmah|${ActivityEventRecorder.dayKey(readingDate)}|$page',
+          pageNumber: page,
+        ),
+      );
+    }
+    return result;
   }
 }

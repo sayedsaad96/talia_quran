@@ -162,8 +162,9 @@ class SocialShareData {
 
   /// The only official character asset currently shipped with the app.
   /// Contextual pose assets must not be referenced until they exist on disk.
+  /// The official character asset used for kids' cards.
   static const String masterCharacterAsset =
-      'assets/images/character/Talia_Master_Character.png';
+      'assets/images/character/talia_hero.png';
 
   final String content;
   final String? title;

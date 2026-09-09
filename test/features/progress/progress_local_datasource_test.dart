@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/constants/app_constants.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/features/progress/data/datasources/progress_local_datasource.dart';
 
 void main() {
@@ -20,6 +21,16 @@ void main() {
       await datasource.saveReadPage(11);
 
       expect(datasource.getReadPages(), [10, 11]);
+    });
+
+    test('rejects a read-page write after account authority is invalidated', () async {
+      AccountDataBarrier.forPreferences(prefs).invalidate();
+
+      await expectLater(
+        datasource.saveReadPage(10),
+        throwsA(isA<AccountDataUnavailableException>()),
+      );
+      expect(datasource.getReadPages(), isEmpty);
     });
 
     test('rejects page numbers outside the Quran page range', () async {

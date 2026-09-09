@@ -9,6 +9,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/widgets/activity_heatmap.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
@@ -71,6 +72,9 @@ class _ProgressView extends StatelessWidget {
                     progress: state.progress,
                     isKids: state.isKids,
                     isDark: isDark,
+                    activityCountsByDay: state.activityCountsByDay,
+                    activityStartDate: state.activityStartDate,
+                    totalXp: state.totalXp,
                   ),
                 ),
               ],
@@ -189,11 +193,17 @@ class _ProgressContent extends StatefulWidget {
     required this.progress,
     required this.isKids,
     required this.isDark,
+    this.activityCountsByDay = const {},
+    this.activityStartDate,
+    this.totalXp = 0,
   });
 
   final OverallProgress progress;
   final bool isKids;
   final bool isDark;
+  final Map<String, int> activityCountsByDay;
+  final DateTime? activityStartDate;
+  final int totalXp;
 
   @override
   State<_ProgressContent> createState() => _ProgressContentState();
@@ -278,6 +288,37 @@ class _ProgressContentState extends State<_ProgressContent>
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  Expanded(
+                    child: _StatCard(
+                      label: context.l10n.reviewing,
+                      value: '${p.reviewAyahs}',
+                      unit: context.l10n.ayahs,
+                      icon: Icons.history_rounded,
+                      isDark: isDark,
+                      color: AppColors.info,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: _StatCard(
+                      label: context.l10n.xpLabel,
+                      value: '${widget.totalXp}',
+                      unit: context.l10n.xpLabel,
+                      icon: Icons.bolt_rounded,
+                      isDark: isDark,
+                      color: AppColors.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.sectionGap),
+              ActivityHeatmap(
+                activityCountsByDay: widget.activityCountsByDay,
+                startDate: widget.activityStartDate ?? DateTime.now(),
               ),
 
               const SizedBox(height: AppSpacing.sectionGap),

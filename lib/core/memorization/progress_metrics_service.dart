@@ -48,6 +48,7 @@ class ProgressMetricsService {
 
     final memorizedKeys = <String>{};
     final memorizedBySurah = <int, Set<int>>{};
+    final startedBySurah = <int, Set<int>>{};
     var startedAyahs = 0;
     var learningAyahs = 0;
     var totalReviewEvents = 0;
@@ -64,6 +65,9 @@ class ProgressMetricsService {
       final started = ReviewRecordFilters.isStarted(record);
       if (!started) continue;
       startedAyahs++;
+      startedBySurah
+          .putIfAbsent(record.surahId, () => <int>{})
+          .add(record.ayahNumber);
 
       if (ReviewRecordFilters.isMemorized(record)) {
         memorizedKeys.add(record.key);
@@ -100,6 +104,15 @@ class ProgressMetricsService {
       return total != null && total > 0 && entry.value.length >= total;
     }).length;
 
+    final inProgressSurahs = startedBySurah.entries.where((entry) {
+      final total = surahAyahCounts[entry.key];
+      final memorizedCount = memorizedBySurah[entry.key]?.length ?? 0;
+      if (total == null || total <= 0) {
+        return entry.value.isNotEmpty && memorizedCount < entry.value.length;
+      }
+      return memorizedCount < total;
+    }).length;
+
     var memorizedJuz = 0;
     for (final juzKeys in ayahKeysByJuz.values) {
       if (juzKeys.isNotEmpty && juzKeys.every(memorizedKeys.contains)) {
@@ -119,6 +132,7 @@ class ProgressMetricsService {
       learningAyahs: learningAyahs,
       totalReviewEvents: totalReviewEvents,
       memorizedSurahs: memorizedSurahs,
+      inProgressSurahs: inProgressSurahs,
       memorizedJuz: memorizedJuz,
       dueReviews: dueReviews,
       overdueReviews: overdueReviews,

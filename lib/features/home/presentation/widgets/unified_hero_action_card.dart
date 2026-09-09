@@ -27,7 +27,11 @@ class UnifiedHeroActionCard extends StatelessWidget {
         ? AppColors.darkTextSecondary
         : AppColors.lightTextSecondary;
 
-    return Material(
+    return Semantics(
+      button: true,
+      label: data.title,
+      hint: data.subtitle,
+      child: Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
@@ -85,6 +89,8 @@ class UnifiedHeroActionCard extends StatelessWidget {
                   children: [
                     Text(
                       data.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: AppTypography.headlineSmall.copyWith(
                         color: textColor,
                         fontFamily: 'Amiri',
@@ -94,6 +100,8 @@ class UnifiedHeroActionCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       data.subtitle,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: AppTypography.bodyMedium.copyWith(
                         color: subTextColor,
                       ),
@@ -119,6 +127,7 @@ class UnifiedHeroActionCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

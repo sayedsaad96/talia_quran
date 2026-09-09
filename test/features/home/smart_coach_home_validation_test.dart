@@ -55,8 +55,8 @@ void main() {
         await _pumpHome(tester);
         await _pumpHomeInitialFrames(tester);
 
-        expect(find.text('Good Morning'), findsOneWidget);
-        expect(find.text('تاليــة'), findsOneWidget);
+        expect(find.text('Talia Quran'), findsOneWidget);
+        expect(find.textContaining('Welcome'), findsOneWidget);
         expect(
           find.text('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'),
           findsNothing,

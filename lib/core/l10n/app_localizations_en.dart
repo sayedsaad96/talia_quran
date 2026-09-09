@@ -4431,4 +4431,341 @@ class AppLocalizationsEn extends AppLocalizations {
   String khatmahCompletedOn(String date) {
     return 'Completed on $date';
   }
+
+  @override
+  String get brandName => 'تاليــة';
+
+  @override
+  String get xpLabel => 'XP';
+
+  @override
+  String get homeTodayTitle => 'Today';
+
+  @override
+  String get homeTodayReading => 'Daily reading';
+
+  @override
+  String get homeTodayMemorize => 'Memorize';
+
+  @override
+  String get homeTodayReview => 'Review';
+
+  @override
+  String get homeTodayAzkar => 'Azkar';
+
+  @override
+  String get homeTodayDone => 'Done';
+
+  @override
+  String get homeTodayTodo => 'To do';
+
+  @override
+  String get homeStreakAtRisk => 'Your streak is at risk';
+
+  @override
+  String homeFreezesAvailable(int count) {
+    return '$count freezes available';
+  }
+
+  @override
+  String get homeAyahOfDay => 'Ayah of the day';
+
+  @override
+  String homeResumeListening(String surah) {
+    return 'Resume listening · $surah';
+  }
+
+  @override
+  String get homeSomethingElse => 'Something else';
+
+  @override
+  String homeMinutes(int count) {
+    return '$count min';
+  }
+
+  @override
+  String get homeOccasionFriday => 'Friday · Surah Al-Kahf';
+
+  @override
+  String get homeOccasionRamadan => 'Ramadan';
+
+  @override
+  String get homeOccasionLastTenNights => 'Last ten nights';
+
+  @override
+  String get homeSlotFridayTitle => 'Surah Al-Kahf';
+
+  @override
+  String get homeSlotFridayBody =>
+      'It is recommended to read Surah Al-Kahf on Friday.';
+
+  @override
+  String get homeSlotRamadanTitle => 'Ramadan reading';
+
+  @override
+  String get homeSlotRamadanBody =>
+      'A blessed month — keep your daily portion going.';
+
+  @override
+  String get homeSlotLastTenTitle => 'Last ten nights';
+
+  @override
+  String get homeSlotLastTenBody =>
+      'Seek Laylat al-Qadr with extra reading and prayer.';
+
+  @override
+  String get homeSlotStreakBody =>
+      'Record today\'s activity before midnight to keep your streak.';
+
+  @override
+  String get homeSlotKhatmahTitle => 'Khatmah almost complete';
+
+  @override
+  String get homeSlotKhatmahBody => 'You are close to finishing this Khatmah.';
+
+  @override
+  String get homeSlotOpen => 'Open';
+
+  @override
+  String get homeWeeklyReflectionTitle => 'This week';
+
+  @override
+  String homeWeeklyReflectionBody(int days, int count) {
+    return '$days active days · $count activities';
+  }
+
+  @override
+  String get homeFirstRunTitle => 'Start your first step';
+
+  @override
+  String get homeFirstRunBody =>
+      'Read a page, begin memorizing, or start a Khatmah.';
+
+  @override
+  String get homeFirstRunRead => 'Read the Quran';
+
+  @override
+  String get homeFirstRunMemorize => 'Start memorizing';
+
+  @override
+  String homeChildStreak(int count) {
+    return '$count-day streak';
+  }
+
+  @override
+  String get homeSearchTitle => 'Search the Quran';
+
+  @override
+  String get homeSearchNoResults => 'No matching ayahs or surahs';
+
+  @override
+  String get homePrayerTimes => 'Prayer times';
+
+  @override
+  String get homePrayerTimesEnabled => 'Show next prayer on Home';
+
+  @override
+  String get homePrayerCity => 'City';
+
+  @override
+  String get homePrayerMethod => 'Calculation method';
+
+  @override
+  String homePrayerChip(String name, int minutes) {
+    return '$name in $minutes min';
+  }
+
+  @override
+  String get prayerFajr => 'Fajr';
+
+  @override
+  String get prayerSunrise => 'Sunrise';
+
+  @override
+  String get prayerDhuhr => 'Dhuhr';
+
+  @override
+  String get prayerAsr => 'Asr';
+
+  @override
+  String get prayerMaghrib => 'Maghrib';
+
+  @override
+  String get prayerIsha => 'Isha';
+
+  @override
+  String get prayerMethodMwl => 'Muslim World League';
+
+  @override
+  String get prayerMethodEgyptian => 'Egyptian';
+
+  @override
+  String get prayerMethodUmmAlQura => 'Umm al-Qura';
+
+  @override
+  String get prayerMethodKarachi => 'Karachi';
+
+  @override
+  String get prayerMethodNorthAmerica => 'ISNA';
+
+  @override
+  String get homeBrandSubtitle => 'Talia Quran';
+
+  @override
+  String homeWelcomeUser(String name) {
+    return 'Welcome, $name';
+  }
+
+  @override
+  String get homeContinueRecitation => 'Continue reciting';
+
+  @override
+  String get homeContinueAction => 'Continue';
+
+  @override
+  String homeAyahRange(int start, int end) {
+    return 'Verses $start to $end';
+  }
+
+  @override
+  String homeAyahProgressCount(int current, int total) {
+    return '$current of $total ayahs';
+  }
+
+  @override
+  String homePageProgressCount(int current, int total) {
+    return '$current of $total pages';
+  }
+
+  @override
+  String get homeTileListen => 'Recite';
+
+  @override
+  String get homeTileListenHint => 'Listen and recite';
+
+  @override
+  String get homeTileReview => 'Review';
+
+  @override
+  String get homeTileReviewHint => 'Strengthen what you memorized';
+
+  @override
+  String get homeTileMemorize => 'Memorize';
+
+  @override
+  String get homeTileMemorizeHint => 'Add new ayahs';
+
+  @override
+  String get homeTileRead => 'Read';
+
+  @override
+  String get homeTileReadHint => 'Open the mushaf';
+
+  @override
+  String get homeDailyChallenge => 'Daily challenge';
+
+  @override
+  String homeDailyChallengePages(int count) {
+    return 'Complete $count pages today';
+  }
+
+  @override
+  String get homeDailyChallengeTasks => 'Complete today\'s tasks';
+
+  @override
+  String homeChallengeProgress(int current, int total) {
+    return '$current of $total';
+  }
+
+  @override
+  String homeStreakDays(int count) {
+    return '$count-day streak';
+  }
+
+  @override
+  String get homeQuranJourney => 'Your journey with the Quran';
+
+  @override
+  String get homeJourneyMemorization => 'Memorization';
+
+  @override
+  String get homeJourneyKhatmah => 'Khatmah';
+
+  @override
+  String homeJourneyMemorizedAyahs(int count) {
+    return '$count ayahs memorized';
+  }
+
+  @override
+  String homeJourneyKhatmahPages(int current, int total) {
+    return '$current of $total pages';
+  }
+
+  @override
+  String get homeJourneyNotStartedTitle => 'Your journey hasn\'t started yet';
+
+  @override
+  String get homeJourneyNotStartedBody =>
+      'Begin memorizing or open a khatmah, and your real progress will be tracked here';
+
+  @override
+  String get homeJourneyStartMemorization => 'Start memorizing';
+
+  @override
+  String get homeSurahsCompleted => 'Completed';
+
+  @override
+  String get homeSurahsInProgress => 'In progress';
+
+  @override
+  String get homeSurahsRemaining => 'Remaining';
+
+  @override
+  String get homeRecentActivity => 'Your recent activity';
+
+  @override
+  String get homeActivityViewAll => 'View all';
+
+  @override
+  String get homeActivityEmpty =>
+      'Start reading or memorizing to see activity here';
+
+  @override
+  String get homeActivityReading => 'Reading';
+
+  @override
+  String get homeActivityMemorize => 'Memorization';
+
+  @override
+  String get homeActivityReview => 'Review';
+
+  @override
+  String get homeActivityKhatmah => 'Khatmah';
+
+  @override
+  String get homeActivityJustNow => 'Just now';
+
+  @override
+  String homeActivityMinutesAgo(int count) {
+    return '$count min ago';
+  }
+
+  @override
+  String homeActivityHoursAgo(int count) {
+    return '$count h ago';
+  }
+
+  @override
+  String get homeActivityYesterday => 'Yesterday';
+
+  @override
+  String homeActivityDaysAgo(int count) {
+    return '$count days ago';
+  }
+
+  @override
+  String get homeActivityCompleted => 'Completed';
+
+  @override
+  String get homeFooterTagline => 'With the Quran, we live more beautifully';
 }

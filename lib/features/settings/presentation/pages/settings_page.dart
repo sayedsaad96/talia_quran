@@ -16,6 +16,7 @@ import '../widgets/settings_info_tiles.dart';
 import '../widgets/settings_memorization_tiles.dart';
 import '../widgets/settings_notification_tiles.dart';
 import '../widgets/settings_parent_tiles.dart';
+import '../widgets/settings_prayer_tiles.dart';
 import '../widgets/settings_section.dart';
 
 void _showSettingsError(BuildContext context, String message) {
@@ -248,6 +249,16 @@ class _SettingsView extends StatelessWidget {
                                       );
                                     },
                                   ),
+                                ],
+                              ),
+                              SettingsSection(
+                                title: context.l10n.homePrayerTimes,
+                                accentColor: accentColor,
+                                icon: Icons.schedule_rounded,
+                                collapsible: true,
+                                initiallyExpanded: false,
+                                children: [
+                                  PrayerTimesSettingsSection(isDark: isDark),
                                 ],
                               ),
                               SettingsSection(

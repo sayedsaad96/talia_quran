@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/memorization/memorization_path_resolver.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
 import '../../../../core/progress/progress_events_bus.dart';
+import '../../../../core/services/xp_service.dart';
+import '../../../home/domain/usecases/get_activity_heatmap_usecase.dart';
 import '../../../memorization_plus/domain/entities/memorization_entities.dart';
 import '../../domain/entities/progress_entities.dart';
 import '../../domain/usecases/get_progress_usecase.dart';
@@ -16,8 +18,10 @@ class ProgressCubit extends Cubit<ProgressState> {
   ProgressCubit(
     this._getProgress,
     this._pathResolver,
-    this._progressEvents,
-  ) : super(const ProgressInitial()) {
+    this._progressEvents, [
+    this._getHeatmap,
+    this._xpService,
+  ]) : super(const ProgressInitial()) {
     _pathChangesSub = _pathResolver.changes.listen((_) {
       if (!isClosed) {
         _scheduleReload();
@@ -29,6 +33,8 @@ class ProgressCubit extends Cubit<ProgressState> {
   final GetProgressUsecase _getProgress;
   final MemorizationPathResolver _pathResolver;
   final ProgressEventsBus _progressEvents;
+  final GetActivityHeatmapUsecase? _getHeatmap;
+  final XpService? _xpService;
   late final StreamSubscription<void> _pathChangesSub;
   late final StreamSubscription<ProgressChangedReason> _progressChangesSub;
   Timer? _reloadDebounce;
@@ -50,8 +56,12 @@ class ProgressCubit extends Cubit<ProgressState> {
   Future<void> load() async {
     emit(const ProgressLoading());
     final profileFuture = _pathResolver.currentProfile();
+    final heatmapFuture = _getHeatmap?.call();
+    final xpFuture = _xpService?.getTotalXp();
     final result = await _getProgress();
     final profile = await profileFuture;
+    final heatmap = await heatmapFuture;
+    final totalXp = await xpFuture ?? 0;
     result.fold(
       (f) => emit(ProgressError(f.message)),
       (progress) => emit(
@@ -59,6 +69,9 @@ class ProgressCubit extends Cubit<ProgressState> {
           progress: progress,
           selectedPath: profile?.selectedPath,
           isKids: _pathResolver.isKids(profile),
+          activityCountsByDay: heatmap?.countsByDay ?? const {},
+          activityStartDate: heatmap?.startDate,
+          totalXp: totalXp,
         ),
       ),
     );

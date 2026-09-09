@@ -141,6 +141,7 @@ void main() {
         ],
       );
       expect(metrics.memorizedSurahs, 0);
+      expect(metrics.inProgressSurahs, 1);
     });
 
     test('surah counts when every ayah reaches strength>=6', () {
@@ -153,6 +154,21 @@ void main() {
         ],
       );
       expect(metrics.memorizedSurahs, 1);
+      expect(metrics.inProgressSurahs, 0);
+    });
+
+    test('counts started-but-incomplete surahs separately from memorized', () {
+      final metrics = service.calculate(
+        now: now,
+        surahAyahCounts: {1: 2, 2: 3},
+        records: [
+          record(surahId: 1, ayahNumber: 1, strengthLevel: 6, totalReviews: 5),
+          record(surahId: 1, ayahNumber: 2, strengthLevel: 6, totalReviews: 5),
+          record(surahId: 2, ayahNumber: 1, strengthLevel: 4, totalReviews: 1),
+        ],
+      );
+      expect(metrics.memorizedSurahs, 1);
+      expect(metrics.inProgressSurahs, 1);
     });
 
     test('juz counts only when all its keys are memorized', () {

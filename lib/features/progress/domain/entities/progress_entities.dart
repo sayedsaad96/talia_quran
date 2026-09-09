@@ -31,6 +31,7 @@ class OverallProgress extends Equatable {
     this.lastMemorizedAyahNumber,
     this.kidsPoints = 0,
     this.kidsStars = 0,
+    this.inProgressSurahs = 0,
   });
 
   final int memorizedAyahs;
@@ -42,6 +43,7 @@ class OverallProgress extends Equatable {
   final int? lastMemorizedAyahNumber;
   final int totalAyahs;
   final int memorizedSurahs;
+  final int inProgressSurahs;
   final int totalSurahs;
   final int memorizedJuz;
   final int totalJuz;
@@ -71,6 +73,9 @@ class OverallProgress extends Equatable {
   double get surahPercentage =>
       totalSurahs == 0 ? 0 : (memorizedSurahs / totalSurahs).clamp(0.0, 1.0);
 
+  int get remainingSurahs =>
+      (totalSurahs - memorizedSurahs - inProgressSurahs).clamp(0, totalSurahs);
+
   double get memorizedAyahsPercentage =>
       totalAyahs == 0 ? 0 : (memorizedAyahs / totalAyahs).clamp(0.0, 1.0);
 
@@ -98,6 +103,7 @@ class OverallProgress extends Equatable {
     lastMemorizedSurahId,
     lastMemorizedAyahNumber,
     memorizedSurahs,
+    inProgressSurahs,
     memorizedJuz,
     readAyahs,
     readSurahs,

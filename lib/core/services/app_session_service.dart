@@ -1,9 +1,12 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../identity/account_data_barrier.dart';
+
 class AppSessionService {
   AppSessionService(this._prefs);
 
   static const _lastLocationKey = 'last_restorable_location';
+  static const _dailyWirdTargetPrefix = 'daily_wird_target_';
 
   final SharedPreferences _prefs;
 
@@ -22,6 +25,30 @@ class AppSessionService {
 
   Future<void> clearLastRestorableLocation() async {
     await _prefs.remove(_lastLocationKey);
+  }
+
+  /// Returns the ordinary daily-wird target fixed for this local calendar day.
+  int? getDailyWirdTarget(DateTime date) {
+    final target = _prefs.getInt(_dailyWirdTargetKey(date));
+    return target != null && target >= 1 && target <= 604 ? target : null;
+  }
+
+  /// Persists an ordinary daily-wird target under the current account lease.
+  Future<void> saveDailyWirdTarget(int pageNumber, DateTime date) async {
+    if (pageNumber < 1 || pageNumber > 604) return;
+    final barrier = AccountDataBarrier.forPreferences(_prefs);
+    final authority = barrier.capture();
+    await barrier.run<void>((lease) async {
+      await _prefs.setInt(_dailyWirdTargetKey(date), pageNumber);
+      lease.check();
+    }, authority: authority);
+  }
+
+  String _dailyWirdTargetKey(DateTime date) {
+    final local = DateTime(date.year, date.month, date.day);
+    final month = local.month.toString().padLeft(2, '0');
+    final day = local.day.toString().padLeft(2, '0');
+    return '$_dailyWirdTargetPrefix${local.year}-$month-$day';
   }
 
   bool _isRestorableLocation(String location) {

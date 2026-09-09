@@ -120,7 +120,7 @@ class _KhatmahHeroCardState extends State<KhatmahHeroCard>
                     style: AppTypography.labelLarge.copyWith(color: primary),
                   ),
                 ),
-                const Icon(Icons.arrow_forward_rounded),
+                Icon(context.forwardChevron),
               ],
             ),
           ),

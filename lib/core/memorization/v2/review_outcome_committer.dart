@@ -9,6 +9,8 @@ import '../../../features/memorization_plus/domain/usecases/memorization_plus_us
 import '../../identity/record_owner_provider.dart';
 import '../review_record_audience_scope.dart';
 import '../review_record_identity.dart';
+import '../../../features/home/domain/entities/activity_event.dart';
+import '../../services/activity_event_recorder.dart';
 import 'hint_usage.dart';
 import 'review_outcome_commit_support.dart';
 import 'session_phase.dart';
@@ -40,12 +42,14 @@ final class V2ReviewOutcomeCommitter {
     required ScheduleNextReviewUsecase scheduler,
     DateTime Function()? now,
     String Function()? idGenerator,
+    ActivityEventRecorder? activityRecorder,
   }) : _isar = isar,
        _owner = owner,
        _scheduler = scheduler,
        _now = now ?? (() => DateTime.now().toUtc()),
        _idGenerator = idGenerator ?? V2ReviewOutcomeCommitSupport.newOpaqueId,
-       _effects = ReviewEffectOutboxWriter(isar);
+       _effects = ReviewEffectOutboxWriter(isar),
+       _activityRecorder = activityRecorder;
 
   final Isar _isar;
   final RecordOwnerProvider _owner;
@@ -53,6 +57,7 @@ final class V2ReviewOutcomeCommitter {
   final DateTime Function() _now;
   final String Function() _idGenerator;
   final ReviewEffectOutboxWriter _effects;
+  final ActivityEventRecorder? _activityRecorder;
 
   /// Writes evidence, SM-2 projection, checkpoint, and outbox rows together.
   ///
@@ -77,7 +82,7 @@ final class V2ReviewOutcomeCommitter {
     final now = _now().toUtc();
     final requestedEventId = eventId ?? 'event-${_idGenerator()}';
 
-    return _isar.writeTxn(() async {
+    final result = await _isar.writeTxn(() async {
       final existingByEventId = await _isar.isarReviewEvidenceEvents
           .filter()
           .eventIdEqualTo(requestedEventId)
@@ -225,6 +230,12 @@ final class V2ReviewOutcomeCommitter {
         alreadyCommitted: false,
       );
     });
+    await _recordSessionActivity(
+      result: result,
+      kind: ActivityEventKind.memorize,
+      state: nextState,
+    );
+    return result;
   }
 
   /// Persists a completed block-review checkpoint and its completion evidence.
@@ -254,7 +265,7 @@ final class V2ReviewOutcomeCommitter {
     );
     final now = _now().toUtc();
     final requestedEventId = eventId ?? 'event-${_idGenerator()}';
-    return _isar.writeTxn(() async {
+    final result = await _isar.writeTxn(() async {
       final existingByEventId = await _isar.isarReviewEvidenceEvents
           .filter()
           .eventIdEqualTo(requestedEventId)
@@ -341,6 +352,12 @@ final class V2ReviewOutcomeCommitter {
         alreadyCommitted: false,
       );
     });
+    await _recordSessionActivity(
+      result: result,
+      kind: ActivityEventKind.review,
+      state: nextState,
+    );
+    return result;
   }
 
   /// Persists one failed automatic recitation attempt and its next checkpoint.
@@ -454,6 +471,26 @@ final class V2ReviewOutcomeCommitter {
         alreadyCommitted: false,
       );
     });
+  }
+
+  Future<void> _recordSessionActivity({
+    required V2ReviewOutcomeCommitResult result,
+    required ActivityEventKind kind,
+    required V2SessionState state,
+  }) async {
+    if (result.alreadyCommitted) return;
+    if (state.phase != V2SessionPhase.completed) return;
+    final ayahs = state.blockAyahs;
+    await _activityRecorder?.record(
+      ActivityEvent(
+        occurredAt: _now(),
+        kind: kind,
+        idempotencyKey: '${kind.name}|${result.sessionId}|block',
+        surahId: state.surahId,
+        startAyah: ayahs.isEmpty ? null : ayahs.first.numberInSurah,
+        endAyah: ayahs.isEmpty ? null : ayahs.last.numberInSurah,
+      ),
+    );
   }
 
   void _validateEventIdReuse(

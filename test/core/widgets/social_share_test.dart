@@ -34,7 +34,7 @@ void main() {
         for (final category in SocialShareCategory.values) {
           expect(
             SocialShareData.defaultCharacterAssetFor(category),
-            'assets/images/character/Talia_Master_Character.png',
+            'assets/images/character/talia_hero.png',
             reason: '$category must resolve to the official master character',
           );
         }
@@ -435,7 +435,7 @@ void main() {
       expect(find.text('New achievement'), findsOneWidget);
       expect(find.text("Sayed's Quran journey"), findsOneWidget);
       expect(
-        find.text('Plan  •  Memorize  •  Review  •  Retain'),
+        find.text('Talia... Quran shapes a better generation'),
         findsOneWidget,
       );
       expect(find.text('taliaapp.com'), findsOneWidget);

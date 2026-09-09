@@ -17,9 +17,11 @@ import '../../../../core/memorization/v2/session_engine.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/memorization/v2/session_state.dart';
 import '../../../../core/services/achievement_service.dart';
+import '../../../../core/services/activity_event_recorder.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/services/audio_lifecycle_manager.dart';
 import '../../../../core/services/streak_service.dart'; // RISK-5 FIX
+import '../../../home/domain/entities/activity_event.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/usecases/memorization_plus_usecases.dart';
@@ -48,7 +50,9 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     KidsGuardianPinVerifier? guardianPinVerifier,
     KidsSessionPolicyLoader? sessionPolicyLoader,
     V2SessionProgressAdapter? progressAdapter,
-  ]) : _appSessionService = appSessionService,
+    ActivityEventRecorder? activityRecorder,
+  ]) : _activityRecorder = activityRecorder,
+       _appSessionService = appSessionService,
        _guardianPinVerifier = guardianPinVerifier,
        _sessionPolicyLoader = sessionPolicyLoader,
        _progressAdapter = progressAdapter,
@@ -82,6 +86,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final KidsGuardianPinVerifier? _guardianPinVerifier;
   final KidsSessionPolicyLoader? _sessionPolicyLoader;
   final V2SessionProgressAdapter? _progressAdapter;
+  final ActivityEventRecorder? _activityRecorder;
   late final KidsRecitationRecorder _recitationRecorder;
   final AudioPlayer _player = AudioPlayer();
   late final StreamSubscription<PlayerState> _playerSub;
@@ -556,6 +561,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         0,
         DateTime.now().toUtc().difference(startedAt).inSeconds,
       );
+
+      // The review record is the source of truth for memorization progress.
+      // Do not grant points or complete the session until it is durably saved;
+      // otherwise a storage failure can reward progress that cannot be reviewed.
       final reviewResult = await _reviewAdapter.recordPass(
         surahId: st.surahId,
         ayahNumber: st.ayahNumber,
@@ -621,7 +630,10 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         automaticSpokenText: automaticSpokenText,
       );
 
-      await _recordSessionActivity();
+      await _recordSessionActivity(
+        surahId: st.surahId,
+        ayahNumber: st.ayahNumber,
+      );
       await _clearKidsSession(st.surahId);
 
       final newAwards = await _achievementService.checkAndUnlockCertificates(
@@ -655,11 +667,28 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     return PerformanceRating.excellent;
   }
 
-  Future<void> _recordSessionActivity() async {
+  Future<void> _recordSessionActivity({int? surahId, int? ayahNumber}) async {
     try {
       await _streakService.recordActivity(activityDelta: 1);
     } catch (_) {
       // Session completion remains valid when the streak service is unavailable.
+    }
+    if (surahId == null || ayahNumber == null) return;
+    try {
+      final now = DateTime.now();
+      await _activityRecorder?.record(
+        ActivityEvent(
+          occurredAt: now,
+          kind: ActivityEventKind.memorize,
+          idempotencyKey:
+              'memorize|kids|${ActivityEventRecorder.dayKey(now)}|$surahId:$ayahNumber',
+          surahId: surahId,
+          startAyah: ayahNumber,
+          endAyah: ayahNumber,
+        ),
+      );
+    } catch (_) {
+      // The activity feed is supplementary to session persistence.
     }
   }
 

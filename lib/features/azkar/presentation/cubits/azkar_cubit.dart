@@ -2,31 +2,31 @@ import 'package:flutter/foundation.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../data/datasources/azkar_completion_store.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../../domain/usecases/get_azkar_usecase.dart';
 
 part 'azkar_state.dart';
 
 class AzkarCubit extends Cubit<AzkarState> {
-  AzkarCubit(this._getAzkar, this._prefs) : super(const AzkarInitial());
+  AzkarCubit(this._getAzkar, SharedPreferences prefs, [AzkarCompletionStore? store])
+    : _store = store ?? AzkarCompletionStore(prefs),
+      super(const AzkarInitial());
   final GetAzkarUsecase _getAzkar;
-  final SharedPreferences _prefs;
-
-  static const _counterPrefix = 'azkar_counter_';
-  static const _datePrefix = 'azkar_date_';
+  final AzkarCompletionStore _store;
+  Future<void> _mutationTail = Future<void>.value();
 
   Future<void> load(AzkarCategory category) async {
     emit(const AzkarLoading());
     final result = await _getAzkar(category);
-    result.fold((f) => emit(AzkarError(f.message)), (azkar) {
-      final savedDate = _prefs.getString('$_datePrefix${category.name}');
-      final todayStr = _todayKey();
-      final isToday = savedDate == todayStr;
+    await result.fold<Future<void>>((f) async {
+      if (!isClosed) emit(AzkarError(f.message));
+    }, (azkar) async {
+      await _store.prepareForToday(category);
+      if (isClosed) return;
 
       final sessions = azkar.map((z) {
-        final savedCount = isToday
-            ? (_prefs.getInt('$_counterPrefix${category.name}_${z.id}') ?? 0)
-            : 0;
+        final savedCount = _store.countFor(category, z.id);
         final count = savedCount.clamp(0, z.totalCount);
         return ZikrSession(
           zikr: z,
@@ -35,12 +35,11 @@ class AzkarCubit extends Cubit<AzkarState> {
         );
       }).toList();
 
-      // Update date stamp if starting fresh
-      if (!isToday) {
-        _prefs.setString('$_datePrefix${category.name}', todayStr);
-      }
-
       final allDone = sessions.isNotEmpty && sessions.every((s) => s.isDone);
+      if (allDone) {
+        await _store.setAllDone(category, true);
+      }
+      if (isClosed) return;
       emit(
         AzkarLoaded(
           category: category,
@@ -52,10 +51,31 @@ class AzkarCubit extends Cubit<AzkarState> {
     });
   }
 
-  void increment() async {
+  /// Queues taps so each one observes the count produced by the previous tap.
+  Future<void> increment() => _enqueueMutation(_increment);
+
+  Future<void> _enqueueMutation(Future<void> Function() operation) {
+    final result = _mutationTail.then((_) => operation());
+    _mutationTail = result.then<void>(
+      (_) {},
+      onError: (Object _, StackTrace _) {},
+    );
+    return result;
+  }
+
+  Future<void> _increment() async {
     final state = this.state;
     if (state is! AzkarLoaded) return;
     if (state.sessions.isEmpty) return;
+
+    // A page can stay open across midnight. Rebuild it from the new day's
+    // cleared state before applying this tap, so yesterday's count is never
+    // added to today's first count.
+    if (!_store.isToday(state.category)) {
+      await load(state.category);
+      if (isClosed || this.state is! AzkarLoaded) return;
+      return _increment();
+    }
 
     final sessions = List<ZikrSession>.from(state.sessions);
     final idx = state.currentIndex;
@@ -64,18 +84,19 @@ class AzkarCubit extends Cubit<AzkarState> {
 
     sessions[idx] = sessions[idx].increment();
 
-    // Persist the updated counter
     final session = sessions[idx];
-    await _prefs.setInt(
-      '$_counterPrefix${state.category.name}_${session.zikr.id}',
-      session.currentCount,
+    await _store.setCount(
+      category: state.category,
+      zikrId: session.zikr.id,
+      count: session.currentCount,
     );
-    await _prefs.setString('$_datePrefix${state.category.name}', _todayKey());
 
     final allDone = sessions.every((s) => s.isDone);
+    if (allDone) {
+      await _store.setAllDone(state.category, true);
+    }
     emit(state.copyWith(sessions: sessions, allDone: allDone));
 
-    // Automatically navigate to the next unfinished zikr
     if (session.isDone && !allDone) {
       await Future.delayed(const Duration(milliseconds: 400));
       if (isClosed) return;
@@ -95,23 +116,30 @@ class AzkarCubit extends Cubit<AzkarState> {
     }
   }
 
-  void reset() {
+  Future<void> reset() => _enqueueMutation(_reset);
+
+  Future<void> _reset() async {
     final state = this.state;
     if (state is! AzkarLoaded) return;
     final sessions = state.sessions.map((s) => s.reset()).toList();
 
-    // Clear persisted counters for this category
-    for (final s in state.sessions) {
-      _prefs.remove('$_counterPrefix${state.category.name}_${s.zikr.id}');
-    }
+    await _store.clearCategory(state.category);
+    if (isClosed) return;
 
     emit(state.copyWith(sessions: sessions, allDone: false));
   }
 
-  Future<void> decrementCurrent() async {
+  Future<void> decrementCurrent() => _enqueueMutation(_decrementCurrent);
+
+  Future<void> _decrementCurrent() async {
     final state = this.state;
     if (state is! AzkarLoaded) return;
     if (state.sessions.isEmpty) return;
+
+    if (!_store.isToday(state.category)) {
+      await load(state.category);
+      return;
+    }
 
     final sessions = List<ZikrSession>.from(state.sessions);
     final idx = state.currentIndex;
@@ -119,11 +147,12 @@ class AzkarCubit extends Cubit<AzkarState> {
 
     sessions[idx] = sessions[idx].decrement();
     final session = sessions[idx];
-    await _prefs.setInt(
-      '$_counterPrefix${state.category.name}_${session.zikr.id}',
-      session.currentCount,
+    await _store.setCount(
+      category: state.category,
+      zikrId: session.zikr.id,
+      count: session.currentCount,
     );
-    await _prefs.setString('$_datePrefix${state.category.name}', _todayKey());
+    await _store.setAllDone(state.category, false);
 
     emit(state.copyWith(sessions: sessions, allDone: false));
   }
@@ -159,10 +188,5 @@ class AzkarCubit extends Cubit<AzkarState> {
     } else if (state.currentIndex < state.sessions.length - 1) {
       emit(state.copyWith(currentIndex: state.currentIndex + 1));
     }
-  }
-
-  String _todayKey() {
-    final now = DateTime.now();
-    return '${now.year}-${now.month}-${now.day}';
   }
 }

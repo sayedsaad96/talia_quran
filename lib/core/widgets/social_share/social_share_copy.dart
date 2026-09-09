@@ -22,11 +22,33 @@ class SocialShareCopy {
   String get appName => isArabic ? 'تالية' : 'Talia';
   String get tagline =>
       isArabic ? 'رفيقك في رحلة القرآن' : 'Your Quran companion';
-  String get brandPromise => isArabic
-      ? 'خطّط  •  احفظ  •  راجع  •  أتقن'
-      : 'Plan  •  Memorize  •  Review  •  Retain';
-  String get compactBrandPromise =>
-      isArabic ? 'احفظ  •  راجع  •  أتقن' : 'Memorize  •  Review  •  Retain';
+  String brandPromise(bool isKids, SocialShareCategory category) {
+    if (isKids) {
+      return isArabic ? 'نغرس القرآن في القلب بحب' : 'Planting the Quran in hearts with love';
+    }
+    switch (category) {
+      case SocialShareCategory.quranAyah:
+      case SocialShareCategory.dua:
+      case SocialShareCategory.azkar:
+        return isArabic ? 'تالية... رفيقك للذكر والهداية' : 'Talia... your companion for remembrance and guidance';
+      default:
+        return isArabic ? 'تالية... قرآنٌ يصنعُ جيلاً أفضل' : 'Talia... Quran shapes a better generation';
+    }
+  }
+
+  String compactBrandPromise(bool isKids, SocialShareCategory category) {
+    if (isKids) {
+      return isArabic ? 'نغرس القرآن بحب' : 'Planting Quran with love';
+    }
+    switch (category) {
+      case SocialShareCategory.quranAyah:
+      case SocialShareCategory.dua:
+      case SocialShareCategory.azkar:
+        return isArabic ? 'رفيقك للذكر والهداية' : 'Companion for guidance';
+      default:
+        return isArabic ? 'قرآنٌ يصنعُ جيلاً أفضل' : 'Quran shapes a better generation';
+    }
+  }
   String get appDomain => Uri.parse(SocialShareData.landingPageUrl).host;
 
   // ─── Marketing & CTA copy ─────────────────────────────────────────────────

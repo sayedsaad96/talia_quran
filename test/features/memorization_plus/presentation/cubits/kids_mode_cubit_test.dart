@@ -210,7 +210,7 @@ void main() {
       expect(savedAfterCompletion.fold(() => false, (_) => true), isFalse);
     });
     test(
-      'review record failure preserves the resumable session without awards',
+      'review record failure keeps the kids session retryable without awards',
       () async {
         repository.reviewWriteFailure = const CacheFailure(
           'review write failed',
@@ -240,6 +240,8 @@ void main() {
         expect(repository.awardCalls, 0);
         expect(repository.awardLogWrites, 0);
         expect(repository.saveLogCalls, 0);
+        expect(streakService.recordCalls, 0);
+        expect(achievementService.checkCalls, 0);
       },
     );
 

@@ -1,7 +1,10 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/services/daily_reading_log_service.dart';
 import '../../../../core/services/streak_service.dart';
+import '../../../../core/services/activity_event_recorder.dart';
+import '../../../../features/home/domain/entities/activity_event.dart';
 import '../../../../features/progress/domain/usecases/save_read_page_usecase.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../../domain/repositories/quran_repository.dart';
@@ -37,12 +40,19 @@ class QuranPageError extends QuranPageState {
 }
 
 class QuranPageCubit extends Cubit<QuranPageState> {
-  QuranPageCubit(this._repository, this._saveReadPage, this._streakService)
-    : super(QuranPageInitial());
+  QuranPageCubit(
+    this._repository,
+    this._saveReadPage,
+    this._streakService, [
+    this._readingLog,
+    this._activityRecorder,
+  ]) : super(QuranPageInitial());
 
   final QuranRepository _repository;
   final SaveReadPageUsecase _saveReadPage;
   final StreakService _streakService;
+  final DailyReadingLogService? _readingLog;
+  final ActivityEventRecorder? _activityRecorder;
 
   Future<void> loadPage(int pageNumber) async {
     emit(QuranPageLoading());
@@ -74,6 +84,27 @@ class QuranPageCubit extends Cubit<QuranPageState> {
     } catch (_) {
       // Streak recording is supplementary and must not invalidate reading.
     }
+    try {
+      await _readingLog?.recordPage(pageNumber);
+    } catch (_) {}
+    try {
+      final surahId = current.detail.surahs.isEmpty
+          ? null
+          : current.detail.surahs.first.id;
+      final ayahs = current.detail.ayahs;
+      await _activityRecorder?.record(
+        ActivityEvent(
+          occurredAt: DateTime.now(),
+          kind: ActivityEventKind.reading,
+          idempotencyKey:
+              'reading|${ActivityEventRecorder.dayKey(DateTime.now())}|$pageNumber',
+          surahId: surahId,
+          startAyah: ayahs.isEmpty ? null : ayahs.first.numberInSurah,
+          endAyah: ayahs.isEmpty ? null : ayahs.last.numberInSurah,
+          pageNumber: pageNumber,
+        ),
+      );
+    } catch (_) {}
     emit(QuranPageLoaded(current.detail, isReadConfirmed: true));
     return true;
   }

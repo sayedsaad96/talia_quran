@@ -1,44 +1,34 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/constants/surah_names.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/l10n/localization_helpers.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_decorations.dart';
-import '../../../../core/theme/app_typography.dart';
+import '../../../../core/journey/journey_feature_flags.dart';
+import '../../../../core/journey/unified_journey_action_mapper.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/theme_cubit.dart';
-import '../../../../core/constants/xp_constants.dart';
-import '../../../../core/widgets/activity_heatmap.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/state_widgets.dart';
-import '../../../../core/router/app_router.dart';
-import '../../../../core/journey/journey_feature_flags.dart';
-import '../../../../core/memorization/smart_coach_recommendation.dart';
-import '../../../../core/services/achievement_service.dart';
-import '../../../../core/services/app_session_service.dart';
-import '../../../auth/presentation/cubits/auth_cubit.dart';
-import '../widgets/unified_hero_action_card.dart';
-import '../../../../core/journey/unified_journey_action_mapper.dart';
-import '../../../../core/journey/resume_session_presentation_mapper.dart';
-import '../../../../core/journey/resume_session_presentation_input.dart';
-import '../../../memorization_plus/domain/entities/memorization_entities.dart';
-import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
-import '../../../memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
-import '../../../progress/domain/entities/progress_entities.dart';
-import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../../../streak/presentation/cubits/streak_cubit.dart';
 import '../cubits/home_cubit.dart';
-import '../../../khatmah/presentation/widgets/khatmah_hero_card.dart';
-import '../../../../core/widgets/social_share/social_share_model.dart';
-import '../../../../core/widgets/social_share/social_share_sheet.dart';
-part 'home_page_widgets.dart';
+import '../theme/home_skin.dart';
+import '../widgets/glass_panel.dart';
+import '../widgets/home_activity_feed.dart';
+import '../widgets/home_action_tiles.dart';
+import '../widgets/home_ayah_of_day.dart';
+import '../widgets/home_background.dart';
+import '../widgets/home_continue_card.dart';
+import '../widgets/home_contextual_slot.dart';
+import '../widgets/home_daily_challenge_card.dart';
+import '../widgets/home_first_run.dart';
+import '../widgets/home_hero_section.dart';
+import '../widgets/home_night_header.dart';
+import '../widgets/home_parent_children.dart';
+import '../widgets/home_quick_access.dart';
+import '../widgets/next_best_action_card.dart';
+import '../widgets/resume_session_card.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -46,10 +36,7 @@ class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
-
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
-  // Track whether the app was backgrounded so we only trigger a reload on a
-  // real resume (background → foreground), not on every lifecycle tick.
   bool _wasInBackground = false;
   late final HomeCubit _homeCubit;
   late final StreakCubit _streakCubit;
@@ -61,12 +48,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _streakCubit = getIt<StreakCubit>()..loadStreak();
     WidgetsBinding.instance.addObserver(this);
     AppRouter.router.routerDelegate.addListener(_onRouteChanged);
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // No need to subscribe to a RouteObserver for shell routes since we use GoRouter listener now
   }
 
   void _onRouteChanged() {
@@ -87,14 +68,6 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  /// Triggered whenever the app lifecycle changes.
-  ///
-  /// GoRouter's tab navigation does NOT push/pop routes in the traditional
-  /// Navigator sense, so RouteAware.didPopNext() never fires when the user
-  /// switches back to the Home tab from the Quran reader. Using the app
-  /// lifecycle is the reliable cross-platform solution: the Quran reader
-  /// pushes a full-screen route that puts the app in an "inactive" state on
-  /// iOS and triggers a pause/resume cycle on Android.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
@@ -126,72 +99,105 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 }
-
 class _HomeView extends StatelessWidget {
   const _HomeView();
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
+    final skin = HomeSkin.forBrightness(Theme.of(context).brightness);
 
     return Scaffold(
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
-      body: BlocBuilder<HomeCubit, HomeState>(
-        builder: (context, state) {
-          if (state is HomeLoading) {
-            return const HomeSkeletonLoader();
-          }
-          if (state is HomeError) {
-            return ErrorStateWidget(
-              message: state.message,
-              onRetry: () => context.read<HomeCubit>().load(),
-            );
-          }
-          if (state is HomeLoaded) {
-            return Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 840),
-                child: _HomeContent(state: state, isDark: isDark),
-              ),
-            );
-          }
-          return const SizedBox.shrink();
-        },
+      backgroundColor: skin.scaffold,
+      body: HomeBackground(
+        skin: skin,
+        child: BlocBuilder<HomeCubit, HomeState>(
+          builder: (context, state) {
+            if (state is HomeLoading) {
+              return const HomeSkeletonLoader();
+            }
+            if (state is HomeError) {
+              return ErrorStateWidget(
+                message: state.message,
+                onRetry: () => context.read<HomeCubit>().load(),
+              );
+            }
+            if (state is HomeLoaded) {
+              return Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 840),
+                  child: HomeLoadedView(state: state, skin: skin),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
       ),
     );
   }
 }
+class HomeLoadedView extends StatelessWidget {
+  const HomeLoadedView({
+    super.key,
+    required this.state,
+    required this.skin,
+  });
 
-class _HomeContent extends StatelessWidget {
-  const _HomeContent({required this.state, required this.isDark});
   final HomeLoaded state;
-  final bool isDark;
+  final HomeSkin skin;
 
   @override
   Widget build(BuildContext context) {
-    final isKids = state.isKids;
-    return CustomScrollView(
-      slivers: [
-        // ─── Hero Header ───────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: _HeroHeader(state: state, isDark: isDark),
-        ),
-
-        // ─── Sign-In Nudge Banner ───────────────────────────────────────────
-        if (JourneyFeatureFlags.unifiedJourneyEnabled &&
-            state.heroAction != null)
-          Builder(
-            builder: (context) {
-              final action = state.heroAction!;
-              final presentationData = const UnifiedJourneyActionMapper().map(
-                context,
-                action,
-              );
-
-              return SliverToBoxAdapter(
+    final isDark = skin.isDark;
+    final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+    return RefreshIndicator(
+      color: skin.accent,
+      onRefresh: () => context.read<HomeCubit>().load(),
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: HomeNightHeader(state: state, skin: skin),
+          ),
+          if (state.isRefreshing)
+            const SliverToBoxAdapter(
+              child: LinearProgressIndicator(minHeight: 2),
+            ),
+          if (state.isFirstRun)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pagePadding,
+                  AppSpacing.md,
+                  AppSpacing.pagePadding,
+                  0,
+                ),
+                child: GlassPanel(
+                  skin: skin,
+                  child: HomeFirstRun(isDark: isDark),
+                ),
+              ),
+            )
+          else ...[
+            SliverToBoxAdapter(
+              child: state.continueRecitation != null
+                  ? Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.pagePadding,
+                        AppSpacing.md,
+                        AppSpacing.pagePadding,
+                        0,
+                      ),
+                      child: HomeContinueCard(
+                        recitation: state.continueRecitation!,
+                        skin: skin,
+                      ),
+                    )
+                  : _PrimaryAction(state: state, isDark: isDark),
+            ),
+            if (state.activeSlot != null)
+              SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pagePadding,
@@ -199,125 +205,115 @@ class _HomeContent extends StatelessWidget {
                     AppSpacing.pagePadding,
                     0,
                   ),
-                  child: UnifiedHeroActionCard(
-                    data: presentationData,
-                    isDark: isDark,
-                    onTap: () => context.push(action.route),
-                  ),
+                  child: HomeContextualSlot(state: state, skin: skin),
                 ),
-              );
-            },
-          )
-        else if (state.lastRestorableLocation != null)
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.md,
-                AppSpacing.pagePadding,
-                0,
               ),
-              child: _ResumeSessionCard(
-                location: state.lastRestorableLocation!,
-                isDark: isDark,
-                isKids: isKids,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pagePadding,
+                  AppSpacing.md,
+                  AppSpacing.pagePadding,
+                  0,
+                ),
+                child: HomeActionTiles(state: state, skin: skin),
               ),
             ),
-          )
-        // Only show the "Next Best Action" card when there is no active
-        // restorable session. Showing both at once is redundant since both
-        // can point to the same memorization feature.
-        else
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.pagePadding,
-                AppSpacing.md,
-                AppSpacing.pagePadding,
-                0,
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pagePadding,
+                  AppSpacing.md,
+                  AppSpacing.pagePadding,
+                  0,
+                ),
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final stacked =
+                        constraints.maxWidth < 520 || textScale > 1.3;
+                    final challenge = HomeDailyChallengeCard(
+                      state: state,
+                      skin: skin,
+                    );
+                    final journey = HomeJourneyRingCard(
+                      state: state,
+                      skin: skin,
+                    );
+                    if (stacked) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          journey,
+                          const SizedBox(height: AppSpacing.md),
+                          challenge,
+                        ],
+                      );
+                    }
+                    return Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: challenge),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(child: journey),
+                      ],
+                    );
+                  },
+                ),
               ),
-              child: _NextBestActionCard(
-                state: state,
-                isDark: isDark,
-                isKids: isKids,
-              ),
             ),
-          ),
-
-        // ─── Khatmah Hero Card ──────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.md,
-              AppSpacing.pagePadding,
-              0,
-            ),
-            child: KhatmahHeroCard(
-              plan: state.activeKhatmah,
-              error: state.khatmahError,
-              onRetry: context.read<HomeCubit>().load,
-              isDark: isDark,
-              margin: EdgeInsets.zero,
-            ),
-          ),
-        ),
-
-        // ─── Daily Wird Card ────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.md,
-              AppSpacing.pagePadding,
-              0,
-            ),
-            child: _DailyWirdCard(state: state, isDark: isDark),
-          ),
-        ),
-
-        // Support prompts follow today's prescribed practice, so they never
-        // compete with the first action a learner sees.
-        SliverToBoxAdapter(child: _SignInNudgeBanner(isDark: isDark)),
-
-        if (state.lastRestorableLocation == null)
-          SliverToBoxAdapter(child: _TutorialPromptBanner(isDark: isDark)),
-
-        if (!isKids && state.selectedTrack == MemorizationTrack.adults)
-          SliverToBoxAdapter(
-            child: BlocBuilder<AuthCubit, AuthState>(
-              builder: (context, authState) {
-                if (!state.isParentMode || authState is! AuthAuthenticated) {
-                  return const SizedBox.shrink();
-                }
-                return Padding(
+            if (state.ayahOfDay != null)
+              SliverToBoxAdapter(
+                child: Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pagePadding,
                     AppSpacing.md,
                     AppSpacing.pagePadding,
                     0,
                   ),
-                  child: _ParentGuardianToolsCard(isDark: isDark),
-                );
-              },
+                  child: HomeAyahOfDayCard(
+                    ayah: state.ayahOfDay!,
+                    skin: skin,
+                  ),
+                ),
+              ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pagePadding,
+                  AppSpacing.md,
+                  AppSpacing.pagePadding,
+                  0,
+                ),
+                child: HomeActivityFeed(state: state, skin: skin),
+              ),
             ),
-          ),
-
-        // ─── Engagement Stats ─────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.sectionGap,
-              AppSpacing.pagePadding,
-              0,
+            if (state.familyChildren.isNotEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.md,
+                    AppSpacing.pagePadding,
+                    0,
+                  ),
+                  child: HomeParentChildren(
+                    children: state.familyChildren,
+                    skin: skin,
+                  ),
+                ),
+              ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.pagePadding,
+                  AppSpacing.md,
+                  AppSpacing.pagePadding,
+                  0,
+                ),
+                child: HomeQuickAccess(state: state, skin: skin),
+              ),
             ),
-            child: _HomeEngagementSection(state: state, isDark: isDark),
-          ),
-        ),
-
-        // ─── Activity Heatmap ───────────────────────────────────────────────
-        if (state.activityCountsByDay.isNotEmpty)
+          ],
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(
@@ -326,52 +322,76 @@ class _HomeContent extends StatelessWidget {
                 AppSpacing.pagePadding,
                 0,
               ),
-              child: _HomeActivityHeatmapSection(state: state, isDark: isDark),
+              child: Text(
+                context.l10n.homeFooterTagline,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Amiri',
+                  fontSize: 14,
+                  color: skin.textSecondary,
+                ),
+              ),
             ),
           ),
+          SliverToBoxAdapter(
+            child: SizedBox(
+              height:
+                  MediaQuery.paddingOf(context).bottom +
+                  AppSpacing.xxl +
+                  AppSpacing.lg,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-        // ─── Progress Section ────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.lg,
-              AppSpacing.pagePadding,
-              0,
-            ),
-            child: _ProgressSection(
-              progress: state.progress,
-              totalXp: state.totalXp,
-              isDark: isDark,
-              isKids: isKids,
-              kidsPoints: state.progress.kidsPoints,
-            ),
-          ),
-        ),
+class _PrimaryAction extends StatelessWidget {
+  const _PrimaryAction({required this.state, required this.isDark});
+  final HomeLoaded state;
+  final bool isDark;
 
-        // ─── Quick Actions ───────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.pagePadding,
-              AppSpacing.lg,
-              AppSpacing.pagePadding,
-              0,
-            ),
-            child: _QuickActionsGrid(isDark: isDark),
-          ),
-        ),
-
-        // ─── Bottom padding (above nav bar) ──────────────────────────────────
-        SliverToBoxAdapter(
-          child: SizedBox(
-            height:
-                MediaQuery.paddingOf(context).bottom +
-                AppSpacing.xxl +
-                AppSpacing.lg,
-          ),
-        ),
-      ],
+  @override
+  Widget build(BuildContext context) {
+    Widget child;
+    if (JourneyFeatureFlags.unifiedJourneyEnabled && state.heroAction != null) {
+      final action = state.heroAction!;
+      final data = const UnifiedJourneyActionMapper().map(context, action);
+      child = HomeHeroSection(
+        data: data,
+        isDark: isDark,
+        minutes: state.heroMinutes,
+        onTap: () => context.push(action.route),
+        onMore: state.alternativeActions.length > 1
+            ? () => showHomeAlternativesSheet(
+                context,
+                actions: state.alternativeActions.skip(1).toList(),
+                isDark: isDark,
+              )
+            : null,
+      );
+    } else if (state.lastRestorableLocation != null) {
+      child = ResumeSessionCard(
+        location: state.lastRestorableLocation!,
+        isDark: isDark,
+        isKids: state.isKids,
+      );
+    } else {
+      child = NextBestActionCard(
+        state: state,
+        isDark: isDark,
+        isKids: state.isKids,
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pagePadding,
+        AppSpacing.md,
+        AppSpacing.pagePadding,
+        0,
+      ),
+      child: child,
     );
   }
 }

@@ -15,7 +15,12 @@ import 'package:talia_quran/core/services/app_session_service.dart';
 import 'package:talia_quran/core/progress/progress_changed_reason.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
 import 'package:talia_quran/core/services/xp_service.dart';
+import 'package:talia_quran/features/home/domain/entities/ayah_of_day.dart';
 import 'package:talia_quran/features/home/domain/usecases/get_activity_heatmap_usecase.dart';
+import 'package:talia_quran/features/home/domain/entities/activity_event.dart';
+import 'package:talia_quran/features/home/domain/repositories/activity_feed_repository.dart';
+import 'package:talia_quran/features/home/domain/usecases/get_ayah_of_day_usecase.dart';
+import 'package:talia_quran/features/home/domain/usecases/get_recent_activity_usecase.dart';
 import 'package:talia_quran/features/home/presentation/cubits/home_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
@@ -26,6 +31,25 @@ import 'package:talia_quran/features/quran/domain/usecases/get_surahs_usecase.da
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
 import 'home_cubit_test.mocks.dart';
+
+class _MockGetAyahOfDay extends Mock implements GetAyahOfDayUsecase {
+  @override
+  Future<AyahOfDay?> call() => super.noSuchMethod(
+    Invocation.method(#call, const []),
+    returnValue: Future<AyahOfDay?>.value(),
+  ) as Future<AyahOfDay?>;
+}
+
+class _MockGetFamilyDashboard extends Mock
+    implements GetFamilyDashboardUsecase {
+  @override
+  Future<Either<Failure, FamilyDashboard>> call() => super.noSuchMethod(
+    Invocation.method(#call, const []),
+    returnValue: Future<Either<Failure, FamilyDashboard>>.value(
+      const Left(CacheFailure('not configured')),
+    ),
+  ) as Future<Either<Failure, FamilyDashboard>>;
+}
 
 @GenerateMocks([
   GetProgressUsecase,
@@ -53,6 +77,28 @@ void main() {
   late ProgressEventsBus progressEvents;
   late _FakeXpService xpService;
 
+  HomeCubit buildCubit({
+    GetAyahOfDayUsecase? getAyahOfDay,
+    GetFamilyDashboardUsecase? getFamilyDashboard,
+    GetRecentActivityUsecase? getRecentActivity,
+  }) => HomeCubit.withExtras(
+    mockGetProgress,
+    mockGetQuranPage,
+    mockGetCustomPlan,
+    mockMemRepo,
+    mockSessionService,
+    mockGetHeatmap,
+    mockPathResolver,
+    mockGetCoachRecommendation,
+    journeyEngine,
+    mockPrefs,
+    progressEvents,
+    xpService,
+    getAyahOfDay: getAyahOfDay,
+    getFamilyDashboard: getFamilyDashboard,
+    getRecentActivity: getRecentActivity,
+  );
+
   setUp(() {
     mockGetProgress = MockGetProgressUsecase();
     mockGetQuranPage = MockGetQuranPageUsecase();
@@ -69,6 +115,7 @@ void main() {
 
     when(mockPathResolver.changes).thenAnswer((_) => const Stream.empty());
     when(mockPrefs.getString(any)).thenReturn(null);
+    when(mockPrefs.getBool(any)).thenReturn(false);
     when(mockPrefs.getBool('unified_journey_enabled')).thenReturn(true);
 
     when(mockGetProgress.call()).thenAnswer(
@@ -125,20 +172,7 @@ void main() {
       mockMemRepo.getAllReviewRecords(),
     ).thenAnswer((_) async => Right([defaultRecord]));
 
-    cubit = HomeCubit(
-      mockGetProgress,
-      mockGetQuranPage,
-      mockGetCustomPlan,
-      mockMemRepo,
-      mockSessionService,
-      mockGetHeatmap,
-      mockPathResolver,
-      mockGetCoachRecommendation,
-      journeyEngine,
-      mockPrefs,
-      progressEvents,
-      xpService,
-    );
+    cubit = buildCubit();
   });
 
   tearDown(() async {
@@ -353,6 +387,21 @@ void main() {
     },
   );
 
+  test('second load keeps HomeLoaded and does not emit HomeLoading', () async {
+    final states = <HomeState>[];
+    final sub = cubit.stream.listen(states.add);
+    addTearDown(sub.cancel);
+
+    await cubit.load();
+    expect(cubit.state, isA<HomeLoaded>());
+    states.clear();
+
+    await cubit.load();
+    expect(states.whereType<HomeLoading>(), isEmpty);
+    expect(cubit.state, isA<HomeLoaded>());
+    expect((cubit.state as HomeLoaded).isRefreshing, isFalse);
+  });
+
   test('load completes quietly when cubit closes during XP fetch', () async {
     xpService.pendingTotalXp = Completer<int>();
 
@@ -363,6 +412,121 @@ void main() {
 
     await expectLater(load, completes);
   });
+
+  test('does not load family data outside the parent PIN gate', () async {
+    final family = _MockGetFamilyDashboard();
+    when(family.call()).thenAnswer(
+      (_) async => const Right(
+        FamilyDashboard(children: [], settings: ParentSettings()),
+      ),
+    );
+    await cubit.close();
+    cubit = buildCubit(getFamilyDashboard: family);
+
+    await cubit.load();
+
+    verifyNever(family.call());
+  });
+
+  test('load completes quietly when cubit closes during extras loading', () async {
+    final ayah = _MockGetAyahOfDay();
+    final pending = Completer<AyahOfDay?>();
+    when(ayah.call()).thenAnswer((_) => pending.future);
+    await cubit.close();
+    cubit = buildCubit(getAyahOfDay: ayah);
+
+    final load = cubit.load();
+    await untilCalled(ayah.call());
+    await cubit.close();
+    pending.complete(null);
+
+    await expectLater(load, completes);
+  });
+
+  test('newer Home load is not overwritten by an older extras result', () async {
+    final ayah = _MockGetAyahOfDay();
+    final first = Completer<AyahOfDay?>();
+    final second = Completer<AyahOfDay?>();
+    var calls = 0;
+    when(ayah.call()).thenAnswer(
+      (_) => calls++ == 0 ? first.future : second.future,
+    );
+    when(mockMemRepo.getMemorizationProfile()).thenAnswer(
+      (_) async => Right(
+        MemorizationProfile.empty().copyWith(isParentGuardian: true),
+      ),
+    );
+    await cubit.close();
+    cubit = buildCubit(getAyahOfDay: ayah);
+
+    final firstLoad = cubit.load();
+    await untilCalled(ayah.call());
+
+    final secondCall = untilCalled(ayah.call());
+    final secondLoad = cubit.load();
+    await secondCall;
+    second.complete(const AyahOfDay(
+      surahId: 2,
+      ayahNumber: 2,
+      text: 'الثانية',
+      surahNameAr: 'البقرة',
+      surahNameEn: 'Al-Baqarah',
+      pageNumber: 2,
+    ));
+    await secondLoad;
+
+    first.complete(const AyahOfDay(
+      surahId: 2,
+      ayahNumber: 1,
+      text: 'الأولى',
+      surahNameAr: 'البقرة',
+      surahNameEn: 'Al-Baqarah',
+      pageNumber: 2,
+    ));
+    await firstLoad;
+
+    expect((cubit.state as HomeLoaded).ayahOfDay?.ayahNumber, 2);
+  });
+
+  test('loads recent activity from the feed usecase', () async {
+    final events = [
+      ActivityEvent(
+        occurredAt: DateTime.utc(2026, 9, 9, 12),
+        kind: ActivityEventKind.reading,
+        idempotencyKey: 'reading|20260909|5',
+        pageNumber: 5,
+      ),
+    ];
+    await cubit.close();
+    cubit = buildCubit(
+      getRecentActivity: GetRecentActivityUsecase(_MemoryActivityFeed(events)),
+    );
+
+    await cubit.load();
+
+    final state = cubit.state;
+    expect(state, isA<HomeLoaded>());
+    expect((state as HomeLoaded).recentActivity, events);
+  });
+}
+
+class _MemoryActivityFeed implements ActivityFeedRepository {
+  const _MemoryActivityFeed(this.events);
+
+  final List<ActivityEvent> events;
+
+  @override
+  Future<void> append(ActivityEvent event) async {}
+
+  @override
+  Future<List<ActivityEvent>> recent({int limit = 20}) async =>
+      events.take(limit).toList();
+
+  @override
+  Future<Set<ActivityEventKind>> kindsSince(DateTime start) async => {
+    for (final event in events)
+      if (!event.occurredAt.isBefore(start)) event.kind,
+  };
 }
 
 class _FakeXpService implements XpService {

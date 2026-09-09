@@ -28,6 +28,7 @@ class ProgressMetrics extends Equatable {
     required this.learningAyahs,
     required this.totalReviewEvents,
     required this.memorizedSurahs,
+    this.inProgressSurahs = 0,
     required this.memorizedJuz,
     required this.dueReviews,
     required this.overdueReviews,
@@ -59,6 +60,9 @@ class ProgressMetrics extends Equatable {
   final int learningAyahs;
   final int totalReviewEvents;
   final int memorizedSurahs;
+
+  /// Surahs with at least one started ayah that are not yet fully memorized.
+  final int inProgressSurahs;
   final int memorizedJuz;
 
   // ── Review workload ───────────────────────────────────────────────────────
@@ -115,6 +119,7 @@ class ProgressMetrics extends Equatable {
     learningAyahs: 0,
     totalReviewEvents: 0,
     memorizedSurahs: 0,
+    inProgressSurahs: 0,
     memorizedJuz: 0,
     dueReviews: 0,
     overdueReviews: 0,
@@ -141,6 +146,7 @@ class ProgressMetrics extends Equatable {
     learningAyahs,
     totalReviewEvents,
     memorizedSurahs,
+    inProgressSurahs,
     memorizedJuz,
     dueReviews,
     overdueReviews,

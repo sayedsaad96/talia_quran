@@ -26,6 +26,7 @@ abstract class AppSpacing {
   static const double radiusLg = 16.0;
   static const double radiusXl = 24.0;
   static const double radiusXxl = 32.0;
+  static const double radiusHero = 32.0;
   static const double radiusFull = 999.0;
 
   const AppSpacing._();

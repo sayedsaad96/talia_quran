@@ -1,0 +1,22 @@
+[
+  { "id": "makkah", "nameAr": "مكة المكرمة", "nameEn": "Makkah", "latitude": 21.4225, "longitude": 39.8262 },
+  { "id": "madinah", "nameAr": "المدينة المنورة", "nameEn": "Madinah", "latitude": 24.4672, "longitude": 39.6111 },
+  { "id": "riyadh", "nameAr": "الرياض", "nameEn": "Riyadh", "latitude": 24.7136, "longitude": 46.6753 },
+  { "id": "jeddah", "nameAr": "جدة", "nameEn": "Jeddah", "latitude": 21.4858, "longitude": 39.1925 },
+  { "id": "cairo", "nameAr": "القاهرة", "nameEn": "Cairo", "latitude": 30.0444, "longitude": 31.2357 },
+  { "id": "alexandria", "nameAr": "الإسكندرية", "nameEn": "Alexandria", "latitude": 31.2001, "longitude": 29.9187 },
+  { "id": "amman", "nameAr": "عمّان", "nameEn": "Amman", "latitude": 31.9454, "longitude": 35.9284 },
+  { "id": "dubai", "nameAr": "دبي", "nameEn": "Dubai", "latitude": 25.2048, "longitude": 55.2708 },
+  { "id": "istanbul", "nameAr": "إسطنبول", "nameEn": "Istanbul", "latitude": 41.0082, "longitude": 28.9784 },
+  { "id": "casablanca", "nameAr": "الدار البيضاء", "nameEn": "Casablanca", "latitude": 33.5731, "longitude": -7.5898 },
+  { "id": "baghdad", "nameAr": "بغداد", "nameEn": "Baghdad", "latitude": 33.3152, "longitude": 44.3661 },
+  { "id": "kuwait", "nameAr": "الكويت", "nameEn": "Kuwait City", "latitude": 29.3759, "longitude": 47.9774 },
+  { "id": "doha", "nameAr": "الدوحة", "nameEn": "Doha", "latitude": 25.2854, "longitude": 51.5310 },
+  { "id": "karachi", "nameAr": "كراتشي", "nameEn": "Karachi", "latitude": 24.8607, "longitude": 67.0011 },
+  { "id": "jakarta", "nameAr": "جاكرتا", "nameEn": "Jakarta", "latitude": -6.2088, "longitude": 106.8456 },
+  { "id": "kualalumpur", "nameAr": "كوالالمبور", "nameEn": "Kuala Lumpur", "latitude": 3.1390, "longitude": 101.6869 },
+  { "id": "london", "nameAr": "لندن", "nameEn": "London", "latitude": 51.5074, "longitude": -0.1278 },
+  { "id": "paris", "nameAr": "باريس", "nameEn": "Paris", "latitude": 48.8566, "longitude": 2.3522 },
+  { "id": "newyork", "nameAr": "نيويورك", "nameEn": "New York", "latitude": 40.7128, "longitude": -74.0060 },
+  { "id": "toronto", "nameAr": "تورونتو", "nameEn": "Toronto", "latitude": 43.6532, "longitude": -79.3832 }
+]

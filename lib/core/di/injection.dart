@@ -17,6 +17,12 @@ import '../../features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import '../services/streak_reader.dart';
 import '../services/streak_service.dart';
 import '../services/xp_service.dart';
+import '../services/daily_reading_log_service.dart';
+import '../services/audio_resume_store.dart';
+import '../services/streak_risk_evaluator.dart';
+import '../services/get_daily_wird_usecase.dart';
+import '../services/prayer_times_service.dart';
+import '../services/activity_event_recorder.dart';
 import '../services/achievement_service.dart';
 import '../theme/theme_cubit.dart';
 import '../l10n/locale_cubit.dart';
@@ -47,6 +53,7 @@ import '../../features/quran/data/services/quran_warmup_service.dart';
 import '../../features/quran/data/repositories/quran_repository_impl.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../../features/quran/domain/usecases/get_surahs_usecase.dart';
+import '../../features/quran/domain/usecases/search_quran_usecase.dart';
 // GetSurahDetailUsecase is defined in get_surahs_usecase.dart
 import '../../features/quran/presentation/cubits/surah_list_cubit.dart';
 import '../../features/quran/presentation/cubits/surah_detail_cubit.dart';
@@ -58,6 +65,7 @@ import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/memorization_plus/presentation/cubits/practice_surah_cubit.dart';
 import '../../features/azkar/data/datasources/azkar_local_datasource.dart';
+import '../../features/azkar/data/datasources/azkar_completion_store.dart';
 import '../../features/azkar/data/repositories/azkar_repository_impl.dart';
 import '../../features/azkar/domain/repositories/azkar_repository.dart';
 import '../../features/azkar/domain/usecases/get_azkar_usecase.dart';
@@ -71,8 +79,15 @@ import '../../features/progress/domain/usecases/save_read_page_usecase.dart';
 import '../../features/progress/presentation/cubits/progress_cubit.dart';
 import '../../features/home/presentation/cubits/home_cubit.dart';
 import '../../features/home/data/repositories/heatmap_repository_impl.dart';
+import '../../features/home/data/repositories/activity_feed_repository_impl.dart';
+import '../../features/home/data/models/activity_event_isar.dart';
 import '../../features/home/domain/repositories/heatmap_repository.dart';
+import '../../features/home/domain/repositories/activity_feed_repository.dart';
 import '../../features/home/domain/usecases/get_activity_heatmap_usecase.dart';
+import '../../features/home/domain/usecases/get_ayah_of_day_usecase.dart';
+import '../../features/home/domain/usecases/get_today_checklist_usecase.dart';
+import '../../features/home/domain/usecases/get_recent_activity_usecase.dart';
+import '../../features/home/domain/services/home_occasion_service.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import '../../features/memorization_plus/data/models/isar_review_effect_outbox.dart';
@@ -142,6 +157,7 @@ Future<void> configureDependencies({bool background = false}) async {
     StreakIsarSchema,
     XpIsarSchema,
     DailyActivityIsarSchema, // For yearly activity heatmap
+    ActivityEventIsarSchema,
     CloudSyncQueueItemSchema,
   ];
   final isar =
@@ -187,6 +203,7 @@ Future<void> configureDependencies({bool background = false}) async {
       encryptedAccountPreferences: getIt<EncryptedAccountPreferencesStore>(),
       owner: getIt<RecordOwnerProvider>(),
       backgroundSyncScheduler: getIt<BackgroundSyncScheduler>(),
+      audioResumeStore: getIt<AudioResumeStore>(),
     ),
   );
 
@@ -290,6 +307,24 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerSingleton<XpService>(
     XpService(getIt<Isar>(), getIt<ProgressEventsBus>()),
   );
+  getIt.registerLazySingleton<DailyReadingLogService>(
+    () => DailyReadingLogService(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<AzkarCompletionStore>(
+    () => AzkarCompletionStore(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<AudioResumeStore>(
+    () => AudioResumeStore(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<StreakRiskEvaluator>(
+    () => const StreakRiskEvaluator(),
+  );
+  getIt.registerLazySingleton<PrayerTimesService>(
+    () => PrayerTimesService(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<HomeOccasionService>(
+    () => const HomeOccasionService(),
+  );
   getIt.registerLazySingleton<ProgressMetricsService>(
     () => const ProgressMetricsService(),
   );
@@ -324,11 +359,23 @@ Future<void> configureDependencies({bool background = false}) async {
     () => QuranRepositoryImpl(getIt<QuranLocalDatasource>()),
   );
   getIt.registerLazySingleton<QuranContinuousPlayerService>(
-    () => QuranContinuousPlayerService(
-      quranRepository: getIt<QuranRepository>(),
-      reciterService: getIt<QuranReciterService>(),
-    ),
-    dispose: (service) => service.dispose(),
+    () {
+      final service = QuranContinuousPlayerService(
+        quranRepository: getIt<QuranRepository>(),
+        reciterService: getIt<QuranReciterService>(),
+      );
+      // Attach after the player exists — never during configureDependencies.
+      // Constructing AudioPlayer() while splash init is still running can
+      // deadlock the Android platform channel and freeze the splash screen.
+      getIt<AudioResumeStore>().attach(service);
+      return service;
+    },
+    dispose: (service) {
+      if (getIt.isRegistered<AudioResumeStore>()) {
+        getIt<AudioResumeStore>().detach();
+      }
+      service.dispose();
+    },
   );
   getIt.registerLazySingleton<QuranAudioPlayerCubit>(
     () => QuranAudioPlayerCubit(getIt<QuranContinuousPlayerService>()),
@@ -405,6 +452,7 @@ Future<void> configureDependencies({bool background = false}) async {
       isar: getIt<Isar>(),
       owner: getIt<RecordOwnerProvider>(),
       scheduler: getIt<ScheduleNextReviewUsecase>(),
+      activityRecorder: getIt<ActivityEventRecorder>(),
     ),
   );
   getIt.registerLazySingleton<V2ReviewEffectOutboxProcessor>(
@@ -477,8 +525,26 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<GetActivityHeatmapUsecase>(
     () => GetActivityHeatmapUsecase(getIt<HeatmapRepository>()),
   );
+  getIt.registerLazySingleton<ActivityFeedRepository>(
+    () => ActivityFeedRepositoryImpl(getIt<Isar>()),
+  );
+  getIt.registerLazySingleton<ActivityEventRecorder>(
+    () => ActivityEventRecorder(getIt<ActivityFeedRepository>()),
+  );
+  getIt.registerLazySingleton<GetRecentActivityUsecase>(
+    () => GetRecentActivityUsecase(getIt<ActivityFeedRepository>()),
+  );
   getIt.registerLazySingleton<GetAzkarUsecase>(
     () => GetAzkarUsecase(getIt<AzkarRepository>()),
+  );
+  getIt.registerLazySingleton<SearchQuranUsecase>(
+    () => SearchQuranUsecase(getIt<QuranRepository>()),
+  );
+  getIt.registerLazySingleton<GetAyahOfDayUsecase>(
+    () => GetAyahOfDayUsecase(getIt<QuranRepository>()),
+  );
+  getIt.registerLazySingleton<GetTodayChecklistUsecase>(
+    () => const GetTodayChecklistUsecase(),
   );
   getIt.registerLazySingleton<GetKidsProgressUsecase>(
     () => GetKidsProgressUsecase(getIt<MemorizationPlusRepository>()),
@@ -510,6 +576,15 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<GetActiveKhatmahUsecase>(
     () => GetActiveKhatmahUsecase(getIt<KhatmahRepository>()),
   );
+  getIt.registerLazySingleton<GetDailyWirdUsecase>(
+    () => GetDailyWirdUsecase(
+      sessionService: getIt<AppSessionService>(),
+      getCustomPlan: getIt<GetCustomPlanUsecase>(),
+      readPages: getIt<ProgressLocalDatasource>(),
+      getSurahs: getIt<GetSurahsUsecase>(),
+      getActiveKhatmah: getIt<GetActiveKhatmahUsecase>(),
+    ),
+  );
   getIt.registerLazySingleton<GetKhatmahHistoryUsecase>(
     () => GetKhatmahHistoryUsecase(getIt<KhatmahRepository>()),
   );
@@ -520,7 +595,10 @@ Future<void> configureDependencies({bool background = false}) async {
     () => UpdateKhatmahScheduleUsecase(getIt<KhatmahRepository>()),
   );
   getIt.registerLazySingleton<RecordKhatmahReadingUsecase>(
-    () => RecordKhatmahReadingUsecase(getIt<KhatmahRepository>()),
+    () => RecordKhatmahReadingUsecase(
+      getIt<KhatmahRepository>(),
+      getIt<ActivityEventRecorder>(),
+    ),
   );
   getIt.registerLazySingleton<PauseResumeKhatmahUsecase>(
     () => PauseResumeKhatmahUsecase(getIt<KhatmahRepository>()),
@@ -538,6 +616,8 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<GetProgressUsecase>(),
       getIt<MemorizationPathResolver>(),
       getIt<ProgressEventsBus>(),
+      getIt<GetActivityHeatmapUsecase>(),
+      getIt<XpService>(),
     ),
   );
   getIt.registerFactory<SurahListCubit>(
@@ -551,6 +631,8 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<QuranRepository>(),
       getIt<SaveReadPageUsecase>(),
       getIt<StreakService>(),
+      getIt<DailyReadingLogService>(),
+      getIt<ActivityEventRecorder>(),
     ),
   );
   getIt.registerFactory<PracticeSurahCubit>(
@@ -560,7 +642,11 @@ Future<void> configureDependencies({bool background = false}) async {
     ),
   );
   getIt.registerFactory<AzkarCubit>(
-    () => AzkarCubit(getIt<GetAzkarUsecase>(), getIt<SharedPreferences>()),
+    () => AzkarCubit(
+      getIt<GetAzkarUsecase>(),
+      getIt<SharedPreferences>(),
+      getIt<AzkarCompletionStore>(),
+    ),
   );
   getIt.registerFactory<GuardianLinkingCubit>(
     () => GuardianLinkingCubit(getIt<MemorizationPlusRepository>()),
@@ -603,6 +689,7 @@ Future<void> configureDependencies({bool background = false}) async {
         datasource: getIt<V2SessionLocalDatasource>(),
         audience: MemorizationAudience.kids,
       ),
+      getIt<ActivityEventRecorder>(),
     ),
   );
   getIt.registerFactory<CustomPlanCubit>(
@@ -675,7 +762,7 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerSingleton<UnifiedJourneyEngine>(const UnifiedJourneyEngine());
 
   getIt.registerFactory<HomeCubit>(
-    () => HomeCubit(
+    () => HomeCubit.withExtras(
       getIt<GetProgressUsecase>(),
       getIt<GetQuranPageUsecase>(),
       getIt<GetCustomPlanUsecase>(),
@@ -688,7 +775,21 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<SharedPreferences>(),
       getIt<ProgressEventsBus>(),
       getIt<XpService>(),
-      getIt<GetActiveKhatmahUsecase>(),
+      getActiveKhatmah: getIt<GetActiveKhatmahUsecase>(),
+      getDailyWird: getIt<GetDailyWirdUsecase>(),
+      readingLog: getIt<DailyReadingLogService>(),
+      azkarStore: getIt<AzkarCompletionStore>(),
+      getAzkar: getIt<GetAzkarUsecase>(),
+      streakRiskEvaluator: getIt<StreakRiskEvaluator>(),
+      streakService: getIt<StreakService>(),
+      audioResumeStore: getIt<AudioResumeStore>(),
+      getFamilyDashboard: getIt<GetFamilyDashboardUsecase>(),
+      bookmarkService: getIt<BookmarkService>(),
+      getAyahOfDay: getIt<GetAyahOfDayUsecase>(),
+      prayerTimes: getIt<PrayerTimesService>(),
+      occasionService: getIt<HomeOccasionService>(),
+      todayChecklist: getIt<GetTodayChecklistUsecase>(),
+      getRecentActivity: getIt<GetRecentActivityUsecase>(),
     ),
   );
   getIt.registerFactory<StreakCubit>(

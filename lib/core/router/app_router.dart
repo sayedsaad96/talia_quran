@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -10,11 +9,14 @@ import '../../features/memorization_plus/domain/repositories/memorization_plus_r
 import '../constants/app_constants.dart';
 import '../di/injection.dart';
 import '../l10n/app_localizations.dart';
+import '../services/get_daily_wird_usecase.dart';
 
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/quran/presentation/pages/kids_quran_reader_page.dart';
 import '../../features/quran/presentation/pages/quran_page.dart';
 import '../../features/quran/presentation/pages/quran_reader_page.dart';
+import '../../features/quran/presentation/pages/quran_search_page.dart';
+import '../../features/quran/presentation/pages/bookmarks_page.dart';
 import '../../features/quran/domain/repositories/quran_repository.dart';
 import '../../features/khatmah/domain/entities/khatmah_dedication.dart';
 import '../../features/khatmah/domain/entities/khatmah_plan.dart';
@@ -63,6 +65,8 @@ abstract class AppRoutes {
   static const String home = '/';
   static const String quran = '/quran';
   static const String quranDaily = '/quran/daily';
+  static const String quranSearch = '/quran/search';
+  static const String quranBookmarks = '/quran/bookmarks';
   static const String hifz = '/hifz';
 
   /// Surah picker for adult "Practice by Surah" (replaces bare `/hifz` browse).
@@ -132,6 +136,9 @@ final _publicRoutes = <String>[
   AppRoutes.updatePasswordAlias,
   AppRoutes.home,
   AppRoutes.quran,
+  AppRoutes.quranDaily,
+  AppRoutes.quranSearch,
+  AppRoutes.quranBookmarks,
   AppRoutes.hifz,
   AppRoutes.hifzPracticeSurah,
   AppRoutes.memorizationHub,
@@ -465,13 +472,24 @@ abstract class AppRouter {
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.quranSearch,
+        builder: (context, state) => const QuranSearchPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.quranBookmarks,
+        builder: (context, state) => const BookmarksPage(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
         path: AppRoutes.quranDaily,
-        redirect: (context, state) {
-          final now = DateTime.now();
-          final today = DateTime(now.year, now.month, now.day);
-          final random = Random(today.millisecondsSinceEpoch);
-          final pageNumber = random.nextInt(604) + 1;
-          return '/quran/page/$pageNumber';
+        redirect: (context, state) async {
+          try {
+            final page = await getIt<GetDailyWirdUsecase>().call();
+            return '/quran/page/$page';
+          } catch (_) {
+            return '/quran/page/1';
+          }
         },
       ),
       GoRoute(
