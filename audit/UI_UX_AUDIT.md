@@ -6,7 +6,7 @@
 
 ## 1. Executive Summary
 
-This fresh audit evaluated the live Talia Quran application across onboarding, navigation, the home dashboard, reading, memorization, and settings. 
+This fresh audit evaluated the live Talia Quran application across onboarding, navigation, the home dashboard, reading, memorization, and settings.
 
 The application demonstrates exceptional typography (Amiri & Naskh), reverent Islamic aesthetics, clean Tajweed rendering via QCF fonts, and thoughtful RTL care. However, runtime inspection and live device profiling revealed **two objective P1 defects** (inverted string parameters and double-flipped chevrons), alongside several layout and density improvements.
 
