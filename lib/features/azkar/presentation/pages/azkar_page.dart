@@ -9,11 +9,18 @@ import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../data/datasources/azkar_completion_store.dart';
+import '../../data/datasources/azkar_preferences_store.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../../domain/repositories/azkar_repository.dart';
+import '../../domain/services/azkar_time_context.dart';
+import '../widgets/free_tasbeeh_sheet.dart';
 
 class AzkarPage extends StatefulWidget {
-  const AzkarPage({super.key});
+  const AzkarPage({super.key, this.currentTime});
+
+  /// Optional injected date-time to explicitly drive morning/evening context in tests.
+  final DateTime? currentTime;
 
   @override
   State<AzkarPage> createState() => _AzkarPageState();
@@ -21,11 +28,21 @@ class AzkarPage extends StatefulWidget {
 
 class _AzkarPageState extends State<AzkarPage> {
   late Future<Map<AzkarCategory, int>> _countsFuture;
+  AzkarCompletionStore? _completionStore;
+  late final AzkarPreferencesStore _prefsStore;
 
   @override
   void initState() {
     super.initState();
     _countsFuture = _loadCounts();
+
+    _completionStore = getIt.isRegistered<AzkarCompletionStore>()
+        ? getIt<AzkarCompletionStore>()
+        : null;
+
+    _prefsStore = getIt.isRegistered<AzkarPreferencesStore>()
+        ? getIt<AzkarPreferencesStore>()
+        : AzkarPreferencesStore();
   }
 
   Future<Map<AzkarCategory, int>> _loadCounts() async {
@@ -73,7 +90,7 @@ class _AzkarPageState extends State<AzkarPage> {
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(
                       AppSpacing.pagePadding,
-                      AppSpacing.lg,
+                      AppSpacing.md,
                       AppSpacing.pagePadding,
                       120, // Prevent cutoff by bottom nav
                     ),
@@ -91,7 +108,7 @@ class _AzkarPageState extends State<AzkarPage> {
                                   ),
                                 ),
                               ]
-                            : _buildCategoryItems(context, counts, isDark),
+                            : _buildContent(context, counts, isDark),
                       ]),
                     ),
                   ),
@@ -104,7 +121,7 @@ class _AzkarPageState extends State<AzkarPage> {
     );
   }
 
-  List<Widget> _buildCategoryItems(
+  List<Widget> _buildContent(
     BuildContext context,
     Map<AzkarCategory, int>? counts,
     bool isDark,
@@ -113,71 +130,16 @@ class _AzkarPageState extends State<AzkarPage> {
       return const [SizedBox(height: 180, child: LoadingWidget())];
     }
 
-    final items = <Widget>[];
-    void addCard(Widget card) {
-      if (items.isNotEmpty) {
-        items.add(const SizedBox(height: AppSpacing.md));
-      }
-      items.add(card);
-    }
-
     final morningCount = counts[AzkarCategory.morning] ?? 0;
-    if (morningCount > 0) {
-      addCard(
-        _AzkarCategoryCard(
-          title: context.l10n.morningAzkar,
-          subtitle: context.l10n.zikrCount(morningCount),
-          icon: Icons.wb_sunny_rounded,
-          gradientColors: const [AppColors.primaryLight, AppColors.primaryDark],
-          route: 'morning',
-          isDark: isDark,
-        ),
-      );
-    }
-
     final eveningCount = counts[AzkarCategory.evening] ?? 0;
-    if (eveningCount > 0) {
-      addCard(
-        _AzkarCategoryCard(
-          title: context.l10n.eveningAzkar,
-          subtitle: context.l10n.zikrCount(eveningCount),
-          icon: Icons.nightlight_round,
-          gradientColors: const [AppColors.primary, AppColors.primaryDark],
-          route: 'evening',
-          isDark: isDark,
-        ),
-      );
-    }
-
     final generalCount = counts[AzkarCategory.general] ?? 0;
-    if (generalCount > 0) {
-      addCard(
-        _AzkarCategoryCard(
-          title: context.l10n.generalAzkar,
-          subtitle: context.l10n.azkarCount(generalCount),
-          icon: Icons.spa_rounded,
-          gradientColors: const [AppColors.ambientTeal, Color(0xFF0F4A3E)],
-          route: 'general',
-          isDark: isDark,
-        ),
-      );
-    }
-
     final duaCount = counts[AzkarCategory.duas] ?? 0;
-    if (duaCount > 0) {
-      addCard(
-        _AzkarCategoryCard(
-          title: context.l10n.duas,
-          subtitle: context.l10n.duaCount(duaCount),
-          icon: Icons.volunteer_activism_rounded,
-          gradientColors: const [AppColors.inkDeep, AppColors.primaryDark],
-          route: 'duas',
-          isDark: isDark,
-        ),
-      );
-    }
 
-    if (items.isEmpty) {
+    // Strict religious safety gate: if no approved records exist, fail closed
+    if (morningCount == 0 &&
+        eveningCount == 0 &&
+        generalCount == 0 &&
+        duaCount == 0) {
       return [
         EmptyStateWidget(
           key: const ValueKey('azkar-content-under-review'),
@@ -186,13 +148,176 @@ class _AzkarPageState extends State<AzkarPage> {
         ),
       ];
     }
-    items.add(const SizedBox(height: AppSpacing.xl));
+
+    final period = AzkarTimeContext.resolvePeriod(widget.currentTime);
+
+    // Pick contextual hero category based on period and availability
+    final AzkarCategory? heroCategory = switch (period) {
+      AzkarPeriod.morning when morningCount > 0 => AzkarCategory.morning,
+      AzkarPeriod.evening when eveningCount > 0 => AzkarCategory.evening,
+      _ => morningCount > 0
+          ? AzkarCategory.morning
+          : (eveningCount > 0 ? AzkarCategory.evening : null),
+    };
+
+    final items = <Widget>[];
+
+    // 1. Contextual Hero Card
+    if (heroCategory != null) {
+      final isMorningHero = heroCategory == AzkarCategory.morning;
+      final heroCount = isMorningHero ? morningCount : eveningCount;
+      final isAllDone =
+          _completionStore?.isCategoryComplete(
+            heroCategory,
+            widget.currentTime,
+          ) ??
+          false;
+
+      items.add(
+        _ContextualHeroCard(
+          key: const ValueKey('azkar-hero-card'),
+          title: isMorningHero
+              ? context.l10n.morningAzkar
+              : context.l10n.eveningAzkar,
+          subtitle: isAllDone
+              ? 'اكتمل ورد اليوم بنجاح ✨'
+              : (isMorningHero
+                  ? 'ابدأ يومك بذكر الله وطمأنينة القلب'
+                  : 'اختم يومك بالسكينة والاستغفار'),
+          countText: context.l10n.zikrCount(heroCount),
+          isDone: isAllDone,
+          icon: isMorningHero
+              ? Icons.wb_sunny_rounded
+              : Icons.nightlight_round,
+          gradientColors: isMorningHero
+              ? const [Color(0xFFE5A642), Color(0xFFC27D16)]
+              : const [AppColors.primary, AppColors.primaryDark],
+          route: isMorningHero ? 'morning' : 'evening',
+          isDark: isDark,
+        ),
+      );
+      items.add(const SizedBox(height: AppSpacing.lg));
+    }
+
+    // 2. Bento Grid for Remaining Available Categories + Free Tasbeeh
+    final bentoCards = <Widget>[];
+
+    // Other time-based category if available
+    if (heroCategory != AzkarCategory.morning && morningCount > 0) {
+      bentoCards.add(
+        _BentoGridCard(
+          title: context.l10n.morningAzkar,
+          subtitle: context.l10n.zikrCount(morningCount),
+          icon: Icons.wb_sunny_rounded,
+          accentColor: const Color(0xFFE5A642),
+          route: 'morning',
+          isDark: isDark,
+        ),
+      );
+    }
+
+    if (heroCategory != AzkarCategory.evening && eveningCount > 0) {
+      bentoCards.add(
+        _BentoGridCard(
+          title: context.l10n.eveningAzkar,
+          subtitle: context.l10n.zikrCount(eveningCount),
+          icon: Icons.nightlight_round,
+          accentColor: AppColors.primaryLight,
+          route: 'evening',
+          isDark: isDark,
+        ),
+      );
+    }
+
+    // Duas card
+    if (duaCount > 0) {
+      bentoCards.add(
+        _BentoGridCard(
+          title: context.l10n.duas,
+          subtitle: context.l10n.duaCount(duaCount),
+          icon: Icons.menu_book_rounded,
+          accentColor: const Color(0xFF6B46C1),
+          route: 'duas',
+          isDark: isDark,
+        ),
+      );
+    }
+
+    // General Azkar card
+    if (generalCount > 0) {
+      bentoCards.add(
+        _BentoGridCard(
+          title: context.l10n.generalAzkar,
+          subtitle: context.l10n.azkarCount(generalCount),
+          icon: Icons.spa_rounded,
+          accentColor: AppColors.ambientTeal,
+          route: 'general',
+          isDark: isDark,
+        ),
+      );
+    }
+
+    // Free Tasbeeh card
+    bentoCards.add(
+      _BentoGridCard(
+        key: const ValueKey('azkar-card-tasbeeh'),
+        title: 'مسبحة حرة',
+        subtitle: 'تسبيح واستغفار حر',
+        icon: Icons.touch_app_rounded,
+        accentColor: AppColors.goldDark,
+        onTap: () => FreeTasbeehSheet.show(
+          context,
+          store: _prefsStore,
+          isDark: isDark,
+        ),
+        isDark: isDark,
+      ),
+    );
+
+    // Section Header
+    items.add(
+      Padding(
+        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+        child: Text(
+          'الأقسام والخدمات',
+          style: AppTypography.titleMedium.copyWith(
+            fontFamily: 'Amiri',
+            fontWeight: FontWeight.w700,
+            color: isDark
+                ? AppColors.darkTextPrimary
+                : AppColors.lightTextPrimary,
+          ),
+        ),
+      ),
+    );
+
+    // Render Bento Grid in 2-column rows
+    for (var i = 0; i < bentoCards.length; i += 2) {
+      final isLastSingle = i + 1 >= bentoCards.length;
+      items.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+          child: Row(
+            children: [
+              Expanded(child: bentoCards[i]),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: isLastSingle
+                    ? const SizedBox.shrink()
+                    : bentoCards[i + 1],
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return items;
   }
 
   SliverAppBar _buildAppBar(BuildContext context, bool isDark) {
     return SliverAppBar(
-      expandedHeight: 160,
+      expandedHeight: 140,
       pinned: true,
       backgroundColor: isDark
           ? AppColors.darkBackground
@@ -210,11 +335,11 @@ class _AzkarPageState extends State<AzkarPage> {
           child: Stack(
             children: [
               PositionedDirectional(
-                end: -40,
-                top: -20,
+                end: -30,
+                top: -15,
                 child: Icon(
                   Icons.mosque_rounded,
-                  size: 200,
+                  size: 180,
                   color: Colors.white.withValues(alpha: 0.1),
                 ),
               ),
@@ -222,40 +347,27 @@ class _AzkarPageState extends State<AzkarPage> {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(
                     AppSpacing.pagePadding,
-                    AppSpacing.lg,
+                    AppSpacing.md,
                     AppSpacing.pagePadding,
                     AppSpacing.md,
                   ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       Text(
                         context.l10n.azkar,
                         style: AppTypography.displaySmall.copyWith(
                           color: Colors.white,
+                          fontFamily: 'Amiri',
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                      const SizedBox(height: AppSpacing.sm),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.md,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusFull,
-                          ),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Text(
-                          context.l10n.azkarSubtitle,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontWeight: FontWeight.w500,
-                          ),
+                      const SizedBox(height: 4),
+                      Text(
+                        context.l10n.azkarSubtitle,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: Colors.white.withValues(alpha: 0.9),
                         ),
                       ),
                     ],
@@ -270,10 +382,13 @@ class _AzkarPageState extends State<AzkarPage> {
   }
 }
 
-class _AzkarCategoryCard extends StatefulWidget {
-  const _AzkarCategoryCard({
+class _ContextualHeroCard extends StatelessWidget {
+  const _ContextualHeroCard({
+    super.key,
     required this.title,
     required this.subtitle,
+    required this.countText,
+    required this.isDone,
     required this.icon,
     required this.gradientColors,
     required this.route,
@@ -282,142 +397,245 @@ class _AzkarCategoryCard extends StatefulWidget {
 
   final String title;
   final String subtitle;
+  final String countText;
+  final bool isDone;
   final IconData icon;
   final List<Color> gradientColors;
   final String route;
   final bool isDark;
 
   @override
-  State<_AzkarCategoryCard> createState() => _AzkarCategoryCardState();
-}
-
-class _AzkarCategoryCardState extends State<_AzkarCategoryCard> {
-  bool _isPressed = false;
-
-  @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      child: GestureDetector(
-        onTapDown: (_) => setState(() => _isPressed = true),
-        onTapUp: (_) => setState(() => _isPressed = false),
-        onTapCancel: () => setState(() => _isPressed = false),
-        onTap: () {
-          context.push('/azkar/${widget.route}');
-        },
-        child: AnimatedScale(
-          scale: _isPressed ? 0.96 : 1.0,
-          duration: const Duration(milliseconds: 150),
-          curve: Curves.easeInOutCubic,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: widget.gradientColors,
-              ),
-              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: widget.gradientColors[0].withValues(alpha: 0.4),
-                  blurRadius: _isPressed ? 10 : 20,
-                  offset: Offset(0, _isPressed ? 4 : 8),
-                ),
-              ],
+      label: '$title، $countText',
+      child: InkWell(
+        onTap: () => context.push('/azkar/$route'),
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: gradientColors,
             ),
-            child: Stack(
-              children: [
-                // Background pattern/icon
-                PositionedDirectional(
-                  end: -20,
-                  bottom: -20,
-                  child: Icon(
-                    widget.icon,
-                    size: 120,
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.25),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: gradientColors[0].withValues(alpha: 0.35),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Stack(
+            children: [
+              // Decorative background glow icon
+              PositionedDirectional(
+                end: -15,
+                bottom: -15,
+                child: Icon(
+                  icon,
+                  size: 130,
+                  color: Colors.white.withValues(alpha: 0.12),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  child: Row(
-                    children: [
-                      // Icon Container with Glassmorphism feel
-                      Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(
-                            AppSpacing.radiusLg,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.22),
+                            shape: BoxShape.circle,
                           ),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            width: 1,
+                          child: Icon(icon, color: Colors.white, size: 24),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                title,
+                                style: AppTypography.titleLarge.copyWith(
+                                  color: Colors.white,
+                                  fontFamily: 'Amiri',
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 22,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                subtitle,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        child: Icon(widget.icon, color: Colors.white, size: 28),
-                      ),
-                      const SizedBox(width: AppSpacing.lg),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.18),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            countText,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        Row(
                           children: [
                             Text(
-                              widget.title,
-                              style: AppTypography.titleLarge.copyWith(
+                              isDone ? 'مراجعة الورد' : 'ابدأ الورد الآن',
+                              style: AppTypography.labelMedium.copyWith(
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontFamily: context.isArabic ? 'Amiri' : null,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
-                            const SizedBox(height: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusFull,
-                                ),
-                              ),
-                              child: Text(
-                                widget.subtitle,
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              Directionality.of(context) == TextDirection.rtl
+                                  ? Icons.arrow_back_rounded
+                                  : Icons.arrow_forward_rounded,
+                              size: 16,
+                              color: Colors.white,
                             ),
                           ],
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Directionality.of(context) == TextDirection.rtl
-                              ? Icons.arrow_back_ios_new_rounded
-                              : Icons.arrow_forward_ios_rounded,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BentoGridCard extends StatelessWidget {
+  const _BentoGridCard({
+    super.key,
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.accentColor,
+    this.route,
+    this.onTap,
+    required this.isDark,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final Color accentColor;
+  final String? route;
+  final VoidCallback? onTap;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final surfaceColor =
+        isDark ? AppColors.darkCard : AppColors.lightCard;
+    final borderColor =
+        isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final textColor =
+        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
+    final subColor =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+
+    return InkWell(
+      onTap: onTap ?? () => context.push('/azkar/$route'),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        height: 125,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: borderColor, width: 0.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: accentColor.withValues(alpha: 0.12),
+                    shape: BoxShape.circle,
                   ),
+                  child: Icon(icon, color: accentColor, size: 22),
+                ),
+                Icon(
+                  Directionality.of(context) == TextDirection.rtl
+                      ? Icons.arrow_back_ios_new_rounded
+                      : Icons.arrow_forward_ios_rounded,
+                  size: 14,
+                  color: subColor.withValues(alpha: 0.6),
                 ),
               ],
             ),
-          ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppTypography.titleMedium.copyWith(
+                    color: textColor,
+                    fontFamily: 'Amiri',
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: AppTypography.labelSmall.copyWith(
+                    color: subColor,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
