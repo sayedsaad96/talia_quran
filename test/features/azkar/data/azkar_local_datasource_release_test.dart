@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -61,6 +62,16 @@ void main() {
       expect(assetBundle.loadCount, 1);
     },
   );
+
+  test('azkar_release.json taxonomy contains no legacy "أدعية قرآنية"', () {
+    final file = File('assets/data/azkar_release.json');
+    final content = jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+    final duas = content['duas'] as List<dynamic>;
+    final subcategories = duas.map((d) => d['subcategory']).toSet();
+
+    expect(subcategories.contains('أدعية قرآنية'), isFalse);
+    expect(subcategories.contains('أدعية من القرآن'), isTrue);
+  });
 }
 
 class _CountingAssetBundle extends AssetBundle {
