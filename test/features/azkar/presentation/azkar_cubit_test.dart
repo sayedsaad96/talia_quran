@@ -89,6 +89,47 @@ void main() {
     final state = cubit.state as AzkarLoaded;
     expect(state.sessions.single.currentCount, 0);
   });
+
+  test('autoAdvance: true advances currentIndex to next unfinished zikr when completed', () async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final cubit = AzkarCubit(
+      GetAzkarUsecase(const _TwoZikrRepository()),
+      preferences,
+    );
+    addTearDown(cubit.close);
+
+    await cubit.load(AzkarCategory.morning);
+    expect((cubit.state as AzkarLoaded).currentIndex, 0);
+
+    await cubit.increment(autoAdvance: true);
+    // Wait for the auto-advance delay (350-400ms)
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+
+    final state = cubit.state as AzkarLoaded;
+    expect(state.sessions[0].isDone, isTrue);
+    expect(state.currentIndex, 1);
+  });
+
+  test('autoAdvance: false does NOT advance currentIndex when completed', () async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final cubit = AzkarCubit(
+      GetAzkarUsecase(const _TwoZikrRepository()),
+      preferences,
+    );
+    addTearDown(cubit.close);
+
+    await cubit.load(AzkarCategory.morning);
+    expect((cubit.state as AzkarLoaded).currentIndex, 0);
+
+    await cubit.increment(autoAdvance: false);
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+
+    final state = cubit.state as AzkarLoaded;
+    expect(state.sessions[0].isDone, isTrue);
+    expect(state.currentIndex, 0);
+  });
 }
 
 class _EmptyAzkarRepository implements AzkarRepository {
@@ -111,6 +152,31 @@ class _SingleZikrRepository implements AzkarRepository {
           transliteration: 'dhikr',
           translation: 'remembrance',
           totalCount: 2,
+          category: category,
+        ),
+      ]);
+}
+
+class _TwoZikrRepository implements AzkarRepository {
+  const _TwoZikrRepository();
+
+  @override
+  Future<Either<Failure, List<Zikr>>> getAzkar(AzkarCategory category) async =>
+      Right([
+        Zikr(
+          id: 'one',
+          text: 'ذكر 1',
+          transliteration: 'dhikr 1',
+          translation: 'remembrance 1',
+          totalCount: 1,
+          category: category,
+        ),
+        Zikr(
+          id: 'two',
+          text: 'ذكر 2',
+          transliteration: 'dhikr 2',
+          translation: 'remembrance 2',
+          totalCount: 1,
           category: category,
         ),
       ]);

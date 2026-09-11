@@ -52,7 +52,8 @@ class AzkarCubit extends Cubit<AzkarState> {
   }
 
   /// Queues taps so each one observes the count produced by the previous tap.
-  Future<void> increment() => _enqueueMutation(_increment);
+  Future<void> increment({bool autoAdvance = true}) =>
+      _enqueueMutation(() => _increment(autoAdvance: autoAdvance));
 
   Future<void> _enqueueMutation(Future<void> Function() operation) {
     final result = _mutationTail.then((_) => operation());
@@ -63,7 +64,7 @@ class AzkarCubit extends Cubit<AzkarState> {
     return result;
   }
 
-  Future<void> _increment() async {
+  Future<void> _increment({bool autoAdvance = true}) async {
     final state = this.state;
     if (state is! AzkarLoaded) return;
     if (state.sessions.isEmpty) return;
@@ -74,7 +75,7 @@ class AzkarCubit extends Cubit<AzkarState> {
     if (!_store.isToday(state.category)) {
       await load(state.category);
       if (isClosed || this.state is! AzkarLoaded) return;
-      return _increment();
+      return _increment(autoAdvance: autoAdvance);
     }
 
     final sessions = List<ZikrSession>.from(state.sessions);
@@ -97,8 +98,8 @@ class AzkarCubit extends Cubit<AzkarState> {
     }
     emit(state.copyWith(sessions: sessions, allDone: allDone));
 
-    if (session.isDone && !allDone) {
-      await Future.delayed(const Duration(milliseconds: 400));
+    if (autoAdvance && session.isDone && !allDone) {
+      await Future.delayed(const Duration(milliseconds: 350));
       if (isClosed) return;
       final latestState = this.state;
       if (latestState is AzkarLoaded && latestState.currentIndex == idx) {

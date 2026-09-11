@@ -13,8 +13,10 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../data/datasources/azkar_preferences_store.dart';
 import '../../domain/entities/azkar_entities.dart';
 import '../cubits/azkar_cubit.dart';
+import '../widgets/font_scale_selector_sheet.dart';
 
 class AzkarCategoryPage extends StatelessWidget {
   const AzkarCategoryPage({super.key, required this.category});
@@ -169,16 +171,19 @@ class _ActiveAzkarScreen extends StatefulWidget {
 }
 
 class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
-  static const _fontSizes = [22.0, 26.0, 30.0];
-  int _fontSizeIndex = 1;
+  late final AzkarPreferencesStore _prefsStore;
   late PageController _pageController;
   Timer? _undoTimer;
   bool _showUndo = false;
   int? _undoIndex;
+  bool _isAutoAdvancing = false;
 
   @override
   void initState() {
     super.initState();
+    _prefsStore = getIt.isRegistered<AzkarPreferencesStore>()
+        ? getIt<AzkarPreferencesStore>()
+        : AzkarPreferencesStore();
     _pageController = PageController(initialPage: widget.state.currentIndex);
   }
 
@@ -187,11 +192,6 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
     _undoTimer?.cancel();
     _pageController.dispose();
     super.dispose();
-  }
-
-  void _cycleFontSize() {
-    setState(() => _fontSizeIndex = (_fontSizeIndex + 1) % _fontSizes.length);
-    HapticFeedback.selectionClick();
   }
 
   Future<void> _copyZikr(BuildContext context, ZikrSession session) async {
@@ -228,7 +228,9 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
     } else {
       HapticFeedback.lightImpact();
     }
-    context.read<AzkarCubit>().increment();
+    context.read<AzkarCubit>().increment(
+      autoAdvance: _prefsStore.getAutoAdvance(),
+    );
 
     _undoTimer?.cancel();
     setState(() {
@@ -405,18 +407,33 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
         return false;
       },
       listener: (context, state) {
-        if (state is AzkarLoaded && _pageController.hasClients) {
-          _pageController.animateToPage(
-            state.currentIndex,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
+        if (state is AzkarLoaded &&
+            _pageController.hasClients &&
+            !_isAutoAdvancing) {
+          if (_pageController.page?.round() != state.currentIndex) {
+            _isAutoAdvancing = true;
+            final disableAnimations = MediaQuery.disableAnimationsOf(context);
+            if (disableAnimations) {
+              _pageController.jumpToPage(state.currentIndex);
+              _isAutoAdvancing = false;
+            } else {
+              _pageController
+                  .animateToPage(
+                    state.currentIndex,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  )
+                  .then((_) {
+                    if (mounted) _isAutoAdvancing = false;
+                  });
+            }
+          }
         }
       },
       child: SafeArea(
         child: Column(
           children: [
-            // â”€â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ─── Header ──────────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
               child: Row(
@@ -472,7 +489,33 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                     color: widget.isDark
                         ? AppColors.darkTextPrimary
                         : AppColors.lightTextPrimary,
-                    onPressed: _cycleFontSize,
+                    onPressed: () => FontScaleSelectorSheet.show(
+                      context,
+                      store: _prefsStore,
+                      isDark: widget.isDark,
+                    ),
+                  ),
+                  ValueListenableBuilder<bool>(
+                    valueListenable: _prefsStore.autoAdvanceListenable,
+                    builder: (context, autoAdvance, _) => IconButton(
+                      tooltip: autoAdvance
+                          ? 'الانتقال التلقائي مفعّل'
+                          : 'الانتقال التلقائي معطّل',
+                      icon: Icon(
+                        autoAdvance
+                            ? Icons.autorenew_rounded
+                            : Icons.pause_circle_outline_rounded,
+                        color: autoAdvance
+                            ? AppColors.primary
+                            : (widget.isDark
+                                ? AppColors.darkTextHint
+                                : AppColors.lightTextHint),
+                      ),
+                      onPressed: () {
+                        HapticFeedback.selectionClick();
+                        _prefsStore.setAutoAdvance(!autoAdvance);
+                      },
+                    ),
                   ),
                   IconButton(
                     tooltip: context.l10n.azkarIndex,
@@ -486,7 +529,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
               ),
             ),
 
-            // â”€â”€â”€ Progress Bar â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ─── Progress Bar ────────────────────────────────────────
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: ClipRRect(
@@ -504,29 +547,34 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
               ),
             ),
 
-            // â”€â”€â”€ PageView (Zikr Content) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+            // ─── PageView (Zikr Content) ──────────────────────────────
             Expanded(
               child: Directionality(
                 textDirection: TextDirection.rtl,
-                child: PageView.builder(
-                  controller: _pageController,
-                  physics: const BouncingScrollPhysics(),
-                  onPageChanged: (index) {
-                    context.read<AzkarCubit>().goTo(index);
-                  },
-                  itemCount: widget.state.sessions.length,
-                  itemBuilder: (context, index) {
-                    final session = widget.state.sessions[index];
-                    return _ZikrReaderPage(
-                      session: session,
-                      fontSize: _fontSizes[_fontSizeIndex],
-                      isDark: widget.isDark,
-                      showUndo: _showUndo && _undoIndex == index,
-                      onTap: () => _handleCounterTap(context, index, session),
-                      onLongPress: () => _undoLastCount(context),
-                      onUndo: () => _undoLastCount(context),
-                      onShare: () => _shareZikr(context, session),
-                      onCopy: () => _copyZikr(context, session),
+                child: ValueListenableBuilder<double>(
+                  valueListenable: _prefsStore.fontScaleListenable,
+                  builder: (context, fontScale, _) {
+                    return PageView.builder(
+                      controller: _pageController,
+                      physics: const BouncingScrollPhysics(),
+                      onPageChanged: (index) {
+                        context.read<AzkarCubit>().goTo(index);
+                      },
+                      itemCount: widget.state.sessions.length,
+                      itemBuilder: (context, index) {
+                        final session = widget.state.sessions[index];
+                        return _ZikrReaderPage(
+                          session: session,
+                          fontSize: 26.0 * fontScale,
+                          isDark: widget.isDark,
+                          showUndo: _showUndo && _undoIndex == index,
+                          onTap: () => _handleCounterTap(context, index, session),
+                          onLongPress: () => _undoLastCount(context),
+                          onUndo: () => _undoLastCount(context),
+                          onShare: () => _shareZikr(context, session),
+                          onCopy: () => _copyZikr(context, session),
+                        );
+                      },
                     );
                   },
                 ),
@@ -578,91 +626,146 @@ class _ZikrReaderPage extends StatelessWidget {
       padding: const EdgeInsets.all(20.0),
       child: Column(
         children: [
-          // â”€â”€â”€ Reading Area â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+          // ─── Reading Area ──────────────────────────────────────────
           Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: cardColor,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: borderColor),
-              ),
-              child: Column(
-                children: [
-                  // Actions Row
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        IconButton(
-                          tooltip: context.l10n.copy,
-                          icon: Icon(
-                            Icons.copy_rounded,
-                            size: 20,
-                            color: secondaryColor,
-                          ),
-                          onPressed: onCopy,
-                        ),
-                        IconButton(
-                          tooltip: context.l10n.share,
-                          icon: Icon(
-                            Icons.share_rounded,
-                            size: 20,
-                            color: secondaryColor,
-                          ),
-                          onPressed: onShare,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Text Area
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-                      child: Column(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onTap,
+              onLongPress: onLongPress,
+              child: Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: cardColor,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: borderColor),
+                ),
+                child: Column(
+                  children: [
+                    // Actions Row
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(
-                            session.zikr.text,
-                            style: AppTypography.azkarText.copyWith(
-                              color: textColor,
-                              fontSize: fontSize,
-                              height: 1.9,
+                          IconButton(
+                            tooltip: context.l10n.copy,
+                            icon: Icon(
+                              Icons.copy_rounded,
+                              size: 20,
+                              color: secondaryColor,
                             ),
-                            textDirection: TextDirection.rtl,
-                            textAlign: TextAlign.center,
+                            onPressed: onCopy,
                           ),
-                          if (session.zikr.reference.isNotEmpty) ...[
-                            const SizedBox(height: 24),
-                            Divider(color: borderColor),
-                            const SizedBox(height: 12),
-                            Text(
-                              session.zikr.reference,
-                              style: AppTypography.titleMedium.copyWith(
-                                color: secondaryColor,
-                                fontFamily: 'Amiri',
-                                fontSize: 16,
-                              ),
-                              textAlign: TextAlign.center,
+                          IconButton(
+                            tooltip: context.l10n.share,
+                            icon: Icon(
+                              Icons.share_rounded,
+                              size: 20,
+                              color: secondaryColor,
                             ),
-                          ],
-                          if (session.zikr.shouldShowAuthenticityGrade) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              session.zikr.authenticityGrade!.displayName,
-                              style: AppTypography.labelMedium.copyWith(
-                                color: secondaryColor,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
+                            onPressed: onShare,
+                          ),
                         ],
                       ),
                     ),
-                  ),
-                ],
+
+                    // Text Area
+                    Expanded(
+                      child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                        child: Column(
+                          children: [
+                            Text(
+                              session.zikr.text,
+                              style: AppTypography.azkarText.copyWith(
+                                color: textColor,
+                                fontSize: fontSize,
+                                height: 1.9,
+                              ),
+                              textDirection: TextDirection.rtl,
+                              textAlign: TextAlign.center,
+                            ),
+                            if (session.zikr.reference.isNotEmpty) ...[
+                              const SizedBox(height: 20),
+                              Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 10,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: (isDark
+                                          ? Colors.white
+                                          : AppColors.primary)
+                                      .withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: (isDark
+                                            ? Colors.white
+                                            : AppColors.primary)
+                                        .withValues(alpha: 0.12),
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          Icons.menu_book_rounded,
+                                          size: 14,
+                                          color: isDark
+                                              ? AppColors.goldLight
+                                              : AppColors.goldDark,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          'فضل الذكر / المصدر',
+                                          style: AppTypography.labelSmall
+                                              .copyWith(
+                                            color: isDark
+                                                ? AppColors.goldLight
+                                                : AppColors.goldDark,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      session.zikr.reference,
+                                      style: AppTypography.titleMedium
+                                          .copyWith(
+                                        color: secondaryColor,
+                                        fontFamily: 'Amiri',
+                                        fontSize: 15,
+                                        height: 1.5,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                            if (session.zikr.shouldShowAuthenticityGrade) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                session.zikr.authenticityGrade!.displayName,
+                                style: AppTypography.labelMedium.copyWith(
+                                  color: secondaryColor,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
