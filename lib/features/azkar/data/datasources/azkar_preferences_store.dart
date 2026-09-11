@@ -36,9 +36,9 @@ class AzkarPreferencesStore {
   Future<bool> toggleFavorite(String id) async {
     final updated = Set<String>.from(_favoritesNotifier.value);
     final isNowFavorite = updated.contains(id) ? !updated.remove(id) : updated.add(id);
+    _favoritesNotifier.value = updated;
 
     await _prefs?.setStringList(_keyFavoriteDuas, updated.toList());
-    _favoritesNotifier.value = updated;
     return isNowFavorite;
   }
 
