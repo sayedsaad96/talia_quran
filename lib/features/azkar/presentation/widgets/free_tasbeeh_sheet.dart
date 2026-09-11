@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -293,8 +292,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                             if (_target > 0) ...[
                               const SizedBox(height: 2),
                               Text(
-                                'الهدف: $_target' +
-                                    (rounds > 0 ? ' (دورة $rounds)' : ''),
+                                'الهدف: $_target${rounds > 0 ? ' (دورة $rounds)' : ''}',
                                 style: AppTypography.labelSmall.copyWith(
                                   color: Colors.white70,
                                 ),

@@ -10,7 +10,6 @@ import 'package:talia_quran/features/azkar/data/datasources/azkar_completion_sto
 import 'package:talia_quran/features/azkar/data/datasources/azkar_preferences_store.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
 import 'package:talia_quran/features/azkar/domain/repositories/azkar_repository.dart';
-import 'package:talia_quran/features/azkar/domain/services/azkar_time_context.dart';
 import 'package:talia_quran/features/azkar/presentation/pages/azkar_page.dart';
 import 'package:talia_quran/features/azkar/presentation/widgets/free_tasbeeh_sheet.dart';
 
@@ -65,7 +64,7 @@ void main() {
   );
 
   testWidgets('shows safe under review state when no approved records exist', (tester) async {
-    final repo = _FakeRepo(const {});
+    const repo = _FakeRepo({});
     getIt.registerSingleton<AzkarRepository>(repo);
 
     await tester.pumpWidget(buildApp(const AzkarPage()));
@@ -78,7 +77,7 @@ void main() {
   });
 
   testWidgets('morning time context displays morning Hero card', (tester) async {
-    final repo = _FakeRepo({
+    const repo = _FakeRepo({
       AzkarCategory.morning: [morningZikr],
       AzkarCategory.evening: [eveningZikr],
     });
@@ -96,7 +95,7 @@ void main() {
   });
 
   testWidgets('evening time context displays evening Hero card', (tester) async {
-    final repo = _FakeRepo({
+    const repo = _FakeRepo({
       AzkarCategory.morning: [morningZikr],
       AzkarCategory.evening: [eveningZikr],
     });
@@ -114,7 +113,7 @@ void main() {
   });
 
   testWidgets('tapping free tasbeeh card opens FreeTasbeehSheet', (tester) async {
-    final repo = _FakeRepo({
+    const repo = _FakeRepo({
       AzkarCategory.morning: [morningZikr],
     });
     getIt.registerSingleton<AzkarRepository>(repo);
