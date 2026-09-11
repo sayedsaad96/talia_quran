@@ -66,6 +66,7 @@ import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/memorization_plus/presentation/cubits/practice_surah_cubit.dart';
 import '../../features/azkar/data/datasources/azkar_local_datasource.dart';
 import '../../features/azkar/data/datasources/azkar_completion_store.dart';
+import '../../features/azkar/data/datasources/azkar_preferences_store.dart';
 import '../../features/azkar/data/repositories/azkar_repository_impl.dart';
 import '../../features/azkar/domain/repositories/azkar_repository.dart';
 import '../../features/azkar/domain/usecases/get_azkar_usecase.dart';
@@ -313,6 +314,9 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<AzkarCompletionStore>(
     () => AzkarCompletionStore(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<AzkarPreferencesStore>(
+    () => AzkarPreferencesStore(getIt<SharedPreferences>()),
   );
   getIt.registerLazySingleton<AudioResumeStore>(
     () => AudioResumeStore(getIt<SharedPreferences>()),
