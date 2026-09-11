@@ -8,6 +8,7 @@ import 'package:timezone/data/latest.dart' as tz_data;
 import '../router/launch_destination.dart';
 import '../content/approved_azkar_content.dart';
 import '../utils/talia_logger.dart';
+import 'daily_ayah_notification_target.dart';
 
 /// Smart notification service for Talia Quran.
 ///
@@ -32,17 +33,20 @@ class TaliaNotificationService {
   static const String morningAzkarPreferenceKey = 'notifications_morning_azkar';
   static const String eveningAzkarPreferenceKey = 'notifications_evening_azkar';
   static const String dailyDuaPreferenceKey = 'notifications_daily_dua';
+  static const String dailyAyahPreferenceKey = 'notifications_daily_ayah';
   static const String kidsReminderPreferenceKey = 'notifications_kids_review';
 
   // ─── Notification IDs ───────────────────────────────────────────────────────
   static const int _dailyReviewId = 1001;
   static const int _streakAlertId = 1002;
-  static const int _dailyAyahId = 1003;
+  static const int _legacyDailyAyahId = 1003;
   static const int _morningAzkarId = 1005;
   static const int _eveningAzkarId = 1006;
   static const int _kidsReviewId = 1007;
   static const int _dailyDuaBaseId = 1010;
   static const int _dailyDuaScheduleDays = 16;
+  static const int _dailyAyahBaseId = 1040;
+  static const int _dailyAyahScheduleDays = 21;
   static const String _notificationIcon = '@mipmap/launcher_icon';
 
   // ─── Notification Channel & Interactive Actions ──────────────────────────────
@@ -87,8 +91,8 @@ class TaliaNotificationService {
       cancelNotification: true,
     ),
     const AndroidNotificationAction(
-      'action_quran',
-      '📖 المصحف الشريف',
+      'action_share_daily_ayah',
+      '↗️ مشاركة الآية',
       showsUserInterface: true,
       cancelNotification: true,
     ),
@@ -174,7 +178,10 @@ class TaliaNotificationService {
           'action_daily_ayah',
           '✨ قراءة آية اليوم',
         ),
-        DarwinNotificationAction.plain('action_quran', '📖 المصحف الشريف'),
+        DarwinNotificationAction.plain(
+          'action_share_daily_ayah',
+          '↗️ مشاركة الآية',
+        ),
       ],
     ),
     DarwinNotificationCategory(
@@ -406,9 +413,10 @@ class TaliaNotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) {
-    final payload =
-        LaunchDestination.mapNotificationAction(response.actionId) ??
-        response.payload;
+    final payload = response.actionId == 'action_daily_ayah'
+        ? response.payload
+        : LaunchDestination.mapNotificationAction(response.actionId) ??
+              response.payload;
 
     if (payload == null || payload.isEmpty || !payload.startsWith('/')) {
       return;
@@ -553,30 +561,65 @@ class TaliaNotificationService {
 
   // ─── Daily Ayah Notification ───────────────────────────────────────────────
 
-  /// Schedules a daily morning ayah reminder at 7:00 AM.
+  /// Schedules a rolling set of daily-ayah reminders.
+  ///
+  /// Each entry receives its own date-specific target. This prevents a
+  /// recurring notification from opening a stale ayah after the daily context
+  /// changes, while keeping Quran text out of the native notification payload.
+  Future<void> scheduleDailyAyahReminders({
+    required Future<DailyAyahReminder?> Function(DateTime date) reminderForDate,
+    int hour = 7,
+    int minute = 0,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await cancelDailyAyahReminder();
+
+    final firstDate = _nextInstanceOfTime(hour, minute);
+    for (var dayOffset = 0; dayOffset < _dailyAyahScheduleDays; dayOffset++) {
+      final scheduledDate = firstDate.add(Duration(days: dayOffset));
+      final reminder = await reminderForDate(
+        DateTime(scheduledDate.year, scheduledDate.month, scheduledDate.day),
+      );
+      if (reminder == null) continue;
+
+      await _plugin.zonedSchedule(
+        id: _dailyAyahBaseId + dayOffset,
+        title: reminder.title,
+        body: reminder.body,
+        scheduledDate: scheduledDate,
+        notificationDetails: _dailyAyahNotificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: reminder.target.payload,
+      );
+    }
+  }
+
+  /// Backward-compatible single-content API.
+  @Deprecated('Use scheduleDailyAyahReminders with a date-specific target.')
   Future<void> scheduleDailyAyahReminder({
     required String title,
     required String body,
   }) async {
-    if (!Platform.isAndroid && !Platform.isIOS) return;
-    await _plugin.cancel(id: _dailyAyahId);
-
-    await _plugin.zonedSchedule(
-      id: _dailyAyahId,
-      title: title,
-      body: body,
-      scheduledDate: _nextInstanceOfTime(7, 0),
-      notificationDetails: _dailyAyahNotificationDetails,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-      payload: '/quran/daily',
+    await scheduleDailyAyahReminders(
+      reminderForDate: (_) async => DailyAyahReminder(
+        title: title,
+        body: body,
+        target: const DailyAyahNotificationTarget(
+          surahId: 1,
+          ayahNumber: 1,
+          pageNumber: 1,
+        ),
+      ),
     );
   }
 
   /// Cancel only the daily ayah reminder.
   Future<void> cancelDailyAyahReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    await _plugin.cancel(id: _dailyAyahId);
+    await _plugin.cancel(id: _legacyDailyAyahId);
+    for (var dayOffset = 0; dayOffset < _dailyAyahScheduleDays; dayOffset++) {
+      await _plugin.cancel(id: _dailyAyahBaseId + dayOffset);
+    }
   }
 
   // ─── Azkar Notifications ──────────────────────────────────────────────────

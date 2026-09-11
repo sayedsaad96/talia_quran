@@ -552,6 +552,29 @@ void main() {
         brightness: brightness,
       );
     });
+
+    testWidgets('shows the seasonal context for a Ramadan ayah', (tester) async {
+      await _pump(
+        tester,
+        HomeAyahOfDayCard(
+          skin: HomeSkin.forBrightness(Brightness.light),
+          ayah: const AyahOfDay(
+            surahId: 2,
+            ayahNumber: 185,
+            text: 'شَهْرُ رَمَضَانَ الَّذِي أُنزِلَ فِيهِ الْقُرْآنُ',
+            surahNameAr: 'البقرة',
+            surahNameEn: 'Al-Baqarah',
+            pageNumber: 28,
+            context: DailyAyahContext.ramadanStart,
+          ),
+        ),
+        width: 360,
+        textScale: 1,
+        locale: const Locale('ar'),
+      );
+
+      expect(find.text('آية لبداية رمضان'), findsOneWidget);
+    });
   });
 
   group('HomeResumeChips', () {

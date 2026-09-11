@@ -82,6 +82,7 @@ abstract final class KidsTheme {
   );
 
   static const String kidAvatarAsset = 'assets/images/kids/kid_avatar.png';
+  static const String taliaHeroAsset = 'assets/images/character/talia_hero.png';
   static const String houseCompletedAsset =
       'assets/images/kids/house_completed.png';
   static const String houseCurrentAsset =
@@ -93,4 +94,55 @@ abstract final class KidsTheme {
   static const String ribbonBannerAsset =
       'assets/images/kids/ribbon_banner.png';
   static const String starRewardAsset = 'assets/images/kids/star_reward.png';
+
+  // ─── 2.5D Adventure Landscape Palette ──────────────────────────────────────
+  static const Color skyTop = Color(0xFF5AB6E5);
+  static const Color skyHorizon = Color(0xFF88D2B4);
+  static const Color landscapeGrass = Color(0xFF3E8E58);
+  static const Color pathGrassLight = Color(0xFF66BB6A);
+  static const Color pathGrassDark = Color(0xFF2E7D32);
+  static const Color pathDirt = Color(0xFFE5C07B);
+  static const Color pathEdge = Color(0xFFC49A50);
+  static const Color pathStone = Color(0xFFFFF6D6);
+  static const Color heroCardTop = Color(0xFF0F7D6B);
+  static const Color heroCardBot = Color(0xFF074D40);
+
+  static const LinearGradient heroCardGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [heroCardTop, heroCardBot],
+  );
+
+  static const LinearGradient skyLandscapeGradient = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [skyTop, skyHorizon, landscapeGrass],
+    stops: [0.0, 0.45, 1.0],
+  );
+
+  static const List<BoxShadow> card25DShadow = [
+    BoxShadow(
+      color: Color(0x38000000),
+      blurRadius: 14,
+      offset: Offset(0, 7),
+    ),
+    BoxShadow(
+      color: Color(0x18000000),
+      blurRadius: 24,
+      offset: Offset(0, 14),
+    ),
+  ];
+
+  static const List<BoxShadow> nodeGlowCurrentShadow = [
+    BoxShadow(
+      color: Color(0x771ABC9C),
+      blurRadius: 24,
+      spreadRadius: 3,
+    ),
+    BoxShadow(
+      color: Color(0x44F59E0B),
+      blurRadius: 14,
+      spreadRadius: 1,
+    ),
+  ];
 }

@@ -4,7 +4,6 @@ import '../share_card_content.dart';
 import '../social_share_copy.dart';
 import '../social_share_model.dart';
 import '../social_share_theme.dart';
-import '../share_card_widgets.dart';
 import '../talia_share_tokens.dart';
 
 /// Specialized Template for Unlocked Achievements.
@@ -207,15 +206,6 @@ class AchievementTemplate extends StatelessWidget {
                 color: theme.textSecondary,
                 fontSize: isCompact ? 10 : 11.5,
               ),
-            ),
-          ],
-          // Kids characters are composed by the shared hero arch so they read
-          // as part of the illustration rather than a second, detached image.
-          if (data.showCharacter && !isKids) ...[
-            SizedBox(height: isCompact ? 6 : (isStory ? 16 : 10)),
-            TaliaCharacterInline(
-              assetPath: data.effectiveCharacterAssetPath,
-              height: isCompact ? 52 : (isStory ? 84 : 64),
             ),
           ],
         ],

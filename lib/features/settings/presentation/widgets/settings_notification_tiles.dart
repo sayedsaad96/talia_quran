@@ -39,23 +39,27 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
   static const _eveningAzkarKey =
       TaliaNotificationService.eveningAzkarPreferenceKey;
   static const _dailyDuaKey = TaliaNotificationService.dailyDuaPreferenceKey;
+  static const _dailyAyahKey = TaliaNotificationService.dailyAyahPreferenceKey;
 
   bool _reviewEnabled = true;
   bool _streakEnabled = true;
   bool _morningAzkarEnabled = true;
   bool _eveningAzkarEnabled = true;
   bool _dailyDuaEnabled = true;
+  bool _dailyAyahEnabled = true;
   bool _savingReview = false;
   bool _savingStreak = false;
   bool _savingMorningAzkar = false;
   bool _savingEveningAzkar = false;
   bool _savingDailyDua = false;
+  bool _savingDailyAyah = false;
 
   TimeOfDay _reviewTime = const TimeOfDay(hour: 20, minute: 0);
   TimeOfDay _streakTime = const TimeOfDay(hour: 22, minute: 0);
   TimeOfDay _morningAzkarTime = const TimeOfDay(hour: 6, minute: 0);
   TimeOfDay _eveningAzkarTime = const TimeOfDay(hour: 18, minute: 0);
   TimeOfDay _dailyDuaTime = const TimeOfDay(hour: 9, minute: 0);
+  TimeOfDay _dailyAyahTime = const TimeOfDay(hour: 7, minute: 0);
 
   @override
   void initState() {
@@ -66,6 +70,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
     _morningAzkarEnabled = prefs.getBool(_morningAzkarKey) ?? true;
     _eveningAzkarEnabled = prefs.getBool(_eveningAzkarKey) ?? true;
     _dailyDuaEnabled = prefs.getBool(_dailyDuaKey) ?? true;
+    _dailyAyahEnabled = prefs.getBool(_dailyAyahKey) ?? true;
 
     _reviewTime = TimeOfDay(
       hour: prefs.getInt('${_reviewKey}_hour') ?? 20,
@@ -87,6 +92,10 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
       hour: prefs.getInt('${_dailyDuaKey}_hour') ?? 9,
       minute: prefs.getInt('${_dailyDuaKey}_minute') ?? 0,
     );
+    _dailyAyahTime = TimeOfDay(
+      hour: prefs.getInt('${_dailyAyahKey}_hour') ?? 7,
+      minute: prefs.getInt('${_dailyAyahKey}_minute') ?? 0,
+    );
   }
 
   int get _activeRemindersCount {
@@ -96,6 +105,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
     if (_morningAzkarEnabled) count++;
     if (_eveningAzkarEnabled) count++;
     if (_dailyDuaEnabled) count++;
+    if (_dailyAyahEnabled) count++;
     return count;
   }
 
@@ -235,6 +245,17 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
       onSavingStateChanged: (s) => _savingDailyDua = s,
       onValueStateChanged: (v) => _dailyDuaEnabled = v,
       errorMessage: context.l10n.dailyDuaSaveError,
+    );
+  }
+
+  Future<void> _toggleDailyAyah(bool value) async {
+    await _toggleSetting(
+      key: _dailyAyahKey,
+      value: value,
+      previous: _dailyAyahEnabled,
+      onSavingStateChanged: (s) => _savingDailyAyah = s,
+      onValueStateChanged: (v) => _dailyAyahEnabled = v,
+      errorMessage: context.l10n.dailyAyahSaveError,
     );
   }
 
@@ -382,8 +403,8 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
                 Expanded(
                   child: Text(
                     context.isArabic
-                        ? 'حالة التنبيهات: $_activeRemindersCount من 5 تذكيرات مفعلة'
-                        : 'Notification status: $_activeRemindersCount of 5 reminders active',
+                        ? 'حالة التنبيهات: $_activeRemindersCount من 6 تذكيرات مفعلة'
+                        : 'Notification status: $_activeRemindersCount of 6 reminders active',
                     style: AppTypography.labelMedium.copyWith(
                       color: primary,
                       fontWeight: FontWeight.bold,
@@ -481,6 +502,24 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
             _dailyDuaTime,
             _dailyDuaEnabled,
             (t) => setState(() => _dailyDuaTime = t),
+          ),
+        ),
+        SettingsDivider(isDark: widget.isDark),
+        _buildTimeEditorTile(
+          title: context.l10n.dailyAyahReminder,
+          time: _dailyAyahTime,
+          isEnabled: _dailyAyahEnabled,
+          isSaving: _savingDailyAyah,
+          onToggle: _toggleDailyAyah,
+          icon: Icons.auto_awesome_rounded,
+          primaryColor: primary,
+          textColor: textColor,
+          subtextColor: subtextColor,
+          onTapEdit: () => _pickTime(
+            _dailyAyahKey,
+            _dailyAyahTime,
+            _dailyAyahEnabled,
+            (t) => setState(() => _dailyAyahTime = t),
           ),
         ),
         SettingsDivider(isDark: widget.isDark),

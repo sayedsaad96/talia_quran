@@ -1203,6 +1203,12 @@ abstract class AppLocalizations {
   /// **'دعاء اليوم'**
   String get dailyDuaReminder;
 
+  /// No description provided for @dailyAyahReminder.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية اليوم'**
+  String get dailyAyahReminder;
+
   /// No description provided for @dailyDuaTime.
   ///
   /// In ar, this message translates to:
@@ -1508,6 +1514,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تعذر تحديث دعاء اليوم'**
   String get dailyDuaSaveError;
+
+  /// No description provided for @dailyAyahSaveError.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر تحديث تذكير آية اليوم'**
+  String get dailyAyahSaveError;
 
   /// No description provided for @difficultyEasy.
   ///
@@ -3158,6 +3170,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'خريطة الحفظ'**
   String get kidsJourneyMapTitle;
+
+  /// No description provided for @kidsJourneyMotivation.
+  ///
+  /// In ar, this message translates to:
+  /// **'مع كل آية تقترب أكثر من كتاب الله'**
+  String get kidsJourneyMotivation;
+
+  /// No description provided for @kidsJourneySignpost1.
+  ///
+  /// In ar, this message translates to:
+  /// **'رحلتنا إلى القرآن أجمل'**
+  String get kidsJourneySignpost1;
+
+  /// No description provided for @kidsJourneySignpost2.
+  ///
+  /// In ar, this message translates to:
+  /// **'كل خطوة نور'**
+  String get kidsJourneySignpost2;
+
+  /// No description provided for @kidsJourneySignpost3.
+  ///
+  /// In ar, this message translates to:
+  /// **'نكمل حفظ كتاب الله'**
+  String get kidsJourneySignpost3;
 
   /// No description provided for @kidsPointsValue.
   ///
@@ -8077,6 +8113,78 @@ abstract class AppLocalizations {
   /// **'آية اليوم'**
   String get homeAyahOfDay;
 
+  /// No description provided for @homeAyahContextFriday.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية ليوم الجمعة'**
+  String get homeAyahContextFriday;
+
+  /// No description provided for @homeAyahContextRamadanStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية لبداية رمضان'**
+  String get homeAyahContextRamadanStart;
+
+  /// No description provided for @homeAyahContextRamadan.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية لرمضان'**
+  String get homeAyahContextRamadan;
+
+  /// No description provided for @homeAyahContextLastTenNights.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية للعشر الأواخر'**
+  String get homeAyahContextLastTenNights;
+
+  /// No description provided for @homeAyahContextDhulHijjah.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية لأيام الحج'**
+  String get homeAyahContextDhulHijjah;
+
+  /// No description provided for @homeAyahContextArafah.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية ليوم عرفة'**
+  String get homeAyahContextArafah;
+
+  /// No description provided for @homeAyahContextEidAlAdha.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية لعيد الأضحى'**
+  String get homeAyahContextEidAlAdha;
+
+  /// No description provided for @homeAyahContextReading.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية لرحلة القراءة'**
+  String get homeAyahContextReading;
+
+  /// No description provided for @homeAyahContextMemorization.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية لرحلة الحفظ'**
+  String get homeAyahContextMemorization;
+
+  /// No description provided for @homeAyahContextSmartReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية للمراجعة'**
+  String get homeAyahContextSmartReview;
+
+  /// No description provided for @homeAyahContextAzkar.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية للأذكار'**
+  String get homeAyahContextAzkar;
+
+  /// No description provided for @homeAyahContextChildJourney.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية لرحلة الطفل'**
+  String get homeAyahContextChildJourney;
+
   /// No description provided for @homeResumeListening.
   ///
   /// In ar, this message translates to:
@@ -8592,6 +8700,24 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'بالقرآن .. نحيا أجمل'**
   String get homeFooterTagline;
+
+  /// No description provided for @quickNavTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنقل سريع'**
+  String get quickNavTitle;
+
+  /// No description provided for @quickNavGo.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتقال'**
+  String get quickNavGo;
+
+  /// No description provided for @quickNavPageHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'رقم الصفحة (1-604)'**
+  String get quickNavPageHint;
 }
 
 class _AppLocalizationsDelegate

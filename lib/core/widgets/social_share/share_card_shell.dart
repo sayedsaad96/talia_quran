@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'share_card_widgets.dart';
 import 'social_share_copy.dart';
 import 'social_share_model.dart';
+import 'social_share_presentation.dart';
 import 'social_share_theme.dart';
 import 'talia_share_tokens.dart';
 
@@ -47,12 +48,43 @@ class ShareCardShell extends StatelessWidget {
 
   bool get _isKids => data.audience == SocialShareAudience.kids;
 
-  bool get _usesCharacterHero =>
-      _isKids &&
-      data.showCharacter &&
-      data.category != SocialShareCategory.quranAyah &&
-      data.category != SocialShareCategory.dua &&
-      data.category != SocialShareCategory.azkar;
+  SocialShareCharacterTreatment get _characterTreatment =>
+      SocialSharePresentation.characterTreatmentFor(data, format);
+
+  bool get _usesProminentCharacter =>
+      _characterTreatment == SocialShareCharacterTreatment.prominent;
+
+  bool get _usesSubtleCharacter =>
+      _characterTreatment == SocialShareCharacterTreatment.subtle;
+
+  double get _prominentCharacterLane {
+    if (_warmArchInterior) {
+      return switch (format) {
+        SocialShareFormat.square => 64,
+        SocialShareFormat.portrait => 82,
+        SocialShareFormat.story => 90,
+      };
+    }
+    switch (format) {
+      case SocialShareFormat.square:
+        return 80;
+      case SocialShareFormat.portrait:
+        return 104;
+      case SocialShareFormat.story:
+        return 124;
+    }
+  }
+
+  double get _prominentCharacterHeight {
+    switch (format) {
+      case SocialShareFormat.square:
+        return 108;
+      case SocialShareFormat.portrait:
+        return 150;
+      case SocialShareFormat.story:
+        return 198;
+    }
+  }
 
   /// Text-hero categories keep the arch interior calm and illuminated;
   /// celebratory/stat categories get the atmospheric scene.
@@ -267,6 +299,8 @@ class ShareCardShell extends StatelessWidget {
                         copy: copy,
                         isCompact: format == SocialShareFormat.square,
                         isKids: _isKids,
+                        showCharacter: _usesSubtleCharacter,
+                        characterAssetPath: data.effectiveCharacterAssetPath,
                       ),
 
                       // The arch is the single visual frame for dynamic
@@ -283,32 +317,33 @@ class ShareCardShell extends StatelessWidget {
                             kidsMode: _isKids,
                             warmInterior: _warmArchInterior,
                             showScene:
-                                !_warmArchInterior && !_usesCharacterHero,
+                                !_warmArchInterior && !_usesProminentCharacter,
                             child: Stack(
                               fit: StackFit.expand,
                               children: [
                                 Padding(
                                   padding: EdgeInsets.fromLTRB(
-                                    format == SocialShareFormat.square
-                                        ? 18
-                                        : 24,
-                                    format == SocialShareFormat.story ? 36 : 26,
-                                    _usesCharacterHero
-                                        ? (format == SocialShareFormat.story
-                                              ? 132
-                                              : 118)
+                                    _usesProminentCharacter
+                                        ? _prominentCharacterLane
                                         : (format == SocialShareFormat.square
                                               ? 18
                                               : 24),
+                                    format == SocialShareFormat.story ? 36 : 26,
+                                    format == SocialShareFormat.square
+                                        ? 18
+                                        : 24,
                                     format == SocialShareFormat.story ? 24 : 18,
                                   ),
                                   child: Center(child: child),
                                 ),
-                                if (_usesCharacterHero)
+                                if (_usesProminentCharacter)
                                   Positioned(
+                                    key: const ValueKey(
+                                      'share-character-prominent',
+                                    ),
                                     left: format == SocialShareFormat.square
-                                        ? -2
-                                        : 2,
+                                        ? -12
+                                        : -18,
                                     bottom: format == SocialShareFormat.story
                                         ? -8
                                         : -12,
@@ -318,11 +353,7 @@ class ShareCardShell extends StatelessWidget {
                                       ),
                                       assetPath:
                                           data.effectiveCharacterAssetPath,
-                                      height: format == SocialShareFormat.story
-                                          ? 260
-                                          : format == SocialShareFormat.square
-                                          ? 140
-                                          : 200,
+                                      height: _prominentCharacterHeight,
                                     ),
                                   ),
                               ],
@@ -440,6 +471,8 @@ class TaliaShareBrandHeader extends StatelessWidget {
   final bool isCompact;
   final SocialShareCopy copy;
   final bool isKids;
+  final bool showCharacter;
+  final String characterAssetPath;
 
   const TaliaShareBrandHeader({
     super.key,
@@ -448,6 +481,8 @@ class TaliaShareBrandHeader extends StatelessWidget {
     required this.category,
     required this.copy,
     required this.isKids,
+    required this.showCharacter,
+    required this.characterAssetPath,
     this.isCompact = false,
   });
 
@@ -524,6 +559,34 @@ class TaliaShareBrandHeader extends StatelessWidget {
                 ),
               ],
             ),
+            if (showCharacter) ...[
+              SizedBox(width: isCompact ? 4 : 7),
+              Container(
+                key: const ValueKey('share-character-subtle'),
+                width: isCompact ? 28 : 38,
+                height: isCompact ? 32 : 44,
+                decoration: BoxDecoration(
+                  color: TaliaShareColors.luminousIvory.withValues(
+                    alpha: theme.isDark ? 0.12 : 0.62,
+                  ),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: theme.accentColor.withValues(alpha: 0.62),
+                  ),
+                ),
+                child: Image.asset(
+                  key: const ValueKey('share-character-image'),
+                  characterAssetPath,
+                  fit: BoxFit.contain,
+                  cacheWidth: 216,
+                  errorBuilder: (_, _, _) => Icon(
+                    Icons.auto_awesome_rounded,
+                    color: theme.accentColor,
+                    size: isCompact ? 14 : 18,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
         SizedBox(height: isCompact ? 4 : 6),
@@ -660,7 +723,9 @@ class ParchmentShareFooter extends StatelessWidget {
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: TaliaShareColors.royalTeal.withValues(alpha: 0.3),
+                        color: TaliaShareColors.royalTeal.withValues(
+                          alpha: 0.3,
+                        ),
                         blurRadius: 8,
                         offset: const Offset(0, 3),
                       ),
@@ -710,48 +775,17 @@ class ParchmentShareFooter extends StatelessWidget {
                   ],
                 ),
                 SizedBox(height: isCompact ? 3 : 5),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Expanded(
-                      child: Divider(
-                        color: TaliaShareColors.warmGold,
-                        thickness: 0.5,
-                        endIndent: 8,
-                      ),
-                    ),
-                    Icon(
-                      Icons.star_border_rounded,
-                      color: TaliaShareColors.warmGold,
-                      size: isCompact ? 8 : 10,
-                    ),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(
-                        isCompact ? copy.compactBrandPromise(isKids, category) : copy.brandPromise(isKids, category),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TaliaShareTypography.title(
-                          color: TaliaShareColors.parchmentInk,
-                          fontSize: isCompact ? 9 : 11,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Icon(
-                      Icons.star_border_rounded,
-                      color: TaliaShareColors.warmGold,
-                      size: isCompact ? 8 : 10,
-                    ),
-                    const Expanded(
-                      child: Divider(
-                        color: TaliaShareColors.warmGold,
-                        thickness: 0.5,
-                        indent: 8,
-                      ),
-                    ),
-                  ],
+                Text(
+                  isCompact
+                      ? copy.compactBrandPromise(isKids, category)
+                      : copy.brandPromise(isKids, category),
+                  maxLines: isCompact ? 1 : 2,
+                  overflow: isCompact ? TextOverflow.ellipsis : null,
+                  textAlign: TextAlign.center,
+                  style: TaliaShareTypography.title(
+                    color: TaliaShareColors.parchmentInk,
+                    fontSize: isCompact ? 9 : 10.5,
+                  ),
                 ),
               ],
             ),
@@ -882,16 +916,36 @@ class _KidsBrandPromiseIcons extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisSize: MainAxisSize.min,
+      mainAxisSize: MainAxisSize.max,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _buildIcon(Icons.star_rounded, copy.isArabic ? 'أتقن' : 'Retain'),
+        Expanded(
+          child: _buildIcon(
+            Icons.star_rounded,
+            copy.isArabic ? 'أتقن' : 'Retain',
+          ),
+        ),
         _buildSeparator(),
-        _buildIcon(Icons.bar_chart_rounded, copy.isArabic ? 'راجع' : 'Review'),
+        Expanded(
+          child: _buildIcon(
+            Icons.bar_chart_rounded,
+            copy.isArabic ? 'راجع' : 'Review',
+          ),
+        ),
         _buildSeparator(),
-        _buildIcon(Icons.menu_book_rounded, copy.isArabic ? 'احفظ' : 'Memorize'),
+        Expanded(
+          child: _buildIcon(
+            Icons.menu_book_rounded,
+            copy.isArabic ? 'احفظ' : 'Memorize',
+          ),
+        ),
         _buildSeparator(),
-        _buildIcon(Icons.assignment_rounded, copy.isArabic ? 'خطط' : 'Plan'),
+        Expanded(
+          child: _buildIcon(
+            Icons.assignment_rounded,
+            copy.isArabic ? 'خطط' : 'Plan',
+          ),
+        ),
       ],
     );
   }
@@ -906,10 +960,7 @@ class _KidsBrandPromiseIcons extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFFFDE8C4).withValues(alpha: 0.6),
             shape: BoxShape.circle,
-            border: Border.all(
-              color: const Color(0xFFFDE8C4),
-              width: 1,
-            ),
+            border: Border.all(color: const Color(0xFFFDE8C4), width: 1),
           ),
           child: Icon(
             icon,
@@ -920,6 +971,8 @@ class _KidsBrandPromiseIcons extends StatelessWidget {
         SizedBox(height: isCompact ? 3 : 4),
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TaliaShareTypography.badge(
             color: TaliaShareColors.parchmentInk,
             fontSize: isCompact ? 8 : 10,
@@ -986,8 +1039,7 @@ class IslamicHeroArch extends StatelessWidget {
   }
 }
 
-/// The official companion asset, framed as part of the kids hero rather than
-/// a detached illustration. It is deliberately absent from adult cards.
+/// The official companion asset, framed as part of the kids hero.
 class TaliaCharacterHero extends StatelessWidget {
   final String assetPath;
   final double height;
@@ -1033,7 +1085,20 @@ class TaliaCharacterHero extends StatelessWidget {
             height: height,
             fit: BoxFit.contain,
             cacheWidth: 540,
-            errorBuilder: (_, _, _) => const SizedBox.shrink(),
+            errorBuilder: (_, _, _) => Container(
+              width: height * 0.62,
+              height: height * 0.62,
+              decoration: BoxDecoration(
+                color: TaliaShareColors.royalTeal.withValues(alpha: 0.9),
+                shape: BoxShape.circle,
+                border: Border.all(color: TaliaShareColors.lanternAmber),
+              ),
+              child: Icon(
+                Icons.auto_awesome_rounded,
+                color: TaliaShareColors.lanternGlow,
+                size: height * 0.24,
+              ),
+            ),
           ),
         ],
       ),
@@ -1061,16 +1126,16 @@ class _IslamicHeroArchPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final inset = size.width * 0.045;
-    final top = size.height * 0.03;
+    final top = size.height * 0.025;
     final bottom = size.height * 0.985;
-    final shoulder = size.height * 0.24;
+    final shoulder = top + size.height * 0.105;
 
     Path archPath(double inset, double top, double shoulder) => Path()
       ..moveTo(inset, bottom)
       ..lineTo(inset, shoulder)
       ..cubicTo(
         inset,
-        top + size.height * 0.06,
+        top + size.height * 0.015,
         size.width * 0.3,
         top,
         size.width / 2,
@@ -1080,7 +1145,7 @@ class _IslamicHeroArchPainter extends CustomPainter {
         size.width * 0.7,
         top,
         size.width - inset,
-        top + size.height * 0.06,
+        top + size.height * 0.015,
         size.width - inset,
         shoulder,
       )

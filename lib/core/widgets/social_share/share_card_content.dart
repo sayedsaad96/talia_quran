@@ -7,19 +7,13 @@ import 'package:flutter/material.dart';
 /// within the available width, then scales the **whole block down uniformly**
 /// only when it overflows — nothing is ever clipped.
 ///
-/// Scale-down is clamped to 0.72× so that in pathological cases (very long
-/// verses) the template shrinks gracefully but does not become unreadable.
-/// Templates already supply adaptive font sizes for the most common length
-/// ranges; this widget acts as a final safety net, not the primary mechanism.
+/// Templates supply adaptive font sizes for the supported content ranges;
+/// this widget is only the final no-clipping safety net.
 ///
 /// The width is pinned while measuring (never the height): a height cap would
 /// cause inner flexes to overflow during layout before scaling could intervene.
 class ShareCardContent extends StatelessWidget {
   final Widget child;
-
-  /// Minimum scale applied when content overflows.  Keeps badges, icons, and
-  /// reference text legible even when verse text is very long.
-  static const double _minScale = 0.72;
 
   const ShareCardContent({super.key, required this.child});
 
@@ -27,29 +21,20 @@ class ShareCardContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        return _ScaleToFit(
-          availableWidth: constraints.maxWidth,
-          minScale: _minScale,
-          child: child,
-        );
+        return _ScaleToFit(availableWidth: constraints.maxWidth, child: child);
       },
     );
   }
 }
 
 /// Measures the child at [availableWidth], computes a scale factor to fit it
-/// vertically into the parent's available height, clamps it to [minScale],
-/// and then renders it scaled + centered.
+/// vertically into the parent's available height, then renders it scaled and
+/// centered as a final safeguard against clipping.
 class _ScaleToFit extends StatelessWidget {
   final Widget child;
   final double availableWidth;
-  final double minScale;
 
-  const _ScaleToFit({
-    required this.child,
-    required this.availableWidth,
-    required this.minScale,
-  });
+  const _ScaleToFit({required this.child, required this.availableWidth});
 
   @override
   Widget build(BuildContext context) {

@@ -25,9 +25,12 @@ class HomeAyahOfDayCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final surahName = context.isArabic ? ayah.surahNameAr : ayah.surahNameEn;
     final reference = context.l10n.surahAyahFormat(surahName, ayah.ayahNumber);
+    final contextLabel = _contextLabel(context);
     return Semantics(
       button: true,
-      label: context.l10n.homeAyahOfDay,
+      label: contextLabel == null
+          ? context.l10n.homeAyahOfDay
+          : '${context.l10n.homeAyahOfDay}, $contextLabel',
       hint: reference,
       child: GlassPanel(
         skin: skin,
@@ -49,14 +52,30 @@ class HomeAyahOfDayCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(
-                        context.l10n.homeAyahOfDay,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.titleMedium.copyWith(
-                          color: skin.textPrimary,
-                          fontWeight: FontWeight.w800,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            context.l10n.homeAyahOfDay,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.titleMedium.copyWith(
+                              color: skin.textPrimary,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          if (contextLabel != null)
+                            Text(
+                              contextLabel,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.labelSmall.copyWith(
+                                color: skin.textSecondary,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                     FittedBox(
@@ -115,5 +134,24 @@ class HomeAyahOfDayCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String? _contextLabel(BuildContext context) {
+    final l10n = context.l10n;
+    return switch (ayah.context) {
+      DailyAyahContext.general => null,
+      DailyAyahContext.friday => l10n.homeAyahContextFriday,
+      DailyAyahContext.ramadanStart => l10n.homeAyahContextRamadanStart,
+      DailyAyahContext.ramadan => l10n.homeAyahContextRamadan,
+      DailyAyahContext.lastTenNights => l10n.homeAyahContextLastTenNights,
+      DailyAyahContext.dhulHijjah => l10n.homeAyahContextDhulHijjah,
+      DailyAyahContext.arafah => l10n.homeAyahContextArafah,
+      DailyAyahContext.eidAlAdha => l10n.homeAyahContextEidAlAdha,
+      DailyAyahContext.reading => l10n.homeAyahContextReading,
+      DailyAyahContext.memorization => l10n.homeAyahContextMemorization,
+      DailyAyahContext.smartReview => l10n.homeAyahContextSmartReview,
+      DailyAyahContext.azkar => l10n.homeAyahContextAzkar,
+      DailyAyahContext.childJourney => l10n.homeAyahContextChildJourney,
+    };
   }
 }

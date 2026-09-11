@@ -14,7 +14,9 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../cubits/quran_audio_player_cubit.dart';
 import '../cubits/surah_list_cubit.dart';
+import '../../domain/entities/juz_summary.dart';
 import '../../domain/entities/quran_entities.dart';
+import '../widgets/continue_reading_card.dart';
 import '../widgets/juz_grid_view.dart';
 import '../widgets/reciter_selector_sheet.dart';
 import 'bookmarks_page.dart';
@@ -41,18 +43,56 @@ class _QuranViewState extends State<_QuranView>
     with SingleTickerProviderStateMixin {
   final _searchCtrl = TextEditingController();
   late TabController _tabCtrl;
+  int _tabIndex = 0;
+  String _query = '';
+
+  /// Surah revelation-type filter for the Surahs tab only. Null means all.
+  /// Kept as view-local display filtering — no Cubit change.
+  String? _surahType;
+
+  List<Surah>? _summarySource;
+  List<JuzSummary>? _summaries;
 
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 3, vsync: this);
+    _tabCtrl.addListener(_onTabChanged);
   }
 
   @override
   void dispose() {
+    _tabCtrl.removeListener(_onTabChanged);
     _searchCtrl.dispose();
     _tabCtrl.dispose();
     super.dispose();
+  }
+
+  void _onTabChanged() {
+    if (_tabCtrl.index != _tabIndex) {
+      setState(() => _tabIndex = _tabCtrl.index);
+    }
+  }
+
+  /// Routes the search text to the active tab: Surahs tab filters through
+  /// the Cubit, Juz/Bookmarks tabs filter locally in their views.
+  void _onSearchChanged(String q) {
+    if (q != _query) {
+      setState(() => _query = q);
+    }
+    if (_tabIndex == 0 && mounted) {
+      context.read<SurahListCubit>().search(q);
+    }
+  }
+
+  /// Shared Juz metadata, memoized across rebuilds (same surah list
+  /// reference → same summaries). Shared with the reader Quick Navigation.
+  List<JuzSummary> _juzSummaries(List<Surah> surahs) {
+    if (!identical(_summarySource, surahs) || _summaries == null) {
+      _summarySource = surahs;
+      _summaries = JuzSummaries.fromSurahs(surahs);
+    }
+    return _summaries!;
   }
 
   @override
@@ -66,37 +106,116 @@ class _QuranViewState extends State<_QuranView>
         headerSliverBuilder: (context, innerBoxScrolled) => [
           _buildAppBar(context, isDark),
         ],
-        body: BlocBuilder<SurahListCubit, SurahListState>(
-          builder: (context, state) {
-            if (state is SurahListLoading) {
-              return const Padding(
-                padding: EdgeInsets.all(AppSpacing.pagePadding),
-                child: ShimmerList(itemCount: 10, height: 72),
-              );
-            }
-            if (state is SurahListError) {
-              return ErrorStateWidget(
-                message: state.message,
-                onRetry: () => context.read<SurahListCubit>().loadSurahs(),
-              );
-            }
-            if (state is SurahListLoaded) {
-              return TabBarView(
-                controller: _tabCtrl,
-                children: [
-                  state.filtered.isEmpty
-                      ? EmptyStateWidget(
-                          message: context.l10n.noData,
-                          icon: Icons.search_off_rounded,
-                        )
-                      : _SurahListView(surahs: state.filtered),
-                  const JuzGridView(),
-                  const BookmarksTab(),
-                ],
-              );
-            }
-            return const SizedBox.shrink();
-          },
+        body: Column(
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(
+                AppSpacing.pagePadding,
+                AppSpacing.sm,
+                AppSpacing.pagePadding,
+                0,
+              ),
+              child: ContinueReadingCard(),
+            ),
+            if (_tabIndex == 0) _buildTypeFilter(context, isDark),
+            Expanded(
+              child: BlocBuilder<SurahListCubit, SurahListState>(
+                builder: (context, state) {
+                  if (state is SurahListLoading) {
+                    return const Padding(
+                      padding: EdgeInsets.all(AppSpacing.pagePadding),
+                      child: ShimmerList(itemCount: 10, height: 72),
+                    );
+                  }
+                  if (state is SurahListError) {
+                    return ErrorStateWidget(
+                      message: state.message,
+                      onRetry: () =>
+                          context.read<SurahListCubit>().loadSurahs(),
+                    );
+                  }
+                  if (state is SurahListLoaded) {
+                    return TabBarView(
+                      controller: _tabCtrl,
+                      children: [
+                        _SurahListView(
+                          surahs: state.filtered,
+                          typeFilter: _surahType,
+                        ),
+                        JuzGridView(
+                          summaries: _juzSummaries(state.surahs),
+                          query: _tabIndex == 1 ? _query : '',
+                        ),
+                        BookmarksTab(
+                          query: _tabIndex == 2 ? _query : '',
+                        ),
+                      ],
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTypeFilter(BuildContext context, bool isDark) {
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final hint = isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
+    final options = <String?>[
+      null,
+      'meccan',
+      'medinan',
+    ];
+    String labelFor(String? type) {
+      return switch (type) {
+        'meccan' => context.l10n.meccan,
+        'medinan' => context.l10n.medinan,
+        _ => context.l10n.all,
+      };
+    }
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.pagePadding,
+        AppSpacing.sm,
+        AppSpacing.pagePadding,
+        0,
+      ),
+      child: Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.xs,
+          children: [
+            for (final type in options)
+              ChoiceChip(
+                label: Text(labelFor(type)),
+                selected: _surahType == type,
+                onSelected: (_) => setState(() => _surahType = type),
+                selectedColor: primary.withValues(alpha: 0.14),
+                backgroundColor: isDark
+                    ? AppColors.darkSurfaceVariant
+                    : AppColors.lightSurfaceVariant,
+                labelStyle: AppTypography.labelMedium.copyWith(
+                  color: _surahType == type ? primary : hint,
+                  fontWeight: _surahType == type
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                ),
+                side: BorderSide(
+                  color: _surahType == type
+                      ? primary.withValues(alpha: 0.5)
+                      : (isDark
+                            ? AppColors.darkDivider
+                            : AppColors.lightDivider),
+                ),
+                showCheckmark: false,
+              ),
+          ],
         ),
       ),
     );
@@ -106,12 +225,12 @@ class _QuranViewState extends State<_QuranView>
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final reciterService = getIt<QuranReciterService>();
     final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.5);
-    final bottomHeight = 104 + ((textScale - 1) * 32);
+    final bottomHeight = 96 + ((textScale - 1) * 32);
 
     return SliverAppBar(
       pinned: true,
       automaticallyImplyLeading: false,
-      toolbarHeight: 72,
+      toolbarHeight: 56,
       backgroundColor: AppColors.primary,
       foregroundColor: Colors.white,
       elevation: 0,
@@ -127,7 +246,7 @@ class _QuranViewState extends State<_QuranView>
         context.l10n.quran,
         style: AppTypography.displaySmall.copyWith(
           color: Colors.white,
-          fontSize: 26,
+          fontSize: 22,
         ),
       ),
       actions: [
@@ -171,7 +290,10 @@ class _QuranViewState extends State<_QuranView>
                   AppSpacing.pagePadding,
                   AppSpacing.sm,
                 ),
-                child: _SearchBar(controller: _searchCtrl),
+                child: _SearchBar(
+                  controller: _searchCtrl,
+                  onChanged: _onSearchChanged,
+                ),
               ),
               TabBar(
                 controller: _tabCtrl,
@@ -200,8 +322,9 @@ class _QuranViewState extends State<_QuranView>
 }
 
 class _SearchBar extends StatefulWidget {
-  const _SearchBar({required this.controller});
+  const _SearchBar({required this.controller, required this.onChanged});
   final TextEditingController controller;
+  final ValueChanged<String> onChanged;
 
   @override
   State<_SearchBar> createState() => _SearchBarState();
@@ -248,7 +371,7 @@ class _SearchBarState extends State<_SearchBar> {
         ),
         child: TextField(
           controller: widget.controller,
-          onChanged: (q) => context.read<SurahListCubit>().search(q),
+          onChanged: widget.onChanged,
           style: AppTypography.bodyMedium.copyWith(
             color: isDark
                 ? AppColors.darkTextPrimary
@@ -276,7 +399,7 @@ class _SearchBarState extends State<_SearchBar> {
                     ),
                     onPressed: () {
                       widget.controller.clear();
-                      context.read<SurahListCubit>().search('');
+                      widget.onChanged('');
                     },
                   )
                 : null,
@@ -296,11 +419,27 @@ class _SearchBarState extends State<_SearchBar> {
 }
 
 class _SurahListView extends StatelessWidget {
-  const _SurahListView({required this.surahs});
+  const _SurahListView({required this.surahs, this.typeFilter});
   final List<Surah> surahs;
+
+  /// View-local revelation-type filter ('meccan' | 'medinan' | null for all).
+  final String? typeFilter;
 
   @override
   Widget build(BuildContext context) {
+    final visible = typeFilter == null
+        ? surahs
+        : surahs
+              .where(
+                (s) => typeFilter == 'meccan' ? s.isMeccan : !s.isMeccan,
+              )
+              .toList();
+    if (visible.isEmpty) {
+      return EmptyStateWidget(
+        message: context.l10n.noData,
+        icon: Icons.search_off_rounded,
+      );
+    }
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.pagePadding,
@@ -308,9 +447,9 @@ class _SurahListView extends StatelessWidget {
         AppSpacing.pagePadding,
         120,
       ),
-      itemCount: surahs.length,
+      itemCount: visible.length,
       separatorBuilder: (_, _) => const SizedBox(height: 6),
-      itemBuilder: (context, i) => _SurahTile(surah: surahs[i], index: i),
+      itemBuilder: (context, i) => _SurahTile(surah: visible[i], index: i),
     );
   }
 }

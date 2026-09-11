@@ -814,8 +814,13 @@ abstract class AppRouter {
             routes: [
               GoRoute(
                 path: AppRoutes.home,
-                pageBuilder: (_, _) =>
-                    const NoTransitionPage(child: HomePage()),
+                pageBuilder: (_, state) => NoTransitionPage(
+                  child: HomePage(
+                    requestDailyAyahShare:
+                        state.uri.queryParameters['dailyAyahAction'] ==
+                        'share',
+                  ),
+                ),
               ),
             ],
           ),

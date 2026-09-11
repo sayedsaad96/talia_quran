@@ -599,6 +599,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyDuaReminder => 'Daily Dua';
 
   @override
+  String get dailyAyahReminder => 'Daily Ayah';
+
+  @override
   String get dailyDuaTime => 'Everyday at 9:00 AM';
 
   @override
@@ -760,6 +763,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dailyDuaSaveError => 'Failed to update daily dua reminder';
+
+  @override
+  String get dailyAyahSaveError => 'Failed to update daily ayah reminder';
 
   @override
   String get difficultyEasy => 'Easy (70%)';
@@ -1680,6 +1686,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kidsJourneyMapTitle => 'Memorization map';
+
+  @override
+  String get kidsJourneyMotivation =>
+      'With every ayah, you draw closer to Allah\'s Book';
+
+  @override
+  String get kidsJourneySignpost1 => 'Our Quran journey is beautiful';
+
+  @override
+  String get kidsJourneySignpost2 => 'Every step is light';
+
+  @override
+  String get kidsJourneySignpost3 => 'We continue Allah\'s book';
 
   @override
   String kidsPointsValue(int points) {
@@ -4471,6 +4490,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeAyahOfDay => 'Ayah of the day';
 
   @override
+  String get homeAyahContextFriday => 'An ayah for Friday';
+
+  @override
+  String get homeAyahContextRamadanStart => 'An ayah for the start of Ramadan';
+
+  @override
+  String get homeAyahContextRamadan => 'An ayah for Ramadan';
+
+  @override
+  String get homeAyahContextLastTenNights => 'An ayah for the last ten nights';
+
+  @override
+  String get homeAyahContextDhulHijjah => 'An ayah for the days of Hajj';
+
+  @override
+  String get homeAyahContextArafah => 'An ayah for the Day of Arafah';
+
+  @override
+  String get homeAyahContextEidAlAdha => 'An ayah for Eid al-Adha';
+
+  @override
+  String get homeAyahContextReading => 'An ayah for your reading journey';
+
+  @override
+  String get homeAyahContextMemorization =>
+      'An ayah for your memorization journey';
+
+  @override
+  String get homeAyahContextSmartReview => 'An ayah for your review';
+
+  @override
+  String get homeAyahContextAzkar => 'An ayah for your adhkar';
+
+  @override
+  String get homeAyahContextChildJourney => 'An ayah for the child journey';
+
+  @override
   String homeResumeListening(String surah) {
     return 'Resume listening · $surah';
   }
@@ -4768,4 +4824,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homeFooterTagline => 'With the Quran, we live more beautifully';
+
+  @override
+  String get quickNavTitle => 'Quick navigation';
+
+  @override
+  String get quickNavGo => 'Go';
+
+  @override
+  String get quickNavPageHint => 'Page number (1-604)';
 }

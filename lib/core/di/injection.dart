@@ -249,6 +249,7 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<NotificationScheduler>(
     () => NotificationScheduler(
       getIt<TaliaNotificationService>(),
+      getAyahOfDay: getIt<GetAyahOfDayUsecase>(),
       kidsSessionDatesLoader: () async {
         if (!getIt.isRegistered<MemorizationPlusRepository>()) return [];
         final result = await getIt<MemorizationPlusRepository>()

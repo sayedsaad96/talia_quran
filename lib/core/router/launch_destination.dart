@@ -23,6 +23,15 @@ abstract final class LaunchDestination {
   }) {
     if (isFirstTime) return AppRoutes.onboarding;
 
+    // The scheduled daily-ayah payload identifies an exact page. It must win
+    // over the generic legacy action route so the notification opens the ayah
+    // that was selected for that day.
+    if (actionId == 'action_daily_ayah' &&
+        payload != null &&
+        payload.startsWith('/')) {
+      return payload;
+    }
+
     final mappedAction = mapNotificationAction(actionId);
     if (mappedAction != null) return mappedAction;
 
@@ -37,6 +46,7 @@ abstract final class LaunchDestination {
       'action_streak' => AppRoutes.memorizationHub,
       'action_quran' => AppRoutes.quran,
       'action_daily_ayah' => AppRoutes.quranDaily,
+      'action_share_daily_ayah' => '${AppRoutes.home}?dailyAyahAction=share',
       'action_morning_azkar' => '/azkar/morning',
       'action_evening_azkar' => '/azkar/evening',
       'action_daily_dua' => '/azkar/duas',

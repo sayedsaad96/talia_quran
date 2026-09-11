@@ -1,0 +1,642 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+
+  .concepts-container {
+    direction: rtl;
+    font-family: 'Noto Naskh Arabic', sans-serif;
+  }
+  
+  .intro-badge {
+    display: inline-block;
+    padding: 6px 14px;
+    background: rgba(13, 92, 83, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: 20px;
+    color: #F59E0B;
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+  }
+
+  .concept-card {
+    background: #111816;
+    border: 1px solid #223530;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .concept-card:hover {
+    border-color: #F59E0B;
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45), 0 0 20px rgba(245, 158, 11, 0.15);
+  }
+
+  .concept-card.selected {
+    border-color: #F59E0B;
+    box-shadow: 0 0 0 2px #F59E0B, 0 12px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .preview-wrapper {
+    padding: 24px 16px;
+    background: #060e0c;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 490px;
+  }
+
+  /* ─────────── CARD SHELL BASE (Ratio 4:5) ─────────── */
+  .share-canvas {
+    width: 290px;
+    height: 380px;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px;
+    box-shadow: 0 16px 36px rgba(0,0,0,0.6);
+    box-sizing: border-box;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     CONCEPT 1: Contemporary Royal Manuscript (المخطوطة المعاصرة)
+     ══════════════════════════════════════════════════════ */
+  .c1-canvas {
+    background: linear-gradient(180deg, #072520 0%, #031310 100%);
+    border: 1px solid rgba(229, 193, 88, 0.35);
+  }
+
+  .c1-inner-border {
+    position: absolute;
+    inset: 8px;
+    border: 1px solid rgba(229, 193, 88, 0.22);
+    border-radius: 14px;
+    pointer-events: none;
+  }
+
+  .c1-corner-tl, .c1-corner-tr, .c1-corner-bl, .c1-corner-br {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-color: #E5C158;
+    border-style: solid;
+  }
+  .c1-corner-tl { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+  .c1-corner-tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; }
+  .c1-corner-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; }
+  .c1-corner-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+
+  .c1-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 2;
+    padding: 0 4px;
+  }
+  .c1-brand {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .c1-logo-ring {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: 1.2px solid #E5C158;
+    background: #0a3932;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #E5C158;
+    font-size: 13px;
+    font-weight: bold;
+  }
+  .c1-brand-name {
+    font-family: 'Amiri', serif;
+    font-size: 15px;
+    color: #F3E2A9;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .c1-badge {
+    font-size: 9.5px;
+    color: #F3E2A9;
+    background: rgba(229, 193, 88, 0.12);
+    border: 0.8px solid rgba(229, 193, 88, 0.4);
+    padding: 2px 8px;
+    border-radius: 12px;
+  }
+
+  .c1-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 2;
+    padding: 10px 12px;
+  }
+  .c1-ornament-top {
+    color: #E5C158;
+    font-size: 12px;
+    letter-spacing: 4px;
+    margin-bottom: 6px;
+    opacity: 0.85;
+  }
+  .c1-verse {
+    font-family: 'Amiri', serif;
+    font-size: 16.5px;
+    line-height: 1.85;
+    color: #FAF8F2;
+    font-weight: 600;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+  }
+  .c1-ref {
+    margin-top: 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: #F59E0B;
+    background: rgba(245, 158, 11, 0.08);
+    padding: 3px 12px;
+    border-radius: 20px;
+    border: 0.8px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .c1-footer {
+    z-index: 2;
+    border-top: 0.8px solid rgba(229, 193, 88, 0.2);
+    padding-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 9px;
+    color: #A3B5AE;
+  }
+  .c1-footer-tag {
+    color: #E5C158;
+    font-weight: 600;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     CONCEPT 2: Floating Luminous Mihrab (المحراب النوراني)
+     ══════════════════════════════════════════════════════ */
+  .c2-canvas {
+    background: radial-gradient(circle at 50% 15%, rgba(20, 130, 117, 0.35) 0%, #010F0D 75%);
+    border: 1px solid rgba(126, 224, 201, 0.25);
+  }
+
+  .c2-light-beam {
+    position: absolute;
+    top: 0;
+    left: 20%;
+    right: 20%;
+    height: 120px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(245, 158, 11, 0.22) 0%, transparent 80%);
+    pointer-events: none;
+  }
+
+  .c2-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .c2-top-brand {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .c2-brand-text {
+    font-family: 'Amiri', serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #7EE0C9;
+    letter-spacing: 0.5px;
+  }
+  .c2-category-pill {
+    font-size: 8.5px;
+    background: rgba(13, 92, 83, 0.5);
+    border: 1px solid rgba(126, 224, 201, 0.3);
+    color: #E8F4F0;
+    padding: 1px 8px;
+    border-radius: 10px;
+  }
+
+  .c2-arch-container {
+    flex: 1;
+    margin: 8px 4px;
+    border-radius: 90px 90px 16px 16px;
+    background: rgba(4, 31, 27, 0.55);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    box-shadow: inset 0 0 20px rgba(126, 224, 201, 0.08), 0 8px 24px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px 14px 14px;
+    text-align: center;
+    position: relative;
+  }
+
+  .c2-arch-apex {
+    position: absolute;
+    top: -9px;
+    width: 18px;
+    height: 18px;
+    background: #010F0D;
+    border: 1px solid #F59E0B;
+    transform: rotate(45deg);
+    border-radius: 3px;
+  }
+
+  .c2-verse {
+    font-family: 'Amiri', serif;
+    font-size: 15.5px;
+    line-height: 1.85;
+    color: #FFFFFF;
+    font-weight: 600;
+  }
+  .c2-ref {
+    margin-top: 10px;
+    font-size: 9.5px;
+    color: #7EE0C9;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .c2-footer {
+    background: rgba(13, 92, 83, 0.4);
+    border: 1px solid rgba(126, 224, 201, 0.2);
+    border-radius: 20px;
+    padding: 6px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 8.5px;
+    color: #E8F4F0;
+    z-index: 2;
+  }
+  .c2-footer-domain {
+    color: #F59E0B;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     CONCEPT 3: Andalusian Gold-Leaf Kiswah (الكسوة والتذهيب الأندلسي)
+     ══════════════════════════════════════════════════════ */
+  .c3-canvas {
+    background: #051613;
+    border: 1px solid #D4AF37;
+    position: relative;
+  }
+
+  .c3-pattern-overlay {
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-image: radial-gradient(#D4AF37 1px, transparent 1px);
+    background-size: 14px 14px;
+    pointer-events: none;
+  }
+
+  .c3-ornate-frame {
+    position: absolute;
+    inset: 6px;
+    border: 1.5px solid #D4AF37;
+    border-radius: 14px;
+    box-shadow: inset 0 0 12px rgba(212, 175, 55, 0.15);
+  }
+
+  .c3-inner-frame {
+    position: absolute;
+    inset: 10px;
+    border: 0.6px dashed rgba(243, 226, 169, 0.4);
+    border-radius: 10px;
+  }
+
+  .c3-header {
+    z-index: 2;
+    text-align: center;
+    padding-top: 4px;
+  }
+  .c3-head-emblem {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #0A2621;
+    border: 1px solid #D4AF37;
+    padding: 3px 14px;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  }
+  .c3-head-title {
+    font-family: 'Amiri', serif;
+    font-size: 14px;
+    color: #F3E2A9;
+    font-weight: bold;
+  }
+  .c3-diamond {
+    color: #D4AF37;
+    font-size: 8px;
+  }
+
+  .c3-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    z-index: 2;
+    padding: 10px 16px;
+  }
+  .c3-bismillah {
+    font-family: 'Amiri', serif;
+    font-size: 12px;
+    color: #D4AF37;
+    margin-bottom: 8px;
+    opacity: 0.9;
+  }
+  .c3-verse {
+    font-family: 'Amiri', serif;
+    font-size: 16px;
+    line-height: 1.9;
+    color: #FAF5E6;
+    font-weight: 700;
+  }
+  .c3-divider {
+    width: 60px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+    margin: 10px auto;
+  }
+  .c3-source {
+    font-family: 'Noto Naskh Arabic', sans-serif;
+    font-size: 10.5px;
+    color: #E5C158;
+    font-weight: 600;
+  }
+
+  .c3-footer {
+    z-index: 2;
+    text-align: center;
+    padding-bottom: 2px;
+  }
+  .c3-footer-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 8.5px;
+    color: #C8A97A;
+    background: rgba(10, 38, 33, 0.7);
+    border: 0.8px solid rgba(212, 175, 55, 0.3);
+    padding: 3px 12px;
+    border-radius: 12px;
+  }
+
+  /* ─────────── CARD DETAILS & METRICS ─────────── */
+  .details-box {
+    padding: 16px;
+    border-top: 1px solid #223530;
+  }
+  .concept-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #F59E0B;
+    margin: 0 0 6px 0;
+  }
+  .concept-desc {
+    font-size: 0.88rem;
+    color: #C7D3CD;
+    margin: 0 0 12px 0;
+    line-height: 1.5;
+  }
+  .features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 14px 0;
+    font-size: 0.82rem;
+    color: #8B98A4;
+  }
+  .features-list li {
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .features-list li::before {
+    content: "✦";
+    color: #F59E0B;
+    font-size: 0.7rem;
+  }
+  .select-btn {
+    width: 100%;
+    padding: 8px 14px;
+    background: rgba(245, 158, 11, 0.12);
+    border: 1px solid #F59E0B;
+    color: #F59E0B;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .concept-card:hover .select-btn {
+    background: #F59E0B;
+    color: #061811;
+  }
+</style>
+
+<div class="concepts-container">
+  <div style="text-align: center; margin-bottom: 24px;">
+    <span class="intro-badge">إعادة تصميم كارت المشاركة — تطبيق تالية</span>
+    <h2 style="color: #FAF7F0; margin: 0 0 8px 0; font-size: 1.6rem;">اختر التصميم الأنسب للهيكل العام (Universal Shell)</h2>
+    <p style="color: #A8B0BC; margin: 0; font-size: 0.95rem;">
+      3 رؤى بصرية غير تقليدية، مدروسة تقنياً وقابلة للتنفيذ مباشرة بكود Flutter عبر محرك التصدير الحالي. انقر على التصميم المفضل لتحديده:
+    </p>
+  </div>
+
+  <div class="grid-3">
+
+    <!-- ──────── OPTION 1 ──────── -->
+    <div class="concept-card" data-choice="option1" onclick="toggleSelect(this)">
+      <div class="preview-wrapper">
+        <!-- Live Card Mockup 1 -->
+        <div class="share-canvas c1-canvas">
+          <div class="c1-inner-border">
+            <div class="c1-corner-tl"></div>
+            <div class="c1-corner-tr"></div>
+            <div class="c1-corner-bl"></div>
+            <div class="c1-corner-br"></div>
+          </div>
+
+          <!-- Header -->
+          <div class="c1-header">
+            <div class="c1-brand">
+              <div class="c1-logo-ring">ت</div>
+              <span class="c1-brand-name">تالية</span>
+            </div>
+            <span class="c1-badge">آية اليوم</span>
+          </div>
+
+          <!-- Hero Body -->
+          <div class="c1-body">
+            <div class="c1-ornament-top">✦ ✧ ✦</div>
+            <div class="c1-verse">
+              ﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾
+            </div>
+            <div class="c1-ref">
+              <span>سورة طه</span>
+              <span>•</span>
+              <span>آية ١١٤</span>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="c1-footer">
+            <span class="c1-footer-tag">رحلة أحمد مع القرآن</span>
+            <span>taliaquran.app</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="details-box">
+        <h3 class="concept-title">١. المخطوطة الملكية المعاصرة (Royal Editorial)</h3>
+        <p class="concept-desc">
+          تصميم تحريري نقي وفاخر مستوحى من المخطوطات الأثرية الحديثة. يتخلص تماماً من الفوانيس والمنحنيات التقليدية، ويعتمد على خطوط هندسية ذهبية دقيقة (Geometric Hairlines) وزوايا إسلامية مقطوعة بالليزر.
+        </p>
+        <ul class="features-list">
+          <li><strong>الهوية:</strong> فخامة هادئة بدون بهرجة أو كليشيهات كارتونية.</li>
+          <li><strong>الهيكل:</strong> رأس هادئ + جسم متسع يتنفس + تذييل خطي أنيق بدون كتلة ورق ضخمة.</li>
+          <li><strong>الأداء:</strong> رسم هندسي خفيف جداً وسريع في الريندر (`CustomPainter` بسيط ونقي).</li>
+        </ul>
+        <button class="select-btn">اختيار التصميم الأول</button>
+      </div>
+    </div>
+
+    <!-- ──────── OPTION 2 ──────── -->
+    <div class="concept-card" data-choice="option2" onclick="toggleSelect(this)">
+      <div class="preview-wrapper">
+        <!-- Live Card Mockup 2 -->
+        <div class="share-canvas c2-canvas">
+          <div class="c2-light-beam"></div>
+
+          <!-- Header -->
+          <div class="c2-header">
+            <div class="c2-top-brand">
+              <div style="width: 8px; height: 8px; background: #7EE0C9; border-radius: 50%; box-shadow: 0 0 6px #7EE0C9;"></div>
+              <span class="c2-brand-text">تالية • TALIA</span>
+            </div>
+            <span class="c2-category-pill">نفحات قرآنية</span>
+          </div>
+
+          <!-- Hero Arch (Glassmorphism) -->
+          <div class="c2-arch-container">
+            <div class="c2-arch-apex"></div>
+            <div class="c2-verse">
+              ﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾
+            </div>
+            <div class="c2-ref">
+              سورة طه : آية ١١٤
+            </div>
+          </div>
+
+          <!-- Floating Capsule Footer -->
+          <div class="c2-footer">
+            <span>تطبيق تالية للقرآن الكريم</span>
+            <span class="c2-footer-domain">taliaquran.app</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="details-box">
+        <h3 class="concept-title">٢. المحراب النوراني العائم (Luminous Glass Mihrab)</h3>
+        <p class="concept-desc">
+          عمق روحي حديث بطبقات زجاجية متدفقة بالنور (Glassmorphism & Radial Beams). محراب تجريدي انسيابي يطفو في سماء زمردية داكنة، مع إضاءة سماوية ناعمة تسلط الضوء على المحتوى المقدس.
+        </p>
+        <ul class="features-list">
+          <li><strong>الهوية:</strong> إحساس روحاني هادئ كصلاة الليل وضوء الفجر.</li>
+          <li><strong>الهيكل:</strong> محراب زجاجي عائم يبرز الآيات والإنجازات في كبسولة واضحة.</li>
+          <li><strong>المظهر الاجتماعي:</strong> ملفت وجذاب جداً عند المشاركة على ستوري إنستغرام وسناب شات.</li>
+        </ul>
+        <button class="select-btn">اختيار التصميم الثاني</button>
+      </div>
+    </div>
+
+    <!-- ──────── OPTION 3 ──────── -->
+    <div class="concept-card" data-choice="option3" onclick="toggleSelect(this)">
+      <div class="preview-wrapper">
+        <!-- Live Card Mockup 3 -->
+        <div class="share-canvas c3-canvas">
+          <div class="c3-pattern-overlay"></div>
+          <div class="c3-ornate-frame"></div>
+          <div class="c3-inner-frame"></div>
+
+          <!-- Header -->
+          <div class="c3-header">
+            <div class="c3-head-emblem">
+              <span class="c3-diamond">✦</span>
+              <span class="c3-head-title">تطبيق تالية</span>
+              <span class="c3-diamond">✦</span>
+            </div>
+          </div>
+
+          <!-- Hero Body -->
+          <div class="c3-body">
+            <div class="c3-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+            <div class="c3-verse">
+              ﴿ وَقُل رَّبِّ زِدْنِي عِلْمًا ﴾
+            </div>
+            <div class="c3-divider"></div>
+            <div class="c3-source">
+              سورة طه — آية ١١٤
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="c3-footer">
+            <div class="c3-footer-pill">
+              <span>ختمة وتدبر</span>
+              <span>•</span>
+              <span style="direction: ltr; font-weight: bold;">taliaquran.app</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="details-box">
+        <h3 class="concept-title">٣. التذهيب الأندلسي وكسوة المصحف (Andalusian Gold-Leaf)</h3>
+        <p class="concept-desc">
+          أصالة إسلامية كلاسيكية فاخرة مستلهمة من فنون التذهيب المصحفي الأندلسي والمملوكي. إطار مزدوج بنقوش دقيقة وألوان الذهب العتيق على أرضية داكنة تحاكي ملمس الكسوة الشريفة.
+        </p>
+        <ul class="features-list">
+          <li><strong>الهوية:</strong> وقار تراثي أصيل يمنح النص القرآني هيبة وقدسية خاصة.</li>
+          <li><strong>الهيكل:</strong> إطار تذهيبي شامل ومتوازن يحمي المحتوى كلوحة فنية مؤطرة.</li>
+          <li><strong>التنوع:</strong> يتألق جداً مع كروت شهادات الإتمام، ختمات القرآن، والآيات.</li>
+        </ul>
+        <button class="select-btn">اختيار التصميم الثالث</button>
+      </div>
+    </div>
+
+  </div>
+</div>

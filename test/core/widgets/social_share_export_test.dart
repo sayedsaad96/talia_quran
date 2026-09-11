@@ -1,15 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/widgets/social_share/social_share_card.dart';
+import 'package:talia_quran/core/widgets/social_share/social_share_sheet.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
 import 'package:talia_quran/features/progress/domain/entities/progress_entities.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
@@ -28,7 +30,7 @@ void main() {
   Future<void> primeAssets() async {
     for (final path in [
       'assets/images/logo_new.png',
-      'assets/images/character/Talia_Master_Character.png',
+      'assets/images/character/talia_hero.png',
     ]) {
       final file = File(path);
       if (await file.exists()) {
@@ -44,16 +46,24 @@ void main() {
     // branding instead of fallback icons.  Pure in-memory lookups only.
     TestWidgetsFlutterBinding.instance.defaultBinaryMessenger
         .setMockMessageHandler('flutter/assets', (ByteData? message) async {
-      final key = utf8.decode(message!.buffer.asUint8List());
-      // The asset manifest is consulted before any AssetImage resolves;
-      // hand it a valid empty manifest (no resolution variants).
-      if (key.startsWith('AssetManifest')) {
-        return const StandardMessageCodec().encodeMessage(<Object?, Object?>{});
-      }
-      final bytes = assetCache[key];
-      if (bytes == null) return null;
-      return ByteData.view(bytes.buffer);
-    });
+          final key = utf8.decode(message!.buffer.asUint8List());
+          // The asset manifest is consulted before any AssetImage resolves;
+          // hand it a valid empty manifest (no resolution variants).
+          if (key.startsWith('AssetManifest')) {
+            return const StandardMessageCodec().encodeMessage(
+              <Object?, Object?>{},
+            );
+          }
+          final bytes = assetCache[key];
+          if (bytes == null) return null;
+          return ByteData.view(bytes.buffer);
+        });
+  });
+
+  test('export QA primes the production companion asset', () {
+    final characterBytes = assetCache['assets/images/character/talia_hero.png'];
+    expect(characterBytes, isNotNull);
+    expect(characterBytes, isNotEmpty);
   });
 
   Future<void> captureAndVerify(
@@ -63,66 +73,40 @@ void main() {
     required SocialShareTheme theme,
     required SocialShareFormat format,
     Locale locale = const Locale('ar'),
+    bool hideUserName = false,
   }) async {
-    final logical = format.exportLogicalSize;
-    final boundaryKey = GlobalKey();
+    late BuildContext captureContext;
 
-    await tester.pumpWidget(MaterialApp(
-      locale: locale,
-      supportedLocales: const [Locale('ar'), Locale('en')],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      home: Scaffold(
-        body: Center(
-          child: RepaintBoundary(
-            key: boundaryKey,
-            child: SizedBox(
-              width: logical.width,
-              height: logical.height,
-              child: SocialShareCard(
-                data: data,
-                theme: theme,
-                format: format,
-                width: logical.width,
-              ),
-            ),
-          ),
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: locale,
+        supportedLocales: const [Locale('ar'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: Builder(
+          builder: (context) {
+            captureContext = context;
+            return const SizedBox.shrink();
+          },
         ),
       ),
-    ));
-    // Bounded pumps: a settle loop can hang forever if an image stream
-    // never completes in the test environment.
-    await tester.pump();
-    // Real image codecs (official logo + Talia character) only decode
-    // inside a real-async window; without it every Image.asset lays out
-    // and paints empty, which is exactly what production never does.
-    await tester.runAsync(() async {
-      await Future<void>.delayed(const Duration(milliseconds: 400));
-    });
-    // Pump so the completed image streams repaint their render objects
-    // before the boundary is rasterized.
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 250));
-    expect(tester.takeException(), isNull, reason: '$caseName layout error');
-
-    final boundary = tester.renderObject<RenderRepaintBoundary>(
-      find.byKey(boundaryKey),
     );
-    // Engine rasterization/encoding is real async work; it must run inside
-    // runAsync or the fake-async test zone never observes completion.
-    final rawBytes = await tester.runAsync(() async {
-      // Same ratio the production exporter uses in SocialShareSheet.
-      final image = await boundary.toImage(pixelRatio: 3.0);
-      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      final result = byteData?.buffer.asUint8List();
-      image.dispose();
-      return result;
-    });
+    await tester.pump();
+    final rawBytes = await tester.runAsync(
+      () => captureSocialShareCardImage(
+        context: captureContext,
+        data: data,
+        theme: theme,
+        format: format,
+        hideUserName: hideUserName,
+      ),
+    );
     expect(rawBytes, isNotNull, reason: '$caseName produced no PNG');
     final bytes = rawBytes!;
+    expect(tester.takeException(), isNull, reason: '$caseName layout error');
 
     // PNG IHDR: width at bytes 16-19, height at 20-23 (big-endian).
     final header = ByteData.view(bytes.buffer, 16, 8);
@@ -147,7 +131,9 @@ void main() {
     });
   }
 
-  testWidgets('VISUAL QA MATRIX - 16 representative export cases', (tester) async {
+  testWidgets('VISUAL QA MATRIX - production capture across representative cases', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -227,7 +213,8 @@ void main() {
         ayah: const Ayah(
           number: 9,
           surahId: 17,
-          text: 'إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ وَيُبَشِّرُ الْمُؤْمِنِينَ',
+          text:
+              'إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ وَيُبَشِّرُ الْمُؤْمِنِينَ',
           numberInSurah: 9,
         ),
         surahName: 'الإسراء',
@@ -249,7 +236,8 @@ void main() {
           numberInSurah: 9,
         ),
         surahName: 'Al-Isra',
-        translation: 'Indeed, this Quran guides to that which is most suitable.',
+        translation:
+            'Indeed, this Quran guides to that which is most suitable.',
       ),
       theme: SocialShareTheme.dawnLight,
       format: SocialShareFormat.square,
@@ -262,7 +250,8 @@ void main() {
       data: SocialShareData.dua(
         zikr: const Zikr(
           id: 'd1',
-          text: 'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
+          text:
+              'رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ',
           transliteration: '',
           translation: '',
           totalCount: 1,
@@ -306,7 +295,10 @@ void main() {
     await captureAndVerify(
       tester,
       caseName: '08_progress_ar',
-      data: SocialShareData.progress(progress: progressStats, userName: 'سيد سعد'),
+      data: SocialShareData.progress(
+        progress: progressStats,
+        userName: 'سيد سعد',
+      ),
       theme: SocialShareTheme.dawnLight,
       format: SocialShareFormat.portrait,
     );
@@ -359,7 +351,8 @@ void main() {
       data: SocialShareData.achievement(
         achievement: const Achievement(
           id: 'full_quran_read',
-          titleKey: 'إنجاز إتمام قراءة القرآن الكريم كاملاً من الغلاف إلى الغلاف',
+          titleKey:
+              'إنجاز إتمام قراءة القرآن الكريم كاملاً من الغلاف إلى الغلاف',
           descriptionKey:
               'قرأت جميع صفحات القرآن الكريم بفضل الله وتوفيقه، واستمريت في رحلتك حتى أتممت الختمة كاملة',
           icon: '📖',
@@ -428,7 +421,10 @@ void main() {
     await captureAndVerify(
       tester,
       caseName: '16_story_1080',
-      data: SocialShareData.progress(progress: progressStats, userName: 'سيد سعد'),
+      data: SocialShareData.progress(
+        progress: progressStats,
+        userName: 'سيد سعد',
+      ),
       theme: SocialShareTheme.tealTwilight,
       format: SocialShareFormat.story,
     );
@@ -559,12 +555,89 @@ void main() {
       theme: SocialShareTheme.parchmentGold,
       format: SocialShareFormat.portrait,
     );
+
+    final khatmahPlan = KhatmahPlan(
+      id: 'export-khatmah',
+      title: 'ختمة القرآن الكريم',
+      startPage: 1,
+      completedPages: {for (var page = 1; page <= 604; page++) page},
+      targetPagesPerDay: 20,
+      targetDays: 30,
+      startDate: DateTime(2026, 3, 1),
+      lastReadDate: DateTime(2026, 3, 5),
+      expectedEndDate: DateTime(2026, 3, 30),
+      status: KhatmahStatus.completed,
+    );
+    await captureAndVerify(
+      tester,
+      caseName: '25_khatmah_portrait',
+      data: SocialShareData.khatmah(
+        completion: KhatmahReadingResult(
+          plan: khatmahPlan,
+          newlyCompletedPages: const {604},
+          historyEntry: KhatmahHistoryEntry(
+            id: khatmahPlan.id,
+            khatmahNumber: 1,
+            title: khatmahPlan.title,
+            startDate: khatmahPlan.startDate,
+            completedDate: DateTime(2026, 3, 5),
+            totalDays: 5,
+          ),
+        ),
+        userName: 'أحمد',
+      ),
+      theme: SocialShareTheme.emeraldDark,
+      format: SocialShareFormat.portrait,
+    );
+
+    await captureAndVerify(
+      tester,
+      caseName: '26_kids_achievement_square',
+      data: SocialShareData.achievement(
+        achievement: achievementAr,
+        userName: 'أحمد',
+      ).copyWith(audience: SocialShareAudience.kids),
+      theme: SocialShareTheme.parchmentGold,
+      format: SocialShareFormat.square,
+    );
+
+    await captureAndVerify(
+      tester,
+      caseName: '27_kids_quran_story',
+      data: SocialShareData.quranAyah(
+        ayah: const Ayah(
+          number: 1,
+          surahId: 1,
+          text: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+          numberInSurah: 1,
+        ),
+        surahName: 'الفاتحة',
+        userName: 'مريم',
+      ).copyWith(audience: SocialShareAudience.kids),
+      theme: SocialShareTheme.parchmentGold,
+      format: SocialShareFormat.story,
+    );
+
+    await captureAndVerify(
+      tester,
+      caseName: '28_private_opt_out',
+      data: SocialShareData.streak(
+        streakDays: 12,
+        longestStreak: 20,
+        userName: 'Hidden Name',
+        showCharacter: false,
+      ),
+      hideUserName: true,
+      theme: SocialShareTheme.midnightGold,
+      format: SocialShareFormat.portrait,
+    );
   });
 }
 
 /// Registers the real bundled fonts so exported PNGs show true Arabic
 /// typography instead of the test-only fallback font.
-Future<void> _loadRealFonts() async {  Future<void> load(String family, List<String> paths) async {
+Future<void> _loadRealFonts() async {
+  Future<void> load(String family, List<String> paths) async {
     final loader = FontLoader(family);
     for (final path in paths) {
       final data = await File(path).readAsBytes();
@@ -609,7 +682,9 @@ Future<void> _loadRealFonts() async {  Future<void> load(String family, List<Str
   for (final candidate in emojiCandidates) {
     final file = File(candidate);
     if (await file.exists()) {
-      final family = candidate.contains('seguiemj') ? 'Segoe UI Emoji' : 'Segoe UI Symbol';
+      final family = candidate.contains('seguiemj')
+          ? 'Segoe UI Emoji'
+          : 'Segoe UI Symbol';
       await load(family, [candidate]);
     }
   }

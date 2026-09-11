@@ -12,27 +12,25 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_session_service.dart';
-import '../../../../core/services/quran_continuous_player_service.dart';
-import '../../../../core/services/quran_reciter.dart';
-import '../../../../core/services/quran_reciter_service.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
-import '../../../../core/utils/quran_ayah_display_text.dart';
-import '../../../../core/widgets/social_share/social_share_model.dart';
-import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../data/datasources/bookmark_service.dart';
-import '../../domain/entities/bookmark_entry.dart';
 import '../../domain/entities/quran_entities.dart';
 import '../cubits/quran_audio_player_cubit.dart';
 import '../cubits/quran_page_cubit.dart';
 import '../cubits/surah_detail_cubit.dart';
 import '../services/quran_read_confirmation_gate.dart';
+import '../../data/services/quran_warmup_service.dart';
 import '../widgets/app_quran_page_view.dart';
-import '../widgets/quran_floating_audio_player.dart';
+import '../widgets/ayah_options_sheet.dart';
+import '../widgets/long_press_hint_banner.dart';
+import '../widgets/quick_navigation_sheet.dart';
 import '../widgets/quran_page_font_guard.dart';
-import '../widgets/reciter_selector_sheet.dart';
+import '../widgets/reader_docked_audio_bar.dart';
+import '../widgets/reader_footer.dart';
+import '../widgets/reader_overflow_sheet.dart';
+import '../widgets/reader_top_bar.dart';
 import '../../../khatmah/domain/entities/khatmah_plan.dart';
 import '../../../khatmah/domain/entities/khatmah_reading_result.dart';
 import '../../../khatmah/presentation/cubits/khatmah_cubit.dart';
@@ -332,7 +330,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       backgroundColor: Colors.transparent,
       builder: (ctx) => BlocProvider.value(
         value: audioCubit,
-        child: _AyahOptionsSheet(
+        child: AyahOptionsSheet(
           ayah: ayah,
           surahName: qcf.getSurahNameArabic(surahNumber),
           onInteraction: () {
@@ -342,6 +340,26 @@ class _QuranReaderPageState extends State<QuranReaderPage>
           },
         ),
       ),
+    );
+  }
+
+  /// Opens the Quick Navigation sheet. The last-read position is resolved
+  /// from the same restorable location source as Continue Reading.
+  void _openQuickNav(BuildContext context, int currentPage) {
+    HapticFeedback.selectionClick();
+    int? lastPage;
+    try {
+      lastPage = QuranWarmupService.parsePageFromLocation(
+        getIt<AppSessionService>().getLastRestorableLocation(),
+      );
+    } catch (_) {
+      lastPage = null;
+    }
+    QuickNavigationSheet.show(
+      context,
+      currentPage: _normalizePageNumber(currentPage),
+      lastPage: lastPage,
+      onGoToPage: (page) => _openAtPage(_normalizePageNumber(page)),
     );
   }
 
@@ -392,7 +410,9 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   Widget _buildMushafReader(BuildContext context) {
     final isDark = context.isDark;
     final bg = isDark ? AppColors.parchmentDark : AppColors.parchmentLight;
-    final gold = isDark ? AppColors.primaryLight : AppColors.primary;
+    // Primary guidance color (not gold): routine reader chrome uses primary
+    // per DESIGN.md; gold stays reserved for achievement surfaces.
+    final accent = isDark ? AppColors.primaryLight : AppColors.primary;
 
     final content = BlocProvider.value(
       value: _quranPageCubit,
@@ -469,7 +489,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                           surah: audioState.currentSurahId!,
                           verseNumber: audioState.currentAyahNumber!,
                           page: audioState.currentPageNumber!,
-                          color: gold.withValues(alpha: 0.24),
+                          color: accent.withValues(alpha: 0.24),
                         ),
                       ]
                     : _highlights;
@@ -537,51 +557,60 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                               cubit: _khatmahCubit,
                                               currentPage: pageNumber,
                                             ),
-                                          _MushafTopBar(
+                                          ReaderTopBar(
                                             surahName:
                                                 firstSurah?.nameAr ?? '',
                                             juzNumber: juzNumber,
                                             pageNumber: pageNumber,
-                                            gold: gold,
+                                            primary: accent,
                                             bg: bg,
-                                            onToggleFocus: () {
-                                              HapticFeedback.selectionClick();
-                                              _isFocusModeNotifier.value =
-                                                  true;
-                                            },
-                                            onClose: () {
+                                            onBack: () {
                                               if (context.canPop()) {
                                                 context.pop();
                                               } else {
                                                 context.go('/');
                                               }
                                             },
+                                            onOpenMenu: () =>
+                                                ReaderOverflowSheet.show(
+                                              context,
+                                              onEnterFocus: () {
+                                                HapticFeedback
+                                                    .selectionClick();
+                                                _isFocusModeNotifier.value =
+                                                    true;
+                                              },
+                                            ),
                                           ),
                                         ],
                                       ),
-                                bottomBar: isFocusMode
-                                    ? null
-                                    : ValueListenableBuilder<bool>(
-                                        valueListenable:
-                                            _showReadConfirmedNotifier,
-                                        builder: (
-                                          context,
-                                          showReadConfirmed,
-                                          _,
-                                        ) {
-                                          return _MushafFooter(
+                                bottomBar: ValueListenableBuilder<bool>(
+                                  valueListenable: _showReadConfirmedNotifier,
+                                  builder: (context, showReadConfirmed, _) {
+                                    return Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const ReaderDockedAudioBar(),
+                                        if (!isFocusMode)
+                                          ReaderFooter(
                                             pageNumber: pageNumber,
                                             hizbNumber:
                                                 MushafHizbHelper.getHizb(
                                               pageNumber,
                                             ),
-                                            gold: gold,
+                                            accent: accent,
                                             bg: bg,
                                             showReadConfirmed:
                                                 showReadConfirmed,
-                                          );
-                                        },
-                                      ),
+                                            onPageTap: () => _openQuickNav(
+                                              context,
+                                              pageNumber,
+                                            ),
+                                          ),
+                                      ],
+                                    );
+                                  },
+                                ),
                               ),
                             );
                           },
@@ -605,11 +634,11 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                                   Icons.fullscreen_exit_rounded,
                                 ),
                                 style: IconButton.styleFrom(
-                                  foregroundColor: gold,
+                                  foregroundColor: accent,
                                   backgroundColor: bg.withValues(alpha: 0.92),
                                   minimumSize: const Size(48, 48),
                                   side: BorderSide(
-                                    color: gold.withValues(alpha: 0.35),
+                                    color: accent.withValues(alpha: 0.35),
                                   ),
                                 ),
                               ),
@@ -626,16 +655,14 @@ class _QuranReaderPageState extends State<QuranReaderPage>
                               top: 54,
                               start: AppSpacing.md,
                               end: AppSpacing.md,
-                              child: _LongPressHintBanner(
-                                gold: gold,
+                              child: LongPressHintBanner(
+                                accent: accent,
                                 bg: bg,
                                 onDismiss: _dismissLongPressHint,
                               ),
                             );
                           },
                         ),
-
-                        const QuranFloatingAudioPlayer(),
                       ],
                     ),
                   ),
@@ -651,602 +678,5 @@ class _QuranReaderPageState extends State<QuranReaderPage>
       return BlocProvider.value(value: _khatmahCubit!, child: content);
     }
     return content;
-  }
-}
-
-class _MushafTopBar extends StatelessWidget {
-  const _MushafTopBar({
-    required this.surahName,
-    required this.juzNumber,
-    required this.pageNumber,
-    required this.gold,
-    required this.bg,
-    required this.onClose,
-    this.onToggleFocus,
-  });
-
-  final String surahName;
-  final int juzNumber;
-  final int pageNumber;
-  final Color gold;
-  final Color bg;
-  final VoidCallback onClose;
-  final VoidCallback? onToggleFocus;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: bg,
-        border: Border(
-          bottom: BorderSide(color: gold.withValues(alpha: 0.15), width: 0.8),
-        ),
-      ),
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.bookmark_outlined, color: gold, size: 16),
-              const SizedBox(width: 4),
-              Text(
-                'الجزء ${MushafHizbHelper.getJuzName(juzNumber)}',
-                style: AppTypography.bodyMedium.copyWith(
-                  fontFamily: 'Amiri',
-                  color: gold,
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                surahName,
-                style: AppTypography.quranHeader.copyWith(
-                  color: gold,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(width: 8),
-              BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
-                builder: (context, audioState) {
-                  final isPlayingThisPage =
-                      audioState.scope == PlayScope.page &&
-                      audioState.currentPageNumber == pageNumber &&
-                      audioState.hasActiveAudio;
-                  final isPlaying = isPlayingThisPage && audioState.isPlaying;
-                  final isLoading = isPlayingThisPage && audioState.isLoading;
-
-                  return IconButton(
-                    onPressed: () {
-                      HapticFeedback.selectionClick();
-                      context.read<QuranAudioPlayerCubit>().playPage(
-                        pageNumber,
-                      );
-                    },
-                    tooltip: isPlaying
-                        ? (context.isArabic
-                              ? 'إيقاف التلاوة'
-                              : 'Pause Recitation')
-                        : (context.isArabic ? 'تلاوة الصفحة' : 'Play Page'),
-                    icon: isLoading
-                        ? SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: gold,
-                            ),
-                          )
-                        : Icon(
-                            isPlaying
-                                ? Icons.pause_circle_filled_rounded
-                                : (isPlayingThisPage
-                                      ? Icons.play_circle_fill_rounded
-                                      : Icons.play_circle_outline_rounded),
-                          ),
-                    color: gold,
-                    style: IconButton.styleFrom(
-                      backgroundColor: gold.withValues(
-                        alpha: isPlayingThisPage ? 0.22 : 0.1,
-                      ),
-                      minimumSize: const Size(48, 48),
-                    ),
-                  );
-                },
-              ),
-              IconButton(
-                onPressed: () => ReciterSelectorSheet.show(context),
-                tooltip: context.l10n.selectReciter,
-                icon: const Icon(Icons.record_voice_over_rounded),
-                color: gold,
-                style: IconButton.styleFrom(
-                  backgroundColor: gold.withValues(alpha: 0.1),
-                  minimumSize: const Size(48, 48),
-                ),
-              ),
-              if (onToggleFocus != null) ...[
-                IconButton(
-                  onPressed: onToggleFocus,
-                  tooltip: context.l10n.enterFocusMode,
-                  icon: const Icon(Icons.fullscreen_rounded),
-                  color: gold,
-                  style: IconButton.styleFrom(
-                    backgroundColor: gold.withValues(alpha: 0.1),
-                    minimumSize: const Size(48, 48),
-                  ),
-                ),
-              ],
-              IconButton(
-                onPressed: onClose,
-                tooltip: context.l10n.closeReader,
-                icon: const Icon(Icons.close_rounded),
-                color: gold,
-                style: IconButton.styleFrom(
-                  backgroundColor: gold.withValues(alpha: 0.1),
-                  minimumSize: const Size(48, 48),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MushafFooter extends StatelessWidget {
-  const _MushafFooter({
-    required this.pageNumber,
-    required this.hizbNumber,
-    required this.gold,
-    required this.bg,
-    required this.showReadConfirmed,
-  });
-
-  final int pageNumber;
-  final int hizbNumber;
-  final Color gold;
-  final Color bg;
-  final bool showReadConfirmed;
-
-  @override
-  Widget build(BuildContext context) {
-    final disableAnimations = MediaQuery.disableAnimationsOf(context);
-    return Container(
-      color: bg,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Text(
-              context.l10n.hizbNumberLabel(
-                MushafHizbHelper.toArabicNumber(hizbNumber),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.bodySmall.copyWith(
-                fontFamily: 'Amiri',
-                fontSize: 13,
-                color: gold,
-                height: 1.5,
-              ),
-            ),
-          ),
-          Semantics(
-            label: '${context.l10n.page} $pageNumber',
-            child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.itemGap,
-                vertical: AppSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: gold.withValues(alpha: 0.1),
-                border: Border.all(color: gold.withValues(alpha: 0.45)),
-                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
-              ),
-              child: Text(
-                MushafHizbHelper.toArabicNumber(pageNumber),
-                style: AppTypography.titleMedium.copyWith(
-                  fontFamily: 'Amiri',
-                  fontWeight: FontWeight.bold,
-                  color: gold,
-                  height: 1.4,
-                ),
-              ),
-            ),
-          ),
-          Expanded(
-            child: AnimatedOpacity(
-              opacity: showReadConfirmed ? 1 : 0,
-              duration: disableAnimations
-                  ? Duration.zero
-                  : const Duration(milliseconds: 220),
-              child: Align(
-                alignment: AlignmentDirectional.centerEnd,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.check_circle_rounded, color: gold, size: 16),
-                    const SizedBox(width: AppSpacing.xs),
-                    Flexible(
-                      child: Text(
-                        context.l10n.readPageConfirmed,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTypography.titleSmall.copyWith(
-                          fontFamily: 'Amiri',
-                          color: gold,
-                          fontWeight: FontWeight.w700,
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LongPressHintBanner extends StatelessWidget {
-  const _LongPressHintBanner({
-    required this.gold,
-    required this.bg,
-    required this.onDismiss,
-  });
-
-  final Color gold;
-  final Color bg;
-  final VoidCallback onDismiss;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: bg,
-      elevation: 4,
-      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          border: Border.all(color: gold.withValues(alpha: 0.28)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.touch_app_rounded, color: gold, size: 18),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                context.l10n.quranLongPressHint,
-                style: AppTypography.bodySmall.copyWith(
-                  fontFamily: 'Amiri',
-                  color: gold,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  height: 1.5,
-                ),
-              ),
-            ),
-            IconButton(
-              onPressed: onDismiss,
-              icon: Icon(Icons.close_rounded, color: gold, size: 18),
-              visualDensity: VisualDensity.compact,
-              tooltip: context.l10n.close,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AyahOptionsSheet extends StatefulWidget {
-  const _AyahOptionsSheet({
-    required this.ayah,
-    required this.surahName,
-    required this.onInteraction,
-  });
-
-  final Ayah ayah;
-  final String surahName;
-  final VoidCallback onInteraction;
-
-  @override
-  State<_AyahOptionsSheet> createState() => _AyahOptionsSheetState();
-}
-
-class _AyahOptionsSheetState extends State<_AyahOptionsSheet> {
-  Future<void> _playAyah() async {
-    widget.onInteraction();
-    final cubit = context.read<QuranAudioPlayerCubit>();
-    if (cubit.state.scope == PlayScope.singleAyah &&
-        cubit.state.isPlaying &&
-        cubit.state.currentSurahId == widget.ayah.surahId &&
-        cubit.state.currentAyahNumber == widget.ayah.numberInSurah) {
-      await cubit.pause();
-    } else {
-      await cubit.playAyah(widget.ayah.surahId, widget.ayah.numberInSurah);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = context.isDark;
-    final surface = isDark ? AppColors.darkSurface : AppColors.lightSurface;
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final reciterService = getIt<QuranReciterService>();
-    final displayedAyahText = QuranAyahDisplayText.withVerseBrackets(
-      widget.ayah.text,
-      ayahNumber: widget.ayah.numberInSurah,
-    );
-
-    return Container(
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: const EdgeInsets.all(AppSpacing.pagePadding),
-      child: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Text(
-                context.l10n.surahAyahFormat(
-                  widget.surahName,
-                  widget.ayah.numberInSurah,
-                ),
-                style: AppTypography.titleMedium.copyWith(
-                  color: primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              // Full Ayah Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: primary.withValues(alpha: 0.06),
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: primary.withValues(alpha: 0.15)),
-                ),
-                child: Text(
-                  displayedAyahText,
-                  style: AppTypography.quranMedium,
-                  textAlign: TextAlign.center,
-                  textDirection: TextDirection.rtl,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-              // Reciter Selector Button
-              ValueListenableBuilder<QuranReciter>(
-                valueListenable: reciterService.currentReciter,
-                builder: (context, reciter, _) {
-                  return Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
-                      onTap: () => ReciterSelectorSheet.show(context),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.sm,
-                          vertical: AppSpacing.xs,
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.record_voice_over_rounded,
-                              size: 14,
-                              color: primary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              context.isArabic
-                                  ? reciter.nameAr
-                                  : reciter.nameEn,
-                              style: AppTypography.bodySmall.copyWith(
-                                color: primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            Icon(
-                              Icons.swap_horiz_rounded,
-                              size: 14,
-                              color: primary,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: AppSpacing.lg),
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: AppSpacing.md,
-                runSpacing: AppSpacing.md,
-                children: [
-                  BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
-                    builder: (context, audioState) {
-                      final isPlayingThisAyah =
-                          audioState.scope == PlayScope.singleAyah &&
-                          audioState.isPlaying &&
-                          audioState.currentSurahId == widget.ayah.surahId &&
-                          audioState.currentAyahNumber ==
-                              widget.ayah.numberInSurah;
-                      final isBufferingThisAyah =
-                          audioState.scope == PlayScope.singleAyah &&
-                          audioState.isLoading &&
-                          audioState.currentSurahId == widget.ayah.surahId &&
-                          audioState.currentAyahNumber ==
-                              widget.ayah.numberInSurah;
-
-                      return _OptionBtn(
-                        icon: isBufferingThisAyah
-                            ? Icons.hourglass_top_rounded
-                            : (isPlayingThisAyah
-                                  ? Icons.pause_circle_filled
-                                  : Icons.play_circle_fill_rounded),
-                        label: isPlayingThisAyah
-                            ? context.l10n.pause
-                            : context.l10n.play,
-                        color: primary,
-                        onTap: _playAyah,
-                      );
-                    },
-                  ),
-                  _OptionBtn(
-                    icon: Icons.copy_rounded,
-                    label: context.l10n.copy,
-                    color: primary,
-                    onTap: () async {
-                      await Clipboard.setData(
-                        ClipboardData(text: displayedAyahText),
-                      );
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(context.l10n.copied)),
-                        );
-                        Navigator.pop(context);
-                      }
-                    },
-                  ),
-                  _OptionBtn(
-                    icon: Icons.bookmark_rounded,
-                    label: context.l10n.bookmark,
-                    color: primary,
-                    onTap: () async {
-                      final bookmarkService = getIt<BookmarkService>();
-                      final entry = BookmarkEntry(
-                        surahId: widget.ayah.surahId,
-                        surahName: widget.surahName,
-                        ayahNumber: widget.ayah.numberInSurah,
-                        ayahText: widget.ayah.text,
-                        savedAt: DateTime.now().toUtc(),
-                      );
-                      final isAdded = await bookmarkService.toggle(entry);
-                      if (isAdded) {
-                        unawaited(HapticFeedback.mediumImpact());
-                      }
-                      if (context.mounted) {
-                        final navigator = Navigator.of(context);
-                        final message = isAdded
-                            ? context.l10n.bookmarkAdded
-                            : context.l10n.bookmarkRemoved;
-                        final undoLabel = context.l10n.undo;
-                        navigator.pop();
-                        context.showAutoDismissSnackBar(
-                          message,
-                          action: SnackBarAction(
-                            label: undoLabel,
-                            onPressed: () {
-                              unawaited(bookmarkService.toggle(entry));
-                            },
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                  _OptionBtn(
-                    icon: Icons.share_rounded,
-                    label: context.l10n.share,
-                    color: primary,
-                    onTap: () {
-                      Navigator.pop(context);
-                      final data = SocialShareData.quranAyah(
-                        ayah: widget.ayah,
-                        surahName: widget.surahName,
-                      );
-                      SocialShareSheet.show(context, data);
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _OptionBtn extends StatelessWidget {
-  const _OptionBtn({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: label,
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-          child: SizedBox(
-            width: 72,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(icon, color: color, size: 26),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTypography.labelMedium.copyWith(color: color),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
   }
 }

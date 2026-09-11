@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/features/home/domain/entities/ayah_of_day.dart';
+import 'package:talia_quran/features/home/domain/services/daily_ayah_context_resolver.dart';
 import 'package:talia_quran/features/home/domain/usecases/get_ayah_of_day_usecase.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
@@ -13,16 +15,24 @@ void main() {
   // falls back to its 5-entry list, which would hide rotation regressions.
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('cycles through every daily ayah reference across 35 calendar days', () async {
+  test('cycles through 35 distinct general ayahs on matching calendar days', () async {
     final selectedRefs = <String>{};
-    final firstDay = DateTime(2026, 1, 1);
+    var day = DateTime(2026, 1, 1);
 
-    for (var offset = 0; offset < 35; offset++) {
+    while (selectedRefs.length < 35) {
+      if (day.weekday == DateTime.friday) {
+        day = day.add(const Duration(days: 1));
+        continue;
+      }
       final ayah = await GetAyahOfDayUsecase(
         const _AnyAyahQuranRepository(),
-        now: () => firstDay.add(Duration(days: offset)),
+        now: () => day,
+        contextResolver: const DailyAyahContextResolver(
+          hijriDateFor: _noHijriDate,
+        ),
       )();
       selectedRefs.add('${ayah!.surahId}:${ayah.ayahNumber}');
+      day = day.add(const Duration(days: 1));
     }
 
     expect(selectedRefs, hasLength(35));
@@ -48,7 +58,71 @@ void main() {
       );
     }
   });
+
+  test('daily ayah source includes seasonal and goal-specific guidance', () {
+    final dailyRefs = jsonDecode(
+      File('assets/data/daily_ayahs.json').readAsStringSync(),
+    ) as List<dynamic>;
+    final tags = dailyRefs
+        .cast<Map<String, dynamic>>()
+        .expand((ref) => (ref['tags'] as List<dynamic>? ?? const <dynamic>[]))
+        .whereType<String>()
+        .toSet();
+
+    expect(
+      tags,
+      containsAll(<String>[
+        'ramadanStart',
+        'ramadan',
+        'lastTenNights',
+        'friday',
+        'dhulHijjah',
+        'arafah',
+        'eidAlAdha',
+        'reading',
+        'memorization',
+        'smartReview',
+        'azkar',
+        'childJourney',
+      ]),
+    );
+  });
+
+  test('prioritizes seasonal guidance, then the user goal, then general ayahs',
+      () async {
+    final ramadanAyah = await GetAyahOfDayUsecase(
+      const _AnyAyahQuranRepository(),
+      now: () => DateTime(2026, 2, 18),
+      contextResolver: DailyAyahContextResolver(
+        hijriDateFor: (_) => const DailyAyahHijriDate(month: 9, day: 1),
+      ),
+    )(userGoal: 'memorization');
+
+    final goalAyah = await GetAyahOfDayUsecase(
+      const _AnyAyahQuranRepository(),
+      now: () => DateTime(2026, 2, 18),
+      contextResolver: const DailyAyahContextResolver(
+        hijriDateFor: _noHijriDate,
+      ),
+    )(userGoal: 'memorization');
+
+    final generalAyah = await GetAyahOfDayUsecase(
+      const _AnyAyahQuranRepository(),
+      now: () => DateTime(2026, 2, 18),
+      contextResolver: const DailyAyahContextResolver(
+        hijriDateFor: _noHijriDate,
+      ),
+    )();
+
+    expect(ramadanAyah!.context, DailyAyahContext.ramadanStart);
+    expect('${ramadanAyah.surahId}:${ramadanAyah.ayahNumber}', anyOf('2:183', '2:185'));
+    expect(goalAyah!.context, DailyAyahContext.memorization);
+    expect('${goalAyah.surahId}:${goalAyah.ayahNumber}', '54:17');
+    expect(generalAyah!.context, DailyAyahContext.general);
+  });
 }
+
+DailyAyahHijriDate? _noHijriDate(DateTime _) => null;
 
 class _AnyAyahQuranRepository implements QuranRepository {
   const _AnyAyahQuranRepository();

@@ -596,6 +596,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyDuaReminder => 'دعاء اليوم';
 
   @override
+  String get dailyAyahReminder => 'آية اليوم';
+
+  @override
   String get dailyDuaTime => 'كل يوم الساعة ٩:٠٠ صباحًا';
 
   @override
@@ -758,6 +761,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dailyDuaSaveError => 'تعذر تحديث دعاء اليوم';
+
+  @override
+  String get dailyAyahSaveError => 'تعذر تحديث تذكير آية اليوم';
 
   @override
   String get difficultyEasy => 'سهل (٧٠٪)';
@@ -1671,6 +1677,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kidsJourneyMapTitle => 'خريطة الحفظ';
+
+  @override
+  String get kidsJourneyMotivation => 'مع كل آية تقترب أكثر من كتاب الله';
+
+  @override
+  String get kidsJourneySignpost1 => 'رحلتنا إلى القرآن أجمل';
+
+  @override
+  String get kidsJourneySignpost2 => 'كل خطوة نور';
+
+  @override
+  String get kidsJourneySignpost3 => 'نكمل حفظ كتاب الله';
 
   @override
   String kidsPointsValue(int points) {
@@ -4523,6 +4541,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeAyahOfDay => 'آية اليوم';
 
   @override
+  String get homeAyahContextFriday => 'آية ليوم الجمعة';
+
+  @override
+  String get homeAyahContextRamadanStart => 'آية لبداية رمضان';
+
+  @override
+  String get homeAyahContextRamadan => 'آية لرمضان';
+
+  @override
+  String get homeAyahContextLastTenNights => 'آية للعشر الأواخر';
+
+  @override
+  String get homeAyahContextDhulHijjah => 'آية لأيام الحج';
+
+  @override
+  String get homeAyahContextArafah => 'آية ليوم عرفة';
+
+  @override
+  String get homeAyahContextEidAlAdha => 'آية لعيد الأضحى';
+
+  @override
+  String get homeAyahContextReading => 'آية لرحلة القراءة';
+
+  @override
+  String get homeAyahContextMemorization => 'آية لرحلة الحفظ';
+
+  @override
+  String get homeAyahContextSmartReview => 'آية للمراجعة';
+
+  @override
+  String get homeAyahContextAzkar => 'آية للأذكار';
+
+  @override
+  String get homeAyahContextChildJourney => 'آية لرحلة الطفل';
+
+  @override
   String homeResumeListening(String surah) {
     return 'أكمل الاستماع · $surah';
   }
@@ -4816,4 +4870,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get homeFooterTagline => 'بالقرآن .. نحيا أجمل';
+
+  @override
+  String get quickNavTitle => 'تنقل سريع';
+
+  @override
+  String get quickNavGo => 'انتقال';
+
+  @override
+  String get quickNavPageHint => 'رقم الصفحة (1-604)';
 }

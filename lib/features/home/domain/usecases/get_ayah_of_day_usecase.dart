@@ -4,22 +4,36 @@ import 'package:flutter/services.dart';
 
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../entities/ayah_of_day.dart';
+import '../services/daily_ayah_context_resolver.dart';
 
 class GetAyahOfDayUsecase {
   GetAyahOfDayUsecase(
     this._repository, {
     DateTime Function()? now,
     this.assetPath = 'assets/data/daily_ayahs.json',
-  }) : _now = now ?? DateTime.now;
+    DailyAyahContextResolver? contextResolver,
+  }) : _now = now ?? DateTime.now,
+       _contextResolver = contextResolver ?? const DailyAyahContextResolver();
 
   final QuranRepository _repository;
   final DateTime Function() _now;
   final String assetPath;
+  final DailyAyahContextResolver _contextResolver;
 
-  Future<AyahOfDay?> call() async {
+  Future<AyahOfDay?> call({DateTime? date, String? userGoal}) async {
     final refs = await _loadRefs();
     if (refs.isEmpty) return null;
-    final ref = refs[_indexFor(_now(), refs.length)];
+    final day = date ?? _now();
+    var context = _contextResolver.resolve(date: day, userGoal: userGoal);
+    var candidates = refs
+        .where((ref) => ref.contexts.contains(context))
+        .toList();
+    if (candidates.isEmpty) {
+      context = DailyAyahContext.general;
+      candidates = refs.where((ref) => ref.contexts.isEmpty).toList();
+    }
+    if (candidates.isEmpty) candidates = refs;
+    final ref = candidates[_indexFor(day, candidates.length)];
     final detail = await _repository.getSurahDetail(ref.surahId);
     return detail.fold((_) => null, (surah) {
       for (final ayah in surah.ayahs) {
@@ -31,6 +45,7 @@ class GetAyahOfDayUsecase {
             surahNameAr: surah.surah.nameAr,
             surahNameEn: surah.surah.nameEn,
             pageNumber: ayah.page ?? surah.surah.page,
+            context: context,
           );
         }
       }
@@ -42,9 +57,11 @@ class GetAyahOfDayUsecase {
   /// visited before repeating. A millisecond seed would step by 86_400_000 and
   /// collapse the cycle to `length / gcd(86_400_000 % length, length)` entries.
   static int _indexFor(DateTime day, int length) {
-    final ordinal = DateTime(day.year, day.month, day.day)
-        .difference(DateTime(1970))
-        .inDays;
+    final ordinal = DateTime(
+      day.year,
+      day.month,
+      day.day,
+    ).difference(DateTime(1970)).inDays;
     return ordinal.remainder(length).abs();
   }
 
@@ -58,6 +75,7 @@ class GetAyahOfDayUsecase {
             DailyAyahRef(
               surahId: item['surahId'] as int,
               ayahNumber: item['ayahNumber'] as int,
+              contexts: _contextsFrom(item['tags']),
             ),
       ];
     } catch (_) {
@@ -69,5 +87,13 @@ class GetAyahOfDayUsecase {
         DailyAyahRef(surahId: 112, ayahNumber: 1),
       ];
     }
+  }
+
+  Set<DailyAyahContext> _contextsFrom(Object? value) {
+    if (value is! List<dynamic>) return const <DailyAyahContext>{};
+    return {
+      for (final item in value)
+        if (item is String) ?DailyAyahContext.fromWireName(item),
+    };
   }
 }

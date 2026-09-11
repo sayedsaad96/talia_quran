@@ -162,7 +162,7 @@ class SocialShareData {
 
   /// The only official character asset currently shipped with the app.
   /// Contextual pose assets must not be referenced until they exist on disk.
-  /// The official character asset used for kids' cards.
+  /// The official character asset used contextually across share cards.
   static const String masterCharacterAsset =
       'assets/images/character/talia_hero.png';
 
@@ -212,7 +212,7 @@ class SocialShareData {
     this.memorizedSurahsCount,
     this.streakDays,
     this.verificationCode,
-    this.showCharacter = false,
+    this.showCharacter = true,
     this.characterAssetPath,
     this.audience = SocialShareAudience.adult,
     this.achievementUnlocked,
@@ -224,7 +224,7 @@ class SocialShareData {
     required String surahName,
     String? translation,
     String? userName,
-    bool showCharacter = false,
+    bool showCharacter = true,
   }) {
     return SocialShareData(
       content: QuranAyahDisplayText.withoutTrailingNumber(
@@ -253,6 +253,7 @@ class SocialShareData {
     required int ayahNumber,
     String? translation,
     String? userName,
+    bool showCharacter = true,
   }) {
     return SocialShareData(
       content: QuranAyahDisplayText.withoutTrailingNumber(
@@ -265,6 +266,7 @@ class SocialShareData {
       ayahNumber: ayahNumber,
       translation: translation,
       userName: userName,
+      showCharacter: showCharacter,
       characterAssetPath: masterCharacterAsset,
     );
   }
@@ -275,7 +277,7 @@ class SocialShareData {
     String? userName,
     String? localizedTitle,
     String? localizedDesc,
-    bool showCharacter = false,
+    bool showCharacter = true,
   }) {
     return SocialShareData(
       content: localizedDesc ?? achievement.descriptionKey,
@@ -298,7 +300,7 @@ class SocialShareData {
     String? categoryTitle,
     String? userName,
     bool isDua = true,
-    bool showCharacter = false,
+    bool showCharacter = true,
   }) {
     return SocialShareData(
       content: zikr.text,
@@ -320,7 +322,7 @@ class SocialShareData {
     String? subtitle,
     String? userName,
     int? targetAyahs,
-    bool showCharacter = false,
+    bool showCharacter = true,
   }) {
     return SocialShareData(
       content: '',
@@ -342,7 +344,7 @@ class SocialShareData {
     required int streakDays,
     int? longestStreak,
     String? userName,
-    bool showCharacter = false,
+    bool showCharacter = true,
   }) {
     return SocialShareData(
       content: '',
@@ -362,7 +364,7 @@ class SocialShareData {
   factory SocialShareData.progress({
     required OverallProgress progress,
     String? userName,
-    bool showCharacter = false,
+    bool showCharacter = true,
   }) {
     return SocialShareData(
       content: '',
@@ -383,7 +385,7 @@ class SocialShareData {
   factory SocialShareData.certificate({
     required CertificateAward award,
     String? userName,
-    bool showCharacter = false,
+    bool showCharacter = true,
   }) {
     return SocialShareData(
       content: award.titleAr,
@@ -404,7 +406,7 @@ class SocialShareData {
     String? userName,
     String? customTitle,
     String? customContent,
-    bool showCharacter = false,
+    bool showCharacter = true,
   }) {
     final copy = l10n ?? AppLocalizationsAr();
     final daysTaken = completion.actualElapsedDays;

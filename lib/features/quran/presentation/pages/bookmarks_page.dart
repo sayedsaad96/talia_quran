@@ -8,6 +8,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/arabic_normalizer.dart';
 import '../../../../core/utils/quran_ayah_display_text.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
@@ -29,7 +30,10 @@ class BookmarksPage extends StatelessWidget {
 }
 
 class BookmarksTab extends StatefulWidget {
-  const BookmarksTab({super.key});
+  const BookmarksTab({super.key, this.query = ''});
+
+  /// Active-tab search text. Empty means no filtering.
+  final String query;
 
   @override
   State<BookmarksTab> createState() => _BookmarksTabState();
@@ -46,6 +50,21 @@ class _BookmarksTabState extends State<BookmarksTab> {
     await getIt<BookmarkService>().toggle(entry);
   }
 
+  List<BookmarkEntry> _filterBookmarks(
+    List<BookmarkEntry> bookmarks,
+    String query,
+  ) {
+    final q = ArabicNormalizer.normalize(query.trim());
+    if (q.isEmpty) return bookmarks;
+    final qRaw = query.trim().toLowerCase();
+    return bookmarks.where((entry) {
+      if (ArabicNormalizer.normalize(entry.surahName).contains(q)) return true;
+      if (ArabicNormalizer.normalize(entry.ayahText).contains(q)) return true;
+      if (entry.surahName.toLowerCase().contains(qRaw)) return true;
+      return false;
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
@@ -59,13 +78,29 @@ class _BookmarksTabState extends State<BookmarksTab> {
         }
         final bookmarks = service.getAll();
 
+        final visible = _filterBookmarks(bookmarks, widget.query);
         if (bookmarks.isEmpty) {
           return _EmptyBookmarks(isDark: isDark);
+        }
+        if (visible.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.xl),
+              child: Text(
+                context.l10n.noData,
+                style: AppTypography.bodyMedium.copyWith(
+                  color: isDark
+                      ? AppColors.darkTextSecondary
+                      : AppColors.lightTextSecondary,
+                ),
+              ),
+            ),
+          );
         }
 
         // Group bookmarks by surah
         final grouped = <int, List<BookmarkEntry>>{};
-        for (final b in bookmarks) {
+        for (final b in visible) {
           grouped.putIfAbsent(b.surahId, () => []).add(b);
         }
 

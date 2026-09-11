@@ -520,7 +520,10 @@ class HomeCubit extends Cubit<HomeState> {
 
     AyahOfDay? ayah;
     try {
-      ayah = await _getAyahOfDay?.call();
+      final userGoal = _prefs.getString('user_primary_goal');
+      ayah = userGoal == null
+          ? await _getAyahOfDay?.call()
+          : await _getAyahOfDay?.call(userGoal: userGoal);
     } catch (_) {}
 
     // Family data stays exclusively behind FamilyDashboardCubit's PIN gate.

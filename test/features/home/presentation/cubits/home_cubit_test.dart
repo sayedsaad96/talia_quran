@@ -34,8 +34,8 @@ import 'home_cubit_test.mocks.dart';
 
 class _MockGetAyahOfDay extends Mock implements GetAyahOfDayUsecase {
   @override
-  Future<AyahOfDay?> call() => super.noSuchMethod(
-    Invocation.method(#call, const []),
+  Future<AyahOfDay?> call({DateTime? date, String? userGoal}) => super.noSuchMethod(
+    Invocation.method(#call, const [], {#date: date, #userGoal: userGoal}),
     returnValue: Future<AyahOfDay?>.value(),
   ) as Future<AyahOfDay?>;
 }
@@ -426,6 +426,18 @@ void main() {
     await cubit.load();
 
     verifyNever(family.call());
+  });
+
+  test('uses the primary goal when selecting the daily ayah', () async {
+    final ayah = _MockGetAyahOfDay();
+    when(mockPrefs.getString('user_primary_goal')).thenReturn('azkar');
+    when(ayah.call(userGoal: 'azkar')).thenAnswer((_) async => null);
+    await cubit.close();
+    cubit = buildCubit(getAyahOfDay: ayah);
+
+    await cubit.load();
+
+    verify(ayah.call(userGoal: 'azkar')).called(1);
   });
 
   test('load completes quietly when cubit closes during extras loading', () async {

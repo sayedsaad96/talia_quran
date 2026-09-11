@@ -30,11 +30,17 @@ void main() {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: AppLocalizations.supportedLocales,
-          home: Scaffold(body: NotificationSettingTile(isDark: false)),
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: NotificationSettingTile(isDark: false),
+            ),
+          ),
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Test Interactive Notification'));
+      final testNotification = find.text('Test Interactive Notification');
+      await tester.ensureVisible(testNotification);
+      await tester.tap(testNotification);
       await tester.pumpAndSettle();
 
       expect(find.text('Daily Review 📖'), findsOneWidget);
@@ -43,4 +49,27 @@ void main() {
       expect(find.text('Daily Dua 🤲'), findsNothing);
     },
   );
+
+  testWidgets('offers a configurable daily ayah reminder', (tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        locale: Locale('en'),
+        localizationsDelegates: [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: NotificationSettingTile(isDark: false),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Daily Ayah'), findsOneWidget);
+  });
 }

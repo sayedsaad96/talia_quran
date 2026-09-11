@@ -10,39 +10,6 @@ import 'talia_share_tokens.dart';
 /// between files. All of them are pure presentation — they only receive
 /// already-localized strings and real `SocialShareData` values.
 
-/// The official Talia companion, shown inline inside a template body.
-///
-/// Reserved for the (rare) adult opt-in path; kids cards compose the same
-/// asset as a large hero inside the shared arch instead. Tagged with the
-/// stable `share-character-image` key asserted by the widget tests.
-class TaliaCharacterInline extends StatelessWidget {
-  final String assetPath;
-  final double height;
-
-  const TaliaCharacterInline({
-    super.key,
-    required this.assetPath,
-    required this.height,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Image.asset(
-        key: const ValueKey('share-character-image'),
-        assetPath,
-        // Pin both axes so layout never depends on codec timing.
-        width: height,
-        height: height,
-        fit: BoxFit.contain,
-        cacheWidth: 288,
-        errorBuilder: (_, _, _) => const SizedBox.shrink(),
-      ),
-    );
-  }
-}
-
 /// A single real metric rendered as a gold-ringed medallion.
 ///
 /// Used by the memorization, streak and progress families so numbers read as

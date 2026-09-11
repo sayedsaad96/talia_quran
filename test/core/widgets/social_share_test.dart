@@ -5,6 +5,9 @@ import 'package:talia_quran/core/widgets/social_share/social_share_card.dart';
 import 'package:talia_quran/core/widgets/social_share/social_share_sheet.dart';
 import 'package:talia_quran/features/azkar/domain/entities/azkar_entities.dart';
 import 'package:talia_quran/features/certificate/domain/entities/certificate_award.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_history_entry.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
+import 'package:talia_quran/features/khatmah/domain/entities/khatmah_reading_result.dart';
 import 'package:talia_quran/features/progress/domain/entities/progress_entities.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
@@ -65,7 +68,7 @@ void main() {
       // localized template composes the reference label.
       expect(data.subtitle, isNull);
       expect(data.translation, isNotNull);
-      expect(data.showCharacter, isFalse);
+      expect(data.showCharacter, isTrue);
     });
 
     test('achievement factory creates valid data from domain Achievement', () {
@@ -90,8 +93,7 @@ void main() {
       expect(data.content, 'اقرأ أول صفحة من القرآن');
       expect(data.userName, 'سيد سعد');
       expect(data.achievementUnlocked, isTrue);
-      // Adults are the safe default: the audience resolver opts kids in.
-      expect(data.showCharacter, isFalse);
+      expect(data.showCharacter, isTrue);
     });
 
     test('dua factory creates valid data from domain Zikr', () {
@@ -381,7 +383,7 @@ void main() {
       final data = SocialShareData.achievement(
         achievement: achievement,
         userName: 'سيد',
-      );
+      ).copyWith(showCharacter: true);
 
       await tester.pumpWidget(
         buildTestHarness(
@@ -786,7 +788,7 @@ void main() {
       final data = SocialShareData.achievement(
         achievement: achievement,
         userName: 'سيد',
-      );
+      ).copyWith(showCharacter: true);
 
       await tester.pumpWidget(
         buildTestHarness(
@@ -800,8 +802,265 @@ void main() {
 
       expect(find.text('رفيقك في رحلة القرآن'), findsOneWidget);
       expect(find.text('رحلة الأبطال الصغار'), findsNothing);
-      expect(characterImage, findsNothing);
+      expect(
+        find.byKey(const ValueKey('share-character-subtle')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('share-character-prominent')),
+        findsNothing,
+      );
       expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+      'Short general Quran, dua, and progress cards integrate the official companion subtly',
+      (tester) async {
+        final shortCards = <SocialShareData>[
+          SocialShareData.quranAyah(
+            ayah: const Ayah(
+              number: 1,
+              surahId: 1,
+              text: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+              numberInSurah: 1,
+            ),
+            surahName: 'الفاتحة',
+          ).copyWith(showCharacter: true),
+          SocialShareData.dua(
+            zikr: const Zikr(
+              id: 'short-dua',
+              text: 'رَبِّ زِدْنِي عِلْمًا',
+              transliteration: '',
+              translation: '',
+              totalCount: 1,
+              category: AzkarCategory.duas,
+              reference: 'سورة طه: ١١٤',
+            ),
+          ).copyWith(showCharacter: true),
+          SocialShareData.streak(
+            streakDays: 7,
+            longestStreak: 14,
+          ).copyWith(showCharacter: true),
+        ];
+
+        for (final data in shortCards) {
+          await tester.pumpWidget(
+            buildTestHarness(
+              SocialShareCard(
+                data: data,
+                theme: SocialShareTheme.emeraldDark,
+                format: SocialShareFormat.portrait,
+              ),
+            ),
+          );
+
+          expect(
+            find.byKey(const ValueKey('share-character-subtle')),
+            findsOneWidget,
+            reason: '${data.category} should carry subtle Talia branding',
+          );
+          expect(
+            find.byKey(const ValueKey('share-character-prominent')),
+            findsNothing,
+          );
+          expect(tester.takeException(), isNull);
+        }
+      },
+    );
+
+    testWidgets('Kids cards present the companion prominently', (tester) async {
+      final data = SocialShareData.streak(
+        streakDays: 7,
+        longestStreak: 14,
+      ).copyWith(audience: SocialShareAudience.kids, showCharacter: true);
+
+      await tester.pumpWidget(
+        buildTestHarness(
+          SocialShareCard(
+            data: data,
+            theme: SocialShareTheme.parchmentGold,
+            format: SocialShareFormat.portrait,
+          ),
+        ),
+      );
+
+      expect(
+        find.byKey(const ValueKey('share-character-prominent')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const ValueKey('share-character-subtle')),
+        findsNothing,
+      );
+      expect(find.text('رحلة الأبطال الصغار'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Kids companion has a dedicated lane beside card content', (
+      tester,
+    ) async {
+      const achievement = Achievement(
+        id: 'kids-lane',
+        titleKey: 'قارئ جزء كامل',
+        descriptionKey: 'قرأت جزءاً كاملاً من القرآن الكريم',
+        icon: '📖',
+        isUnlocked: true,
+        category: AchievementCategory.reading,
+        currentValue: 20,
+        targetValue: 20,
+      );
+      final data = SocialShareData.achievement(
+        achievement: achievement,
+      ).copyWith(audience: SocialShareAudience.kids, showCharacter: true);
+
+      await tester.pumpWidget(
+        buildTestHarness(
+          SocialShareCard(
+            data: data,
+            theme: SocialShareTheme.parchmentGold,
+            format: SocialShareFormat.portrait,
+          ),
+        ),
+      );
+
+      final characterBounds = tester.getRect(
+        find.byKey(const ValueKey('share-character-prominent')),
+      );
+      final titleBounds = tester.getRect(find.text('قارئ جزء كامل'));
+      expect(characterBounds.overlaps(titleBounds), isFalse);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Explicit character opt-out preserves a content-only card', (
+      tester,
+    ) async {
+      final data = SocialShareData.streak(
+        streakDays: 7,
+        longestStreak: 14,
+      ).copyWith(showCharacter: false);
+
+      await tester.pumpWidget(
+        buildTestHarness(
+          SocialShareCard(
+            data: data,
+            theme: SocialShareTheme.emeraldDark,
+            format: SocialShareFormat.portrait,
+          ),
+        ),
+      );
+
+      expect(
+        find.byKey(const ValueKey('share-character-subtle')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const ValueKey('share-character-prominent')),
+        findsNothing,
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('Portrait and story footers keep audience slogans unabridged', (
+      tester,
+    ) async {
+      final cases = <(SocialShareData, String)>[
+        (
+          SocialShareData.streak(streakDays: 7, longestStreak: 14),
+          'تالية... قرآنٌ يصنعُ جيلاً أفضل',
+        ),
+        (
+          SocialShareData.streak(
+            streakDays: 7,
+            longestStreak: 14,
+          ).copyWith(audience: SocialShareAudience.kids),
+          'نغرس القرآن في القلب بحب',
+        ),
+      ];
+
+      for (final (data, slogan) in cases) {
+        for (final format in [
+          SocialShareFormat.portrait,
+          SocialShareFormat.story,
+        ]) {
+          await tester.pumpWidget(
+            buildTestHarness(
+              SocialShareCard(
+                data: data,
+                theme: SocialShareTheme.emeraldDark,
+                format: format,
+              ),
+              size: format.exportLogicalSize,
+            ),
+          );
+
+          final sloganText = tester.widget<Text>(find.text(slogan));
+          expect(sloganText.overflow, isNot(TextOverflow.ellipsis));
+          expect(sloganText.maxLines, isNot(1));
+          expect(tester.takeException(), isNull);
+        }
+      }
+    });
+
+    testWidgets('footer content remains inside every exported card format', (
+      tester,
+    ) async {
+      for (final locale in const [Locale('ar'), Locale('en')]) {
+        for (final audience in SocialShareAudience.values) {
+          for (final format in SocialShareFormat.values) {
+            final data = SocialShareData.streak(
+              streakDays: 12,
+              longestStreak: 20,
+              userName: locale.languageCode == 'ar'
+                  ? 'عبد الرحمن'
+                  : 'Abdul Rahman',
+            ).copyWith(audience: audience);
+            await tester.pumpWidget(
+              buildTestHarness(
+                SocialShareCard(
+                  data: data,
+                  theme: SocialShareTheme.emeraldDark,
+                  format: format,
+                ),
+                locale: locale,
+                size: format.exportLogicalSize,
+              ),
+            );
+
+            final cardRect = tester.getRect(find.byType(SocialShareCard));
+            final footerRect = tester.getRect(
+              find.byKey(const ValueKey('share-parchment-footer')),
+            );
+            expect(footerRect.left, greaterThanOrEqualTo(cardRect.left));
+            expect(footerRect.right, lessThanOrEqualTo(cardRect.right));
+            expect(footerRect.top, greaterThanOrEqualTo(cardRect.top));
+            expect(footerRect.bottom, lessThanOrEqualTo(cardRect.bottom));
+            expect(tester.takeException(), isNull);
+          }
+        }
+      }
+    });
+
+    test('character density policy accounts for the selected format', () {
+      final mediumKidsText = SocialShareData(
+        content: List.filled(20, 'ذكر').join(' '),
+        category: SocialShareCategory.dua,
+        audience: SocialShareAudience.kids,
+      );
+
+      expect(
+        SocialSharePresentation.characterTreatmentFor(
+          mediumKidsText,
+          SocialShareFormat.square,
+        ),
+        SocialShareCharacterTreatment.none,
+      );
+      expect(
+        SocialSharePresentation.characterTreatmentFor(
+          mediumKidsText,
+          SocialShareFormat.story,
+        ),
+        SocialShareCharacterTreatment.prominent,
+      );
     });
 
     testWidgets('CASE 11: Very long Quran verse never overflows in any format', (
@@ -820,7 +1079,11 @@ void main() {
         numberInSurah: 255,
       );
 
-      final data = SocialShareData.quranAyah(ayah: ayah, surahName: 'البقرة');
+      final data = SocialShareData.quranAyah(
+        ayah: ayah,
+        surahName: 'البقرة',
+        showCharacter: true,
+      );
 
       for (final fmt in SocialShareFormat.values) {
         await tester.pumpWidget(
@@ -834,10 +1097,27 @@ void main() {
           ),
         );
         // The full verse must be present — the export canvas may not clip.
+        final verseFinder = find.textContaining('وَهُوَ الْعَلِيُّ الْعَظِيمُ');
         expect(
-          find.textContaining('وَهُوَ الْعَلِيُّ الْعَظِيمُ'),
+          verseFinder,
           findsOneWidget,
           reason: 'Verse tail missing on format: $fmt',
+        );
+        final verseWidget = tester.widget<Text>(verseFinder);
+        final renderedScale = tester
+            .renderObject(verseFinder)
+            .getTransformTo(null)
+            .getMaxScaleOnAxis();
+        final effectiveFontSize = verseWidget.style!.fontSize! * renderedScale;
+        expect(
+          effectiveFontSize,
+          greaterThanOrEqualTo(9),
+          reason: 'Quran text became unreadably small on format: $fmt',
+        );
+        expect(
+          find.byKey(const ValueKey('share-character-subtle')),
+          findsNothing,
+          reason: 'Dense Quran content takes priority on format: $fmt',
         );
         expect(
           tester.takeException(),
@@ -865,7 +1145,7 @@ void main() {
       final data = SocialShareData.achievement(
         achievement: achievement,
         userName: 'سيد سعد',
-      );
+      ).copyWith(showCharacter: true);
 
       for (final fmt in SocialShareFormat.values) {
         await tester.pumpWidget(
@@ -880,6 +1160,11 @@ void main() {
         );
         expect(find.textContaining('من الغلاف إلى الغلاف'), findsOneWidget);
         expect(find.textContaining('الختمة كاملة'), findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('share-character-subtle')),
+          findsNothing,
+          reason: 'Dense achievement content takes priority on format: $fmt',
+        );
         expect(
           tester.takeException(),
           isNull,
@@ -920,6 +1205,18 @@ void main() {
     testWidgets('CASE 14-16: All export formats render every category safely', (
       tester,
     ) async {
+      final khatmahPlan = KhatmahPlan(
+        id: 'share-matrix-khatmah',
+        title: 'ختمة القرآن الكريم',
+        startPage: 1,
+        completedPages: {for (var page = 1; page <= 604; page++) page},
+        targetPagesPerDay: 20,
+        targetDays: 30,
+        startDate: DateTime(2026, 3, 1),
+        lastReadDate: DateTime(2026, 3, 5),
+        expectedEndDate: DateTime(2026, 3, 30),
+        status: KhatmahStatus.completed,
+      );
       final datasets = <SocialShareData>[
         SocialShareData.achievement(
           achievement: const Achievement(
@@ -954,6 +1251,18 @@ void main() {
           ),
           isDua: false,
         ),
+        SocialShareData.dua(
+          zikr: const Zikr(
+            id: 'dua-matrix',
+            text: 'رَبِّ زِدْنِي عِلْمًا',
+            transliteration: '',
+            translation: '',
+            totalCount: 1,
+            category: AzkarCategory.duas,
+            reference: 'سورة طه: ١١٤',
+          ),
+          isDua: true,
+        ),
         SocialShareData.memorization(ayahsCount: 60, surahsCount: 3),
         SocialShareData.streak(streakDays: 7, longestStreak: 14),
         SocialShareData.progress(
@@ -976,7 +1285,35 @@ void main() {
             reviewAyahs: 4,
           ),
         ),
+        SocialShareData.certificate(
+          award: CertificateAward(
+            id: 'matrix-certificate',
+            titleAr: 'شهادة إتمام حفظ جزء عم',
+            type: CertificateType.juz,
+            earnedAt: DateTime.utc(2026, 9, 1),
+            juzNumber: 30,
+          ),
+        ),
+        SocialShareData.khatmah(
+          completion: KhatmahReadingResult(
+            plan: khatmahPlan,
+            newlyCompletedPages: const {604},
+            historyEntry: KhatmahHistoryEntry(
+              id: khatmahPlan.id,
+              khatmahNumber: 1,
+              title: khatmahPlan.title,
+              startDate: khatmahPlan.startDate,
+              completedDate: DateTime(2026, 3, 5),
+              totalDays: 5,
+            ),
+          ),
+        ),
       ];
+
+      expect(
+        datasets.map((data) => data.category).toSet(),
+        SocialShareCategory.values.toSet(),
+      );
 
       for (final data in datasets) {
         for (final fmt in SocialShareFormat.values) {
@@ -1085,6 +1422,34 @@ void main() {
       await tester.pump();
 
       expect(find.text('en'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('narrow preview scales the canonical export canvas', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      const data = SocialShareData(
+        content: 'رَبِّ زِدْنِي عِلْمًا',
+        category: SocialShareCategory.dua,
+      );
+      await tester.pumpWidget(sheetHarness(data, const Locale('ar')));
+
+      final canvas = tester.widget<SizedBox>(
+        find.byKey(const ValueKey('social-share-card-canvas')),
+      );
+      expect(canvas.width, 360);
+      expect(canvas.height, 450);
+      expect(
+        find.ancestor(
+          of: find.byKey(const ValueKey('social-share-card-canvas')),
+          matching: find.byType(FittedBox),
+        ),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     });
 

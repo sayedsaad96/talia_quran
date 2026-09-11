@@ -27,7 +27,6 @@ class ProgressTemplate extends StatelessWidget {
   Widget build(BuildContext context) {
     final copy = SocialShareCopy.of(context);
     final isCompact = format == SocialShareFormat.square;
-    final isStory = format == SocialShareFormat.story;
     final isKids = data.audience == SocialShareAudience.kids;
 
     final pages = data.readPagesCount ?? 0;
@@ -138,15 +137,6 @@ class ProgressTemplate extends StatelessWidget {
                 color: theme.textSecondary,
                 fontSize: isCompact ? 10 : 11.5,
               ),
-            ),
-          ],
-
-          // ─── 5. Talia companion (adult opt-in path) ────────────────────
-          if (data.showCharacter && !isKids) ...[
-            SizedBox(height: isCompact ? 6 : (isStory ? 14 : 8)),
-            TaliaCharacterInline(
-              assetPath: data.effectiveCharacterAssetPath,
-              height: isCompact ? 46 : (isStory ? 74 : 56),
             ),
           ],
         ],

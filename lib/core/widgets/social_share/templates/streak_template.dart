@@ -4,7 +4,6 @@ import '../share_card_content.dart';
 import '../social_share_copy.dart';
 import '../social_share_model.dart';
 import '../social_share_theme.dart';
-import '../share_card_widgets.dart';
 import '../talia_share_tokens.dart';
 
 /// Specialized Template for Streak & Daily Consistency — continuity & fire.
@@ -50,7 +49,9 @@ class StreakTemplate extends StatelessWidget {
                   color: TaliaShareColors.streakEmber.withValues(alpha: 0.22),
                   boxShadow: [
                     BoxShadow(
-                      color: TaliaShareColors.streakEmber.withValues(alpha: 0.4),
+                      color: TaliaShareColors.streakEmber.withValues(
+                        alpha: 0.4,
+                      ),
                       blurRadius: 18,
                       spreadRadius: 3,
                     ),
@@ -122,26 +123,29 @@ class StreakTemplate extends StatelessWidget {
                   ),
                 ),
               ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '$days',
-                    style: TaliaShareTypography.metricValue(
-                      color: TaliaShareColors.streakEmber,
-                      fontSize: isCompact ? 40 : (isStory ? 54 : 48),
+              Flexible(
+                flex: 4,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '$days',
+                      style: TaliaShareTypography.metricValue(
+                        color: TaliaShareColors.streakEmber,
+                        fontSize: isCompact ? 40 : (isStory ? 54 : 48),
+                      ),
                     ),
-                  ),
-                  Text(
-                    copy.consecutiveDays,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    style: TaliaShareTypography.title(
-                      color: theme.textPrimary,
-                      fontSize: isCompact ? 12.5 : 14,
+                    Text(
+                      copy.consecutiveDays,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TaliaShareTypography.title(
+                        color: theme.textPrimary,
+                        fontSize: isCompact ? 12.5 : 14,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               Expanded(
                 child: Container(
@@ -225,15 +229,6 @@ class StreakTemplate extends StatelessWidget {
                 color: theme.textSecondary,
                 fontSize: isCompact ? 10 : 11.5,
               ),
-            ),
-          ],
-
-          // ─── 6. Talia companion (adult opt-in path) ────────────────────
-          if (data.showCharacter && !isKids) ...[
-            SizedBox(height: isCompact ? 6 : (isStory ? 14 : 8)),
-            TaliaCharacterInline(
-              assetPath: data.effectiveCharacterAssetPath,
-              height: isCompact ? 48 : (isStory ? 76 : 58),
             ),
           ],
         ],

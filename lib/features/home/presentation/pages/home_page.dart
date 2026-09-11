@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -10,6 +12,8 @@ import '../../../../core/journey/unified_journey_action_mapper.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/theme_cubit.dart';
 import '../../../../core/widgets/skeleton_loader.dart';
+import '../../../../core/widgets/social_share/social_share_model.dart';
+import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../streak/presentation/cubits/streak_cubit.dart';
 import '../cubits/home_cubit.dart';
@@ -31,7 +35,9 @@ import '../widgets/next_best_action_card.dart';
 import '../widgets/resume_session_card.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, this.requestDailyAyahShare = false});
+
+  final bool requestDailyAyahShare;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -40,11 +46,17 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   bool _wasInBackground = false;
   late final HomeCubit _homeCubit;
   late final StreakCubit _streakCubit;
+  StreamSubscription<HomeState>? _homeSubscription;
+  bool _shareDailyAyahWhenReady = false;
+  bool _isOpeningDailyAyahShare = false;
 
   @override
   void initState() {
     super.initState();
-    _homeCubit = getIt<HomeCubit>()..load();
+    _homeCubit = getIt<HomeCubit>();
+    _homeSubscription = _homeCubit.stream.listen(_onHomeStateChanged);
+    _shareDailyAyahWhenReady = widget.requestDailyAyahShare;
+    _homeCubit.load();
     _streakCubit = getIt<StreakCubit>()..loadStreak();
     WidgetsBinding.instance.addObserver(this);
     AppRouter.router.routerDelegate.addListener(_onRouteChanged);
@@ -61,11 +73,48 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    _homeSubscription?.cancel();
     AppRouter.router.routerDelegate.removeListener(_onRouteChanged);
     WidgetsBinding.instance.removeObserver(this);
     _homeCubit.close();
     _streakCubit.close();
     super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(HomePage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.requestDailyAyahShare && !oldWidget.requestDailyAyahShare) {
+      _shareDailyAyahWhenReady = true;
+      _reloadProgress();
+    }
+  }
+
+  void _onHomeStateChanged(HomeState state) {
+    if (!_shareDailyAyahWhenReady || _isOpeningDailyAyahShare) return;
+    if (state is! HomeLoaded || state.isRefreshing || state.ayahOfDay == null) {
+      return;
+    }
+    _shareDailyAyahWhenReady = false;
+    _isOpeningDailyAyahShare = true;
+    final ayah = state.ayahOfDay!;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      final surahName = context.isArabic ? ayah.surahNameAr : ayah.surahNameEn;
+      try {
+        await SocialShareSheet.show(
+          context,
+          SocialShareData.quranVerse(
+            ayahText: ayah.text,
+            surahName: surahName,
+            ayahNumber: ayah.ayahNumber,
+          ),
+        );
+      } finally {
+        _isOpeningDailyAyahShare = false;
+        if (mounted) AppRouter.router.go(AppRoutes.home);
+      }
+    });
   }
 
   @override

@@ -24,6 +24,56 @@ Widget buildSocialShareCaptureTree({
   return Localizations.override(context: context, child: child);
 }
 
+/// Builds the one canonical logical canvas shared by preview and export.
+/// Preview scales this finished composition; it never lays the card out at a
+/// narrower width, so line breaks and character placement match the PNG.
+Widget buildSocialShareCardCanvas({
+  Key? key,
+  required SocialShareData data,
+  required SocialShareTheme theme,
+  required SocialShareFormat format,
+  bool hideUserName = false,
+}) {
+  final size = format.exportLogicalSize;
+  return SizedBox(
+    key: key ?? const ValueKey('social-share-card-canvas'),
+    width: size.width,
+    height: size.height,
+    child: SocialShareCard(
+      data: data,
+      theme: theme,
+      format: format,
+      width: size.width,
+      hideUserName: hideUserName,
+    ),
+  );
+}
+
+/// Rasterizes the exact production card canvas used by the live preview.
+Future<Uint8List> captureSocialShareCardImage({
+  required BuildContext context,
+  required SocialShareData data,
+  required SocialShareTheme theme,
+  required SocialShareFormat format,
+  bool hideUserName = false,
+  ScreenshotController? controller,
+}) {
+  final size = format.exportLogicalSize;
+  final canvas = buildSocialShareCardCanvas(
+    data: data,
+    theme: theme,
+    format: format,
+    hideUserName: hideUserName,
+  );
+  return (controller ?? ScreenshotController()).captureFromWidget(
+    buildSocialShareCaptureTree(context: context, child: canvas),
+    context: context,
+    delay: const Duration(milliseconds: 200),
+    pixelRatio: 3,
+    targetSize: size,
+  );
+}
+
 class SocialShareSheet extends StatefulWidget {
   final SocialShareData data;
 
@@ -55,10 +105,6 @@ class SocialShareSheet extends StatefulWidget {
           audience: profile.isChild
               ? SocialShareAudience.kids
               : SocialShareAudience.adult,
-          // A character supports the playful kids track but does not dominate
-          // the refined adult variants.
-          showCharacter:
-              profile.isChild && data.category != SocialShareCategory.quranAyah,
         ),
       );
       return resolved;
@@ -96,28 +142,13 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
 
   Future<Uint8List?> _captureCardImage() async {
     try {
-      final size = _selectedFormat.exportLogicalSize;
-      final captureTree = buildSocialShareCaptureTree(
+      return await captureSocialShareCardImage(
         context: context,
-        child: SizedBox(
-          width: size.width,
-          height: size.height,
-          child: SocialShareCard(
-            data: widget.data,
-            theme: _currentTheme,
-            format: _selectedFormat,
-            width: size.width,
-            // Export must mirror the preview — honor the name-hide toggle.
-            hideUserName: !_showUserName,
-          ),
-        ),
-      );
-      return await _screenshotController.captureFromWidget(
-        captureTree,
-        context: context,
-        delay: const Duration(milliseconds: 200),
-        pixelRatio: 3.0,
-        targetSize: size,
+        data: widget.data,
+        theme: _currentTheme,
+        format: _selectedFormat,
+        hideUserName: !_showUserName,
+        controller: _screenshotController,
       );
     } catch (e) {
       debugPrint('Error capturing social card image: $e');
@@ -233,6 +264,9 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenWidth = MediaQuery.sizeOf(context).width;
     final cardWidth = (screenWidth - AppSpacing.md * 2).clamp(0.0, 360.0);
+    final canonicalSize = _selectedFormat.exportLogicalSize;
+    final previewHeight =
+        cardWidth * canonicalSize.height / canonicalSize.width;
 
     return Center(
       child: ConstrainedBox(
@@ -273,24 +307,30 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.share_outlined,
-                          color: AppColors.primary,
-                          size: 22,
-                        ),
-                        const SizedBox(width: AppSpacing.xs),
-                        Text(
-                          copy.sheetTitle,
-                          style: AppTypography.titleMedium.copyWith(
-                            color: isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                            fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.share_outlined,
+                            color: AppColors.primary,
+                            size: 22,
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: AppSpacing.xs),
+                          Expanded(
+                            child: Text(
+                              copy.sheetTitle,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.titleMedium.copyWith(
+                                color: isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     IconButton(
                       tooltip: MaterialLocalizations.of(
@@ -316,15 +356,21 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                   child: Center(
                     child: AnimatedSwitcher(
                       duration: const Duration(milliseconds: 300),
-                      child: SocialShareCard(
+                      child: SizedBox(
                         key: ValueKey(
                           '$_selectedThemeType-$_selectedFormat-$_showUserName',
                         ),
-                        data: widget.data,
-                        theme: _currentTheme,
-                        format: _selectedFormat,
                         width: cardWidth,
-                        hideUserName: !_showUserName,
+                        height: previewHeight,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: buildSocialShareCardCanvas(
+                            data: widget.data,
+                            theme: _currentTheme,
+                            format: _selectedFormat,
+                            hideUserName: !_showUserName,
+                          ),
+                        ),
                       ),
                     ),
                   ),

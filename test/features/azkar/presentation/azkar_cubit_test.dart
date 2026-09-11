@@ -25,32 +25,34 @@ void main() {
     expect(state.allDone, isFalse);
   });
 
-  test('counts the first post-midnight tap once instead of carrying yesterday\'s count',
-      () async {
-    SharedPreferences.setMockInitialValues({});
-    final preferences = await SharedPreferences.getInstance();
-    var currentDate = DateTime(2026, 9, 8, 23, 59);
-    final store = AzkarCompletionStore(preferences, now: () => currentDate);
-    final usecase = GetAzkarUsecase(const _SingleZikrRepository());
-    final firstCubit = AzkarCubit(usecase, preferences, store);
-    addTearDown(firstCubit.close);
+  test(
+    'counts the first post-midnight tap once instead of carrying yesterday\'s count',
+    () async {
+      SharedPreferences.setMockInitialValues({});
+      final preferences = await SharedPreferences.getInstance();
+      var currentDate = DateTime(2026, 9, 8, 23, 59);
+      final store = AzkarCompletionStore(preferences, now: () => currentDate);
+      final usecase = GetAzkarUsecase(const _SingleZikrRepository());
+      final firstCubit = AzkarCubit(usecase, preferences, store);
+      addTearDown(firstCubit.close);
 
-    await firstCubit.load(AzkarCategory.morning);
-    firstCubit.increment();
-    await Future<void>.delayed(Duration.zero);
+      await firstCubit.load(AzkarCategory.morning);
+      await firstCubit.increment();
+      await Future<void>.delayed(Duration.zero);
 
-    currentDate = DateTime(2026, 9, 9);
-    firstCubit.increment();
-    await Future<void>.delayed(Duration.zero);
+      currentDate = DateTime(2026, 9, 9);
+      await firstCubit.increment();
+      await Future<void>.delayed(Duration.zero);
 
-    final reloadedCubit = AzkarCubit(usecase, preferences, store);
-    addTearDown(reloadedCubit.close);
-    await reloadedCubit.load(AzkarCategory.morning);
+      final reloadedCubit = AzkarCubit(usecase, preferences, store);
+      addTearDown(reloadedCubit.close);
+      await reloadedCubit.load(AzkarCategory.morning);
 
-    final state = reloadedCubit.state as AzkarLoaded;
-    expect(state.sessions.single.currentCount, 1);
-    expect(state.allDone, isFalse);
-  });
+      final state = reloadedCubit.state as AzkarLoaded;
+      expect(state.sessions.single.currentCount, 1);
+      expect(state.allDone, isFalse);
+    },
+  );
 
   test('keeps each rapid counter tap', () async {
     SharedPreferences.setMockInitialValues({});
@@ -62,8 +64,8 @@ void main() {
     addTearDown(cubit.close);
 
     await cubit.load(AzkarCategory.morning);
-    cubit.increment();
-    cubit.increment();
+    await cubit.increment();
+    await cubit.increment();
     await Future<void>.delayed(Duration.zero);
 
     final state = cubit.state as AzkarLoaded;

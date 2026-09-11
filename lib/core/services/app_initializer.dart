@@ -153,6 +153,9 @@ class AppInitializer {
           true;
       final dailyDuaEnabled =
           prefs.getBool(TaliaNotificationService.dailyDuaPreferenceKey) ?? true;
+      final dailyAyahEnabled =
+          prefs.getBool(TaliaNotificationService.dailyAyahPreferenceKey) ??
+          true;
 
       await prefs.setBool(
         TaliaNotificationService.morningAzkarPreferenceKey,
@@ -166,15 +169,20 @@ class AppInitializer {
         TaliaNotificationService.dailyDuaPreferenceKey,
         dailyDuaEnabled,
       );
-
-      final locale = getIt<LocaleCubit>().state;
-      final l10n = lookupAppLocalizations(locale);
-      final scheduler = getIt<NotificationScheduler>();
-      await scheduler.refreshNotifications(l10n);
+      await prefs.setBool(
+        TaliaNotificationService.dailyAyahPreferenceKey,
+        dailyAyahEnabled,
+      );
 
       await prefs.setBool('notifications_initialized', true);
       await prefs.setBool('notifications_azkar_initialized', true);
     }
+
+    // Daily ayahs are date-specific. Refresh on every launch so existing
+    // users receive the rolling schedule as well as new users.
+    final locale = getIt<LocaleCubit>().state;
+    final l10n = lookupAppLocalizations(locale);
+    await getIt<NotificationScheduler>().refreshNotifications(l10n);
 
     final notificationService = getIt<TaliaNotificationService>();
     await notificationService.cancelStreakAlert();

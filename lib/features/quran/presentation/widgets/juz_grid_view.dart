@@ -6,50 +6,32 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/arabic_normalizer.dart';
+import '../../domain/entities/juz_summary.dart';
 
 typedef JuzSelectedCallback = void Function(int juzNumber, int initialPage);
 
 class JuzGridView extends StatelessWidget {
-  const JuzGridView({super.key, this.onJuzSelected});
+  const JuzGridView({
+    super.key,
+    this.onJuzSelected,
+    this.summaries,
+    this.query = '',
+  });
 
   final JuzSelectedCallback? onJuzSelected;
 
-  static const List<int> _juzStartPages = [
-    1,
-    22,
-    42,
-    62,
-    82,
-    102,
-    121,
-    142,
-    162,
-    182,
-    201,
-    222,
-    242,
-    262,
-    282,
-    302,
-    322,
-    342,
-    362,
-    382,
-    402,
-    422,
-    442,
-    462,
-    482,
-    502,
-    522,
-    542,
-    562,
-    582,
-  ];
+  /// Precomputed per-juz metadata shared with the reader Quick Navigation
+  /// sheet. When null, cards fall back to page-only display.
+  final List<JuzSummary>? summaries;
+
+  /// Active-tab search text. Empty means no filtering.
+  final String query;
 
   @override
   Widget build(BuildContext context) {
     final textScale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.5);
+    final visible = _visibleJuz(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -75,15 +57,16 @@ class JuzGridView extends StatelessWidget {
             mainAxisSpacing: AppSpacing.md,
             mainAxisExtent: 138 + ((textScale - 1) * 48),
           ),
-          itemCount: _juzStartPages.length,
+          itemCount: visible.length,
           itemBuilder: (context, index) {
-            final juzNumber = index + 1;
-            final initialPage = _juzStartPages[index];
+            final juzNumber = visible[index];
+            final initialPage = JuzSummaries.startPages[juzNumber - 1];
 
             return _JuzCard(
               key: ValueKey('juz_card_$juzNumber'),
               juzNumber: juzNumber,
               initialPage: initialPage,
+              summary: _summaryFor(juzNumber),
               onTap: () {
                 final callback = onJuzSelected;
                 if (callback != null) {
@@ -98,6 +81,37 @@ class JuzGridView extends StatelessWidget {
       },
     );
   }
+
+  JuzSummary? _summaryFor(int juzNumber) {
+    final list = summaries;
+    if (list == null) return null;
+    for (final summary in list) {
+      if (summary.juzNumber == juzNumber) return summary;
+    }
+    return null;
+  }
+
+  /// Juz numbers matching [query] by juz number or surah-range names.
+  List<int> _visibleJuz(BuildContext context) {
+    final q = ArabicNormalizer.normalize(query.trim());
+    final all = List<int>.generate(JuzSummaries.totalJuz, (i) => i + 1);
+    if (q.isEmpty) return all;
+    final isArabic = context.isArabic;
+    return all.where((juzNumber) {
+      if ('$juzNumber'.contains(query.trim())) return true;
+      final summary = _summaryFor(juzNumber);
+      if (summary == null || !summary.hasRange) return false;
+      for (final surah in summary.surahs) {
+        final name = isArabic ? surah.nameAr : surah.nameEn;
+        if (ArabicNormalizer.normalize(name).contains(q)) return true;
+        final other = isArabic ? surah.nameEn.toLowerCase() : surah.nameAr;
+        if (other.toLowerCase().contains(query.trim().toLowerCase())) {
+          return true;
+        }
+      }
+      return false;
+    }).toList();
+  }
 }
 
 class _JuzCard extends StatelessWidget {
@@ -106,11 +120,13 @@ class _JuzCard extends StatelessWidget {
     required this.juzNumber,
     required this.initialPage,
     required this.onTap,
+    this.summary,
   });
 
   final int juzNumber;
   final int initialPage;
   final VoidCallback onTap;
+  final JuzSummary? summary;
 
   @override
   Widget build(BuildContext context) {
@@ -178,6 +194,18 @@ class _JuzCard extends StatelessWidget {
                     height: 1.25,
                   ),
                 ),
+                if (summary != null && summary!.hasRange)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(
+                      _rangeLabel(context, summary!),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.labelSmall.copyWith(
+                        color: secondaryText,
+                      ),
+                    ),
+                  ),
                 const Spacer(),
                 Row(
                   children: [
@@ -202,4 +230,17 @@ class _JuzCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _rangeLabel(BuildContext context, JuzSummary summary) {
+  final first = context.isArabic
+      ? summary.firstSurah.nameAr
+      : summary.firstSurah.nameEn;
+  if (summary.isSingleSurah) {
+    return context.isArabic ? 'سورة $first' : first;
+  }
+  final last = context.isArabic
+      ? summary.lastSurah.nameAr
+      : summary.lastSurah.nameEn;
+  return context.isArabic ? 'من $first إلى $last' : '$first – $last';
 }

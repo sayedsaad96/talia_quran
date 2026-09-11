@@ -114,8 +114,8 @@ class QuranWarmupService {
 
   /// Extracts a mushaf page number (1-604) from a restorable location such as
   /// `/quran/page/42` or `/quran/surah/2`, or `null` when the location does
-  /// not point at a specific Quran page.
-  @visibleForTesting
+  /// not point at a specific Quran page. Shared with Continue Reading so both
+  /// resolve the last position identically.
   static int? parsePageFromLocation(String? location) {
     if (location == null) return null;
     final uri = Uri.tryParse(location);
