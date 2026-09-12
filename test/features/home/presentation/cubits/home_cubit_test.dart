@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/router/app_router.dart';
 
 import 'package:talia_quran/core/journey/unified_journey_action.dart';
 import 'package:talia_quran/core/journey/unified_journey_engine.dart';
@@ -519,6 +520,14 @@ void main() {
     final state = cubit.state;
     expect(state, isA<HomeLoaded>());
     expect((state as HomeLoaded).recentActivity, events);
+  });
+
+  test('active contextual slot is never weeklyReflection redirecting to progress', () async {
+    await cubit.load();
+
+    final state = cubit.state;
+    expect(state, isA<HomeLoaded>());
+    expect((state as HomeLoaded).activeSlot?.route, isNot(AppRoutes.progress));
   });
 }
 

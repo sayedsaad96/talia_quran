@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
-import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
@@ -44,12 +42,8 @@ class HomeMomentumStrip extends StatelessWidget {
         final risk = state.streakRisk;
         final atRisk = risk?.isAtRisk == true;
         return Semantics(
-          button: true,
           label: context.l10n.streakTerm,
-          child: InkWell(
-            onTap: () => context.go(AppRoutes.progress),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            child: Container(
+          child: Container(
               padding: const EdgeInsets.all(AppSpacing.md),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -149,9 +143,8 @@ class HomeMomentumStrip extends StatelessWidget {
                 ],
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
     );
   }
 }

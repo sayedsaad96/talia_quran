@@ -39,7 +39,6 @@ class HomeContextualSlot extends StatelessWidget {
       HomeSlotKind.lastTenNights => context.l10n.homeSlotLastTenTitle,
       HomeSlotKind.streakRisk => context.l10n.homeStreakAtRisk,
       HomeSlotKind.khatmahNearComplete => context.l10n.homeSlotKhatmahTitle,
-      HomeSlotKind.weeklyReflection => context.l10n.homeWeeklyReflectionTitle,
       HomeSlotKind.parentTools => context.l10n.homeParentToolsTitle,
       HomeSlotKind.signIn => context.l10n.guestUpgradeTitle,
       HomeSlotKind.tutorial => context.l10n.homeTourTitle,
@@ -50,10 +49,6 @@ class HomeContextualSlot extends StatelessWidget {
       HomeSlotKind.lastTenNights => context.l10n.homeSlotLastTenBody,
       HomeSlotKind.streakRisk => context.l10n.homeSlotStreakBody,
       HomeSlotKind.khatmahNearComplete => context.l10n.homeSlotKhatmahBody,
-      HomeSlotKind.weeklyReflection => context.l10n.homeWeeklyReflectionBody(
-        state.weeklyActiveDays,
-        state.weeklyActivityCount,
-      ),
       HomeSlotKind.parentTools => context.l10n.homeParentToolsSubtitle,
       HomeSlotKind.signIn => context.l10n.guestUpgradeMessage,
       HomeSlotKind.tutorial => context.l10n.homeTourDesc,

@@ -185,7 +185,11 @@ class HomeLoaded extends HomeState {
       progress.memorizedAyahs == 0 &&
       activeKhatmah == null &&
       customPlan == null &&
-      lastRestorableLocation == null;
+      lastRestorableLocation == null &&
+      coachRecommendation == null &&
+      continueRecitation == null &&
+      heroAction == null &&
+      recentActivity.isEmpty;
 
   @override
   List<Object?> get props => [

@@ -587,12 +587,6 @@ class HomeCubit extends Cubit<HomeState> {
           route: AppRoutes.khatmahDashboard,
           priority: 3,
         ),
-      if (today.weekday == DateTime.friday || today.weekday == DateTime.saturday)
-        const HomeSlotCandidate(
-          kind: HomeSlotKind.weeklyReflection,
-          route: AppRoutes.progress,
-          priority: 4,
-        ),
       if (isParentMode)
         const HomeSlotCandidate(
           kind: HomeSlotKind.parentTools,

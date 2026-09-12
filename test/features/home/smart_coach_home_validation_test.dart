@@ -33,6 +33,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() async {
+    JourneyFeatureFlags.unifiedJourneyEnabled = false;
     SharedPreferences.setMockInitialValues({
       'onboarding_skipped': true,
       'first_action_completed': false,
@@ -745,6 +746,9 @@ class _FakeXpService implements XpService {
 
   @override
   XpLevel getCurrentLevel(int xp) => XpConstants.levels.first;
+
+  @override
+  double progressToNextLevel(int xp) => 0.0;
 
   @override
   Future<int> getTotalXp() async => 0;

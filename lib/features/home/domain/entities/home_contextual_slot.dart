@@ -4,7 +4,6 @@ enum HomeSlotKind {
   lastTenNights,
   streakRisk,
   khatmahNearComplete,
-  weeklyReflection,
   parentTools,
   signIn,
   tutorial,
