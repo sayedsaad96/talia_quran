@@ -110,13 +110,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       final notificationService = getIt<TaliaNotificationService>();
       notificationService.onPayloadReceived = _openNotification;
 
-      // Load persisted theme/locale/profile once. The cubits below are
-      // shared getIt singletons exposed via BlocProvider.value so the
-      // widget tree never closes them.
-      getIt<ThemeCubit>().loadTheme();
-      getIt<LocaleCubit>().loadLocale();
-      getIt<ProfileCubit>().loadProfile();
-
+      // Theme, locale, and profile are already loaded during AppInitializer.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _applyLaunchNavigation(notificationService);
       });
@@ -173,6 +167,18 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
                       GlobalWidgetsLocalizations.delegate,
                       GlobalCupertinoLocalizations.delegate,
                     ],
+                    builder: (context, child) {
+                      final media = MediaQuery.of(context);
+                      return MediaQuery(
+                        data: media.copyWith(
+                          textScaler: media.textScaler.clamp(
+                            minScaleFactor: 0.85,
+                            maxScaleFactor: 1.35,
+                          ),
+                        ),
+                        child: child ?? const SizedBox.shrink(),
+                      );
+                    },
                     routerConfig: AppRouter.router,
                   );
                 },

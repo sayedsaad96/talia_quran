@@ -66,6 +66,7 @@ class HomeHeroBanner extends StatelessWidget {
               child: Image.asset(
                 HomeSkin.backgroundAsset,
                 fit: BoxFit.cover,
+                cacheWidth: 1080,
                 // The skyline sits along the bottom-left of the artwork.
                 alignment: Alignment.bottomLeft,
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),

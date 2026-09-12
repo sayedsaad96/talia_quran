@@ -45,12 +45,7 @@ class KidsProgressHeader extends StatelessWidget {
     if (enableAnimation) {
       avatarImage = avatarImage
           .animate(onPlay: (controller) => controller.repeat(reverse: true))
-          .moveY(
-            begin: 0,
-            end: -4,
-            duration: 2000.ms,
-            curve: Curves.easeInOut,
-          );
+          .moveY(begin: 0, end: -4, duration: 2000.ms, curve: Curves.easeInOut);
     }
 
     final avatarCircle = Container(
@@ -58,10 +53,7 @@ class KidsProgressHeader extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: const RadialGradient(
-          colors: [
-            Color(0xFF26A69A),
-            Color(0xFF004D40),
-          ],
+          colors: [Color(0xFF26A69A), Color(0xFF004D40)],
         ),
         border: Border.all(
           color: KidsTheme.goldStar.withValues(alpha: 0.8),
@@ -256,11 +248,7 @@ class _StarCounter extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.star_rounded,
-            color: KidsTheme.goldStar,
-            size: 20,
-          ),
+          const Icon(Icons.star_rounded, color: KidsTheme.goldStar, size: 20),
           const SizedBox(width: 4),
           Text(
             context.l10n.kidsGamifiedStarsCount(count),

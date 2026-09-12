@@ -34,7 +34,7 @@ class QuranWarmupService {
   static const _warmedFlagKey = 'quran_fonts_warmed_v1';
 
   /// Lets the home screen render its first frames before warm-up work starts.
-  static const _initialDelay = Duration(seconds: 2);
+  static const _initialDelay = Duration(seconds: 5);
 
   static const _priorityRadius = 3;
 
@@ -66,6 +66,10 @@ class QuranWarmupService {
     } catch (error, stack) {
       TaliaLogger.e('Quran warm-up: data warm-up failed', error, stack);
     }
+
+    // Yield to the event loop so any pending UI frames render smoothly
+    // before the bulk font registration begins.
+    await Future<void>.delayed(const Duration(milliseconds: 500));
 
     try {
       await qcf.QcfFontLoader.setupFontsAtStartup(

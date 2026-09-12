@@ -334,136 +334,152 @@ class _CertificatePageState extends State<CertificatePage> {
             ),
           ),
 
-          // 3. Style Switcher Bar (Bottom Center)
+          // 3. Adaptive Bottom Controls (Non-overlapping)
           Positioned(
-            bottom: AppSpacing.pagePadding,
-            left: 0,
-            right: 0,
+            bottom: AppSpacing.sm,
+            left: AppSpacing.md,
+            right: AppSpacing.md,
             child: SafeArea(
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black87,
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(color: Colors.white24, width: 1),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.4),
-                        blurRadius: 10,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildActionButtons(),
+                          const SizedBox(width: AppSpacing.md),
+                          _buildStyleSwitcher(),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: CertificateStyleType.values.map((style) {
-                      final isSelected = style == _selectedStyle;
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSpacing.xs,
-                        ),
-                        child: ChoiceChip(
-                          label: Text(
-                            style.displayName,
-                            style: AppTypography.titleSmall.copyWith(
-                              fontFamily: 'Amiri',
-                              fontWeight: isSelected
-                                  ? FontWeight.bold
-                                  : FontWeight.normal,
-                              color: isSelected ? Colors.black : Colors.white70,
-                            ),
-                          ),
-                          selected: isSelected,
-                          selectedColor: const Color(0xFFE5C158),
-                          backgroundColor: Colors.white12,
-                          onSelected: (selected) {
-                            if (selected) {
-                              unawaited(HapticFeedback.selectionClick());
-                              setState(() => _selectedStyle = style);
-                            }
-                          },
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // 4. Action Buttons (Bottom Left / Start)
-          PositionedDirectional(
-            bottom: AppSpacing.pagePadding,
-            start: AppSpacing.lg,
-            child: SafeArea(
-              child: _isSaving
-                  ? Container(
-                      padding: const EdgeInsets.all(AppSpacing.itemGap),
-                      decoration: const BoxDecoration(
-                        color: Colors.black54,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const CircularProgressIndicator(
-                        color: Color(0xFFC9A84C),
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ElevatedButton.icon(
-                          onPressed: _share,
-                          icon: const Icon(Icons.share_rounded, size: 18),
-                          label: Text(
-                            'مشاركة الشهادة',
-                            style: AppTypography.titleMedium.copyWith(
-                              fontFamily: 'Amiri',
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFC9A84C),
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10,
-                              horizontal: 14,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        IconButton.filledTonal(
-                          onPressed: _shareToSocialMediaCard,
-                          icon: const Icon(Icons.stars_rounded, size: 20),
-                          tooltip: 'بطاقة سوشيال ميديا',
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.white24,
-                            foregroundColor: const Color(0xFFE5C158),
-                            padding: const EdgeInsets.all(AppSpacing.sm),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        IconButton.filledTonal(
-                          onPressed: _showSaveOptions,
-                          icon: const Icon(Icons.download_rounded, size: 20),
-                          tooltip: 'حفظ الشهادة',
-                          style: IconButton.styleFrom(
-                            backgroundColor: Colors.white24,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.all(AppSpacing.sm),
-                          ),
-                        ),
-                      ],
                     ),
+                  );
+                },
+              ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildStyleSwitcher() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.white24, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 10,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: CertificateStyleType.values.map((style) {
+          final isSelected = style == _selectedStyle;
+          return Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.xs,
+            ),
+            child: ChoiceChip(
+              label: Text(
+                style.displayName,
+                style: AppTypography.titleSmall.copyWith(
+                  fontFamily: 'Amiri',
+                  fontWeight: isSelected
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                  color: isSelected ? Colors.black : Colors.white70,
+                ),
+              ),
+              selected: isSelected,
+              selectedColor: const Color(0xFFE5C158),
+              backgroundColor: Colors.white12,
+              onSelected: (selected) {
+                if (selected) {
+                  unawaited(HapticFeedback.selectionClick());
+                  setState(() => _selectedStyle = style);
+                }
+              },
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    if (_isSaving) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.itemGap),
+        decoration: const BoxDecoration(
+          color: Colors.black54,
+          shape: BoxShape.circle,
+        ),
+        child: const CircularProgressIndicator(
+          color: Color(0xFFC9A84C),
+          strokeWidth: 2,
+        ),
+      );
+    }
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ElevatedButton.icon(
+          onPressed: _share,
+          icon: const Icon(Icons.share_rounded, size: 18),
+          label: Text(
+            'مشاركة الشهادة',
+            style: AppTypography.titleMedium.copyWith(
+              fontFamily: 'Amiri',
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFFC9A84C),
+            foregroundColor: Colors.black,
+            padding: const EdgeInsets.symmetric(
+              vertical: 10,
+              horizontal: 14,
+            ),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        IconButton.filledTonal(
+          onPressed: _shareToSocialMediaCard,
+          icon: const Icon(Icons.stars_rounded, size: 20),
+          tooltip: 'بطاقة سوشيال ميديا',
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.white24,
+            foregroundColor: const Color(0xFFE5C158),
+            padding: const EdgeInsets.all(AppSpacing.sm),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.sm),
+        IconButton.filledTonal(
+          onPressed: _showSaveOptions,
+          icon: const Icon(Icons.download_rounded, size: 20),
+          tooltip: 'حفظ الشهادة',
+          style: IconButton.styleFrom(
+            backgroundColor: Colors.white24,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.all(AppSpacing.sm),
+          ),
+        ),
+      ],
     );
   }
 }

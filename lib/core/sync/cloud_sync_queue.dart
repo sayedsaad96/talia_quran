@@ -28,9 +28,7 @@ class CloudSyncQueue {
     this._isar,
     this._owner, {
     Future<void> Function(String ownerId)? scheduleBackgroundDelivery,
-    Future<void> Function()? requestForegroundSync,
-  }) : _scheduleBackgroundDelivery = scheduleBackgroundDelivery,
-       _requestForegroundSync = requestForegroundSync;
+  }) : _scheduleBackgroundDelivery = scheduleBackgroundDelivery;
 
   static const maxAttempts = 8;
   static const baseBackoffSeconds = 30;
@@ -38,7 +36,6 @@ class CloudSyncQueue {
   final Isar _isar;
   final RecordOwnerProvider _owner;
   final Future<void> Function(String ownerId)? _scheduleBackgroundDelivery;
-  final Future<void> Function()? _requestForegroundSync;
   final _random = Random();
 
   String get _ownerUserId => _owner.currentOwnerId;
@@ -87,10 +84,6 @@ class CloudSyncQueue {
       await _isar.cloudSyncQueueItems.put(item);
     });
     await _scheduleBackgroundDelivery?.call(ownerUserId);
-    final requestForegroundSync = _requestForegroundSync;
-    if (requestForegroundSync != null) {
-      unawaited(requestForegroundSync());
-    }
   }
 
   Future<bool> hasPending() async {

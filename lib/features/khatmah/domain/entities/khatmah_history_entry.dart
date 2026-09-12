@@ -24,15 +24,35 @@ class KhatmahHistoryEntry extends Equatable {
   final String? certificateId;
 
   /// Local issuance lives in the durable archive, never in cloud award lists.
-  CertificateAward? get certificate => certificateId == 'khatmah-$id'
-      ? CertificateAward(
-          id: certificateId!,
-          titleAr: CertificateType.khatmahReading.titleAr,
-          titleEn: CertificateType.khatmahReading.titleEn,
-          type: CertificateType.khatmahReading,
-          earnedAt: completedDate,
-        )
-      : null;
+  CertificateAward? get certificate {
+    if (certificateId != 'khatmah-$id') return null;
+    String? dedicationStr;
+    if (dedication != null &&
+        dedication!.isDedicated &&
+        dedication!.recipientName != null &&
+        dedication!.recipientName!.trim().isNotEmpty) {
+      final name = dedication!.recipientName!.trim();
+      final suffix = switch (dedication!.condition) {
+        DedicationCondition.alive => ' (حفظه الله)',
+        DedicationCondition.deceased => ' (رحمه الله)',
+        DedicationCondition.sick => ' (شفاه الله)',
+        null => '',
+      };
+      if (suffix.isNotEmpty && !name.contains('الله')) {
+        dedicationStr = '$name$suffix';
+      } else {
+        dedicationStr = name;
+      }
+    }
+    return CertificateAward(
+      id: certificateId!,
+      titleAr: CertificateType.khatmahReading.titleAr,
+      titleEn: CertificateType.khatmahReading.titleEn,
+      type: CertificateType.khatmahReading,
+      earnedAt: completedDate,
+      dedication: dedicationStr,
+    );
+  }
 
   @override
   List<Object?> get props => [

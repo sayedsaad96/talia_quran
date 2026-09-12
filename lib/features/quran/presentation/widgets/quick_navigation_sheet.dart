@@ -103,15 +103,14 @@ class _QuickNavigationSheetState extends State<QuickNavigationSheet> {
       maxChildSize: 0.95,
       expand: false,
       builder: (context, scrollController) {
-        return Container(
-          decoration: BoxDecoration(
-            color: surface,
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(24),
-            ),
+        return Material(
+          color: surface,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(24),
           ),
-          padding: const EdgeInsets.all(AppSpacing.pagePadding),
-          child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.pagePadding),
+            child: SafeArea(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -238,6 +237,7 @@ class _QuickNavigationSheetState extends State<QuickNavigationSheet> {
                 ),
               ],
             ),
+          ),
           ),
         );
       },

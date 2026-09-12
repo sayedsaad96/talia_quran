@@ -19,8 +19,8 @@ class _TutorialGuidePageState extends State<TutorialGuidePage> {
   final _searchController = TextEditingController();
   String _query = '';
   String? _selectedCategory;
-  late final List<TutorialGuideSection> _allSections;
-  late final List<String> _categories;
+  List<TutorialGuideSection> _allSections = const [];
+  List<String> _categories = const [];
 
   @override
   void didChangeDependencies() {

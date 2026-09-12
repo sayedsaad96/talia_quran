@@ -36,18 +36,26 @@ class NotificationScheduler {
   }) : _kidsSessionDatesLoader = kidsSessionDatesLoader,
        _getAyahOfDay = getAyahOfDay;
 
+  String? _lastRollingDateKey;
+
   /// Reschedules every enabled reminder. Called from app resume, locale
   /// changes and first launch — none of which may surface plugin errors,
   /// so any failure is logged and contained.
-  Future<void> refreshNotifications(AppLocalizations l10n) async {
+  Future<void> refreshNotifications(
+    AppLocalizations l10n, {
+    bool force = false,
+  }) async {
     try {
-      await _refreshNotifications(l10n);
+      await _refreshNotifications(l10n, force: force);
     } catch (error, stack) {
       TaliaLogger.w('Notification refresh failed', error, stack);
     }
   }
 
-  Future<void> _refreshNotifications(AppLocalizations l10n) async {
+  Future<void> _refreshNotifications(
+    AppLocalizations l10n, {
+    bool force = false,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
 
     // First, sync timezone
@@ -143,35 +151,41 @@ class NotificationScheduler {
       await _service.cancelStreakAlert();
     }
 
+    final now = DateTime.now();
+    final todayKey = '${now.year}-${now.month}-${now.day}';
+    final shouldRefreshRolling = force || _lastRollingDateKey != todayKey;
+
     if (dailyAyahEnabled && _getAyahOfDay != null) {
-      final hour =
-          prefs.getInt(
-            '${TaliaNotificationService.dailyAyahPreferenceKey}_hour',
-          ) ??
-          7;
-      final minute =
-          prefs.getInt(
-            '${TaliaNotificationService.dailyAyahPreferenceKey}_minute',
-          ) ??
-          0;
-      final userGoal = prefs.getString('user_primary_goal');
-      await _service.scheduleDailyAyahReminders(
-        hour: hour,
-        minute: minute,
-        reminderForDate: (date) async {
-          final ayah = await _getAyahOfDay(date: date, userGoal: userGoal);
-          if (ayah == null) return null;
-          return DailyAyahReminder(
-            title: l10n.notificationDailyAyahTitle,
-            body: l10n.notificationDailyAyahBody,
-            target: DailyAyahNotificationTarget(
-              surahId: ayah.surahId,
-              ayahNumber: ayah.ayahNumber,
-              pageNumber: ayah.pageNumber,
-            ),
-          );
-        },
-      );
+      if (shouldRefreshRolling) {
+        final hour =
+            prefs.getInt(
+              '${TaliaNotificationService.dailyAyahPreferenceKey}_hour',
+            ) ??
+            7;
+        final minute =
+            prefs.getInt(
+              '${TaliaNotificationService.dailyAyahPreferenceKey}_minute',
+            ) ??
+            0;
+        final userGoal = prefs.getString('user_primary_goal');
+        await _service.scheduleDailyAyahReminders(
+          hour: hour,
+          minute: minute,
+          reminderForDate: (date) async {
+            final ayah = await _getAyahOfDay(date: date, userGoal: userGoal);
+            if (ayah == null) return null;
+            return DailyAyahReminder(
+              title: l10n.notificationDailyAyahTitle,
+              body: l10n.notificationDailyAyahBody,
+              target: DailyAyahNotificationTarget(
+                surahId: ayah.surahId,
+                ayahNumber: ayah.ayahNumber,
+                pageNumber: ayah.pageNumber,
+              ),
+            );
+          },
+        );
+      }
     } else {
       await _service.cancelDailyAyahReminder();
     }
@@ -219,23 +233,29 @@ class NotificationScheduler {
     }
 
     if (dailyDuaEnabled) {
-      final hour =
-          prefs.getInt(
-            '${TaliaNotificationService.dailyDuaPreferenceKey}_hour',
-          ) ??
-          9;
-      final minute =
-          prefs.getInt(
-            '${TaliaNotificationService.dailyDuaPreferenceKey}_minute',
-          ) ??
-          0;
-      await _service.scheduleDailyDuaReminder(
-        title: l10n.notificationDailyDuaTitle,
-        hour: hour,
-        minute: minute,
-      );
+      if (shouldRefreshRolling) {
+        final hour =
+            prefs.getInt(
+              '${TaliaNotificationService.dailyDuaPreferenceKey}_hour',
+            ) ??
+            9;
+        final minute =
+            prefs.getInt(
+              '${TaliaNotificationService.dailyDuaPreferenceKey}_minute',
+            ) ??
+            0;
+        await _service.scheduleDailyDuaReminder(
+          title: l10n.notificationDailyDuaTitle,
+          hour: hour,
+          minute: minute,
+        );
+      }
     } else {
       await _service.cancelDailyDuaReminder();
+    }
+
+    if (shouldRefreshRolling) {
+      _lastRollingDateKey = todayKey;
     }
 
     if (kidsReviewEnabled && !kidsMissionCompletedToday) {

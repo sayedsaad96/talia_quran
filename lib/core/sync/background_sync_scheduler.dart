@@ -57,7 +57,7 @@ class BackgroundSyncScheduler {
       _cloudSyncTaskName,
       inputData: {_ownerInputKey: ownerId},
       constraints: Constraints(networkType: NetworkType.connected),
-      existingWorkPolicy: ExistingWorkPolicy.replace,
+      existingWorkPolicy: ExistingWorkPolicy.keep,
       backoffPolicy: BackoffPolicy.exponential,
       backoffPolicyDelay: const Duration(minutes: 1),
     );

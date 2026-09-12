@@ -18,6 +18,7 @@ abstract final class CubitMessageCodes {
   // Generic data-layer failures (emitted by core Failure types).
   static const errorCache = '@error/cache';
   static const errorNetwork = '@error/network';
+  static const errorServer = '@error/server';
   static const errorNotFound = '@error/not_found';
   static const errorParse = '@error/parse';
   static const errorUnknown = '@error/unknown';

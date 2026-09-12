@@ -434,99 +434,125 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
         child: Column(
           children: [
             // ─── Header ──────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    tooltip: MaterialLocalizations.of(
-                      context,
-                    ).backButtonTooltip,
-                    icon: const BackButtonIcon(),
-                    color: widget.isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                    onPressed: () {
-                      if (context.canPop()) {
-                        context.pop();
-                      } else {
-                        context.go('/');
-                      }
-                    },
+            // ─── Header ──────────────────────────────────────────────
+            Builder(
+              builder: (context) {
+                final isSmall = context.screenWidth < 360;
+                final iconConstraints = isSmall
+                    ? const BoxConstraints(minWidth: 36, minHeight: 36)
+                    : null;
+                return Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmall ? 4 : 8,
+                    vertical: 8,
                   ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.title,
-                          style: AppTypography.headlineSmall.copyWith(
-                            fontFamily: 'Amiri',
-                            fontWeight: FontWeight.w700,
-                            color: widget.isDark
-                                ? AppColors.darkTextPrimary
-                                : AppColors.lightTextPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          context.l10n.completedCount(
-                            widget.state.completedCount,
-                            widget.state.sessions.length,
-                          ),
-                          style: AppTypography.labelMedium.copyWith(
-                            color: widget.isDark
-                                ? AppColors.darkTextSecondary
-                                : AppColors.lightTextSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: context.l10n.fontSize,
-                    icon: const Icon(Icons.format_size_rounded),
-                    color: widget.isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                    onPressed: () => FontScaleSelectorSheet.show(
-                      context,
-                      store: _prefsStore,
-                      isDark: widget.isDark,
-                    ),
-                  ),
-                  ValueListenableBuilder<bool>(
-                    valueListenable: _prefsStore.autoAdvanceListenable,
-                    builder: (context, autoAdvance, _) => IconButton(
-                      tooltip: autoAdvance
-                          ? 'الانتقال التلقائي مفعّل'
-                          : 'الانتقال التلقائي معطّل',
-                      icon: Icon(
-                        autoAdvance
-                            ? Icons.autorenew_rounded
-                            : Icons.pause_circle_outline_rounded,
-                        color: autoAdvance
-                            ? AppColors.primary
-                            : (widget.isDark
-                                ? AppColors.darkTextHint
-                                : AppColors.lightTextHint),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        tooltip: MaterialLocalizations.of(
+                          context,
+                        ).backButtonTooltip,
+                        icon: const BackButtonIcon(),
+                        constraints: iconConstraints,
+                        visualDensity: isSmall ? VisualDensity.compact : null,
+                        color: widget.isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                        onPressed: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/');
+                          }
+                        },
                       ),
-                      onPressed: () {
-                        HapticFeedback.selectionClick();
-                        _prefsStore.setAutoAdvance(!autoAdvance);
-                      },
-                    ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              widget.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.headlineSmall.copyWith(
+                                fontFamily: 'Amiri',
+                                fontWeight: FontWeight.w700,
+                                fontSize: isSmall ? 18 : null,
+                                color: widget.isDark
+                                    ? AppColors.darkTextPrimary
+                                    : AppColors.lightTextPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              context.l10n.completedCount(
+                                widget.state.completedCount,
+                                widget.state.sessions.length,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTypography.labelMedium.copyWith(
+                                color: widget.isDark
+                                    ? AppColors.darkTextSecondary
+                                    : AppColors.lightTextSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: context.l10n.fontSize,
+                        icon: const Icon(Icons.format_size_rounded),
+                        constraints: iconConstraints,
+                        visualDensity: isSmall ? VisualDensity.compact : null,
+                        color: widget.isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                        onPressed: () => FontScaleSelectorSheet.show(
+                          context,
+                          store: _prefsStore,
+                          isDark: widget.isDark,
+                        ),
+                      ),
+                      ValueListenableBuilder<bool>(
+                        valueListenable: _prefsStore.autoAdvanceListenable,
+                        builder: (context, autoAdvance, _) => IconButton(
+                          tooltip: autoAdvance
+                              ? 'الانتقال التلقائي مفعّل'
+                              : 'الانتقال التلقائي معطّل',
+                          constraints: iconConstraints,
+                          visualDensity: isSmall ? VisualDensity.compact : null,
+                          icon: Icon(
+                            autoAdvance
+                                ? Icons.autorenew_rounded
+                                : Icons.pause_circle_outline_rounded,
+                            color: autoAdvance
+                                ? AppColors.primary
+                                : (widget.isDark
+                                    ? AppColors.darkTextHint
+                                    : AppColors.lightTextHint),
+                          ),
+                          onPressed: () {
+                            HapticFeedback.selectionClick();
+                            _prefsStore.setAutoAdvance(!autoAdvance);
+                          },
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: context.l10n.azkarIndex,
+                        icon: const Icon(Icons.format_list_bulleted_rounded),
+                        constraints: iconConstraints,
+                        visualDensity: isSmall ? VisualDensity.compact : null,
+                        color: widget.isDark
+                            ? AppColors.darkTextPrimary
+                            : AppColors.lightTextPrimary,
+                        onPressed: () => _openIndexSheet(context),
+                      ),
+                    ],
                   ),
-                  IconButton(
-                    tooltip: context.l10n.azkarIndex,
-                    icon: const Icon(Icons.format_list_bulleted_rounded),
-                    color: widget.isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
-                    onPressed: () => _openIndexSheet(context),
-                  ),
-                ],
-              ),
+                );
+              },
             ),
 
             // ─── Progress Bar ────────────────────────────────────────

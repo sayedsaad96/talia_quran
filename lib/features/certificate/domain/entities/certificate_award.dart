@@ -53,6 +53,7 @@ class CertificateAward extends Equatable {
     this.surahNameAr,
     this.surahNameEn,
     this.titleEn,
+    this.dedication,
   });
 
   final String id;
@@ -64,6 +65,7 @@ class CertificateAward extends Equatable {
   final String? surahNameAr;
   final String? surahNameEn;
   final String? titleEn;
+  final String? dedication;
 
   String get verificationCode {
     final prefix = switch (type) {
@@ -87,6 +89,7 @@ class CertificateAward extends Equatable {
     'surahId': surahId,
     'surahNameAr': surahNameAr,
     'surahNameEn': surahNameEn,
+    if (dedication != null) 'dedication': dedication,
   };
 
   factory CertificateAward.fromJson(Map<String, dynamic> json) =>
@@ -103,6 +106,7 @@ class CertificateAward extends Equatable {
         surahId: json['surahId'] as int?,
         surahNameAr: json['surahNameAr'] as String?,
         surahNameEn: json['surahNameEn'] as String?,
+        dedication: json['dedication'] as String?,
       );
 
   /// Maps a `certificate_awards_cloud` row onto the local award shape.
@@ -127,6 +131,7 @@ class CertificateAward extends Equatable {
       earnedAt: DateTime.parse(row['earned_at'] as String).toUtc(),
       juzNumber: juzNumber,
       surahId: surahId,
+      dedication: row['dedication'] as String?,
     );
   }
 
@@ -141,5 +146,6 @@ class CertificateAward extends Equatable {
     surahNameAr,
     surahNameEn,
     titleEn,
+    dedication,
   ];
 }

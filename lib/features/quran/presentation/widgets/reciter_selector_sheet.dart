@@ -65,10 +65,14 @@ class ReciterSelectorSheet extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                Text(
-                  context.isArabic ? 'اختر القارئ المفضل' : 'Select Reciter',
-                  style: AppTypography.titleMedium.copyWith(
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    context.isArabic ? 'اختر القارئ المفضل' : 'Select Reciter',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.titleMedium.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],

@@ -11,9 +11,11 @@ import '../services/hifz_migration_service.dart';
 import '../services/notification_scheduler.dart';
 import '../services/notification_service.dart';
 import '../sync/background_sync_scheduler.dart';
+import '../theme/theme_cubit.dart';
 import '../utils/talia_logger.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
 import '../../features/quran/data/services/quran_warmup_service.dart';
+import '../../features/settings/presentation/cubits/profile_cubit.dart';
 
 /// Handles heavy app initialization that was previously blocking `runApp()`.
 ///
@@ -38,7 +40,7 @@ class AppInitializer {
   /// 1. Supabase initialization
   /// 2. Dependency injection (Isar, SharedPreferences, services, cubits)
   /// 3. Notification plugin initialization
-  /// 4. First-launch notification scheduling
+  /// 4. First-launch notification scheduling (non-blocking)
   ///
   /// QCF fonts and Quran page data are warmed up in the background by
   /// [QuranWarmupService] once initialization completes, so the reader opens
@@ -65,31 +67,30 @@ class AppInitializer {
       }
       await configureDependencies(background: background);
 
-      // Load the persisted locale before scheduling notifications so their
-      // initial content matches the language shown when the app opens.
-      getIt<LocaleCubit>().loadLocale();
-
-      // Steps 3 & 4: Notifications — foreground only. The notification
-      // plugin needs an Activity context that headless Workmanager engines
-      // don't have; calling it there throws NullPointerException, which
-      // makes the background task report failure and get retried forever.
       if (!background) {
+        // Pre-load theme, locale, and profile early so they are immediately available
+        // without causing redundant MaterialApp rebuilds during startup.
+        getIt<ThemeCubit>().loadTheme();
+        getIt<LocaleCubit>().loadLocale();
+        getIt<ProfileCubit>().loadProfile();
+
+        // Steps 3 & 4: Notifications — foreground only. The notification
+        // plugin needs an Activity context that headless Workmanager engines
+        // don't have; calling it there throws NullPointerException, which
+        // makes the background task report failure and get retried forever.
         onProgress?.call('جارٍ إعداد التنبيهات...', 0.6);
         await _initNotifications();
 
-        onProgress?.call('جارٍ ضبط المواعيد...', 0.8);
-        await _scheduleFirstLaunchNotifications();
-
-        // Warm the Quran rendering pipeline (fonts + page data) in the
-        // background. The service delays itself so it never competes with
-        // the first frames of the home screen.
+        // Non-blocking: Scheduling reminders and pre-warming Quran cache
+        // runs in the background so the UI transitions immediately.
+        unawaited(_scheduleFirstLaunchNotifications());
         unawaited(getIt<QuranWarmupService>().warmUp());
         unawaited(getIt<BookmarkService>().ensureLoaded());
-      }
 
-      // Step 5: Register the durable background task entrypoint before any
-      // repository is able to enqueue an owner-scoped retry.
-      await _startBackgroundTasks();
+        // Step 5: Register background tasks non-blocking so splash dismisses immediately.
+        // Never run inside a background isolate.
+        unawaited(_startBackgroundTasks());
+      }
 
       onProgress?.call('جاهز!', 1.0);
       _initialized = true;

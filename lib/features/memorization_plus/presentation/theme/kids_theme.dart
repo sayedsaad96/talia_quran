@@ -4,10 +4,12 @@ import '../../../../core/theme/app_colors.dart';
 
 abstract final class KidsTheme {
   static const Color nightSkyDark = Color(0xFF021210); // Matches darkBackground
-  static const Color nightSkyMid = Color(0xFF041D1A);  // Matches darkSurface
+  static const Color nightSkyMid = Color(0xFF041D1A); // Matches darkSurface
   static const Color nightSkyLight = Color(0xFF0A2925);
-  static const Color forestGreen = Color(0xFF0D5C53);  // Matches primary Royal Teal
-  static const Color ribbonGreen = Color(0xFF148275);  // Matches primaryLight
+  static const Color forestGreen = Color(
+    0xFF0D5C53,
+  ); // Matches primary Royal Teal
+  static const Color ribbonGreen = Color(0xFF148275); // Matches primaryLight
   static const Color mintGlow = Color(0xFF1ABC9C);
   static const Color goldStar = Color(0xFFF59E0B);
   static const Color goldWarm = AppColors.gold;
@@ -121,28 +123,12 @@ abstract final class KidsTheme {
   );
 
   static const List<BoxShadow> card25DShadow = [
-    BoxShadow(
-      color: Color(0x38000000),
-      blurRadius: 14,
-      offset: Offset(0, 7),
-    ),
-    BoxShadow(
-      color: Color(0x18000000),
-      blurRadius: 24,
-      offset: Offset(0, 14),
-    ),
+    BoxShadow(color: Color(0x38000000), blurRadius: 14, offset: Offset(0, 7)),
+    BoxShadow(color: Color(0x18000000), blurRadius: 24, offset: Offset(0, 14)),
   ];
 
   static const List<BoxShadow> nodeGlowCurrentShadow = [
-    BoxShadow(
-      color: Color(0x771ABC9C),
-      blurRadius: 24,
-      spreadRadius: 3,
-    ),
-    BoxShadow(
-      color: Color(0x44F59E0B),
-      blurRadius: 14,
-      spreadRadius: 1,
-    ),
+    BoxShadow(color: Color(0x771ABC9C), blurRadius: 24, spreadRadius: 3),
+    BoxShadow(color: Color(0x44F59E0B), blurRadius: 14, spreadRadius: 1),
   ];
 }

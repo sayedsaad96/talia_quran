@@ -273,6 +273,8 @@ class _LoginPageState extends State<LoginPage> {
                             'assets/images/logo.png',
                             width: 120,
                             height: 120,
+                            cacheWidth: 240,
+                            cacheHeight: 240,
                           ),
                           const SizedBox(height: AppSpacing.md),
 

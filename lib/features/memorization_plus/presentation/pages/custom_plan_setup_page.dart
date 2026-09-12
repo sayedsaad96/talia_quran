@@ -773,15 +773,18 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 size: 20,
               ),
               const SizedBox(width: AppSpacing.sm),
-              Text(
-                context.l10n.customPlanFromAyah,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: isDark
-                      ? AppColors.darkTextPrimary
-                      : AppColors.lightTextPrimary,
+              Expanded(
+                child: Text(
+                  context.l10n.customPlanFromAyah,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: isDark
+                        ? AppColors.darkTextPrimary
+                        : AppColors.lightTextPrimary,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: AppSpacing.sm),
               SizedBox(
                 width: 118,
                 child: TextFormField(

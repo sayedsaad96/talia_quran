@@ -572,7 +572,6 @@ class TaliaNotificationService {
     int minute = 0,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    await cancelDailyAyahReminder();
 
     final firstDate = _nextInstanceOfTime(hour, minute);
     for (var dayOffset = 0; dayOffset < _dailyAyahScheduleDays; dayOffset++) {
@@ -694,7 +693,6 @@ class TaliaNotificationService {
     int minute = 0,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    await cancelDailyDuaReminder();
 
     final duas = await _loadApprovedAzkarTexts('duas');
     // Fail safe: no corpus → no religious notification content at all.

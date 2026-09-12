@@ -193,7 +193,6 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<RecordOwnerProvider>(),
       scheduleBackgroundDelivery:
           getIt<BackgroundSyncScheduler>().scheduleAccountSync,
-      requestForegroundSync: () => getIt<CloudSyncCoordinator>().run(),
     ),
   );
   getIt.registerLazySingleton<AccountDataReset>(

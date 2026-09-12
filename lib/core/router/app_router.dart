@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/auth/presentation/cubits/auth_cubit.dart';
+import '../../features/settings/presentation/cubits/profile_cubit.dart';
 import '../../features/memorization_plus/domain/entities/memorization_entities.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../constants/app_constants.dart';
@@ -382,7 +384,24 @@ abstract class AppRouter {
     redirect: (context, state) {
       final authState = getIt<AuthCubit>().state;
       final location = state.matchedLocation;
-      return redirectForAuth(authState, location);
+      final authRedirect = redirectForAuth(authState, location);
+      if (authRedirect != null) return authRedirect;
+
+      // Fast path: direct first-time users to onboarding immediately before Home builds.
+      if (location == AppRoutes.home) {
+        try {
+          if (getIt.isRegistered<SharedPreferences>()) {
+            final isFirstTime =
+                getIt<SharedPreferences>().getBool('isFirstTimeAppOpen') ??
+                true;
+            if (isFirstTime) {
+              return AppRoutes.onboarding;
+            }
+          }
+        } catch (_) {}
+      }
+
+      return null;
     },
     // OFFLINE-SAFE: GoRouter wraps any exception thrown inside an async
     // redirect as a GoException and re-throws it as an uncaught async error.
@@ -443,7 +462,19 @@ abstract class AppRouter {
         builder: (context, state) {
           final extra = state.extra as Map<String, dynamic>?;
           final l10n = AppLocalizations.of(context);
-          final userName = extra?['userName'] as String? ?? l10n.taliaUser;
+          var userName = extra?['userName'] as String?;
+          if (userName == null ||
+              userName.trim().isEmpty ||
+              userName == l10n.taliaUser) {
+            try {
+              final profileState = context.read<ProfileCubit>().state;
+              if (profileState is ProfileLoaded &&
+                  profileState.profile.displayName.trim().isNotEmpty) {
+                userName = profileState.profile.displayName.trim();
+              }
+            } catch (_) {}
+          }
+          userName ??= l10n.taliaUser;
 
           CertificateAward? award;
           final rawAward = extra?['award'];

@@ -145,7 +145,10 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
       await prefs.setInt('${key}_hour', newTime.hour);
       await prefs.setInt('${key}_minute', newTime.minute);
       if (isEnabled) {
-        await getIt<NotificationScheduler>().refreshNotifications(l10n);
+        await getIt<NotificationScheduler>().refreshNotifications(
+          l10n,
+          force: true,
+        );
       }
     }
   }
@@ -178,7 +181,10 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
       }
       try {
         await _ensureNotificationPermissionIfEnabling(value);
-        await getIt<NotificationScheduler>().refreshNotifications(l10n);
+        await getIt<NotificationScheduler>().refreshNotifications(
+          l10n,
+          force: true,
+        );
       } catch (e) {
         debugPrint('Error scheduling notification for $key: $e');
       }
@@ -592,15 +598,17 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
 
     await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: Column(
+        return Material(
+          color: surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -696,6 +704,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile> {
               ],
             ),
           ),
+        ),
         );
       },
     );

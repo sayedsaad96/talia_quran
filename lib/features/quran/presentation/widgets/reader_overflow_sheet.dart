@@ -38,12 +38,11 @@ class ReaderOverflowSheet extends StatelessWidget {
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
     final reciterService = getIt<QuranReciterService>();
 
-    return Container(
-      decoration: BoxDecoration(
-        color: surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: const EdgeInsets.all(AppSpacing.pagePadding),
+    return Material(
+      color: surface,
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.pagePadding),
       child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -140,6 +139,7 @@ class ReaderOverflowSheet extends StatelessWidget {
             ),
           ],
         ),
+      ),
       ),
     );
   }

@@ -20,6 +20,16 @@ abstract class Failure extends Equatable {
   /// SECURITY: Only expose the human-readable message, not class internals
   @override
   String toString() => message;
+
+  /// Classifies cloud/remote exceptions into [ServerFailure] (for PostgREST/DB/server errors)
+  /// or [NetworkFailure] (for connectivity/socket/timeout issues).
+  static Failure fromCloud(Object error, [StackTrace? stackTrace]) {
+    final str = error.toString();
+    if (str.contains('PostgrestException') || str.contains('AuthException')) {
+      return ServerFailure.from(error, stackTrace);
+    }
+    return NetworkFailure.from(error, stackTrace);
+  }
 }
 
 class CacheFailure extends Failure {
@@ -28,6 +38,15 @@ class CacheFailure extends Failure {
   static CacheFailure from(Object error, [StackTrace? stackTrace]) {
     TaliaLogger.e('CacheFailure', error, stackTrace);
     return const CacheFailure();
+  }
+}
+
+class ServerFailure extends Failure {
+  const ServerFailure([super.message = CubitMessageCodes.errorServer]);
+
+  static ServerFailure from(Object error, [StackTrace? stackTrace]) {
+    TaliaLogger.e('ServerFailure', error, stackTrace);
+    return const ServerFailure();
   }
 }
 

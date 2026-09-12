@@ -2,10 +2,12 @@ import 'package:confetti/confetti.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../settings/presentation/cubits/profile_cubit.dart';
 import '../khatmah_localizations.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
@@ -351,11 +353,20 @@ class _KhatmahCompletionPageState extends State<KhatmahCompletionPage> {
                       key: const Key('khatmah_completion_certificate_button'),
                       onPressed: () {
                         if (!completion.isValidCompletion) return;
+                        String? userName;
+                        try {
+                          final profileState = context.read<ProfileCubit>().state;
+                          if (profileState is ProfileLoaded &&
+                              profileState.profile.displayName.trim().isNotEmpty) {
+                            userName = profileState.profile.displayName.trim();
+                          }
+                        } catch (_) {}
+                        userName ??= context.l10n.taliaUser;
                         context.push(
                           AppRoutes.certificate,
                           extra: <String, dynamic>{
                             'award': completion.historyEntry!.certificate!,
-                            'userName': context.l10n.taliaUser,
+                            'userName': userName,
                           },
                         );
                       },

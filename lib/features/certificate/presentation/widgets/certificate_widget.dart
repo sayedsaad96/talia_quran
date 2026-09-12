@@ -299,6 +299,13 @@ class CertificateWidget extends StatelessWidget {
     }
   }
 
+  String get _actionText {
+    if (award.type == CertificateType.khatmahReading) {
+      return 'قد أتم بنجاح تلاوة';
+    }
+    return 'قد أتم بنجاح حفظ';
+  }
+
   String get _formattedDate {
     return '${completionDate.year}/${completionDate.month.toString().padLeft(2, '0')}/${completionDate.day.toString().padLeft(2, '0')}';
   }
@@ -455,7 +462,7 @@ class CertificateWidget extends StatelessWidget {
                               const SizedBox(height: 10),
 
                               Text(
-                                'قد أتم بنجاح حفظ',
+                                _actionText,
                                 style: TextStyle(
                                   fontFamily: 'Amiri',
                                   fontSize: 19,
@@ -491,6 +498,20 @@ class CertificateWidget extends StatelessWidget {
                                   ),
                                 ),
                               ),
+
+                              if (award.dedication != null &&
+                                  award.dedication!.trim().isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  'إهداء إلى: ${award.dedication!.trim()}',
+                                  style: TextStyle(
+                                    fontFamily: 'Amiri',
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: theme.accentGold,
+                                  ),
+                                ),
+                              ],
 
                               const SizedBox(height: 14),
 

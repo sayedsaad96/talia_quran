@@ -132,7 +132,7 @@ class MemorizationParentAccessService {
         return Right(saved);
       });
     } catch (e) {
-      return Left(NetworkFailure.from(e));
+      return Left(Failure.fromCloud(e));
     }
   }
 
@@ -314,7 +314,7 @@ class MemorizationParentAccessService {
 
       return Right(token);
     } catch (e) {
-      return Left(NetworkFailure.from(e));
+      return Left(Failure.fromCloud(e));
     }
   }
 
@@ -344,7 +344,7 @@ class MemorizationParentAccessService {
       );
       return const Right(null);
     } catch (e) {
-      return Left(NetworkFailure.from(e));
+      return Left(Failure.fromCloud(e));
     }
   }
 
@@ -372,7 +372,7 @@ class MemorizationParentAccessService {
       );
       return const Right(null);
     } catch (e) {
-      return Left(NetworkFailure.from(e));
+      return Left(Failure.fromCloud(e));
     }
   }
 

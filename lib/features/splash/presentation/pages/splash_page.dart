@@ -28,7 +28,7 @@ class _SplashPageState extends State<SplashPage> {
   bool _hasNavigated = false;
   bool _initError = false;
 
-  static const Duration _minDisplayDuration = Duration(milliseconds: 2500);
+  static const Duration _minDisplayDuration = Duration(milliseconds: 1500);
 
   @override
   void initState() {
@@ -100,6 +100,7 @@ class _SplashPageState extends State<SplashPage> {
             child: Image.asset(
               'assets/images/mosque_bg_vertical.jpg',
               fit: BoxFit.cover,
+              cacheWidth: 1080,
               alignment: Alignment.center,
             ),
           ),
@@ -159,6 +160,8 @@ class _SplashPageState extends State<SplashPage> {
                               'assets/images/splash_hero.png',
                               width: 140,
                               height: 140,
+                              cacheWidth: 280,
+                              cacheHeight: 280,
                               fit: BoxFit.contain,
                             )
                             .animate()

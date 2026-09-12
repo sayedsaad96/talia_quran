@@ -223,11 +223,15 @@ class _SurahBookmarkGroup extends StatelessWidget {
               children: [
                 Icon(Icons.menu_book_rounded, size: 18, color: primary),
                 const SizedBox(width: 8),
-                Text(
-                  surahName,
-                  style: AppTypography.titleMedium.copyWith(color: primary),
+                Expanded(
+                  child: Text(
+                    surahName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.titleMedium.copyWith(color: primary),
+                  ),
                 ),
-                const Spacer(),
+                const SizedBox(width: 8),
                 Text(
                   context.l10n.bookmarksCountItem(entries.length),
                   style: AppTypography.labelSmall.copyWith(color: subtextColor),

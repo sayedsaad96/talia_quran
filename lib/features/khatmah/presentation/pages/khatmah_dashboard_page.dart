@@ -441,7 +441,7 @@ class _KhatmahDashboardPageState extends State<KhatmahDashboardPage>
                 IconButton(
                   key: const Key('khatmah_dashboard_abandon_button'),
                   tooltip: context.l10n.khatmahEndKhatmah,
-                  icon: const Icon(Icons.close_rounded),
+                  icon: const Icon(Icons.delete_outline_rounded),
                   onPressed: () => _showAbandonConfirmDialog(context, plan),
                 ),
               ],

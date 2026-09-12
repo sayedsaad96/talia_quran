@@ -62,8 +62,8 @@ class ReaderTopBar extends StatelessWidget {
             tooltip: context.l10n.closeReader,
             icon: Icon(
               context.isArabic
-                  ? Icons.arrow_forward_rounded
-                  : Icons.arrow_back_rounded,
+                  ? Icons.arrow_back_rounded
+                  : Icons.arrow_forward_rounded,
             ),
             color: primary,
             style: IconButton.styleFrom(minimumSize: const Size(48, 48)),

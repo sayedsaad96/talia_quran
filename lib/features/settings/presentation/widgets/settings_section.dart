@@ -257,12 +257,16 @@ class SettingsInlineHeader extends StatelessWidget {
         children: [
           Icon(icon, color: iconColor, size: 18),
           const SizedBox(width: AppSpacing.sm),
-          Text(
-            title,
-            style: AppTypography.labelMedium.copyWith(
-              color: textColor,
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.labelMedium.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
             ),
           ),
         ],

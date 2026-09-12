@@ -177,6 +177,7 @@ extension TaliaLocalizationHelpers on BuildContext {
         l10n.kidsAyahAlreadyCompleted,
       CubitMessageCodes.errorCache => l10n.errorCacheMessage,
       CubitMessageCodes.errorNetwork => l10n.errorNetworkMessage,
+      CubitMessageCodes.errorServer => l10n.errorUnknownMessage,
       CubitMessageCodes.errorNotFound => l10n.errorNotFoundMessage,
       CubitMessageCodes.errorParse => l10n.errorParseMessage,
       CubitMessageCodes.errorUnknown => l10n.errorUnknownMessage,

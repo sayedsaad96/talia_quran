@@ -211,8 +211,8 @@ class _KidsQuranHeader extends StatelessWidget {
             tooltip: context.l10n.kidsQuranBackToHome,
             icon: Icon(
               context.isArabic
-                  ? Icons.arrow_forward_rounded
-                  : Icons.arrow_back_rounded,
+                  ? Icons.arrow_back_rounded
+                  : Icons.arrow_forward_rounded,
               color: accent,
             ),
           ),
