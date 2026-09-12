@@ -42,6 +42,8 @@ class XpService {
 
   XpLevel getCurrentLevel(int xp) => _getLevel(xp);
 
+  double progressToNextLevel(int xp) => _getProgress(xp);
+
   XpLevel _getLevel(int xp) {
     const levels = XpConstants.levels;
     for (int i = levels.length - 1; i >= 0; i--) {

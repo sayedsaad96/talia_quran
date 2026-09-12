@@ -2120,5 +2120,18 @@
   "homeFooterTagline": "With the Quran, we live more beautifully",
   "quickNavTitle": "Quick navigation",
   "quickNavGo": "Go",
-  "quickNavPageHint": "Page number (1-604)"
+  "quickNavPageHint": "Page number (1-604)",
+  "homeStartKhatmahTitle": "Start Your Quran Khatmah Now",
+  "homeStartKhatmahSubtitle": "Set your daily portion and pace to maintain a regular Quran habit",
+  "homeStartKhatmahCta": "Create New Khatmah",
+  "homeAchievementSheetTitle": "Your Achievements & Level",
+  "homeAchievementSheetSubtitle": "Continue reciting and memorizing to advance your rank",
+  "homePrayerTimesSheetTitle": "Prayer Times",
+  "weekdayMonday": "Monday",
+  "weekdayTuesday": "Tuesday",
+  "weekdayWednesday": "Wednesday",
+  "weekdayThursday": "Thursday",
+  "weekdayFriday": "Friday",
+  "weekdaySaturday": "Saturday",
+  "weekdaySunday": "Sunday"
 }

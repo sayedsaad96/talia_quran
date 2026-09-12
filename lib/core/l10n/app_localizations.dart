@@ -8718,6 +8718,84 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'رقم الصفحة (1-604)'**
   String get quickNavPageHint;
+
+  /// No description provided for @homeStartKhatmahTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ ختمتك القرآنية الآن'**
+  String get homeStartKhatmahTitle;
+
+  /// No description provided for @homeStartKhatmahSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'رتّب وِردك اليومي وحدد مدة الختمة لتنال أجر التلاوة المستمرة'**
+  String get homeStartKhatmahSubtitle;
+
+  /// No description provided for @homeStartKhatmahCta.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنشاء ختمة جديدة'**
+  String get homeStartKhatmahCta;
+
+  /// No description provided for @homeAchievementSheetTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنجازاتك ومستواك'**
+  String get homeAchievementSheetTitle;
+
+  /// No description provided for @homeAchievementSheetSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'واصل التلاوة والحفظ لترقية مستواك القرآني'**
+  String get homeAchievementSheetSubtitle;
+
+  /// No description provided for @homePrayerTimesSheetTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مواقيت الصلاة'**
+  String get homePrayerTimesSheetTitle;
+
+  /// No description provided for @weekdayMonday.
+  ///
+  /// In ar, this message translates to:
+  /// **'الاثنين'**
+  String get weekdayMonday;
+
+  /// No description provided for @weekdayTuesday.
+  ///
+  /// In ar, this message translates to:
+  /// **'الثلاثاء'**
+  String get weekdayTuesday;
+
+  /// No description provided for @weekdayWednesday.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأربعاء'**
+  String get weekdayWednesday;
+
+  /// No description provided for @weekdayThursday.
+  ///
+  /// In ar, this message translates to:
+  /// **'الخميس'**
+  String get weekdayThursday;
+
+  /// No description provided for @weekdayFriday.
+  ///
+  /// In ar, this message translates to:
+  /// **'الجمعة'**
+  String get weekdayFriday;
+
+  /// No description provided for @weekdaySaturday.
+  ///
+  /// In ar, this message translates to:
+  /// **'السبت'**
+  String get weekdaySaturday;
+
+  /// No description provided for @weekdaySunday.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأحد'**
+  String get weekdaySunday;
 }
 
 class _AppLocalizationsDelegate

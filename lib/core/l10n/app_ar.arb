@@ -2055,5 +2055,18 @@
   "homeFooterTagline": "بالقرآن .. نحيا أجمل",
   "quickNavTitle": "تنقل سريع",
   "quickNavGo": "انتقال",
-  "quickNavPageHint": "رقم الصفحة (1-604)"
+  "quickNavPageHint": "رقم الصفحة (1-604)",
+  "homeStartKhatmahTitle": "ابدأ ختمتك القرآنية الآن",
+  "homeStartKhatmahSubtitle": "رتّب وِردك اليومي وحدد مدة الختمة لتنال أجر التلاوة المستمرة",
+  "homeStartKhatmahCta": "إنشاء ختمة جديدة",
+  "homeAchievementSheetTitle": "إنجازاتك ومستواك",
+  "homeAchievementSheetSubtitle": "واصل التلاوة والحفظ لترقية مستواك القرآني",
+  "homePrayerTimesSheetTitle": "مواقيت الصلاة",
+  "weekdayMonday": "الاثنين",
+  "weekdayTuesday": "الثلاثاء",
+  "weekdayWednesday": "الأربعاء",
+  "weekdayThursday": "الخميس",
+  "weekdayFriday": "الجمعة",
+  "weekdaySaturday": "السبت",
+  "weekdaySunday": "الأحد"
 }

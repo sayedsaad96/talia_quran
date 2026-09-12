@@ -26,12 +26,28 @@ class PrayerTimesSnapshot {
     required this.nextName,
     required this.nextTime,
     required this.minutesUntil,
+    this.fajr,
+    this.sunrise,
+    this.dhuhr,
+    this.asr,
+    this.maghrib,
+    this.isha,
   });
 
   final PrayerCity city;
   final String nextName;
   final DateTime nextTime;
   final int minutesUntil;
+
+  /// All six computed times for the selected city and calculation date.
+  /// Null only for legacy call sites constructed before the prayer sheet
+  /// feature; `current()` always fills them.
+  final DateTime? fajr;
+  final DateTime? sunrise;
+  final DateTime? dhuhr;
+  final DateTime? asr;
+  final DateTime? maghrib;
+  final DateTime? isha;
 }
 
 class PrayerTimesService {
@@ -129,6 +145,12 @@ class PrayerTimesService {
       nextName: next.$1,
       nextTime: next.$2,
       minutesUntil: next.$2.difference(now).inMinutes,
+      fajr: times.fajr,
+      sunrise: times.sunrise,
+      dhuhr: times.dhuhr,
+      asr: times.asr,
+      maghrib: times.maghrib,
+      isha: times.isha,
     );
   }
 

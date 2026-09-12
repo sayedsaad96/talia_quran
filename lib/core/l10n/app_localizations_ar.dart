@@ -4879,4 +4879,45 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quickNavPageHint => 'رقم الصفحة (1-604)';
+
+  @override
+  String get homeStartKhatmahTitle => 'ابدأ ختمتك القرآنية الآن';
+
+  @override
+  String get homeStartKhatmahSubtitle =>
+      'رتّب وِردك اليومي وحدد مدة الختمة لتنال أجر التلاوة المستمرة';
+
+  @override
+  String get homeStartKhatmahCta => 'إنشاء ختمة جديدة';
+
+  @override
+  String get homeAchievementSheetTitle => 'إنجازاتك ومستواك';
+
+  @override
+  String get homeAchievementSheetSubtitle =>
+      'واصل التلاوة والحفظ لترقية مستواك القرآني';
+
+  @override
+  String get homePrayerTimesSheetTitle => 'مواقيت الصلاة';
+
+  @override
+  String get weekdayMonday => 'الاثنين';
+
+  @override
+  String get weekdayTuesday => 'الثلاثاء';
+
+  @override
+  String get weekdayWednesday => 'الأربعاء';
+
+  @override
+  String get weekdayThursday => 'الخميس';
+
+  @override
+  String get weekdayFriday => 'الجمعة';
+
+  @override
+  String get weekdaySaturday => 'السبت';
+
+  @override
+  String get weekdaySunday => 'الأحد';
 }

@@ -14,6 +14,7 @@ import '../cubits/home_cubit.dart';
 import '../theme/home_skin.dart';
 import 'home_background.dart';
 import 'home_context_bar.dart';
+import 'home_prayer_times_sheet.dart';
 
 class HomeNightHeader extends StatelessWidget {
   const HomeNightHeader({super.key, required this.state, required this.skin});
@@ -27,7 +28,11 @@ class HomeNightHeader extends StatelessWidget {
       if (state.occasion != HomeOccasion.none)
         _OccasionChip(occasion: state.occasion, skin: skin),
       if (state.prayerSnapshot != null)
-        HomePrayerChip(snapshot: state.prayerSnapshot!, skin: skin),
+        HomePrayerChip(
+          snapshot: state.prayerSnapshot!,
+          skin: skin,
+          hijriLabel: state.hijriLabel,
+        ),
       HomeAchievementChip(
         progress: state.progress,
         isKids: state.isKids,
@@ -270,10 +275,16 @@ class _OccasionChip extends StatelessWidget {
 }
 
 class HomePrayerChip extends StatelessWidget {
-  const HomePrayerChip({super.key, required this.snapshot, required this.skin});
+  const HomePrayerChip({
+    super.key,
+    required this.snapshot,
+    required this.skin,
+    this.hijriLabel = '',
+  });
 
   final PrayerTimesSnapshot snapshot;
   final HomeSkin skin;
+  final String hijriLabel;
 
   String _localizedName(BuildContext context) => switch (snapshot.nextName) {
     'fajr' => context.l10n.prayerFajr,
@@ -299,11 +310,18 @@ class HomePrayerChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = _localizedName(context);
     return Semantics(
+      button: true,
       label: context.l10n.homePrayerChip(name, snapshot.minutesUntil),
       child: _HeroChip(
         skin: skin,
         icon: Icons.mosque_rounded,
         label: '$name  ${_formattedTime(context)}',
+        onTap: () => showHomePrayerTimesSheet(
+          context,
+          snapshot: snapshot,
+          hijriLabel: hijriLabel,
+          skin: skin,
+        ),
       ),
     );
   }

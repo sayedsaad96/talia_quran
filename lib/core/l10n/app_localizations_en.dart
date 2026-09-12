@@ -4833,4 +4833,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quickNavPageHint => 'Page number (1-604)';
+
+  @override
+  String get homeStartKhatmahTitle => 'Start Your Quran Khatmah Now';
+
+  @override
+  String get homeStartKhatmahSubtitle =>
+      'Set your daily portion and pace to maintain a regular Quran habit';
+
+  @override
+  String get homeStartKhatmahCta => 'Create New Khatmah';
+
+  @override
+  String get homeAchievementSheetTitle => 'Your Achievements & Level';
+
+  @override
+  String get homeAchievementSheetSubtitle =>
+      'Continue reciting and memorizing to advance your rank';
+
+  @override
+  String get homePrayerTimesSheetTitle => 'Prayer Times';
+
+  @override
+  String get weekdayMonday => 'Monday';
+
+  @override
+  String get weekdayTuesday => 'Tuesday';
+
+  @override
+  String get weekdayWednesday => 'Wednesday';
+
+  @override
+  String get weekdayThursday => 'Thursday';
+
+  @override
+  String get weekdayFriday => 'Friday';
+
+  @override
+  String get weekdaySaturday => 'Saturday';
+
+  @override
+  String get weekdaySunday => 'Sunday';
 }
