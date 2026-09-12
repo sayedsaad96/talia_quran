@@ -45,7 +45,7 @@ void main() {
     await getIt.reset();
   });
 
-  OverallProgress emptyProgress() => OverallProgress(
+  OverallProgress emptyProgress() => const OverallProgress(
         memorizedAyahs: 0,
         totalAyahs: 6236,
         memorizedSurahs: 0,
@@ -57,7 +57,7 @@ void main() {
         readJuz: 0,
         streakDays: 0,
         lastActiveDate: null,
-        achievements: const [],
+        achievements: [],
         readPagesCount: 0,
         totalQuranPages: 604,
         learningAyahs: 0,

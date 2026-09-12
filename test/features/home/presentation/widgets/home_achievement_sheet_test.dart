@@ -62,7 +62,7 @@ void main() {
   }
 
   testWidgets('renders level, total XP, and achievements list', (tester) async {
-    final progress = OverallProgress(
+    const progress = OverallProgress(
       memorizedAyahs: 10,
       totalAyahs: 6236,
       memorizedSurahs: 1,
@@ -74,7 +74,7 @@ void main() {
       readJuz: 1,
       streakDays: 3,
       lastActiveDate: null,
-      achievements: const [
+      achievements: [
         Achievement(
           id: 'first_page',
           titleKey: 'achievementTitleFirstPage',

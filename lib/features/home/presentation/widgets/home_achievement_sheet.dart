@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/constants/xp_constants.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
