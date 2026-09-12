@@ -32,7 +32,6 @@ class HomeActivityFeed extends StatelessWidget {
               Icon(Icons.history_rounded, size: 16, color: skin.gold),
               const SizedBox(width: 6),
               Expanded(
-                flex: 3,
                 child: Text(
                   context.l10n.homeRecentActivity,
                   maxLines: 1,
@@ -40,30 +39,6 @@ class HomeActivityFeed extends StatelessWidget {
                   style: AppTypography.titleMedium.copyWith(
                     color: skin.textPrimary,
                     fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              Flexible(
-                flex: 2,
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: TextButton(
-                    onPressed: () => context.go(AppRoutes.progress),
-                    style: TextButton.styleFrom(
-                      foregroundColor: skin.accent,
-                      minimumSize: Size.zero,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.sm,
-                        vertical: AppSpacing.xs,
-                      ),
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      context.l10n.homeActivityViewAll,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
                   ),
                 ),
               ),
@@ -83,7 +58,11 @@ class HomeActivityFeed extends StatelessWidget {
             for (var i = 0; i < events.length; i++) ...[
               if (i > 0)
                 Divider(height: 1, thickness: 1, color: skin.glassBorder),
-              _ActivityRow(event: events[i], skin: skin),
+              _ActivityRow(
+                event: events[i],
+                skin: skin,
+                state: state,
+              ),
             ],
         ],
       ),
@@ -92,10 +71,15 @@ class HomeActivityFeed extends StatelessWidget {
 }
 
 class _ActivityRow extends StatelessWidget {
-  const _ActivityRow({required this.event, required this.skin});
+  const _ActivityRow({
+    required this.event,
+    required this.skin,
+    required this.state,
+  });
 
   final ActivityEvent event;
   final HomeSkin skin;
+  final HomeLoaded state;
 
   @override
   Widget build(BuildContext context) {
@@ -132,41 +116,82 @@ class _ActivityRow extends StatelessWidget {
         ? context.l10n.homeAyahRange(event.startAyah!, event.endAyah!)
         : kindLabel;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: color.withValues(alpha: 0.16),
-            child: Icon(icon, size: 16, color: color),
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.titleSmall.copyWith(
-                    color: skin.textPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  '$detail · ${activityTimeLabel(context.l10n, event.occurredAt)}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTypography.labelSmall.copyWith(
-                    color: skin.textSecondary,
-                  ),
-                ),
-              ],
+    void handleTap() {
+      switch (event.kind) {
+        case ActivityEventKind.reading:
+          if (event.pageNumber != null) {
+            context.push('/quran/page/${event.pageNumber}');
+          } else if (event.surahId != null) {
+            context.push('/quran/surah/${event.surahId}');
+          } else {
+            context.push(AppRoutes.quran);
+          }
+          break;
+        case ActivityEventKind.khatmah:
+          final page =
+              event.pageNumber ?? state.activeKhatmah?.nextUnreadPage ?? 1;
+          context.push('/quran/page/$page?mode=khatmah');
+          break;
+        case ActivityEventKind.memorize:
+          if (event.surahId != null) {
+            context.push(
+              AppRoutes.hifzPracticeSurah,
+              extra: {'surahId': event.surahId},
+            );
+          } else {
+            context.push(AppRoutes.memorizationHub);
+          }
+          break;
+        case ActivityEventKind.review:
+          context.push(AppRoutes.memorizationV2Session);
+          break;
+      }
+    }
+
+    return InkWell(
+      onTap: handleTap,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: color.withValues(alpha: 0.16),
+              child: Icon(icon, size: 16, color: color),
             ),
-          ),
-        ],
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.titleSmall.copyWith(
+                      color: skin.textPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  Text(
+                    '$detail · ${activityTimeLabel(context.l10n, event.occurredAt)}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTypography.labelSmall.copyWith(
+                      color: skin.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 18,
+              color: skin.textSecondary.withValues(alpha: 0.5),
+            ),
+          ],
+        ),
       ),
     );
   }
