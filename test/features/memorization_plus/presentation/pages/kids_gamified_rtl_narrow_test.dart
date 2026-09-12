@@ -11,9 +11,15 @@ import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_g
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
 
 void main() {
+  setUpAll(() {
+    Animate.defaultDuration = Duration.zero;
+    Animate.restartOnHotReload = false;
+  });
+
   group('Kids gamified Arabic narrow layout', () {
     testWidgets('home page renders at 320px without layout exceptions', (
       tester,
@@ -91,7 +97,10 @@ void main() {
 Future<void> _pumpNarrowArabic(WidgetTester tester, Widget child) async {
   tester.view.devicePixelRatio = 1;
   tester.view.physicalSize = const Size(320, 900);
-  addTearDown(tester.view.reset);
+  addTearDown(() async {
+    await tester.pumpWidget(const SizedBox());
+    tester.view.reset();
+  });
 
   await tester.pumpWidget(_ArabicTestApp(child: child));
   await tester.pumpAndSettle();

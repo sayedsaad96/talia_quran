@@ -160,8 +160,6 @@ class _SplashPageState extends State<SplashPage> {
                               'assets/images/splash_hero.png',
                               width: 140,
                               height: 140,
-                              cacheWidth: 280,
-                              cacheHeight: 280,
                               fit: BoxFit.contain,
                             )
                             .animate()

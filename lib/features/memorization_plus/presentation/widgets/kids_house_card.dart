@@ -482,55 +482,69 @@ class _DestinationActionFooter extends StatelessWidget {
     final l10n = context.l10n;
 
     if (status == KidsJourneyStageStatus.current) {
-      return SizedBox(
+      return Container(
         width: double.infinity,
-        height: 36,
-        child: FilledButton.icon(
-          onPressed: onTap,
-          icon: const Icon(Icons.play_arrow_rounded, size: 18),
-          label: Text(
-            l10n.kidsGamifiedStartMission,
-            style: AppTypography.labelSmall.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: KidsTheme.goldStar.withValues(alpha: 0.18),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.play_arrow_rounded,
+              size: 16,
+              color: KidsTheme.goldStar,
             ),
-          ),
-          style: FilledButton.styleFrom(
-            backgroundColor: KidsTheme.goldStar,
-            foregroundColor: const Color(0xFF1F2937),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                l10n.kidsGamifiedCurrentStage,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.labelSmall.copyWith(
+                  color: KidsTheme.goldStar,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0,
+                ),
+              ),
             ),
-            elevation: 3,
-          ),
+          ],
         ),
       );
     }
 
     if (status == KidsJourneyStageStatus.needsReview) {
-      return SizedBox(
+      return Container(
         width: double.infinity,
-        height: 36,
-        child: FilledButton.icon(
-          onPressed: onTap,
-          icon: const Icon(Icons.refresh_rounded, size: 18),
-          label: Text(
-            l10n.kidsGamifiedContinueNow,
-            style: AppTypography.labelSmall.copyWith(
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          color: const Color(0x33C084FC),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.refresh_rounded,
+              size: 16,
+              color: Color(0xFFC084FC),
             ),
-          ),
-          style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFFC084FC),
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                l10n.kidsGamifiedNeedsReview,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: AppTypography.labelSmall.copyWith(
+                  color: const Color(0xFFC084FC),
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0,
+                ),
+              ),
             ),
-            elevation: 3,
-          ),
+          ],
         ),
       );
     }

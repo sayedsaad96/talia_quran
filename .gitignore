@@ -55,3 +55,4 @@ android/local_maven/
 test_builder.jar
 # Widget Preview related
 .widget_preview/
+android/.kotlin/

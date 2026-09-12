@@ -6,9 +6,15 @@ import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_home_page.dart';
 
 void main() {
+  setUpAll(() {
+    Animate.defaultDuration = Duration.zero;
+    Animate.restartOnHotReload = false;
+  });
+
   group('KidsGamifiedHomePage', () {
     test('mission route preserves the due-review task type', () {
       const mission = KidsNextMission(
@@ -86,6 +92,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
       addTearDown(tester.view.reset);
+      addTearDown(() async => tester.pumpWidget(const SizedBox()));
 
       String? location;
 
@@ -115,6 +122,7 @@ void main() {
         tester.view.devicePixelRatio = 1;
         tester.view.physicalSize = const Size(900, 1200);
         addTearDown(tester.view.reset);
+        addTearDown(() async => tester.pumpWidget(const SizedBox()));
 
         const firstTimeState = KidsJourneyLoaded(
           surahId: 114,
@@ -156,6 +164,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
       addTearDown(tester.view.reset);
+      addTearDown(() async => tester.pumpWidget(const SizedBox()));
 
       await tester.pumpWidget(
         _TestApp(
@@ -179,6 +188,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(900, 1200);
       addTearDown(tester.view.reset);
+      addTearDown(() async => tester.pumpWidget(const SizedBox()));
 
       final tapped = <String>[];
 

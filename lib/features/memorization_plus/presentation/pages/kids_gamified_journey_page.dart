@@ -208,16 +208,18 @@ class _KidsGamifiedJourneyContentState
                           ),
                         ),
 
-                        // The 2.5D Winding Adventure Journey Path
                         if (widget.state.stages.isNotEmpty)
                           SliverList.builder(
                             itemCount: widget.state.stages.length,
                             itemBuilder: (context, index) {
                               final stage = widget.state.stages[index];
-                              final isActive = stage.status ==
-                                      KidsJourneyStageStatus.current ||
-                                  stage.status ==
-                                      KidsJourneyStageStatus.needsReview;
+                              final activeIndex = widget.state.stages.indexWhere(
+                                (s) =>
+                                    s.status == KidsJourneyStageStatus.current ||
+                                    s.status ==
+                                        KidsJourneyStageStatus.needsReview,
+                              );
+                              final isActive = index == activeIndex;
                               final isLeft = index.isEven;
                               final showSignpost = (index + 1) % 4 == 0 &&
                                   index != widget.state.stages.length - 1;
