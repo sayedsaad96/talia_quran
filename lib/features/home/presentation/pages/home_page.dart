@@ -17,6 +17,7 @@ import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../../streak/presentation/cubits/streak_cubit.dart';
 import '../cubits/home_cubit.dart';
+import '../../domain/services/home_primary_action_resolver.dart';
 import '../theme/home_skin.dart';
 import '../widgets/glass_panel.dart';
 import '../widgets/home_activity_feed.dart';
@@ -31,6 +32,7 @@ import '../widgets/home_hero_section.dart';
 import '../widgets/home_night_header.dart';
 import '../widgets/home_parent_children.dart';
 import '../widgets/home_quick_access.dart';
+import '../widgets/home_start_khatmah_card.dart';
 import '../widgets/next_best_action_card.dart';
 import '../widgets/resume_session_card.dart';
 
@@ -230,21 +232,28 @@ class HomeLoadedView extends StatelessWidget {
             )
           else ...[
             SliverToBoxAdapter(
-              child: state.continueRecitation != null
-                  ? Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.pagePadding,
-                        AppSpacing.md,
-                        AppSpacing.pagePadding,
-                        0,
-                      ),
-                      child: HomeContinueCard(
-                        recitation: state.continueRecitation!,
-                        skin: skin,
-                      ),
-                    )
-                  : _PrimaryAction(state: state, isDark: isDark),
+              child: _PrimaryAction(state: state, skin: skin),
             ),
+            if (JourneyFeatureFlags.unifiedJourneyEnabled &&
+                state.continueRecitation == null &&
+                const HomePrimaryActionResolver().resolve(
+                      unifiedJourneyEnabled:
+                          JourneyFeatureFlags.unifiedJourneyEnabled,
+                      hasContinueRecitation: false,
+                      heroPriority: state.heroAction?.priority,
+                    ) ==
+                    HomePrimaryActionKind.journeyHero)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.md,
+                    AppSpacing.pagePadding,
+                    0,
+                  ),
+                  child: HomeStartKhatmahCard(skin: skin, isDark: isDark),
+                ),
+              ),
             if (state.activeSlot != null)
               SliverToBoxAdapter(
                 child: Padding(
@@ -397,41 +406,65 @@ class HomeLoadedView extends StatelessWidget {
 }
 
 class _PrimaryAction extends StatelessWidget {
-  const _PrimaryAction({required this.state, required this.isDark});
+  const _PrimaryAction({required this.state, required this.skin});
+
   final HomeLoaded state;
-  final bool isDark;
+  final HomeSkin skin;
 
   @override
   Widget build(BuildContext context) {
+    final isDark = skin.isDark;
+    final kind = const HomePrimaryActionResolver().resolve(
+      unifiedJourneyEnabled: JourneyFeatureFlags.unifiedJourneyEnabled,
+      hasContinueRecitation: state.continueRecitation != null,
+      heroPriority: state.heroAction?.priority,
+    );
     Widget child;
-    if (JourneyFeatureFlags.unifiedJourneyEnabled && state.heroAction != null) {
-      final action = state.heroAction!;
-      final data = const UnifiedJourneyActionMapper().map(context, action);
-      child = HomeHeroSection(
-        data: data,
-        isDark: isDark,
-        minutes: state.heroMinutes,
-        onTap: () => context.push(action.route),
-        onMore: state.alternativeActions.length > 1
-            ? () => showHomeAlternativesSheet(
-                context,
-                actions: state.alternativeActions.skip(1).toList(),
-                isDark: isDark,
-              )
-            : null,
+    if (kind == HomePrimaryActionKind.khatmahContinue) {
+      child = HomeContinueCard(
+        recitation: state.continueRecitation!,
+        skin: skin,
       );
-    } else if (state.lastRestorableLocation != null) {
-      child = ResumeSessionCard(
-        location: state.lastRestorableLocation!,
+    } else if (kind == HomePrimaryActionKind.startKhatmah &&
+        JourneyFeatureFlags.unifiedJourneyEnabled) {
+      child = HomeStartKhatmahCard(
+        skin: skin,
         isDark: isDark,
-        isKids: state.isKids,
       );
     } else {
-      child = NextBestActionCard(
-        state: state,
-        isDark: isDark,
-        isKids: state.isKids,
-      );
+      // Interim (Tasks 1-3): preserves today's rendering exactly.
+      // Task 5 replaces the startKhatmah case with HomeStartKhatmahCard
+      // and adds the invitation below the journey hero (plan step 3.4).
+      if (JourneyFeatureFlags.unifiedJourneyEnabled &&
+          state.heroAction != null) {
+        final action = state.heroAction!;
+        final data = const UnifiedJourneyActionMapper().map(context, action);
+        child = HomeHeroSection(
+          data: data,
+          isDark: isDark,
+          minutes: state.heroMinutes,
+          onTap: () => context.push(action.route),
+          onMore: state.alternativeActions.length > 1
+              ? () => showHomeAlternativesSheet(
+                  context,
+                  actions: state.alternativeActions.skip(1).toList(),
+                  isDark: isDark,
+                )
+              : null,
+        );
+      } else if (state.lastRestorableLocation != null) {
+        child = ResumeSessionCard(
+          location: state.lastRestorableLocation!,
+          isDark: isDark,
+          isKids: state.isKids,
+        );
+      } else {
+        child = NextBestActionCard(
+          state: state,
+          isDark: isDark,
+          isKids: state.isKids,
+        );
+      }
     }
     return Padding(
       padding: const EdgeInsets.fromLTRB(

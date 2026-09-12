@@ -3,16 +3,20 @@ import '../../../khatmah/domain/entities/khatmah_plan.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../entities/continue_recitation.dart';
 
-/// Builds the "continue recitation" hero from the user's own reading history.
+/// Builds the "continue recitation" hero strictly from an active khatmah.
 ///
-/// Progress numbers come only from confirmed read pages or an active khatmah
-/// daily target. The ayah range on a mushaf page is a location label, never a
-/// substitute for how far the user has actually read.
+/// Random reading or memorization never activates the recitation card: when
+/// there is no `KhatmahStatus.active` plan the mapper returns null and the
+/// home screen shows the start-khatmah invitation instead
+/// (spec 2026-09-12, section 3.1).
 class ContinueRecitationMapper {
   const ContinueRecitationMapper();
 
   static const totalQuranPages = 604;
 
+  /// [heroAction], [lastRestorableLocation] and [confirmedReadPages] are
+  /// retained for source compatibility with existing call sites; they no
+  /// longer influence the result.
   ContinueRecitation? map({
     required bool isArabic,
     UnifiedJourneyAction? heroAction,
@@ -23,39 +27,15 @@ class ContinueRecitationMapper {
     int confirmedReadPages = 0,
   }) {
     final moment = now ?? DateTime.now();
-    if (activeKhatmah != null && activeKhatmah.status == KhatmahStatus.active) {
-      return _fromKhatmah(
-        isArabic: isArabic,
-        plan: activeKhatmah,
-        page: dailyWirdPageDetail,
-        now: moment,
-      );
+    if (activeKhatmah == null ||
+        activeKhatmah.status != KhatmahStatus.active) {
+      return null;
     }
-
-    final resumePage = _quranPageFrom(lastRestorableLocation);
-    final hasOpenedMushaf = resumePage != null || confirmedReadPages > 0;
-    if (!hasOpenedMushaf) return null;
-
-    if (dailyWirdPageDetail != null && dailyWirdPageDetail.ayahs.isNotEmpty) {
-      return _fromPage(
-        isArabic: isArabic,
-        page: dailyWirdPageDetail,
-        route:
-            heroAction?.route ??
-            lastRestorableLocation ??
-            '/quran/page/${dailyWirdPageDetail.pageNumber}',
-        confirmedReadPages: confirmedReadPages,
-      );
-    }
-
-    if (resumePage == null) return null;
-    return ContinueRecitation(
-      surahName: isArabic ? 'القرآن الكريم' : 'The Quran',
-      current: confirmedReadPages.clamp(0, totalQuranPages),
-      total: totalQuranPages,
-      percent: confirmedReadPages / totalQuranPages,
-      route: lastRestorableLocation!,
-      unit: ContinueRecitationUnit.pages,
+    return _fromKhatmah(
+      isArabic: isArabic,
+      plan: activeKhatmah,
+      page: dailyWirdPageDetail,
+      now: moment,
     );
   }
 
@@ -84,45 +64,5 @@ class ContinueRecitationMapper {
       unit: ContinueRecitationUnit.pages,
       versePreview: ayahs.isEmpty ? null : ayahs.first.text,
     );
-  }
-
-  ContinueRecitation _fromPage({
-    required bool isArabic,
-    required QuranPageDetail page,
-    required String route,
-    required int confirmedReadPages,
-  }) {
-    final surah = page.surahs.isNotEmpty ? page.surahs.first : null;
-    final ayahs = surah == null
-        ? page.ayahs
-        : page.ayahs.where((ayah) => ayah.surahId == surah.id).toList();
-    final usable = ayahs.isNotEmpty ? ayahs : page.ayahs;
-    final current = confirmedReadPages.clamp(0, totalQuranPages);
-    return ContinueRecitation(
-      surahName: surah == null
-          ? (isArabic ? 'القرآن الكريم' : 'The Quran')
-          : (isArabic ? surah.nameAr : surah.nameEn),
-      surahId: surah?.id,
-      startAyah: usable.isEmpty ? null : usable.first.numberInSurah,
-      endAyah: usable.isEmpty ? null : usable.last.numberInSurah,
-      current: current,
-      total: totalQuranPages,
-      percent: current / totalQuranPages,
-      route: route,
-      unit: ContinueRecitationUnit.pages,
-      versePreview: usable.isEmpty ? null : usable.first.text,
-    );
-  }
-
-  int? _quranPageFrom(String? location) {
-    if (location == null || location.isEmpty) return null;
-    final uri = Uri.tryParse(location);
-    if (uri == null || uri.pathSegments.length < 3) return null;
-    if (uri.pathSegments[0] != 'quran' || uri.pathSegments[1] != 'page') {
-      return null;
-    }
-    final page = int.tryParse(uri.pathSegments[2]);
-    if (page == null || page < 1 || page > totalQuranPages) return null;
-    return page;
   }
 }
