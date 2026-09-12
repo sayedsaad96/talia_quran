@@ -74,10 +74,12 @@ The application's Home Screen (`HomePage`) currently suffers from four main UX a
   1. If `state.continueRecitation != null`: Render `HomeContinueCard(recitation: state.continueRecitation!)`.
   2. If `state.continueRecitation == null`:
      - Evaluate `state.heroAction`:
-       - If `state.heroAction != null` and `state.heroAction!.priority` is higher than daily goal (i.e. `p1ActiveSession`, `p2CriticalAlert`, `p3ReviewBacklog`, or `p4SmartPlan`):
+       - If `state.heroAction != null` and `state.heroAction!.priority.index <= UnifiedJourneyPriority.p4SmartPlan.index` (i.e. `p1ActiveSession`, `p2CriticalAlert`, `p3ReviewBacklog`, or `p4SmartPlan`):
          Render `_PrimaryAction` (which displays `HomeHeroSection`) to preserve the Smart Coach / Unified Journey flagship feature.
        - Otherwise: Render `HomeStartKhatmahCard`.
      - In case `HomeHeroSection` is rendered above, offer `HomeStartKhatmahCard` as an inspiring card below it so the user still has an immediate invitation to start a Khatmah.
+- **`HomePrimaryActionResolver` (New, Pure):** Extract the decision above into a pure, unit-testable resolver in `lib/features/home/domain/services/home_primary_action_resolver.dart` that takes (`continueRecitation`, `heroAction`, `unifiedJourneyEnabled`) and returns a sealed kind (`khatmahContinue`, `journeyHero`, `startKhatmah`). `HomePage`/`_PrimaryAction` consume it; no branching logic stays inline in the widget.
+- **Legacy Cards (`ResumeSessionCard` / `NextBestActionCard`):** Both remain the flag-off fallback: when `JourneyFeatureFlags.unifiedJourneyEnabled == false`, `_PrimaryAction` keeps its current `lastRestorableLocation → ResumeSessionCard → NextBestActionCard` chain, and the existing suites `smart_coach_home_validation_test.dart` and `responsive_home_widgets_test.dart` must keep passing unmodified. They are never rendered when the flag is on.
 
 ### 3.3 Contextual Slots & Elimination of Redundancies
 - **`HomeSlotKind` (`lib/features/home/domain/entities/home_contextual_slot.dart`):**
@@ -87,7 +89,7 @@ The application's Home Screen (`HomePage`) currently suffers from four main UX a
 - **`HomeContextualSlot` (`lib/features/home/presentation/widgets/home_contextual_slot.dart`):**
   - Remove UI cases for `weeklyReflection`.
 - **`HomeMomentumStrip` (`lib/features/home/presentation/widgets/home_momentum_strip.dart`):**
-  - Remove `onTap: () => context.go(AppRoutes.progress)` (line 50) and make it an informative, non-redirecting card or display streak celebration sheet.
+  - Remove `onTap: () => context.go(AppRoutes.progress)` (line 50) and make it an informative, non-redirecting card (streak stats only; no celebration sheet — streak celebration is already covered by `HomeAchievementSheet` in §3.7).
 
 ### 3.4 Interactive Recent Activity Feed (`lib/features/home/presentation/widgets/home_activity_feed.dart`)
 - Remove the `TextButton` ("عرض الكل") that called `context.go(AppRoutes.progress)`.
@@ -97,7 +99,7 @@ The application's Home Screen (`HomePage`) currently suffers from four main UX a
     Else if `event.surahId != null`: navigate to `/quran/surah/${event.surahId}`.
     Else: navigate to `AppRoutes.quran`.
   - `ActivityEventKind.khatmah`:
-    Navigate to `/quran/page/${event.pageNumber ?? 1}?mode=khatmah`.
+    Navigate to `/quran/page/${event.pageNumber ?? state.activeKhatmah?.nextUnreadPage ?? 1}?mode=khatmah` (fall back to the active khatmah's next unread page, mirroring the cubit's reading-route resolution — never silently jump to Al-Fatiha).
   - `ActivityEventKind.memorize`:
     If `event.surahId != null`: navigate to `AppRoutes.hifzPracticeSurah` with surah context or `AppRoutes.memorizationHub`.
     Else: navigate to `AppRoutes.memorizationHub`.
@@ -107,7 +109,7 @@ The application's Home Screen (`HomePage`) currently suffers from four main UX a
 ### 3.5 Direct Action Tiles (`lib/features/home/presentation/widgets/home_action_tiles.dart`)
 - **استمع (Listen):**
   - If `state.audioResume != null`: resume via `getIt<QuranContinuousPlayerService>().playAyah(...)`.
-  - Else: start playback of ayah of the day or daily wird page.
+  - Else: start playback from `state.ayahOfDay` (available on `HomeLoaded`); the daily wird page is not directly exposed to presentation and must not be assumed.
 - **راجع (Review):**
   - Navigate directly to `AppRoutes.memorizationV2Session`.
 - **احفظ (Memorize):**
@@ -130,6 +132,7 @@ The application's Home Screen (`HomePage`) currently suffers from four main UX a
   - If NO certificate available: Instead of `context.go(AppRoutes.progress)`, show `HomeAchievementSheet(progress: state.progress, isKids: state.isKids)`.
 - **`HomeAchievementSheet` (New Widget in `lib/features/home/presentation/widgets/home_achievement_sheet.dart`):**
   - Displays user rank/level title, total XP, current progress toward next milestone, and list of earned/in-progress badges.
+  - Data source: thread `state.totalXp` into the chip/sheet and derive the level via `XpService.getCurrentLevel(totalXp)` + its exposed `progressToNextLevel` — do not re-derive level thresholds from `XpConstants`.
 - **`PrayerTimesService` & Model (`lib/core/services/prayer_times_service.dart`):**
   - Update `PrayerTimesSnapshot` to include all 6 prayer times:
     `final Map<String, DateTime> allTimes;`
@@ -158,7 +161,12 @@ The application's Home Screen (`HomePage`) currently suffers from four main UX a
      - Test that `weeklyReflection` is never generated in `activeSlot`.
    - `test/core/services/prayer_times_service_test.dart`:
      - Test that `PrayerTimesSnapshot` includes all 6 prayer times.
-   - Run `flutter test` to ensure all tests pass.
+   - `test/features/home/domain/services/home_primary_action_resolver_test.dart`:
+     - Active khatmah → `khatmahContinue` (regardless of heroAction).
+     - p1–p4 heroAction, no khatmah → `journeyHero` (with `HomeStartKhatmahCard` rendered below).
+     - p5/p6 heroAction, no khatmah → `startKhatmah`.
+   - Widget tests for `HomePrayerTimesSheet` (renders 6 rows, Hijri date, city name, next-prayer highlight) and `HomeStartKhatmahCard` (CTA routes to `AppRoutes.khatmahSetup`).
+   - Run `flutter test` to ensure all tests pass (including the existing `ResumeSessionCard`/`NextBestActionCard` suites under the flag-off path).
 2. **Static Analysis:**
    - Run `dart analyze` to ensure zero errors or warnings.
 3. **Manual / Functional Verification:**

@@ -1,15 +1,17 @@
-# Home Screen Redesign & Navigation Cleanup Implementation Plan
+# Home Screen Redesign & Navigation Cleanup Implementation Plan (Updated)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Redesign the Home Screen to strictly link "أكمل تلاوتك" to active Khatmah plans, eliminate all accidental redirections to the progress page, turn action tiles into direct execution links, optimize quick access, and add an interactive animated prayer times sheet with full Hijri calendar data.
+**Goal:** Redesign the Home Screen to strictly link "أكمل تلاوتك" to active Khatmah plans, eliminate all 5 accidental redirections to the progress page, extract a pure `HomePrimaryActionResolver` for the smart priority hero contract, turn action tiles into direct execution links, optimize quick access, and add an interactive animated prayer times sheet with full Hijri calendar data.
 
 **Architecture:** 
 - Strict Khatmah mapping in `ContinueRecitationMapper` returning null when no active Khatmah exists.
-- Smart Priority contract in `_PrimaryAction` (`home_page.dart`): active Khatmah renders `HomeContinueCard`; critical/high-priority learning alerts render `HomeHeroSection` with a contextual Khatmah prompt; otherwise renders `HomeStartKhatmahCard`.
-- Redundant `/progress` route elimination across `HomeCubit`, `HomeContextualSlot`, `HomeActivityFeed`, `HomeContextBar`, and `HomeMomentumStrip`.
+- Pure `HomePrimaryActionResolver` in `lib/features/home/domain/services/home_primary_action_resolver.dart` deciding between `khatmahContinue`, `journeyHero` (with contextual `startKhatmah`), and `startKhatmah`.
+- Preserved flag-off fallback for `ResumeSessionCard` / `NextBestActionCard` when `JourneyFeatureFlags.unifiedJourneyEnabled == false` to keep existing validation suites passing.
+- Redundant `/progress` route elimination across `HomeCubit`, `HomeContextualSlot`, `HomeActivityFeed`, `HomeContextBar`, and `HomeMomentumStrip` (informative stats only).
 - Extended `PrayerTimesSnapshot` with all 6 daily prayer times rendered in an animated `HomePrayerTimesSheet`.
 - Dual localization (`app_ar.arb` and `app_en.arb`) for all new user-facing strings.
+- Derived XP levels in `HomeAchievementSheet` via `XpService.getCurrentLevel` and `XpService.progressToNextLevel`.
 
 **Tech Stack:** Flutter, Dart, BLoC (`flutter_bloc`), `adhan` package, `go_router`, `shared_preferences`, `intl`.
 
@@ -19,20 +21,24 @@
 - Preserve existing comments and docstrings.
 - Follow Clean Code, SOLID, DRY, and KISS principles.
 - Run `flutter test` and `dart analyze` to guarantee zero errors or warnings.
+- Keep legacy flag-off suites (`smart_coach_home_validation_test.dart` and `responsive_home_widgets_test.dart`) passing unmodified.
 
 ---
 
-### Task 1: Localization & PrayerTimesService Enhancement
+### Task 1: Localization, XpService & PrayerTimesService Enhancement
 
 **Files:**
 - Modify: `lib/core/l10n/app_ar.arb`
 - Modify: `lib/core/l10n/app_en.arb`
 - Modify: `lib/core/services/prayer_times_service.dart`
+- Modify: `lib/core/services/xp_service.dart`
 - Test: `test/core/services/prayer_times_service_test.dart`
+- Test: `test/core/services/xp_service_test.dart`
 
 **Interfaces:**
 - Produces: 
   - `PrayerTimesSnapshot.allTimes`: `Map<String, DateTime>` mapping `'fajr'`, `'sunrise'`, `'dhuhr'`, `'asr'`, `'maghrib'`, `'isha'` to their calculated times.
+  - `XpService.progressToNextLevel(int xp)`: public method exposing progress ratio towards the next level `(0.0..1.0)`.
   - Localization keys: `homeStartKhatmahTitle`, `homeStartKhatmahSubtitle`, `homeStartKhatmahAction`, `homePrayerTimesSheetTitle`, `homeAchievementSheetTitle`, `homeAchievementSheetSubtitle`.
 
 - [ ] **Step 1: Write the failing unit test for `PrayerTimesService` and `PrayerTimesSnapshot`**
@@ -44,9 +50,9 @@ Add a test in `test/core/services/prayer_times_service_test.dart` verifying that
 Run: `flutter test test/core/services/prayer_times_service_test.dart`
 Expected: FAIL (missing `allTimes` property or constructor argument).
 
-- [ ] **Step 3: Update `PrayerTimesSnapshot` and `PrayerTimesService`**
+- [ ] **Step 3: Update `PrayerTimesSnapshot`, `PrayerTimesService`, and `XpService`**
 
-In `lib/core/services/prayer_times_service.dart`:
+1. In `lib/core/services/prayer_times_service.dart`:
 Add `final Map<String, DateTime> allTimes;` to `PrayerTimesSnapshot`.
 In `PrayerTimesService.current()`, populate `allTimes`:
 ```dart
@@ -60,6 +66,9 @@ final allTimes = <String, DateTime>{
 };
 ```
 Pass `allTimes: allTimes` to `PrayerTimesSnapshot`.
+
+2. In `lib/core/services/xp_service.dart`:
+Expose `double progressToNextLevel(int xp) => _getProgress(xp);`.
 
 - [ ] **Step 4: Add localization strings to `app_ar.arb` and `app_en.arb`**
 
@@ -91,8 +100,8 @@ Expected: PASS
 - [ ] **Step 6: Commit**
 
 ```bash
-git add lib/core/l10n/ lib/core/services/prayer_times_service.dart test/core/services/prayer_times_service_test.dart
-git commit -m "feat(prayer,l10n): add allTimes to PrayerTimesSnapshot and add home redesign l10n strings"
+git add lib/core/l10n/ lib/core/services/prayer_times_service.dart lib/core/services/xp_service.dart test/core/services/prayer_times_service_test.dart
+git commit -m "feat(prayer,l10n,xp): add allTimes to PrayerTimesSnapshot, expose progressToNextLevel in XpService, and add home redesign l10n strings"
 ```
 
 ---
@@ -173,7 +182,7 @@ git commit -m "fix(home): restrict continue recitation card strictly to active k
 
 **Interfaces:**
 - Consumes: `HomeLoaded`
-- Produces: `HomeState` where `activeSlot?.kind` is never `weeklyReflection`.
+- Produces: `HomeState` where `activeSlot?.kind` is never `weeklyReflection`, and `HomeMomentumStrip` renders streak stats without any `onTap` redirecting to progress.
 
 - [ ] **Step 1: Write test verifying `weeklyReflection` is never chosen as active slot**
 
@@ -186,21 +195,13 @@ Run: `flutter test test/features/home/presentation/cubits/home_cubit_test.dart`
 - [ ] **Step 3: Remove `weeklyReflection` candidate generation and slot rendering**
 
 1. In `lib/features/home/presentation/cubits/home_cubit.dart`:
-Remove lines 590-595:
-```dart
-if (today.weekday == DateTime.friday || today.weekday == DateTime.saturday)
-  const HomeSlotCandidate(
-    kind: HomeSlotKind.weeklyReflection,
-    route: AppRoutes.progress,
-    priority: 4,
-  ),
-```
+Remove lines 590-595 (`weeklyReflection` candidate).
 2. In `lib/features/home/domain/entities/home_contextual_slot.dart`:
-Remove or mark deprecated `weeklyReflection`.
+Remove or deprecate `weeklyReflection`.
 3. In `lib/features/home/presentation/widgets/home_contextual_slot.dart`:
 Remove `HomeSlotKind.weeklyReflection` cases from title and body switch expressions.
 4. In `lib/features/home/presentation/widgets/home_momentum_strip.dart`:
-Remove line 50 `onTap: () => context.go(AppRoutes.progress)` to eliminate accidental jump to progress.
+Remove line 50 `onTap: () => context.go(AppRoutes.progress)` and make the strip an informative, non-redirecting card showing streak stats only (no celebration sheet, since streak achievement is covered by `HomeAchievementSheet`).
 
 - [ ] **Step 4: Run tests and verify PASS**
 
@@ -223,15 +224,15 @@ git commit -m "refactor(home): remove weeklyReflection slot and momentum strip r
 - Test: `test/features/home/presentation/widgets/home_activity_feed_test.dart`
 
 **Interfaces:**
-- Consumes: `HomeLoaded.recentActivity`
-- Produces: Interactive rows navigating directly to content, with no "عرض الكل" text button.
+- Consumes: `HomeLoaded.recentActivity`, `HomeLoaded.activeKhatmah`
+- Produces: Interactive rows navigating directly to content, with no "عرض الكل" text button, and khatmah fallback to active khatmah's next unread page.
 
 - [ ] **Step 1: Write widget test for `HomeActivityFeed`**
 
 Verify that:
 1. "عرض الكل" button is NOT rendered.
 2. Tapping a reading activity navigates to `/quran/page/$pageNumber`.
-3. Tapping a khatmah activity navigates to `/quran/page/$pageNumber?mode=khatmah`.
+3. Tapping a khatmah activity navigates to `/quran/page/${event.pageNumber ?? state.activeKhatmah?.nextUnreadPage ?? 1}?mode=khatmah`.
 4. Tapping a review activity navigates to `AppRoutes.memorizationV2Session`.
 
 - [ ] **Step 2: Run test to verify failure**
@@ -256,7 +257,7 @@ onTap: () {
       }
       break;
     case ActivityEventKind.khatmah:
-      final page = event.pageNumber ?? 1;
+      final page = event.pageNumber ?? state.activeKhatmah?.nextUnreadPage ?? 1;
       context.push('/quran/page/$page?mode=khatmah');
       break;
     case ActivityEventKind.memorize:
@@ -376,7 +377,7 @@ Run: `flutter test test/features/home/presentation/widgets/home_quick_access_tes
 - [ ] **Step 3: Update `HomeQuickAccess`**
 
 In `lib/features/home/presentation/widgets/home_quick_access.dart`:
-Remove static `AppRoutes.khatmahDashboard` item. Keep Bookmarks, time-of-day Azkar, and Friday Kahf.
+Remove static `AppRoutes.khatmahDashboard` item. Keep Bookmarks, dynamic time-of-day Azkar, and Friday Kahf.
 
 - [ ] **Step 4: Run test and verify PASS**
 
@@ -392,56 +393,108 @@ git commit -m "refactor(home): streamline quick access chips and remove redundan
 
 ---
 
-### Task 7: `HomeStartKhatmahCard` & Hero Smart Priority Contract
+### Task 7: Pure `HomePrimaryActionResolver`, `HomeStartKhatmahCard`, and Hero Contract Integration
 
 **Files:**
+- Create: `lib/features/home/domain/services/home_primary_action_resolver.dart`
 - Create: `lib/features/home/presentation/widgets/home_start_khatmah_card.dart`
 - Modify: `lib/features/home/presentation/pages/home_page.dart:230-250, 399-445`
+- Test: `test/features/home/domain/services/home_primary_action_resolver_test.dart`
 - Test: `test/features/home/presentation/widgets/home_start_khatmah_card_test.dart`
-- Test: `test/features/home/presentation/pages/home_page_test.dart`
 
 **Interfaces:**
-- Consumes: `HomeLoaded`
-- Produces:
-  - `HomeStartKhatmahCard`: UI card with CTA to `AppRoutes.khatmahSetup`.
-  - Smart Priority logic in `HomePage`:
-    - `state.continueRecitation != null` -> `HomeContinueCard`
-    - `state.heroAction` has high priority learning task -> `HomeHeroSection` + contextual `HomeStartKhatmahCard`
-    - Otherwise -> `HomeStartKhatmahCard` as primary hero.
+- `HomePrimaryActionResolver`: pure class returning `HomePrimaryActionDecision(kind: HomePrimaryActionKind, showContextualStartKhatmah: bool)`
+- `HomeStartKhatmahCard`: widget with headline, subtitle, and button to `AppRoutes.khatmahSetup`.
 
-- [ ] **Step 1: Write unit test for `HomeStartKhatmahCard`**
+- [ ] **Step 1: Write unit tests for `HomePrimaryActionResolver`**
 
-Verify title, subtitle, and tapping CTA navigates to `AppRoutes.khatmahSetup`.
+In `test/features/home/domain/services/home_primary_action_resolver_test.dart`:
+1. Active khatmah (`continueRecitation != null`) -> `khatmahContinue` (regardless of `heroAction`).
+2. No khatmah, `heroAction` has priority `p1ActiveSession`, `p2CriticalAlert`, `p3ReviewBacklog`, or `p4SmartPlan` (priority index <= p4 index), and `unifiedJourneyEnabled == true` -> `journeyHero` with `showContextualStartKhatmah == true`.
+3. No khatmah, `heroAction` has priority `p5DailyGoal` or `p6FreeExploration` -> `startKhatmah` with `showContextualStartKhatmah == false`.
+4. No khatmah, `heroAction == null` -> `startKhatmah`.
 
-- [ ] **Step 2: Implement `HomeStartKhatmahCard`**
+- [ ] **Step 2: Implement pure `HomePrimaryActionResolver`**
+
+Create `lib/features/home/domain/services/home_primary_action_resolver.dart`:
+```dart
+import '../../../../core/journey/unified_journey_action.dart';
+import '../entities/continue_recitation.dart';
+
+enum HomePrimaryActionKind {
+  khatmahContinue,
+  journeyHero,
+  startKhatmah,
+}
+
+class HomePrimaryActionDecision {
+  const HomePrimaryActionDecision({
+    required this.kind,
+    this.showContextualStartKhatmah = false,
+  });
+
+  final HomePrimaryActionKind kind;
+  final bool showContextualStartKhatmah;
+}
+
+class HomePrimaryActionResolver {
+  const HomePrimaryActionResolver();
+
+  HomePrimaryActionDecision resolve({
+    required ContinueRecitation? continueRecitation,
+    required UnifiedJourneyAction? heroAction,
+    required bool unifiedJourneyEnabled,
+  }) {
+    if (continueRecitation != null) {
+      return const HomePrimaryActionDecision(
+        kind: HomePrimaryActionKind.khatmahContinue,
+      );
+    }
+
+    if (unifiedJourneyEnabled &&
+        heroAction != null &&
+        heroAction.priority.index <= UnifiedJourneyPriority.p4SmartPlan.index) {
+      return const HomePrimaryActionDecision(
+        kind: HomePrimaryActionKind.journeyHero,
+        showContextualStartKhatmah: true,
+      );
+    }
+
+    return const HomePrimaryActionDecision(
+      kind: HomePrimaryActionKind.startKhatmah,
+    );
+  }
+}
+```
+
+- [ ] **Step 3: Implement `HomeStartKhatmahCard`**
 
 Create `lib/features/home/presentation/widgets/home_start_khatmah_card.dart`:
 - Match `HomeSkin` gradient, gold icon (`Icons.auto_stories_rounded`).
 - Text from `context.l10n.homeStartKhatmahTitle` and `context.l10n.homeStartKhatmahSubtitle`.
 - Elevated/filled button with `context.l10n.homeStartKhatmahAction` calling `context.push(AppRoutes.khatmahSetup)`.
 
-- [ ] **Step 3: Wire Smart Priority Contract in `home_page.dart`**
+- [ ] **Step 4: Wire Resolver into `HomePage` & preserve legacy flag-off fallback in `_PrimaryAction`**
 
 In `lib/features/home/presentation/pages/home_page.dart`:
-When `state.continueRecitation != null`: Render `HomeContinueCard`.
-When `state.continueRecitation == null`:
-Check `state.heroAction`:
-- If `heroAction != null` and priority is learning-critical (`p1ActiveSession`, `p2CriticalAlert`, `p3ReviewBacklog`, `p4SmartPlan`):
-  Render `_PrimaryAction` (which displays `HomeHeroSection`), followed by `HomeStartKhatmahCard` in a contextual slot.
-- Else:
-  Render `HomeStartKhatmahCard`.
+Use `const HomePrimaryActionResolver().resolve(...)`:
+- If `decision.kind == HomePrimaryActionKind.khatmahContinue`: Render `HomeContinueCard`.
+- If `decision.kind == HomePrimaryActionKind.journeyHero`: Render `_PrimaryAction` (which shows `HomeHeroSection`), followed by `HomeStartKhatmahCard`.
+- If `decision.kind == HomePrimaryActionKind.startKhatmah`:
+  - When `JourneyFeatureFlags.unifiedJourneyEnabled`: Render `HomeStartKhatmahCard`.
+  - When `!JourneyFeatureFlags.unifiedJourneyEnabled`: Keep legacy fallback `_PrimaryAction` (`ResumeSessionCard` / `NextBestActionCard`) untouched so existing tests (`smart_coach_home_validation_test.dart`, `responsive_home_widgets_test.dart`) pass.
 
-- [ ] **Step 4: Run tests and verify PASS**
+- [ ] **Step 5: Run tests and verify PASS**
 
+Run: `flutter test test/features/home/domain/services/home_primary_action_resolver_test.dart`
 Run: `flutter test test/features/home/presentation/widgets/home_start_khatmah_card_test.dart`
-Run: `flutter test test/features/home/presentation/pages/home_page_test.dart`
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add lib/features/home/presentation/widgets/home_start_khatmah_card.dart lib/features/home/presentation/pages/home_page.dart test/features/home/presentation/widgets/home_start_khatmah_card_test.dart
-git commit -m "feat(home): add HomeStartKhatmahCard and implement smart priority hero contract"
+git add lib/features/home/domain/services/home_primary_action_resolver.dart lib/features/home/presentation/widgets/home_start_khatmah_card.dart lib/features/home/presentation/pages/home_page.dart test/features/home/domain/services/home_primary_action_resolver_test.dart test/features/home/presentation/widgets/home_start_khatmah_card_test.dart
+git commit -m "feat(home): add HomePrimaryActionResolver and HomeStartKhatmahCard with smart priority hero contract"
 ```
 
 ---
@@ -450,28 +503,30 @@ git commit -m "feat(home): add HomeStartKhatmahCard and implement smart priority
 
 **Files:**
 - Create: `lib/features/home/presentation/widgets/home_achievement_sheet.dart`
-- Modify: `lib/features/home/presentation/widgets/home_context_bar.dart:224-262`
+- Modify: `lib/features/home/presentation/widgets/home_context_bar.dart:200-265`
 - Test: `test/features/home/presentation/widgets/home_achievement_sheet_test.dart`
 
 **Interfaces:**
-- Consumes: `Progress` state, `isKids` flag.
-- Produces: `showModalBottomSheet` displaying level, XP, and badges, replacing `context.go(AppRoutes.progress)`.
+- Consumes: `Progress` state, `int totalXp`, `isKids` flag.
+- Produces: `showModalBottomSheet` displaying level title via `XpService.getCurrentLevel(totalXp)` and progress via `XpService.progressToNextLevel(totalXp)`.
 
 - [ ] **Step 1: Write test for `HomeAchievementSheet`**
 
-Verify level rank, XP display, and badges list render properly.
+Verify level rank from `XpService`, total XP display, progress indicator, and badge list.
 
 - [ ] **Step 2: Implement `HomeAchievementSheet`**
 
 Create `lib/features/home/presentation/widgets/home_achievement_sheet.dart`:
-- Header with trophy/badge icon and `context.l10n.homeAchievementSheetTitle`.
-- Subtitle with `context.l10n.homeAchievementSheetSubtitle`.
-- Current level name, total XP, and unlocked achievements count.
-- Close button.
+- Takes `Progress progress`, `int totalXp`, `bool isKids`.
+- Uses `getIt<XpService>().getCurrentLevel(totalXp)` and `getIt<XpService>().progressToNextLevel(totalXp)`.
+- Displays level title, total XP, current progress toward next milestone, and list of achievements.
+- Has header with trophy icon and `context.l10n.homeAchievementSheetTitle`.
 
 - [ ] **Step 3: Update `HomeAchievementChip` in `home_context_bar.dart`**
 
-In `lib/features/home/presentation/widgets/home_context_bar.dart` lines 246-249:
+In `lib/features/home/presentation/widgets/home_context_bar.dart`:
+Pass `totalXp: state.totalXp` to `HomeAchievementChip`.
+When `award == null`:
 Replace `context.go(AppRoutes.progress);` with:
 ```dart
 showModalBottomSheet<void>(
@@ -479,6 +534,7 @@ showModalBottomSheet<void>(
   backgroundColor: Colors.transparent,
   builder: (ctx) => HomeAchievementSheet(
     progress: progress,
+    totalXp: totalXp,
     isKids: isKids,
   ),
 );
@@ -493,7 +549,7 @@ Expected: PASS
 
 ```bash
 git add lib/features/home/presentation/widgets/home_achievement_sheet.dart lib/features/home/presentation/widgets/home_context_bar.dart test/features/home/presentation/widgets/home_achievement_sheet_test.dart
-git commit -m "feat(home): add HomeAchievementSheet and eliminate achievement chip progress redirect"
+git commit -m "feat(home): add HomeAchievementSheet using XpService and eliminate achievement chip progress redirect"
 ```
 
 ---
@@ -522,7 +578,7 @@ Create `lib/features/home/presentation/widgets/home_prayer_times_sheet.dart`:
 - Derive day of week (e.g. `DateFormat('EEEE', context.isArabic ? 'ar' : 'en').format(DateTime.now())`).
 - Display Hijri date header with elegant Islamic ornament / badge styling.
 - Display city name.
-- Animated staggered list (using `TweenAnimationBuilder` or `AnimationController`) for all 6 prayer entries.
+- Animated staggered list for all 6 prayer entries.
 - Highlight next prayer with gold accent, glow border, and "متبقي X دقيقة".
 
 - [ ] **Step 3: Connect `HomePrayerChip` in `home_night_header.dart`**
@@ -569,10 +625,10 @@ git commit -m "feat(home): add animated HomePrayerTimesSheet with Hijri date and
 Run: `dart analyze`
 Expected: 0 errors, 0 warnings.
 
-- [ ] **Step 2: Run all unit and widget tests**
+- [ ] **Step 2: Run all unit and widget tests (including legacy flag-off suites)**
 
 Run: `flutter test`
-Expected: All tests PASS.
+Expected: All tests PASS, including `smart_coach_home_validation_test.dart` and `responsive_home_widgets_test.dart`.
 
 - [ ] **Step 3: DTD Hot Reload Check**
 
