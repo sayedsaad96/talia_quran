@@ -9,16 +9,22 @@ import '../cubits/home_cubit.dart';
 import '../theme/home_skin.dart';
 
 class HomeQuickAccess extends StatelessWidget {
-  const HomeQuickAccess({super.key, required this.state, required this.skin});
+  const HomeQuickAccess({
+    super.key,
+    required this.state,
+    required this.skin,
+    this.now,
+  });
 
   final HomeLoaded state;
   final HomeSkin skin;
+  final DateTime Function()? now;
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final hour = now.hour;
-    final isFridayKahf = now.weekday == DateTime.friday && hour < 18;
+    final currentTime = now?.call() ?? DateTime.now();
+    final hour = currentTime.hour;
+    final isFridayKahf = currentTime.weekday == DateTime.friday && hour < 18;
     final azkarRoute = hour < 12
         ? '/azkar/morning'
         : hour >= 16
@@ -30,19 +36,13 @@ class HomeQuickAccess extends StatelessWidget {
         context.l10n.bookmark,
         state.recentBookmarkRoute ?? AppRoutes.quranBookmarks,
       ),
+      (Icons.spa_rounded, context.l10n.azkar, azkarRoute),
       if (isFridayKahf)
         (
           Icons.menu_book_rounded,
           context.l10n.homeSlotFridayTitle,
           '/quran/surah/18',
-        )
-      else
-        (Icons.spa_rounded, context.l10n.azkar, azkarRoute),
-      (
-        Icons.auto_stories_rounded,
-        context.l10n.khatmahStartAction,
-        AppRoutes.khatmahDashboard,
-      ),
+        ),
     ];
     return LayoutBuilder(
       builder: (context, constraints) {
