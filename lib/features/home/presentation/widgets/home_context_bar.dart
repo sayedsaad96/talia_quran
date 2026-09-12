@@ -1,3 +1,4 @@
+import 'home_achievement_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -178,6 +179,7 @@ class HomeAchievementChip extends StatelessWidget {
     super.key,
     required this.progress,
     required this.isKids,
+    this.totalXp = 0,
     this.foreground = Colors.white,
     this.background,
     this.border,
@@ -185,6 +187,7 @@ class HomeAchievementChip extends StatelessWidget {
 
   final OverallProgress progress;
   final bool isKids;
+  final int totalXp;
   final Color foreground;
   final Color? background;
   final Color? border;
@@ -244,7 +247,16 @@ class HomeAchievementChip extends StatelessWidget {
             }
           }
           if (award == null) {
-            context.go(AppRoutes.progress);
+            showModalBottomSheet<void>(
+              context: context,
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              builder: (ctx) => HomeAchievementSheet(
+                progress: progress,
+                totalXp: totalXp,
+                isKids: isKids,
+              ),
+            );
             return;
           }
           context.push(

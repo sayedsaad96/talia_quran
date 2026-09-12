@@ -31,6 +31,7 @@ class HomeNightHeader extends StatelessWidget {
       HomeAchievementChip(
         progress: state.progress,
         isKids: state.isKids,
+        totalXp: state.totalXp,
         foreground: skin.textOnHero,
         background: skin.onHeroFill,
         border: skin.onHeroBorder,
@@ -216,6 +217,8 @@ class _BrandLockup extends StatelessWidget {
           HomeSkin.logoAsset,
           width: 96,
           height: 96,
+          cacheWidth: 200,
+          cacheHeight: 200,
           fit: BoxFit.contain,
           excludeFromSemantics: true,
           errorBuilder: (_, _, _) =>
