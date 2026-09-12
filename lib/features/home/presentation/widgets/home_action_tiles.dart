@@ -28,33 +28,69 @@ class HomeActionTiles extends StatelessWidget {
       return null;
     }
 
-    final listenRoute = state.audioResume == null
-        ? (of(TodayTaskKind.review)?.route ?? AppRoutes.memorizationHub)
-        : null;
+    void handleListen() {
+      if (state.audioResume != null) {
+        final audio = state.audioResume!;
+        getIt<QuranContinuousPlayerService>().playAyah(
+          audio.surahId,
+          audio.ayahNumber,
+          reciter: audio.reciter,
+          scope: audio.scope,
+        );
+      } else if (state.ayahOfDay != null) {
+        getIt<QuranContinuousPlayerService>().playAyah(
+          state.ayahOfDay!.surahId,
+          state.ayahOfDay!.ayahNumber,
+        );
+      } else {
+        context.push(AppRoutes.quran);
+      }
+    }
+
+    void handleReview() {
+      final route = of(TodayTaskKind.review)?.route ?? AppRoutes.memorizationV2Session;
+      context.push(route);
+    }
+
+    void handleMemorize() {
+      final route = of(TodayTaskKind.memorize)?.route ?? AppRoutes.hifzPracticeSurah;
+      context.push(route);
+    }
+
+    void handleRead() {
+      if (state.lastRestorableLocation != null &&
+          state.lastRestorableLocation!.startsWith('/quran/page/')) {
+        context.push(state.lastRestorableLocation!);
+      } else {
+        final route = of(TodayTaskKind.reading)?.route ?? AppRoutes.quran;
+        context.push(route);
+      }
+    }
+
     final tiles = [
       (
         Icons.headphones_rounded,
         context.l10n.homeTileListen,
         context.l10n.homeTileListenHint,
-        listenRoute,
+        handleListen,
       ),
       (
         Icons.replay_rounded,
         context.l10n.homeTileReview,
         context.l10n.homeTileReviewHint,
-        of(TodayTaskKind.review)?.route ?? AppRoutes.memorizationHub,
+        handleReview,
       ),
       (
         Icons.bookmark_outline_rounded,
         context.l10n.homeTileMemorize,
         context.l10n.homeTileMemorizeHint,
-        of(TodayTaskKind.memorize)?.route ?? AppRoutes.memorizationHub,
+        handleMemorize,
       ),
       (
         Icons.menu_book_outlined,
         context.l10n.homeTileRead,
         context.l10n.homeTileReadHint,
-        of(TodayTaskKind.reading)?.route ?? AppRoutes.quran,
+        handleRead,
       ),
     ];
 
@@ -67,20 +103,7 @@ class HomeActionTiles extends StatelessWidget {
           icon: tiles[i].$1,
           title: tiles[i].$2,
           hint: tiles[i].$3,
-          onTap: () {
-            final route = tiles[i].$4;
-            if (route == null) {
-              final audio = state.audioResume!;
-              getIt<QuranContinuousPlayerService>().playAyah(
-                audio.surahId,
-                audio.ayahNumber,
-                reciter: audio.reciter,
-                scope: audio.scope,
-              );
-              return;
-            }
-            context.push(route);
-          },
+          onTap: tiles[i].$4,
         );
 
         if (singleColumn) {
