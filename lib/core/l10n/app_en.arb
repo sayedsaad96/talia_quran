@@ -1412,6 +1412,34 @@
   "notificationKidsReviewTitle": "Review Time Hero! 🌟",
   "notificationKidsReviewBody": "Your new stage is ready, let's continue memorizing!",
   "notificationDailyDuaTitle": "Dua of the Day 🤲",
+  "notificationFridayKahfTitle": "Surah Al-Kahf Reminder 🌿",
+  "notificationFridayKahfBody": "Blessed Friday! Remember to read Surah Al-Kahf today to illuminate your week ✨",
+  "notificationTahajjudTitle": "Tahajjud & Night Prayer 🌙",
+  "notificationTahajjudBody": "A peaceful moment for prayer and supplication in the last third of the night.. May Allah accept your prayers 🤲",
+  "notificationKhatmahTitle": "Daily Khatmah Reading 📖",
+  "notificationKhatmahBody": "Continue your blessed journey with your Quran Khatmah today 🌿",
+  "notificationKhatmahBodyWithTarget": "Today's portion: page {start} to {end}.. Keep going! ✨",
+  "@notificationKhatmahBodyWithTarget": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "notificationPrayerTitle": "Time for {prayer} Prayer 🕌",
+  "@notificationPrayerTitle": {
+    "placeholders": {
+      "prayer": {}
+    }
+  },
+  "notificationPrayerBody": "Come to prayer, come to success.. May Allah bless your prayer",
+  "notificationSettingsFridayKahf": "Surah Al-Kahf (Friday)",
+  "notificationSettingsFridayKahfSub": "Weekly Friday reminder to read Surah Al-Kahf",
+  "notificationSettingsTahajjud": "Tahajjud & Night Prayer",
+  "notificationSettingsTahajjudSub": "Daily reminder in the last third of the night",
+  "notificationSettingsKhatmah": "Khatmah Progress",
+  "notificationSettingsKhatmahSub": "Daily reminder for your active Khatmah target",
+  "notificationSettingsPrayerTimes": "Prayer Times",
+  "notificationSettingsPrayerTimesSub": "Reminders at the time of each of the 5 daily prayers",
   "homeActionReadToday": "Read today",
   "homeActionTodaysPlan": "Today's Plan",
   "homeActionContinuePlan": "Continue today's plan",

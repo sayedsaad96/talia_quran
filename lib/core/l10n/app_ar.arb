@@ -1397,6 +1397,34 @@
   "notificationKidsReviewTitle": "يلا يا بطل جاهز؟ 🌟",
   "notificationKidsReviewBody": "مرحلتك الجديدة مستنياك.. يلا نكمل ونجمع نجوم جديدة! 🚀",
   "notificationDailyDuaTitle": "دعوة من القلب 🤲",
+  "notificationFridayKahfTitle": "نور ما بين الجمعتين 🌿",
+  "notificationFridayKahfBody": "جمعة مباركة! لا تنسَ قراءة سورة الكهف اليوم لتضيء لك ما بين الجمعتين ✨",
+  "notificationTahajjudTitle": "قيام الليل والدعاء المستجاب 🌙",
+  "notificationTahajjudBody": "ركعتان في جوف الليل وسؤال لله تعالى في ساعة الاستجابة.. تقبل الله طاعتك 🤲",
+  "notificationKhatmahTitle": "ورد الختمة اليومي 📖",
+  "notificationKhatmahBody": "واصل مسيرتك المباركة مع الختمة.. وردك اليوم بانتظارك 🌿",
+  "notificationKhatmahBodyWithTarget": "وردك اليوم: من صفحة {start} إلى {end}.. اقتربت من إتمام الختمة! ✨",
+  "@notificationKhatmahBodyWithTarget": {
+    "placeholders": {
+      "start": {},
+      "end": {}
+    }
+  },
+  "notificationPrayerTitle": "حان الآن موعد صلاة {prayer} 🕌",
+  "@notificationPrayerTitle": {
+    "placeholders": {
+      "prayer": {}
+    }
+  },
+  "notificationPrayerBody": "حي على الصلاة، حي على الفلاح.. بارك الله في صلاتك",
+  "notificationSettingsFridayKahf": "سورة الكهف (الجمعة)",
+  "notificationSettingsFridayKahfSub": "تذكير أسبوعي بقراءة سورة الكهف يوم الجمعة",
+  "notificationSettingsTahajjud": "قيام الليل والوتر",
+  "notificationSettingsTahajjudSub": "تذكير يومي في الثلث الأخير من الليل",
+  "notificationSettingsKhatmah": "متابعة الختمة",
+  "notificationSettingsKhatmahSub": "تذكير يومي بالورد المحدد لختمتك الحالية",
+  "notificationSettingsPrayerTimes": "مواقيت الصلاة",
+  "notificationSettingsPrayerTimesSub": "تنبيهات عند حلول أوقات الصلوات الخمس",
   "homeTourTitle": "تحتاج جولة سريعة؟",
   "homeTourDesc": "افتح الدليل متى أردت من هنا أو من المساعدة.",
   "homeTourGuideAction": "الدليل",

@@ -52,6 +52,9 @@ abstract final class LaunchDestination {
       'action_daily_dua' => '/azkar/duas',
       'action_azkar' => AppRoutes.azkar,
       'action_kids_review' => AppRoutes.memorizationPlusKidsJourney,
+      'action_read_kahf' => '/quran/surah/18',
+      'action_khatmah' => AppRoutes.khatmahDashboard,
+      'action_tahajjud' => '/azkar/duas',
       _ => null,
     };
   }

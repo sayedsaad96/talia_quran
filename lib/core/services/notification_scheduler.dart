@@ -2,12 +2,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../di/injection.dart';
 import '../l10n/app_localizations.dart';
 import '../services/streak_reader.dart';
+import '../services/streak_risk_evaluator.dart';
 import '../utils/talia_logger.dart';
 import '../../features/progress/domain/repositories/progress_repository.dart';
 import '../../features/home/domain/usecases/get_ayah_of_day_usecase.dart';
+import '../../features/khatmah/domain/entities/khatmah_plan.dart';
+import '../../features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 
 import 'daily_ayah_notification_target.dart';
 import 'notification_service.dart';
+import 'prayer_times_service.dart';
 
 typedef KidsSessionDatesLoader = Future<List<DateTime>> Function();
 
@@ -28,13 +32,22 @@ class NotificationScheduler {
   final TaliaNotificationService _service;
   final KidsSessionDatesLoader? _kidsSessionDatesLoader;
   final GetAyahOfDayUsecase? _getAyahOfDay;
+  final StreakRiskEvaluator _streakRiskEvaluator;
+  final PrayerTimesService? _prayerTimesService;
+  final GetActiveKhatmahUsecase? _getActiveKhatmah;
 
   NotificationScheduler(
     this._service, {
     KidsSessionDatesLoader? kidsSessionDatesLoader,
     GetAyahOfDayUsecase? getAyahOfDay,
+    StreakRiskEvaluator streakRiskEvaluator = const StreakRiskEvaluator(),
+    PrayerTimesService? prayerTimesService,
+    GetActiveKhatmahUsecase? getActiveKhatmah,
   }) : _kidsSessionDatesLoader = kidsSessionDatesLoader,
-       _getAyahOfDay = getAyahOfDay;
+       _getAyahOfDay = getAyahOfDay,
+       _streakRiskEvaluator = streakRiskEvaluator,
+       _prayerTimesService = prayerTimesService,
+       _getActiveKhatmah = getActiveKhatmah;
 
   String? _lastRollingDateKey;
 
@@ -64,11 +77,14 @@ class NotificationScheduler {
     int currentStreak = 1;
     int dueReviews = 0;
     var kidsMissionCompletedToday = false;
+    var hasStreakActivityToday = false;
 
     try {
       if (getIt.isRegistered<StreakReader>()) {
         final streakEntity = await getIt<StreakReader>().getStreak();
         currentStreak = streakEntity.currentStreak;
+        final risk = _streakRiskEvaluator.evaluate(streakEntity);
+        hasStreakActivityToday = risk.hasActivityToday;
       }
       if (getIt.isRegistered<ProgressRepository>()) {
         final progressResult = await getIt<ProgressRepository>()
@@ -79,8 +95,8 @@ class NotificationScheduler {
       if (kidsDates != null) {
         kidsMissionCompletedToday = hasCompletedKidsMissionToday(kidsDates);
       }
-    } catch (_) {
-      // Non-critical fallback
+    } catch (e, stack) {
+      TaliaLogger.w('Notification data loading failed', e, stack);
     }
 
     final reviewEnabled =
@@ -129,7 +145,7 @@ class NotificationScheduler {
       await _service.cancelDailyReviewReminder();
     }
 
-    if (streakEnabled) {
+    if (streakEnabled && !hasStreakActivityToday && currentStreak > 0) {
       final hour =
           prefs.getInt(
             '${TaliaNotificationService.streakAlertPreferenceKey}_hour',
@@ -191,43 +207,47 @@ class NotificationScheduler {
     }
 
     if (morningAzkarEnabled) {
-      final hour =
-          prefs.getInt(
-            '${TaliaNotificationService.morningAzkarPreferenceKey}_hour',
-          ) ??
-          6;
-      final minute =
-          prefs.getInt(
-            '${TaliaNotificationService.morningAzkarPreferenceKey}_minute',
-          ) ??
-          0;
-      await _service.scheduleMorningAzkarReminder(
-        title: l10n.notificationMorningAzkarTitle,
-        body: l10n.notificationMorningAzkarBody,
-        hour: hour,
-        minute: minute,
-      );
+      if (shouldRefreshRolling) {
+        final hour =
+            prefs.getInt(
+              '${TaliaNotificationService.morningAzkarPreferenceKey}_hour',
+            ) ??
+            6;
+        final minute =
+            prefs.getInt(
+              '${TaliaNotificationService.morningAzkarPreferenceKey}_minute',
+            ) ??
+            0;
+        await _service.scheduleMorningAzkarReminder(
+          title: l10n.notificationMorningAzkarTitle,
+          body: l10n.notificationMorningAzkarBody,
+          hour: hour,
+          minute: minute,
+        );
+      }
     } else {
       await _service.cancelMorningAzkarReminder();
     }
 
     if (eveningAzkarEnabled) {
-      final hour =
-          prefs.getInt(
-            '${TaliaNotificationService.eveningAzkarPreferenceKey}_hour',
-          ) ??
-          18;
-      final minute =
-          prefs.getInt(
-            '${TaliaNotificationService.eveningAzkarPreferenceKey}_minute',
-          ) ??
-          0;
-      await _service.scheduleEveningAzkarReminder(
-        title: l10n.notificationEveningAzkarTitle,
-        body: l10n.notificationEveningAzkarBody,
-        hour: hour,
-        minute: minute,
-      );
+      if (shouldRefreshRolling) {
+        final hour =
+            prefs.getInt(
+              '${TaliaNotificationService.eveningAzkarPreferenceKey}_hour',
+            ) ??
+            18;
+        final minute =
+            prefs.getInt(
+              '${TaliaNotificationService.eveningAzkarPreferenceKey}_minute',
+            ) ??
+            0;
+        await _service.scheduleEveningAzkarReminder(
+          title: l10n.notificationEveningAzkarTitle,
+          body: l10n.notificationEveningAzkarBody,
+          hour: hour,
+          minute: minute,
+        );
+      }
     } else {
       await _service.cancelEveningAzkarReminder();
     }
@@ -254,10 +274,6 @@ class NotificationScheduler {
       await _service.cancelDailyDuaReminder();
     }
 
-    if (shouldRefreshRolling) {
-      _lastRollingDateKey = todayKey;
-    }
-
     if (kidsReviewEnabled && !kidsMissionCompletedToday) {
       final hour =
           prefs.getInt(
@@ -277,6 +293,183 @@ class NotificationScheduler {
       );
     } else {
       await _service.cancelKidsReviewReminder();
+    }
+
+    // Friday Surah Al-Kahf Reminder
+    final fridayKahfEnabled =
+        prefs.getBool(TaliaNotificationService.fridayKahfPreferenceKey) ?? true;
+    if (fridayKahfEnabled) {
+      final hour =
+          prefs.getInt(
+            '${TaliaNotificationService.fridayKahfPreferenceKey}_hour',
+          ) ??
+          9;
+      final minute =
+          prefs.getInt(
+            '${TaliaNotificationService.fridayKahfPreferenceKey}_minute',
+          ) ??
+          0;
+      await _service.scheduleFridayKahfReminder(
+        title: l10n.notificationFridayKahfTitle,
+        body: l10n.notificationFridayKahfBody,
+        hour: hour,
+        minute: minute,
+      );
+    } else {
+      await _service.cancelFridayKahfReminder();
+    }
+
+    // Tahajjud / Qiyam Al-Layl Reminder
+    final tahajjudEnabled =
+        prefs.getBool(TaliaNotificationService.tahajjudPreferenceKey) ?? false;
+    if (tahajjudEnabled) {
+      final hour =
+          prefs.getInt(
+            '${TaliaNotificationService.tahajjudPreferenceKey}_hour',
+          ) ??
+          3;
+      final minute =
+          prefs.getInt(
+            '${TaliaNotificationService.tahajjudPreferenceKey}_minute',
+          ) ??
+          30;
+      await _service.scheduleTahajjudReminder(
+        title: l10n.notificationTahajjudTitle,
+        body: l10n.notificationTahajjudBody,
+        hour: hour,
+        minute: minute,
+      );
+    } else {
+      await _service.cancelTahajjudReminder();
+    }
+
+    // Khatmah Daily Progress Reminder
+    final khatmahEnabled =
+        prefs.getBool(TaliaNotificationService.khatmahReminderPreferenceKey) ??
+        true;
+    if (khatmahEnabled) {
+      final hour =
+          prefs.getInt(
+            '${TaliaNotificationService.khatmahReminderPreferenceKey}_hour',
+          ) ??
+          17;
+      final minute =
+          prefs.getInt(
+            '${TaliaNotificationService.khatmahReminderPreferenceKey}_minute',
+          ) ??
+          0;
+
+      KhatmahPlan? activePlan;
+      try {
+        final usecase = _getActiveKhatmah ??
+            (getIt.isRegistered<GetActiveKhatmahUsecase>()
+                ? getIt<GetActiveKhatmahUsecase>()
+                : null);
+        activePlan = await usecase?.call();
+      } catch (e, stack) {
+        TaliaLogger.w('Failed to load active khatmah for notification', e, stack);
+      }
+
+      final String body;
+      final String payload;
+      if (activePlan != null &&
+          !activePlan.isComplete &&
+          activePlan.status == KhatmahStatus.active) {
+        final target = activePlan.dailyTargetFor(now);
+        body = l10n.notificationKhatmahBodyWithTarget(
+          target.startPage,
+          target.endPage,
+        );
+        payload = '/quran/page/${target.startPage}?mode=khatmah';
+      } else {
+        body = l10n.notificationKhatmahBody;
+        payload = '/khatmah';
+      }
+
+      await _service.scheduleKhatmahReminder(
+        title: l10n.notificationKhatmahTitle,
+        body: body,
+        payload: payload,
+        hour: hour,
+        minute: minute,
+      );
+    } else {
+      await _service.cancelKhatmahReminder();
+    }
+
+    // Prayer Times (Rolling 7 Days)
+    final prayerTimesEnabled =
+        prefs.getBool(
+          TaliaNotificationService.prayerNotificationsPreferenceKey,
+        ) ??
+        false;
+    if (prayerTimesEnabled) {
+      if (shouldRefreshRolling) {
+        try {
+          final prayerService = _prayerTimesService ??
+              (getIt.isRegistered<PrayerTimesService>()
+                  ? getIt<PrayerTimesService>()
+                  : null);
+          if (prayerService != null) {
+            final scheduledPrayers = <ScheduledPrayerNotification>[];
+            final fajrActive =
+                prefs.getBool(TaliaNotificationService.prayerFajrKey) ?? true;
+            final dhuhrActive =
+                prefs.getBool(TaliaNotificationService.prayerDhuhrKey) ?? true;
+            final asrActive =
+                prefs.getBool(TaliaNotificationService.prayerAsrKey) ?? true;
+            final maghribActive =
+                prefs.getBool(TaliaNotificationService.prayerMaghribKey) ?? true;
+            final ishaActive =
+                prefs.getBool(TaliaNotificationService.prayerIshaKey) ?? true;
+
+            final prayerFilter = {
+              'fajr': fajrActive,
+              'dhuhr': dhuhrActive,
+              'asr': asrActive,
+              'maghrib': maghribActive,
+              'isha': ishaActive,
+            };
+
+            var offset = 0;
+            for (var day = 0; day < 7; day++) {
+              final targetDate = now.add(Duration(days: day));
+              final prayers = await prayerService.timesForDate(targetDate);
+              for (final prayer in prayers) {
+                if (prayerFilter[prayer.key] == true) {
+                  final prayerName = l10n.localeName.startsWith('ar')
+                      ? prayer.nameAr
+                      : prayer.nameEn;
+                  scheduledPrayers.add(
+                    ScheduledPrayerNotification(
+                      idOffset: offset,
+                      title: l10n.notificationPrayerTitle(prayerName),
+                      body: l10n.notificationPrayerBody,
+                      scheduledDate: prayer.time,
+                    ),
+                  );
+                }
+                offset++;
+              }
+            }
+            await _service.schedulePrayerTimesReminders(
+              prayers: scheduledPrayers,
+            );
+          }
+        } catch (e, stack) {
+          TaliaLogger.w(
+            'Failed to schedule prayer times notifications',
+            e,
+            stack,
+          );
+        }
+      }
+    } else {
+      await _service.cancelPrayerTimesReminders();
+    }
+
+    if (shouldRefreshRolling) {
+      _lastRollingDateKey = todayKey;
     }
   }
 }

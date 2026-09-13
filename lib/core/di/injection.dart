@@ -112,6 +112,7 @@ import '../../features/memorization_plus/presentation/cubits/memorization_sessio
 import '../../features/onboarding/presentation/cubits/onboarding_cubit.dart';
 import '../../features/settings/presentation/cubits/profile_cubit.dart';
 import '../../features/settings/presentation/cubits/settings_cubit.dart';
+import '../../features/settings/presentation/cubits/notification_settings_cubit.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/streak/data/models/streak_isar.dart';
@@ -231,6 +232,15 @@ Future<void> configureDependencies({bool background = false}) async {
       getIt<SharedPreferences>(),
       getIt<MemorizationPathResolver>(),
       getIt<AppVersionInfoProvider>(),
+    ),
+  );
+  getIt.registerFactory<NotificationSettingsCubit>(
+    () => NotificationSettingsCubit(
+      getIt<SharedPreferences>(),
+      getIt<TaliaNotificationService>(),
+      getIt.isRegistered<NotificationScheduler>()
+          ? getIt<NotificationScheduler>()
+          : null,
     ),
   );
   getIt.registerSingleton<AudioCacheService>(AudioCacheService.instance);

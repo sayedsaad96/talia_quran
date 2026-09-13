@@ -161,4 +161,30 @@ class PrayerTimesService {
         : match.first;
     return resolved.getParameters();
   }
+
+  /// Calculates prayer times for a specific date using the active city and method.
+  Future<List<({String key, String nameAr, String nameEn, DateTime time})>>
+  timesForDate(DateTime date) async {
+    final all = await cities();
+    if (all.isEmpty) return const [];
+    final id = selectedCityId;
+    final city = all.cast<PrayerCity?>().firstWhere(
+          (c) => c?.id == id,
+          orElse: () => all.first,
+        ) ??
+        all.first;
+    final params = _paramsFor(calculationMethod);
+    final times = PrayerTimes(
+      Coordinates(city.latitude, city.longitude),
+      DateComponents.from(date),
+      params,
+    );
+    return [
+      (key: 'fajr', nameAr: 'الفجر', nameEn: 'Fajr', time: times.fajr),
+      (key: 'dhuhr', nameAr: 'الظهر', nameEn: 'Dhuhr', time: times.dhuhr),
+      (key: 'asr', nameAr: 'العصر', nameEn: 'Asr', time: times.asr),
+      (key: 'maghrib', nameAr: 'المغرب', nameEn: 'Maghrib', time: times.maghrib),
+      (key: 'isha', nameAr: 'العشاء', nameEn: 'Isha', time: times.isha),
+    ];
+  }
 }

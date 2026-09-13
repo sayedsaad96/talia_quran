@@ -3043,6 +3043,69 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationDailyDuaTitle => 'دعوة من القلب 🤲';
 
   @override
+  String get notificationFridayKahfTitle => 'نور ما بين الجمعتين 🌿';
+
+  @override
+  String get notificationFridayKahfBody =>
+      'جمعة مباركة! لا تنسَ قراءة سورة الكهف اليوم لتضيء لك ما بين الجمعتين ✨';
+
+  @override
+  String get notificationTahajjudTitle => 'قيام الليل والدعاء المستجاب 🌙';
+
+  @override
+  String get notificationTahajjudBody =>
+      'ركعتان في جوف الليل وسؤال لله تعالى في ساعة الاستجابة.. تقبل الله طاعتك 🤲';
+
+  @override
+  String get notificationKhatmahTitle => 'ورد الختمة اليومي 📖';
+
+  @override
+  String get notificationKhatmahBody =>
+      'واصل مسيرتك المباركة مع الختمة.. وردك اليوم بانتظارك 🌿';
+
+  @override
+  String notificationKhatmahBodyWithTarget(Object start, Object end) {
+    return 'وردك اليوم: من صفحة $start إلى $end.. اقتربت من إتمام الختمة! ✨';
+  }
+
+  @override
+  String notificationPrayerTitle(Object prayer) {
+    return 'حان الآن موعد صلاة $prayer 🕌';
+  }
+
+  @override
+  String get notificationPrayerBody =>
+      'حي على الصلاة، حي على الفلاح.. بارك الله في صلاتك';
+
+  @override
+  String get notificationSettingsFridayKahf => 'سورة الكهف (الجمعة)';
+
+  @override
+  String get notificationSettingsFridayKahfSub =>
+      'تذكير أسبوعي بقراءة سورة الكهف يوم الجمعة';
+
+  @override
+  String get notificationSettingsTahajjud => 'قيام الليل والوتر';
+
+  @override
+  String get notificationSettingsTahajjudSub =>
+      'تذكير يومي في الثلث الأخير من الليل';
+
+  @override
+  String get notificationSettingsKhatmah => 'متابعة الختمة';
+
+  @override
+  String get notificationSettingsKhatmahSub =>
+      'تذكير يومي بالورد المحدد لختمتك الحالية';
+
+  @override
+  String get notificationSettingsPrayerTimes => 'مواقيت الصلاة';
+
+  @override
+  String get notificationSettingsPrayerTimesSub =>
+      'تنبيهات عند حلول أوقات الصلوات الخمس';
+
+  @override
   String get homeTourTitle => 'تحتاج جولة سريعة؟';
 
   @override

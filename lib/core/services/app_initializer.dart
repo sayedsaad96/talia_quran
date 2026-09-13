@@ -187,6 +187,7 @@ class AppInitializer {
 
     final notificationService = getIt<TaliaNotificationService>();
     await notificationService.cancelStreakAlert();
+    await notificationService.clearBadge();
   }
 
   static Future<void> _startBackgroundTasks() async {

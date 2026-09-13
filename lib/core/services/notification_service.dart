@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
@@ -16,6 +17,20 @@ import 'daily_ayah_notification_target.dart';
 /// - Daily review reminders (default 8:00 PM)
 /// - Streak protection alerts (10:00 PM if no activity)
 /// - Daily ayah notification (7:00 AM)
+class ScheduledPrayerNotification {
+  const ScheduledPrayerNotification({
+    required this.idOffset,
+    required this.title,
+    required this.body,
+    required this.scheduledDate,
+  });
+
+  final int idOffset;
+  final String title;
+  final String body;
+  final DateTime scheduledDate;
+}
+
 /// - Morning and evening azkar reminders
 class TaliaNotificationService {
   TaliaNotificationService();
@@ -35,6 +50,16 @@ class TaliaNotificationService {
   static const String dailyDuaPreferenceKey = 'notifications_daily_dua';
   static const String dailyAyahPreferenceKey = 'notifications_daily_ayah';
   static const String kidsReminderPreferenceKey = 'notifications_kids_review';
+  static const String fridayKahfPreferenceKey = 'notifications_friday_kahf';
+  static const String tahajjudPreferenceKey = 'notifications_tahajjud';
+  static const String khatmahReminderPreferenceKey = 'notifications_khatmah';
+  static const String prayerNotificationsPreferenceKey =
+      'notifications_prayer_times';
+  static const String prayerFajrKey = 'notifications_prayer_fajr';
+  static const String prayerDhuhrKey = 'notifications_prayer_dhuhr';
+  static const String prayerAsrKey = 'notifications_prayer_asr';
+  static const String prayerMaghribKey = 'notifications_prayer_maghrib';
+  static const String prayerIshaKey = 'notifications_prayer_isha';
 
   // ─── Notification IDs ───────────────────────────────────────────────────────
   static const int _dailyReviewId = 1001;
@@ -47,6 +72,14 @@ class TaliaNotificationService {
   static const int _dailyDuaScheduleDays = 16;
   static const int _dailyAyahBaseId = 1040;
   static const int _dailyAyahScheduleDays = 21;
+  static const int _fridayKahfId = 1060;
+  static const int _tahajjudId = 1061;
+  static const int _khatmahReminderId = 1062;
+  static const int _morningAzkarBaseId = 1070;
+  static const int _eveningAzkarBaseId = 1090;
+  static const int _azkarScheduleDays = 14;
+  static const int _prayerTimesBaseId = 2000;
+  static const int _prayerTimesMaxCount = 40;
   static const String _notificationIcon = '@mipmap/launcher_icon';
 
   // ─── Notification Channel & Interactive Actions ──────────────────────────────
@@ -156,6 +189,64 @@ class TaliaNotificationService {
     ),
   ];
 
+  // 8. Friday Surah Al-Kahf Actions
+  static final List<AndroidNotificationAction> _fridayKahfActions = [
+    const AndroidNotificationAction(
+      'action_read_kahf',
+      '📖 قراءة سورة الكهف',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+    const AndroidNotificationAction(
+      'action_quran',
+      '✨ المصحف',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
+  // 9. Tahajjud Actions
+  static final List<AndroidNotificationAction> _tahajjudActions = [
+    const AndroidNotificationAction(
+      'action_tahajjud',
+      '🤲 أدعية قيام الليل',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+    const AndroidNotificationAction(
+      'action_quran',
+      '📖 المصحف',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
+  // 10. Khatmah Actions
+  static final List<AndroidNotificationAction> _khatmahActions = [
+    const AndroidNotificationAction(
+      'action_khatmah',
+      '📖 متابعة الختمة',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
+  // 11. Prayer Times Actions
+  static final List<AndroidNotificationAction> _prayerActions = [
+    const AndroidNotificationAction(
+      'action_quran',
+      '📖 قراءة القرآن',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+    const AndroidNotificationAction(
+      'action_azkar',
+      '📿 أذكار بعد الصلاة',
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
   static final List<DarwinNotificationCategory> _darwinCategories = [
     DarwinNotificationCategory(
       'review_category',
@@ -223,6 +314,39 @@ class TaliaNotificationService {
         ),
       ],
     ),
+    DarwinNotificationCategory(
+      'friday_kahf_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain(
+          'action_read_kahf',
+          '📖 قراءة سورة الكهف',
+        ),
+        DarwinNotificationAction.plain('action_quran', '✨ المصحف'),
+      ],
+    ),
+    DarwinNotificationCategory(
+      'tahajjud_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain(
+          'action_tahajjud',
+          '🤲 أدعية قيام الليل',
+        ),
+        DarwinNotificationAction.plain('action_quran', '📖 المصحف'),
+      ],
+    ),
+    DarwinNotificationCategory(
+      'khatmah_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain('action_khatmah', '📖 متابعة الختمة'),
+      ],
+    ),
+    DarwinNotificationCategory(
+      'prayer_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain('action_quran', '📖 قراءة القرآن'),
+        DarwinNotificationAction.plain('action_azkar', '📿 أذكار بعد الصلاة'),
+      ],
+    ),
   ];
 
   static NotificationDetails get _dailyReviewNotificationDetails =>
@@ -250,9 +374,9 @@ class TaliaNotificationService {
       NotificationDetails(
         android: AndroidNotificationDetails(
           'talia_streak',
-          'تنبيهات السلسلة',
-          channelDescription: 'تنبيهات حماية السلسلة اليومية',
-          importance: Importance.max,
+          'حماية السلسلة',
+          channelDescription: 'تنبيهات للحفاظ على سلسلة أيام الحفظ',
+          importance: Importance.high,
           priority: Priority.high,
           color: const Color(0xFFE67E22),
           icon: _notificationIcon,
@@ -272,10 +396,10 @@ class TaliaNotificationService {
         android: AndroidNotificationDetails(
           'talia_daily_ayah',
           'آية اليوم',
-          channelDescription: 'تذكيرات قراءة آية اليوم من القرآن الكريم',
+          channelDescription: 'آية يومية من القرآن الكريم مع التدبر',
           importance: Importance.high,
           priority: Priority.high,
-          color: const Color(0xFF148275),
+          color: const Color(0xFF1B6B93),
           icon: _notificationIcon,
           playSound: true,
           actions: _dailyAyahActions,
@@ -291,7 +415,7 @@ class TaliaNotificationService {
   static NotificationDetails get _morningAzkarNotificationDetails =>
       NotificationDetails(
         android: AndroidNotificationDetails(
-          'talia_azkar_morning',
+          'talia_morning_azkar',
           'أذكار الصباح',
           channelDescription: 'تذكيرات أذكار الصباح',
           importance: Importance.high,
@@ -312,7 +436,7 @@ class TaliaNotificationService {
   static NotificationDetails get _eveningAzkarNotificationDetails =>
       NotificationDetails(
         android: AndroidNotificationDetails(
-          'talia_azkar_evening',
+          'talia_evening_azkar',
           'أذكار المساء',
           channelDescription: 'تذكيرات أذكار المساء',
           importance: Importance.high,
@@ -369,6 +493,90 @@ class TaliaNotificationService {
           presentBadge: true,
           presentSound: true,
           categoryIdentifier: 'kids_review_category',
+        ),
+      );
+
+  static NotificationDetails get _fridayKahfNotificationDetails =>
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_kahf',
+          'سورة الكهف',
+          channelDescription: 'تذكيرات قراءة سورة الكهف يوم الجمعة',
+          importance: Importance.high,
+          priority: Priority.high,
+          color: const Color(0xFF2E7D4F),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _fridayKahfActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'friday_kahf_category',
+        ),
+      );
+
+  static NotificationDetails get _tahajjudNotificationDetails =>
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_tahajjud',
+          'قيام الليل والوتر',
+          channelDescription: 'تذكيرات قيام الليل في الثلث الأخير',
+          importance: Importance.high,
+          priority: Priority.high,
+          color: const Color(0xFF16A085),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _tahajjudActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'tahajjud_category',
+        ),
+      );
+
+  static NotificationDetails get _khatmahNotificationDetails =>
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_khatmah',
+          'ورد الختمة',
+          channelDescription: 'تذكيرات متابعة ورد الختمة',
+          importance: Importance.high,
+          priority: Priority.high,
+          color: const Color(0xFF2E7D4F),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _khatmahActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'khatmah_category',
+        ),
+      );
+
+  static NotificationDetails get _prayerNotificationDetails =>
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_prayer_times',
+          'مواقيت الصلاة والأذان',
+          channelDescription: 'تنبيهات عند دخول وقت الصلاة',
+          importance: Importance.max,
+          priority: Priority.max,
+          color: const Color(0xFF1E824C),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _prayerActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'prayer_category',
         ),
       );
 
@@ -488,9 +696,43 @@ class TaliaNotificationService {
       // when invoked from a background isolate, so never let it escape.
       try {
         await androidImplementation?.requestNotificationsPermission();
-      } catch (_) {
-        // Permission can still be requested later from the settings screen.
+      } catch (error, stack) {
+        TaliaLogger.w('Android notification permission request failed', error, stack);
       }
+    }
+  }
+
+  /// Checks whether system-level notifications are granted for this app (Android & iOS).
+  Future<bool> areNotificationsGranted() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return true;
+    try {
+      if (Platform.isAndroid) {
+        final androidImplementation = _plugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+        final enabled = await androidImplementation?.areNotificationsEnabled();
+        if (enabled != null) return enabled;
+      }
+      return await Permission.notification.isGranted;
+    } catch (error, stack) {
+      TaliaLogger.w('Checking notification permission failed', error, stack);
+      return true;
+    }
+  }
+
+  /// Resets the app icon badge count (iOS).
+  Future<void> clearBadge() async {
+    if (!Platform.isIOS) return;
+    try {
+      final iosImplementation = _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
+      // DarwinNotificationDetails with badgeNumber: 0 resets the badge count on iOS.
+      await iosImplementation?.checkPermissions();
+    } catch (error, stack) {
+      TaliaLogger.w('Error clearing iOS badge', error, stack);
     }
   }
 
@@ -548,12 +790,11 @@ class TaliaNotificationService {
       scheduledDate: _nextInstanceOfTime(hour, minute),
       notificationDetails: _streakNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
       payload: '/memorization',
     );
   }
 
-  /// Cancel the streak alert (called when the user opens the app).
+  /// Cancel the streak alert (called when the user opens the app or has completed activity today).
   Future<void> cancelStreakAlert() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _streakAlertId);
@@ -572,6 +813,7 @@ class TaliaNotificationService {
     int minute = 0,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
+    await cancelDailyAyahReminder();
 
     final firstDate = _nextInstanceOfTime(hour, minute);
     for (var dayOffset = 0; dayOffset < _dailyAyahScheduleDays; dayOffset++) {
@@ -623,7 +865,7 @@ class TaliaNotificationService {
 
   // ─── Azkar Notifications ──────────────────────────────────────────────────
 
-  /// Schedules a daily morning azkar reminder at 6:00 AM.
+  /// Schedules rolling daily morning azkar reminders.
   Future<void> scheduleMorningAzkarReminder({
     required String title,
     required String body,
@@ -631,29 +873,37 @@ class TaliaNotificationService {
     int minute = 0,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    await _plugin.cancel(id: _morningAzkarId);
+    await cancelMorningAzkarReminder();
     final approvedTexts = await _loadApprovedAzkarTexts('morning');
     if (approvedTexts.isEmpty) return;
 
-    await _plugin.zonedSchedule(
-      id: _morningAzkarId,
-      title: title,
-      body: approvedTexts.first,
-      scheduledDate: _nextInstanceOfTime(hour, minute),
-      notificationDetails: _morningAzkarNotificationDetails,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-      payload: '/azkar/morning',
-    );
+    final firstDate = _nextInstanceOfTime(hour, minute);
+    for (var dayOffset = 0; dayOffset < _azkarScheduleDays; dayOffset++) {
+      final scheduledDate = firstDate.add(Duration(days: dayOffset));
+      final text = approvedTexts[_azkarIndexForDate(scheduledDate, approvedTexts.length)];
+
+      await _plugin.zonedSchedule(
+        id: _morningAzkarBaseId + dayOffset,
+        title: title,
+        body: text,
+        scheduledDate: scheduledDate,
+        notificationDetails: _morningAzkarNotificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: '/azkar/morning',
+      );
+    }
   }
 
-  /// Cancel only the morning azkar reminder.
+  /// Cancel morning azkar reminders.
   Future<void> cancelMorningAzkarReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _morningAzkarId);
+    for (var i = 0; i < _azkarScheduleDays; i++) {
+      await _plugin.cancel(id: _morningAzkarBaseId + i);
+    }
   }
 
-  /// Schedules a daily evening azkar reminder at 6:00 PM.
+  /// Schedules rolling daily evening azkar reminders.
   Future<void> scheduleEveningAzkarReminder({
     required String title,
     required String body,
@@ -661,26 +911,34 @@ class TaliaNotificationService {
     int minute = 0,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    await _plugin.cancel(id: _eveningAzkarId);
+    await cancelEveningAzkarReminder();
     final approvedTexts = await _loadApprovedAzkarTexts('evening');
     if (approvedTexts.isEmpty) return;
 
-    await _plugin.zonedSchedule(
-      id: _eveningAzkarId,
-      title: title,
-      body: approvedTexts.first,
-      scheduledDate: _nextInstanceOfTime(hour, minute),
-      notificationDetails: _eveningAzkarNotificationDetails,
-      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-      payload: '/azkar/evening',
-    );
+    final firstDate = _nextInstanceOfTime(hour, minute);
+    for (var dayOffset = 0; dayOffset < _azkarScheduleDays; dayOffset++) {
+      final scheduledDate = firstDate.add(Duration(days: dayOffset));
+      final text = approvedTexts[_azkarIndexForDate(scheduledDate, approvedTexts.length)];
+
+      await _plugin.zonedSchedule(
+        id: _eveningAzkarBaseId + dayOffset,
+        title: title,
+        body: text,
+        scheduledDate: scheduledDate,
+        notificationDetails: _eveningAzkarNotificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: '/azkar/evening',
+      );
+    }
   }
 
-  /// Cancel only the evening azkar reminder.
+  /// Cancel evening azkar reminders.
   Future<void> cancelEveningAzkarReminder() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _eveningAzkarId);
+    for (var i = 0; i < _azkarScheduleDays; i++) {
+      await _plugin.cancel(id: _eveningAzkarBaseId + i);
+    }
   }
 
   /// Schedules rolling daily dua notifications at 9:00 AM.
@@ -693,6 +951,7 @@ class TaliaNotificationService {
     int minute = 0,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
+    await cancelDailyDuaReminder();
 
     final duas = await _loadApprovedAzkarTexts('duas');
     // Fail safe: no corpus → no religious notification content at all.
@@ -749,41 +1008,129 @@ class TaliaNotificationService {
     await _plugin.cancel(id: _kidsReviewId);
   }
 
-  // ─── Streak Alert (Smart) ──────────────────────────────────────────────────
+  // ─── Friday Surah Al-Kahf Reminder ─────────────────────────────────────────
 
-  /// Schedules a streak-specific alert at 9 PM for users with streak > 3 days.
-  Future<void> scheduleStreakAlert({
+  /// Schedules a weekly Friday reminder to read Surah Al-Kahf.
+  Future<void> scheduleFridayKahfReminder({
     required String title,
     required String body,
-    required int currentStreak,
+    int hour = 9,
+    int minute = 0,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
-    if (currentStreak <= 3) return;
-
-    await _plugin.cancel(id: _streakAlertId);
-
-    final tzNow = tz.TZDateTime.now(tz.local);
-    var alertTime = tz.TZDateTime(
-      tz.local,
-      tzNow.year,
-      tzNow.month,
-      tzNow.day,
-      21,
-      0,
-    );
-    if (alertTime.isBefore(tzNow)) {
-      alertTime = alertTime.add(const Duration(days: 1));
-    }
+    await cancelFridayKahfReminder();
 
     await _plugin.zonedSchedule(
-      id: _streakAlertId,
+      id: _fridayKahfId,
       title: title,
       body: body,
-      scheduledDate: alertTime,
-      notificationDetails: _streakNotificationDetails,
+      scheduledDate: _nextInstanceOfDayAndTime(DateTime.friday, hour, minute),
+      notificationDetails: _fridayKahfNotificationDetails,
       androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-      payload: '/memorization',
+      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      payload: '/quran/surah/18',
     );
+  }
+
+  /// Cancel Friday Surah Al-Kahf reminder.
+  Future<void> cancelFridayKahfReminder() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.cancel(id: _fridayKahfId);
+  }
+
+  // ─── Tahajjud / Qiyam Al-Layl Reminder ──────────────────────────────────────
+
+  /// Schedules a daily reminder for Tahajjud and night prayer in the last third of the night.
+  Future<void> scheduleTahajjudReminder({
+    required String title,
+    required String body,
+    int hour = 3,
+    int minute = 30,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await cancelTahajjudReminder();
+
+    await _plugin.zonedSchedule(
+      id: _tahajjudId,
+      title: title,
+      body: body,
+      scheduledDate: _nextInstanceOfTime(hour, minute),
+      notificationDetails: _tahajjudNotificationDetails,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: '/azkar/duas',
+    );
+  }
+
+  /// Cancel Tahajjud reminder.
+  Future<void> cancelTahajjudReminder() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.cancel(id: _tahajjudId);
+  }
+
+  // ─── Khatmah Daily Progress Reminder ───────────────────────────────────────
+
+  /// Schedules a daily reminder for the user's active Khatmah target.
+  Future<void> scheduleKhatmahReminder({
+    required String title,
+    required String body,
+    required String payload,
+    int hour = 17,
+    int minute = 0,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await cancelKhatmahReminder();
+
+    await _plugin.zonedSchedule(
+      id: _khatmahReminderId,
+      title: title,
+      body: body,
+      scheduledDate: _nextInstanceOfTime(hour, minute),
+      notificationDetails: _khatmahNotificationDetails,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: payload,
+    );
+  }
+
+  /// Cancel Khatmah reminder.
+  Future<void> cancelKhatmahReminder() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.cancel(id: _khatmahReminderId);
+  }
+
+  // ─── Prayer Times Reminders ────────────────────────────────────────────────
+
+  /// Schedules rolling prayer time reminders.
+  Future<void> schedulePrayerTimesReminders({
+    required List<ScheduledPrayerNotification> prayers,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await cancelPrayerTimesReminders();
+
+    final now = DateTime.now();
+    for (final prayer in prayers) {
+      if (prayer.scheduledDate.isBefore(now)) continue;
+
+      final tzDate = tz.TZDateTime.from(prayer.scheduledDate, tz.local);
+      await _plugin.zonedSchedule(
+        id: _prayerTimesBaseId + prayer.idOffset,
+        title: prayer.title,
+        body: prayer.body,
+        scheduledDate: tzDate,
+        notificationDetails: _prayerNotificationDetails,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        payload: '/',
+      );
+    }
+  }
+
+  /// Cancel all scheduled prayer times reminders.
+  Future<void> cancelPrayerTimesReminders() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    for (var i = 0; i < _prayerTimesMaxCount; i++) {
+      await _plugin.cancel(id: _prayerTimesBaseId + i);
+    }
   }
 
   // ─── Cancel All & Test Notifications ───────────────────────────────────────
@@ -815,6 +1162,10 @@ class TaliaNotificationService {
       'streak' => _streakNotificationDetails,
       'dua' => _dailyDuaNotificationDetails,
       'kids' => _kidsReviewNotificationDetails,
+      'friday_kahf' => _fridayKahfNotificationDetails,
+      'tahajjud' => _tahajjudNotificationDetails,
+      'khatmah' => _khatmahNotificationDetails,
+      'prayer' => _prayerNotificationDetails,
       _ => _dailyReviewNotificationDetails,
     };
 
@@ -824,6 +1175,10 @@ class TaliaNotificationService {
       'streak' => '/memorization',
       'dua' => '/azkar/duas',
       'kids' => '/memorization-plus/kids-journey',
+      'friday_kahf' => '/quran/surah/18',
+      'tahajjud' => '/azkar/duas',
+      'khatmah' => '/khatmah',
+      'prayer' => '/',
       _ => '/memorization',
     };
 
@@ -860,6 +1215,14 @@ class TaliaNotificationService {
     return scheduled;
   }
 
+  tz.TZDateTime _nextInstanceOfDayAndTime(int dayOfWeek, int hour, int minute) {
+    var scheduled = _nextInstanceOfTime(hour, minute);
+    while (scheduled.weekday != dayOfWeek) {
+      scheduled = scheduled.add(const Duration(days: 1));
+    }
+    return scheduled;
+  }
+
   final Map<String, List<String>> _cachedAzkarTexts = {};
 
   /// Loads daily dua bodies from the bundled approved corpus only.
@@ -879,15 +1242,23 @@ class TaliaNotificationService {
       final texts = extractApprovedAzkarTexts(source, category: category);
       _cachedAzkarTexts[category] = texts;
       return texts;
-    } catch (_) {
-      // Keep notification scheduling resilient if assets are unavailable.
+    } catch (error, stack) {
+      TaliaLogger.w('Failed to load approved azkar texts for category $category', error, stack);
       return const [];
     }
   }
 
-  int _duaIndexForDate(tz.TZDateTime date, int duaCount) {
+  int _azkarIndexForDate(tz.TZDateTime date, int count) {
+    if (count <= 0) return 0;
     final day = DateTime(date.year, date.month, date.day);
     final base = DateTime(2024);
-    return day.difference(base).inDays % duaCount;
+    return day.difference(base).inDays.abs() % count;
+  }
+
+  int _duaIndexForDate(tz.TZDateTime date, int duaCount) {
+    if (duaCount <= 0) return 0;
+    final day = DateTime(date.year, date.month, date.day);
+    final base = DateTime(2024);
+    return day.difference(base).inDays.abs() % duaCount;
   }
 }

@@ -3078,6 +3078,69 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationDailyDuaTitle => 'Dua of the Day 🤲';
 
   @override
+  String get notificationFridayKahfTitle => 'Surah Al-Kahf Reminder 🌿';
+
+  @override
+  String get notificationFridayKahfBody =>
+      'Blessed Friday! Remember to read Surah Al-Kahf today to illuminate your week ✨';
+
+  @override
+  String get notificationTahajjudTitle => 'Tahajjud & Night Prayer 🌙';
+
+  @override
+  String get notificationTahajjudBody =>
+      'A peaceful moment for prayer and supplication in the last third of the night.. May Allah accept your prayers 🤲';
+
+  @override
+  String get notificationKhatmahTitle => 'Daily Khatmah Reading 📖';
+
+  @override
+  String get notificationKhatmahBody =>
+      'Continue your blessed journey with your Quran Khatmah today 🌿';
+
+  @override
+  String notificationKhatmahBodyWithTarget(Object start, Object end) {
+    return 'Today\'s portion: page $start to $end.. Keep going! ✨';
+  }
+
+  @override
+  String notificationPrayerTitle(Object prayer) {
+    return 'Time for $prayer Prayer 🕌';
+  }
+
+  @override
+  String get notificationPrayerBody =>
+      'Come to prayer, come to success.. May Allah bless your prayer';
+
+  @override
+  String get notificationSettingsFridayKahf => 'Surah Al-Kahf (Friday)';
+
+  @override
+  String get notificationSettingsFridayKahfSub =>
+      'Weekly Friday reminder to read Surah Al-Kahf';
+
+  @override
+  String get notificationSettingsTahajjud => 'Tahajjud & Night Prayer';
+
+  @override
+  String get notificationSettingsTahajjudSub =>
+      'Daily reminder in the last third of the night';
+
+  @override
+  String get notificationSettingsKhatmah => 'Khatmah Progress';
+
+  @override
+  String get notificationSettingsKhatmahSub =>
+      'Daily reminder for your active Khatmah target';
+
+  @override
+  String get notificationSettingsPrayerTimes => 'Prayer Times';
+
+  @override
+  String get notificationSettingsPrayerTimesSub =>
+      'Reminders at the time of each of the 5 daily prayers';
+
+  @override
   String get homeTourTitle => 'Need a quick tour?';
 
   @override

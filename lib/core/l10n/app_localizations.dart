@@ -5551,6 +5551,108 @@ abstract class AppLocalizations {
   /// **'دعوة من القلب 🤲'**
   String get notificationDailyDuaTitle;
 
+  /// No description provided for @notificationFridayKahfTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نور ما بين الجمعتين 🌿'**
+  String get notificationFridayKahfTitle;
+
+  /// No description provided for @notificationFridayKahfBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'جمعة مباركة! لا تنسَ قراءة سورة الكهف اليوم لتضيء لك ما بين الجمعتين ✨'**
+  String get notificationFridayKahfBody;
+
+  /// No description provided for @notificationTahajjudTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيام الليل والدعاء المستجاب 🌙'**
+  String get notificationTahajjudTitle;
+
+  /// No description provided for @notificationTahajjudBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'ركعتان في جوف الليل وسؤال لله تعالى في ساعة الاستجابة.. تقبل الله طاعتك 🤲'**
+  String get notificationTahajjudBody;
+
+  /// No description provided for @notificationKhatmahTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد الختمة اليومي 📖'**
+  String get notificationKhatmahTitle;
+
+  /// No description provided for @notificationKhatmahBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'واصل مسيرتك المباركة مع الختمة.. وردك اليوم بانتظارك 🌿'**
+  String get notificationKhatmahBody;
+
+  /// No description provided for @notificationKhatmahBodyWithTarget.
+  ///
+  /// In ar, this message translates to:
+  /// **'وردك اليوم: من صفحة {start} إلى {end}.. اقتربت من إتمام الختمة! ✨'**
+  String notificationKhatmahBodyWithTarget(Object start, Object end);
+
+  /// No description provided for @notificationPrayerTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حان الآن موعد صلاة {prayer} 🕌'**
+  String notificationPrayerTitle(Object prayer);
+
+  /// No description provided for @notificationPrayerBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'حي على الصلاة، حي على الفلاح.. بارك الله في صلاتك'**
+  String get notificationPrayerBody;
+
+  /// No description provided for @notificationSettingsFridayKahf.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة الكهف (الجمعة)'**
+  String get notificationSettingsFridayKahf;
+
+  /// No description provided for @notificationSettingsFridayKahfSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير أسبوعي بقراءة سورة الكهف يوم الجمعة'**
+  String get notificationSettingsFridayKahfSub;
+
+  /// No description provided for @notificationSettingsTahajjud.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيام الليل والوتر'**
+  String get notificationSettingsTahajjud;
+
+  /// No description provided for @notificationSettingsTahajjudSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير يومي في الثلث الأخير من الليل'**
+  String get notificationSettingsTahajjudSub;
+
+  /// No description provided for @notificationSettingsKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة الختمة'**
+  String get notificationSettingsKhatmah;
+
+  /// No description provided for @notificationSettingsKhatmahSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير يومي بالورد المحدد لختمتك الحالية'**
+  String get notificationSettingsKhatmahSub;
+
+  /// No description provided for @notificationSettingsPrayerTimes.
+  ///
+  /// In ar, this message translates to:
+  /// **'مواقيت الصلاة'**
+  String get notificationSettingsPrayerTimes;
+
+  /// No description provided for @notificationSettingsPrayerTimesSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيهات عند حلول أوقات الصلوات الخمس'**
+  String get notificationSettingsPrayerTimesSub;
+
   /// No description provided for @homeTourTitle.
   ///
   /// In ar, this message translates to:

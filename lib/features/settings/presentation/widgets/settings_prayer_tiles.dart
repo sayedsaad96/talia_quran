@@ -1,8 +1,11 @@
 import 'package:adhan/adhan.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/services/notification_scheduler.dart';
+import '../../../../core/services/notification_service.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import 'settings_section.dart';
 
@@ -20,6 +23,7 @@ class _PrayerTimesSettingsSectionState
     extends State<PrayerTimesSettingsSection> {
   final _service = getIt<PrayerTimesService>();
   late bool _enabled;
+  late bool _notificationsEnabled;
   String? _cityId;
   late String _method;
   List<PrayerCity> _cities = const [];
@@ -30,6 +34,14 @@ class _PrayerTimesSettingsSectionState
     _enabled = _service.isEnabled;
     _cityId = _service.selectedCityId;
     _method = _service.calculationMethod;
+    final prefs = getIt.isRegistered<SharedPreferences>()
+        ? getIt<SharedPreferences>()
+        : null;
+    _notificationsEnabled =
+        prefs?.getBool(
+          TaliaNotificationService.prayerNotificationsPreferenceKey,
+        ) ??
+        false;
     _service.cities().then((cities) {
       if (!mounted) return;
       setState(() {
@@ -46,14 +58,30 @@ class _PrayerTimesSettingsSectionState
 
   Future<void> _setCity(String? id) async {
     if (id == null) return;
+    final l10n = context.l10n;
     await _service.setCityId(id);
+    if (!mounted) return;
     setState(() => _cityId = id);
+    if (getIt.isRegistered<NotificationScheduler>()) {
+      await getIt<NotificationScheduler>().refreshNotifications(
+        l10n,
+        force: true,
+      );
+    }
   }
 
   Future<void> _setMethod(String? method) async {
     if (method == null) return;
+    final l10n = context.l10n;
     await _service.setCalculationMethod(method);
+    if (!mounted) return;
     setState(() => _method = method);
+    if (getIt.isRegistered<NotificationScheduler>()) {
+      await getIt<NotificationScheduler>().refreshNotifications(
+        l10n,
+        force: true,
+      );
+    }
   }
 
   String _methodLabel(BuildContext context, String method) {
@@ -118,6 +146,31 @@ class _PrayerTimesSettingsSectionState
               ],
               onChanged: _setMethod,
             ),
+          ),
+          SettingsDivider(isDark: widget.isDark),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(context.l10n.notificationSettingsPrayerTimes),
+            subtitle: Text(context.l10n.notificationSettingsPrayerTimesSub),
+            value: _notificationsEnabled,
+            onChanged: (val) async {
+              final l10n = context.l10n;
+              final prefs = getIt.isRegistered<SharedPreferences>()
+                  ? getIt<SharedPreferences>()
+                  : null;
+              await prefs?.setBool(
+                TaliaNotificationService.prayerNotificationsPreferenceKey,
+                val,
+              );
+              if (!mounted) return;
+              setState(() => _notificationsEnabled = val);
+              if (getIt.isRegistered<NotificationScheduler>()) {
+                await getIt<NotificationScheduler>().refreshNotifications(
+                  l10n,
+                  force: true,
+                );
+              }
+            },
           ),
         ],
       ],

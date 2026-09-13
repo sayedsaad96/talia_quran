@@ -65,6 +65,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       final currentLocale = getIt<LocaleCubit>().state;
       final l10n = lookupAppLocalizations(currentLocale);
       unawaited(getIt<NotificationScheduler>().refreshNotifications(l10n));
+      unawaited(getIt<TaliaNotificationService>().clearBadge());
       getIt<AuthCubit>().resyncOnResume();
     } else if (state == AppLifecycleState.inactive ||
         state == AppLifecycleState.hidden ||
