@@ -67,6 +67,7 @@ class _FakeAuthRepository implements AuthRepository {
 class _FakeMemorizationCloudRepository implements MemorizationCloudRepository {
   final events = <String>[];
   bool failEvidencePull = false;
+  bool failEvidencePush = false;
 
   @override
   bool get isReviewEvidenceTransportEnabled => true;
@@ -82,7 +83,9 @@ class _FakeMemorizationCloudRepository implements MemorizationCloudRepository {
   @override
   Future<Either<Failure, void>> syncReviewEvidenceToCloud() async {
     events.add('evidence-push');
-    return const Right(null);
+    return failEvidencePush
+        ? const Left(NetworkFailure('evidence offline'))
+        : const Right(null);
   }
 
   @override
@@ -179,6 +182,20 @@ void main() {
     expect(memorizationRepository.events, isNot(contains('production-push')));
     expect(reasons, isNot(contains(ProgressChangedReason.cloudPull)));
     await subscription.cancel();
+  });
+
+  test('evidence push failure does not block projection push', () async {
+    memorizationRepository.failEvidencePush = true;
+    final coordinator = CloudSyncCoordinator(
+      authRepository: authRepository,
+      memorizationCloudRepository: memorizationRepository,
+      syncBookmarks: false,
+    );
+
+    await coordinator.run();
+
+    expect(memorizationRepository.events, contains('evidence-push'));
+    expect(memorizationRepository.events, contains('production-push'));
   });
 
   test(

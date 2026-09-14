@@ -30,7 +30,9 @@ class CloudSyncQueue {
     this._isar,
     this._owner, {
     Future<void> Function(String ownerId)? scheduleBackgroundDelivery,
-  }) : _scheduleBackgroundDelivery = scheduleBackgroundDelivery;
+    DateTime Function()? now,
+  }) : _scheduleBackgroundDelivery = scheduleBackgroundDelivery,
+       _now = now ?? (() => DateTime.now().toUtc());
 
   static const maxAttempts = 8;
   static const baseBackoffSeconds = 30;
@@ -38,6 +40,7 @@ class CloudSyncQueue {
   final Isar _isar;
   final RecordOwnerProvider _owner;
   final Future<void> Function(String ownerId)? _scheduleBackgroundDelivery;
+  final DateTime Function() _now;
   final _random = Random();
 
   String get _ownerUserId => _owner.currentOwnerId;
@@ -59,7 +62,7 @@ class CloudSyncQueue {
   /// item's [attemptCount].
   Future<void> enqueue(String kind) async {
     if (!_canQueue) return;
-    final now = DateTime.now().toUtc();
+    final now = _now().toUtc();
     final ownerUserId = _ownerUserId;
     await _isar.writeTxn(() async {
       final existing = await _isar.cloudSyncQueueItems.getByKindOwnerUserId(
@@ -94,7 +97,7 @@ class CloudSyncQueue {
   }
 
   Future<List<CloudSyncQueueItem>> dueItems() async {
-    final now = DateTime.now().toUtc();
+    final now = _now().toUtc();
     final items = await _ownedItems();
     return items
         .where(
@@ -149,7 +152,8 @@ class CloudSyncQueue {
       kind,
       expectedOwner,
     );
-    return item == null || item.attemptCount < maxAttempts;
+    return item == null ||
+        (item.attemptCount < maxAttempts && !item.nextRetryAt.isAfter(_now()));
   }
 
   Future<void> markSuccess(String kind, {String? expectedOwner}) async {
@@ -180,7 +184,7 @@ class CloudSyncQueue {
         baseBackoffSeconds * pow(2, existing.attemptCount - 1).toInt(),
       );
       final jitter = _random.nextInt(max(1, delaySeconds ~/ 4 + 1));
-      existing.nextRetryAt = DateTime.now().toUtc().add(
+      existing.nextRetryAt = _now().toUtc().add(
         Duration(seconds: delaySeconds + jitter),
       );
       // Retain exhausted items as dead letters (do not delete).

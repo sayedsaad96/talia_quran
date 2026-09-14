@@ -155,8 +155,23 @@ class CloudSyncCoordinator {
       }
       final memorization = _memorizationCloudRepository;
       if (memorization != null && await memorization.hasPendingCloudWork()) {
-        final evidenceFlush = await memorization.flushReviewEvidenceBeforeSignOut();
-        if (evidenceFlush.fold((_) => false, (drained) => !drained)) return false;
+        if (await memorization.hasPendingReviewEvidence()) {
+          final ownerId = _authRepository.currentUser?.id;
+          final queue = _cloudSyncQueue;
+          if (ownerId == null ||
+              (queue != null &&
+                  !await queue.isRetryEligible(
+                    CloudSyncQueueKind.reviewEvidencePush,
+                    ownerId,
+                  ))) {
+            return false;
+          }
+          final evidenceFlush =
+              await memorization.flushReviewEvidenceBeforeSignOut();
+          if (evidenceFlush.fold((_) => false, (drained) => !drained)) {
+            return false;
+          }
+        }
         await memorization.resyncProductionDataToCloud();
         await memorization.syncKidsProgressToCloud();
       }
@@ -335,7 +350,8 @@ class CloudSyncCoordinator {
 
     final memorization = _memorizationCloudRepository;
     if (memorization != null) {
-      if (!await _pushReviewEvidence(memorization, ownerId)) return;
+      await _pushReviewEvidence(memorization, ownerId);
+      if (!_ownerIsStillActive(ownerId)) return;
       await _pushProductionData(memorization);
       if (!_ownerIsStillActive(ownerId)) return;
       await _pushKidsProgress(memorization);
@@ -360,9 +376,7 @@ class CloudSyncCoordinator {
     final memorization = _memorizationCloudRepository;
     if (memorization != null) {
       final ownerId = _authRepository.currentUser?.id;
-      if (ownerId != null && !await _pushReviewEvidence(memorization, ownerId)) {
-        return;
-      }
+      if (ownerId != null) await _pushReviewEvidence(memorization, ownerId);
       if (await memorization.hasPendingCloudWork()) {
         await _pushProductionData(memorization);
       }

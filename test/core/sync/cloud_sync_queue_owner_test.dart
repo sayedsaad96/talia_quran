@@ -86,5 +86,36 @@ void main() {
       await queueFor('local').enqueue(CloudSyncQueueKind.productionPush);
       expect(await isar.cloudSyncQueueItems.where().count(), 0);
     });
+
+    test('evidence retries respect backoff before their next retry time',
+        () async {
+      var now = DateTime.utc(2026, 9, 15, 12);
+      final queue = CloudSyncQueue(
+        isar,
+        const FixedRecordOwnerProvider('user-a'),
+        now: () => now,
+      );
+      await queue.enqueue(CloudSyncQueueKind.reviewEvidencePush);
+      await queue.markFailure(
+        CloudSyncQueueKind.reviewEvidencePush,
+        expectedOwner: 'user-a',
+      );
+
+      expect(
+        await queue.isRetryEligible(
+          CloudSyncQueueKind.reviewEvidencePush,
+          'user-a',
+        ),
+        isFalse,
+      );
+      now = now.add(const Duration(hours: 1));
+      expect(
+        await queue.isRetryEligible(
+          CloudSyncQueueKind.reviewEvidencePush,
+          'user-a',
+        ),
+        isTrue,
+      );
+    });
   });
 }
