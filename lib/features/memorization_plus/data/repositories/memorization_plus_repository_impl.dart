@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:dartz/dartz.dart';
+import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/error/app_failure.dart';
+import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/memorization/progress_metrics_service.dart';
 import '../../../../core/memorization/kids_hifz_feature_flags.dart';
 import '../../../../core/services/notification_service.dart';
@@ -32,6 +34,8 @@ import 'collaborators/memorization_parent_access_service.dart';
 import 'collaborators/memorization_production_sync_service.dart';
 import 'collaborators/memorization_profile_service.dart';
 import 'collaborators/memorization_profile_store.dart';
+import 'collaborators/review_evidence_sync_service.dart';
+import '../datasources/review_evidence_local_datasource.dart';
 
 class MemorizationPlusRepositoryImpl
     implements
@@ -47,9 +51,13 @@ class MemorizationPlusRepositoryImpl
     ProgressMetricsService metrics = const ProgressMetricsService(),
     CloudSyncQueue? cloudSyncQueue,
     ParentPinSecureStore? parentPinStore,
+    Isar? isar,
+    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
   }) : _metrics = metrics,
        _cloudSyncQueue = cloudSyncQueue,
-       _parentPinStore = parentPinStore;
+       _parentPinStore = parentPinStore,
+       _isar = isar,
+       _owner = owner;
 
   final ParentPinSecureStore? _parentPinStore;
 
@@ -107,6 +115,15 @@ class MemorizationPlusRepositoryImpl
         _prefs,
         _gateway,
         _mappers,
+        owner: _owner,
+        evidenceSync: _isar == null
+            ? null
+            : ReviewEvidenceSyncService(
+                local: ReviewEvidenceLocalDatasource(_isar),
+                owner: _owner,
+                prefs: _prefs,
+                transport: SupabaseReviewEvidenceTransport(_gateway),
+              ),
       );
 
   final MemorizationPlusLocalDatasource _datasource;
@@ -122,6 +139,8 @@ class MemorizationPlusRepositoryImpl
   final SharedPreferences _prefs;
   final ProgressMetricsService _metrics;
   final CloudSyncQueue? _cloudSyncQueue;
+  final Isar? _isar;
+  final RecordOwnerProvider _owner;
 
   // ─── Identity profile ──────────────────────────────────────────────────────
   @override

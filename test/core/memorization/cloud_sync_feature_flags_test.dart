@@ -24,4 +24,20 @@ void main() {
       isFalse,
     );
   });
+
+  test('review evidence transport is disabled until explicitly enabled', () async {
+    SharedPreferences.setMockInitialValues({});
+    final prefs = await SharedPreferences.getInstance();
+
+    expect(CloudSyncFeatureFlags.isReviewEvidenceTransportEnabled(prefs), isFalse);
+
+    SharedPreferences.setMockInitialValues({
+      CloudSyncFeatureFlags.reviewEvidenceTransportKey: true,
+    });
+    final enabledPrefs = await SharedPreferences.getInstance();
+    expect(
+      CloudSyncFeatureFlags.isReviewEvidenceTransportEnabled(enabledPrefs),
+      isTrue,
+    );
+  });
 }

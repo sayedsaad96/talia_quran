@@ -424,6 +424,8 @@ Future<void> configureDependencies({bool background = false}) async {
       metrics: const ProgressMetricsService(),
       cloudSyncQueue: getIt<CloudSyncQueue>(),
       parentPinStore: getIt<ParentPinSecureStore>(),
+      isar: getIt<Isar>(),
+      owner: getIt<RecordOwnerProvider>(),
     ),
   );
   getIt.registerLazySingleton<MemorizationIdentityRepository>(

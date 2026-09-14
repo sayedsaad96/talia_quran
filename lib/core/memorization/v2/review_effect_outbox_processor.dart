@@ -16,8 +16,8 @@ import '../../services/achievement_service.dart';
 ///
 /// XP, streak data and their outbox receipt share one Isar transaction. A
 /// certificate is already idempotent by certificate id in its own store, then
-/// receives its durable receipt after the check completes. Sync stays pending
-/// until the append-only cloud event transport is introduced.
+/// receives its durable receipt after the check completes. Sync receipts stay
+/// pending until the cloud evidence collaborator receives server acceptance.
 final class V2ReviewEffectOutboxProcessor {
   V2ReviewEffectOutboxProcessor({
     required Isar isar,

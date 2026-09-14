@@ -21,6 +21,7 @@ import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
 import 'memorization_cloud_gateway.dart';
 import 'memorization_cloud_mappers.dart';
+import 'review_evidence_sync_service.dart';
 
 /// Production-mode cloud sync: pull production review records, daily plan,
 /// and custom plan from Supabase; resync dirty local rows; push certificates;
@@ -32,13 +33,16 @@ class MemorizationProductionSyncService {
     this._gateway,
     this._mappers, {
     RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
-  }) : _owner = owner;
+    ReviewEvidenceSync? evidenceSync,
+  }) : _owner = owner,
+       _evidenceSync = evidenceSync;
 
   final MemorizationPlusLocalDatasource _datasource;
   final SharedPreferences _prefs;
   final MemorizationCloudGateway _gateway;
   final MemorizationCloudMappers _mappers;
   final RecordOwnerProvider _owner;
+  final ReviewEvidenceSync? _evidenceSync;
 
   /// Daily-plan dirty flag is also written by the facade's `saveDailyPlan`.
   static const dailyPlanCloudDirtyKey = PlanCloudDirtyKeys.dailyPlan;
@@ -67,13 +71,27 @@ class MemorizationProductionSyncService {
 
   Future<Either<Failure, void>> pullProductionDataFromCloud() async {
     try {
-      if (!_isSupabaseReady || !_cloudPullEnabled) return const Right(null);
+      Failure? evidenceFailure;
+      if (_isSupabaseReady && _evidenceSync != null) {
+        try {
+          await _evidenceSync.pull();
+        } catch (error) {
+          // Preserve projection compatibility while suppressing a false
+          // completed-reconciliation signal for evidence consumers.
+          evidenceFailure = Failure.fromCloud(error);
+        }
+      }
+      if (!_isSupabaseReady || !_cloudPullEnabled) {
+        return evidenceFailure == null ? const Right(null) : Left(evidenceFailure);
+      }
       final client = _supabase;
       final user = client.auth.currentUser;
-      if (user == null) return const Right(null);
+      if (user == null) {
+        return evidenceFailure == null ? const Right(null) : Left(evidenceFailure);
+      }
       final expectedOwner = user.id;
       if (_owner.currentOwnerId != expectedOwner) {
-        return const Right(null);
+        return evidenceFailure == null ? const Right(null) : Left(evidenceFailure);
       }
 
       var cursor = _readReviewPullCursor();
@@ -112,7 +130,9 @@ class MemorizationProductionSyncService {
           await _mergeDailyPlanFromCloud(client, user.id);
           await _mergeCustomPlanFromCloud(client, user.id);
           await _markReviewPullCompleted();
-          return const Right(null);
+          return evidenceFailure == null
+              ? const Right(null)
+              : Left(evidenceFailure);
         }
 
         final cloudRows = rows.cast<Map<String, dynamic>>();
@@ -144,7 +164,7 @@ class MemorizationProductionSyncService {
       await _mergeDailyPlanFromCloud(client, user.id);
       await _mergeCustomPlanFromCloud(client, user.id);
       await _markReviewPullCompleted();
-      return const Right(null);
+      return evidenceFailure == null ? const Right(null) : Left(evidenceFailure);
     } catch (e) {
       return Left(Failure.fromCloud(e));
     }
@@ -300,6 +320,8 @@ class MemorizationProductionSyncService {
       if (user == null) return const Right(null);
       if (_owner.currentOwnerId != user.id) return const Right(null);
 
+      await _evidenceSync?.pushPending();
+
       final dirtyRecords = await _datasource.getCloudDirtyReviewRecords(
         includeAllAudiences: true,
       );
@@ -419,6 +441,7 @@ class MemorizationProductionSyncService {
   }
 
   Future<bool> hasPendingCloudWork() async {
+    if (await _evidenceSync?.hasUnacknowledgedEvents() ?? false) return true;
     final dirtyRecords = await _datasource.getCloudDirtyReviewRecords(
       includeAllAudiences: true,
     );

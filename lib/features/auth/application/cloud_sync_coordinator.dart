@@ -211,9 +211,6 @@ class CloudSyncCoordinator {
 
   Future<void> _perform(String? ownerId) async {
     if (!_ownerIsStillActive(ownerId)) return;
-    await _processSyncQueue();
-    if (!_ownerIsStillActive(ownerId)) return;
-
     final bookmarks = _bookmarkService;
     if (_syncBookmarks && bookmarks != null) {
       try {
@@ -299,6 +296,9 @@ class CloudSyncCoordinator {
       );
     }
 
+    if (!_ownerIsStillActive(ownerId)) return;
+    // Deferred pushes must not overtake full pull/reconciliation work.
+    await _processSyncQueue();
     if (!_ownerIsStillActive(ownerId)) return;
     await _pushAllData(ownerId!);
 
