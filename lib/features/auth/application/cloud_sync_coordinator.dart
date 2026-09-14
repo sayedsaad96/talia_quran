@@ -155,6 +155,8 @@ class CloudSyncCoordinator {
       }
       final memorization = _memorizationCloudRepository;
       if (memorization != null && await memorization.hasPendingCloudWork()) {
+        final evidenceFlush = await memorization.flushReviewEvidenceBeforeSignOut();
+        if (evidenceFlush.fold((_) => false, (drained) => !drained)) return false;
         await memorization.resyncProductionDataToCloud();
         await memorization.syncKidsProgressToCloud();
       }
@@ -238,12 +240,29 @@ class CloudSyncCoordinator {
     );
 
     final memorization = _memorizationCloudRepository;
+    var evidenceReady = true;
     if (memorization != null) {
       final identityPull = await memorization.pullIdentityFromCloud();
       if (!_ownerIsStillActive(ownerId)) return;
       identityPull.fold(
         (failure) => TaliaLogger.w('Identity pull failed', failure.message),
         (_) => TaliaLogger.i('Identity pull completed'),
+      );
+
+      final evidencePull = await memorization.pullReviewEvidenceFromCloud();
+      if (!_ownerIsStillActive(ownerId)) return;
+      await evidencePull.fold(
+        (failure) async {
+          evidenceReady = false;
+          TaliaLogger.w('Review evidence pull failed', failure.message);
+          await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.reviewEvidencePull);
+        },
+        (_) async {
+          await _cloudSyncQueue?.markSuccess(
+            CloudSyncQueueKind.reviewEvidencePull,
+            expectedOwner: ownerId,
+          );
+        },
       );
 
       final productionPull = await memorization.pullProductionDataFromCloud();
@@ -258,6 +277,10 @@ class CloudSyncCoordinator {
           await _cloudSyncQueue?.markSuccess(CloudSyncQueueKind.productionPull);
         },
       );
+
+      // Evidence-derived consumers must not see a fresh cloud result after a
+      // failed/incomplete reconciliation. Projection pull above stays intact.
+      if (!evidenceReady) return;
 
       final achievementService = _achievementService;
       if (achievementService != null) {
@@ -298,7 +321,7 @@ class CloudSyncCoordinator {
 
     if (!_ownerIsStillActive(ownerId)) return;
     // Deferred pushes must not overtake full pull/reconciliation work.
-    await _processSyncQueue();
+    await _processSyncQueue(expectedOwner: ownerId);
     if (!_ownerIsStillActive(ownerId)) return;
     await _pushAllData(ownerId!);
 
@@ -312,6 +335,7 @@ class CloudSyncCoordinator {
 
     final memorization = _memorizationCloudRepository;
     if (memorization != null) {
+      if (!await _pushReviewEvidence(memorization, ownerId)) return;
       await _pushProductionData(memorization);
       if (!_ownerIsStillActive(ownerId)) return;
       await _pushKidsProgress(memorization);
@@ -335,6 +359,10 @@ class CloudSyncCoordinator {
 
     final memorization = _memorizationCloudRepository;
     if (memorization != null) {
+      final ownerId = _authRepository.currentUser?.id;
+      if (ownerId != null && !await _pushReviewEvidence(memorization, ownerId)) {
+        return;
+      }
       if (await memorization.hasPendingCloudWork()) {
         await _pushProductionData(memorization);
       }
@@ -352,6 +380,46 @@ class CloudSyncCoordinator {
         await bookmarks.hasPendingCloudWorkDurably()) {
       await _pushBookmarks(bookmarks);
     }
+  }
+
+  Future<bool> _pushReviewEvidence(
+    MemorizationCloudRepository memorization,
+    String expectedOwner,
+  ) async {
+    if (!_ownerIsStillActive(expectedOwner)) return false;
+    if (!memorization.isReviewEvidenceTransportEnabled) return true;
+    final queue = _cloudSyncQueue;
+    if (queue != null &&
+        !await queue.isRetryEligible(
+          CloudSyncQueueKind.reviewEvidencePush,
+          expectedOwner,
+        )) {
+      return false;
+    }
+    final result = await memorization.syncReviewEvidenceToCloud();
+    if (!_ownerIsStillActive(expectedOwner)) return false;
+    return result.fold(
+      (failure) async {
+        TaliaLogger.w('Review evidence cloud append failed', failure.message);
+        await queue?.enqueue(CloudSyncQueueKind.reviewEvidencePush);
+        await queue?.markFailure(
+          CloudSyncQueueKind.reviewEvidencePush,
+          expectedOwner: expectedOwner,
+        );
+        return false;
+      },
+      (_) async {
+        if (await memorization.hasPendingReviewEvidence()) {
+          await queue?.enqueue(CloudSyncQueueKind.reviewEvidencePush);
+          return true;
+        }
+        await queue?.markSuccess(
+          CloudSyncQueueKind.reviewEvidencePush,
+          expectedOwner: expectedOwner,
+        );
+        return true;
+      },
+    );
   }
 
   Future<void> _pushAuthProgress() async {
@@ -461,10 +529,20 @@ class CloudSyncCoordinator {
     return memorization != null && await memorization.hasPendingCloudWork();
   }
 
-  Future<void> _processSyncQueue() async {
+  Future<void> _processSyncQueue({String? expectedOwner}) async {
     final queue = _cloudSyncQueue;
     if (queue == null) return;
     for (final item in await queue.dueItems()) {
+      final memorization = _memorizationCloudRepository;
+      if ((item.kind == CloudSyncQueueKind.reviewEvidencePull ||
+              item.kind == CloudSyncQueueKind.reviewEvidencePush) &&
+          (memorization == null ||
+              !memorization.isReviewEvidenceTransportEnabled)) {
+        // The kill switch preserves evidence and its retry state unchanged.
+        continue;
+      }
+      final ownerId = expectedOwner ?? item.ownerUserId;
+      if (item.ownerUserId != ownerId || !_ownerIsStillActive(ownerId)) continue;
       if (!_syncBookmarks &&
           (item.kind == CloudSyncQueueKind.bookmarkPull ||
               item.kind == CloudSyncQueueKind.bookmarkPush)) {
@@ -481,10 +559,11 @@ class CloudSyncCoordinator {
         );
         completed = false;
       }
+      if (!_ownerIsStillActive(ownerId)) continue;
       if (completed) {
-        await queue.markSuccess(item.kind);
+        await queue.markSuccess(item.kind, expectedOwner: ownerId);
       } else {
-        await queue.markFailure(item.kind);
+        await queue.markFailure(item.kind, expectedOwner: ownerId);
       }
     }
   }
@@ -504,6 +583,12 @@ class CloudSyncCoordinator {
       case CloudSyncQueueKind.productionPush:
         return memorization == null ||
             (await memorization.resyncProductionDataToCloud()).isRight();
+      case CloudSyncQueueKind.reviewEvidencePull:
+        return memorization != null &&
+            (await memorization.pullReviewEvidenceFromCloud()).isRight();
+      case CloudSyncQueueKind.reviewEvidencePush:
+        return memorization != null &&
+            (await memorization.syncReviewEvidenceToCloud()).isRight();
       case CloudSyncQueueKind.certificatePush:
         final achievementService = _achievementService;
         if (memorization == null || achievementService == null) return true;
@@ -537,7 +622,7 @@ class CloudSyncCoordinator {
         return bookmarks == null ||
             !await bookmarks.hasPendingCloudWorkDurably();
       default:
-        return true;
+        return false;
     }
   }
 

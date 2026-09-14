@@ -513,6 +513,26 @@ class MemorizationPlusRepositoryImpl
   Future<Either<Failure, void>> pullProductionDataFromCloud() =>
       _productionSync.pullProductionDataFromCloud();
 
+  @override
+  Future<Either<Failure, void>> pullReviewEvidenceFromCloud() =>
+      _productionSync.pullReviewEvidenceFromCloud();
+
+  @override
+  bool get isReviewEvidenceTransportEnabled =>
+      _productionSync.isReviewEvidenceTransportEnabled;
+
+  @override
+  Future<Either<Failure, void>> syncReviewEvidenceToCloud() =>
+      _productionSync.syncReviewEvidenceToCloud();
+
+  @override
+  Future<Either<Failure, bool>> flushReviewEvidenceBeforeSignOut() =>
+      _productionSync.flushReviewEvidenceBeforeSignOut();
+
+  @override
+  Future<bool> hasPendingReviewEvidence() =>
+      _productionSync.hasPendingReviewEvidence();
+
   bool isReviewPullCursorStale() => _productionSync.isReviewPullCursorStale();
 
   @override

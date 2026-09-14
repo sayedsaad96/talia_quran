@@ -14,6 +14,8 @@ abstract final class CloudSyncQueueKind {
   static const authPush = 'auth_push';
   static const productionPull = 'production_pull';
   static const productionPush = 'production_push';
+  static const reviewEvidencePull = 'review_evidence_pull';
+  static const reviewEvidencePush = 'review_evidence_push';
   static const certificatePush = 'certificate_push';
   static const certificatePull = 'certificate_pull';
   static const kidsProgress = 'kids_progress'; // legacy — kept to drain old Isar rows
@@ -141,18 +143,35 @@ class CloudSyncQueue {
     return DeadLetterRecoveryResult(kind: kind, rearmed: true);
   }
 
-  Future<void> markSuccess(String kind) async {
+  Future<bool> isRetryEligible(String kind, String expectedOwner) async {
+    if (_ownerUserId != expectedOwner) return false;
+    final item = await _isar.cloudSyncQueueItems.getByKindOwnerUserId(
+      kind,
+      expectedOwner,
+    );
+    return item == null || item.attemptCount < maxAttempts;
+  }
+
+  Future<void> markSuccess(String kind, {String? expectedOwner}) async {
+    final ownerId = expectedOwner ?? _ownerUserId;
+    if (_ownerUserId != ownerId) return;
     await _isar.writeTxn(() async {
-      final existing = await _find(kind);
+      if (_ownerUserId != ownerId) return;
+      final existing = await _isar.cloudSyncQueueItems
+          .getByKindOwnerUserId(kind, ownerId);
       if (existing != null) {
         await _isar.cloudSyncQueueItems.delete(existing.id);
       }
     });
   }
 
-  Future<void> markFailure(String kind) async {
+  Future<void> markFailure(String kind, {String? expectedOwner}) async {
+    final ownerId = expectedOwner ?? _ownerUserId;
+    if (_ownerUserId != ownerId) return;
     await _isar.writeTxn(() async {
-      final existing = await _find(kind);
+      if (_ownerUserId != ownerId) return;
+      final existing = await _isar.cloudSyncQueueItems
+          .getByKindOwnerUserId(kind, ownerId);
       if (existing == null) return;
 
       existing.attemptCount += 1;

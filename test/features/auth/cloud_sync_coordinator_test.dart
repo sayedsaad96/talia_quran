@@ -65,6 +65,29 @@ class _FakeAuthRepository implements AuthRepository {
 }
 
 class _FakeMemorizationCloudRepository implements MemorizationCloudRepository {
+  final events = <String>[];
+  bool failEvidencePull = false;
+
+  @override
+  bool get isReviewEvidenceTransportEnabled => true;
+
+  @override
+  Future<Either<Failure, void>> pullReviewEvidenceFromCloud() async {
+    events.add('evidence-pull');
+    return failEvidencePull
+        ? const Left(NetworkFailure('evidence offline'))
+        : const Right(null);
+  }
+
+  @override
+  Future<Either<Failure, void>> syncReviewEvidenceToCloud() async {
+    events.add('evidence-push');
+    return const Right(null);
+  }
+
+  @override
+  Future<Either<Failure, bool>> flushReviewEvidenceBeforeSignOut() async =>
+      const Right(true);
   @override
   Future<Either<Failure, void>> pullIdentityFromCloud() async =>
       const Right(null);
@@ -78,8 +101,10 @@ class _FakeMemorizationCloudRepository implements MemorizationCloudRepository {
       const Right(null);
 
   @override
-  Future<Either<Failure, void>> resyncProductionDataToCloud() async =>
-      const Right(null);
+  Future<Either<Failure, void>> resyncProductionDataToCloud() async {
+    events.add('production-push');
+    return const Right(null);
+  }
 
   @override
   Future<Either<Failure, void>> syncKidsProgressToCloud() async =>
@@ -133,6 +158,27 @@ void main() {
     ).run();
 
     expect(authRepository.events, ['pull', 'push']);
+  });
+
+  test('failed evidence pull suppresses regular pushes and cloudPull refresh',
+      () async {
+    memorizationRepository.failEvidencePull = true;
+    final progress = ProgressEventsBus();
+    final reasons = <ProgressChangedReason>[];
+    final subscription = progress.changes.listen(reasons.add);
+    final coordinator = CloudSyncCoordinator(
+      authRepository: authRepository,
+      memorizationCloudRepository: memorizationRepository,
+      progressEvents: progress,
+      syncBookmarks: false,
+    );
+
+    await coordinator.run();
+
+    expect(memorizationRepository.events, contains('evidence-pull'));
+    expect(memorizationRepository.events, isNot(contains('production-push')));
+    expect(reasons, isNot(contains(ProgressChangedReason.cloudPull)));
+    await subscription.cancel();
   });
 
   test(

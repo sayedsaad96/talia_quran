@@ -21,8 +21,10 @@ abstract interface class ReviewEvidenceTransport {
 }
 
 abstract interface class ReviewEvidenceSync {
+  bool get isEnabled;
   Future<void> pull();
   Future<void> pushPending();
+  Future<bool> flushPending();
   Future<bool> hasUnacknowledgedEvents();
 }
 
@@ -133,8 +135,11 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
 
     final pending = await _local.pendingEvents(expectedOwner);
     if (pending.isEmpty) return;
+    lease.check();
+    _ensureOwner(expectedOwner);
     final batch = _boundedBatch(pending);
     final payload = batch.map(ReviewEvidenceWire.toRpcPayload).toList();
+    lease.check();
     _ensureOwner(expectedOwner);
     final response = await _transport.append(payload);
     lease.check();
@@ -151,6 +156,25 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
     _ensureOwner(expectedOwner);
   }
 
+  /// Drains bounded append batches for an explicit lifecycle flush. A rejected
+  /// or disabled batch cannot spin forever: the remaining first ID proves that
+  /// no progress was made and the caller keeps account data instead.
+  @override
+  Future<bool> flushPending({int maxBatches = 20}) async {
+    if (!_owner.isSignedIn) return true;
+    for (var batch = 0; batch < maxBatches; batch += 1) {
+      final before = await pendingEvents();
+      if (before.isEmpty) return true;
+      if (!isEnabled) return false;
+      final firstId = before.first.eventId;
+      await pushPending();
+      final after = await pendingEvents();
+      if (after.isEmpty) return true;
+      if (after.first.eventId == firstId) return false;
+    }
+    return (await pendingEvents()).isEmpty;
+  }
+
   /// Reconciles every page from zero. It does not persist server sequence as a
   /// completion cursor, preventing loss when lower allocated sequences commit
   /// after a later sequence becomes visible.
@@ -162,6 +186,7 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
     var cursorSequence = 0;
     var cursorEventId = '';
     while (true) {
+      lease.check();
       _ensureOwner(expectedOwner);
       final rows = await _transport.pull(
         ownerId: expectedOwner,
@@ -174,15 +199,21 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
         throw const FormatException('Evidence pull page exceeds server limit');
       }
       if (rows.isEmpty) return;
+      var previousCursor = (cursorSequence, cursorEventId);
+      for (final row in rows) {
+        final rowCursor = _pageCursor(row);
+        if (rowCursor.$1 < previousCursor.$1 ||
+            (rowCursor.$1 == previousCursor.$1 &&
+                rowCursor.$2.compareTo(previousCursor.$2) <= 0)) {
+          throw const FormatException('Evidence pull page is not ordered');
+        }
+        previousCursor = rowCursor;
+      }
       final events = rows.map(ReviewEvidenceWire.fromCloudRow).toList();
       if (events.any((event) => event.ownerId != expectedOwner)) {
         throw StateError('Evidence pull owner mismatch');
       }
-      final last = _pageCursor(rows.last);
-      if (last.$1 < cursorSequence ||
-          (last.$1 == cursorSequence && last.$2.compareTo(cursorEventId) <= 0)) {
-        throw const FormatException('Evidence pull cursor did not advance');
-      }
+      final last = previousCursor;
       await _barrier.run(
         (_) => _local.mergeCloudPage(expectedOwner, events),
         authority: lease,

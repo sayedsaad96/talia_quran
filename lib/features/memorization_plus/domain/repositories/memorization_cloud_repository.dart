@@ -5,6 +5,7 @@ import '../../../certificate/domain/entities/certificate_award.dart';
 import '../entities/memorization_entities.dart';
 
 abstract class MemorizationCloudRepository {
+  bool get isReviewEvidenceTransportEnabled;
   Future<Either<Failure, String>> createChildLinkToken();
   Future<Either<Failure, void>> acceptChildLinkToken(String token);
   Future<Either<Failure, void>> pullKidsProgressFromCloud();
@@ -21,6 +22,10 @@ abstract class MemorizationCloudRepository {
 
   Future<Either<Failure, void>> resyncProductionDataToCloud();
   Future<Either<Failure, void>> pullProductionDataFromCloud();
+  Future<Either<Failure, void>> pullReviewEvidenceFromCloud();
+  Future<Either<Failure, void>> syncReviewEvidenceToCloud();
+  Future<Either<Failure, bool>> flushReviewEvidenceBeforeSignOut();
+  Future<bool> hasPendingReviewEvidence();
   Future<Either<Failure, List<CertificateAward>>> pullCertificatesFromCloud();
   Future<Either<Failure, void>> pushCertificatesToCloud(
     List<CertificateAward> certificates,

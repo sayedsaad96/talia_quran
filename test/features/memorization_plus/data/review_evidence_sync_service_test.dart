@@ -97,6 +97,32 @@ void main() {
       expect(await service.pendingEvents(), isEmpty);
       expect(await isar.isarReviewEvidenceEvents.count(), 2);
     });
+
+    test('sign-out flush drains more than one bounded append batch', () async {
+      await isar.writeTxn(() async {
+        await isar.isarReviewEvidenceEvents.putAll([
+          for (var index = 0; index < 101; index += 1)
+            _event(id: 'event-$index', taskId: 'task-$index'),
+        ]);
+      });
+      var calls = 0;
+      transport.onAppend = (events) async {
+        calls += 1;
+        return events
+            .map(
+              (event) => {
+                'event_id': event['event_id'],
+                'result': 'applied',
+                'server_sequence': calls,
+              },
+            )
+            .toList();
+      };
+
+      expect(await service.flushPending(), isTrue);
+      expect(calls, 2);
+      expect(await service.pendingEvents(), isEmpty);
+    });
   });
 }
 

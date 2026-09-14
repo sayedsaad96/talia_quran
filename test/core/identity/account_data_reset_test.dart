@@ -320,6 +320,13 @@ void main() {
       expect(prefs.getBool('unified_journey_enabled'), isTrue);
     });
 
+    test('retains the review evidence transport kill switch', () {
+      expect(
+        AccountDataReset.retainedPreferenceKeys,
+        contains('use_review_evidence_transport'),
+      );
+    });
+
     test('the two inventories never overlap', () {
       for (final retained in AccountDataReset.retainedPreferenceKeys) {
         expect(

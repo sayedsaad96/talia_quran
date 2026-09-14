@@ -122,6 +122,7 @@ class AccountDataReset {
     'onboarding_user_type',
     'unified_journey_enabled',
     'use_cloud_production_pull',
+    'use_review_evidence_transport',
   };
 
   Future<void> clearAccountOwnedData({

@@ -62,6 +62,8 @@ class MemorizationProductionSyncService {
 
   bool get _cloudPullEnabled => _gateway.cloudPullEnabled;
 
+  bool get isReviewEvidenceTransportEnabled => _evidenceSync?.isEnabled ?? false;
+
   SupabaseClient get _supabase => _gateway.supabase;
 
   bool _isProductionReviewRecord(AyahReviewRecord record) =>
@@ -71,27 +73,13 @@ class MemorizationProductionSyncService {
 
   Future<Either<Failure, void>> pullProductionDataFromCloud() async {
     try {
-      Failure? evidenceFailure;
-      if (_isSupabaseReady && _evidenceSync != null) {
-        try {
-          await _evidenceSync.pull();
-        } catch (error) {
-          // Preserve projection compatibility while suppressing a false
-          // completed-reconciliation signal for evidence consumers.
-          evidenceFailure = Failure.fromCloud(error);
-        }
-      }
-      if (!_isSupabaseReady || !_cloudPullEnabled) {
-        return evidenceFailure == null ? const Right(null) : Left(evidenceFailure);
-      }
+      if (!_isSupabaseReady || !_cloudPullEnabled) return const Right(null);
       final client = _supabase;
       final user = client.auth.currentUser;
-      if (user == null) {
-        return evidenceFailure == null ? const Right(null) : Left(evidenceFailure);
-      }
+      if (user == null) return const Right(null);
       final expectedOwner = user.id;
       if (_owner.currentOwnerId != expectedOwner) {
-        return evidenceFailure == null ? const Right(null) : Left(evidenceFailure);
+        return const Right(null);
       }
 
       var cursor = _readReviewPullCursor();
@@ -130,9 +118,7 @@ class MemorizationProductionSyncService {
           await _mergeDailyPlanFromCloud(client, user.id);
           await _mergeCustomPlanFromCloud(client, user.id);
           await _markReviewPullCompleted();
-          return evidenceFailure == null
-              ? const Right(null)
-              : Left(evidenceFailure);
+          return const Right(null);
         }
 
         final cloudRows = rows.cast<Map<String, dynamic>>();
@@ -164,7 +150,7 @@ class MemorizationProductionSyncService {
       await _mergeDailyPlanFromCloud(client, user.id);
       await _mergeCustomPlanFromCloud(client, user.id);
       await _markReviewPullCompleted();
-      return evidenceFailure == null ? const Right(null) : Left(evidenceFailure);
+      return const Right(null);
     } catch (e) {
       return Left(Failure.fromCloud(e));
     }
@@ -320,8 +306,6 @@ class MemorizationProductionSyncService {
       if (user == null) return const Right(null);
       if (_owner.currentOwnerId != user.id) return const Right(null);
 
-      await _evidenceSync?.pushPending();
-
       final dirtyRecords = await _datasource.getCloudDirtyReviewRecords(
         includeAllAudiences: true,
       );
@@ -455,6 +439,38 @@ class MemorizationProductionSyncService {
 
     return isReviewPullCursorStale();
   }
+
+  Future<Either<Failure, void>> pullReviewEvidenceFromCloud() async {
+    try {
+      await _evidenceSync?.pull();
+      return const Right(null);
+    } catch (error) {
+      return Left(Failure.fromCloud(error));
+    }
+  }
+
+  Future<Either<Failure, void>> syncReviewEvidenceToCloud() async {
+    try {
+      final drained = await _evidenceSync?.flushPending() ?? true;
+      if (!drained) {
+        throw StateError('Review evidence remains pending after bounded sync');
+      }
+      return const Right(null);
+    } catch (error) {
+      return Left(Failure.fromCloud(error));
+    }
+  }
+
+  Future<Either<Failure, bool>> flushReviewEvidenceBeforeSignOut() async {
+    try {
+      return Right(await _evidenceSync?.flushPending() ?? true);
+    } catch (error) {
+      return Left(Failure.fromCloud(error));
+    }
+  }
+
+  Future<bool> hasPendingReviewEvidence() async =>
+      await _evidenceSync?.hasUnacknowledgedEvents() ?? false;
 
   /// True when local earned certificates are missing from the synced-id set.
   ///
