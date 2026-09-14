@@ -18,7 +18,8 @@ abstract final class CloudSyncQueueKind {
   static const reviewEvidencePush = 'review_evidence_push';
   static const certificatePush = 'certificate_push';
   static const certificatePull = 'certificate_pull';
-  static const kidsProgress = 'kids_progress'; // legacy — kept to drain old Isar rows
+  static const kidsProgress =
+      'kids_progress'; // legacy — kept to drain old Isar rows
   static const kidsProgressPull = 'kids_progress_pull';
   static const kidsProgressPush = 'kids_progress_push';
   static const bookmarkPull = 'bookmark_pull';
@@ -91,6 +92,44 @@ class CloudSyncQueue {
     await _scheduleBackgroundDelivery?.call(ownerUserId);
   }
 
+  /// Atomically records a failed request for the owner captured before the
+  /// request began. Unlike [enqueue], this never derives identity from the
+  /// owner that happens to be current after an awaited network response.
+  Future<void> recordFailure(
+    String kind, {
+    required String expectedOwner,
+  }) async {
+    if (expectedOwner.isEmpty ||
+        expectedOwner == ReviewRecordIdentity.localOwnerId) {
+      return;
+    }
+    final now = _now().toUtc();
+    await _isar.writeTxn(() async {
+      final existing = await _isar.cloudSyncQueueItems.getByKindOwnerUserId(
+        kind,
+        expectedOwner,
+      );
+      if (existing != null && existing.attemptCount >= maxAttempts) return;
+
+      final item =
+          existing ??
+          (CloudSyncQueueItem()
+            ..kind = kind
+            ..ownerUserId = expectedOwner
+            ..attemptCount = 0
+            ..createdAt = now);
+      item.attemptCount += 1;
+      final delaySeconds = min(
+        3600,
+        baseBackoffSeconds * pow(2, item.attemptCount - 1).toInt(),
+      );
+      final jitter = _random.nextInt(max(1, delaySeconds ~/ 4 + 1));
+      item.nextRetryAt = now.add(Duration(seconds: delaySeconds + jitter));
+      await _isar.cloudSyncQueueItems.put(item);
+    });
+    await _scheduleBackgroundDelivery?.call(expectedOwner);
+  }
+
   Future<bool> hasPending() async {
     final items = await _ownedItems();
     return items.any((item) => item.attemptCount < maxAttempts);
@@ -102,8 +141,7 @@ class CloudSyncQueue {
     return items
         .where(
           (item) =>
-              item.attemptCount < maxAttempts &&
-              !item.nextRetryAt.isAfter(now),
+              item.attemptCount < maxAttempts && !item.nextRetryAt.isAfter(now),
         )
         .toList();
   }
@@ -161,8 +199,10 @@ class CloudSyncQueue {
     if (_ownerUserId != ownerId) return;
     await _isar.writeTxn(() async {
       if (_ownerUserId != ownerId) return;
-      final existing = await _isar.cloudSyncQueueItems
-          .getByKindOwnerUserId(kind, ownerId);
+      final existing = await _isar.cloudSyncQueueItems.getByKindOwnerUserId(
+        kind,
+        ownerId,
+      );
       if (existing != null) {
         await _isar.cloudSyncQueueItems.delete(existing.id);
       }
@@ -174,8 +214,10 @@ class CloudSyncQueue {
     if (_ownerUserId != ownerId) return;
     await _isar.writeTxn(() async {
       if (_ownerUserId != ownerId) return;
-      final existing = await _isar.cloudSyncQueueItems
-          .getByKindOwnerUserId(kind, ownerId);
+      final existing = await _isar.cloudSyncQueueItems.getByKindOwnerUserId(
+        kind,
+        ownerId,
+      );
       if (existing == null) return;
 
       existing.attemptCount += 1;

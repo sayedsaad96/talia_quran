@@ -166,11 +166,10 @@ class CloudSyncCoordinator {
                   ))) {
             return false;
           }
-          final evidenceFlush =
-              await memorization.flushReviewEvidenceBeforeSignOut();
+          final evidenceFlush = await memorization
+              .flushReviewEvidenceBeforeSignOut();
           if (evidenceFlush.isLeft()) {
-            await queue?.enqueue(CloudSyncQueueKind.reviewEvidencePush);
-            await queue?.markFailure(
+            await queue?.recordFailure(
               CloudSyncQueueKind.reviewEvidencePush,
               expectedOwner: ownerId,
             );
@@ -564,7 +563,9 @@ class CloudSyncCoordinator {
         continue;
       }
       final ownerId = expectedOwner ?? item.ownerUserId;
-      if (item.ownerUserId != ownerId || !_ownerIsStillActive(ownerId)) continue;
+      if (item.ownerUserId != ownerId || !_ownerIsStillActive(ownerId)) {
+        continue;
+      }
       if (!_syncBookmarks &&
           (item.kind == CloudSyncQueueKind.bookmarkPull ||
               item.kind == CloudSyncQueueKind.bookmarkPush)) {

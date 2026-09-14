@@ -71,6 +71,7 @@ class _FakeMemorizationCloudRepository implements MemorizationCloudRepository {
   bool failEvidenceFlush = false;
   bool evidencePending = false;
   var evidenceFlushCalls = 0;
+  Future<void> Function()? onEvidenceFlush;
 
   @override
   bool get isReviewEvidenceTransportEnabled => true;
@@ -94,10 +95,12 @@ class _FakeMemorizationCloudRepository implements MemorizationCloudRepository {
   @override
   Future<Either<Failure, bool>> flushReviewEvidenceBeforeSignOut() async {
     evidenceFlushCalls += 1;
+    await onEvidenceFlush?.call();
     return failEvidenceFlush
         ? const Left(NetworkFailure('evidence flush offline'))
         : const Right(true);
   }
+
   @override
   Future<Either<Failure, void>> pullIdentityFromCloud() async =>
       const Right(null);
@@ -173,26 +176,28 @@ void main() {
     expect(authRepository.events, ['pull', 'push']);
   });
 
-  test('failed evidence pull suppresses regular pushes and cloudPull refresh',
-      () async {
-    memorizationRepository.failEvidencePull = true;
-    final progress = ProgressEventsBus();
-    final reasons = <ProgressChangedReason>[];
-    final subscription = progress.changes.listen(reasons.add);
-    final coordinator = CloudSyncCoordinator(
-      authRepository: authRepository,
-      memorizationCloudRepository: memorizationRepository,
-      progressEvents: progress,
-      syncBookmarks: false,
-    );
+  test(
+    'failed evidence pull suppresses regular pushes and cloudPull refresh',
+    () async {
+      memorizationRepository.failEvidencePull = true;
+      final progress = ProgressEventsBus();
+      final reasons = <ProgressChangedReason>[];
+      final subscription = progress.changes.listen(reasons.add);
+      final coordinator = CloudSyncCoordinator(
+        authRepository: authRepository,
+        memorizationCloudRepository: memorizationRepository,
+        progressEvents: progress,
+        syncBookmarks: false,
+      );
 
-    await coordinator.run();
+      await coordinator.run();
 
-    expect(memorizationRepository.events, contains('evidence-pull'));
-    expect(memorizationRepository.events, isNot(contains('production-push')));
-    expect(reasons, isNot(contains(ProgressChangedReason.cloudPull)));
-    await subscription.cancel();
-  });
+      expect(memorizationRepository.events, contains('evidence-pull'));
+      expect(memorizationRepository.events, isNot(contains('production-push')));
+      expect(reasons, isNot(contains(ProgressChangedReason.cloudPull)));
+      await subscription.cancel();
+    },
+  );
 
   test('evidence push failure does not block projection push', () async {
     memorizationRepository.failEvidencePush = true;
@@ -245,42 +250,184 @@ void main() {
     },
   );
 
-  test('sign-out evidence flush failure records one retry and does not retry',
-      () async {
-    await _initializeIsarCoreForTests();
-    final directory = await Directory.systemTemp.createTemp('evidence_flush_');
-    final isar = await Isar.open(
-      [CloudSyncQueueItemSchema],
-      directory: directory.path,
-      name: 'evidence_flush_${DateTime.now().microsecondsSinceEpoch}',
-    );
-    final queue = CloudSyncQueue(
-      isar,
-      const FixedRecordOwnerProvider('coordinator-user'),
-    );
-    memorizationRepository
-      ..evidencePending = true
-      ..failEvidenceFlush = true;
-    try {
-      final flushed = await CloudSyncCoordinator(
-        authRepository: authRepository,
-        memorizationCloudRepository: memorizationRepository,
-        cloudSyncQueue: queue,
-        syncBookmarks: false,
-      ).flushBeforeSignOut();
+  test(
+    'sign-out evidence flush failure records one retry and does not retry',
+    () async {
+      await _initializeIsarCoreForTests();
+      final directory = await Directory.systemTemp.createTemp(
+        'evidence_flush_',
+      );
+      final isar = await Isar.open(
+        [CloudSyncQueueItemSchema],
+        directory: directory.path,
+        name: 'evidence_flush_${DateTime.now().microsecondsSinceEpoch}',
+      );
+      final queue = CloudSyncQueue(
+        isar,
+        const FixedRecordOwnerProvider('coordinator-user'),
+      );
+      memorizationRepository
+        ..evidencePending = true
+        ..failEvidenceFlush = true;
+      try {
+        final flushed = await CloudSyncCoordinator(
+          authRepository: authRepository,
+          memorizationCloudRepository: memorizationRepository,
+          cloudSyncQueue: queue,
+          syncBookmarks: false,
+        ).flushBeforeSignOut();
 
-      expect(flushed, isFalse);
-      expect(memorizationRepository.evidenceFlushCalls, 1);
-      expect(memorizationRepository.evidencePending, isTrue);
-      final item = (await isar.cloudSyncQueueItems.where().findAll()).single;
-      expect(item.kind, CloudSyncQueueKind.reviewEvidencePush);
-      expect(item.attemptCount, 1);
-      expect(item.nextRetryAt.isAfter(DateTime.now().toUtc()), isTrue);
-    } finally {
-      await isar.close(deleteFromDisk: true);
-      await directory.delete(recursive: true);
-    }
-  });
+        expect(flushed, isFalse);
+        expect(memorizationRepository.evidenceFlushCalls, 1);
+        expect(memorizationRepository.evidencePending, isTrue);
+        final item = (await isar.cloudSyncQueueItems.where().findAll()).single;
+        expect(item.kind, CloudSyncQueueKind.reviewEvidencePush);
+        expect(item.attemptCount, 1);
+        expect(item.nextRetryAt.isAfter(DateTime.now().toUtc()), isTrue);
+      } finally {
+        await isar.close(deleteFromDisk: true);
+        await directory.delete(recursive: true);
+      }
+    },
+  );
+
+  test(
+    'sign-out evidence failure stays bound to the captured owner after A to B switch',
+    () async {
+      await _initializeIsarCoreForTests();
+      final directory = await Directory.systemTemp.createTemp(
+        'evidence_flush_owner_',
+      );
+      final isar = await Isar.open(
+        [CloudSyncQueueItemSchema],
+        directory: directory.path,
+        name: 'evidence_flush_owner_${DateTime.now().microsecondsSinceEpoch}',
+      );
+      final queueOwner = _MutableRecordOwnerProvider('coordinator-user');
+      final queue = CloudSyncQueue(isar, queueOwner);
+      memorizationRepository
+        ..evidencePending = true
+        ..failEvidenceFlush = true
+        ..onEvidenceFlush = () async {
+          authRepository.user = const AppUser(
+            id: 'owner-b',
+            email: 'b@example.com',
+            displayName: 'B',
+          );
+          queueOwner.currentOwnerId = 'owner-b';
+        };
+      try {
+        final flushed = await CloudSyncCoordinator(
+          authRepository: authRepository,
+          memorizationCloudRepository: memorizationRepository,
+          cloudSyncQueue: queue,
+          syncBookmarks: false,
+        ).flushBeforeSignOut();
+
+        expect(flushed, isFalse);
+        final rows = await isar.cloudSyncQueueItems.where().findAll();
+        expect(rows, hasLength(1));
+        expect(rows.single.ownerUserId, 'coordinator-user');
+        expect(rows.single.kind, CloudSyncQueueKind.reviewEvidencePush);
+        expect(rows.single.attemptCount, 1);
+      } finally {
+        await isar.close(deleteFromDisk: true);
+        await directory.delete(recursive: true);
+      }
+    },
+  );
+
+  test(
+    'deferred evidence makes zero flush calls and blocks sign-out',
+    () async {
+      await _initializeIsarCoreForTests();
+      final directory = await Directory.systemTemp.createTemp(
+        'evidence_flush_deferred_',
+      );
+      final isar = await Isar.open(
+        [CloudSyncQueueItemSchema],
+        directory: directory.path,
+        name:
+            'evidence_flush_deferred_${DateTime.now().microsecondsSinceEpoch}',
+      );
+      final now = DateTime.utc(2026, 9, 15, 12);
+      final queue = CloudSyncQueue(
+        isar,
+        const FixedRecordOwnerProvider('coordinator-user'),
+        now: () => now,
+      );
+      memorizationRepository.evidencePending = true;
+      try {
+        await queue.enqueue(CloudSyncQueueKind.reviewEvidencePush);
+        await queue.markFailure(
+          CloudSyncQueueKind.reviewEvidencePush,
+          expectedOwner: 'coordinator-user',
+        );
+
+        final flushed = await CloudSyncCoordinator(
+          authRepository: authRepository,
+          memorizationCloudRepository: memorizationRepository,
+          cloudSyncQueue: queue,
+          syncBookmarks: false,
+        ).flushBeforeSignOut();
+
+        expect(flushed, isFalse);
+        expect(memorizationRepository.evidenceFlushCalls, 0);
+        expect(memorizationRepository.events, isNot(contains('evidence-push')));
+      } finally {
+        await isar.close(deleteFromDisk: true);
+        await directory.delete(recursive: true);
+      }
+    },
+  );
+
+  test(
+    'exhausted evidence makes zero flush calls and blocks sign-out',
+    () async {
+      await _initializeIsarCoreForTests();
+      final directory = await Directory.systemTemp.createTemp(
+        'evidence_flush_exhausted_',
+      );
+      final isar = await Isar.open(
+        [CloudSyncQueueItemSchema],
+        directory: directory.path,
+        name:
+            'evidence_flush_exhausted_${DateTime.now().microsecondsSinceEpoch}',
+      );
+      final queue = CloudSyncQueue(
+        isar,
+        const FixedRecordOwnerProvider('coordinator-user'),
+      );
+      memorizationRepository.evidencePending = true;
+      try {
+        await queue.enqueue(CloudSyncQueueKind.reviewEvidencePush);
+        for (
+          var attempt = 0;
+          attempt < CloudSyncQueue.maxAttempts;
+          attempt += 1
+        ) {
+          await queue.markFailure(
+            CloudSyncQueueKind.reviewEvidencePush,
+            expectedOwner: 'coordinator-user',
+          );
+        }
+
+        final flushed = await CloudSyncCoordinator(
+          authRepository: authRepository,
+          memorizationCloudRepository: memorizationRepository,
+          cloudSyncQueue: queue,
+          syncBookmarks: false,
+        ).flushBeforeSignOut();
+
+        expect(flushed, isFalse);
+        expect(memorizationRepository.evidenceFlushCalls, 0);
+        expect(memorizationRepository.events, isNot(contains('evidence-push')));
+      } finally {
+        await isar.close(deleteFromDisk: true);
+        await directory.delete(recursive: true);
+      }
+    },
+  );
 
   test('run contains unexpected cloud failures', () async {
     authRepository.failPull = true;
@@ -295,30 +442,32 @@ void main() {
     expect(authRepository.syncCalls, 0);
   });
 
-  test('external owner switch aborts the remaining captured-owner sync',
-      () async {
-    final pullStarted = Completer<void>();
-    final releasePull = Completer<void>();
-    authRepository
-      ..pullGate = releasePull.future
-      ..onPullStarted = pullStarted.complete;
-    final coordinator = CloudSyncCoordinator(
-      authRepository: authRepository,
-      memorizationCloudRepository: memorizationRepository,
-    );
+  test(
+    'external owner switch aborts the remaining captured-owner sync',
+    () async {
+      final pullStarted = Completer<void>();
+      final releasePull = Completer<void>();
+      authRepository
+        ..pullGate = releasePull.future
+        ..onPullStarted = pullStarted.complete;
+      final coordinator = CloudSyncCoordinator(
+        authRepository: authRepository,
+        memorizationCloudRepository: memorizationRepository,
+      );
 
-    final sync = coordinator.run();
-    await pullStarted.future;
-    authRepository.user = const AppUser(
-      id: 'owner-b',
-      email: 'b@example.com',
-      displayName: 'B',
-    );
-    releasePull.complete();
-    await sync;
+      final sync = coordinator.run();
+      await pullStarted.future;
+      authRepository.user = const AppUser(
+        id: 'owner-b',
+        email: 'b@example.com',
+        displayName: 'B',
+      );
+      releasePull.complete();
+      await sync;
 
-    expect(authRepository.syncCalls, 0);
-  });
+      expect(authRepository.syncCalls, 0);
+    },
+  );
 
   test('background execution leaves bookmark writes for foreground', () async {
     await _initializeIsarCoreForTests();
