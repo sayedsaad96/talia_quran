@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/account_data_barrier.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/review_evidence_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_review_effect_outbox.dart';
@@ -123,6 +124,55 @@ void main() {
       expect(calls, 2);
       expect(await service.pendingEvents(), isEmpty);
     });
+
+    test('owner change during append response cannot acknowledge its receipt',
+        () async {
+      final owner = _MutableOwner('owner-a');
+      final guarded = ReviewEvidenceSyncService(
+        local: ReviewEvidenceLocalDatasource(isar),
+        owner: owner,
+        prefs: prefs,
+        transport: transport,
+      );
+      await isar.writeTxn(() => isar.isarReviewEvidenceEvents.put(_event()));
+      transport.onAppend = (_) async {
+        owner.currentOwnerId = 'owner-b';
+        return const [
+          {'event_id': 'event-a', 'result': 'applied', 'server_sequence': 1},
+        ];
+      };
+
+      await expectLater(
+        guarded.pushPending(),
+        throwsA(isA<AccountDataUnavailableException>()),
+      );
+      final effect = await isar.isarReviewEffectOutboxs
+          .filter()
+          .eventIdEqualTo('event-a')
+          .findFirst();
+      expect(effect?.processedAt, isNull);
+    });
+
+    test('out-of-order intermediate pull row rejects the page before merge',
+        () async {
+      transport.pullPages = [
+        [_cloudRow('remote-b', 2), _cloudRow('remote-a', 1)],
+      ];
+
+      await expectLater(service.pull(), throwsA(isA<FormatException>()));
+      expect(await isar.isarReviewEvidenceEvents.count(), 0);
+    });
+
+    test('disabled transport preserves pending receipt without a network call',
+        () async {
+      await prefs.setBool('use_review_evidence_transport', false);
+      await isar.writeTxn(() => isar.isarReviewEvidenceEvents.put(_event()));
+
+      await service.pushPending();
+
+      expect(await service.pendingEvents(), hasLength(1));
+      expect(transport.pullCursors, isEmpty);
+    });
   });
 }
 
@@ -146,6 +196,16 @@ class _FakeEvidenceTransport implements ReviewEvidenceTransport {
     if (_pullIndex >= pullPages.length) return const [];
     return pullPages[_pullIndex++];
   }
+}
+
+class _MutableOwner implements RecordOwnerProvider {
+  _MutableOwner(this.currentOwnerId);
+
+  @override
+  String currentOwnerId;
+
+  @override
+  bool get isSignedIn => currentOwnerId != 'local';
 }
 
 IsarReviewEvidenceEvent _event({

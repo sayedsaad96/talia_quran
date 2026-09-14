@@ -168,6 +168,14 @@ class CloudSyncCoordinator {
           }
           final evidenceFlush =
               await memorization.flushReviewEvidenceBeforeSignOut();
+          if (evidenceFlush.isLeft()) {
+            await queue?.enqueue(CloudSyncQueueKind.reviewEvidencePush);
+            await queue?.markFailure(
+              CloudSyncQueueKind.reviewEvidencePush,
+              expectedOwner: ownerId,
+            );
+            return false;
+          }
           if (evidenceFlush.fold((_) => false, (drained) => !drained)) {
             return false;
           }

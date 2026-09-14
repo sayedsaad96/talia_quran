@@ -68,6 +68,9 @@ class _FakeMemorizationCloudRepository implements MemorizationCloudRepository {
   final events = <String>[];
   bool failEvidencePull = false;
   bool failEvidencePush = false;
+  bool failEvidenceFlush = false;
+  bool evidencePending = false;
+  var evidenceFlushCalls = 0;
 
   @override
   bool get isReviewEvidenceTransportEnabled => true;
@@ -89,8 +92,12 @@ class _FakeMemorizationCloudRepository implements MemorizationCloudRepository {
   }
 
   @override
-  Future<Either<Failure, bool>> flushReviewEvidenceBeforeSignOut() async =>
-      const Right(true);
+  Future<Either<Failure, bool>> flushReviewEvidenceBeforeSignOut() async {
+    evidenceFlushCalls += 1;
+    return failEvidenceFlush
+        ? const Left(NetworkFailure('evidence flush offline'))
+        : const Right(true);
+  }
   @override
   Future<Either<Failure, void>> pullIdentityFromCloud() async =>
       const Right(null);
@@ -118,7 +125,10 @@ class _FakeMemorizationCloudRepository implements MemorizationCloudRepository {
       const Right(null);
 
   @override
-  Future<bool> hasPendingCloudWork() async => false;
+  Future<bool> hasPendingCloudWork() async => evidencePending;
+
+  @override
+  Future<bool> hasPendingReviewEvidence() async => evidencePending;
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -234,6 +244,43 @@ void main() {
       }
     },
   );
+
+  test('sign-out evidence flush failure records one retry and does not retry',
+      () async {
+    await _initializeIsarCoreForTests();
+    final directory = await Directory.systemTemp.createTemp('evidence_flush_');
+    final isar = await Isar.open(
+      [CloudSyncQueueItemSchema],
+      directory: directory.path,
+      name: 'evidence_flush_${DateTime.now().microsecondsSinceEpoch}',
+    );
+    final queue = CloudSyncQueue(
+      isar,
+      const FixedRecordOwnerProvider('coordinator-user'),
+    );
+    memorizationRepository
+      ..evidencePending = true
+      ..failEvidenceFlush = true;
+    try {
+      final flushed = await CloudSyncCoordinator(
+        authRepository: authRepository,
+        memorizationCloudRepository: memorizationRepository,
+        cloudSyncQueue: queue,
+        syncBookmarks: false,
+      ).flushBeforeSignOut();
+
+      expect(flushed, isFalse);
+      expect(memorizationRepository.evidenceFlushCalls, 1);
+      expect(memorizationRepository.evidencePending, isTrue);
+      final item = (await isar.cloudSyncQueueItems.where().findAll()).single;
+      expect(item.kind, CloudSyncQueueKind.reviewEvidencePush);
+      expect(item.attemptCount, 1);
+      expect(item.nextRetryAt.isAfter(DateTime.now().toUtc()), isTrue);
+    } finally {
+      await isar.close(deleteFromDisk: true);
+      await directory.delete(recursive: true);
+    }
+  });
 
   test('run contains unexpected cloud failures', () async {
     authRepository.failPull = true;
