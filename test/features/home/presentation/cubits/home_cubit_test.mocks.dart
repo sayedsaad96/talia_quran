@@ -1431,6 +1431,30 @@ class MockAppSessionService extends _i1.Mock implements _i16.AppSessionService {
         returnValue: _i5.Future<void>.value(),
         returnValueForMissingStub: _i5.Future<void>.value(),
       ) as _i5.Future<void>);
+
+  @override
+  int? getDailyWirdTarget(DateTime? date) =>
+      (super.noSuchMethod(Invocation.method(
+        #getDailyWirdTarget,
+        [date],
+      )) as int?);
+
+  @override
+  _i5.Future<void> saveDailyWirdTarget(
+    int? pageNumber,
+    DateTime? date,
+  ) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveDailyWirdTarget,
+          [
+            pageNumber,
+            date,
+          ],
+        ),
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
 }
 
 /// A class which mocks [GetActivityHeatmapUsecase].

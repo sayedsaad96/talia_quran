@@ -1669,6 +1669,15 @@ class MockXpService extends _i1.Mock implements _i21.XpService {
           ),
         ),
       ) as _i5.XpLevel);
+
+  @override
+  double progressToNextLevel(int? xp) => (super.noSuchMethod(
+        Invocation.method(
+          #progressToNextLevel,
+          [xp],
+        ),
+        returnValue: 0.0,
+      ) as double);
 }
 
 /// A class which mocks [StreakService].
@@ -1813,6 +1822,19 @@ class MockAchievementService extends _i1.Mock
       (super.noSuchMethod(
         Invocation.method(
           #checkAndUnlockCertificates,
+          [],
+          {#isKids: isKids},
+        ),
+        returnValue: _i10.Future<List<_i16.CertificateAward>>.value(
+            <_i16.CertificateAward>[]),
+      ) as _i10.Future<List<_i16.CertificateAward>>);
+
+  @override
+  _i10.Future<List<_i16.CertificateAward>> checkAndUnlockCertificatesStrict(
+          {required bool? isKids}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #checkAndUnlockCertificatesStrict,
           [],
           {#isKids: isKids},
         ),

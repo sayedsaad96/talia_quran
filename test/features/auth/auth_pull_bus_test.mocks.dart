@@ -1583,4 +1583,17 @@ class MockAchievementService extends _i1.Mock
         returnValue: _i4.Future<List<_i12.CertificateAward>>.value(
             <_i12.CertificateAward>[]),
       ) as _i4.Future<List<_i12.CertificateAward>>);
+
+  @override
+  _i4.Future<List<_i12.CertificateAward>> checkAndUnlockCertificatesStrict(
+          {required bool? isKids}) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #checkAndUnlockCertificatesStrict,
+          [],
+          {#isKids: isKids},
+        ),
+        returnValue: _i4.Future<List<_i12.CertificateAward>>.value(
+            <_i12.CertificateAward>[]),
+      ) as _i4.Future<List<_i12.CertificateAward>>);
 }

@@ -1,0 +1,25 @@
+targets:
+  $default:
+    builders:
+      isar_generator:isar_generator:
+        generate_for:
+          - lib/features/xp/data/models/xp_isar.dart
+          - lib/features/hifz/data/models/isar_ayah_progress.dart
+          - lib/core/sync/cloud_sync_queue_item.dart
+          - lib/features/streak/data/models/streak_isar.dart
+          - lib/features/streak/data/models/daily_activity_isar.dart
+          - lib/features/home/data/models/activity_event_isar.dart
+          - lib/features/memorization_plus/data/models/isar_review_effect_outbox.dart
+          - lib/features/memorization_plus/data/models/isar_ayah_review_record.dart
+          - lib/features/memorization_plus/data/models/isar_v2_session.dart
+          - lib/features/memorization_plus/data/models/isar_review_evidence_event.dart
+      mockito:mockBuilder:
+        generate_for:
+          - test/features/memorization_plus/presentation/cubits/memorization_session_cubit_test.dart
+          - test/features/memorization_plus/presentation/cubits/kids_journey_cubit_test.dart
+          - test/features/memorization_plus/presentation/cubits/guardian_linking_cubit_test.dart
+          - test/features/home/presentation/cubits/home_cubit_test.dart
+          - test/features/auth/presentation/cubits/auth_cubit_test.dart
+          - test/features/auth/auth_pull_bus_test.dart
+          - test/features/auth/auth_cubit_lifecycle_test.dart
+          - test/core/memorization/session_resume_after_complete_test.dart
