@@ -44,7 +44,7 @@ class UnifiedJourneyEngine {
     if (input.hasReviewBacklog && input.overdueAyahs > 0) {
       actions.add(
         UnifiedJourneyAction(
-          route: '/memorization',
+          route: input.reviewBacklogRoute ?? '/memorization',
           priority: UnifiedJourneyPriority.p3ReviewBacklog,
           source: 'AdaptiveRecommendations',
           actionType: UnifiedJourneyActionType.reviewBacklog,
@@ -110,7 +110,14 @@ class UnifiedJourneyEngine {
     }
 
     actions.add(_explore(input));
-    return actions;
+    return _deduplicateRoutes(actions);
+  }
+
+  List<UnifiedJourneyAction> _deduplicateRoutes(
+    List<UnifiedJourneyAction> actions,
+  ) {
+    final routes = <String>{};
+    return actions.where((action) => routes.add(action.route)).toList();
   }
 
   UnifiedJourneyAction _explore(UnifiedJourneyInput input) {

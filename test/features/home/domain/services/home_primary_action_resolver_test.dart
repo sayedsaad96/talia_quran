@@ -69,5 +69,39 @@ void main() {
         HomePrimaryActionKind.startKhatmah,
       );
     });
+
+    test('active Khatmah keeps an urgent review immediately actionable', () {
+      const urgentReview = UnifiedJourneyAction(
+        route:
+            '/memorization-v2/session?surahId=2&ayahNumber=255&intent=review&origin=smartCoach',
+        priority: UnifiedJourneyPriority.p2CriticalAlert,
+        source: 'SmartCoach',
+        actionType: UnifiedJourneyActionType.criticalAlert,
+        intent: JourneyIntent.review,
+      );
+
+      expect(
+        resolver.shouldShowUrgentJourneyBelowKhatmah(
+          unifiedJourneyEnabled: true,
+          hasContinueRecitation: true,
+          heroAction: urgentReview,
+        ),
+        isTrue,
+      );
+      expect(
+        resolver.shouldShowUrgentJourneyBelowKhatmah(
+          unifiedJourneyEnabled: true,
+          hasContinueRecitation: true,
+          heroAction: const UnifiedJourneyAction(
+            route: '/quran/page/12',
+            priority: UnifiedJourneyPriority.p5DailyGoal,
+            source: 'DailyWird',
+            actionType: UnifiedJourneyActionType.dailyReading,
+            intent: JourneyIntent.reading,
+          ),
+        ),
+        isFalse,
+      );
+    });
   });
 }

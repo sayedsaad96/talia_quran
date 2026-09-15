@@ -29,4 +29,21 @@ class HomePrimaryActionResolver {
     }
     return HomePrimaryActionKind.startKhatmah;
   }
+
+  /// An urgent learning review stays immediately actionable when the active
+  /// khatmah continuation owns the primary slot.
+  bool shouldShowUrgentJourneyBelowKhatmah({
+    required bool unifiedJourneyEnabled,
+    required bool hasContinueRecitation,
+    required UnifiedJourneyAction? heroAction,
+  }) {
+    final priority = heroAction?.priority;
+    final isUrgentLearningAction =
+        priority != null &&
+        priority.index <= UnifiedJourneyPriority.p4SmartPlan.index &&
+        heroAction!.intent == JourneyIntent.review;
+    return unifiedJourneyEnabled &&
+        hasContinueRecitation &&
+        isUrgentLearningAction;
+  }
 }

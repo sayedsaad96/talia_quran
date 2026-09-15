@@ -15,6 +15,7 @@ class UnifiedJourneyInput {
     this.learningAlertRoute,
     this.hasReviewBacklog = false,
     this.overdueAyahs = 0,
+    this.reviewBacklogRoute,
     this.hasSmartPlan = false,
     this.isSmartPlanReview = false,
     this.smartPlanType,
@@ -38,6 +39,7 @@ class UnifiedJourneyInput {
   // Review Backlog (Priority 3)
   final bool hasReviewBacklog;
   final int overdueAyahs;
+  final String? reviewBacklogRoute;
 
   // Smart Plan / Coach (Priority 4)
   final bool hasSmartPlan;

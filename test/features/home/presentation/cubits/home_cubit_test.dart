@@ -9,6 +9,7 @@ import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/journey/unified_journey_action.dart';
 import 'package:talia_quran/core/journey/unified_journey_engine.dart';
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
+import 'package:talia_quran/core/memorization/review_record_audience_scope.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart';
 import 'package:talia_quran/core/memorization/usecases/get_smart_coach_recommendation_usecase.dart';
@@ -184,7 +185,9 @@ void main() {
   test('Scenario 1: Resume Session emits P1 Action', () async {
     when(
       mockSessionService.getLastRestorableLocation(),
-    ).thenReturn('/quran/2/1');
+    ).thenReturn(
+      '/memorization-v2/session?surahId=2&ayahNumber=7&intent=resume&origin=checkpoint',
+    );
 
     await cubit.load();
     final state = cubit.state;
@@ -197,6 +200,12 @@ void main() {
       UnifiedJourneyPriority.p1ActiveSession,
     );
     expect(loadedState.heroAction!.intent, JourneyIntent.resume);
+    final route = Uri.parse(loadedState.heroAction!.route);
+    expect(route.path, '/memorization-v2/session');
+    expect(route.queryParameters['surahId'], '2');
+    expect(route.queryParameters['ayahNumber'], '7');
+    expect(route.queryParameters['intent'], 'resume');
+    expect(route.queryParameters['origin'], 'checkpoint');
   });
 
   test('Scenario 2: Critical Learning Alert emits P2 Action', () async {
@@ -216,6 +225,14 @@ void main() {
     when(
       mockMemRepo.getAllReviewRecords(),
     ).thenAnswer((_) async => Right([record]));
+    const coach = SmartCoachRecommendation(
+      kind: SmartCoachRecommendationKind.reviewWeakAyah,
+      route:
+          '/memorization-v2/session?surahId=2&ayahNumber=255&intent=review&origin=smartCoach',
+    );
+    when(
+      mockGetCoachRecommendation.call(),
+    ).thenAnswer((_) async => const Right(coach));
 
     await cubit.load();
     final state = cubit.state as HomeLoaded;
@@ -223,6 +240,16 @@ void main() {
     expect(state.heroAction, isNotNull);
     expect(state.heroAction!.priority, UnifiedJourneyPriority.p2CriticalAlert);
     expect(state.heroAction!.intent, JourneyIntent.review);
+    final route = Uri.parse(state.heroAction!.route);
+    expect(route.path, '/memorization-v2/session');
+    expect(route.queryParameters['surahId'], '2');
+    expect(route.queryParameters['ayahNumber'], '255');
+    expect(route.queryParameters['intent'], 'review');
+    expect(route.queryParameters['origin'], 'smartCoach');
+    expect(
+      state.alternativeActions.map((action) => action.route),
+      [state.heroAction!.route, '/quran'],
+    );
   });
 
   test('Scenario 3: Review Backlog emits P3 Action', () async {
@@ -286,10 +313,11 @@ void main() {
     );
   });
 
-  test('Scenario 4: Smart Coach Recommendation emits P4 Action', () async {
+  test('weak due Coach recommendation preserves its exact P4 route', () async {
     const coach = SmartCoachRecommendation(
-      kind: SmartCoachRecommendationKind.memorizeNewAyahs,
-      route: '/some/route',
+      kind: SmartCoachRecommendationKind.reviewWeakAyah,
+      route:
+          '/memorization-v2/session?surahId=2&ayahNumber=255&intent=review&origin=smartCoach',
     );
     when(
       mockGetCoachRecommendation.call(),
@@ -300,7 +328,85 @@ void main() {
 
     expect(state.heroAction, isNotNull);
     expect(state.heroAction!.priority, UnifiedJourneyPriority.p4SmartPlan);
-    expect(state.heroAction!.intent, JourneyIntent.memorize);
+    expect(state.heroAction!.intent, JourneyIntent.review);
+    final route = Uri.parse(state.heroAction!.route);
+    expect(route.queryParameters['surahId'], '2');
+    expect(route.queryParameters['ayahNumber'], '255');
+    expect(route.queryParameters['intent'], 'review');
+    expect(route.queryParameters['origin'], 'smartCoach');
+  });
+
+  test('retention Coach recommendation preserves its exact review route', () async {
+    const coach = SmartCoachRecommendation(
+      kind: SmartCoachRecommendationKind.memorizedReviewDue,
+      route:
+          '/memorization-v2/session?surahId=36&ayahNumber=12&intent=review&origin=smartCoach',
+    );
+    when(
+      mockGetCoachRecommendation.call(),
+    ).thenAnswer((_) async => const Right(coach));
+
+    await cubit.load();
+    final route = Uri.parse((cubit.state as HomeLoaded).heroAction!.route);
+
+    expect(route.queryParameters['surahId'], '36');
+    expect(route.queryParameters['ayahNumber'], '12');
+    expect(route.queryParameters['intent'], 'review');
+    expect(route.queryParameters['origin'], 'smartCoach');
+  });
+
+  test('incomplete plan Coach recommendation preserves its exact route', () async {
+    const coach = SmartCoachRecommendation(
+      kind: SmartCoachRecommendationKind.continueDailyPlan,
+      route:
+          '/memorization-v2/session?surahId=2&ayahNumber=4&intent=memorize&origin=smartCoach',
+    );
+    when(
+      mockGetCoachRecommendation.call(),
+    ).thenAnswer((_) async => const Right(coach));
+
+    await cubit.load();
+    final state = cubit.state as HomeLoaded;
+    final route = Uri.parse(state.heroAction!.route);
+
+    expect(state.heroAction!.priority, UnifiedJourneyPriority.p4SmartPlan);
+    expect(route.queryParameters['surahId'], '2');
+    expect(route.queryParameters['ayahNumber'], '4');
+    expect(route.queryParameters['intent'], 'memorize');
+    expect(route.queryParameters['origin'], 'smartCoach');
+  });
+
+  test('child mission preserves the exact Coach kids-home route', () async {
+    const coach = SmartCoachRecommendation(
+      kind: SmartCoachRecommendationKind.kidsCurrentMission,
+      route:
+          '/memorization-plus/kids-home?surahId=3&intent=memorize&origin=smartCoach',
+    );
+    when(
+      mockGetCoachRecommendation.call(),
+    ).thenAnswer((_) async => const Right(coach));
+    when(
+      mockMemRepo.getMemorizationProfile(),
+    ).thenAnswer(
+      (_) async => Right(
+        MemorizationProfile.empty().copyWith(
+          selectedPath: MemorizationPath.child,
+        ),
+      ),
+    );
+    when(
+      mockMemRepo.getAllReviewRecords(scope: ReviewRecordReadScope.kids),
+    ).thenAnswer((_) async => const Right([]));
+
+    await cubit.load();
+    final state = cubit.state as HomeLoaded;
+    final route = Uri.parse(state.heroAction!.route);
+
+    expect(state.isKids, isTrue);
+    expect(route.path, '/memorization-plus/kids-home');
+    expect(route.queryParameters['surahId'], '3');
+    expect(route.queryParameters['intent'], 'memorize');
+    expect(route.queryParameters['origin'], 'smartCoach');
   });
 
   test('Scenario 5: Daily Wird emits P5 Action', () async {
@@ -315,6 +421,7 @@ void main() {
     expect(state.heroAction, isNotNull);
     expect(state.heroAction!.priority, UnifiedJourneyPriority.p5DailyGoal);
     expect(state.heroAction!.intent, JourneyIntent.reading);
+    expect(state.heroAction!.route, '/quran/page/5');
   });
 
   test('Scenario 6: Azkar Goal emits Azkar Intent', () async {
@@ -333,6 +440,7 @@ void main() {
 
     expect(state.heroAction, isNotNull);
     expect(state.heroAction!.intent, JourneyIntent.explore);
+    expect(state.heroAction!.route, '/quran');
   });
 
   test(
@@ -344,6 +452,8 @@ void main() {
       final state = cubit.state as HomeLoaded;
 
       expect(state.heroAction, isNull);
+      expect(state.alternativeActions, isEmpty);
+      expect(state.unifiedJourneyEnabled, isFalse);
     },
   );
 

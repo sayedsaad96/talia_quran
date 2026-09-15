@@ -33,6 +33,7 @@ class HomeLoaded extends HomeState {
     required this.activityStartDate,
     this.coachRecommendation,
     this.heroAction,
+    this.unifiedJourneyEnabled = true,
     this.totalXp = 0,
     this.activeKhatmah,
     this.khatmahError,
@@ -71,6 +72,7 @@ class HomeLoaded extends HomeState {
     DateTime? activityStartDate,
     SmartCoachRecommendation? coachRecommendation,
     UnifiedJourneyAction? heroAction,
+    bool? unifiedJourneyEnabled,
     int? totalXp,
     Object? activeKhatmah = _khatmahSentinel,
     Object? khatmahError = _khatmahSentinel,
@@ -107,6 +109,8 @@ class HomeLoaded extends HomeState {
       activityStartDate: activityStartDate ?? this.activityStartDate,
       coachRecommendation: coachRecommendation ?? this.coachRecommendation,
       heroAction: heroAction ?? this.heroAction,
+      unifiedJourneyEnabled:
+          unifiedJourneyEnabled ?? this.unifiedJourneyEnabled,
       totalXp: totalXp ?? this.totalXp,
       activeKhatmah: identical(activeKhatmah, _khatmahSentinel)
           ? this.activeKhatmah
@@ -147,6 +151,7 @@ class HomeLoaded extends HomeState {
   final DateTime activityStartDate;
   final SmartCoachRecommendation? coachRecommendation;
   final int totalXp;
+  final bool unifiedJourneyEnabled;
   final KhatmahPlan? activeKhatmah;
   final Object? khatmahError;
   final bool isRefreshing;
@@ -205,6 +210,7 @@ class HomeLoaded extends HomeState {
     activityStartDate,
     coachRecommendation,
     heroAction,
+    unifiedJourneyEnabled,
     totalXp,
     activeKhatmah,
     khatmahError,

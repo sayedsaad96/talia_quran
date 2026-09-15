@@ -307,6 +307,8 @@ class HomeCubit extends Cubit<HomeState> {
     if (isClosed) return;
     UnifiedJourneyAction? heroAction;
     var alternativeActions = const <UnifiedJourneyAction>[];
+    final unifiedJourneyEnabled =
+        _prefs.getBool('unified_journey_enabled') ?? true;
     try {
       final evaluated = await _evaluateUnifiedActions(
         lastLocation: lastLocation,
@@ -316,6 +318,7 @@ class HomeCubit extends Cubit<HomeState> {
         isKids: isKids,
         overallProgress: overallProgress,
         activeKhatmah: activeKhatmah,
+        isEnabled: unifiedJourneyEnabled,
       );
       heroAction = evaluated.$1;
       alternativeActions = evaluated.$2;
@@ -367,6 +370,7 @@ class HomeCubit extends Cubit<HomeState> {
           activityStartDate: heatmap.startDate,
           coachRecommendation: coachRecommendation,
           heroAction: heroAction,
+          unifiedJourneyEnabled: unifiedJourneyEnabled,
           totalXp: totalXp,
           activeKhatmah: activeKhatmah,
           khatmahError: khatmahError,
@@ -654,8 +658,8 @@ class HomeCubit extends Cubit<HomeState> {
     required bool isKids,
     required OverallProgress? overallProgress,
     required KhatmahPlan? activeKhatmah,
+    required bool isEnabled,
   }) async {
-    final isEnabled = _prefs.getBool('unified_journey_enabled') ?? true;
     if (!isEnabled) {
       return (null, const <UnifiedJourneyAction>[]);
     }
@@ -694,9 +698,11 @@ class HomeCubit extends Cubit<HomeState> {
       lastRestorableLocation: lastLocation,
       hasCriticalLearningAlert: criticals.isNotEmpty,
       learningAlertType: criticals.isNotEmpty ? criticals.first.type : null,
+      learningAlertRoute: coachRecommendation?.route,
       hasReviewBacklog:
           (overallProgress?.reviewAyahs ?? 0) > 0 && backlogs.isNotEmpty,
       overdueAyahs: overallProgress?.overdueReviews ?? 0,
+      reviewBacklogRoute: coachRecommendation?.route,
       hasSmartPlan: coachRecommendation != null || customPlan != null,
       isSmartPlanReview:
           coachRecommendation != null &&
@@ -725,37 +731,10 @@ class HomeCubit extends Cubit<HomeState> {
     );
 
     final all = _journeyEngine.evaluateAll(input);
-    final unifiedAction = all.first;
-    final hero = _resolveHeroAction(
-      unifiedAction: unifiedAction,
-      coachRecommendation: coachRecommendation,
-    );
-    return (hero, all);
+    return (all.first, all);
   }
 
   bool _isCurrentLoad(int revision) => !isClosed && revision == _loadRevision;
-
-  UnifiedJourneyAction? _resolveHeroAction({
-    required UnifiedJourneyAction unifiedAction,
-    SmartCoachRecommendation? coachRecommendation,
-  }) {
-    if (coachRecommendation == null) return unifiedAction;
-
-    final coachUrgent = switch (coachRecommendation.kind) {
-      SmartCoachRecommendationKind.reviewWeakAyah ||
-      SmartCoachRecommendationKind.reviewDueNear ||
-      SmartCoachRecommendationKind.reviewDueFar ||
-      SmartCoachRecommendationKind.memorizedReviewDue => true,
-      _ => false,
-    };
-    if (!coachUrgent) return unifiedAction;
-
-    if (unifiedAction.priority == UnifiedJourneyPriority.p5DailyGoal ||
-        unifiedAction.priority == UnifiedJourneyPriority.p6FreeExploration) {
-      return null;
-    }
-    return unifiedAction;
-  }
 
   @override
   Future<void> close() async {

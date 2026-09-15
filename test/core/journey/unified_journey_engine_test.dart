@@ -44,17 +44,23 @@ void main() {
     });
 
     test('Priority 3: Review Backlog -> review', () {
+      const exactCoachRoute =
+          '/memorization-v2/session?surahId=9&ayahNumber=5&intent=review&origin=smartCoach';
       const input = UnifiedJourneyInput(
         hasReviewBacklog: true,
         overdueAyahs: 20,
-        hasSmartPlan: true,
-        hasDailyWird: true,
+        reviewBacklogRoute: exactCoachRoute,
       );
 
       final result = engine.evaluate(input);
 
       expect(result.priority, UnifiedJourneyPriority.p3ReviewBacklog);
       expect(result.intent, JourneyIntent.review);
+      final route = Uri.parse(result.route);
+      expect(route.queryParameters['surahId'], '9');
+      expect(route.queryParameters['ayahNumber'], '5');
+      expect(route.queryParameters['intent'], 'review');
+      expect(route.queryParameters['origin'], 'smartCoach');
     });
 
     test('Priority 4: Smart Plan (Review) -> review', () {
@@ -95,6 +101,21 @@ void main() {
       expect(result.route, '/quran/page/5');
     });
 
+    test('Priority 5: active Khatmah remains the reading continuation', () {
+      const input = UnifiedJourneyInput(
+        hasActiveKhatmah: true,
+        khatmahRoute: '/quran/page/77?mode=khatmah',
+        hasDailyWird: true,
+        dailyWirdPageNumber: 12,
+      );
+
+      final result = engine.evaluate(input);
+
+      expect(result.priority, UnifiedJourneyPriority.p5DailyGoal);
+      expect(result.route, '/quran/page/77?mode=khatmah');
+      expect(result.intent, JourneyIntent.reading);
+    });
+
     test('Priority 6: Kids Mode Fallback -> explore', () {
       const input = UnifiedJourneyInput(
         isKids: true,
@@ -126,6 +147,35 @@ void main() {
       expect(result.priority, UnifiedJourneyPriority.p6FreeExploration);
       expect(result.intent, JourneyIntent.explore);
       expect(result.route, '/quran');
+    });
+
+    test('keeps one exact Coach route when critical and plan inputs overlap', () {
+      const exactCoachRoute =
+          '/memorization-v2/session?surahId=2&ayahNumber=255&intent=review&origin=smartCoach';
+      final actions = engine.evaluateAll(
+        const UnifiedJourneyInput(
+          hasCriticalLearningAlert: true,
+          learningAlertRoute: exactCoachRoute,
+          hasReviewBacklog: true,
+          overdueAyahs: 8,
+          reviewBacklogRoute: exactCoachRoute,
+          hasSmartPlan: true,
+          isSmartPlanReview: true,
+          smartPlanRoute: exactCoachRoute,
+          hasDailyWird: true,
+          dailyWirdPageNumber: 12,
+        ),
+      );
+
+      expect(
+        actions.map((action) => action.route),
+        [exactCoachRoute, '/quran/page/12', '/quran'],
+      );
+      final route = Uri.parse(actions.first.route);
+      expect(route.queryParameters['surahId'], '2');
+      expect(route.queryParameters['ayahNumber'], '255');
+      expect(route.queryParameters['intent'], 'review');
+      expect(route.queryParameters['origin'], 'smartCoach');
     });
   });
 }

@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/journey/journey_presentation_data.dart';
+import 'package:talia_quran/core/journey/unified_journey_action.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/services/audio_resume_store.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
@@ -257,6 +258,8 @@ HomeLoaded _homeLoaded({
   ContinueRecitation? continueRecitation,
   List<ActivityEvent> recentActivity = const [],
   PrayerTimesSnapshot? prayerSnapshot,
+  UnifiedJourneyAction? heroAction,
+  bool unifiedJourneyEnabled = true,
 }) {
   return HomeLoaded(
     progress: _progress(),
@@ -276,6 +279,8 @@ HomeLoaded _homeLoaded({
     weeklyActivityCount: 9999,
     activityCountsByDay: const {},
     heroMinutes: 45,
+    heroAction: heroAction,
+    unifiedJourneyEnabled: unifiedJourneyEnabled,
     continueRecitation: continueRecitation,
     recentActivity: recentActivity,
     prayerSnapshot: prayerSnapshot,
@@ -925,6 +930,63 @@ void main() {
   });
 
   group('HomeLoadedView', () {
+    testWidgets('keeps urgent review visible below active Khatmah', (
+      tester,
+    ) async {
+      final skin = HomeSkin.forBrightness(Brightness.light);
+      await _pumpPage(
+        tester,
+        HomeBackground(
+          skin: skin,
+          child: HomeLoadedView(
+            state: _homeLoaded(
+              continueRecitation: _continueRecitation(),
+              heroAction: const UnifiedJourneyAction(
+                route:
+                    '/memorization-v2/session?surahId=2&ayahNumber=255&intent=review&origin=smartCoach',
+                priority: UnifiedJourneyPriority.p2CriticalAlert,
+                source: 'SmartCoach',
+                actionType: UnifiedJourneyActionType.criticalAlert,
+                intent: JourneyIntent.review,
+              ),
+            ),
+            skin: skin,
+          ),
+        ),
+        width: 360,
+        textScale: 1,
+        locale: const Locale('en'),
+        brightness: Brightness.light,
+        providers: _profileProviders(),
+      );
+
+      expect(find.byType(HomeContinueCard), findsOneWidget);
+      expect(find.byType(UnifiedHeroActionCard), findsOneWidget);
+    });
+
+    testWidgets('uses the legacy action card when the journey flag is off', (
+      tester,
+    ) async {
+      final skin = HomeSkin.forBrightness(Brightness.light);
+      await _pumpPage(
+        tester,
+        HomeBackground(
+          skin: skin,
+          child: HomeLoadedView(
+            state: _homeLoaded(unifiedJourneyEnabled: false),
+            skin: skin,
+          ),
+        ),
+        width: 360,
+        textScale: 1,
+        locale: const Locale('en'),
+        brightness: Brightness.light,
+        providers: _profileProviders(),
+      );
+
+      expect(find.byType(NextBestActionCard), findsOneWidget);
+    });
+
     _forEachViewportAndTheme('renders without overflow', (
       tester,
       width,

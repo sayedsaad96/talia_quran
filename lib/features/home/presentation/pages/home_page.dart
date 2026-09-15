@@ -201,6 +201,8 @@ class HomeLoadedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = skin.isDark;
+    final journeyEnabled =
+        JourneyFeatureFlags.unifiedJourneyEnabled && state.unifiedJourneyEnabled;
     final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
     return RefreshIndicator(
       color: skin.accent,
@@ -234,11 +236,10 @@ class HomeLoadedView extends StatelessWidget {
             SliverToBoxAdapter(
               child: _PrimaryAction(state: state, skin: skin),
             ),
-            if (JourneyFeatureFlags.unifiedJourneyEnabled &&
+            if (journeyEnabled &&
                 state.continueRecitation == null &&
                 const HomePrimaryActionResolver().resolve(
-                      unifiedJourneyEnabled:
-                          JourneyFeatureFlags.unifiedJourneyEnabled,
+                      unifiedJourneyEnabled: journeyEnabled,
                       hasContinueRecitation: false,
                       heroPriority: state.heroAction?.priority,
                     ) ==
@@ -414,19 +415,32 @@ class _PrimaryAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = skin.isDark;
-    final kind = const HomePrimaryActionResolver().resolve(
-      unifiedJourneyEnabled: JourneyFeatureFlags.unifiedJourneyEnabled,
+    final journeyEnabled =
+        JourneyFeatureFlags.unifiedJourneyEnabled && state.unifiedJourneyEnabled;
+    const resolver = HomePrimaryActionResolver();
+    final kind = resolver.resolve(
+      unifiedJourneyEnabled: journeyEnabled,
       hasContinueRecitation: state.continueRecitation != null,
       heroPriority: state.heroAction?.priority,
     );
     Widget child;
     if (kind == HomePrimaryActionKind.khatmahContinue) {
-      child = HomeContinueCard(
-        recitation: state.continueRecitation!,
-        skin: skin,
+      child = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          HomeContinueCard(recitation: state.continueRecitation!, skin: skin),
+          if (resolver.shouldShowUrgentJourneyBelowKhatmah(
+            unifiedJourneyEnabled: journeyEnabled,
+            hasContinueRecitation: true,
+            heroAction: state.heroAction,
+          )) ...[
+            const SizedBox(height: AppSpacing.md),
+            _JourneyHeroAction(state: state, isDark: isDark),
+          ],
+        ],
       );
     } else if (kind == HomePrimaryActionKind.startKhatmah &&
-        JourneyFeatureFlags.unifiedJourneyEnabled) {
+        journeyEnabled) {
       child = HomeStartKhatmahCard(
         skin: skin,
         isDark: isDark,
@@ -435,23 +449,9 @@ class _PrimaryAction extends StatelessWidget {
       // Interim (Tasks 1-3): preserves today's rendering exactly.
       // Task 5 replaces the startKhatmah case with HomeStartKhatmahCard
       // and adds the invitation below the journey hero (plan step 3.4).
-      if (JourneyFeatureFlags.unifiedJourneyEnabled &&
+      if (journeyEnabled &&
           state.heroAction != null) {
-        final action = state.heroAction!;
-        final data = const UnifiedJourneyActionMapper().map(context, action);
-        child = HomeHeroSection(
-          data: data,
-          isDark: isDark,
-          minutes: state.heroMinutes,
-          onTap: () => context.push(action.route),
-          onMore: state.alternativeActions.length > 1
-              ? () => showHomeAlternativesSheet(
-                  context,
-                  actions: state.alternativeActions.skip(1).toList(),
-                  isDark: isDark,
-                )
-              : null,
-        );
+        child = _JourneyHeroAction(state: state, isDark: isDark);
       } else if (state.lastRestorableLocation != null) {
         child = ResumeSessionCard(
           location: state.lastRestorableLocation!,
@@ -474,6 +474,32 @@ class _PrimaryAction extends StatelessWidget {
         0,
       ),
       child: child,
+    );
+  }
+}
+
+class _JourneyHeroAction extends StatelessWidget {
+  const _JourneyHeroAction({required this.state, required this.isDark});
+
+  final HomeLoaded state;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final action = state.heroAction!;
+    final data = const UnifiedJourneyActionMapper().map(context, action);
+    return HomeHeroSection(
+      data: data,
+      isDark: isDark,
+      minutes: state.heroMinutes,
+      onTap: () => context.push(action.route),
+      onMore: state.alternativeActions.length > 1
+          ? () => showHomeAlternativesSheet(
+              context,
+              actions: state.alternativeActions.skip(1).toList(),
+              isDark: isDark,
+            )
+          : null,
     );
   }
 }
