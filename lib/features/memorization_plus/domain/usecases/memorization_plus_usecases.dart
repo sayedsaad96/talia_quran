@@ -235,6 +235,7 @@ class GetKidsProgressUsecase implements UseCaseNoParams<KidsProgress> {
 
 class AwardKidsPointsParams {
   const AwardKidsPointsParams({
+    this.completionAuthorized = false,
     this.sessionId,
     required this.surahId,
     required this.ayahNumber,
@@ -246,6 +247,7 @@ class AwardKidsPointsParams {
     this.hintCount = 0,
     this.masteryRating = PerformanceRating.excellent,
   });
+  final bool completionAuthorized;
   final String? sessionId;
   final int surahId;
   final int ayahNumber;
@@ -267,6 +269,7 @@ class AwardKidsPointsUsecase
   Future<Either<Failure, KidsCompletionResult>> call(
     AwardKidsPointsParams params,
   ) => _repository.awardKidsPoints(
+    completionAuthorized: params.completionAuthorized,
     sessionId: params.sessionId,
     surahId: params.surahId,
     ayahNumber: params.ayahNumber,

@@ -143,6 +143,7 @@ abstract class MemorizationPlusRepository
     String rewardId,
   );
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
+    bool completionAuthorized = false,
     String? sessionId,
     required int surahId,
     required int ayahNumber,

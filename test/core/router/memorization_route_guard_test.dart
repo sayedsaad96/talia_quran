@@ -178,6 +178,35 @@ void main() {
     });
   });
 
+  group('rootAudienceRedirect', () {
+    test('redirects a child away from the adult home', () async {
+      registerProfile(_profile(MemorizationPath.child));
+
+      expect(
+        await MemorizationRouteGuard.rootAudienceRedirect(),
+        AppRoutes.memorizationPlusKidsHome,
+      );
+    });
+
+    test('keeps the adult home for an adult profile', () async {
+      registerProfile(_profile(MemorizationPath.adult));
+
+      expect(await MemorizationRouteGuard.rootAudienceRedirect(), isNull);
+    });
+
+    test(
+      'fails closed when the authoritative profile cannot be read',
+      () async {
+        registerProfile(null);
+
+        expect(
+          await MemorizationRouteGuard.rootAudienceRedirect(),
+          '${AppRoutes.memorizationPlus}?preferred=kids',
+        );
+      },
+    );
+  });
+
   group('kidsOnlyRedirect', () {
     test('redirects adult profiles to the memorization hub', () async {
       registerProfile(_profile(MemorizationPath.adult));

@@ -140,4 +140,52 @@ void main() {
     expect(merged.hintCount, 1);
     expect(merged.masteryRating, PerformanceRating.average);
   });
+
+  test('zero-point activity cannot become reward progress', () {
+    final activity = KidsSessionLog(
+      id: 'listen-only',
+      surahId: 114,
+      ayahNumber: 1,
+      repeatsCompleted: 5,
+      pointsEarned: 0,
+      completedAt: DateTime.utc(2026, 8, 8),
+      missionType: KidsMissionType.dueReview,
+    );
+
+    final rebuilt = KidsSessionLogsCloudMerge.rebuildProjection([activity]);
+
+    expect(KidsSessionLogsCloudMerge.completedAyahsCount([activity]), 0);
+    expect(rebuilt, const KidsProgress.initial());
+  });
+
+  test('projection deduplicates the same rewarded ayah across devices', () {
+    final local = KidsSessionLog(
+      id: 'local',
+      surahId: 114,
+      ayahNumber: 1,
+      repeatsCompleted: 3,
+      pointsEarned: 10,
+      completedAt: DateTime.utc(2026, 8, 8),
+      masteryRating: PerformanceRating.average,
+    );
+    final remote = KidsSessionLog(
+      id: 'remote',
+      surahId: 114,
+      ayahNumber: 1,
+      repeatsCompleted: 3,
+      pointsEarned: 10,
+      completedAt: DateTime.utc(2026, 8, 9),
+      syncedAt: DateTime.utc(2026, 8, 9),
+      masteryRating: PerformanceRating.average,
+    );
+
+    final rebuilt = KidsSessionLogsCloudMerge.rebuildProjection([
+      local,
+      remote,
+    ]);
+
+    expect(rebuilt.totalPoints, 10);
+    expect(rebuilt.starsEarned, 2);
+    expect(rebuilt.ayahsCompleted, 1);
+  });
 }

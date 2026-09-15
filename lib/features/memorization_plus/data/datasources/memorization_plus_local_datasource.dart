@@ -78,6 +78,8 @@ abstract class MemorizationPlusLocalDatasource {
   // Kids progress
   Future<KidsProgressModel> getKidsProgress();
   Future<void> saveKidsProgress(KidsProgressModel progress);
+  Future<KidsProgressModel> getKidsLegacyCloudFloor();
+  Future<void> saveKidsLegacyCloudFloor(KidsProgressModel progress);
   Future<List<KidsSessionLogModel>> getKidsSessionLogs();
   Future<void> saveKidsSessionLog(KidsSessionLogModel log);
   Future<void> saveKidsSessionLogs(List<KidsSessionLogModel> logs);
@@ -192,6 +194,7 @@ class MemorizationPlusLocalDatasourceImpl
   static const _kLocalRecordsClaimedBy = 'mem_plus_local_records_claimed_by';
   static const _kDailyPlan = 'mem_plus_daily_plan';
   static const _kKidsProgress = 'mem_plus_kids_progress';
+  static const _kKidsLegacyCloudFloor = 'mem_plus_kids_legacy_cloud_floor';
   static const _kKidsSessionLogs = 'mem_plus_kids_session_logs';
   static const _kParentSettings = 'mem_plus_parent_settings';
   static const _kParentRewards = 'mem_plus_parent_rewards';

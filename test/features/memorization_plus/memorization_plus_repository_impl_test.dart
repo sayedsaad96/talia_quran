@@ -86,23 +86,22 @@ void main() {
         expect(stages[1].startAyah, 4);
       },
     );
-    test('saveKidsSessionLog persists local kids session log', () async {
-      final result = await repository.saveKidsSessionLog(
-        surahId: 114,
-        ayahNumber: 1,
-        repeatsCompleted: 3,
-        pointsEarned: 14,
-      );
+    test(
+      'saveKidsSessionLog rejects caller-selected positive rewards',
+      () async {
+        final result = await repository.saveKidsSessionLog(
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 3,
+          pointsEarned: 14,
+        );
 
-      final log = result.getOrElse(
-        () => throw StateError('Expected session log to save'),
-      );
-      final logs = await datasource.getKidsSessionLogs();
+        final logs = await datasource.getKidsSessionLogs();
 
-      expect(log.ayahNumber, 1);
-      expect(logs, hasLength(1));
-      expect(logs.single.pointsEarned, 14);
-    });
+        expect(result.isLeft(), isTrue);
+        expect(logs, isEmpty);
+      },
+    );
 
     test(
       'saveKidsSessionLog persists learning metrics without speech',
@@ -112,8 +111,8 @@ void main() {
           surahId: 114,
           ayahNumber: 1,
           repeatsCompleted: 1,
-          pointsEarned: 10,
-          missionType: KidsMissionType.newMemorization,
+          pointsEarned: 0,
+          missionType: KidsMissionType.dueReview,
           ayahNumbers: const [1],
           durationSeconds: 92,
           attemptCount: 2,
@@ -136,6 +135,7 @@ void main() {
 
     test('a due review is logged without granting a second reward', () async {
       final first = await repository.awardKidsPoints(
+        completionAuthorized: true,
         sessionId: 'new-114-1',
         surahId: 114,
         ayahNumber: 1,
@@ -175,19 +175,123 @@ void main() {
       expect(reviewLog.masteryRating, PerformanceRating.average);
     });
 
-    test('saveKidsSessionLog is idempotent per ayah', () async {
+    for (final missionType in [
+      KidsMissionType.dueReview,
+      KidsMissionType.resume,
+      KidsMissionType.linkedReview,
+    ]) {
+      test('a first $missionType mission never grants a reward', () async {
+        final result = await repository.awardKidsPoints(
+          sessionId: 'non-reward-${missionType.name}',
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 1,
+          missionType: missionType,
+        );
+
+        final completion = result.getOrElse(
+          () => throw StateError('Expected non-reward mission to succeed'),
+        );
+        final progress = await datasource.getKidsProgress();
+        final logs = await datasource.getKidsSessionLogs();
+        final journey = (await repository.getKidsJourney(
+          surahId: 114,
+        )).getOrElse(() => throw StateError('Expected journey'));
+
+        expect(completion.pointsEarned, 0);
+        expect(completion.starsEarned, 0);
+        expect(progress.totalPoints, 0);
+        expect(progress.ayahsCompleted, 0);
+        expect(logs.single.pointsEarned, 0);
+        expect(journey.first.completedAyahs, isEmpty);
+      });
+    }
+
+    test('positive logs repair a stale cached kids projection', () async {
+      await datasource.saveKidsSessionLog(
+        KidsSessionLogModel(
+          id: 'reward-114-1',
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 3,
+          pointsEarned: 10,
+          completedAt: DateTime.utc(2026, 9, 15),
+          masteryRating: PerformanceRating.average,
+        ),
+      );
+      await datasource.saveKidsProgress(
+        const KidsProgressModel(
+          totalPoints: 0,
+          currentLevel: 1,
+          currentStreak: 0,
+          starsEarned: 0,
+          ayahsCompleted: 0,
+          lastSessionAt: null,
+        ),
+      );
+
+      final repaired = (await repository.getKidsProgress()).getOrElse(
+        () => throw StateError('Expected projection repair'),
+      );
+      final stored = await datasource.getKidsProgress();
+
+      expect(repaired.totalPoints, 10);
+      expect(repaired.starsEarned, 2);
+      expect(repaired.ayahsCompleted, 1);
+      expect(stored.totalPoints, 10);
+      expect(stored.starsEarned, 2);
+    });
+
+    test('positive logs replace a corrupt high cached projection', () async {
+      await datasource.saveKidsSessionLog(
+        KidsSessionLogModel(
+          id: 'reward-114-1',
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 3,
+          pointsEarned: 10,
+          completedAt: DateTime.utc(2026, 9, 15),
+          masteryRating: PerformanceRating.average,
+        ),
+      );
+      await datasource.saveKidsProgress(
+        const KidsProgressModel(
+          totalPoints: 999,
+          currentLevel: 9,
+          currentStreak: 0,
+          starsEarned: 99,
+          ayahsCompleted: 99,
+          lastSessionAt: null,
+        ),
+      );
+
+      final repaired = (await repository.getKidsProgress()).getOrElse(
+        () => throw StateError('Expected projection repair'),
+      );
+
+      expect(repaired.totalPoints, 10);
+      expect(repaired.currentLevel, 1);
+      expect(repaired.starsEarned, 2);
+      expect(repaired.ayahsCompleted, 1);
+    });
+
+    test('saveKidsSessionLog is idempotent per session id', () async {
       await repository.saveKidsSessionLog(
+        sessionId: 'review-session',
         surahId: 114,
         ayahNumber: 1,
         repeatsCompleted: 3,
-        pointsEarned: 14,
+        pointsEarned: 0,
+        missionType: KidsMissionType.dueReview,
       );
 
       final duplicate = await repository.saveKidsSessionLog(
+        sessionId: 'review-session',
         surahId: 114,
         ayahNumber: 1,
         repeatsCompleted: 3,
-        pointsEarned: 14,
+        pointsEarned: 0,
+        missionType: KidsMissionType.dueReview,
       );
 
       final logs = await datasource.getKidsSessionLogs();
@@ -199,8 +303,122 @@ void main() {
       expect(returned.id, logs.single.id);
     });
 
+    test('different session ids cannot reward the same ayah twice', () async {
+      await repository.awardKidsPoints(
+        completionAuthorized: true,
+        sessionId: 'device-a',
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+      );
+      final duplicate = await repository.awardKidsPoints(
+        completionAuthorized: true,
+        sessionId: 'device-b',
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+      );
+
+      expect(duplicate.isRight(), isTrue);
+      expect(await datasource.getKidsSessionLogs(), hasLength(1));
+    });
+
+    test('negative kids points are rejected', () async {
+      final result = await repository.saveKidsSessionLog(
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 1,
+        pointsEarned: -1,
+      );
+
+      expect(result.isLeft(), isTrue);
+      expect(await datasource.getKidsSessionLogs(), isEmpty);
+    });
+
+    test('new memorization without completion evidence is not rewarded', () async {
+      final result = await repository.awardKidsPoints(
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+      );
+
+      expect(result.isLeft(), isTrue);
+      expect(await datasource.getKidsSessionLogs(), isEmpty);
+      expect((await datasource.getKidsProgress()).totalPoints, 0);
+    });
+
+    test(
+      'award cannot overwrite a review log with the same session id',
+      () async {
+        await repository.saveKidsSessionLog(
+          sessionId: 'immutable-session',
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 1,
+          pointsEarned: 0,
+          missionType: KidsMissionType.dueReview,
+        );
+
+        final result = await repository.awardKidsPoints(
+          completionAuthorized: true,
+          sessionId: 'immutable-session',
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 3,
+        );
+        final logs = await datasource.getKidsSessionLogs();
+
+        expect(result.isLeft(), isTrue);
+        expect(logs, hasLength(1));
+        expect(logs.single.missionType, KidsMissionType.dueReview);
+        expect(logs.single.pointsEarned, 0);
+      },
+    );
+
+    test('replaying a reward cannot unlock a second weekly reward', () async {
+      await datasource.saveParentSettings(
+        const ParentSettingsModel(weeklyGoalSessions: 1),
+      );
+      await repository.saveParentReward('الأولى');
+      await repository.saveParentReward('الثانية');
+
+      await repository.awardKidsPoints(
+        completionAuthorized: true,
+        sessionId: 'weekly-reward',
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+      );
+      await repository.awardKidsPoints(
+        completionAuthorized: true,
+        sessionId: 'weekly-reward',
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+      );
+
+      final rewards = await datasource.getParentRewards();
+      expect(
+        rewards.where((reward) => reward.status == ParentRewardStatus.unlocked),
+        hasLength(1),
+      );
+    });
+
+    test('an unsynced positive kids log is pending cloud work', () async {
+      await repository.awardKidsPoints(
+        completionAuthorized: true,
+        sessionId: 'pending-reward',
+        surahId: 114,
+        ayahNumber: 1,
+        repeatsCompleted: 3,
+      );
+
+      expect(await repository.hasPendingCloudWork(), isTrue);
+    });
+
     test('awardKidsPoints awards only once per completed ayah', () async {
       final first = await repository.awardKidsPoints(
+        completionAuthorized: true,
         surahId: 114,
         ayahNumber: 1,
         repeatsCompleted: 3,
@@ -210,6 +428,7 @@ void main() {
       );
 
       final replay = await repository.awardKidsPoints(
+        completionAuthorized: true,
         surahId: 114,
         ayahNumber: 1,
         repeatsCompleted: 3,
@@ -261,6 +480,7 @@ void main() {
         streakReader.currentStreak = 4;
 
         await repository.awardKidsPoints(
+          completionAuthorized: true,
           surahId: 114,
           ayahNumber: 1,
           repeatsCompleted: 3,
@@ -279,11 +499,11 @@ void main() {
     test(
       'kids session log drives journey while kidsMode records feed kids metrics only',
       () async {
-        await repository.saveKidsSessionLog(
+        await repository.awardKidsPoints(
+          completionAuthorized: true,
           surahId: 114,
           ayahNumber: 1,
           repeatsCompleted: 3,
-          pointsEarned: 14,
         );
         await repository.saveReviewRecord(
           AyahReviewRecord(
@@ -332,11 +552,13 @@ void main() {
 
       final results = await Future.wait([
         repository.awardKidsPoints(
+          completionAuthorized: true,
           surahId: 114,
           ayahNumber: 1,
           repeatsCompleted: 3,
         ),
         repository.awardKidsPoints(
+          completionAuthorized: true,
           surahId: 114,
           ayahNumber: 1,
           repeatsCompleted: 3,
@@ -382,18 +604,18 @@ void main() {
 
     test('duplicate kids completion does not disturb journey status', () async {
       for (var ayah = 1; ayah <= 5; ayah++) {
-        await repository.saveKidsSessionLog(
+        await repository.awardKidsPoints(
+          completionAuthorized: true,
           surahId: 114,
           ayahNumber: ayah,
           repeatsCompleted: 3,
-          pointsEarned: 14,
         );
       }
-      await repository.saveKidsSessionLog(
+      await repository.awardKidsPoints(
+        completionAuthorized: true,
         surahId: 114,
         ayahNumber: 5,
         repeatsCompleted: 3,
-        pointsEarned: 14,
       );
 
       final logs = await datasource.getKidsSessionLogs();

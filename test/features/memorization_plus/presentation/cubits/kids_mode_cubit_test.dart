@@ -728,6 +728,7 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
 
   @override
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
+    bool completionAuthorized = false,
     String? sessionId,
     required int surahId,
     required int ayahNumber,
@@ -739,6 +740,7 @@ class _FakeMemorizationPlusRepository implements MemorizationPlusRepository {
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
   }) async {
+    expect(completionAuthorized, isTrue);
     expect(surahId, 114);
     expect(ayahNumber, 1);
     expect(ayahNumbers, [1]);

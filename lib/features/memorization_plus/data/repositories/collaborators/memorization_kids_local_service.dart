@@ -8,6 +8,7 @@ import '../../../../../core/error/app_failure.dart';
 import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../../core/memorization/review_record_filters.dart';
+import '../../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../../core/progress/progress_changed_reason.dart';
 import '../../../../../core/progress/progress_events_bus.dart';
 import '../../../../../core/services/streak_reader.dart';
@@ -57,7 +58,7 @@ class MemorizationKidsLocalService {
 
   Future<Either<Failure, KidsProgress>> getKidsProgress() async {
     try {
-      final progress = await _datasource.getKidsProgress();
+      final progress = await _reconcileKidsProjection();
       return Right(await _hydrateKidsStreak(progress));
     } catch (e) {
       return Left(CacheFailure.from(e));
@@ -98,7 +99,11 @@ class MemorizationKidsLocalService {
     try {
       final logs = await _datasource.getKidsSessionLogs();
       final completed = logs
-          .where((log) => log.surahId == surahId)
+          .where(
+            (log) =>
+                log.surahId == surahId &&
+                KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
+          )
           .map((log) => log.ayahNumber)
           .toSet();
 
@@ -191,22 +196,16 @@ class MemorizationKidsLocalService {
     PerformanceRating masteryRating = PerformanceRating.excellent,
   }) async {
     try {
-      final logs = await _datasource.getKidsSessionLogs();
-      KidsSessionLogModel? existing;
-      for (final log in logs) {
-        final sameExplicitSession = sessionId != null && log.id == sessionId;
-        final sameLegacyCompletion =
-            sessionId == null &&
-            missionType == KidsMissionType.newMemorization &&
-            log.surahId == surahId &&
-            log.ayahNumber == ayahNumber &&
-            log.pointsEarned > 0;
-        if (sameExplicitSession || sameLegacyCompletion) {
-          existing = log;
-          break;
-        }
+      if (pointsEarned < 0) {
+        return const Left(CacheFailure('Kids points cannot be negative'));
       }
-      if (existing != null) return Right(existing);
+      if (pointsEarned > 0) {
+        return const Left(
+          CacheFailure(
+            'Positive Kids rewards must be committed by awardKidsPoints',
+          ),
+        );
+      }
 
       // UTC: consistent with all other review/session date fields.
       final now = DateTime.now().toUtc();
@@ -215,7 +214,7 @@ class MemorizationKidsLocalService {
         surahId: surahId,
         ayahNumber: ayahNumber,
         repeatsCompleted: repeatsCompleted,
-        pointsEarned: pointsEarned,
+        pointsEarned: 0,
         completedAt: now,
         missionType: missionType,
         ayahNumbers: ayahNumbers.isEmpty ? [ayahNumber] : ayahNumbers,
@@ -224,11 +223,7 @@ class MemorizationKidsLocalService {
         hintCount: max(0, hintCount),
         masteryRating: masteryRating,
       );
-      await _datasource.saveKidsSessionLog(log);
-      await _unlockWeeklyRewardIfNeeded();
-      await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush);
-      _progressEvents.notify(ProgressChangedReason.kidsProgress);
-      return Right(log);
+      return Right(await _appendImmutableKidsLog(log));
     } catch (e) {
       return Left(CacheFailure.from(e));
     }
@@ -400,6 +395,7 @@ class MemorizationKidsLocalService {
   }
 
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
+    bool completionAuthorized = false,
     String? sessionId,
     required int surahId,
     required int ayahNumber,
@@ -410,34 +406,53 @@ class MemorizationKidsLocalService {
     int attemptCount = 1,
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
-  }) => _withKidsAwardLock(surahId, ayahNumber, () async {
+  }) {
+    if (missionType == KidsMissionType.newMemorization &&
+        !completionAuthorized) {
+      return Future.value(
+        const Left(
+          CacheFailure('Kids reward requires authorized completion evidence'),
+        ),
+      );
+    }
+    return _withKidsAwardLock(surahId, ayahNumber, () async {
     try {
-      final current = await _datasource.getKidsProgress();
+      final ownerId = _owner.currentOwnerId;
+      final current = await _reconcileKidsProjection();
       final logs = await _datasource.getKidsSessionLogs();
       final alreadyCompleted = logs.any(
         (log) =>
             log.surahId == surahId &&
             log.ayahNumber == ayahNumber &&
-            log.pointsEarned > 0,
+            KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
       );
-      if (alreadyCompleted) {
-        if (missionType != KidsMissionType.newMemorization) {
-          final logResult = await saveKidsSessionLog(
-            sessionId: sessionId,
-            surahId: surahId,
-            ayahNumber: ayahNumber,
-            repeatsCompleted: repeatsCompleted,
+      if (missionType != KidsMissionType.newMemorization) {
+        final logResult = await saveKidsSessionLog(
+          sessionId: sessionId,
+          surahId: surahId,
+          ayahNumber: ayahNumber,
+          repeatsCompleted: repeatsCompleted,
+          pointsEarned: 0,
+          missionType: missionType,
+          ayahNumbers: ayahNumbers,
+          durationSeconds: durationSeconds,
+          attemptCount: attemptCount,
+          hintCount: hintCount,
+          masteryRating: masteryRating,
+        );
+        final logFailure = logResult.fold((failure) => failure, (_) => null);
+        if (logFailure != null) return Left(logFailure);
+        return Right(
+          KidsCompletionResult(
+            progress: await _hydrateKidsStreak(current),
             pointsEarned: 0,
-            missionType: missionType,
-            ayahNumbers: ayahNumbers,
-            durationSeconds: durationSeconds,
-            attemptCount: attemptCount,
-            hintCount: hintCount,
-            masteryRating: masteryRating,
-          );
-          final logFailure = logResult.fold((failure) => failure, (_) => null);
-          if (logFailure != null) return Left(logFailure);
-        }
+            starsEarned: 0,
+            alreadyCompleted: alreadyCompleted,
+          ),
+        );
+      }
+      if (alreadyCompleted) {
+        await _runKidsRewardAncillaryEffects();
         return Right(
           KidsCompletionResult(
             progress: await _hydrateKidsStreak(current),
@@ -450,50 +465,56 @@ class MemorizationKidsLocalService {
 
       // Listening repetitions are practice, not a rewardable action.
       const points = 10;
-      final stars = switch (masteryRating) {
-        PerformanceRating.excellent => 3,
-        PerformanceRating.average => 2,
-        PerformanceRating.weak => 1,
-      };
-      final updated = current.addPoints(points, stars: stars);
-      await _datasource.saveKidsProgress(
-        KidsProgressModel.fromEntity(_kidsProgressForStorage(updated)),
-      );
-      final logResult = await saveKidsSessionLog(
-        sessionId: sessionId,
+      final now = DateTime.now().toUtc();
+      final log = KidsSessionLogModel(
+        id: sessionId ?? '${now.microsecondsSinceEpoch}_${surahId}_$ayahNumber',
         surahId: surahId,
         ayahNumber: ayahNumber,
         repeatsCompleted: repeatsCompleted,
         pointsEarned: points,
+        completedAt: now,
         missionType: missionType,
-        ayahNumbers: ayahNumbers,
-        durationSeconds: durationSeconds,
-        attemptCount: attemptCount,
-        hintCount: hintCount,
+        ayahNumbers: ayahNumbers.isEmpty ? [ayahNumber] : ayahNumbers,
+        durationSeconds: max(0, durationSeconds),
+        attemptCount: max(1, attemptCount),
+        hintCount: max(0, hintCount),
         masteryRating: masteryRating,
       );
-      final logFailure = logResult.fold((failure) => failure, (_) => null);
-      if (logFailure != null) return Left(logFailure);
+      if (_owner.currentOwnerId != ownerId) {
+        throw StateError('Kids data owner changed during reward commit');
+      }
+      // The immutable positive log is the commit point. The aggregate below is
+      // a projection and can be repaired from this log after interruption.
+      final committed = await _appendImmutableKidsLog(log);
+      if (_owner.currentOwnerId != ownerId) {
+        throw StateError('Kids data owner changed during reward commit');
+      }
+      final updated = await _reconcileKidsProjection();
+      await _runKidsRewardAncillaryEffects();
+      final wasNewCommit = committed.id == log.id;
 
       return Right(
         KidsCompletionResult(
           progress: await _hydrateKidsStreak(updated),
-          pointsEarned: points,
-          starsEarned: updated.starsEarned - current.starsEarned,
-          alreadyCompleted: false,
+          pointsEarned: wasNewCommit ? points : 0,
+          starsEarned: wasNewCommit
+              ? updated.starsEarned - current.starsEarned
+              : 0,
+          alreadyCompleted: !wasNewCommit,
         ),
       );
     } catch (e) {
       return Left(CacheFailure.from(e));
     }
-  });
+    });
+  }
 
   Future<T> _withKidsAwardLock<T>(
     int surahId,
     int ayahNumber,
     Future<T> Function() action,
   ) async {
-    final key = '${surahId}_$ayahNumber';
+    final key = '${_owner.currentOwnerId}|kids|${surahId}_$ayahNumber';
     final previous = _kidsAwardLocks[key];
     final completer = Completer<void>();
     final current = previous == null
@@ -514,6 +535,82 @@ class MemorizationKidsLocalService {
       if (_kidsAwardLocks[key] == current) {
         unawaited(_kidsAwardLocks.remove(key));
       }
+    }
+  }
+
+  Future<KidsProgress> _reconcileKidsProjection() async {
+    final ownerId = _owner.currentOwnerId;
+    final logs = await _datasource.getKidsSessionLogs();
+    _ensureKidsOwner(ownerId);
+    final rebuilt = KidsSessionLogsCloudMerge.rebuildProjection(logs);
+    final stored = await _datasource.getKidsProgress();
+    _ensureKidsOwner(ownerId);
+    final legacyCloudFloor = await _datasource.getKidsLegacyCloudFloor();
+    _ensureKidsOwner(ownerId);
+    // Only a value explicitly imported from the legacy cloud contract may be
+    // a compatibility floor. Ordinary cached progress is never authoritative.
+    final projected = KidsProgressCloudMerge.merge(
+      local: rebuilt,
+      remote: legacyCloudFloor,
+    );
+    final changed =
+        stored.totalPoints != projected.totalPoints ||
+        stored.currentLevel != projected.currentLevel ||
+        stored.starsEarned != projected.starsEarned ||
+        stored.ayahsCompleted != projected.ayahsCompleted ||
+        stored.lastSessionAt != projected.lastSessionAt;
+    if (changed) {
+      await _datasource.saveKidsProgress(
+        KidsProgressModel.fromEntity(_kidsProgressForStorage(projected)),
+      );
+      _ensureKidsOwner(ownerId);
+    }
+    return projected;
+  }
+
+  Future<KidsSessionLogModel> _appendImmutableKidsLog(
+    KidsSessionLogModel candidate,
+  ) async {
+    final ownerId = _owner.currentOwnerId;
+    final logs = await _datasource.getKidsSessionLogs();
+    _ensureKidsOwner(ownerId);
+    for (final existing in logs) {
+      if (existing.id == candidate.id) {
+        final conflicts =
+            existing.surahId != candidate.surahId ||
+            existing.ayahNumber != candidate.ayahNumber ||
+            existing.missionType != candidate.missionType ||
+            existing.pointsEarned != candidate.pointsEarned;
+        if (conflicts) {
+          throw StateError('Kids session id conflicts with immutable evidence');
+        }
+        return existing;
+      }
+      if (KidsSessionLogsCloudMerge.isCanonicalRewardLog(candidate) &&
+          KidsSessionLogsCloudMerge.isCanonicalRewardLog(existing) &&
+          existing.surahId == candidate.surahId &&
+          existing.ayahNumber == candidate.ayahNumber) {
+        return existing;
+      }
+    }
+    _ensureKidsOwner(ownerId);
+    await _datasource.saveKidsSessionLog(candidate);
+    _ensureKidsOwner(ownerId);
+    return candidate;
+  }
+
+  Future<void> _runKidsRewardAncillaryEffects() async {
+    final ownerId = _owner.currentOwnerId;
+    await _cloudSyncQueue?.enqueue(CloudSyncQueueKind.kidsProgressPush);
+    _ensureKidsOwner(ownerId);
+    await _unlockWeeklyRewardIfNeeded();
+    _ensureKidsOwner(ownerId);
+    _progressEvents.notify(ProgressChangedReason.kidsProgress);
+  }
+
+  void _ensureKidsOwner(String ownerId) {
+    if (_owner.currentOwnerId != ownerId) {
+      throw StateError('Kids data owner changed during operation');
     }
   }
 
@@ -588,8 +685,18 @@ class MemorizationKidsLocalService {
       now.month,
       now.day,
     ).subtract(Duration(days: now.weekday - 1));
+    final alreadyUnlockedThisWeek = rewards.any(
+      (reward) =>
+          reward.unlockedAt != null &&
+          !reward.unlockedAt!.toUtc().isBefore(weekStart),
+    );
+    if (alreadyUnlockedThisWeek) return;
     final sessionsThisWeek = logs
-        .where((log) => !log.completedAt.isBefore(weekStart))
+        .where(
+          (log) =>
+              KidsSessionLogsCloudMerge.isCanonicalRewardLog(log) &&
+              !log.completedAt.isBefore(weekStart),
+        )
         .length;
     if (sessionsThisWeek < settings.weeklyGoalSessions) return;
 

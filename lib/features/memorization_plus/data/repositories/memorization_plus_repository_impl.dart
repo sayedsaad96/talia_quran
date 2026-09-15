@@ -7,6 +7,7 @@ import '../../../../core/error/app_failure.dart';
 import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/memorization/progress_metrics_service.dart';
 import '../../../../core/memorization/kids_hifz_feature_flags.dart';
+import '../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../core/services/notification_service.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
@@ -86,6 +87,7 @@ class MemorizationPlusRepositoryImpl
         _progressEvents,
         _cloudSyncQueue,
         parentPinStore: _parentPinStore,
+        owner: _owner,
       );
   late final MemorizationDailyPlanService _dailyPlan =
       MemorizationDailyPlanService(
@@ -108,6 +110,7 @@ class MemorizationPlusRepositoryImpl
         _streakReader,
         _gateway,
         _mappers,
+        owner: _owner,
       );
   late final MemorizationProductionSyncService _productionSync =
       MemorizationProductionSyncService(
@@ -444,6 +447,7 @@ class MemorizationPlusRepositoryImpl
 
   @override
   Future<Either<Failure, KidsCompletionResult>> awardKidsPoints({
+    bool completionAuthorized = false,
     String? sessionId,
     required int surahId,
     required int ayahNumber,
@@ -455,6 +459,7 @@ class MemorizationPlusRepositoryImpl
     int hintCount = 0,
     PerformanceRating masteryRating = PerformanceRating.excellent,
   }) => _kidsLocal.awardKidsPoints(
+    completionAuthorized: completionAuthorized,
     sessionId: sessionId,
     surahId: surahId,
     ayahNumber: ayahNumber,
@@ -549,7 +554,17 @@ class MemorizationPlusRepositoryImpl
   ) => _productionSync.pushCertificatesToCloud(certificates);
 
   @override
-  Future<bool> hasPendingCloudWork() => _productionSync.hasPendingCloudWork();
+  Future<bool> hasPendingCloudWork() async {
+    final kidsLogs = await _datasource.getKidsSessionLogs();
+    if (kidsLogs.any(
+      (log) =>
+          !log.isSynced &&
+          KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
+    )) {
+      return true;
+    }
+    return _productionSync.hasPendingCloudWork();
+  }
 
   @override
   Future<Either<Failure, void>> revokeGuardianLink(String counterpartUserId) =>

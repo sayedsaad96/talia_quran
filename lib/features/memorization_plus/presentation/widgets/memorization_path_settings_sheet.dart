@@ -105,8 +105,18 @@ Future<void> showMemorizationPathSettingsSheet(
                   ),
                 );
                 if (confirmed == true) {
-                  final result = await getIt<MemorizationPlusRepository>()
-                      .resetMemorizationIdentity();
+                  final repository = getIt<MemorizationPlusRepository>();
+                  final profileResult = await repository
+                      .getMemorizationProfile();
+                  final requiresGuardianPin = profileResult.fold(
+                    (_) => true,
+                    (profile) => profile.isChild,
+                  );
+                  if (requiresGuardianPin) {
+                    final guardianVerified = await _verifyGuardianPin(context);
+                    if (!guardianVerified) return;
+                  }
+                  final result = await repository.resetMemorizationIdentity();
                   final failure = result.fold(
                     (failure) => failure,
                     (_) => null,
@@ -131,4 +141,66 @@ Future<void> showMemorizationPathSettingsSheet(
       ),
     ),
   );
+}
+
+Future<bool> _verifyGuardianPin(BuildContext context) async {
+  final controller = TextEditingController();
+  String? error;
+  final verified = await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: Text(context.l10n.parentDashboardEnterPinTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(context.l10n.parentDashboardPinHelp),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: controller,
+              autofocus: true,
+              keyboardType: TextInputType.number,
+              obscureText: true,
+              maxLength: 4,
+              decoration: InputDecoration(
+                counterText: '',
+                labelText: 'PIN',
+                errorText: error,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final pin = controller.text.trim();
+              if (pin.length != 4 || int.tryParse(pin) == null) {
+                setState(() => error = context.l10n.parentDashboardPinInvalid);
+                return;
+              }
+              final result = await getIt<MemorizationPlusRepository>()
+                  .verifyParentPin(pin);
+              final isValid = result.getOrElse(() => false);
+              if (!dialogContext.mounted) return;
+              if (isValid) {
+                Navigator.pop(dialogContext, true);
+              } else {
+                setState(
+                  () => error = context.l10n.parentDashboardPinIncorrect,
+                );
+              }
+            },
+            child: Text(context.l10n.reset),
+          ),
+        ],
+      ),
+    ),
+  );
+  controller.dispose();
+  return verified == true;
 }

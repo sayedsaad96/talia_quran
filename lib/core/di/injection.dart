@@ -517,6 +517,8 @@ Future<void> configureDependencies({bool background = false}) async {
       achievementService: getIt<AchievementService>(),
       cloudSyncQueue: getIt<CloudSyncQueue>(),
       bookmarkService: getIt<BookmarkService>(),
+      onMemorizationIdentityChanged:
+          getIt<MemorizationPathResolver>().notifyChanged,
       syncBookmarks: !background,
     ),
     dispose: (coordinator) => coordinator.dispose(),

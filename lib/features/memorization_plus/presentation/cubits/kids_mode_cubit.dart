@@ -584,6 +584,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
       final result = await _awardPoints(
         AwardKidsPointsParams(
+          completionAuthorized: true,
           sessionId: _sessionId,
           surahId: st.surahId,
           ayahNumber: st.ayahNumber,

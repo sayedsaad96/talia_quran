@@ -12,6 +12,7 @@ import '../constants/app_constants.dart';
 import '../di/injection.dart';
 import '../l10n/app_localizations.dart';
 import '../memorization/learning_launch_context.dart';
+import '../memorization/memorization_path_resolver.dart';
 import '../services/get_daily_wird_usecase.dart';
 
 import '../../features/home/presentation/pages/home_page.dart';
@@ -116,15 +117,18 @@ abstract class AppRoutes {
 /// Bridges [AuthCubit] state stream into a [Listenable] so [GoRouter]
 /// re-evaluates its [redirect] automatically whenever auth state changes.
 class _AuthNotifier extends ChangeNotifier {
-  _AuthNotifier(AuthCubit cubit) {
+  _AuthNotifier(AuthCubit cubit, {MemorizationPathResolver? pathResolver}) {
     _sub = cubit.stream.listen((_) => notifyListeners());
+    _pathSub = pathResolver?.changes.listen((_) => notifyListeners());
   }
 
   late final StreamSubscription<AuthState> _sub;
+  StreamSubscription<void>? _pathSub;
 
   @override
   void dispose() {
     _sub.cancel();
+    _pathSub?.cancel();
     super.dispose();
   }
 }
@@ -192,6 +196,21 @@ class MemorizationRouteGuard {
       return null;
     } catch (_) {
       return null;
+    }
+  }
+
+  /// Keeps a resolved child profile out of the adult shell at `/`.
+  static Future<String?> rootAudienceRedirect() async {
+    try {
+      final result = await getIt<MemorizationPlusRepository>()
+          .getMemorizationProfile();
+      return result.fold(
+        (_) => '${AppRoutes.memorizationPlus}?preferred=kids',
+        (profile) =>
+            profile.isChild ? AppRoutes.memorizationPlusKidsHome : null,
+      );
+    } catch (_) {
+      return '${AppRoutes.memorizationPlus}?preferred=kids';
     }
   }
 
@@ -381,8 +400,13 @@ abstract class AppRouter {
     initialLocation: AppRoutes.home,
     debugLogDiagnostics: kDebugMode,
     // AUTH GATE: redirect unauthenticated users to /login for all protected routes.
-    refreshListenable: _AuthNotifier(getIt<AuthCubit>()),
-    redirect: (context, state) {
+    refreshListenable: _AuthNotifier(
+      getIt<AuthCubit>(),
+      pathResolver: getIt.isRegistered<MemorizationPathResolver>()
+          ? getIt<MemorizationPathResolver>()
+          : null,
+    ),
+    redirect: (context, state) async {
       final authState = getIt<AuthCubit>().state;
       final location = state.matchedLocation;
       final authRedirect = redirectForAuth(authState, location);
@@ -400,6 +424,10 @@ abstract class AppRouter {
             }
           }
         } catch (_) {}
+
+        final audienceRedirect =
+            await MemorizationRouteGuard.rootAudienceRedirect();
+        if (audienceRedirect != null) return audienceRedirect;
       }
 
       return null;

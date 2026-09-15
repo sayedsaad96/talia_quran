@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
@@ -44,6 +45,71 @@ void main() {
   });
 
   group('MemorizationPlusLocalDatasourceImpl', () {
+    test('kids reward storage is partitioned by owner', () async {
+      final ownerA = MemorizationPlusLocalDatasourceImpl(
+        prefs,
+        owner: const FixedRecordOwnerProvider('owner-a'),
+      );
+      final ownerB = MemorizationPlusLocalDatasourceImpl(
+        prefs,
+        owner: const FixedRecordOwnerProvider('owner-b'),
+      );
+      await ownerA.saveKidsProgress(
+        const KidsProgressModel(
+          totalPoints: 10,
+          currentLevel: 1,
+          currentStreak: 0,
+          starsEarned: 3,
+          ayahsCompleted: 1,
+          lastSessionAt: null,
+        ),
+      );
+      await ownerA.saveKidsSessionLog(
+        KidsSessionLogModel(
+          id: 'owner-a-reward',
+          surahId: 114,
+          ayahNumber: 1,
+          repeatsCompleted: 3,
+          pointsEarned: 10,
+          completedAt: DateTime.utc(2026, 9, 15),
+        ),
+      );
+
+      expect((await ownerA.getKidsProgress()).totalPoints, 10);
+      expect(await ownerA.getKidsSessionLogs(), hasLength(1));
+      expect((await ownerB.getKidsProgress()).totalPoints, 0);
+      expect(await ownerB.getKidsSessionLogs(), isEmpty);
+    });
+
+    test('the last signed-in owner claims legacy kids data once', () async {
+      await prefs.setString('auth_last_signed_in_user_id', 'owner-a');
+      await prefs.setString(
+        'mem_plus_kids_progress',
+        jsonEncode(
+          const KidsProgressModel(
+            totalPoints: 10,
+            currentLevel: 1,
+            currentStreak: 0,
+            starsEarned: 3,
+            ayahsCompleted: 1,
+            lastSessionAt: null,
+          ).toJson(),
+        ),
+      );
+      final ownerA = MemorizationPlusLocalDatasourceImpl(
+        prefs,
+        owner: const FixedRecordOwnerProvider('owner-a'),
+      );
+      final ownerB = MemorizationPlusLocalDatasourceImpl(
+        prefs,
+        owner: const FixedRecordOwnerProvider('owner-b'),
+      );
+
+      expect((await ownerA.getKidsProgress()).totalPoints, 10);
+      expect(prefs.getString('mem_plus_kids_legacy_claimed_by'), 'owner-a');
+      expect((await ownerB.getKidsProgress()).totalPoints, 0);
+    });
+
     test('returns an empty profile when no identity has been saved', () async {
       final profile = await datasource.getMemorizationProfile();
 
@@ -156,7 +222,9 @@ void main() {
         expect(prefs.getString('mem_plus_review_2_3'), isNull);
         expect(prefs.getString('mem_plus_review_corrupted'), '{bad json');
         expect(
-          prefs.getString('mem_plus_migration_quarantine_review_mem_plus_review_corrupted'),
+          prefs.getString(
+            'mem_plus_migration_quarantine_review_mem_plus_review_corrupted',
+          ),
           '{bad json',
         );
         expect(

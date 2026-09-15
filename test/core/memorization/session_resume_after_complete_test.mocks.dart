@@ -58,114 +58,59 @@ import 'package:talia_quran/features/xp/domain/entities/xp_gain_result.dart'
 // ignore_for_file: subtype_of_sealed_class
 
 class _FakeEither_0<L, R> extends _i1.SmartFake implements _i2.Either<L, R> {
-  _FakeEither_0(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeEither_0(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeAyahReviewRecord_1 extends _i1.SmartFake
     implements _i3.AyahReviewRecord {
-  _FakeAyahReviewRecord_1(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeAyahReviewRecord_1(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeXpGainResult_2 extends _i1.SmartFake implements _i4.XpGainResult {
-  _FakeXpGainResult_2(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeXpGainResult_2(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeXpLevel_3 extends _i1.SmartFake implements _i5.XpLevel {
-  _FakeXpLevel_3(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeXpLevel_3(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeStreakEntity_4 extends _i1.SmartFake implements _i6.StreakEntity {
-  _FakeStreakEntity_4(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeStreakEntity_4(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeStreakResult_5 extends _i1.SmartFake implements _i7.StreakResult {
-  _FakeStreakResult_5(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeStreakResult_5(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakePlayerEvent_6 extends _i1.SmartFake implements _i8.PlayerEvent {
-  _FakePlayerEvent_6(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakePlayerEvent_6(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakePlaybackEvent_7 extends _i1.SmartFake implements _i8.PlaybackEvent {
-  _FakePlaybackEvent_7(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakePlaybackEvent_7(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeDuration_8 extends _i1.SmartFake implements Duration {
-  _FakeDuration_8(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeDuration_8(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakePlayerState_9 extends _i1.SmartFake implements _i8.PlayerState {
-  _FakePlayerState_9(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakePlayerState_9(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 class _FakeSequenceState_10 extends _i1.SmartFake implements _i8.SequenceState {
-  _FakeSequenceState_10(
-    Object parent,
-    Invocation parentInvocation,
-  ) : super(
-          parent,
-          parentInvocation,
-        );
+  _FakeSequenceState_10(Object parent, Invocation parentInvocation)
+    : super(parent, parentInvocation);
 }
 
 /// A class which mocks [QuranRepository].
@@ -179,96 +124,82 @@ class MockQuranRepository extends _i1.Mock implements _i9.QuranRepository {
   @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i12.Surah>>> getSurahs() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getSurahs,
-          [],
-        ),
-        returnValue:
-            _i10.Future<_i2.Either<_i11.Failure, List<_i12.Surah>>>.value(
-                _FakeEither_0<_i11.Failure, List<_i12.Surah>>(
-          this,
-          Invocation.method(
-            #getSurahs,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, List<_i12.Surah>>>);
+            Invocation.method(#getSurahs, []),
+            returnValue:
+                _i10.Future<_i2.Either<_i11.Failure, List<_i12.Surah>>>.value(
+                  _FakeEither_0<_i11.Failure, List<_i12.Surah>>(
+                    this,
+                    Invocation.method(#getSurahs, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, List<_i12.Surah>>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i12.SurahDetail>> getSurahDetail(
-          int? surahId) =>
+    int? surahId,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getSurahDetail,
-          [surahId],
-        ),
-        returnValue:
-            _i10.Future<_i2.Either<_i11.Failure, _i12.SurahDetail>>.value(
-                _FakeEither_0<_i11.Failure, _i12.SurahDetail>(
-          this,
-          Invocation.method(
-            #getSurahDetail,
-            [surahId],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, _i12.SurahDetail>>);
+            Invocation.method(#getSurahDetail, [surahId]),
+            returnValue:
+                _i10.Future<_i2.Either<_i11.Failure, _i12.SurahDetail>>.value(
+                  _FakeEither_0<_i11.Failure, _i12.SurahDetail>(
+                    this,
+                    Invocation.method(#getSurahDetail, [surahId]),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i12.SurahDetail>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i12.Surah>>> searchSurahs(
-          String? query) =>
+    String? query,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #searchSurahs,
-          [query],
-        ),
-        returnValue:
-            _i10.Future<_i2.Either<_i11.Failure, List<_i12.Surah>>>.value(
-                _FakeEither_0<_i11.Failure, List<_i12.Surah>>(
-          this,
-          Invocation.method(
-            #searchSurahs,
-            [query],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, List<_i12.Surah>>>);
+            Invocation.method(#searchSurahs, [query]),
+            returnValue:
+                _i10.Future<_i2.Either<_i11.Failure, List<_i12.Surah>>>.value(
+                  _FakeEither_0<_i11.Failure, List<_i12.Surah>>(
+                    this,
+                    Invocation.method(#searchSurahs, [query]),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, List<_i12.Surah>>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i12.QuranPageDetail>> getQuranPage(
-          int? pageNumber) =>
+    int? pageNumber,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getQuranPage,
-          [pageNumber],
-        ),
-        returnValue:
-            _i10.Future<_i2.Either<_i11.Failure, _i12.QuranPageDetail>>.value(
-                _FakeEither_0<_i11.Failure, _i12.QuranPageDetail>(
-          this,
-          Invocation.method(
-            #getQuranPage,
-            [pageNumber],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, _i12.QuranPageDetail>>);
+            Invocation.method(#getQuranPage, [pageNumber]),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i12.QuranPageDetail>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i12.QuranPageDetail>(
+                    this,
+                    Invocation.method(#getQuranPage, [pageNumber]),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i12.QuranPageDetail>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i12.Ayah>>> searchAyahs(
-          String? query) =>
+    String? query,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #searchAyahs,
-          [query],
-        ),
-        returnValue:
-            _i10.Future<_i2.Either<_i11.Failure, List<_i12.Ayah>>>.value(
-                _FakeEither_0<_i11.Failure, List<_i12.Ayah>>(
-          this,
-          Invocation.method(
-            #searchAyahs,
-            [query],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, List<_i12.Ayah>>>);
+            Invocation.method(#searchAyahs, [query]),
+            returnValue:
+                _i10.Future<_i2.Either<_i11.Failure, List<_i12.Ayah>>>.value(
+                  _FakeEither_0<_i11.Failure, List<_i12.Ayah>>(
+                    this,
+                    Invocation.method(#searchAyahs, [query]),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, List<_i12.Ayah>>>);
 }
 
 /// A class which mocks [MemorizationPlusRepository].
@@ -282,273 +213,250 @@ class MockMemorizationPlusRepository extends _i1.Mock
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>
-      getMemorizationProfile() => (super.noSuchMethod(
-            Invocation.method(
-              #getMemorizationProfile,
-              [],
-            ),
-            returnValue: _i10.Future<
-                    _i2.Either<_i11.Failure, _i3.MemorizationProfile>>.value(
-                _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
-              this,
-              Invocation.method(
-                #getMemorizationProfile,
-                [],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
+  getMemorizationProfile() =>
+      (super.noSuchMethod(
+            Invocation.method(#getMemorizationProfile, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.MemorizationProfile>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
+                    this,
+                    Invocation.method(#getMemorizationProfile, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>
-      selectMemorizationPath(_i3.MemorizationPath? path) => (super.noSuchMethod(
-            Invocation.method(
-              #selectMemorizationPath,
-              [path],
-            ),
-            returnValue: _i10.Future<
-                    _i2.Either<_i11.Failure, _i3.MemorizationProfile>>.value(
-                _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
-              this,
-              Invocation.method(
-                #selectMemorizationPath,
-                [path],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
+  selectMemorizationPath(_i3.MemorizationPath? path) =>
+      (super.noSuchMethod(
+            Invocation.method(#selectMemorizationPath, [path]),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.MemorizationProfile>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
+                    this,
+                    Invocation.method(#selectMemorizationPath, [path]),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>
-      configureChildAge(int? age) => (super.noSuchMethod(
-            Invocation.method(
-              #configureChildAge,
-              [age],
-            ),
-            returnValue: _i10.Future<
-                    _i2.Either<_i11.Failure, _i3.MemorizationProfile>>.value(
-                _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
-              this,
-              Invocation.method(
-                #configureChildAge,
-                [age],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
+  configureChildAge(int? age) =>
+      (super.noSuchMethod(
+            Invocation.method(#configureChildAge, [age]),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.MemorizationProfile>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
+                    this,
+                    Invocation.method(#configureChildAge, [age]),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>
-      continueWithoutGuardian() => (super.noSuchMethod(
-            Invocation.method(
-              #continueWithoutGuardian,
-              [],
-            ),
-            returnValue: _i10.Future<
-                    _i2.Either<_i11.Failure, _i3.MemorizationProfile>>.value(
-                _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
-              this,
-              Invocation.method(
-                #continueWithoutGuardian,
-                [],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
+  continueWithoutGuardian() =>
+      (super.noSuchMethod(
+            Invocation.method(#continueWithoutGuardian, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.MemorizationProfile>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
+                    this,
+                    Invocation.method(#continueWithoutGuardian, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.PairingSession>>
-      createGuardianPairingSession() => (super.noSuchMethod(
-            Invocation.method(
-              #createGuardianPairingSession,
-              [],
-            ),
+  createGuardianPairingSession() =>
+      (super.noSuchMethod(
+            Invocation.method(#createGuardianPairingSession, []),
             returnValue:
                 _i10.Future<_i2.Either<_i11.Failure, _i3.PairingSession>>.value(
-                    _FakeEither_0<_i11.Failure, _i3.PairingSession>(
-              this,
-              Invocation.method(
-                #createGuardianPairingSession,
-                [],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.PairingSession>>);
+                  _FakeEither_0<_i11.Failure, _i3.PairingSession>(
+                    this,
+                    Invocation.method(#createGuardianPairingSession, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.PairingSession>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>
-      acceptGuardianPairingCode(String? codeOrQrData) => (super.noSuchMethod(
-            Invocation.method(
-              #acceptGuardianPairingCode,
-              [codeOrQrData],
-            ),
-            returnValue: _i10.Future<
-                    _i2.Either<_i11.Failure, _i3.MemorizationProfile>>.value(
-                _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
-              this,
-              Invocation.method(
-                #acceptGuardianPairingCode,
-                [codeOrQrData],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
+  acceptGuardianPairingCode(String? codeOrQrData) =>
+      (super.noSuchMethod(
+            Invocation.method(#acceptGuardianPairingCode, [codeOrQrData]),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.MemorizationProfile>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
+                    this,
+                    Invocation.method(#acceptGuardianPairingCode, [
+                      codeOrQrData,
+                    ]),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.PairingSession?>>
-      refreshPairingSession() => (super.noSuchMethod(
-            Invocation.method(
-              #refreshPairingSession,
-              [],
-            ),
-            returnValue: _i10
-                .Future<_i2.Either<_i11.Failure, _i3.PairingSession?>>.value(
-                _FakeEither_0<_i11.Failure, _i3.PairingSession?>(
-              this,
-              Invocation.method(
-                #refreshPairingSession,
-                [],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.PairingSession?>>);
+  refreshPairingSession() =>
+      (super.noSuchMethod(
+            Invocation.method(#refreshPairingSession, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.PairingSession?>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.PairingSession?>(
+                    this,
+                    Invocation.method(#refreshPairingSession, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.PairingSession?>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>
-      unlinkGuardian() => (super.noSuchMethod(
-            Invocation.method(
-              #unlinkGuardian,
-              [],
-            ),
-            returnValue: _i10.Future<
-                    _i2.Either<_i11.Failure, _i3.MemorizationProfile>>.value(
-                _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
-              this,
-              Invocation.method(
-                #unlinkGuardian,
-                [],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
+  unlinkGuardian() =>
+      (super.noSuchMethod(
+            Invocation.method(#unlinkGuardian, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.MemorizationProfile>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
+                    this,
+                    Invocation.method(#unlinkGuardian, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>
-      setParentGuardianMode(bool? value) => (super.noSuchMethod(
-            Invocation.method(
-              #setParentGuardianMode,
-              [value],
-            ),
-            returnValue: _i10.Future<
-                    _i2.Either<_i11.Failure, _i3.MemorizationProfile>>.value(
-                _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
-              this,
-              Invocation.method(
-                #setParentGuardianMode,
-                [value],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
+  setParentGuardianMode(bool? value) =>
+      (super.noSuchMethod(
+            Invocation.method(#setParentGuardianMode, [value]),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.MemorizationProfile>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
+                    this,
+                    Invocation.method(#setParentGuardianMode, [value]),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>
-      refreshChildGuardianLink() => (super.noSuchMethod(
-            Invocation.method(
-              #refreshChildGuardianLink,
-              [],
-            ),
-            returnValue: _i10.Future<
-                    _i2.Either<_i11.Failure, _i3.MemorizationProfile>>.value(
-                _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
-              this,
-              Invocation.method(
-                #refreshChildGuardianLink,
-                [],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
+  refreshChildGuardianLink() =>
+      (super.noSuchMethod(
+            Invocation.method(#refreshChildGuardianLink, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.MemorizationProfile>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
+                    this,
+                    Invocation.method(#refreshChildGuardianLink, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>
-      resetMemorizationIdentity() => (super.noSuchMethod(
-            Invocation.method(
-              #resetMemorizationIdentity,
-              [],
-            ),
-            returnValue: _i10.Future<
-                    _i2.Either<_i11.Failure, _i3.MemorizationProfile>>.value(
-                _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
-              this,
-              Invocation.method(
-                #resetMemorizationIdentity,
-                [],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
+  resetMemorizationIdentity() =>
+      (super.noSuchMethod(
+            Invocation.method(#resetMemorizationIdentity, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.MemorizationProfile>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.MemorizationProfile>(
+                    this,
+                    Invocation.method(#resetMemorizationIdentity, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.MemorizationProfile>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.SmartMemorizationSettings>>
-      getSmartSettings() => (super.noSuchMethod(
-            Invocation.method(
-              #getSmartSettings,
-              [],
-            ),
-            returnValue: _i10.Future<
-                    _i2
-                    .Either<_i11.Failure, _i3.SmartMemorizationSettings>>.value(
-                _FakeEither_0<_i11.Failure, _i3.SmartMemorizationSettings>(
-              this,
-              Invocation.method(
-                #getSmartSettings,
-                [],
-              ),
-            )),
-          ) as _i10
-              .Future<_i2.Either<_i11.Failure, _i3.SmartMemorizationSettings>>);
+  getSmartSettings() =>
+      (super.noSuchMethod(
+            Invocation.method(#getSmartSettings, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.SmartMemorizationSettings>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.SmartMemorizationSettings>(
+                    this,
+                    Invocation.method(#getSmartSettings, []),
+                  ),
+                ),
+          )
+          as _i10.Future<
+            _i2.Either<_i11.Failure, _i3.SmartMemorizationSettings>
+          >);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> saveSmartSettings(
-          _i3.SmartMemorizationSettings? settings) =>
+    _i3.SmartMemorizationSettings? settings,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #saveSmartSettings,
-          [settings],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #saveSmartSettings,
-            [settings],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#saveSmartSettings, [settings]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#saveSmartSettings, [settings]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i2.Either<_i11.Failure, _i3.MemorizationTrack?> getSelectedTrack() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getSelectedTrack,
-          [],
-        ),
-        returnValue: _FakeEither_0<_i11.Failure, _i3.MemorizationTrack?>(
-          this,
-          Invocation.method(
-            #getSelectedTrack,
-            [],
-          ),
-        ),
-      ) as _i2.Either<_i11.Failure, _i3.MemorizationTrack?>);
+            Invocation.method(#getSelectedTrack, []),
+            returnValue: _FakeEither_0<_i11.Failure, _i3.MemorizationTrack?>(
+              this,
+              Invocation.method(#getSelectedTrack, []),
+            ),
+          )
+          as _i2.Either<_i11.Failure, _i3.MemorizationTrack?>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> saveSelectedTrack(
-          _i3.MemorizationTrack? track) =>
+    _i3.MemorizationTrack? track,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #saveSelectedTrack,
-          [track],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #saveSelectedTrack,
-            [track],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#saveSelectedTrack, [track]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#saveSelectedTrack, [track]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.DailyPlan>> generateDailyPlan({
@@ -556,91 +464,74 @@ class MockMemorizationPlusRepository extends _i1.Mock
     required int? newAyahsPerDay,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #generateDailyPlan,
-          [],
-          {
-            #surahId: surahId,
-            #newAyahsPerDay: newAyahsPerDay,
-          },
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, _i3.DailyPlan>>.value(
-            _FakeEither_0<_i11.Failure, _i3.DailyPlan>(
-          this,
-          Invocation.method(
-            #generateDailyPlan,
-            [],
-            {
+            Invocation.method(#generateDailyPlan, [], {
               #surahId: surahId,
               #newAyahsPerDay: newAyahsPerDay,
-            },
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, _i3.DailyPlan>>);
+            }),
+            returnValue:
+                _i10.Future<_i2.Either<_i11.Failure, _i3.DailyPlan>>.value(
+                  _FakeEither_0<_i11.Failure, _i3.DailyPlan>(
+                    this,
+                    Invocation.method(#generateDailyPlan, [], {
+                      #surahId: surahId,
+                      #newAyahsPerDay: newAyahsPerDay,
+                    }),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.DailyPlan>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.DailyPlan?>> getCachedDailyPlan() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getCachedDailyPlan,
-          [],
-        ),
-        returnValue:
-            _i10.Future<_i2.Either<_i11.Failure, _i3.DailyPlan?>>.value(
-                _FakeEither_0<_i11.Failure, _i3.DailyPlan?>(
-          this,
-          Invocation.method(
-            #getCachedDailyPlan,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, _i3.DailyPlan?>>);
+            Invocation.method(#getCachedDailyPlan, []),
+            returnValue:
+                _i10.Future<_i2.Either<_i11.Failure, _i3.DailyPlan?>>.value(
+                  _FakeEither_0<_i11.Failure, _i3.DailyPlan?>(
+                    this,
+                    Invocation.method(#getCachedDailyPlan, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.DailyPlan?>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> saveDailyPlan(
-          _i3.DailyPlan? plan) =>
+    _i3.DailyPlan? plan,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #saveDailyPlan,
-          [plan],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #saveDailyPlan,
-            [plan],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#saveDailyPlan, [plan]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#saveDailyPlan, [plan]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i14.SyncConflict<_i3.DailyPlan>?> getDailyPlanConflict() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getDailyPlanConflict,
-          [],
-        ),
-        returnValue: _i10.Future<_i14.SyncConflict<_i3.DailyPlan>?>.value(),
-      ) as _i10.Future<_i14.SyncConflict<_i3.DailyPlan>?>);
+            Invocation.method(#getDailyPlanConflict, []),
+            returnValue: _i10.Future<_i14.SyncConflict<_i3.DailyPlan>?>.value(),
+          )
+          as _i10.Future<_i14.SyncConflict<_i3.DailyPlan>?>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> resolveDailyPlanConflict(
-          _i14.SyncConflictResolution? resolution) =>
+    _i14.SyncConflictResolution? resolution,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #resolveDailyPlanConflict,
-          [resolution],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #resolveDailyPlanConflict,
-            [resolution],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#resolveDailyPlanConflict, [resolution]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#resolveDailyPlanConflict, [resolution]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, bool>> markDailyPlanAyahCompleted({
@@ -648,27 +539,21 @@ class MockMemorizationPlusRepository extends _i1.Mock
     required int? ayahNumber,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #markDailyPlanAyahCompleted,
-          [],
-          {
-            #surahId: surahId,
-            #ayahNumber: ayahNumber,
-          },
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, bool>>.value(
-            _FakeEither_0<_i11.Failure, bool>(
-          this,
-          Invocation.method(
-            #markDailyPlanAyahCompleted,
-            [],
-            {
+            Invocation.method(#markDailyPlanAyahCompleted, [], {
               #surahId: surahId,
               #ayahNumber: ayahNumber,
-            },
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, bool>>);
+            }),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, bool>>.value(
+              _FakeEither_0<_i11.Failure, bool>(
+                this,
+                Invocation.method(#markDailyPlanAyahCompleted, [], {
+                  #surahId: surahId,
+                  #ayahNumber: ayahNumber,
+                }),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, bool>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.AyahReviewRecord?>> getReviewRecord(
@@ -677,162 +562,138 @@ class MockMemorizationPlusRepository extends _i1.Mock
     _i15.ReviewRecordReadScope? scope = _i15.ReviewRecordReadScope.adult,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getReviewRecord,
-          [
-            surahId,
-            ayahNumber,
-          ],
-          {#scope: scope},
-        ),
-        returnValue:
-            _i10.Future<_i2.Either<_i11.Failure, _i3.AyahReviewRecord?>>.value(
-                _FakeEither_0<_i11.Failure, _i3.AyahReviewRecord?>(
-          this,
-          Invocation.method(
-            #getReviewRecord,
-            [
-              surahId,
-              ayahNumber,
-            ],
-            {#scope: scope},
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, _i3.AyahReviewRecord?>>);
+            Invocation.method(
+              #getReviewRecord,
+              [surahId, ayahNumber],
+              {#scope: scope},
+            ),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.AyahReviewRecord?>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.AyahReviewRecord?>(
+                    this,
+                    Invocation.method(
+                      #getReviewRecord,
+                      [surahId, ayahNumber],
+                      {#scope: scope},
+                    ),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.AyahReviewRecord?>>);
 
   @override
-  _i10.Future<
-      _i2.Either<_i11.Failure, List<_i3.AyahReviewRecord>>> getAllReviewRecords(
-          {_i15.ReviewRecordReadScope? scope =
-              _i15.ReviewRecordReadScope.adult}) =>
+  _i10.Future<_i2.Either<_i11.Failure, List<_i3.AyahReviewRecord>>>
+  getAllReviewRecords({
+    _i15.ReviewRecordReadScope? scope = _i15.ReviewRecordReadScope.adult,
+  }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getAllReviewRecords,
-          [],
-          {#scope: scope},
-        ),
-        returnValue: _i10
-            .Future<_i2.Either<_i11.Failure, List<_i3.AyahReviewRecord>>>.value(
-            _FakeEither_0<_i11.Failure, List<_i3.AyahReviewRecord>>(
-          this,
-          Invocation.method(
-            #getAllReviewRecords,
-            [],
-            {#scope: scope},
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, List<_i3.AyahReviewRecord>>>);
+            Invocation.method(#getAllReviewRecords, [], {#scope: scope}),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, List<_i3.AyahReviewRecord>>
+                >.value(
+                  _FakeEither_0<_i11.Failure, List<_i3.AyahReviewRecord>>(
+                    this,
+                    Invocation.method(#getAllReviewRecords, [], {
+                      #scope: scope,
+                    }),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, List<_i3.AyahReviewRecord>>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> saveReviewRecord(
-          _i3.AyahReviewRecord? record) =>
+    _i3.AyahReviewRecord? record,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #saveReviewRecord,
-          [record],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #saveReviewRecord,
-            [record],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#saveReviewRecord, [record]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#saveReviewRecord, [record]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, int>> claimLocalReviewRecords() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #claimLocalReviewRecords,
-          [],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, int>>.value(
-            _FakeEither_0<_i11.Failure, int>(
-          this,
-          Invocation.method(
-            #claimLocalReviewRecords,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, int>>);
+            Invocation.method(#claimLocalReviewRecords, []),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, int>>.value(
+              _FakeEither_0<_i11.Failure, int>(
+                this,
+                Invocation.method(#claimLocalReviewRecords, []),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, int>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.KidsProgress>> getKidsProgress() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getKidsProgress,
-          [],
-        ),
-        returnValue:
-            _i10.Future<_i2.Either<_i11.Failure, _i3.KidsProgress>>.value(
-                _FakeEither_0<_i11.Failure, _i3.KidsProgress>(
-          this,
-          Invocation.method(
-            #getKidsProgress,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, _i3.KidsProgress>>);
+            Invocation.method(#getKidsProgress, []),
+            returnValue:
+                _i10.Future<_i2.Either<_i11.Failure, _i3.KidsProgress>>.value(
+                  _FakeEither_0<_i11.Failure, _i3.KidsProgress>(
+                    this,
+                    Invocation.method(#getKidsProgress, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.KidsProgress>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> saveKidsProgress(
-          _i3.KidsProgress? progress) =>
+    _i3.KidsProgress? progress,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #saveKidsProgress,
-          [progress],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #saveKidsProgress,
-            [progress],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#saveKidsProgress, [progress]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#saveKidsProgress, [progress]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
-  _i10.Future<
-      _i2.Either<_i11.Failure, List<_i3.KidsJourneyStage>>> getKidsJourney(
-          {required int? surahId}) =>
+  _i10.Future<_i2.Either<_i11.Failure, List<_i3.KidsJourneyStage>>>
+  getKidsJourney({required int? surahId}) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getKidsJourney,
-          [],
-          {#surahId: surahId},
-        ),
-        returnValue: _i10
-            .Future<_i2.Either<_i11.Failure, List<_i3.KidsJourneyStage>>>.value(
-            _FakeEither_0<_i11.Failure, List<_i3.KidsJourneyStage>>(
-          this,
-          Invocation.method(
-            #getKidsJourney,
-            [],
-            {#surahId: surahId},
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, List<_i3.KidsJourneyStage>>>);
+            Invocation.method(#getKidsJourney, [], {#surahId: surahId}),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, List<_i3.KidsJourneyStage>>
+                >.value(
+                  _FakeEither_0<_i11.Failure, List<_i3.KidsJourneyStage>>(
+                    this,
+                    Invocation.method(#getKidsJourney, [], {#surahId: surahId}),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, List<_i3.KidsJourneyStage>>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i3.KidsSessionLog>>>
-      getKidsSessionLogs() => (super.noSuchMethod(
-            Invocation.method(
-              #getKidsSessionLogs,
-              [],
-            ),
-            returnValue: _i10.Future<
-                    _i2.Either<_i11.Failure, List<_i3.KidsSessionLog>>>.value(
-                _FakeEither_0<_i11.Failure, List<_i3.KidsSessionLog>>(
-              this,
-              Invocation.method(
-                #getKidsSessionLogs,
-                [],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, List<_i3.KidsSessionLog>>>);
+  getKidsSessionLogs() =>
+      (super.noSuchMethod(
+            Invocation.method(#getKidsSessionLogs, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, List<_i3.KidsSessionLog>>
+                >.value(
+                  _FakeEither_0<_i11.Failure, List<_i3.KidsSessionLog>>(
+                    this,
+                    Invocation.method(#getKidsSessionLogs, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, List<_i3.KidsSessionLog>>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.KidsSessionLog>> saveKidsSessionLog({
@@ -849,31 +710,7 @@ class MockMemorizationPlusRepository extends _i1.Mock
     _i3.PerformanceRating? masteryRating = _i3.PerformanceRating.excellent,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #saveKidsSessionLog,
-          [],
-          {
-            #sessionId: sessionId,
-            #surahId: surahId,
-            #ayahNumber: ayahNumber,
-            #repeatsCompleted: repeatsCompleted,
-            #pointsEarned: pointsEarned,
-            #missionType: missionType,
-            #ayahNumbers: ayahNumbers,
-            #durationSeconds: durationSeconds,
-            #attemptCount: attemptCount,
-            #hintCount: hintCount,
-            #masteryRating: masteryRating,
-          },
-        ),
-        returnValue:
-            _i10.Future<_i2.Either<_i11.Failure, _i3.KidsSessionLog>>.value(
-                _FakeEither_0<_i11.Failure, _i3.KidsSessionLog>(
-          this,
-          Invocation.method(
-            #saveKidsSessionLog,
-            [],
-            {
+            Invocation.method(#saveKidsSessionLog, [], {
               #sessionId: sessionId,
               #surahId: surahId,
               #ayahNumber: ayahNumber,
@@ -885,304 +722,279 @@ class MockMemorizationPlusRepository extends _i1.Mock
               #attemptCount: attemptCount,
               #hintCount: hintCount,
               #masteryRating: masteryRating,
-            },
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, _i3.KidsSessionLog>>);
+            }),
+            returnValue:
+                _i10.Future<_i2.Either<_i11.Failure, _i3.KidsSessionLog>>.value(
+                  _FakeEither_0<_i11.Failure, _i3.KidsSessionLog>(
+                    this,
+                    Invocation.method(#saveKidsSessionLog, [], {
+                      #sessionId: sessionId,
+                      #surahId: surahId,
+                      #ayahNumber: ayahNumber,
+                      #repeatsCompleted: repeatsCompleted,
+                      #pointsEarned: pointsEarned,
+                      #missionType: missionType,
+                      #ayahNumbers: ayahNumbers,
+                      #durationSeconds: durationSeconds,
+                      #attemptCount: attemptCount,
+                      #hintCount: hintCount,
+                      #masteryRating: masteryRating,
+                    }),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.KidsSessionLog>>);
 
   @override
-  _i10.Future<_i2.Either<_i11.Failure, _i3.ParentDashboard>> getParentDashboard(
-          {required int? surahId}) =>
+  _i10.Future<_i2.Either<_i11.Failure, _i3.ParentDashboard>>
+  getParentDashboard({required int? surahId}) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getParentDashboard,
-          [],
-          {#surahId: surahId},
-        ),
-        returnValue:
-            _i10.Future<_i2.Either<_i11.Failure, _i3.ParentDashboard>>.value(
-                _FakeEither_0<_i11.Failure, _i3.ParentDashboard>(
-          this,
-          Invocation.method(
-            #getParentDashboard,
-            [],
-            {#surahId: surahId},
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, _i3.ParentDashboard>>);
+            Invocation.method(#getParentDashboard, [], {#surahId: surahId}),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.ParentDashboard>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.ParentDashboard>(
+                    this,
+                    Invocation.method(#getParentDashboard, [], {
+                      #surahId: surahId,
+                    }),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.ParentDashboard>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.ParentSettings>>
-      getParentSettings() => (super.noSuchMethod(
-            Invocation.method(
-              #getParentSettings,
-              [],
-            ),
+  getParentSettings() =>
+      (super.noSuchMethod(
+            Invocation.method(#getParentSettings, []),
             returnValue:
                 _i10.Future<_i2.Either<_i11.Failure, _i3.ParentSettings>>.value(
-                    _FakeEither_0<_i11.Failure, _i3.ParentSettings>(
-              this,
-              Invocation.method(
-                #getParentSettings,
-                [],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.ParentSettings>>);
+                  _FakeEither_0<_i11.Failure, _i3.ParentSettings>(
+                    this,
+                    Invocation.method(#getParentSettings, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.ParentSettings>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> saveParentSettings(
-          _i3.ParentSettings? settings) =>
+    _i3.ParentSettings? settings,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #saveParentSettings,
-          [settings],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #saveParentSettings,
-            [settings],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#saveParentSettings, [settings]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#saveParentSettings, [settings]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, bool>> verifyParentPin(String? pin) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #verifyParentPin,
-          [pin],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, bool>>.value(
-            _FakeEither_0<_i11.Failure, bool>(
-          this,
-          Invocation.method(
-            #verifyParentPin,
-            [pin],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, bool>>);
+            Invocation.method(#verifyParentPin, [pin]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, bool>>.value(
+              _FakeEither_0<_i11.Failure, bool>(
+                this,
+                Invocation.method(#verifyParentPin, [pin]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, bool>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> setParentPin(String? pin) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setParentPin,
-          [pin],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #setParentPin,
-            [pin],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#setParentPin, [pin]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#setParentPin, [pin]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> resetParentAccess() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #resetParentAccess,
-          [],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #resetParentAccess,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#resetParentAccess, []),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#resetParentAccess, []),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>
-      saveParentReward(String? title) => (super.noSuchMethod(
-            Invocation.method(
-              #saveParentReward,
-              [title],
-            ),
-            returnValue: _i10
-                .Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>.value(
-                _FakeEither_0<_i11.Failure, List<_i3.ParentReward>>(
-              this,
-              Invocation.method(
-                #saveParentReward,
-                [title],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>);
+  saveParentReward(String? title) =>
+      (super.noSuchMethod(
+            Invocation.method(#saveParentReward, [title]),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, List<_i3.ParentReward>>
+                >.value(
+                  _FakeEither_0<_i11.Failure, List<_i3.ParentReward>>(
+                    this,
+                    Invocation.method(#saveParentReward, [title]),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>
-      claimParentReward(String? id) => (super.noSuchMethod(
-            Invocation.method(
-              #claimParentReward,
-              [id],
-            ),
-            returnValue: _i10
-                .Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>.value(
-                _FakeEither_0<_i11.Failure, List<_i3.ParentReward>>(
-              this,
-              Invocation.method(
-                #claimParentReward,
-                [id],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>);
+  claimParentReward(String? id) =>
+      (super.noSuchMethod(
+            Invocation.method(#claimParentReward, [id]),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, List<_i3.ParentReward>>
+                >.value(
+                  _FakeEither_0<_i11.Failure, List<_i3.ParentReward>>(
+                    this,
+                    Invocation.method(#claimParentReward, [id]),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, String>> createChildLinkToken() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #createChildLinkToken,
-          [],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, String>>.value(
-            _FakeEither_0<_i11.Failure, String>(
-          this,
-          Invocation.method(
-            #createChildLinkToken,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, String>>);
+            Invocation.method(#createChildLinkToken, []),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, String>>.value(
+              _FakeEither_0<_i11.Failure, String>(
+                this,
+                Invocation.method(#createChildLinkToken, []),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, String>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> acceptChildLinkToken(
-          String? token) =>
+    String? token,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #acceptChildLinkToken,
-          [token],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #acceptChildLinkToken,
-            [token],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#acceptChildLinkToken, [token]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#acceptChildLinkToken, [token]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> pullKidsProgressFromCloud() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #pullKidsProgressFromCloud,
-          [],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #pullKidsProgressFromCloud,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#pullKidsProgressFromCloud, []),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#pullKidsProgressFromCloud, []),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> syncKidsProgressToCloud() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #syncKidsProgressToCloud,
-          [],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #syncKidsProgressToCloud,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#syncKidsProgressToCloud, []),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#syncKidsProgressToCloud, []),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
-  _i10.Future<bool> hasPendingCloudWork() => (super.noSuchMethod(
-        Invocation.method(
-          #hasPendingCloudWork,
-          [],
-        ),
-        returnValue: _i10.Future<bool>.value(false),
-      ) as _i10.Future<bool>);
+  _i10.Future<bool> hasPendingCloudWork() =>
+      (super.noSuchMethod(
+            Invocation.method(#hasPendingCloudWork, []),
+            returnValue: _i10.Future<bool>.value(false),
+          )
+          as _i10.Future<bool>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i3.RemoteChildSummary>>>
-      getRemoteChildren() => (super.noSuchMethod(
-            Invocation.method(
-              #getRemoteChildren,
-              [],
-            ),
-            returnValue: _i10.Future<
-                    _i2
-                    .Either<_i11.Failure, List<_i3.RemoteChildSummary>>>.value(
-                _FakeEither_0<_i11.Failure, List<_i3.RemoteChildSummary>>(
-              this,
-              Invocation.method(
-                #getRemoteChildren,
-                [],
-              ),
-            )),
-          ) as _i10
-              .Future<_i2.Either<_i11.Failure, List<_i3.RemoteChildSummary>>>);
+  getRemoteChildren() =>
+      (super.noSuchMethod(
+            Invocation.method(#getRemoteChildren, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, List<_i3.RemoteChildSummary>>
+                >.value(
+                  _FakeEither_0<_i11.Failure, List<_i3.RemoteChildSummary>>(
+                    this,
+                    Invocation.method(#getRemoteChildren, []),
+                  ),
+                ),
+          )
+          as _i10.Future<
+            _i2.Either<_i11.Failure, List<_i3.RemoteChildSummary>>
+          >);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>
-      saveRemoteParentReward({
+  saveRemoteParentReward({
     required String? childUserId,
     required String? title,
   }) =>
-          (super.noSuchMethod(
-            Invocation.method(
-              #saveRemoteParentReward,
-              [],
-              {
-                #childUserId: childUserId,
-                #title: title,
-              },
-            ),
-            returnValue: _i10
-                .Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>.value(
-                _FakeEither_0<_i11.Failure, List<_i3.ParentReward>>(
-              this,
-              Invocation.method(
-                #saveRemoteParentReward,
-                [],
-                {
-                  #childUserId: childUserId,
-                  #title: title,
-                },
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>);
+      (super.noSuchMethod(
+            Invocation.method(#saveRemoteParentReward, [], {
+              #childUserId: childUserId,
+              #title: title,
+            }),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, List<_i3.ParentReward>>
+                >.value(
+                  _FakeEither_0<_i11.Failure, List<_i3.ParentReward>>(
+                    this,
+                    Invocation.method(#saveRemoteParentReward, [], {
+                      #childUserId: childUserId,
+                      #title: title,
+                    }),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>
-      unlockRemoteParentReward(String? rewardId) => (super.noSuchMethod(
-            Invocation.method(
-              #unlockRemoteParentReward,
-              [rewardId],
-            ),
-            returnValue: _i10
-                .Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>.value(
-                _FakeEither_0<_i11.Failure, List<_i3.ParentReward>>(
-              this,
-              Invocation.method(
-                #unlockRemoteParentReward,
-                [rewardId],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>);
+  unlockRemoteParentReward(String? rewardId) =>
+      (super.noSuchMethod(
+            Invocation.method(#unlockRemoteParentReward, [rewardId]),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, List<_i3.ParentReward>>
+                >.value(
+                  _FakeEither_0<_i11.Failure, List<_i3.ParentReward>>(
+                    this,
+                    Invocation.method(#unlockRemoteParentReward, [rewardId]),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, List<_i3.ParentReward>>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.KidsCompletionResult>>
-      awardKidsPoints({
+  awardKidsPoints({
+    bool? completionAuthorized = false,
     String? sessionId,
     required int? surahId,
     required int? ayahNumber,
@@ -1194,321 +1006,274 @@ class MockMemorizationPlusRepository extends _i1.Mock
     int? hintCount = 0,
     _i3.PerformanceRating? masteryRating = _i3.PerformanceRating.excellent,
   }) =>
-          (super.noSuchMethod(
-            Invocation.method(
-              #awardKidsPoints,
-              [],
-              {
-                #sessionId: sessionId,
-                #surahId: surahId,
-                #ayahNumber: ayahNumber,
-                #repeatsCompleted: repeatsCompleted,
-                #missionType: missionType,
-                #ayahNumbers: ayahNumbers,
-                #durationSeconds: durationSeconds,
-                #attemptCount: attemptCount,
-                #hintCount: hintCount,
-                #masteryRating: masteryRating,
-              },
-            ),
-            returnValue: _i10.Future<
-                    _i2.Either<_i11.Failure, _i3.KidsCompletionResult>>.value(
-                _FakeEither_0<_i11.Failure, _i3.KidsCompletionResult>(
-              this,
-              Invocation.method(
-                #awardKidsPoints,
-                [],
-                {
-                  #sessionId: sessionId,
-                  #surahId: surahId,
-                  #ayahNumber: ayahNumber,
-                  #repeatsCompleted: repeatsCompleted,
-                  #missionType: missionType,
-                  #ayahNumbers: ayahNumbers,
-                  #durationSeconds: durationSeconds,
-                  #attemptCount: attemptCount,
-                  #hintCount: hintCount,
-                  #masteryRating: masteryRating,
-                },
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.KidsCompletionResult>>);
+      (super.noSuchMethod(
+            Invocation.method(#awardKidsPoints, [], {
+              #completionAuthorized: completionAuthorized,
+              #sessionId: sessionId,
+              #surahId: surahId,
+              #ayahNumber: ayahNumber,
+              #repeatsCompleted: repeatsCompleted,
+              #missionType: missionType,
+              #ayahNumbers: ayahNumbers,
+              #durationSeconds: durationSeconds,
+              #attemptCount: attemptCount,
+              #hintCount: hintCount,
+              #masteryRating: masteryRating,
+            }),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.KidsCompletionResult>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.KidsCompletionResult>(
+                    this,
+                    Invocation.method(#awardKidsPoints, [], {
+                      #completionAuthorized: completionAuthorized,
+                      #sessionId: sessionId,
+                      #surahId: surahId,
+                      #ayahNumber: ayahNumber,
+                      #repeatsCompleted: repeatsCompleted,
+                      #missionType: missionType,
+                      #ayahNumbers: ayahNumbers,
+                      #durationSeconds: durationSeconds,
+                      #attemptCount: attemptCount,
+                      #hintCount: hintCount,
+                      #masteryRating: masteryRating,
+                    }),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.KidsCompletionResult>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.CustomMemorizationPlan?>>
-      getCustomPlan() => (super.noSuchMethod(
-            Invocation.method(
-              #getCustomPlan,
-              [],
-            ),
-            returnValue: _i10.Future<
-                    _i2
-                    .Either<_i11.Failure, _i3.CustomMemorizationPlan?>>.value(
-                _FakeEither_0<_i11.Failure, _i3.CustomMemorizationPlan?>(
-              this,
-              Invocation.method(
-                #getCustomPlan,
-                [],
-              ),
-            )),
-          ) as _i10
-              .Future<_i2.Either<_i11.Failure, _i3.CustomMemorizationPlan?>>);
+  getCustomPlan() =>
+      (super.noSuchMethod(
+            Invocation.method(#getCustomPlan, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.CustomMemorizationPlan?>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.CustomMemorizationPlan?>(
+                    this,
+                    Invocation.method(#getCustomPlan, []),
+                  ),
+                ),
+          )
+          as _i10.Future<
+            _i2.Either<_i11.Failure, _i3.CustomMemorizationPlan?>
+          >);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> saveCustomPlan(
-          _i3.CustomMemorizationPlan? plan) =>
+    _i3.CustomMemorizationPlan? plan,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #saveCustomPlan,
-          [plan],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #saveCustomPlan,
-            [plan],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#saveCustomPlan, [plan]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#saveCustomPlan, [plan]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> deleteCustomPlan() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #deleteCustomPlan,
-          [],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #deleteCustomPlan,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#deleteCustomPlan, []),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#deleteCustomPlan, []),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i14.SyncConflict<_i3.CustomMemorizationPlan>?>
-      getCustomPlanConflict() => (super.noSuchMethod(
-            Invocation.method(
-              #getCustomPlanConflict,
-              [],
-            ),
-            returnValue: _i10
-                .Future<_i14.SyncConflict<_i3.CustomMemorizationPlan>?>.value(),
-          ) as _i10.Future<_i14.SyncConflict<_i3.CustomMemorizationPlan>?>);
+  getCustomPlanConflict() =>
+      (super.noSuchMethod(
+            Invocation.method(#getCustomPlanConflict, []),
+            returnValue:
+                _i10.Future<
+                  _i14.SyncConflict<_i3.CustomMemorizationPlan>?
+                >.value(),
+          )
+          as _i10.Future<_i14.SyncConflict<_i3.CustomMemorizationPlan>?>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> resolveCustomPlanConflict(
-          _i14.SyncConflictResolution? resolution) =>
+    _i14.SyncConflictResolution? resolution,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #resolveCustomPlanConflict,
-          [resolution],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #resolveCustomPlanConflict,
-            [resolution],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#resolveCustomPlanConflict, [resolution]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#resolveCustomPlanConflict, [resolution]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
-  _i2.Either<_i11.Failure, bool> getIsParentMode() => (super.noSuchMethod(
-        Invocation.method(
-          #getIsParentMode,
-          [],
-        ),
-        returnValue: _FakeEither_0<_i11.Failure, bool>(
-          this,
-          Invocation.method(
-            #getIsParentMode,
-            [],
-          ),
-        ),
-      ) as _i2.Either<_i11.Failure, bool>);
+  _i2.Either<_i11.Failure, bool> getIsParentMode() =>
+      (super.noSuchMethod(
+            Invocation.method(#getIsParentMode, []),
+            returnValue: _FakeEither_0<_i11.Failure, bool>(
+              this,
+              Invocation.method(#getIsParentMode, []),
+            ),
+          )
+          as _i2.Either<_i11.Failure, bool>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> setIsParentMode(bool? value) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setIsParentMode,
-          [value],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #setIsParentMode,
-            [value],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#setIsParentMode, [value]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#setIsParentMode, [value]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> resyncProductionDataToCloud() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #resyncProductionDataToCloud,
-          [],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #resyncProductionDataToCloud,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#resyncProductionDataToCloud, []),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#resyncProductionDataToCloud, []),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> pullProductionDataFromCloud() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #pullProductionDataFromCloud,
-          [],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #pullProductionDataFromCloud,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#pullProductionDataFromCloud, []),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#pullProductionDataFromCloud, []),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, List<_i16.CertificateAward>>>
-      pullCertificatesFromCloud() => (super.noSuchMethod(
-            Invocation.method(
-              #pullCertificatesFromCloud,
-              [],
-            ),
-            returnValue: _i10.Future<
-                    _i2
-                    .Either<_i11.Failure, List<_i16.CertificateAward>>>.value(
-                _FakeEither_0<_i11.Failure, List<_i16.CertificateAward>>(
-              this,
-              Invocation.method(
-                #pullCertificatesFromCloud,
-                [],
-              ),
-            )),
-          ) as _i10
-              .Future<_i2.Either<_i11.Failure, List<_i16.CertificateAward>>>);
+  pullCertificatesFromCloud() =>
+      (super.noSuchMethod(
+            Invocation.method(#pullCertificatesFromCloud, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, List<_i16.CertificateAward>>
+                >.value(
+                  _FakeEither_0<_i11.Failure, List<_i16.CertificateAward>>(
+                    this,
+                    Invocation.method(#pullCertificatesFromCloud, []),
+                  ),
+                ),
+          )
+          as _i10.Future<
+            _i2.Either<_i11.Failure, List<_i16.CertificateAward>>
+          >);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> pushCertificatesToCloud(
-          List<_i16.CertificateAward>? certificates) =>
+    List<_i16.CertificateAward>? certificates,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #pushCertificatesToCloud,
-          [certificates],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #pushCertificatesToCloud,
-            [certificates],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#pushCertificatesToCloud, [certificates]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#pushCertificatesToCloud, [certificates]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> revokeGuardianLink(
-          String? counterpartUserId) =>
+    String? counterpartUserId,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #revokeGuardianLink,
-          [counterpartUserId],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #revokeGuardianLink,
-            [counterpartUserId],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#revokeGuardianLink, [counterpartUserId]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#revokeGuardianLink, [counterpartUserId]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> removeChild(
-          String? childUserId) =>
+    String? childUserId,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #removeChild,
-          [childUserId],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #removeChild,
-            [childUserId],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#removeChild, [childUserId]),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#removeChild, [childUserId]),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, _i3.FamilyDashboard>>
-      getFamilyDashboard() => (super.noSuchMethod(
-            Invocation.method(
-              #getFamilyDashboard,
-              [],
-            ),
-            returnValue: _i10
-                .Future<_i2.Either<_i11.Failure, _i3.FamilyDashboard>>.value(
-                _FakeEither_0<_i11.Failure, _i3.FamilyDashboard>(
-              this,
-              Invocation.method(
-                #getFamilyDashboard,
-                [],
-              ),
-            )),
-          ) as _i10.Future<_i2.Either<_i11.Failure, _i3.FamilyDashboard>>);
+  getFamilyDashboard() =>
+      (super.noSuchMethod(
+            Invocation.method(#getFamilyDashboard, []),
+            returnValue:
+                _i10.Future<
+                  _i2.Either<_i11.Failure, _i3.FamilyDashboard>
+                >.value(
+                  _FakeEither_0<_i11.Failure, _i3.FamilyDashboard>(
+                    this,
+                    Invocation.method(#getFamilyDashboard, []),
+                  ),
+                ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, _i3.FamilyDashboard>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> pullIdentityFromCloud() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #pullIdentityFromCloud,
-          [],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #pullIdentityFromCloud,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#pullIdentityFromCloud, []),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#pullIdentityFromCloud, []),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 
   @override
   _i10.Future<_i2.Either<_i11.Failure, void>> pushIdentityToCloud() =>
       (super.noSuchMethod(
-        Invocation.method(
-          #pushIdentityToCloud,
-          [],
-        ),
-        returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
-            _FakeEither_0<_i11.Failure, void>(
-          this,
-          Invocation.method(
-            #pushIdentityToCloud,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i2.Either<_i11.Failure, void>>);
+            Invocation.method(#pushIdentityToCloud, []),
+            returnValue: _i10.Future<_i2.Either<_i11.Failure, void>>.value(
+              _FakeEither_0<_i11.Failure, void>(
+                this,
+                Invocation.method(#pushIdentityToCloud, []),
+              ),
+            ),
+          )
+          as _i10.Future<_i2.Either<_i11.Failure, void>>);
 }
 
 /// A class which mocks [ScheduleNextReviewUsecase].
@@ -1527,26 +1292,13 @@ class MockScheduleNextReviewUsecase extends _i1.Mock
     DateTime? nowOverride,
   ]) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #schedule,
-          [
-            record,
-            rating,
-            nowOverride,
-          ],
-        ),
-        returnValue: _FakeAyahReviewRecord_1(
-          this,
-          Invocation.method(
-            #schedule,
-            [
-              record,
-              rating,
-              nowOverride,
-            ],
-          ),
-        ),
-      ) as _i3.AyahReviewRecord);
+            Invocation.method(#schedule, [record, rating, nowOverride]),
+            returnValue: _FakeAyahReviewRecord_1(
+              this,
+              Invocation.method(#schedule, [record, rating, nowOverride]),
+            ),
+          )
+          as _i3.AyahReviewRecord);
 }
 
 /// A class which mocks [V2SessionLocalDatasource].
@@ -1559,26 +1311,25 @@ class MockV2SessionLocalDatasource extends _i1.Mock
   }
 
   @override
-  String get currentOwnerId => (super.noSuchMethod(
-        Invocation.getter(#currentOwnerId),
-        returnValue: _i19.dummyValue<String>(
-          this,
-          Invocation.getter(#currentOwnerId),
-        ),
-      ) as String);
+  String get currentOwnerId =>
+      (super.noSuchMethod(
+            Invocation.getter(#currentOwnerId),
+            returnValue: _i19.dummyValue<String>(
+              this,
+              Invocation.getter(#currentOwnerId),
+            ),
+          )
+          as String);
 
   @override
-  _i10.Future<_i20.IsarV2Session?> getLatestSession(
-          {_i3.MemorizationAudience? audience =
-              _i3.MemorizationAudience.adult}) =>
+  _i10.Future<_i20.IsarV2Session?> getLatestSession({
+    _i3.MemorizationAudience? audience = _i3.MemorizationAudience.adult,
+  }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getLatestSession,
-          [],
-          {#audience: audience},
-        ),
-        returnValue: _i10.Future<_i20.IsarV2Session?>.value(),
-      ) as _i10.Future<_i20.IsarV2Session?>);
+            Invocation.method(#getLatestSession, [], {#audience: audience}),
+            returnValue: _i10.Future<_i20.IsarV2Session?>.value(),
+          )
+          as _i10.Future<_i20.IsarV2Session?>);
 
   @override
   _i10.Future<_i20.IsarV2Session?> getSession(
@@ -1586,24 +1337,19 @@ class MockV2SessionLocalDatasource extends _i1.Mock
     _i3.MemorizationAudience? audience = _i3.MemorizationAudience.adult,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getSession,
-          [surahId],
-          {#audience: audience},
-        ),
-        returnValue: _i10.Future<_i20.IsarV2Session?>.value(),
-      ) as _i10.Future<_i20.IsarV2Session?>);
+            Invocation.method(#getSession, [surahId], {#audience: audience}),
+            returnValue: _i10.Future<_i20.IsarV2Session?>.value(),
+          )
+          as _i10.Future<_i20.IsarV2Session?>);
 
   @override
   _i10.Future<void> saveSession(_i20.IsarV2Session? session) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #saveSession,
-          [session],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#saveSession, [session]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<void> clearSession(
@@ -1611,14 +1357,11 @@ class MockV2SessionLocalDatasource extends _i1.Mock
     _i3.MemorizationAudience? audience = _i3.MemorizationAudience.adult,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #clearSession,
-          [surahId],
-          {#audience: audience},
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#clearSession, [surahId], {#audience: audience}),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 }
 
 /// A class which mocks [XpService].
@@ -1630,52 +1373,41 @@ class MockXpService extends _i1.Mock implements _i21.XpService {
   }
 
   @override
-  _i10.Future<_i4.XpGainResult> addXp(String? eventKey) => (super.noSuchMethod(
-        Invocation.method(
-          #addXp,
-          [eventKey],
-        ),
-        returnValue: _i10.Future<_i4.XpGainResult>.value(_FakeXpGainResult_2(
-          this,
-          Invocation.method(
-            #addXp,
-            [eventKey],
-          ),
-        )),
-      ) as _i10.Future<_i4.XpGainResult>);
+  _i10.Future<_i4.XpGainResult> addXp(String? eventKey) =>
+      (super.noSuchMethod(
+            Invocation.method(#addXp, [eventKey]),
+            returnValue: _i10.Future<_i4.XpGainResult>.value(
+              _FakeXpGainResult_2(this, Invocation.method(#addXp, [eventKey])),
+            ),
+          )
+          as _i10.Future<_i4.XpGainResult>);
 
   @override
-  _i10.Future<int> getTotalXp() => (super.noSuchMethod(
-        Invocation.method(
-          #getTotalXp,
-          [],
-        ),
-        returnValue: _i10.Future<int>.value(0),
-      ) as _i10.Future<int>);
+  _i10.Future<int> getTotalXp() =>
+      (super.noSuchMethod(
+            Invocation.method(#getTotalXp, []),
+            returnValue: _i10.Future<int>.value(0),
+          )
+          as _i10.Future<int>);
 
   @override
-  _i5.XpLevel getCurrentLevel(int? xp) => (super.noSuchMethod(
-        Invocation.method(
-          #getCurrentLevel,
-          [xp],
-        ),
-        returnValue: _FakeXpLevel_3(
-          this,
-          Invocation.method(
-            #getCurrentLevel,
-            [xp],
-          ),
-        ),
-      ) as _i5.XpLevel);
+  _i5.XpLevel getCurrentLevel(int? xp) =>
+      (super.noSuchMethod(
+            Invocation.method(#getCurrentLevel, [xp]),
+            returnValue: _FakeXpLevel_3(
+              this,
+              Invocation.method(#getCurrentLevel, [xp]),
+            ),
+          )
+          as _i5.XpLevel);
 
   @override
-  double progressToNextLevel(int? xp) => (super.noSuchMethod(
-        Invocation.method(
-          #progressToNextLevel,
-          [xp],
-        ),
-        returnValue: 0.0,
-      ) as double);
+  double progressToNextLevel(int? xp) =>
+      (super.noSuchMethod(
+            Invocation.method(#progressToNextLevel, [xp]),
+            returnValue: 0.0,
+          )
+          as double);
 }
 
 /// A class which mocks [StreakService].
@@ -1687,68 +1419,57 @@ class MockStreakService extends _i1.Mock implements _i22.StreakService {
   }
 
   @override
-  _i10.Future<_i6.StreakEntity> getStreak() => (super.noSuchMethod(
-        Invocation.method(
-          #getStreak,
-          [],
-        ),
-        returnValue: _i10.Future<_i6.StreakEntity>.value(_FakeStreakEntity_4(
-          this,
-          Invocation.method(
-            #getStreak,
-            [],
-          ),
-        )),
-      ) as _i10.Future<_i6.StreakEntity>);
+  _i10.Future<_i6.StreakEntity> getStreak() =>
+      (super.noSuchMethod(
+            Invocation.method(#getStreak, []),
+            returnValue: _i10.Future<_i6.StreakEntity>.value(
+              _FakeStreakEntity_4(this, Invocation.method(#getStreak, [])),
+            ),
+          )
+          as _i10.Future<_i6.StreakEntity>);
 
   @override
   _i10.Future<_i7.StreakResult> recordActivity({int? activityDelta = 1}) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #recordActivity,
-          [],
-          {#activityDelta: activityDelta},
-        ),
-        returnValue: _i10.Future<_i7.StreakResult>.value(_FakeStreakResult_5(
-          this,
-          Invocation.method(
-            #recordActivity,
-            [],
-            {#activityDelta: activityDelta},
-          ),
-        )),
-      ) as _i10.Future<_i7.StreakResult>);
+            Invocation.method(#recordActivity, [], {
+              #activityDelta: activityDelta,
+            }),
+            returnValue: _i10.Future<_i7.StreakResult>.value(
+              _FakeStreakResult_5(
+                this,
+                Invocation.method(#recordActivity, [], {
+                  #activityDelta: activityDelta,
+                }),
+              ),
+            ),
+          )
+          as _i10.Future<_i7.StreakResult>);
 
   @override
   _i10.Future<Map<String, int>> getActivityMap({int? days = 365}) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getActivityMap,
-          [],
-          {#days: days},
-        ),
-        returnValue: _i10.Future<Map<String, int>>.value(<String, int>{}),
-      ) as _i10.Future<Map<String, int>>);
+            Invocation.method(#getActivityMap, [], {#days: days}),
+            returnValue: _i10.Future<Map<String, int>>.value(<String, int>{}),
+          )
+          as _i10.Future<Map<String, int>>);
 
   @override
-  _i10.Future<void> useFreeze() => (super.noSuchMethod(
-        Invocation.method(
-          #useFreeze,
-          [],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> useFreeze() =>
+      (super.noSuchMethod(
+            Invocation.method(#useFreeze, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> addFreeze(int? count) => (super.noSuchMethod(
-        Invocation.method(
-          #addFreeze,
-          [count],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> addFreeze(int? count) =>
+      (super.noSuchMethod(
+            Invocation.method(#addFreeze, [count]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 }
 
 /// A class which mocks [AchievementService].
@@ -1763,22 +1484,18 @@ class MockAchievementService extends _i1.Mock
   @override
   List<_i16.CertificateAward> getEarnedCertificates({required bool? isKids}) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #getEarnedCertificates,
-          [],
-          {#isKids: isKids},
-        ),
-        returnValue: <_i16.CertificateAward>[],
-      ) as List<_i16.CertificateAward>);
+            Invocation.method(#getEarnedCertificates, [], {#isKids: isKids}),
+            returnValue: <_i16.CertificateAward>[],
+          )
+          as List<_i16.CertificateAward>);
 
   @override
-  List<_i16.CertificateAward> getAllEarnedCertificates() => (super.noSuchMethod(
-        Invocation.method(
-          #getAllEarnedCertificates,
-          [],
-        ),
-        returnValue: <_i16.CertificateAward>[],
-      ) as List<_i16.CertificateAward>);
+  List<_i16.CertificateAward> getAllEarnedCertificates() =>
+      (super.noSuchMethod(
+            Invocation.method(#getAllEarnedCertificates, []),
+            returnValue: <_i16.CertificateAward>[],
+          )
+          as List<_i16.CertificateAward>);
 
   @override
   _i10.Future<int> mergeEarnedFromCloud(
@@ -1786,59 +1503,56 @@ class MockAchievementService extends _i1.Mock
     required bool? isKids,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #mergeEarnedFromCloud,
-          [remote],
-          {#isKids: isKids},
-        ),
-        returnValue: _i10.Future<int>.value(0),
-      ) as _i10.Future<int>);
+            Invocation.method(
+              #mergeEarnedFromCloud,
+              [remote],
+              {#isKids: isKids},
+            ),
+            returnValue: _i10.Future<int>.value(0),
+          )
+          as _i10.Future<int>);
 
   @override
-  bool hasNewCertificate({required bool? isKids}) => (super.noSuchMethod(
-        Invocation.method(
-          #hasNewCertificate,
-          [],
-          {#isKids: isKids},
-        ),
-        returnValue: false,
-      ) as bool);
+  bool hasNewCertificate({required bool? isKids}) =>
+      (super.noSuchMethod(
+            Invocation.method(#hasNewCertificate, [], {#isKids: isKids}),
+            returnValue: false,
+          )
+          as bool);
 
   @override
   void markCertificatesSeen({required bool? isKids}) => super.noSuchMethod(
-        Invocation.method(
-          #markCertificatesSeen,
-          [],
-          {#isKids: isKids},
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#markCertificatesSeen, [], {#isKids: isKids}),
+    returnValueForMissingStub: null,
+  );
 
   @override
-  _i10.Future<List<_i16.CertificateAward>> checkAndUnlockCertificates(
-          {required bool? isKids}) =>
+  _i10.Future<List<_i16.CertificateAward>> checkAndUnlockCertificates({
+    required bool? isKids,
+  }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #checkAndUnlockCertificates,
-          [],
-          {#isKids: isKids},
-        ),
-        returnValue: _i10.Future<List<_i16.CertificateAward>>.value(
-            <_i16.CertificateAward>[]),
-      ) as _i10.Future<List<_i16.CertificateAward>>);
+            Invocation.method(#checkAndUnlockCertificates, [], {
+              #isKids: isKids,
+            }),
+            returnValue: _i10.Future<List<_i16.CertificateAward>>.value(
+              <_i16.CertificateAward>[],
+            ),
+          )
+          as _i10.Future<List<_i16.CertificateAward>>);
 
   @override
-  _i10.Future<List<_i16.CertificateAward>> checkAndUnlockCertificatesStrict(
-          {required bool? isKids}) =>
+  _i10.Future<List<_i16.CertificateAward>> checkAndUnlockCertificatesStrict({
+    required bool? isKids,
+  }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #checkAndUnlockCertificatesStrict,
-          [],
-          {#isKids: isKids},
-        ),
-        returnValue: _i10.Future<List<_i16.CertificateAward>>.value(
-            <_i16.CertificateAward>[]),
-      ) as _i10.Future<List<_i16.CertificateAward>>);
+            Invocation.method(#checkAndUnlockCertificatesStrict, [], {
+              #isKids: isKids,
+            }),
+            returnValue: _i10.Future<List<_i16.CertificateAward>>.value(
+              <_i16.CertificateAward>[],
+            ),
+          )
+          as _i10.Future<List<_i16.CertificateAward>>);
 }
 
 /// A class which mocks [AudioPlayer].
@@ -1850,311 +1564,382 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
   }
 
   @override
-  _i8.PlayerEvent get playerEvent => (super.noSuchMethod(
-        Invocation.getter(#playerEvent),
-        returnValue: _FakePlayerEvent_6(
-          this,
-          Invocation.getter(#playerEvent),
-        ),
-      ) as _i8.PlayerEvent);
+  _i8.PlayerEvent get playerEvent =>
+      (super.noSuchMethod(
+            Invocation.getter(#playerEvent),
+            returnValue: _FakePlayerEvent_6(
+              this,
+              Invocation.getter(#playerEvent),
+            ),
+          )
+          as _i8.PlayerEvent);
 
   @override
-  _i10.Stream<_i8.PlayerEvent> get playerEventStream => (super.noSuchMethod(
-        Invocation.getter(#playerEventStream),
-        returnValue: _i10.Stream<_i8.PlayerEvent>.empty(),
-      ) as _i10.Stream<_i8.PlayerEvent>);
+  _i10.Stream<_i8.PlayerEvent> get playerEventStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#playerEventStream),
+            returnValue: _i10.Stream<_i8.PlayerEvent>.empty(),
+          )
+          as _i10.Stream<_i8.PlayerEvent>);
 
   @override
-  _i8.PlaybackEvent get playbackEvent => (super.noSuchMethod(
-        Invocation.getter(#playbackEvent),
-        returnValue: _FakePlaybackEvent_7(
-          this,
-          Invocation.getter(#playbackEvent),
-        ),
-      ) as _i8.PlaybackEvent);
+  _i8.PlaybackEvent get playbackEvent =>
+      (super.noSuchMethod(
+            Invocation.getter(#playbackEvent),
+            returnValue: _FakePlaybackEvent_7(
+              this,
+              Invocation.getter(#playbackEvent),
+            ),
+          )
+          as _i8.PlaybackEvent);
 
   @override
-  _i10.Stream<_i8.PlaybackEvent> get playbackEventStream => (super.noSuchMethod(
-        Invocation.getter(#playbackEventStream),
-        returnValue: _i10.Stream<_i8.PlaybackEvent>.empty(),
-      ) as _i10.Stream<_i8.PlaybackEvent>);
+  _i10.Stream<_i8.PlaybackEvent> get playbackEventStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#playbackEventStream),
+            returnValue: _i10.Stream<_i8.PlaybackEvent>.empty(),
+          )
+          as _i10.Stream<_i8.PlaybackEvent>);
 
   @override
-  _i10.Stream<Duration?> get durationStream => (super.noSuchMethod(
-        Invocation.getter(#durationStream),
-        returnValue: _i10.Stream<Duration?>.empty(),
-      ) as _i10.Stream<Duration?>);
+  _i10.Stream<Duration?> get durationStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#durationStream),
+            returnValue: _i10.Stream<Duration?>.empty(),
+          )
+          as _i10.Stream<Duration?>);
 
   @override
-  _i8.ProcessingState get processingState => (super.noSuchMethod(
-        Invocation.getter(#processingState),
-        returnValue: _i8.ProcessingState.idle,
-      ) as _i8.ProcessingState);
+  _i8.ProcessingState get processingState =>
+      (super.noSuchMethod(
+            Invocation.getter(#processingState),
+            returnValue: _i8.ProcessingState.idle,
+          )
+          as _i8.ProcessingState);
 
   @override
   _i10.Stream<_i8.ProcessingState> get processingStateStream =>
       (super.noSuchMethod(
-        Invocation.getter(#processingStateStream),
-        returnValue: _i10.Stream<_i8.ProcessingState>.empty(),
-      ) as _i10.Stream<_i8.ProcessingState>);
+            Invocation.getter(#processingStateStream),
+            returnValue: _i10.Stream<_i8.ProcessingState>.empty(),
+          )
+          as _i10.Stream<_i8.ProcessingState>);
 
   @override
-  bool get playing => (super.noSuchMethod(
-        Invocation.getter(#playing),
-        returnValue: false,
-      ) as bool);
+  bool get playing =>
+      (super.noSuchMethod(Invocation.getter(#playing), returnValue: false)
+          as bool);
 
   @override
-  _i10.Stream<bool> get playingStream => (super.noSuchMethod(
-        Invocation.getter(#playingStream),
-        returnValue: _i10.Stream<bool>.empty(),
-      ) as _i10.Stream<bool>);
+  _i10.Stream<bool> get playingStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#playingStream),
+            returnValue: _i10.Stream<bool>.empty(),
+          )
+          as _i10.Stream<bool>);
 
   @override
-  double get volume => (super.noSuchMethod(
-        Invocation.getter(#volume),
-        returnValue: 0.0,
-      ) as double);
+  double get volume =>
+      (super.noSuchMethod(Invocation.getter(#volume), returnValue: 0.0)
+          as double);
 
   @override
-  _i10.Stream<double> get volumeStream => (super.noSuchMethod(
-        Invocation.getter(#volumeStream),
-        returnValue: _i10.Stream<double>.empty(),
-      ) as _i10.Stream<double>);
+  _i10.Stream<double> get volumeStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#volumeStream),
+            returnValue: _i10.Stream<double>.empty(),
+          )
+          as _i10.Stream<double>);
 
   @override
-  double get speed => (super.noSuchMethod(
-        Invocation.getter(#speed),
-        returnValue: 0.0,
-      ) as double);
+  double get speed =>
+      (super.noSuchMethod(Invocation.getter(#speed), returnValue: 0.0)
+          as double);
 
   @override
-  _i10.Stream<double> get speedStream => (super.noSuchMethod(
-        Invocation.getter(#speedStream),
-        returnValue: _i10.Stream<double>.empty(),
-      ) as _i10.Stream<double>);
+  _i10.Stream<double> get speedStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#speedStream),
+            returnValue: _i10.Stream<double>.empty(),
+          )
+          as _i10.Stream<double>);
 
   @override
-  double get pitch => (super.noSuchMethod(
-        Invocation.getter(#pitch),
-        returnValue: 0.0,
-      ) as double);
+  double get pitch =>
+      (super.noSuchMethod(Invocation.getter(#pitch), returnValue: 0.0)
+          as double);
 
   @override
-  _i10.Stream<double> get pitchStream => (super.noSuchMethod(
-        Invocation.getter(#pitchStream),
-        returnValue: _i10.Stream<double>.empty(),
-      ) as _i10.Stream<double>);
+  _i10.Stream<double> get pitchStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#pitchStream),
+            returnValue: _i10.Stream<double>.empty(),
+          )
+          as _i10.Stream<double>);
 
   @override
-  bool get skipSilenceEnabled => (super.noSuchMethod(
-        Invocation.getter(#skipSilenceEnabled),
-        returnValue: false,
-      ) as bool);
+  bool get skipSilenceEnabled =>
+      (super.noSuchMethod(
+            Invocation.getter(#skipSilenceEnabled),
+            returnValue: false,
+          )
+          as bool);
 
   @override
-  _i10.Stream<bool> get skipSilenceEnabledStream => (super.noSuchMethod(
-        Invocation.getter(#skipSilenceEnabledStream),
-        returnValue: _i10.Stream<bool>.empty(),
-      ) as _i10.Stream<bool>);
+  _i10.Stream<bool> get skipSilenceEnabledStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#skipSilenceEnabledStream),
+            returnValue: _i10.Stream<bool>.empty(),
+          )
+          as _i10.Stream<bool>);
 
   @override
-  Duration get bufferedPosition => (super.noSuchMethod(
-        Invocation.getter(#bufferedPosition),
-        returnValue: _FakeDuration_8(
-          this,
-          Invocation.getter(#bufferedPosition),
-        ),
-      ) as Duration);
+  Duration get bufferedPosition =>
+      (super.noSuchMethod(
+            Invocation.getter(#bufferedPosition),
+            returnValue: _FakeDuration_8(
+              this,
+              Invocation.getter(#bufferedPosition),
+            ),
+          )
+          as Duration);
 
   @override
-  _i10.Stream<Duration> get bufferedPositionStream => (super.noSuchMethod(
-        Invocation.getter(#bufferedPositionStream),
-        returnValue: _i10.Stream<Duration>.empty(),
-      ) as _i10.Stream<Duration>);
+  _i10.Stream<Duration> get bufferedPositionStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#bufferedPositionStream),
+            returnValue: _i10.Stream<Duration>.empty(),
+          )
+          as _i10.Stream<Duration>);
 
   @override
-  _i10.Stream<_i8.IcyMetadata?> get icyMetadataStream => (super.noSuchMethod(
-        Invocation.getter(#icyMetadataStream),
-        returnValue: _i10.Stream<_i8.IcyMetadata?>.empty(),
-      ) as _i10.Stream<_i8.IcyMetadata?>);
+  _i10.Stream<_i8.IcyMetadata?> get icyMetadataStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#icyMetadataStream),
+            returnValue: _i10.Stream<_i8.IcyMetadata?>.empty(),
+          )
+          as _i10.Stream<_i8.IcyMetadata?>);
 
   @override
-  _i8.PlayerState get playerState => (super.noSuchMethod(
-        Invocation.getter(#playerState),
-        returnValue: _FakePlayerState_9(
-          this,
-          Invocation.getter(#playerState),
-        ),
-      ) as _i8.PlayerState);
+  _i8.PlayerState get playerState =>
+      (super.noSuchMethod(
+            Invocation.getter(#playerState),
+            returnValue: _FakePlayerState_9(
+              this,
+              Invocation.getter(#playerState),
+            ),
+          )
+          as _i8.PlayerState);
 
   @override
-  _i10.Stream<_i8.PlayerState> get playerStateStream => (super.noSuchMethod(
-        Invocation.getter(#playerStateStream),
-        returnValue: _i10.Stream<_i8.PlayerState>.empty(),
-      ) as _i10.Stream<_i8.PlayerState>);
+  _i10.Stream<_i8.PlayerState> get playerStateStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#playerStateStream),
+            returnValue: _i10.Stream<_i8.PlayerState>.empty(),
+          )
+          as _i10.Stream<_i8.PlayerState>);
 
   @override
-  List<_i8.IndexedAudioSource> get sequence => (super.noSuchMethod(
-        Invocation.getter(#sequence),
-        returnValue: <_i8.IndexedAudioSource>[],
-      ) as List<_i8.IndexedAudioSource>);
+  List<_i8.IndexedAudioSource> get sequence =>
+      (super.noSuchMethod(
+            Invocation.getter(#sequence),
+            returnValue: <_i8.IndexedAudioSource>[],
+          )
+          as List<_i8.IndexedAudioSource>);
 
   @override
   _i10.Stream<List<_i8.IndexedAudioSource>> get sequenceStream =>
       (super.noSuchMethod(
-        Invocation.getter(#sequenceStream),
-        returnValue: _i10.Stream<List<_i8.IndexedAudioSource>>.empty(),
-      ) as _i10.Stream<List<_i8.IndexedAudioSource>>);
+            Invocation.getter(#sequenceStream),
+            returnValue: _i10.Stream<List<_i8.IndexedAudioSource>>.empty(),
+          )
+          as _i10.Stream<List<_i8.IndexedAudioSource>>);
 
   @override
-  List<int> get shuffleIndices => (super.noSuchMethod(
-        Invocation.getter(#shuffleIndices),
-        returnValue: <int>[],
-      ) as List<int>);
+  List<int> get shuffleIndices =>
+      (super.noSuchMethod(
+            Invocation.getter(#shuffleIndices),
+            returnValue: <int>[],
+          )
+          as List<int>);
 
   @override
-  _i10.Stream<List<int>> get shuffleIndicesStream => (super.noSuchMethod(
-        Invocation.getter(#shuffleIndicesStream),
-        returnValue: _i10.Stream<List<int>>.empty(),
-      ) as _i10.Stream<List<int>>);
+  _i10.Stream<List<int>> get shuffleIndicesStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#shuffleIndicesStream),
+            returnValue: _i10.Stream<List<int>>.empty(),
+          )
+          as _i10.Stream<List<int>>);
 
   @override
-  _i10.Stream<int?> get currentIndexStream => (super.noSuchMethod(
-        Invocation.getter(#currentIndexStream),
-        returnValue: _i10.Stream<int?>.empty(),
-      ) as _i10.Stream<int?>);
+  _i10.Stream<int?> get currentIndexStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#currentIndexStream),
+            returnValue: _i10.Stream<int?>.empty(),
+          )
+          as _i10.Stream<int?>);
 
   @override
-  _i8.SequenceState get sequenceState => (super.noSuchMethod(
-        Invocation.getter(#sequenceState),
-        returnValue: _FakeSequenceState_10(
-          this,
-          Invocation.getter(#sequenceState),
-        ),
-      ) as _i8.SequenceState);
+  _i8.SequenceState get sequenceState =>
+      (super.noSuchMethod(
+            Invocation.getter(#sequenceState),
+            returnValue: _FakeSequenceState_10(
+              this,
+              Invocation.getter(#sequenceState),
+            ),
+          )
+          as _i8.SequenceState);
 
   @override
-  _i10.Stream<_i8.SequenceState> get sequenceStateStream => (super.noSuchMethod(
-        Invocation.getter(#sequenceStateStream),
-        returnValue: _i10.Stream<_i8.SequenceState>.empty(),
-      ) as _i10.Stream<_i8.SequenceState>);
+  _i10.Stream<_i8.SequenceState> get sequenceStateStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#sequenceStateStream),
+            returnValue: _i10.Stream<_i8.SequenceState>.empty(),
+          )
+          as _i10.Stream<_i8.SequenceState>);
 
   @override
-  bool get hasNext => (super.noSuchMethod(
-        Invocation.getter(#hasNext),
-        returnValue: false,
-      ) as bool);
+  bool get hasNext =>
+      (super.noSuchMethod(Invocation.getter(#hasNext), returnValue: false)
+          as bool);
 
   @override
-  bool get hasPrevious => (super.noSuchMethod(
-        Invocation.getter(#hasPrevious),
-        returnValue: false,
-      ) as bool);
+  bool get hasPrevious =>
+      (super.noSuchMethod(Invocation.getter(#hasPrevious), returnValue: false)
+          as bool);
 
   @override
-  List<int> get effectiveIndices => (super.noSuchMethod(
-        Invocation.getter(#effectiveIndices),
-        returnValue: <int>[],
-      ) as List<int>);
+  List<int> get effectiveIndices =>
+      (super.noSuchMethod(
+            Invocation.getter(#effectiveIndices),
+            returnValue: <int>[],
+          )
+          as List<int>);
 
   @override
-  _i8.LoopMode get loopMode => (super.noSuchMethod(
-        Invocation.getter(#loopMode),
-        returnValue: _i8.LoopMode.off,
-      ) as _i8.LoopMode);
+  _i8.LoopMode get loopMode =>
+      (super.noSuchMethod(
+            Invocation.getter(#loopMode),
+            returnValue: _i8.LoopMode.off,
+          )
+          as _i8.LoopMode);
 
   @override
-  _i10.Stream<_i8.LoopMode> get loopModeStream => (super.noSuchMethod(
-        Invocation.getter(#loopModeStream),
-        returnValue: _i10.Stream<_i8.LoopMode>.empty(),
-      ) as _i10.Stream<_i8.LoopMode>);
+  _i10.Stream<_i8.LoopMode> get loopModeStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#loopModeStream),
+            returnValue: _i10.Stream<_i8.LoopMode>.empty(),
+          )
+          as _i10.Stream<_i8.LoopMode>);
 
   @override
-  bool get shuffleModeEnabled => (super.noSuchMethod(
-        Invocation.getter(#shuffleModeEnabled),
-        returnValue: false,
-      ) as bool);
+  bool get shuffleModeEnabled =>
+      (super.noSuchMethod(
+            Invocation.getter(#shuffleModeEnabled),
+            returnValue: false,
+          )
+          as bool);
 
   @override
-  _i10.Stream<bool> get shuffleModeEnabledStream => (super.noSuchMethod(
-        Invocation.getter(#shuffleModeEnabledStream),
-        returnValue: _i10.Stream<bool>.empty(),
-      ) as _i10.Stream<bool>);
+  _i10.Stream<bool> get shuffleModeEnabledStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#shuffleModeEnabledStream),
+            returnValue: _i10.Stream<bool>.empty(),
+          )
+          as _i10.Stream<bool>);
 
   @override
-  _i10.Stream<int?> get androidAudioSessionIdStream => (super.noSuchMethod(
-        Invocation.getter(#androidAudioSessionIdStream),
-        returnValue: _i10.Stream<int?>.empty(),
-      ) as _i10.Stream<int?>);
+  _i10.Stream<int?> get androidAudioSessionIdStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#androidAudioSessionIdStream),
+            returnValue: _i10.Stream<int?>.empty(),
+          )
+          as _i10.Stream<int?>);
 
   @override
-  _i10.Stream<_i8.PlayerException> get errorStream => (super.noSuchMethod(
-        Invocation.getter(#errorStream),
-        returnValue: _i10.Stream<_i8.PlayerException>.empty(),
-      ) as _i10.Stream<_i8.PlayerException>);
+  _i10.Stream<_i8.PlayerException> get errorStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#errorStream),
+            returnValue: _i10.Stream<_i8.PlayerException>.empty(),
+          )
+          as _i10.Stream<_i8.PlayerException>);
 
   @override
   _i10.Stream<_i8.PositionDiscontinuity> get positionDiscontinuityStream =>
       (super.noSuchMethod(
-        Invocation.getter(#positionDiscontinuityStream),
-        returnValue: _i10.Stream<_i8.PositionDiscontinuity>.empty(),
-      ) as _i10.Stream<_i8.PositionDiscontinuity>);
+            Invocation.getter(#positionDiscontinuityStream),
+            returnValue: _i10.Stream<_i8.PositionDiscontinuity>.empty(),
+          )
+          as _i10.Stream<_i8.PositionDiscontinuity>);
 
   @override
-  bool get automaticallyWaitsToMinimizeStalling => (super.noSuchMethod(
-        Invocation.getter(#automaticallyWaitsToMinimizeStalling),
-        returnValue: false,
-      ) as bool);
+  bool get automaticallyWaitsToMinimizeStalling =>
+      (super.noSuchMethod(
+            Invocation.getter(#automaticallyWaitsToMinimizeStalling),
+            returnValue: false,
+          )
+          as bool);
 
   @override
   bool get canUseNetworkResourcesForLiveStreamingWhilePaused =>
       (super.noSuchMethod(
-        Invocation.getter(#canUseNetworkResourcesForLiveStreamingWhilePaused),
-        returnValue: false,
-      ) as bool);
+            Invocation.getter(
+              #canUseNetworkResourcesForLiveStreamingWhilePaused,
+            ),
+            returnValue: false,
+          )
+          as bool);
 
   @override
-  double get preferredPeakBitRate => (super.noSuchMethod(
-        Invocation.getter(#preferredPeakBitRate),
-        returnValue: 0.0,
-      ) as double);
+  double get preferredPeakBitRate =>
+      (super.noSuchMethod(
+            Invocation.getter(#preferredPeakBitRate),
+            returnValue: 0.0,
+          )
+          as double);
 
   @override
-  bool get allowsExternalPlayback => (super.noSuchMethod(
-        Invocation.getter(#allowsExternalPlayback),
-        returnValue: false,
-      ) as bool);
+  bool get allowsExternalPlayback =>
+      (super.noSuchMethod(
+            Invocation.getter(#allowsExternalPlayback),
+            returnValue: false,
+          )
+          as bool);
 
   @override
-  String get webSinkId => (super.noSuchMethod(
-        Invocation.getter(#webSinkId),
-        returnValue: _i19.dummyValue<String>(
-          this,
-          Invocation.getter(#webSinkId),
-        ),
-      ) as String);
+  String get webSinkId =>
+      (super.noSuchMethod(
+            Invocation.getter(#webSinkId),
+            returnValue: _i19.dummyValue<String>(
+              this,
+              Invocation.getter(#webSinkId),
+            ),
+          )
+          as String);
 
   @override
-  Duration get position => (super.noSuchMethod(
-        Invocation.getter(#position),
-        returnValue: _FakeDuration_8(
-          this,
-          Invocation.getter(#position),
-        ),
-      ) as Duration);
+  Duration get position =>
+      (super.noSuchMethod(
+            Invocation.getter(#position),
+            returnValue: _FakeDuration_8(this, Invocation.getter(#position)),
+          )
+          as Duration);
 
   @override
-  _i10.Stream<Duration> get positionStream => (super.noSuchMethod(
-        Invocation.getter(#positionStream),
-        returnValue: _i10.Stream<Duration>.empty(),
-      ) as _i10.Stream<Duration>);
+  _i10.Stream<Duration> get positionStream =>
+      (super.noSuchMethod(
+            Invocation.getter(#positionStream),
+            returnValue: _i10.Stream<Duration>.empty(),
+          )
+          as _i10.Stream<Duration>);
 
   @override
-  List<_i8.AudioSource> get audioSources => (super.noSuchMethod(
-        Invocation.getter(#audioSources),
-        returnValue: <_i8.AudioSource>[],
-      ) as List<_i8.AudioSource>);
+  List<_i8.AudioSource> get audioSources =>
+      (super.noSuchMethod(
+            Invocation.getter(#audioSources),
+            returnValue: <_i8.AudioSource>[],
+          )
+          as List<_i8.AudioSource>);
 
   @override
   _i10.Stream<Duration> createPositionStream({
@@ -2163,17 +1948,14 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
     Duration? maxPeriod = const Duration(milliseconds: 200),
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #createPositionStream,
-          [],
-          {
-            #steps: steps,
-            #minPeriod: minPeriod,
-            #maxPeriod: maxPeriod,
-          },
-        ),
-        returnValue: _i10.Stream<Duration>.empty(),
-      ) as _i10.Stream<Duration>);
+            Invocation.method(#createPositionStream, [], {
+              #steps: steps,
+              #minPeriod: minPeriod,
+              #maxPeriod: maxPeriod,
+            }),
+            returnValue: _i10.Stream<Duration>.empty(),
+          )
+          as _i10.Stream<Duration>);
 
   @override
   _i10.Future<Duration?> setUrl(
@@ -2184,18 +1966,19 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
     dynamic tag,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setUrl,
-          [url],
-          {
-            #headers: headers,
-            #initialPosition: initialPosition,
-            #preload: preload,
-            #tag: tag,
-          },
-        ),
-        returnValue: _i10.Future<Duration?>.value(),
-      ) as _i10.Future<Duration?>);
+            Invocation.method(
+              #setUrl,
+              [url],
+              {
+                #headers: headers,
+                #initialPosition: initialPosition,
+                #preload: preload,
+                #tag: tag,
+              },
+            ),
+            returnValue: _i10.Future<Duration?>.value(),
+          )
+          as _i10.Future<Duration?>);
 
   @override
   _i10.Future<Duration?> setFilePath(
@@ -2205,17 +1988,14 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
     dynamic tag,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setFilePath,
-          [filePath],
-          {
-            #initialPosition: initialPosition,
-            #preload: preload,
-            #tag: tag,
-          },
-        ),
-        returnValue: _i10.Future<Duration?>.value(),
-      ) as _i10.Future<Duration?>);
+            Invocation.method(
+              #setFilePath,
+              [filePath],
+              {#initialPosition: initialPosition, #preload: preload, #tag: tag},
+            ),
+            returnValue: _i10.Future<Duration?>.value(),
+          )
+          as _i10.Future<Duration?>);
 
   @override
   _i10.Future<Duration?> setAsset(
@@ -2226,18 +2006,19 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
     dynamic tag,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setAsset,
-          [assetPath],
-          {
-            #package: package,
-            #preload: preload,
-            #initialPosition: initialPosition,
-            #tag: tag,
-          },
-        ),
-        returnValue: _i10.Future<Duration?>.value(),
-      ) as _i10.Future<Duration?>);
+            Invocation.method(
+              #setAsset,
+              [assetPath],
+              {
+                #package: package,
+                #preload: preload,
+                #initialPosition: initialPosition,
+                #tag: tag,
+              },
+            ),
+            returnValue: _i10.Future<Duration?>.value(),
+          )
+          as _i10.Future<Duration?>);
 
   @override
   _i10.Future<Duration?> setAudioSource(
@@ -2247,17 +2028,18 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
     Duration? initialPosition,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setAudioSource,
-          [audioSource],
-          {
-            #preload: preload,
-            #initialIndex: initialIndex,
-            #initialPosition: initialPosition,
-          },
-        ),
-        returnValue: _i10.Future<Duration?>.value(),
-      ) as _i10.Future<Duration?>);
+            Invocation.method(
+              #setAudioSource,
+              [audioSource],
+              {
+                #preload: preload,
+                #initialIndex: initialIndex,
+                #initialPosition: initialPosition,
+              },
+            ),
+            returnValue: _i10.Future<Duration?>.value(),
+          )
+          as _i10.Future<Duration?>);
 
   @override
   _i10.Future<Duration?> setAudioSources(
@@ -2268,38 +2050,36 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
     _i8.ShuffleOrder? shuffleOrder,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setAudioSources,
-          [audioSources],
-          {
-            #preload: preload,
-            #initialIndex: initialIndex,
-            #initialPosition: initialPosition,
-            #shuffleOrder: shuffleOrder,
-          },
-        ),
-        returnValue: _i10.Future<Duration?>.value(),
-      ) as _i10.Future<Duration?>);
+            Invocation.method(
+              #setAudioSources,
+              [audioSources],
+              {
+                #preload: preload,
+                #initialIndex: initialIndex,
+                #initialPosition: initialPosition,
+                #shuffleOrder: shuffleOrder,
+              },
+            ),
+            returnValue: _i10.Future<Duration?>.value(),
+          )
+          as _i10.Future<Duration?>);
 
   @override
-  _i10.Future<Duration?> load() => (super.noSuchMethod(
-        Invocation.method(
-          #load,
-          [],
-        ),
-        returnValue: _i10.Future<Duration?>.value(),
-      ) as _i10.Future<Duration?>);
+  _i10.Future<Duration?> load() =>
+      (super.noSuchMethod(
+            Invocation.method(#load, []),
+            returnValue: _i10.Future<Duration?>.value(),
+          )
+          as _i10.Future<Duration?>);
 
   @override
   _i10.Future<void> addAudioSource(_i8.AudioSource? audioSource) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #addAudioSource,
-          [audioSource],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#addAudioSource, [audioSource]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<void> insertAudioSource(
@@ -2307,27 +2087,20 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
     _i8.AudioSource? audioSource,
   ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #insertAudioSource,
-          [
-            index,
-            audioSource,
-          ],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#insertAudioSource, [index, audioSource]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<void> addAudioSources(List<_i8.AudioSource>? audioSources) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #addAudioSources,
-          [audioSources],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#addAudioSources, [audioSources]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<void> insertAudioSources(
@@ -2335,70 +2108,47 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
     List<_i8.AudioSource>? audioSources,
   ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #insertAudioSources,
-          [
-            index,
-            audioSources,
-          ],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#insertAudioSources, [index, audioSources]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> removeAudioSourceAt(int? index) => (super.noSuchMethod(
-        Invocation.method(
-          #removeAudioSourceAt,
-          [index],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
-
-  @override
-  _i10.Future<void> removeAudioSourceRange(
-    int? start,
-    int? end,
-  ) =>
+  _i10.Future<void> removeAudioSourceAt(int? index) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #removeAudioSourceRange,
-          [
-            start,
-            end,
-          ],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#removeAudioSourceAt, [index]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> moveAudioSource(
-    int? currentIndex,
-    int? newIndex,
-  ) =>
+  _i10.Future<void> removeAudioSourceRange(int? start, int? end) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #moveAudioSource,
-          [
-            currentIndex,
-            newIndex,
-          ],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#removeAudioSourceRange, [start, end]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> clearAudioSources() => (super.noSuchMethod(
-        Invocation.method(
-          #clearAudioSources,
-          [],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> moveAudioSource(int? currentIndex, int? newIndex) =>
+      (super.noSuchMethod(
+            Invocation.method(#moveAudioSource, [currentIndex, newIndex]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
+
+  @override
+  _i10.Future<void> clearAudioSources() =>
+      (super.noSuchMethod(
+            Invocation.method(#clearAudioSources, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<Duration?> setClip({
@@ -2407,241 +2157,216 @@ class MockAudioPlayer extends _i1.Mock implements _i8.AudioPlayer {
     dynamic tag,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setClip,
-          [],
-          {
-            #start: start,
-            #end: end,
-            #tag: tag,
-          },
-        ),
-        returnValue: _i10.Future<Duration?>.value(),
-      ) as _i10.Future<Duration?>);
+            Invocation.method(#setClip, [], {
+              #start: start,
+              #end: end,
+              #tag: tag,
+            }),
+            returnValue: _i10.Future<Duration?>.value(),
+          )
+          as _i10.Future<Duration?>);
 
   @override
-  _i10.Future<void> play() => (super.noSuchMethod(
-        Invocation.method(
-          #play,
-          [],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> play() =>
+      (super.noSuchMethod(
+            Invocation.method(#play, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> pause() => (super.noSuchMethod(
-        Invocation.method(
-          #pause,
-          [],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> pause() =>
+      (super.noSuchMethod(
+            Invocation.method(#pause, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> stop() => (super.noSuchMethod(
-        Invocation.method(
-          #stop,
-          [],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> stop() =>
+      (super.noSuchMethod(
+            Invocation.method(#stop, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> setVolume(double? volume) => (super.noSuchMethod(
-        Invocation.method(
-          #setVolume,
-          [volume],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> setVolume(double? volume) =>
+      (super.noSuchMethod(
+            Invocation.method(#setVolume, [volume]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> setSkipSilenceEnabled(bool? enabled) => (super.noSuchMethod(
-        Invocation.method(
-          #setSkipSilenceEnabled,
-          [enabled],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> setSkipSilenceEnabled(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setSkipSilenceEnabled, [enabled]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> setSpeed(double? speed) => (super.noSuchMethod(
-        Invocation.method(
-          #setSpeed,
-          [speed],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> setSpeed(double? speed) =>
+      (super.noSuchMethod(
+            Invocation.method(#setSpeed, [speed]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> setPitch(double? pitch) => (super.noSuchMethod(
-        Invocation.method(
-          #setPitch,
-          [pitch],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> setPitch(double? pitch) =>
+      (super.noSuchMethod(
+            Invocation.method(#setPitch, [pitch]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> setLoopMode(_i8.LoopMode? mode) => (super.noSuchMethod(
-        Invocation.method(
-          #setLoopMode,
-          [mode],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> setLoopMode(_i8.LoopMode? mode) =>
+      (super.noSuchMethod(
+            Invocation.method(#setLoopMode, [mode]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> setShuffleModeEnabled(bool? enabled) => (super.noSuchMethod(
-        Invocation.method(
-          #setShuffleModeEnabled,
-          [enabled],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> setShuffleModeEnabled(bool? enabled) =>
+      (super.noSuchMethod(
+            Invocation.method(#setShuffleModeEnabled, [enabled]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> shuffle() => (super.noSuchMethod(
-        Invocation.method(
-          #shuffle,
-          [],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> shuffle() =>
+      (super.noSuchMethod(
+            Invocation.method(#shuffle, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<void> setAutomaticallyWaitsToMinimizeStalling(
-          bool? automaticallyWaitsToMinimizeStalling) =>
+    bool? automaticallyWaitsToMinimizeStalling,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setAutomaticallyWaitsToMinimizeStalling,
-          [automaticallyWaitsToMinimizeStalling],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#setAutomaticallyWaitsToMinimizeStalling, [
+              automaticallyWaitsToMinimizeStalling,
+            ]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<void> setCanUseNetworkResourcesForLiveStreamingWhilePaused(
-          bool? canUseNetworkResourcesForLiveStreamingWhilePaused) =>
+    bool? canUseNetworkResourcesForLiveStreamingWhilePaused,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setCanUseNetworkResourcesForLiveStreamingWhilePaused,
-          [canUseNetworkResourcesForLiveStreamingWhilePaused],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(
+              #setCanUseNetworkResourcesForLiveStreamingWhilePaused,
+              [canUseNetworkResourcesForLiveStreamingWhilePaused],
+            ),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<void> setPreferredPeakBitRate(double? preferredPeakBitRate) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setPreferredPeakBitRate,
-          [preferredPeakBitRate],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#setPreferredPeakBitRate, [preferredPeakBitRate]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<void> setAllowsExternalPlayback(bool? allowsExternalPlayback) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setAllowsExternalPlayback,
-          [allowsExternalPlayback],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#setAllowsExternalPlayback, [
+              allowsExternalPlayback,
+            ]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> seek(
-    Duration? position, {
-    int? index,
-  }) =>
+  _i10.Future<void> seek(Duration? position, {int? index}) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #seek,
-          [position],
-          {#index: index},
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#seek, [position], {#index: index}),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> seekToNext() => (super.noSuchMethod(
-        Invocation.method(
-          #seekToNext,
-          [],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> seekToNext() =>
+      (super.noSuchMethod(
+            Invocation.method(#seekToNext, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> seekToPrevious() => (super.noSuchMethod(
-        Invocation.method(
-          #seekToPrevious,
-          [],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> seekToPrevious() =>
+      (super.noSuchMethod(
+            Invocation.method(#seekToPrevious, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<void> setAndroidAudioAttributes(
-          _i24.AndroidAudioAttributes? audioAttributes) =>
+    _i24.AndroidAudioAttributes? audioAttributes,
+  ) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setAndroidAudioAttributes,
-          [audioAttributes],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#setAndroidAudioAttributes, [audioAttributes]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<void> setWebCrossOrigin(_i8.WebCrossOrigin? webCrossOrigin) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #setWebCrossOrigin,
-          [webCrossOrigin],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+            Invocation.method(#setWebCrossOrigin, [webCrossOrigin]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> setWebSinkId(String? webSinkId) => (super.noSuchMethod(
-        Invocation.method(
-          #setWebSinkId,
-          [webSinkId],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> setWebSinkId(String? webSinkId) =>
+      (super.noSuchMethod(
+            Invocation.method(#setWebSinkId, [webSinkId]),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> dispose() => (super.noSuchMethod(
-        Invocation.method(
-          #dispose,
-          [],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> dispose() =>
+      (super.noSuchMethod(
+            Invocation.method(#dispose, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 }
 
 /// A class which mocks [SpeechToText].
@@ -2655,93 +2380,87 @@ class MockSpeechToText extends _i1.Mock implements _i25.SpeechToText {
   @override
   set errorListener(_i25.SpeechErrorListener? _errorListener) =>
       super.noSuchMethod(
-        Invocation.setter(
-          #errorListener,
-          _errorListener,
-        ),
+        Invocation.setter(#errorListener, _errorListener),
         returnValueForMissingStub: null,
       );
 
   @override
   set statusListener(_i25.SpeechStatusListener? _statusListener) =>
       super.noSuchMethod(
-        Invocation.setter(
-          #statusListener,
-          _statusListener,
-        ),
+        Invocation.setter(#statusListener, _statusListener),
         returnValueForMissingStub: null,
       );
 
   @override
   set unexpectedPhraseAggregator(
-          _i25.SpeechPhraseAggregator? _unexpectedPhraseAggregator) =>
-      super.noSuchMethod(
-        Invocation.setter(
-          #unexpectedPhraseAggregator,
-          _unexpectedPhraseAggregator,
-        ),
-        returnValueForMissingStub: null,
-      );
+    _i25.SpeechPhraseAggregator? _unexpectedPhraseAggregator,
+  ) => super.noSuchMethod(
+    Invocation.setter(#unexpectedPhraseAggregator, _unexpectedPhraseAggregator),
+    returnValueForMissingStub: null,
+  );
 
   @override
-  bool get hasRecognized => (super.noSuchMethod(
-        Invocation.getter(#hasRecognized),
-        returnValue: false,
-      ) as bool);
+  bool get hasRecognized =>
+      (super.noSuchMethod(Invocation.getter(#hasRecognized), returnValue: false)
+          as bool);
 
   @override
-  String get lastRecognizedWords => (super.noSuchMethod(
-        Invocation.getter(#lastRecognizedWords),
-        returnValue: _i19.dummyValue<String>(
-          this,
-          Invocation.getter(#lastRecognizedWords),
-        ),
-      ) as String);
+  String get lastRecognizedWords =>
+      (super.noSuchMethod(
+            Invocation.getter(#lastRecognizedWords),
+            returnValue: _i19.dummyValue<String>(
+              this,
+              Invocation.getter(#lastRecognizedWords),
+            ),
+          )
+          as String);
 
   @override
-  String get lastStatus => (super.noSuchMethod(
-        Invocation.getter(#lastStatus),
-        returnValue: _i19.dummyValue<String>(
-          this,
-          Invocation.getter(#lastStatus),
-        ),
-      ) as String);
+  String get lastStatus =>
+      (super.noSuchMethod(
+            Invocation.getter(#lastStatus),
+            returnValue: _i19.dummyValue<String>(
+              this,
+              Invocation.getter(#lastStatus),
+            ),
+          )
+          as String);
 
   @override
-  double get lastSoundLevel => (super.noSuchMethod(
-        Invocation.getter(#lastSoundLevel),
-        returnValue: 0.0,
-      ) as double);
+  double get lastSoundLevel =>
+      (super.noSuchMethod(Invocation.getter(#lastSoundLevel), returnValue: 0.0)
+          as double);
 
   @override
-  bool get isAvailable => (super.noSuchMethod(
-        Invocation.getter(#isAvailable),
-        returnValue: false,
-      ) as bool);
+  bool get isAvailable =>
+      (super.noSuchMethod(Invocation.getter(#isAvailable), returnValue: false)
+          as bool);
 
   @override
-  bool get isListening => (super.noSuchMethod(
-        Invocation.getter(#isListening),
-        returnValue: false,
-      ) as bool);
+  bool get isListening =>
+      (super.noSuchMethod(Invocation.getter(#isListening), returnValue: false)
+          as bool);
 
   @override
-  bool get isNotListening => (super.noSuchMethod(
-        Invocation.getter(#isNotListening),
-        returnValue: false,
-      ) as bool);
+  bool get isNotListening =>
+      (super.noSuchMethod(
+            Invocation.getter(#isNotListening),
+            returnValue: false,
+          )
+          as bool);
 
   @override
-  bool get hasError => (super.noSuchMethod(
-        Invocation.getter(#hasError),
-        returnValue: false,
-      ) as bool);
+  bool get hasError =>
+      (super.noSuchMethod(Invocation.getter(#hasError), returnValue: false)
+          as bool);
 
   @override
-  _i10.Future<bool> get hasPermission => (super.noSuchMethod(
-        Invocation.getter(#hasPermission),
-        returnValue: _i10.Future<bool>.value(false),
-      ) as _i10.Future<bool>);
+  _i10.Future<bool> get hasPermission =>
+      (super.noSuchMethod(
+            Invocation.getter(#hasPermission),
+            returnValue: _i10.Future<bool>.value(false),
+          )
+          as _i10.Future<bool>);
 
   @override
   _i10.Future<bool> initialize({
@@ -2752,39 +2471,34 @@ class MockSpeechToText extends _i1.Mock implements _i25.SpeechToText {
     List<_i26.SpeechConfigOption>? options,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #initialize,
-          [],
-          {
-            #onError: onError,
-            #onStatus: onStatus,
-            #debugLogging: debugLogging,
-            #finalTimeout: finalTimeout,
-            #options: options,
-          },
-        ),
-        returnValue: _i10.Future<bool>.value(false),
-      ) as _i10.Future<bool>);
+            Invocation.method(#initialize, [], {
+              #onError: onError,
+              #onStatus: onStatus,
+              #debugLogging: debugLogging,
+              #finalTimeout: finalTimeout,
+              #options: options,
+            }),
+            returnValue: _i10.Future<bool>.value(false),
+          )
+          as _i10.Future<bool>);
 
   @override
-  _i10.Future<void> stop() => (super.noSuchMethod(
-        Invocation.method(
-          #stop,
-          [],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> stop() =>
+      (super.noSuchMethod(
+            Invocation.method(#stop, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
-  _i10.Future<void> cancel() => (super.noSuchMethod(
-        Invocation.method(
-          #cancel,
-          [],
-        ),
-        returnValue: _i10.Future<void>.value(),
-        returnValueForMissingStub: _i10.Future<void>.value(),
-      ) as _i10.Future<void>);
+  _i10.Future<void> cancel() =>
+      (super.noSuchMethod(
+            Invocation.method(#cancel, []),
+            returnValue: _i10.Future<void>.value(),
+            returnValueForMissingStub: _i10.Future<void>.value(),
+          )
+          as _i10.Future<void>);
 
   @override
   _i10.Future<dynamic> listen({
@@ -2801,51 +2515,44 @@ class MockSpeechToText extends _i1.Mock implements _i25.SpeechToText {
     _i26.SpeechListenOptions? listenOptions,
   }) =>
       (super.noSuchMethod(
-        Invocation.method(
-          #listen,
-          [],
-          {
-            #onResult: onResult,
-            #listenFor: listenFor,
-            #pauseFor: pauseFor,
-            #localeId: localeId,
-            #onSoundLevelChange: onSoundLevelChange,
-            #cancelOnError: cancelOnError,
-            #partialResults: partialResults,
-            #onDevice: onDevice,
-            #listenMode: listenMode,
-            #sampleRate: sampleRate,
-            #listenOptions: listenOptions,
-          },
-        ),
-        returnValue: _i10.Future<dynamic>.value(),
-      ) as _i10.Future<dynamic>);
+            Invocation.method(#listen, [], {
+              #onResult: onResult,
+              #listenFor: listenFor,
+              #pauseFor: pauseFor,
+              #localeId: localeId,
+              #onSoundLevelChange: onSoundLevelChange,
+              #cancelOnError: cancelOnError,
+              #partialResults: partialResults,
+              #onDevice: onDevice,
+              #listenMode: listenMode,
+              #sampleRate: sampleRate,
+              #listenOptions: listenOptions,
+            }),
+            returnValue: _i10.Future<dynamic>.value(),
+          )
+          as _i10.Future<dynamic>);
 
   @override
   void changePauseFor(Duration? pauseFor) => super.noSuchMethod(
-        Invocation.method(
-          #changePauseFor,
-          [pauseFor],
-        ),
-        returnValueForMissingStub: null,
-      );
+    Invocation.method(#changePauseFor, [pauseFor]),
+    returnValueForMissingStub: null,
+  );
 
   @override
-  _i10.Future<List<_i25.LocaleName>> locales() => (super.noSuchMethod(
-        Invocation.method(
-          #locales,
-          [],
-        ),
-        returnValue:
-            _i10.Future<List<_i25.LocaleName>>.value(<_i25.LocaleName>[]),
-      ) as _i10.Future<List<_i25.LocaleName>>);
+  _i10.Future<List<_i25.LocaleName>> locales() =>
+      (super.noSuchMethod(
+            Invocation.method(#locales, []),
+            returnValue: _i10.Future<List<_i25.LocaleName>>.value(
+              <_i25.LocaleName>[],
+            ),
+          )
+          as _i10.Future<List<_i25.LocaleName>>);
 
   @override
-  _i10.Future<_i25.LocaleName?> systemLocale() => (super.noSuchMethod(
-        Invocation.method(
-          #systemLocale,
-          [],
-        ),
-        returnValue: _i10.Future<_i25.LocaleName?>.value(),
-      ) as _i10.Future<_i25.LocaleName?>);
+  _i10.Future<_i25.LocaleName?> systemLocale() =>
+      (super.noSuchMethod(
+            Invocation.method(#systemLocale, []),
+            returnValue: _i10.Future<_i25.LocaleName?>.value(),
+          )
+          as _i10.Future<_i25.LocaleName?>);
 }

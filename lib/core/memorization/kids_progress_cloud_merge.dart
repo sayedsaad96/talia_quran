@@ -1,6 +1,7 @@
 import '../../features/memorization_plus/domain/entities/kids_progress.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_log.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_policy.dart';
+import '../../features/memorization_plus/domain/entities/ayah_review_record.dart';
 
 /// Merges cloud kids progress into local using GREATEST-style field rules
 /// (matches `upsert_kids_progress_cloud` on the server).
@@ -68,7 +69,7 @@ class KidsSessionLogsCloudMerge {
     final rewardByAyah = <String, KidsSessionLog>{};
     final merged = <KidsSessionLog>[];
     for (final log in byId.values) {
-      if (!_isNewMemorizationReward(log)) {
+      if (!isCanonicalRewardLog(log)) {
         merged.add(log);
         continue;
       }
@@ -85,9 +86,51 @@ class KidsSessionLogsCloudMerge {
     return merged;
   }
 
-  static bool _isNewMemorizationReward(KidsSessionLog log) =>
+  /// True only for evidence that is allowed to advance Kids rewards.
+  static bool isCanonicalRewardLog(KidsSessionLog log) =>
       log.missionType == KidsMissionType.newMemorization &&
       log.pointsEarned > 0;
+
+  /// Rebuilds the repairable Kids aggregate from immutable positive evidence.
+  ///
+  /// Cloud rows currently omit mastery, so callers merging legacy cloud data
+  /// retain the documented excellent-rating fallback supplied by the mapper.
+  static KidsProgress rebuildProjection(Iterable<KidsSessionLog> logs) {
+    final canonical = merge(local: logs, remote: const []);
+    final rewards = canonical.where(isCanonicalRewardLog).toList();
+    final totalPoints = rewards.fold<int>(
+      0,
+      (sum, log) => sum + log.pointsEarned,
+    );
+    final stars = rewards.fold<int>(0, (sum, log) {
+      final earned = switch (log.masteryRating) {
+        PerformanceRating.excellent => 3,
+        PerformanceRating.average => 2,
+        PerformanceRating.weak => 1,
+      };
+      return sum + earned;
+    });
+    DateTime? lastSessionAt;
+    for (final log in rewards) {
+      if (lastSessionAt == null || log.completedAt.isAfter(lastSessionAt)) {
+        lastSessionAt = log.completedAt;
+      }
+    }
+    var level = 1;
+    var spent = 0;
+    while (totalPoints - spent >= level * 100) {
+      spent += level * 100;
+      level++;
+    }
+    return KidsProgress(
+      totalPoints: totalPoints,
+      currentLevel: level,
+      currentStreak: 0,
+      starsEarned: stars,
+      ayahsCompleted: rewards.length,
+      lastSessionAt: lastSessionAt,
+    );
+  }
 
   static KidsSessionLog _mergeMatchingSession(
     KidsSessionLog local,
@@ -135,8 +178,11 @@ class KidsSessionLogsCloudMerge {
       (log.hintCount > 0 ? 1 : 0) +
       (log.masteryRating.index > 0 ? 1 : 0);
 
-  static int completedAyahsCount(Iterable<KidsSessionLog> logs) =>
-      logs.map((log) => '${log.surahId}:${log.ayahNumber}').toSet().length;
+  static int completedAyahsCount(Iterable<KidsSessionLog> logs) => logs
+      .where(isCanonicalRewardLog)
+      .map((log) => '${log.surahId}:${log.ayahNumber}')
+      .toSet()
+      .length;
 
   static bool _isPreferred(KidsSessionLog candidate, KidsSessionLog current) {
     if (candidate.isSynced != current.isSynced) return candidate.isSynced;

@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../../../core/identity/record_owner_provider.dart';
 import '../../../../../core/memorization/kids_session_log_acknowledgement.dart';
 import '../../../../../core/memorization/kids_progress_cloud_merge.dart';
 import '../../../../../core/services/streak_reader.dart';
@@ -18,13 +19,15 @@ class MemorizationKidsCloudSyncService {
     this._datasource,
     this._streakReader,
     this._gateway,
-    this._mappers,
-  );
+    this._mappers, {
+    RecordOwnerProvider owner = const SupabaseRecordOwnerProvider(),
+  }) : _owner = owner;
 
   final MemorizationPlusLocalDatasource _datasource;
   final StreakReader _streakReader;
   final MemorizationCloudGateway _gateway;
   final MemorizationCloudMappers _mappers;
+  final RecordOwnerProvider _owner;
 
   Either<Failure, SupabaseClient> get _supabaseOrFailure =>
       _gateway.supabaseOrFailure();
@@ -43,6 +46,8 @@ class MemorizationKidsCloudSyncService {
 
       final user = client.auth.currentUser;
       if (user == null) return const Right(null);
+      final ownerId = user.id;
+      _ensureOwner(ownerId);
 
       final progressRows = await client
           .from('kids_progress_cloud')
@@ -59,11 +64,11 @@ class MemorizationKidsCloudSyncService {
           .select()
           .eq('child_user_id', user.id)
           .order('created_at', ascending: false);
+      _ensureOwner(ownerId);
 
       final remote = _mappers.progressFromCloud(
         progressRows.isEmpty ? null : progressRows.first,
       );
-      final local = await _datasource.getKidsProgress();
       final localLogs = await _datasource.getKidsSessionLogs();
       final remoteLogs = logRows
           .map((row) => _mappers.logFromCloud(Map<String, dynamic>.from(row)))
@@ -72,22 +77,28 @@ class MemorizationKidsCloudSyncService {
         local: localLogs,
         remote: remoteLogs,
       );
-      final mergedProgress = KidsProgressCloudMerge.merge(
-        local: local,
-        remote: remote,
-      );
-      final reconciledProgress = mergedProgress.copyWith(
-        ayahsCompleted: KidsSessionLogsCloudMerge.completedAyahsCount(
-          mergedLogs,
-        ),
-      );
-
-      await _datasource.saveKidsProgress(
-        KidsProgressModel.fromEntity(reconciledProgress),
-      );
+      // Evidence is persisted before its projection. If interrupted, the next
+      // read/sync deterministically repairs the aggregate from these logs.
       await _datasource.saveKidsSessionLogs(
         mergedLogs.map(KidsSessionLogModel.fromEntity).toList(),
       );
+      _ensureOwner(ownerId);
+      final rebuilt = KidsSessionLogsCloudMerge.rebuildProjection(mergedLogs);
+      // Preserve legacy remote aggregates that cannot yet be reconstructed
+      // because the deployed log contract omits exact awarded stars. Local
+      // stale caches are deliberately not merged back into the projection.
+      final reconciledProgress = KidsProgressCloudMerge.merge(
+        local: rebuilt,
+        remote: remote,
+      );
+      await _datasource.saveKidsLegacyCloudFloor(
+        KidsProgressModel.fromEntity(remote),
+      );
+      _ensureOwner(ownerId);
+      await _datasource.saveKidsProgress(
+        KidsProgressModel.fromEntity(reconciledProgress),
+      );
+      _ensureOwner(ownerId);
       await _datasource.saveParentRewards(
         rewardRows
             .map(
@@ -97,6 +108,7 @@ class MemorizationKidsCloudSyncService {
             )
             .toList(),
       );
+      _ensureOwner(ownerId);
       return const Right(null);
     } catch (e) {
       return Left(Failure.fromCloud(e));
@@ -117,8 +129,31 @@ class MemorizationKidsCloudSyncService {
 
       final user = client.auth.currentUser;
       if (user == null) return const Right(null);
+      final ownerId = user.id;
+      _ensureOwner(ownerId);
 
-      final progress = await _datasource.getKidsProgress();
+      final logs = await _datasource.getKidsSessionLogs();
+      final pendingLogs = logs
+          .where(
+            (log) =>
+                !log.isSynced &&
+                KidsSessionLogsCloudMerge.isCanonicalRewardLog(log),
+          )
+          .toList();
+      if (pendingLogs.isNotEmpty) {
+        final acceptedIds = await _pushKidsSessionLogs(client, pendingLogs);
+        _ensureOwner(ownerId);
+        await _datasource.markKidsSessionLogsCloudSynced(acceptedIds);
+      }
+
+      // The cloud aggregate is uploaded only after its canonical evidence.
+      final reconciledLogs = await _datasource.getKidsSessionLogs();
+      final progress = KidsSessionLogsCloudMerge.rebuildProjection(
+        reconciledLogs,
+      );
+      await _datasource.saveKidsProgress(
+        KidsProgressModel.fromEntity(progress),
+      );
       final streak = await _streakReader.getStreak();
       await client.rpc(
         'upsert_kids_progress_cloud',
@@ -133,16 +168,16 @@ class MemorizationKidsCloudSyncService {
               .toIso8601String(),
         },
       );
-
-      final logs = await _datasource.getKidsSessionLogs();
-      final pendingLogs = logs.where((log) => !log.isSynced).toList();
-      if (pendingLogs.isNotEmpty) {
-        final acceptedIds = await _pushKidsSessionLogs(client, pendingLogs);
-        await _datasource.markKidsSessionLogsCloudSynced(acceptedIds);
-      }
+      _ensureOwner(ownerId);
       return const Right(null);
     } catch (e) {
       return Left(Failure.fromCloud(e));
+    }
+  }
+
+  void _ensureOwner(String ownerId) {
+    if (_owner.currentOwnerId != ownerId) {
+      throw StateError('Kids cloud sync owner changed during operation');
     }
   }
 
@@ -388,9 +423,14 @@ class MemorizationKidsCloudSyncService {
         return const Left(CacheFailure('معرّف المكافأة غير صالح'));
       }
       final clientResult = _supabaseOrFailure;
-      final clientFailure = clientResult.fold((failure) => failure, (_) => null);
+      final clientFailure = clientResult.fold(
+        (failure) => failure,
+        (_) => null,
+      );
       if (clientFailure != null) return Left(clientFailure);
-      final client = clientResult.getOrElse(() => throw StateError('unreachable'));
+      final client = clientResult.getOrElse(
+        () => throw StateError('unreachable'),
+      );
       if (client.auth.currentUser == null) {
         return const Left(NetworkFailure('سجّل الدخول أولاً'));
       }
@@ -401,7 +441,9 @@ class MemorizationKidsCloudSyncService {
       );
       final acknowledged = (response as List<dynamic>)
           .whereType<Map>()
-          .map((row) => _mappers.rewardFromCloud(Map<String, dynamic>.from(row)))
+          .map(
+            (row) => _mappers.rewardFromCloud(Map<String, dynamic>.from(row)),
+          )
           .toList();
       if (acknowledged.isEmpty) {
         return const Left(NetworkFailure('المكافأة ليست متاحة لهذا الإجراء'));

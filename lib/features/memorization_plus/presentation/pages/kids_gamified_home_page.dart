@@ -80,7 +80,9 @@ class _KidsGamifiedHomeView extends StatelessWidget {
           return KidsGamifiedHomeContent(
             state: state,
             childName: childName,
-            onHomeTap: () => context.go(AppRoutes.home),
+            onHomeTap: () => context.go(
+              '${AppRoutes.memorizationPlusKidsHome}?surahId=${state.surahId}',
+            ),
             onRefresh: () =>
                 context.read<KidsJourneyCubit>().load(surahId: surahId),
             onMushafTap: () =>

@@ -22,6 +22,7 @@ class CloudSyncCoordinator {
     AchievementService? achievementService,
     CloudSyncQueue? cloudSyncQueue,
     BookmarkService? bookmarkService,
+    void Function()? onMemorizationIdentityChanged,
     bool syncBookmarks = true,
     Duration localChangeDebounce = const Duration(seconds: 2),
   }) : _authRepository = authRepository,
@@ -30,6 +31,7 @@ class CloudSyncCoordinator {
        _achievementService = achievementService,
        _cloudSyncQueue = cloudSyncQueue,
        _bookmarkService = bookmarkService,
+       _onMemorizationIdentityChanged = onMemorizationIdentityChanged,
        _syncBookmarks = syncBookmarks,
        _localChangeDebounce = localChangeDebounce {
     _progressSubscription = _progressEvents?.changes
@@ -43,6 +45,7 @@ class CloudSyncCoordinator {
   final AchievementService? _achievementService;
   final CloudSyncQueue? _cloudSyncQueue;
   final BookmarkService? _bookmarkService;
+  final void Function()? _onMemorizationIdentityChanged;
   final bool _syncBookmarks;
   final Duration _localChangeDebounce;
 
@@ -268,7 +271,10 @@ class CloudSyncCoordinator {
       if (!_ownerIsStillActive(ownerId)) return;
       identityPull.fold(
         (failure) => TaliaLogger.w('Identity pull failed', failure.message),
-        (_) => TaliaLogger.i('Identity pull completed'),
+        (_) {
+          TaliaLogger.i('Identity pull completed');
+          _onMemorizationIdentityChanged?.call();
+        },
       );
 
       final evidencePull = await memorization.pullReviewEvidenceFromCloud();
