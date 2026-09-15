@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -139,6 +141,115 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
     }
   }
 
+  Future<void> _pickQuietHour({
+    required NotificationSettingsState state,
+    required bool isStart,
+  }) async {
+    final l10n = context.l10n;
+    final currentHour = isStart
+        ? state.quietHoursStart
+        : state.quietHoursEnd;
+    final selected = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: currentHour, minute: 0),
+    );
+    if (selected == null) return;
+    await _cubit.updateQuietHours(
+      startHour: isStart ? selected.hour : state.quietHoursStart,
+      endHour: isStart ? state.quietHoursEnd : selected.hour,
+      l10n: l10n,
+    );
+  }
+
+  Widget _buildNotificationPreferences(
+    NotificationSettingsState state,
+    Color primary,
+    Color textColor,
+    Color subtextColor,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+      child: Column(
+        children: [
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              context.l10n.notificationQuietHours,
+              style: AppTypography.bodyMedium.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              context.l10n.notificationQuietHoursSub,
+              style: AppTypography.bodySmall.copyWith(color: subtextColor),
+            ),
+            value: state.quietHoursEnabled,
+            onChanged: (value) => _cubit.toggleReminder(
+              TaliaNotificationService.quietHoursPreferenceKey,
+              value,
+              l10n: context.l10n,
+            ),
+            activeThumbColor: primary,
+          ),
+          if (state.quietHoursEnabled)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(
+                start: AppSpacing.lg,
+                bottom: AppSpacing.sm,
+              ),
+              child: Row(
+                children: [
+                  OutlinedButton(
+                    onPressed: () => _pickQuietHour(
+                      state: state,
+                      isStart: true,
+                    ),
+                    child: Text(
+                      '${context.l10n.notificationQuietHoursStart}: '
+                      '${_formatTime(TimeOfDay(hour: state.quietHoursStart, minute: 0))}',
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  OutlinedButton(
+                    onPressed: () => _pickQuietHour(
+                      state: state,
+                      isStart: false,
+                    ),
+                    child: Text(
+                      '${context.l10n.notificationQuietHoursEnd}: '
+                      '${_formatTime(TimeOfDay(hour: state.quietHoursEnd, minute: 0))}',
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            title: Text(
+              context.l10n.notificationSmartReminder,
+              style: AppTypography.bodyMedium.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              context.l10n.notificationSmartReminderSub,
+              style: AppTypography.bodySmall.copyWith(color: subtextColor),
+            ),
+            value: state.smartReminder,
+            onChanged: (value) => _cubit.toggleReminder(
+              TaliaNotificationService.smartReminderPreferenceKey,
+              value,
+              l10n: context.l10n,
+            ),
+            activeThumbColor: primary,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildPrayerTimesTile({
     required NotificationSettingsState state,
     required Color primary,
@@ -247,6 +358,45 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                   primary: primary,
                 ),
               ],
+            ),
+          ),
+        if (Platform.isAndroid && state.prayerNotifications)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(
+              start: AppSpacing.xl,
+              end: AppSpacing.md,
+              bottom: AppSpacing.sm,
+            ),
+            child: Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final granted =
+                      await _cubit.requestExactPrayerTimePermission();
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        granted
+                            ? context.l10n.notificationExactAlarmGranted
+                            : context.l10n.notificationExactAlarmDenied,
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.alarm_rounded, size: 16),
+                label: Text(
+                  context.l10n.notificationExactAlarmRequest,
+                  style: AppTypography.labelSmall.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: primary,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+              ),
             ),
           ),
       ],
@@ -518,6 +668,15 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                 ),
               ),
             ),
+
+            // 1. Daily Review Reminder
+            _buildNotificationPreferences(
+              state,
+              primary,
+              textColor,
+              subtextColor,
+            ),
+            SettingsDivider(isDark: widget.isDark),
 
             // 1. Daily Review Reminder
             _buildTimeEditorTile(
@@ -845,7 +1004,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                     ),
                     onTap: () async {
                       Navigator.pop(bottomSheetContext);
-                      await _cubit.showTestNotification(
+                      final wasShown = await _cubit.showTestNotification(
                         title: bottomSheetContext.isArabic
                             ? 'جاهز نراجع سوا؟ 📖'
                             : 'Daily Review Time 📖',
@@ -854,7 +1013,11 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                             : 'You have 5 ayahs due for review today ⚡',
                         type: 'review',
                       );
-                      _showTestSuccessSnackBar();
+                      if (wasShown) {
+                        _showTestSuccessSnackBar();
+                      } else {
+                        _showTestFailureSnackBar();
+                      }
                     },
                   ),
                   ListTile(
@@ -881,7 +1044,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                     ),
                     onTap: () async {
                       Navigator.pop(bottomSheetContext);
-                      await _cubit.showTestNotification(
+                      final wasShown = await _cubit.showTestNotification(
                         title: bottomSheetContext.isArabic
                             ? '⚠️ متضيعش إنجاز 7 أيام!'
                             : "⚠️ Don't lose 7 days streak!",
@@ -890,7 +1053,11 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                             : "You haven't reviewed today — protect your streak now 🔥",
                         type: 'streak',
                       );
-                      _showTestSuccessSnackBar();
+                      if (wasShown) {
+                        _showTestSuccessSnackBar();
+                      } else {
+                        _showTestFailureSnackBar();
+                      }
                     },
                   ),
                 ],
@@ -915,6 +1082,18 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         ),
+      ),
+    );
+  }
+
+  void _showTestFailureSnackBar() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          context.l10n.notificationTestFailed,
+        ),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }

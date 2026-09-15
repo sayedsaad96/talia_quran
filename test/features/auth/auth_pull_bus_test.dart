@@ -60,6 +60,15 @@ void main() {
       mockMemPlusRepository.pullIdentityFromCloud(),
     ).thenAnswer((_) async => const Right(null));
     when(
+      mockMemPlusRepository.pullReviewEvidenceFromCloud(),
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      mockMemPlusRepository.hasPendingReviewEvidence(),
+    ).thenAnswer((_) async => false);
+    when(
+      mockMemPlusRepository.isReviewEvidenceTransportEnabled,
+    ).thenReturn(false);
+    when(
       mockMemPlusRepository.pullCertificatesFromCloud(),
     ).thenAnswer((_) async => const Right([]));
     when(
@@ -123,6 +132,7 @@ void main() {
     verifyInOrder([
       mockAuthRepository.pullProgressFromCloud(),
       mockMemPlusRepository.pullIdentityFromCloud(),
+      mockMemPlusRepository.pullReviewEvidenceFromCloud(),
       mockMemPlusRepository.pullProductionDataFromCloud(),
       mockMemPlusRepository.pullCertificatesFromCloud(),
       mockMemPlusRepository.pullKidsProgressFromCloud(),
@@ -257,6 +267,7 @@ void main() {
 
       verifyInOrder([
         mockMemPlusRepository.hasPendingCloudWork(),
+        mockMemPlusRepository.hasPendingReviewEvidence(),
         mockMemPlusRepository.resyncProductionDataToCloud(),
         mockMemPlusRepository.syncKidsProgressToCloud(),
         mockAuthRepository.signOut(),

@@ -5509,11 +5509,353 @@ abstract class AppLocalizations {
   /// **'⚠️ متضيعش إنجاز {count} يوم!'**
   String notificationStreakAlertTitle(Object count);
 
+  /// No description provided for @notificationStreakGentleTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سلسلتك من {count} يوم مستنياك'**
+  String notificationStreakGentleTitle(Object count);
+
+  /// No description provided for @notificationStreakGentleBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'دقايق مراجعة النهاردة تحافظ على سلسلتك.. وقت ما تحب 🌿'**
+  String get notificationStreakGentleBody;
+
+  /// No description provided for @notificationSmartReminderTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'وقت قراءتك المعتاد'**
+  String get notificationSmartReminderTitle;
+
+  /// No description provided for @notificationSmartReminderBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'الوقت ده عادةً بتقرا فيه.. في آيات مستنياك.'**
+  String get notificationSmartReminderBody;
+
+  /// No description provided for @notificationChannelStreakGentleName.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير لطيف بالسلسلة'**
+  String get notificationChannelStreakGentleName;
+
+  /// No description provided for @notificationChannelStreakGentleDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير هادئ قبل تنبيه حماية السلسلة'**
+  String get notificationChannelStreakGentleDescription;
+
+  /// No description provided for @notificationChannelSmartName.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير ذكي'**
+  String get notificationChannelSmartName;
+
+  /// No description provided for @notificationChannelSmartDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات في وقت قراءتك المعتاد'**
+  String get notificationChannelSmartDescription;
+
   /// No description provided for @notificationStreakAlertBody.
   ///
   /// In ar, this message translates to:
   /// **'فاضل تكة صغيرة وتكمل وردك النهاردة.. متكسلش، تقدر تعملها! 🔥'**
   String get notificationStreakAlertBody;
+
+  /// No description provided for @notificationActionReviewStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'⚡ ابدأ المراجعة'**
+  String get notificationActionReviewStart;
+
+  /// No description provided for @notificationActionDailyWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'📖 الورد اليومي'**
+  String get notificationActionDailyWird;
+
+  /// No description provided for @notificationActionStreakProtect.
+  ///
+  /// In ar, this message translates to:
+  /// **'🔥 احمي السلسلة الآن'**
+  String get notificationActionStreakProtect;
+
+  /// No description provided for @notificationActionReadWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'📖 قراءة الورد'**
+  String get notificationActionReadWird;
+
+  /// No description provided for @notificationActionReadDailyAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'✨ قراءة آية اليوم'**
+  String get notificationActionReadDailyAyah;
+
+  /// No description provided for @notificationActionShareAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'↗️ مشاركة الآية'**
+  String get notificationActionShareAyah;
+
+  /// No description provided for @notificationActionMorningAzkar.
+  ///
+  /// In ar, this message translates to:
+  /// **'☀️ قراءة أذكار الصباح'**
+  String get notificationActionMorningAzkar;
+
+  /// No description provided for @notificationActionEveningAzkar.
+  ///
+  /// In ar, this message translates to:
+  /// **'🌙 قراءة أذكار المساء'**
+  String get notificationActionEveningAzkar;
+
+  /// No description provided for @notificationActionDailyDua.
+  ///
+  /// In ar, this message translates to:
+  /// **'🤲 قراءة أدعية اليوم'**
+  String get notificationActionDailyDua;
+
+  /// No description provided for @notificationActionAzkar.
+  ///
+  /// In ar, this message translates to:
+  /// **'✨ الأذكار'**
+  String get notificationActionAzkar;
+
+  /// No description provided for @notificationActionKidsReview.
+  ///
+  /// In ar, this message translates to:
+  /// **'🌟 ابدأ التسميع يا بطل'**
+  String get notificationActionKidsReview;
+
+  /// No description provided for @notificationActionReadKahf.
+  ///
+  /// In ar, this message translates to:
+  /// **'📖 قراءة سورة الكهف'**
+  String get notificationActionReadKahf;
+
+  /// No description provided for @notificationActionOpenMushaf.
+  ///
+  /// In ar, this message translates to:
+  /// **'✨ المصحف'**
+  String get notificationActionOpenMushaf;
+
+  /// No description provided for @notificationActionTahajjudDua.
+  ///
+  /// In ar, this message translates to:
+  /// **'🤲 أدعية قيام الليل'**
+  String get notificationActionTahajjudDua;
+
+  /// No description provided for @notificationActionFollowKhatmah.
+  ///
+  /// In ar, this message translates to:
+  /// **'📖 متابعة الختمة'**
+  String get notificationActionFollowKhatmah;
+
+  /// No description provided for @notificationActionReadQuran.
+  ///
+  /// In ar, this message translates to:
+  /// **'📖 قراءة القرآن'**
+  String get notificationActionReadQuran;
+
+  /// No description provided for @notificationActionPostPrayerAzkar.
+  ///
+  /// In ar, this message translates to:
+  /// **'📿 أذكار بعد الصلاة'**
+  String get notificationActionPostPrayerAzkar;
+
+  /// No description provided for @notificationChannelRemindersName.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات تالية'**
+  String get notificationChannelRemindersName;
+
+  /// No description provided for @notificationChannelRemindersDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات يومية للمراجعة والحفظ'**
+  String get notificationChannelRemindersDescription;
+
+  /// No description provided for @notificationChannelStreakName.
+  ///
+  /// In ar, this message translates to:
+  /// **'حماية السلسلة'**
+  String get notificationChannelStreakName;
+
+  /// No description provided for @notificationChannelStreakDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيهات للحفاظ على سلسلة أيام الحفظ'**
+  String get notificationChannelStreakDescription;
+
+  /// No description provided for @notificationChannelDailyAyahName.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية اليوم'**
+  String get notificationChannelDailyAyahName;
+
+  /// No description provided for @notificationChannelDailyAyahDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'آية يومية من القرآن الكريم مع التدبر'**
+  String get notificationChannelDailyAyahDescription;
+
+  /// No description provided for @notificationChannelMorningAzkarName.
+  ///
+  /// In ar, this message translates to:
+  /// **'أذكار الصباح'**
+  String get notificationChannelMorningAzkarName;
+
+  /// No description provided for @notificationChannelMorningAzkarDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات أذكار الصباح'**
+  String get notificationChannelMorningAzkarDescription;
+
+  /// No description provided for @notificationChannelEveningAzkarName.
+  ///
+  /// In ar, this message translates to:
+  /// **'أذكار المساء'**
+  String get notificationChannelEveningAzkarName;
+
+  /// No description provided for @notificationChannelEveningAzkarDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات أذكار المساء'**
+  String get notificationChannelEveningAzkarDescription;
+
+  /// No description provided for @notificationChannelDailyDuaName.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعاء اليوم'**
+  String get notificationChannelDailyDuaName;
+
+  /// No description provided for @notificationChannelDailyDuaDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات دعاء اليوم والابتهالات'**
+  String get notificationChannelDailyDuaDescription;
+
+  /// No description provided for @notificationChannelKidsName.
+  ///
+  /// In ar, this message translates to:
+  /// **'تسميع الأطفال'**
+  String get notificationChannelKidsName;
+
+  /// No description provided for @notificationChannelKidsDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات مراجعة وتسميع الأطفال'**
+  String get notificationChannelKidsDescription;
+
+  /// No description provided for @notificationChannelKahfName.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة الكهف'**
+  String get notificationChannelKahfName;
+
+  /// No description provided for @notificationChannelKahfDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات قراءة سورة الكهف يوم الجمعة'**
+  String get notificationChannelKahfDescription;
+
+  /// No description provided for @notificationChannelTahajjudName.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيام الليل والوتر'**
+  String get notificationChannelTahajjudName;
+
+  /// No description provided for @notificationChannelTahajjudDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات قيام الليل في الثلث الأخير'**
+  String get notificationChannelTahajjudDescription;
+
+  /// No description provided for @notificationChannelKhatmahName.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد الختمة'**
+  String get notificationChannelKhatmahName;
+
+  /// No description provided for @notificationChannelKhatmahDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات متابعة ورد الختمة'**
+  String get notificationChannelKhatmahDescription;
+
+  /// No description provided for @notificationChannelMilestonesName.
+  ///
+  /// In ar, this message translates to:
+  /// **'احتفالات الإنجاز'**
+  String get notificationChannelMilestonesName;
+
+  /// No description provided for @notificationChannelMilestonesDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'احتفال عند إتمام حفظ جزء أو سورة أو ختمة كاملة'**
+  String get notificationChannelMilestonesDesc;
+
+  /// No description provided for @notificationMilestoneJuzTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'🎉 أتممت حفظ الجزء {juz}!'**
+  String notificationMilestoneJuzTitle(int juz);
+
+  /// No description provided for @notificationMilestoneJuzBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما شاء الله، تبارك الله! أكملت حفظ الجزء {juz} كاملاً. بارك الله فيك وثبّته في قلبك.'**
+  String notificationMilestoneJuzBody(int juz);
+
+  /// No description provided for @notificationMilestoneSurahTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'🎉 أتممت حفظ سورة {surah}!'**
+  String notificationMilestoneSurahTitle(String surah);
+
+  /// No description provided for @notificationMilestoneSurahBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'ما شاء الله! أكملت حفظ سورة {surah} كاملة. تقبّل الله منك وجعلها نوراً لك.'**
+  String notificationMilestoneSurahBody(String surah);
+
+  /// No description provided for @notificationMilestoneKhatmahTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'🎉 أتممت ختمة القرآن الكريم!'**
+  String get notificationMilestoneKhatmahTitle;
+
+  /// No description provided for @notificationMilestoneKhatmahBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'الحمد لله! أتممت ختمة كاملة من القرآن الكريم. تقبّل الله منك وجازاك بأفضل الجزاء.'**
+  String get notificationMilestoneKhatmahBody;
+
+  /// No description provided for @notificationMilestoneStreakTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'🔥 ٣٠ يوماً متتالياً!'**
+  String get notificationMilestoneStreakTitle;
+
+  /// No description provided for @notificationMilestoneStreakBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'ثلاثون يوماً من المواظبة على المراجعة، ما شاء الله! أكمل سلسلة نورك.'**
+  String get notificationMilestoneStreakBody;
+
+  /// No description provided for @notificationChannelPrayerName.
+  ///
+  /// In ar, this message translates to:
+  /// **'مواقيت الصلاة والأذان'**
+  String get notificationChannelPrayerName;
+
+  /// No description provided for @notificationChannelPrayerDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيهات عند دخول وقت الصلاة'**
+  String get notificationChannelPrayerDescription;
 
   /// No description provided for @notificationDailyAyahTitle.
   ///
@@ -8916,6 +9258,66 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'الأحد'**
   String get weekdaySunday;
+
+  /// No description provided for @notificationExactAlarmRequest.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحسين دقة مواقيت الصلاة'**
+  String get notificationExactAlarmRequest;
+
+  /// No description provided for @notificationExactAlarmGranted.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تفعيل دقة تنبيهات مواقيت الصلاة.'**
+  String get notificationExactAlarmGranted;
+
+  /// No description provided for @notificationExactAlarmDenied.
+  ///
+  /// In ar, this message translates to:
+  /// **'قد تصل التنبيهات متأخرة قليلًا حتى تمنح إذن المنبهات الدقيقة من إعدادات الهاتف.'**
+  String get notificationExactAlarmDenied;
+
+  /// No description provided for @notificationTestFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذر إرسال الإشعار. تحقّق من إذن الإشعارات في إعدادات الهاتف.'**
+  String get notificationTestFailed;
+
+  /// No description provided for @notificationQuietHours.
+  ///
+  /// In ar, this message translates to:
+  /// **'الساعات الهادئة'**
+  String get notificationQuietHours;
+
+  /// No description provided for @notificationQuietHoursSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'ينقل التذكيرات العادية خارج الفترة المحددة. مواقيت الصلاة لا تتغير.'**
+  String get notificationQuietHoursSub;
+
+  /// No description provided for @notificationQuietHoursStart.
+  ///
+  /// In ar, this message translates to:
+  /// **'البداية'**
+  String get notificationQuietHoursStart;
+
+  /// No description provided for @notificationQuietHoursEnd.
+  ///
+  /// In ar, this message translates to:
+  /// **'النهاية'**
+  String get notificationQuietHoursEnd;
+
+  /// No description provided for @notificationSmartReminder.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير ذكي'**
+  String get notificationSmartReminder;
+
+  /// No description provided for @notificationSmartReminderSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'يستخدم أوقات فتحك الأخيرة على الجهاز لاختيار وقت التذكير.'**
+  String get notificationSmartReminderSub;
 }
 
 class _AppLocalizationsDelegate

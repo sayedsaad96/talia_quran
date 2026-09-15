@@ -1390,7 +1390,79 @@
   "notificationDailyReviewBodyCount": "عندك {count} آية مستنية مراجعتك النهاردة.. يلا خطوة بخطوة! ✨",
   "notificationDailyReviewBody": "يلا بينا نرجع للمصحف ونثبت حفظ اليوم 🌸",
   "notificationStreakAlertTitle": "⚠️ متضيعش إنجاز {count} يوم!",
+  "@notificationStreakAlertTitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "notificationStreakGentleTitle": "سلسلتك من {count} يوم مستنياك",
+  "@notificationStreakGentleTitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "notificationStreakGentleBody": "دقايق مراجعة النهاردة تحافظ على سلسلتك.. وقت ما تحب 🌿",
+  "notificationSmartReminderTitle": "وقت قراءتك المعتاد",
+  "notificationSmartReminderBody": "الوقت ده عادةً بتقرا فيه.. في آيات مستنياك.",
+  "notificationChannelStreakGentleName": "تذكير لطيف بالسلسلة",
+  "notificationChannelStreakGentleDescription": "تذكير هادئ قبل تنبيه حماية السلسلة",
+  "notificationChannelSmartName": "تذكير ذكي",
+  "notificationChannelSmartDescription": "تذكيرات في وقت قراءتك المعتاد",
   "notificationStreakAlertBody": "فاضل تكة صغيرة وتكمل وردك النهاردة.. متكسلش، تقدر تعملها! 🔥",
+  "notificationActionReviewStart": "⚡ ابدأ المراجعة",
+  "notificationActionDailyWird": "📖 الورد اليومي",
+  "notificationActionStreakProtect": "🔥 احمي السلسلة الآن",
+  "notificationActionReadWird": "📖 قراءة الورد",
+  "notificationActionReadDailyAyah": "✨ قراءة آية اليوم",
+  "notificationActionShareAyah": "↗️ مشاركة الآية",
+  "notificationActionMorningAzkar": "☀️ قراءة أذكار الصباح",
+  "notificationActionEveningAzkar": "🌙 قراءة أذكار المساء",
+  "notificationActionDailyDua": "🤲 قراءة أدعية اليوم",
+  "notificationActionAzkar": "✨ الأذكار",
+  "notificationActionKidsReview": "🌟 ابدأ التسميع يا بطل",
+  "notificationActionReadKahf": "📖 قراءة سورة الكهف",
+  "notificationActionOpenMushaf": "✨ المصحف",
+  "notificationActionTahajjudDua": "🤲 أدعية قيام الليل",
+  "notificationActionFollowKhatmah": "📖 متابعة الختمة",
+  "notificationActionReadQuran": "📖 قراءة القرآن",
+  "notificationActionPostPrayerAzkar": "📿 أذكار بعد الصلاة",
+  "notificationChannelRemindersName": "تذكيرات تالية",
+  "notificationChannelRemindersDescription": "تذكيرات يومية للمراجعة والحفظ",
+  "notificationChannelStreakName": "حماية السلسلة",
+  "notificationChannelStreakDescription": "تنبيهات للحفاظ على سلسلة أيام الحفظ",
+  "notificationChannelDailyAyahName": "آية اليوم",
+  "notificationChannelDailyAyahDescription": "آية يومية من القرآن الكريم مع التدبر",
+  "notificationChannelMorningAzkarName": "أذكار الصباح",
+  "notificationChannelMorningAzkarDescription": "تذكيرات أذكار الصباح",
+  "notificationChannelEveningAzkarName": "أذكار المساء",
+  "notificationChannelEveningAzkarDescription": "تذكيرات أذكار المساء",
+  "notificationChannelDailyDuaName": "دعاء اليوم",
+  "notificationChannelDailyDuaDescription": "تذكيرات دعاء اليوم والابتهالات",
+  "notificationChannelKidsName": "تسميع الأطفال",
+  "notificationChannelKidsDescription": "تذكيرات مراجعة وتسميع الأطفال",
+  "notificationChannelKahfName": "سورة الكهف",
+  "notificationChannelKahfDescription": "تذكيرات قراءة سورة الكهف يوم الجمعة",
+  "notificationChannelTahajjudName": "قيام الليل والوتر",
+  "notificationChannelTahajjudDescription": "تذكيرات قيام الليل في الثلث الأخير",
+  "notificationChannelKhatmahName": "ورد الختمة",
+  "notificationChannelKhatmahDescription": "تذكيرات متابعة ورد الختمة",
+  "notificationChannelMilestonesName": "احتفالات الإنجاز",
+  "notificationChannelMilestonesDesc": "احتفال عند إتمام حفظ جزء أو سورة أو ختمة كاملة",
+  "notificationMilestoneJuzTitle": "🎉 أتممت حفظ الجزء {juz}!",
+  "@notificationMilestoneJuzTitle": { "placeholders": { "juz": { "type": "int" } } },
+  "notificationMilestoneJuzBody": "ما شاء الله، تبارك الله! أكملت حفظ الجزء {juz} كاملاً. بارك الله فيك وثبّته في قلبك.",
+  "@notificationMilestoneJuzBody": { "placeholders": { "juz": { "type": "int" } } },
+  "notificationMilestoneSurahTitle": "🎉 أتممت حفظ سورة {surah}!",
+  "@notificationMilestoneSurahTitle": { "placeholders": { "surah": { "type": "String" } } },
+  "notificationMilestoneSurahBody": "ما شاء الله! أكملت حفظ سورة {surah} كاملة. تقبّل الله منك وجعلها نوراً لك.",
+  "@notificationMilestoneSurahBody": { "placeholders": { "surah": { "type": "String" } } },
+  "notificationMilestoneKhatmahTitle": "🎉 أتممت ختمة القرآن الكريم!",
+  "notificationMilestoneKhatmahBody": "الحمد لله! أتممت ختمة كاملة من القرآن الكريم. تقبّل الله منك وجازاك بأفضل الجزاء.",
+  "notificationMilestoneStreakTitle": "🔥 ٣٠ يوماً متتالياً!",
+  "notificationMilestoneStreakBody": "ثلاثون يوماً من المواظبة على المراجعة، ما شاء الله! أكمل سلسلة نورك.",
+  "notificationChannelPrayerName": "مواقيت الصلاة والأذان",
+  "notificationChannelPrayerDescription": "تنبيهات عند دخول وقت الصلاة",
+
   "notificationDailyAyahTitle": "آية تفتح لك يومك ✨",
   "notificationDailyAyahBody": "خدلك دقيقة روق بالك مع وردك النهاردة من القرآن الكريم 🌿",
   "notificationMorningAzkarTitle": "صبحك الله بالخير ☀️",
@@ -2099,5 +2171,15 @@
   "weekdayThursday": "الخميس",
   "weekdayFriday": "الجمعة",
   "weekdaySaturday": "السبت",
-  "weekdaySunday": "الأحد"
+  "weekdaySunday": "الأحد",
+  "notificationExactAlarmRequest": "تحسين دقة مواقيت الصلاة",
+  "notificationExactAlarmGranted": "تم تفعيل دقة تنبيهات مواقيت الصلاة.",
+  "notificationExactAlarmDenied": "قد تصل التنبيهات متأخرة قليلًا حتى تمنح إذن المنبهات الدقيقة من إعدادات الهاتف.",
+  "notificationTestFailed": "تعذر إرسال الإشعار. تحقّق من إذن الإشعارات في إعدادات الهاتف."
+  ,"notificationQuietHours": "الساعات الهادئة"
+  ,"notificationQuietHoursSub": "ينقل التذكيرات العادية خارج الفترة المحددة. مواقيت الصلاة لا تتغير."
+  ,"notificationQuietHoursStart": "البداية"
+  ,"notificationQuietHoursEnd": "النهاية"
+  ,"notificationSmartReminder": "تذكير ذكي"
+  ,"notificationSmartReminderSub": "يستخدم أوقات فتحك الأخيرة على الجهاز لاختيار وقت التذكير."
 }

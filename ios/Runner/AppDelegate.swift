@@ -12,7 +12,29 @@ import workmanager_apple
     WorkmanagerPlugin.setPluginRegistrantCallback { registry in
       GeneratedPluginRegistrant.register(with: registry)
     }
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    let didFinishLaunching = super.application(
+      application,
+      didFinishLaunchingWithOptions: launchOptions
+    )
+
+    if let controller = window?.rootViewController as? FlutterViewController {
+      let badgeChannel = FlutterMethodChannel(
+        name: "talia/badge",
+        binaryMessenger: controller.binaryMessenger
+      )
+      badgeChannel.setMethodCallHandler { call, result in
+        guard call.method == "clearBadge" else {
+          result(FlutterMethodNotImplemented)
+          return
+        }
+        DispatchQueue.main.async {
+          application.applicationIconBadgeNumber = 0
+          result(nil)
+        }
+      }
+    }
+
+    return didFinishLaunching
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {

@@ -21,6 +21,10 @@ class NotificationSettingsState extends Equatable {
     this.prayerAsr = true,
     this.prayerMaghrib = true,
     this.prayerIsha = true,
+    this.quietHoursEnabled = false,
+    this.quietHoursStart = 23,
+    this.quietHoursEnd = 4,
+    this.smartReminder = false,
     this.dailyReviewTime = const TimeOfDay(hour: 20, minute: 0),
     this.streakAlertTime = const TimeOfDay(hour: 22, minute: 0),
     this.dailyAyahTime = const TimeOfDay(hour: 7, minute: 0),
@@ -55,6 +59,11 @@ class NotificationSettingsState extends Equatable {
   final bool prayerAsr;
   final bool prayerMaghrib;
   final bool prayerIsha;
+
+  final bool quietHoursEnabled;
+  final int quietHoursStart;
+  final int quietHoursEnd;
+  final bool smartReminder;
 
   // Time schedules
   final TimeOfDay dailyReviewTime;
@@ -109,6 +118,10 @@ class NotificationSettingsState extends Equatable {
     bool? prayerAsr,
     bool? prayerMaghrib,
     bool? prayerIsha,
+    bool? quietHoursEnabled,
+    int? quietHoursStart,
+    int? quietHoursEnd,
+    bool? smartReminder,
     TimeOfDay? dailyReviewTime,
     TimeOfDay? streakAlertTime,
     TimeOfDay? dailyAyahTime,
@@ -139,6 +152,10 @@ class NotificationSettingsState extends Equatable {
       prayerAsr: prayerAsr ?? this.prayerAsr,
       prayerMaghrib: prayerMaghrib ?? this.prayerMaghrib,
       prayerIsha: prayerIsha ?? this.prayerIsha,
+      quietHoursEnabled: quietHoursEnabled ?? this.quietHoursEnabled,
+      quietHoursStart: quietHoursStart ?? this.quietHoursStart,
+      quietHoursEnd: quietHoursEnd ?? this.quietHoursEnd,
+      smartReminder: smartReminder ?? this.smartReminder,
       dailyReviewTime: dailyReviewTime ?? this.dailyReviewTime,
       streakAlertTime: streakAlertTime ?? this.streakAlertTime,
       dailyAyahTime: dailyAyahTime ?? this.dailyAyahTime,
@@ -172,6 +189,10 @@ class NotificationSettingsState extends Equatable {
     prayerAsr,
     prayerMaghrib,
     prayerIsha,
+    quietHoursEnabled,
+    quietHoursStart,
+    quietHoursEnd,
+    smartReminder,
     dailyReviewTime,
     streakAlertTime,
     dailyAyahTime,

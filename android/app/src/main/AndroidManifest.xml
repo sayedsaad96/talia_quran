@@ -8,6 +8,12 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Exact alarms for time-critical prayer/streak reminders (Android 12).
+         flutter_local_notifications 22.x does NOT declare this permission in
+         its own manifest, and USE_EXACT_ALARM / battery-optimization bypasses
+         are deliberately avoided (Play policy). -->
+    <uses-permission
+        android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <application
         android:label="Talia"

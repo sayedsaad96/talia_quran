@@ -43,7 +43,7 @@ void main() {
         body: any(named: 'body'),
         type: any(named: 'type'),
       ),
-    ).thenAnswer((_) async {});
+    ).thenAnswer((_) async => true);
     when(
       () => mockScheduler.refreshNotifications(
         any(),
@@ -120,6 +120,73 @@ void main() {
       ).called(1);
     });
 
+    test('load() falls back to 6:00 / 18:00 defaults for azkar times', () async {
+      await cubit.load();
+
+      expect(
+        cubit.state.morningAzkarTime,
+        const TimeOfDay(hour: 6, minute: 0),
+      );
+      expect(
+        cubit.state.eveningAzkarTime,
+        const TimeOfDay(hour: 18, minute: 0),
+      );
+    });
+
+    test('updateReminderTime() persists morning azkar time and triggers reschedule', () async {
+      await cubit.load();
+
+      final fakeL10n = FakeAppLocalizations();
+      const newTime = TimeOfDay(hour: 5, minute: 30);
+
+      await cubit.updateReminderTime(
+        TaliaNotificationService.morningAzkarPreferenceKey,
+        newTime,
+        l10n: fakeL10n,
+      );
+
+      expect(cubit.state.morningAzkarTime, newTime);
+      expect(
+        prefs.getInt(
+          '${TaliaNotificationService.morningAzkarPreferenceKey}_hour',
+        ),
+        5,
+      );
+      expect(
+        prefs.getInt(
+          '${TaliaNotificationService.morningAzkarPreferenceKey}_minute',
+        ),
+        30,
+      );
+      verify(
+        () => mockScheduler.refreshNotifications(fakeL10n, force: true),
+      ).called(1);
+    });
+
+    test('updateReminderTime() persists evening azkar time and triggers reschedule', () async {
+      await cubit.load();
+
+      final fakeL10n = FakeAppLocalizations();
+      const newTime = TimeOfDay(hour: 19, minute: 0);
+
+      await cubit.updateReminderTime(
+        TaliaNotificationService.eveningAzkarPreferenceKey,
+        newTime,
+        l10n: fakeL10n,
+      );
+
+      expect(cubit.state.eveningAzkarTime, newTime);
+      expect(
+        prefs.getInt(
+          '${TaliaNotificationService.eveningAzkarPreferenceKey}_hour',
+        ),
+        19,
+      );
+      verify(
+        () => mockScheduler.refreshNotifications(fakeL10n, force: true),
+      ).called(1);
+    });
+
     test('togglePrayer() updates individual prayer filter and triggers reschedule', () async {
       await cubit.load();
 
@@ -147,6 +214,56 @@ void main() {
       await cubit.checkPermission();
       expect(cubit.state.hasSystemPermission, isFalse);
       expect(cubit.state.isSystemPermissionBlocked, isTrue);
+    });
+
+    test('quiet-hours controls persist and reschedule notifications', () async {
+      await cubit.load();
+      final fakeL10n = FakeAppLocalizations();
+
+      await cubit.toggleReminder(
+        TaliaNotificationService.quietHoursPreferenceKey,
+        true,
+        l10n: fakeL10n,
+      );
+      await cubit.updateQuietHours(
+        startHour: 22,
+        endHour: 5,
+        l10n: fakeL10n,
+      );
+
+      expect(cubit.state.quietHoursEnabled, isTrue);
+      expect(cubit.state.quietHoursStart, 22);
+      expect(cubit.state.quietHoursEnd, 5);
+      expect(
+        prefs.getBool(TaliaNotificationService.quietHoursPreferenceKey),
+        isTrue,
+      );
+      expect(prefs.getInt(TaliaNotificationService.quietHoursStartKey), 22);
+      expect(prefs.getInt(TaliaNotificationService.quietHoursEndKey), 5);
+      verify(
+        () => mockScheduler.refreshNotifications(fakeL10n, force: true),
+      ).called(2);
+    });
+
+    test('smart reminder preference persists and reschedules notifications',
+        () async {
+      await cubit.load();
+      final fakeL10n = FakeAppLocalizations();
+
+      await cubit.toggleReminder(
+        TaliaNotificationService.smartReminderPreferenceKey,
+        true,
+        l10n: fakeL10n,
+      );
+
+      expect(cubit.state.smartReminder, isTrue);
+      expect(
+        prefs.getBool(TaliaNotificationService.smartReminderPreferenceKey),
+        isTrue,
+      );
+      verify(
+        () => mockScheduler.refreshNotifications(fakeL10n, force: true),
+      ).called(1);
     });
 
     test('showTestNotification() delegates to TaliaNotificationService', () async {

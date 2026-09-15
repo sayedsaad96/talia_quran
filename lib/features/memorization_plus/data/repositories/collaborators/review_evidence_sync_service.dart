@@ -67,11 +67,17 @@ final class SupabaseReviewEvidenceTransport implements ReviewEvidenceTransport {
   }
 
   static List<Map<String, dynamic>> _mapRows(Object? raw) {
-    if (raw is! List) throw const FormatException('Invalid evidence RPC response');
-    return raw.map((row) {
-      if (row is! Map) throw const FormatException('Invalid evidence RPC row');
-      return Map<String, dynamic>.from(row);
-    }).toList(growable: false);
+    if (raw is! List) {
+      throw const FormatException('Invalid evidence RPC response');
+    }
+    return raw
+        .map((row) {
+          if (row is! Map) {
+            throw const FormatException('Invalid evidence RPC row');
+          }
+          return Map<String, dynamic>.from(row);
+        })
+        .toList(growable: false);
   }
 }
 
@@ -99,6 +105,7 @@ final class ReviewEvidenceSyncService implements ReviewEvidenceSync {
   final ReviewEvidenceTransport _transport;
   final AccountDataBarrier _barrier;
 
+  @override
   bool get isEnabled =>
       CloudSyncFeatureFlags.isReviewEvidenceTransportEnabled(_prefs);
 

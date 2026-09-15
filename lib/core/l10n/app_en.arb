@@ -1405,8 +1405,75 @@
       "count": {}
     }
   },
+  "notificationStreakGentleTitle": "Your {count}-day streak is waiting",
+  "@notificationStreakGentleTitle": {
+    "placeholders": {
+      "count": {}
+    }
+  },
+  "notificationStreakGentleBody": "A few minutes of review today keeps your streak alive. Whenever you're ready 🌿",
+  "notificationSmartReminderTitle": "Time for your usual reading",
+  "notificationSmartReminderBody": "It's usually your reading time — a few ayahs are waiting for you.",
+  "notificationChannelStreakGentleName": "Gentle streak reminder",
+  "notificationChannelStreakGentleDescription": "A quiet reminder before the streak protection alert",
+  "notificationChannelSmartName": "Smart reminder",
+  "notificationChannelSmartDescription": "Reminders at your usual reading time",
   "notificationStreakAlertBody": "You haven't reviewed today yet — you still can",
   "notificationDailyAyahTitle": "Ayah of the Day ✨",
+  "notificationActionReviewStart": "⚡ Start review",
+  "notificationActionDailyWird": "📖 Daily wird",
+  "notificationActionStreakProtect": "🔥 Protect your streak",
+  "notificationActionReadWird": "📖 Read the wird",
+  "notificationActionReadDailyAyah": "✨ Read ayah of the day",
+  "notificationActionShareAyah": "↗️ Share the ayah",
+  "notificationActionMorningAzkar": "☀️ Morning azkar",
+  "notificationActionEveningAzkar": "🌙 Evening azkar",
+  "notificationActionDailyDua": "🤲 Read today's duas",
+  "notificationActionAzkar": "✨ Azkar",
+  "notificationActionKidsReview": "🌟 Start reciting, champ",
+  "notificationActionReadKahf": "📖 Read Surah Al-Kahf",
+  "notificationActionOpenMushaf": "✨ The Quran",
+  "notificationActionTahajjudDua": "🤲 Night prayer duas",
+  "notificationActionFollowKhatmah": "📖 Continue khatmah",
+  "notificationActionReadQuran": "📖 Read the Quran",
+  "notificationActionPostPrayerAzkar": "📿 Post-prayer azkar",
+  "notificationChannelRemindersName": "Talia reminders",
+  "notificationChannelRemindersDescription": "Daily review and memorization reminders",
+  "notificationChannelStreakName": "Streak protection",
+  "notificationChannelStreakDescription": "Alerts to protect your memorization streak",
+  "notificationChannelDailyAyahName": "Ayah of the Day",
+  "notificationChannelDailyAyahDescription": "A daily ayah from the Holy Quran with reflection",
+  "notificationChannelMorningAzkarName": "Morning azkar",
+  "notificationChannelMorningAzkarDescription": "Morning azkar reminders",
+  "notificationChannelEveningAzkarName": "Evening azkar",
+  "notificationChannelEveningAzkarDescription": "Evening azkar reminders",
+  "notificationChannelDailyDuaName": "Dua of the Day",
+  "notificationChannelDailyDuaDescription": "Daily dua and supplication reminders",
+  "notificationChannelKidsName": "Kids recitation",
+  "notificationChannelKidsDescription": "Kids review and recitation reminders",
+  "notificationChannelKahfName": "Surah Al-Kahf",
+  "notificationChannelKahfDescription": "Friday Surah Al-Kahf reading reminders",
+  "notificationChannelTahajjudName": "Night prayer & Witr",
+  "notificationChannelTahajjudDescription": "Qiyam al-layl reminders in the last third of the night",
+  "notificationChannelKhatmahName": "Khatmah wird",
+  "notificationChannelKhatmahDescription": "Khatmah progress reminders",
+  "notificationChannelMilestonesName": "Achievement celebrations",
+  "notificationChannelMilestonesDesc": "Celebrations when you complete a juz, a surah, or a full khatmah",
+  "notificationMilestoneJuzTitle": "🎉 Juz {juz} memorized!",
+  "@notificationMilestoneJuzTitle": { "placeholders": { "juz": { "type": "int" } } },
+  "notificationMilestoneJuzBody": "Masha'Allah, tabarak Allah! You have completed memorizing all of Juz {juz}. May Allah keep it firm in your heart.",
+  "@notificationMilestoneJuzBody": { "placeholders": { "juz": { "type": "int" } } },
+  "notificationMilestoneSurahTitle": "🎉 Surah {surah} memorized!",
+  "@notificationMilestoneSurahTitle": { "placeholders": { "surah": { "type": "String" } } },
+  "notificationMilestoneSurahBody": "Masha'Allah! You have completed memorizing Surah {surah}. May Allah bless it and make it a light for you.",
+  "@notificationMilestoneSurahBody": { "placeholders": { "surah": { "type": "String" } } },
+  "notificationMilestoneKhatmahTitle": "🎉 Khatmah of the Noble Quran complete!",
+  "notificationMilestoneKhatmahBody": "Alhamdulillah! You have completed a full khatmah of the Quran. May Allah accept it from you and reward you with the best of rewards.",
+  "notificationMilestoneStreakTitle": "🔥 30 consecutive days!",
+  "notificationMilestoneStreakBody": "Thirty days of steady review, masha'Allah! Keep your chain of light going.",
+  "notificationChannelPrayerName": "Prayer times & Adhan",
+  "notificationChannelPrayerDescription": "Alerts when a prayer time enters",
+
   "notificationDailyAyahBody": "Read your daily Wird from the Holy Quran",
   "notificationMorningAzkarTitle": "Morning Azkar ☀️",
   "notificationMorningAzkarBody": "Start your day with the remembrance of Allah and peace of mind",
@@ -2164,5 +2231,15 @@
   "weekdayThursday": "Thursday",
   "weekdayFriday": "Friday",
   "weekdaySaturday": "Saturday",
-  "weekdaySunday": "Sunday"
+  "weekdaySunday": "Sunday",
+  "notificationExactAlarmRequest": "Improve prayer-time precision",
+  "notificationExactAlarmGranted": "Prayer-time notification precision is enabled.",
+  "notificationExactAlarmDenied": "Notifications may arrive slightly late until exact-alarm access is allowed in device settings.",
+  "notificationTestFailed": "Could not send the notification. Check notification permission in device settings."
+  ,"notificationQuietHours": "Quiet hours"
+  ,"notificationQuietHoursSub": "Move regular reminders outside the chosen period. Prayer times remain unchanged."
+  ,"notificationQuietHoursStart": "Starts"
+  ,"notificationQuietHoursEnd": "Ends"
+  ,"notificationSmartReminder": "Smart reminder"
+  ,"notificationSmartReminderSub": "Uses your recent on-device opening times to choose a reminder time."
 }

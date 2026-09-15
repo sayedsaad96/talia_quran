@@ -67,6 +67,16 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         _prefs.getBool(TaliaNotificationService.prayerMaghribKey) ?? true;
     final prayerIsha =
         _prefs.getBool(TaliaNotificationService.prayerIshaKey) ?? true;
+    final quietHoursEnabled =
+        _prefs.getBool(TaliaNotificationService.quietHoursPreferenceKey) ??
+        false;
+    final quietHoursStart =
+        _prefs.getInt(TaliaNotificationService.quietHoursStartKey) ?? 23;
+    final quietHoursEnd =
+        _prefs.getInt(TaliaNotificationService.quietHoursEndKey) ?? 4;
+    final smartReminder =
+        _prefs.getBool(TaliaNotificationService.smartReminderPreferenceKey) ??
+        false;
 
     emit(
       state.copyWith(
@@ -88,6 +98,10 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         prayerAsr: prayerAsr,
         prayerMaghrib: prayerMaghrib,
         prayerIsha: prayerIsha,
+        quietHoursEnabled: quietHoursEnabled,
+        quietHoursStart: quietHoursStart,
+        quietHoursEnd: quietHoursEnd,
+        smartReminder: smartReminder,
         dailyReviewTime: _readTime(
           TaliaNotificationService.dailyReviewPreferenceKey,
           defaultHour: 20,
@@ -192,6 +206,12 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       ),
       TaliaNotificationService.prayerNotificationsPreferenceKey =>
         state.copyWith(prayerNotifications: value),
+      TaliaNotificationService.quietHoursPreferenceKey => state.copyWith(
+        quietHoursEnabled: value,
+      ),
+      TaliaNotificationService.smartReminderPreferenceKey => state.copyWith(
+        smartReminder: value,
+      ),
       _ => state,
     };
 
@@ -278,16 +298,33 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
   }
 
   /// Triggers an immediate interactive test notification.
-  Future<void> showTestNotification({
+  Future<bool> showTestNotification({
     required String title,
     required String body,
     String type = 'review',
   }) async {
-    await _notificationService.showImmediateTestNotification(
+    return _notificationService.showImmediateTestNotification(
       title: title,
       body: body,
       type: type,
     );
+  }
+
+  Future<bool> requestExactPrayerTimePermission() {
+    return _notificationService.requestExactNotificationPermission();
+  }
+
+  Future<void> updateQuietHours({
+    required int startHour,
+    required int endHour,
+    AppLocalizations? l10n,
+  }) async {
+    await _prefs.setInt(TaliaNotificationService.quietHoursStartKey, startHour);
+    await _prefs.setInt(TaliaNotificationService.quietHoursEndKey, endHour);
+    emit(
+      state.copyWith(quietHoursStart: startHour, quietHoursEnd: endHour),
+    );
+    await _reschedule(l10n);
   }
 
   TimeOfDay _readTime(
@@ -301,10 +338,17 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
   }
 
   Future<void> _reschedule(AppLocalizations? l10n) async {
-    if (l10n != null && _scheduler != null) {
-      try {
-        await _scheduler.refreshNotifications(l10n, force: true);
-      } catch (_) {}
+    if (_scheduler == null) return;
+    var effectiveL10n = l10n;
+    if (effectiveL10n == null) {
+      // Fall back to the saved locale preference so a reschedule triggered
+      // without a BuildContext never silently skips (and never leaves stale
+      // Arabic/English labels behind).
+      final languageCode = _prefs.getString('app_locale') ?? 'ar';
+      effectiveL10n = lookupAppLocalizations(Locale(languageCode));
     }
+    try {
+      await _scheduler.refreshNotifications(effectiveL10n, force: true);
+    } catch (_) {}
   }
 }

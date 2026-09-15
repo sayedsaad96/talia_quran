@@ -9,6 +9,7 @@ import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
 import '../sync/cloud_sync_queue.dart';
 import '../utils/talia_logger.dart';
+import 'milestone_notification.dart';
 import '../../features/certificate/domain/entities/certificate_award.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import '../../features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
@@ -305,6 +306,9 @@ class AchievementService {
     );
     if (!saved) throw StateError('certificate_write_failed');
     _progressEvents.notify(ProgressChangedReason.certificate);
+    // Fire-and-forget milestone celebration; fireCertificateMilestone
+    // contains every failure so certificate creation is never interrupted.
+    unawaited(fireCertificateMilestone(award));
     final queue = _cloudSyncQueue;
     if (queue != null) {
       unawaited(queue.enqueue(CloudSyncQueueKind.certificatePush));

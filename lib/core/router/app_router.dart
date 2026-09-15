@@ -204,11 +204,11 @@ class MemorizationRouteGuard {
     try {
       final result = await getIt<MemorizationPlusRepository>()
           .getMemorizationProfile();
-      return result.fold(
-        (_) => '${AppRoutes.memorizationPlus}?preferred=kids',
-        (profile) =>
-            profile.isChild ? AppRoutes.memorizationPlusKidsHome : null,
-      );
+      final profile = result.fold((_) => null, (p) => p);
+      if (profile == null) {
+        return '${AppRoutes.memorizationPlus}?preferred=kids';
+      }
+      return profile.isChild ? AppRoutes.memorizationPlusKidsHome : null;
     } catch (_) {
       return '${AppRoutes.memorizationPlus}?preferred=kids';
     }

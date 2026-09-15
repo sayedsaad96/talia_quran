@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import '../../../../core/identity/account_data_barrier.dart';
+import '../../../../core/services/milestone_notification.dart';
 import '../../domain/entities/khatmah_history_entry.dart';
 import '../../domain/entities/khatmah_plan.dart';
 import '../../domain/entities/khatmah_reading_result.dart';
@@ -195,6 +198,8 @@ class KhatmahRepositoryImpl implements KhatmahRepository {
         ),
       );
       lease.check();
+      // Fire-and-forget khatmah completion celebration; fully contained.
+      unawaited(fireKhatmahMilestone());
     } else if (persisted.certificateId == null) {
       persisted = await _datasource.linkCertificate(persisted.id);
       lease.check();

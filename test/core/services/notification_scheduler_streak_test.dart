@@ -38,6 +38,35 @@ void main() {
         .thenAnswer((_) async {});
     when(() => mockNotificationService.cancelStreakAlert())
         .thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelStreakGentleNudge())
+        .thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelSmartReminder())
+        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.scheduleStreakGentleNudge(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        currentStreak: any(named: 'currentStreak'),
+        hour: any(named: 'hour'),
+        minute: any(named: 'minute'),
+      ),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.scheduleSmartReminder(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        hour: any(named: 'hour'),
+        minute: any(named: 'minute'),
+      ),
+    ).thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelFridayKahfReminder())
+        .thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelTahajjudReminder())
+        .thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelKhatmahReminder())
+        .thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelPrayerTimesReminders())
+        .thenAnswer((_) async {});
     when(
       () => mockNotificationService.scheduleStreakProtectionAlert(
         title: any(named: 'title'),

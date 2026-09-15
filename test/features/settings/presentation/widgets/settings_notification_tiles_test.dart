@@ -72,4 +72,67 @@ void main() {
 
     expect(find.text('Daily Ayah'), findsOneWidget);
   });
+
+  testWidgets(
+    'renders configurable azkar and daily review time tiles with default times',
+    (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          locale: Locale('en'),
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: NotificationSettingTile(isDark: false),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Daily Review Reminder'), findsOneWidget);
+      expect(find.text('Morning Azkar Reminder'), findsOneWidget);
+      expect(find.text('Evening Azkar Reminder'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'tapping the daily review time button opens the time picker',
+    (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          locale: Locale('en'),
+          localizationsDelegates: [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: NotificationSettingTile(isDark: false),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The Daily Review tile is the first time-editor tile; its edit
+      // affordance is the first clock-icon OutlinedButton in the list.
+      final editButton = find.byIcon(Icons.access_time_rounded).first;
+      await tester.ensureVisible(editButton);
+      await tester.tap(editButton);
+      await tester.pumpAndSettle();
+
+      // The Material TimePicker dialog opened at the 8:00 PM default.
+      expect(find.byType(TimePickerDialog), findsOneWidget);
+      expect(find.text('PM'), findsWidgets);
+    },
+  );
 }

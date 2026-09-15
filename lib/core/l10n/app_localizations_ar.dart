@@ -3018,8 +3018,208 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String notificationStreakGentleTitle(Object count) {
+    return 'سلسلتك من $count يوم مستنياك';
+  }
+
+  @override
+  String get notificationStreakGentleBody =>
+      'دقايق مراجعة النهاردة تحافظ على سلسلتك.. وقت ما تحب 🌿';
+
+  @override
+  String get notificationSmartReminderTitle => 'وقت قراءتك المعتاد';
+
+  @override
+  String get notificationSmartReminderBody =>
+      'الوقت ده عادةً بتقرا فيه.. في آيات مستنياك.';
+
+  @override
+  String get notificationChannelStreakGentleName => 'تذكير لطيف بالسلسلة';
+
+  @override
+  String get notificationChannelStreakGentleDescription =>
+      'تذكير هادئ قبل تنبيه حماية السلسلة';
+
+  @override
+  String get notificationChannelSmartName => 'تذكير ذكي';
+
+  @override
+  String get notificationChannelSmartDescription =>
+      'تذكيرات في وقت قراءتك المعتاد';
+
+  @override
   String get notificationStreakAlertBody =>
       'فاضل تكة صغيرة وتكمل وردك النهاردة.. متكسلش، تقدر تعملها! 🔥';
+
+  @override
+  String get notificationActionReviewStart => '⚡ ابدأ المراجعة';
+
+  @override
+  String get notificationActionDailyWird => '📖 الورد اليومي';
+
+  @override
+  String get notificationActionStreakProtect => '🔥 احمي السلسلة الآن';
+
+  @override
+  String get notificationActionReadWird => '📖 قراءة الورد';
+
+  @override
+  String get notificationActionReadDailyAyah => '✨ قراءة آية اليوم';
+
+  @override
+  String get notificationActionShareAyah => '↗️ مشاركة الآية';
+
+  @override
+  String get notificationActionMorningAzkar => '☀️ قراءة أذكار الصباح';
+
+  @override
+  String get notificationActionEveningAzkar => '🌙 قراءة أذكار المساء';
+
+  @override
+  String get notificationActionDailyDua => '🤲 قراءة أدعية اليوم';
+
+  @override
+  String get notificationActionAzkar => '✨ الأذكار';
+
+  @override
+  String get notificationActionKidsReview => '🌟 ابدأ التسميع يا بطل';
+
+  @override
+  String get notificationActionReadKahf => '📖 قراءة سورة الكهف';
+
+  @override
+  String get notificationActionOpenMushaf => '✨ المصحف';
+
+  @override
+  String get notificationActionTahajjudDua => '🤲 أدعية قيام الليل';
+
+  @override
+  String get notificationActionFollowKhatmah => '📖 متابعة الختمة';
+
+  @override
+  String get notificationActionReadQuran => '📖 قراءة القرآن';
+
+  @override
+  String get notificationActionPostPrayerAzkar => '📿 أذكار بعد الصلاة';
+
+  @override
+  String get notificationChannelRemindersName => 'تذكيرات تالية';
+
+  @override
+  String get notificationChannelRemindersDescription =>
+      'تذكيرات يومية للمراجعة والحفظ';
+
+  @override
+  String get notificationChannelStreakName => 'حماية السلسلة';
+
+  @override
+  String get notificationChannelStreakDescription =>
+      'تنبيهات للحفاظ على سلسلة أيام الحفظ';
+
+  @override
+  String get notificationChannelDailyAyahName => 'آية اليوم';
+
+  @override
+  String get notificationChannelDailyAyahDescription =>
+      'آية يومية من القرآن الكريم مع التدبر';
+
+  @override
+  String get notificationChannelMorningAzkarName => 'أذكار الصباح';
+
+  @override
+  String get notificationChannelMorningAzkarDescription =>
+      'تذكيرات أذكار الصباح';
+
+  @override
+  String get notificationChannelEveningAzkarName => 'أذكار المساء';
+
+  @override
+  String get notificationChannelEveningAzkarDescription =>
+      'تذكيرات أذكار المساء';
+
+  @override
+  String get notificationChannelDailyDuaName => 'دعاء اليوم';
+
+  @override
+  String get notificationChannelDailyDuaDescription =>
+      'تذكيرات دعاء اليوم والابتهالات';
+
+  @override
+  String get notificationChannelKidsName => 'تسميع الأطفال';
+
+  @override
+  String get notificationChannelKidsDescription =>
+      'تذكيرات مراجعة وتسميع الأطفال';
+
+  @override
+  String get notificationChannelKahfName => 'سورة الكهف';
+
+  @override
+  String get notificationChannelKahfDescription =>
+      'تذكيرات قراءة سورة الكهف يوم الجمعة';
+
+  @override
+  String get notificationChannelTahajjudName => 'قيام الليل والوتر';
+
+  @override
+  String get notificationChannelTahajjudDescription =>
+      'تذكيرات قيام الليل في الثلث الأخير';
+
+  @override
+  String get notificationChannelKhatmahName => 'ورد الختمة';
+
+  @override
+  String get notificationChannelKhatmahDescription =>
+      'تذكيرات متابعة ورد الختمة';
+
+  @override
+  String get notificationChannelMilestonesName => 'احتفالات الإنجاز';
+
+  @override
+  String get notificationChannelMilestonesDesc =>
+      'احتفال عند إتمام حفظ جزء أو سورة أو ختمة كاملة';
+
+  @override
+  String notificationMilestoneJuzTitle(int juz) {
+    return '🎉 أتممت حفظ الجزء $juz!';
+  }
+
+  @override
+  String notificationMilestoneJuzBody(int juz) {
+    return 'ما شاء الله، تبارك الله! أكملت حفظ الجزء $juz كاملاً. بارك الله فيك وثبّته في قلبك.';
+  }
+
+  @override
+  String notificationMilestoneSurahTitle(String surah) {
+    return '🎉 أتممت حفظ سورة $surah!';
+  }
+
+  @override
+  String notificationMilestoneSurahBody(String surah) {
+    return 'ما شاء الله! أكملت حفظ سورة $surah كاملة. تقبّل الله منك وجعلها نوراً لك.';
+  }
+
+  @override
+  String get notificationMilestoneKhatmahTitle =>
+      '🎉 أتممت ختمة القرآن الكريم!';
+
+  @override
+  String get notificationMilestoneKhatmahBody =>
+      'الحمد لله! أتممت ختمة كاملة من القرآن الكريم. تقبّل الله منك وجازاك بأفضل الجزاء.';
+
+  @override
+  String get notificationMilestoneStreakTitle => '🔥 ٣٠ يوماً متتالياً!';
+
+  @override
+  String get notificationMilestoneStreakBody =>
+      'ثلاثون يوماً من المواظبة على المراجعة، ما شاء الله! أكمل سلسلة نورك.';
+
+  @override
+  String get notificationChannelPrayerName => 'مواقيت الصلاة والأذان';
+
+  @override
+  String get notificationChannelPrayerDescription =>
+      'تنبيهات عند دخول وقت الصلاة';
 
   @override
   String get notificationDailyAyahTitle => 'آية تفتح لك يومك ✨';
@@ -4993,4 +5193,39 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get weekdaySunday => 'الأحد';
+
+  @override
+  String get notificationExactAlarmRequest => 'تحسين دقة مواقيت الصلاة';
+
+  @override
+  String get notificationExactAlarmGranted =>
+      'تم تفعيل دقة تنبيهات مواقيت الصلاة.';
+
+  @override
+  String get notificationExactAlarmDenied =>
+      'قد تصل التنبيهات متأخرة قليلًا حتى تمنح إذن المنبهات الدقيقة من إعدادات الهاتف.';
+
+  @override
+  String get notificationTestFailed =>
+      'تعذر إرسال الإشعار. تحقّق من إذن الإشعارات في إعدادات الهاتف.';
+
+  @override
+  String get notificationQuietHours => 'الساعات الهادئة';
+
+  @override
+  String get notificationQuietHoursSub =>
+      'ينقل التذكيرات العادية خارج الفترة المحددة. مواقيت الصلاة لا تتغير.';
+
+  @override
+  String get notificationQuietHoursStart => 'البداية';
+
+  @override
+  String get notificationQuietHoursEnd => 'النهاية';
+
+  @override
+  String get notificationSmartReminder => 'تذكير ذكي';
+
+  @override
+  String get notificationSmartReminderSub =>
+      'يستخدم أوقات فتحك الأخيرة على الجهاز لاختيار وقت التذكير.';
 }

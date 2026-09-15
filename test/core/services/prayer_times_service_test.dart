@@ -15,6 +15,22 @@ void main() {
     expect(snapshot, isNull);
   });
 
+  test('notification scheduling requires explicit city and calculation method',
+      () async {
+    SharedPreferences.setMockInitialValues({
+      PrayerTimesService.enabledKey: true,
+    });
+    final prefs = await SharedPreferences.getInstance();
+    final service = PrayerTimesService(prefs);
+
+    expect(service.isReadyForNotificationScheduling, isFalse);
+
+    await service.setCityId('cairo');
+    await service.setCalculationMethod('egyptian');
+
+    expect(service.isReadyForNotificationScheduling, isTrue);
+  });
+
   test('exposes all six computed times in canonical order', () async {
     SharedPreferences.setMockInitialValues({
       PrayerTimesService.enabledKey: true,

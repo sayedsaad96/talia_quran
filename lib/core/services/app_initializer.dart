@@ -1,7 +1,10 @@
 import 'dart:async';
+import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:workmanager/workmanager.dart';
 
 import '../config/supabase_config.dart';
 import '../di/injection.dart';
@@ -11,6 +14,7 @@ import '../services/hifz_migration_service.dart';
 import '../services/notification_scheduler.dart';
 import '../services/notification_service.dart';
 import '../sync/background_sync_scheduler.dart';
+import '../sync/notification_refresh_worker.dart';
 import '../theme/theme_cubit.dart';
 import '../utils/talia_logger.dart';
 import '../../features/quran/data/datasources/bookmark_service.dart';
@@ -192,7 +196,32 @@ class AppInitializer {
 
   static Future<void> _startBackgroundTasks() async {
     await getIt<BackgroundSyncScheduler>().initialize();
+    await _registerPeriodicNotificationRefresh();
     // One-time data migration: Hifz → MemorizationPlus V2.
     unawaited(getIt<HifzMigrationService>().runIfNeeded());
+  }
+
+  /// Registers a periodic WorkManager task that refreshes rolling
+  /// notification schedules (daily ayahs, duas, azkar) every 6 hours even
+  /// when the app is not opened. `ExistingPeriodicWorkPolicy.keep` makes the
+  /// registration idempotent. On iOS this is best-effort background refresh;
+  /// the operating system chooses the actual execution window.
+  static Future<void> _registerPeriodicNotificationRefresh() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    try {
+      await Workmanager().registerPeriodicTask(
+        kNotificationRefreshUniqueName,
+        kNotificationRefreshTaskName,
+        frequency: const Duration(hours: 6),
+        existingWorkPolicy: ExistingPeriodicWorkPolicy.keep,
+        constraints: Constraints(networkType: NetworkType.notRequired),
+      );
+    } catch (error, stack) {
+      TaliaLogger.w(
+        'Periodic notification refresh registration failed',
+        error,
+        stack,
+      );
+    }
   }
 }

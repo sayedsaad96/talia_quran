@@ -113,6 +113,7 @@ Future<void> showMemorizationPathSettingsSheet(
                     (profile) => profile.isChild,
                   );
                   if (requiresGuardianPin) {
+                    if (!context.mounted) return;
                     final guardianVerified = await _verifyGuardianPin(context);
                     if (!guardianVerified) return;
                   }

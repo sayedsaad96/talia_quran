@@ -86,6 +86,11 @@ class _FakeMemPlusDatasource implements MemorizationPlusLocalDatasource {
   @override
   Future<void> saveKidsProgress(KidsProgressModel progress) async {}
   @override
+  Future<KidsProgressModel> getKidsLegacyCloudFloor() async =>
+      const KidsProgressModel.empty();
+  @override
+  Future<void> saveKidsLegacyCloudFloor(KidsProgressModel progress) async {}
+  @override
   Future<List<KidsSessionLogModel>> getKidsSessionLogs() async => const [];
   @override
   Future<void> saveKidsSessionLog(KidsSessionLogModel log) async {}

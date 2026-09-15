@@ -54,6 +54,15 @@ void main() {
       memPlusRepository.pullIdentityFromCloud(),
     ).thenAnswer((_) async => const Right(null));
     when(
+      memPlusRepository.pullReviewEvidenceFromCloud(),
+    ).thenAnswer((_) async => const Right(null));
+    when(
+      memPlusRepository.hasPendingReviewEvidence(),
+    ).thenAnswer((_) async => false);
+    when(
+      memPlusRepository.isReviewEvidenceTransportEnabled,
+    ).thenReturn(false);
+    when(
       memPlusRepository.pushIdentityToCloud(),
     ).thenAnswer((_) async => const Right(null));
     when(
@@ -104,6 +113,7 @@ void main() {
     verifyInOrder([
       authRepository.pullProgressFromCloud(),
       memPlusRepository.pullIdentityFromCloud(),
+      memPlusRepository.pullReviewEvidenceFromCloud(),
       memPlusRepository.pullProductionDataFromCloud(),
       memPlusRepository.pullCertificatesFromCloud(),
       memPlusRepository.pullKidsProgressFromCloud(),

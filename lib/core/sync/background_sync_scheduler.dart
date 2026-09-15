@@ -8,6 +8,7 @@ import '../di/injection.dart';
 import '../identity/record_owner_provider.dart';
 import '../../features/auth/application/cloud_sync_coordinator.dart';
 import '../services/app_initializer.dart';
+import 'notification_refresh_worker.dart';
 
 const _cloudSyncTaskName = 'talia.cloud_sync';
 const _ownerInputKey = 'owner_id';
@@ -16,7 +17,12 @@ const _ownerInputKey = 'owner_id';
 /// engine after the app has been terminated.
 @pragma('vm:entry-point')
 void cloudSyncCallbackDispatcher() {
-  Workmanager().executeTask((_, inputData) async {
+  Workmanager().executeTask((task, inputData) async {
+    // Workmanager supports a single dispatcher per app; route the periodic
+    // notification-refresh task to its lightweight handler (no app init).
+    if (task == kNotificationRefreshTaskName) {
+      return runNotificationRefreshTask();
+    }
     WidgetsFlutterBinding.ensureInitialized();
     try {
       await AppInitializer.initialize(background: true);

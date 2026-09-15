@@ -28,6 +28,33 @@ bool hasCompletedKidsMissionToday(
   });
 }
 
+/// Pure quiet-hours helper: if [hour]/[minute] falls inside the quiet window
+/// ([startHour]..[endHour], possibly wrapping midnight), returns the first
+/// time AFTER the window ends (endHour:00). Otherwise returns the input
+/// unchanged. When [enabled] is false the input is always returned unchanged.
+bool _isInQuietWindow(int hour, int startHour, int endHour) {
+  if (startHour == endHour) return true; // degenerate window covers all day
+  if (startHour < endHour) {
+    return hour >= startHour && hour < endHour;
+  }
+  // Wraps midnight (e.g. 23 -> 4).
+  return hour >= startHour || hour < endHour;
+}
+
+({int hour, int minute}) applyQuietHours({
+  required int hour,
+  required int minute,
+  required bool enabled,
+  required int startHour,
+  required int endHour,
+}) {
+  if (!enabled) return (hour: hour, minute: minute);
+  if (!_isInQuietWindow(hour, startHour, endHour)) {
+    return (hour: hour, minute: minute);
+  }
+  return (hour: endHour % 24, minute: 0);
+}
+
 class NotificationScheduler {
   final TaliaNotificationService _service;
   final KidsSessionDatesLoader? _kidsSessionDatesLoader;
@@ -65,14 +92,51 @@ class NotificationScheduler {
     }
   }
 
+  /// Background refreshes need a success signal so WorkManager can retry a
+  /// failed rolling-schedule update instead of treating it as complete.
+  Future<bool> refreshNotificationsInBackground(
+    AppLocalizations l10n, {
+    bool force = false,
+  }) async {
+    try {
+      await _refreshNotifications(l10n, force: force);
+      return true;
+    } catch (error, stack) {
+      TaliaLogger.w('Background notification refresh failed', error, stack);
+      return false;
+    }
+  }
+
   Future<void> _refreshNotifications(
     AppLocalizations l10n, {
     bool force = false,
   }) async {
+    // Keep notification action labels / channel names in the active locale.
+    _service.attachLocalization(l10n);
+
     final prefs = await SharedPreferences.getInstance();
+
+    // Every refresh call corresponds to an app open/resume: record the hour
+    // for the smart reminder heuristic.
+    await recordAppOpen();
 
     // First, sync timezone
     await _service.configureLocalTimezone();
+
+    final quietEnabled =
+        prefs.getBool(TaliaNotificationService.quietHoursPreferenceKey) ??
+        false;
+    final quietStartHour =
+        prefs.getInt(TaliaNotificationService.quietHoursStartKey) ?? 23;
+    final quietEndHour =
+        prefs.getInt(TaliaNotificationService.quietHoursEndKey) ?? 4;
+    ({int hour, int minute}) quiet(int hour, int minute) => applyQuietHours(
+      hour: hour,
+      minute: minute,
+      enabled: quietEnabled,
+      startHour: quietStartHour,
+      endHour: quietEndHour,
+    );
 
     int currentStreak = 1;
     int dueReviews = 0;
@@ -135,11 +199,12 @@ class NotificationScheduler {
           ? l10n.notificationDailyReviewBodyCount(dueReviews)
           : l10n.notificationDailyReviewBody;
 
+      final quietTime = quiet(hour, minute);
       await _service.scheduleDailyReviewReminder(
         title: l10n.notificationDailyReviewTitle,
         body: body,
-        hour: hour,
-        minute: minute,
+        hour: quietTime.hour,
+        minute: quietTime.minute,
       );
     } else {
       await _service.cancelDailyReviewReminder();
@@ -156,6 +221,19 @@ class NotificationScheduler {
             '${TaliaNotificationService.streakAlertPreferenceKey}_minute',
           ) ??
           0;
+
+      // Stage 1: gentle nudge one hour before the urgent alert.
+      if (hour > 0) {
+        await _service.scheduleStreakGentleNudge(
+          title: l10n.notificationStreakGentleTitle(currentStreak),
+          body: l10n.notificationStreakGentleBody,
+          currentStreak: currentStreak,
+          hour: hour - 1,
+          minute: minute,
+        );
+      }
+
+      // Stage 2: urgent high-importance protection alert.
       await _service.scheduleStreakProtectionAlert(
         title: l10n.notificationStreakAlertTitle(currentStreak),
         body: l10n.notificationStreakAlertBody,
@@ -165,6 +243,7 @@ class NotificationScheduler {
       );
     } else {
       await _service.cancelStreakAlert();
+      await _service.cancelStreakGentleNudge();
     }
 
     final now = DateTime.now();
@@ -184,9 +263,10 @@ class NotificationScheduler {
             ) ??
             0;
         final userGoal = prefs.getString('user_primary_goal');
+        final quietTime = quiet(hour, minute);
         await _service.scheduleDailyAyahReminders(
-          hour: hour,
-          minute: minute,
+          hour: quietTime.hour,
+          minute: quietTime.minute,
           reminderForDate: (date) async {
             final ayah = await _getAyahOfDay(date: date, userGoal: userGoal);
             if (ayah == null) return null;
@@ -221,8 +301,8 @@ class NotificationScheduler {
         await _service.scheduleMorningAzkarReminder(
           title: l10n.notificationMorningAzkarTitle,
           body: l10n.notificationMorningAzkarBody,
-          hour: hour,
-          minute: minute,
+          hour: quiet(hour, minute).hour,
+          minute: quiet(hour, minute).minute,
         );
       }
     } else {
@@ -244,8 +324,8 @@ class NotificationScheduler {
         await _service.scheduleEveningAzkarReminder(
           title: l10n.notificationEveningAzkarTitle,
           body: l10n.notificationEveningAzkarBody,
-          hour: hour,
-          minute: minute,
+          hour: quiet(hour, minute).hour,
+          minute: quiet(hour, minute).minute,
         );
       }
     } else {
@@ -266,8 +346,8 @@ class NotificationScheduler {
             0;
         await _service.scheduleDailyDuaReminder(
           title: l10n.notificationDailyDuaTitle,
-          hour: hour,
-          minute: minute,
+          hour: quiet(hour, minute).hour,
+          minute: quiet(hour, minute).minute,
         );
       }
     } else {
@@ -288,8 +368,8 @@ class NotificationScheduler {
       await _service.scheduleKidsReviewReminder(
         title: l10n.notificationKidsReviewTitle,
         body: l10n.notificationKidsReviewBody,
-        hour: hour,
-        minute: minute,
+        hour: quiet(hour, minute).hour,
+        minute: quiet(hour, minute).minute,
       );
     } else {
       await _service.cancelKidsReviewReminder();
@@ -309,11 +389,12 @@ class NotificationScheduler {
             '${TaliaNotificationService.fridayKahfPreferenceKey}_minute',
           ) ??
           0;
+      final quietTime = quiet(hour, minute);
       await _service.scheduleFridayKahfReminder(
         title: l10n.notificationFridayKahfTitle,
         body: l10n.notificationFridayKahfBody,
-        hour: hour,
-        minute: minute,
+        hour: quietTime.hour,
+        minute: quietTime.minute,
       );
     } else {
       await _service.cancelFridayKahfReminder();
@@ -333,11 +414,12 @@ class NotificationScheduler {
             '${TaliaNotificationService.tahajjudPreferenceKey}_minute',
           ) ??
           30;
+      final quietTime = quiet(hour, minute);
       await _service.scheduleTahajjudReminder(
         title: l10n.notificationTahajjudTitle,
         body: l10n.notificationTahajjudBody,
-        hour: hour,
-        minute: minute,
+        hour: quietTime.hour,
+        minute: quietTime.minute,
       );
     } else {
       await _service.cancelTahajjudReminder();
@@ -386,12 +468,13 @@ class NotificationScheduler {
         payload = '/khatmah';
       }
 
+      final quietTime = quiet(hour, minute);
       await _service.scheduleKhatmahReminder(
         title: l10n.notificationKhatmahTitle,
         body: body,
         payload: payload,
-        hour: hour,
-        minute: minute,
+        hour: quietTime.hour,
+        minute: quietTime.minute,
       );
     } else {
       await _service.cancelKhatmahReminder();
@@ -403,59 +486,59 @@ class NotificationScheduler {
           TaliaNotificationService.prayerNotificationsPreferenceKey,
         ) ??
         false;
-    if (prayerTimesEnabled) {
+    final prayerService = _prayerTimesService ??
+        (getIt.isRegistered<PrayerTimesService>()
+            ? getIt<PrayerTimesService>()
+            : null);
+    final canSchedulePrayerNotifications =
+        prayerTimesEnabled &&
+        prayerService != null &&
+        prayerService.isReadyForNotificationScheduling;
+    if (canSchedulePrayerNotifications) {
       if (shouldRefreshRolling) {
         try {
-          final prayerService = _prayerTimesService ??
-              (getIt.isRegistered<PrayerTimesService>()
-                  ? getIt<PrayerTimesService>()
-                  : null);
-          if (prayerService != null) {
-            final scheduledPrayers = <ScheduledPrayerNotification>[];
-            final fajrActive =
-                prefs.getBool(TaliaNotificationService.prayerFajrKey) ?? true;
-            final dhuhrActive =
-                prefs.getBool(TaliaNotificationService.prayerDhuhrKey) ?? true;
-            final asrActive =
-                prefs.getBool(TaliaNotificationService.prayerAsrKey) ?? true;
-            final maghribActive =
-                prefs.getBool(TaliaNotificationService.prayerMaghribKey) ?? true;
-            final ishaActive =
-                prefs.getBool(TaliaNotificationService.prayerIshaKey) ?? true;
+          final scheduledPrayers = <ScheduledPrayerNotification>[];
+          final fajrActive =
+              prefs.getBool(TaliaNotificationService.prayerFajrKey) ?? true;
+          final dhuhrActive =
+              prefs.getBool(TaliaNotificationService.prayerDhuhrKey) ?? true;
+          final asrActive =
+              prefs.getBool(TaliaNotificationService.prayerAsrKey) ?? true;
+          final maghribActive =
+              prefs.getBool(TaliaNotificationService.prayerMaghribKey) ?? true;
+          final ishaActive =
+              prefs.getBool(TaliaNotificationService.prayerIshaKey) ?? true;
 
-            final prayerFilter = {
-              'fajr': fajrActive,
-              'dhuhr': dhuhrActive,
-              'asr': asrActive,
-              'maghrib': maghribActive,
-              'isha': ishaActive,
-            };
+          final prayerFilter = {
+            'fajr': fajrActive,
+            'dhuhr': dhuhrActive,
+            'asr': asrActive,
+            'maghrib': maghribActive,
+            'isha': ishaActive,
+          };
 
-            var offset = 0;
-            for (var day = 0; day < 7; day++) {
-              final targetDate = now.add(Duration(days: day));
-              final prayers = await prayerService.timesForDate(targetDate);
-              for (final prayer in prayers) {
-                if (prayerFilter[prayer.key] == true) {
-                  final prayerName = l10n.localeName.startsWith('ar')
-                      ? prayer.nameAr
-                      : prayer.nameEn;
-                  scheduledPrayers.add(
-                    ScheduledPrayerNotification(
-                      idOffset: offset,
-                      title: l10n.notificationPrayerTitle(prayerName),
-                      body: l10n.notificationPrayerBody,
-                      scheduledDate: prayer.time,
-                    ),
-                  );
-                }
-                offset++;
+          var offset = 0;
+          for (var day = 0; day < 7; day++) {
+            final targetDate = now.add(Duration(days: day));
+            final prayers = await prayerService.timesForDate(targetDate);
+            for (final prayer in prayers) {
+              if (prayerFilter[prayer.key] == true) {
+                final prayerName = l10n.localeName.startsWith('ar')
+                    ? prayer.nameAr
+                    : prayer.nameEn;
+                scheduledPrayers.add(
+                  ScheduledPrayerNotification(
+                    idOffset: offset,
+                    title: l10n.notificationPrayerTitle(prayerName),
+                    body: l10n.notificationPrayerBody,
+                    scheduledDate: prayer.time,
+                  ),
+                );
               }
+              offset++;
             }
-            await _service.schedulePrayerTimesReminders(
-              prayers: scheduledPrayers,
-            );
           }
+          await _service.schedulePrayerTimesReminders(prayers: scheduledPrayers);
         } catch (e, stack) {
           TaliaLogger.w(
             'Failed to schedule prayer times notifications',
@@ -471,5 +554,80 @@ class NotificationScheduler {
     if (shouldRefreshRolling) {
       _lastRollingDateKey = todayKey;
     }
+
+    // Smart Reminder (greenfield): schedule at the user's most frequent
+    // app-open hour when they have a streak but no activity today.
+    final smartEnabled =
+        prefs.getBool(TaliaNotificationService.smartReminderPreferenceKey) ??
+        false;
+    if (smartEnabled && !hasStreakActivityToday) {
+      final openHours = _loadRecordedOpenHours(prefs);
+      if (openHours.length >= 3) {
+        await _service.scheduleSmartReminder(
+          title: l10n.notificationSmartReminderTitle,
+          body: l10n.notificationSmartReminderBody,
+          hour: _modeOfOpenHours(openHours),
+          minute: 0,
+        );
+      } else {
+        await _service.cancelSmartReminder();
+      }
+    } else {
+      await _service.cancelSmartReminder();
+    }
+  }
+
+  static const String _smartReminderOpenHoursKey = 'smart_reminder_open_hours';
+  static const int _smartReminderMaxEntries = 7;
+
+  /// Records the current local hour of an app open/resume for the smart
+  /// reminder heuristic. Keeps the last 7 entries, collapsing consecutive
+  /// duplicate hour entries to one.
+  Future<void> recordAppOpen({DateTime? now}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentHour = (now ?? DateTime.now()).toLocal().hour.toString();
+      final entries = prefs.getStringList(_smartReminderOpenHoursKey) ??
+          <String>[];
+      // Collapse consecutive duplicates (same hour opened repeatedly).
+      if (entries.isEmpty || entries.last != currentHour) {
+        entries.add(currentHour);
+      }
+      while (entries.length > _smartReminderMaxEntries) {
+        entries.removeAt(0);
+      }
+      await prefs.setStringList(_smartReminderOpenHoursKey, entries);
+    } catch (error, stack) {
+      TaliaLogger.w('Failed to record app open hour', error, stack);
+    }
+  }
+
+  List<int> _loadRecordedOpenHours(SharedPreferences prefs) {
+    final entries =
+        prefs.getStringList(_smartReminderOpenHoursKey) ?? <String>[];
+    return entries
+        .map((entry) => int.tryParse(entry))
+        .whereType<int>()
+        .where((hour) => hour >= 0 && hour < 24)
+        .toList();
+  }
+
+  /// Most frequent hour; ties resolved by the most recent occurrence.
+  static int _modeOfOpenHours(List<int> hours) {
+    final counts = <int, int>{};
+    final lastSeen = <int, int>{};
+    for (var i = 0; i < hours.length; i++) {
+      counts[hours[i]] = (counts[hours[i]] ?? 0) + 1;
+      lastSeen[hours[i]] = i;
+    }
+    int best = hours.first;
+    for (final hour in counts.keys) {
+      if (counts[hour]! > counts[best]! ||
+          (counts[hour] == counts[best] &&
+              lastSeen[hour]! > lastSeen[best]!)) {
+        best = hour;
+      }
+    }
+    return best;
   }
 }

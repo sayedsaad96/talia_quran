@@ -70,6 +70,20 @@ class PrayerTimesService {
   String get calculationMethod =>
       _prefs.getString(methodKey) ?? CalculationMethod.muslim_world_league.name;
 
+  /// Prayer alerts must not be scheduled from an implicit fallback location or
+  /// calculation method. The prayer-times view can still use its display
+  /// defaults, but an alert is only trustworthy after the user has explicitly
+  /// configured both values.
+  bool get isReadyForNotificationScheduling {
+    final cityId = selectedCityId;
+    final method = _prefs.getString(methodKey);
+    return isEnabled &&
+        cityId != null &&
+        cityId.isNotEmpty &&
+        method != null &&
+        CalculationMethod.values.any((value) => value.name == method);
+  }
+
   Future<void> setEnabled(bool enabled) => _prefs.setBool(enabledKey, enabled);
 
   Future<void> setCityId(String id) => _prefs.setString(cityIdKey, id);

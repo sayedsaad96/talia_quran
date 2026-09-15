@@ -3053,8 +3053,208 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String notificationStreakGentleTitle(Object count) {
+    return 'Your $count-day streak is waiting';
+  }
+
+  @override
+  String get notificationStreakGentleBody =>
+      'A few minutes of review today keeps your streak alive. Whenever you\'re ready 🌿';
+
+  @override
+  String get notificationSmartReminderTitle => 'Time for your usual reading';
+
+  @override
+  String get notificationSmartReminderBody =>
+      'It\'s usually your reading time — a few ayahs are waiting for you.';
+
+  @override
+  String get notificationChannelStreakGentleName => 'Gentle streak reminder';
+
+  @override
+  String get notificationChannelStreakGentleDescription =>
+      'A quiet reminder before the streak protection alert';
+
+  @override
+  String get notificationChannelSmartName => 'Smart reminder';
+
+  @override
+  String get notificationChannelSmartDescription =>
+      'Reminders at your usual reading time';
+
+  @override
   String get notificationStreakAlertBody =>
       'You haven\'t reviewed today yet — you still can';
+
+  @override
+  String get notificationActionReviewStart => '⚡ Start review';
+
+  @override
+  String get notificationActionDailyWird => '📖 Daily wird';
+
+  @override
+  String get notificationActionStreakProtect => '🔥 Protect your streak';
+
+  @override
+  String get notificationActionReadWird => '📖 Read the wird';
+
+  @override
+  String get notificationActionReadDailyAyah => '✨ Read ayah of the day';
+
+  @override
+  String get notificationActionShareAyah => '↗️ Share the ayah';
+
+  @override
+  String get notificationActionMorningAzkar => '☀️ Morning azkar';
+
+  @override
+  String get notificationActionEveningAzkar => '🌙 Evening azkar';
+
+  @override
+  String get notificationActionDailyDua => '🤲 Read today\'s duas';
+
+  @override
+  String get notificationActionAzkar => '✨ Azkar';
+
+  @override
+  String get notificationActionKidsReview => '🌟 Start reciting, champ';
+
+  @override
+  String get notificationActionReadKahf => '📖 Read Surah Al-Kahf';
+
+  @override
+  String get notificationActionOpenMushaf => '✨ The Quran';
+
+  @override
+  String get notificationActionTahajjudDua => '🤲 Night prayer duas';
+
+  @override
+  String get notificationActionFollowKhatmah => '📖 Continue khatmah';
+
+  @override
+  String get notificationActionReadQuran => '📖 Read the Quran';
+
+  @override
+  String get notificationActionPostPrayerAzkar => '📿 Post-prayer azkar';
+
+  @override
+  String get notificationChannelRemindersName => 'Talia reminders';
+
+  @override
+  String get notificationChannelRemindersDescription =>
+      'Daily review and memorization reminders';
+
+  @override
+  String get notificationChannelStreakName => 'Streak protection';
+
+  @override
+  String get notificationChannelStreakDescription =>
+      'Alerts to protect your memorization streak';
+
+  @override
+  String get notificationChannelDailyAyahName => 'Ayah of the Day';
+
+  @override
+  String get notificationChannelDailyAyahDescription =>
+      'A daily ayah from the Holy Quran with reflection';
+
+  @override
+  String get notificationChannelMorningAzkarName => 'Morning azkar';
+
+  @override
+  String get notificationChannelMorningAzkarDescription =>
+      'Morning azkar reminders';
+
+  @override
+  String get notificationChannelEveningAzkarName => 'Evening azkar';
+
+  @override
+  String get notificationChannelEveningAzkarDescription =>
+      'Evening azkar reminders';
+
+  @override
+  String get notificationChannelDailyDuaName => 'Dua of the Day';
+
+  @override
+  String get notificationChannelDailyDuaDescription =>
+      'Daily dua and supplication reminders';
+
+  @override
+  String get notificationChannelKidsName => 'Kids recitation';
+
+  @override
+  String get notificationChannelKidsDescription =>
+      'Kids review and recitation reminders';
+
+  @override
+  String get notificationChannelKahfName => 'Surah Al-Kahf';
+
+  @override
+  String get notificationChannelKahfDescription =>
+      'Friday Surah Al-Kahf reading reminders';
+
+  @override
+  String get notificationChannelTahajjudName => 'Night prayer & Witr';
+
+  @override
+  String get notificationChannelTahajjudDescription =>
+      'Qiyam al-layl reminders in the last third of the night';
+
+  @override
+  String get notificationChannelKhatmahName => 'Khatmah wird';
+
+  @override
+  String get notificationChannelKhatmahDescription =>
+      'Khatmah progress reminders';
+
+  @override
+  String get notificationChannelMilestonesName => 'Achievement celebrations';
+
+  @override
+  String get notificationChannelMilestonesDesc =>
+      'Celebrations when you complete a juz, a surah, or a full khatmah';
+
+  @override
+  String notificationMilestoneJuzTitle(int juz) {
+    return '🎉 Juz $juz memorized!';
+  }
+
+  @override
+  String notificationMilestoneJuzBody(int juz) {
+    return 'Masha\'Allah, tabarak Allah! You have completed memorizing all of Juz $juz. May Allah keep it firm in your heart.';
+  }
+
+  @override
+  String notificationMilestoneSurahTitle(String surah) {
+    return '🎉 Surah $surah memorized!';
+  }
+
+  @override
+  String notificationMilestoneSurahBody(String surah) {
+    return 'Masha\'Allah! You have completed memorizing Surah $surah. May Allah bless it and make it a light for you.';
+  }
+
+  @override
+  String get notificationMilestoneKhatmahTitle =>
+      '🎉 Khatmah of the Noble Quran complete!';
+
+  @override
+  String get notificationMilestoneKhatmahBody =>
+      'Alhamdulillah! You have completed a full khatmah of the Quran. May Allah accept it from you and reward you with the best of rewards.';
+
+  @override
+  String get notificationMilestoneStreakTitle => '🔥 30 consecutive days!';
+
+  @override
+  String get notificationMilestoneStreakBody =>
+      'Thirty days of steady review, masha\'Allah! Keep your chain of light going.';
+
+  @override
+  String get notificationChannelPrayerName => 'Prayer times & Adhan';
+
+  @override
+  String get notificationChannelPrayerDescription =>
+      'Alerts when a prayer time enters';
 
   @override
   String get notificationDailyAyahTitle => 'Ayah of the Day ✨';
@@ -4947,4 +5147,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weekdaySunday => 'Sunday';
+
+  @override
+  String get notificationExactAlarmRequest => 'Improve prayer-time precision';
+
+  @override
+  String get notificationExactAlarmGranted =>
+      'Prayer-time notification precision is enabled.';
+
+  @override
+  String get notificationExactAlarmDenied =>
+      'Notifications may arrive slightly late until exact-alarm access is allowed in device settings.';
+
+  @override
+  String get notificationTestFailed =>
+      'Could not send the notification. Check notification permission in device settings.';
+
+  @override
+  String get notificationQuietHours => 'Quiet hours';
+
+  @override
+  String get notificationQuietHoursSub =>
+      'Move regular reminders outside the chosen period. Prayer times remain unchanged.';
+
+  @override
+  String get notificationQuietHoursStart => 'Starts';
+
+  @override
+  String get notificationQuietHoursEnd => 'Ends';
+
+  @override
+  String get notificationSmartReminder => 'Smart reminder';
+
+  @override
+  String get notificationSmartReminderSub =>
+      'Uses your recent on-device opening times to choose a reminder time.';
 }

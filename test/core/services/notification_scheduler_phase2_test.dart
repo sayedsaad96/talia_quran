@@ -37,9 +37,41 @@ void main() {
     mockPrayerTimesService = MockPrayerTimesService();
     mockGetActiveKhatmahUsecase = MockGetActiveKhatmahUsecase();
 
+    when(() => mockPrayerTimesService.isReadyForNotificationScheduling)
+        .thenReturn(false);
+
     when(() => mockNotificationService.configureLocalTimezone())
         .thenAnswer((_) async {});
     when(() => mockNotificationService.cancelStreakAlert())
+        .thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelStreakGentleNudge())
+        .thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelSmartReminder())
+        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.scheduleStreakGentleNudge(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        currentStreak: any(named: 'currentStreak'),
+        hour: any(named: 'hour'),
+        minute: any(named: 'minute'),
+      ),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.scheduleSmartReminder(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        hour: any(named: 'hour'),
+        minute: any(named: 'minute'),
+      ),
+    ).thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelFridayKahfReminder())
+        .thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelTahajjudReminder())
+        .thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelKhatmahReminder())
+        .thenAnswer((_) async {});
+    when(() => mockNotificationService.cancelPrayerTimesReminders())
         .thenAnswer((_) async {});
     when(() => mockNotificationService.cancelDailyReviewReminder())
         .thenAnswer((_) async {});
@@ -311,6 +343,29 @@ void main() {
   });
 
   group('Prayer times rolling reminders', () {
+    test('cancels prayer reminders until the prayer location is configured', () async {
+      SharedPreferences.setMockInitialValues({
+        TaliaNotificationService.prayerNotificationsPreferenceKey: true,
+      });
+
+      final scheduler = NotificationScheduler(
+        mockNotificationService,
+        prayerTimesService: mockPrayerTimesService,
+      );
+
+      await scheduler.refreshNotifications(
+        lookupAppLocalizations(const Locale('ar')),
+      );
+
+      verify(() => mockNotificationService.cancelPrayerTimesReminders())
+          .called(1);
+      verifyNever(
+        () => mockNotificationService.schedulePrayerTimesReminders(
+          prayers: any(named: 'prayers'),
+        ),
+      );
+    });
+
     test('schedules prayer times for rolling window when enabled', () async {
       SharedPreferences.setMockInitialValues({
         TaliaNotificationService.prayerNotificationsPreferenceKey: true,
@@ -331,6 +386,8 @@ void main() {
           (key: 'isha', nameAr: 'العشاء', nameEn: 'Isha', time: DateTime(date.year, date.month, date.day, 19, 45)),
         ];
       });
+      when(() => mockPrayerTimesService.isReadyForNotificationScheduling)
+          .thenReturn(true);
 
       final scheduler = NotificationScheduler(
         mockNotificationService,
@@ -373,6 +430,8 @@ void main() {
           (key: 'isha', nameAr: 'العشاء', nameEn: 'Isha', time: DateTime(date.year, date.month, date.day, 19, 45)),
         ];
       });
+      when(() => mockPrayerTimesService.isReadyForNotificationScheduling)
+          .thenReturn(true);
 
       final scheduler = NotificationScheduler(
         mockNotificationService,

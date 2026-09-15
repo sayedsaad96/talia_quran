@@ -43,6 +43,12 @@ void main() {
         .thenAnswer((_) async => const Right(null));
     when(mockMem.pullIdentityFromCloud())
         .thenAnswer((_) async => const Right(null));
+    when(mockMem.pullReviewEvidenceFromCloud())
+        .thenAnswer((_) async => const Right(null));
+    when(mockMem.hasPendingReviewEvidence())
+        .thenAnswer((_) async => false);
+    when(mockMem.isReviewEvidenceTransportEnabled)
+        .thenReturn(false);
     when(mockMem.pullCertificatesFromCloud()).thenAnswer(
       (_) async => Right([
         CertificateAward(
@@ -77,6 +83,7 @@ void main() {
     verifyInOrder([
       mockAuth.pullProgressFromCloud(),
       mockMem.pullIdentityFromCloud(),
+      mockMem.pullReviewEvidenceFromCloud(),
       mockMem.pullProductionDataFromCloud(),
       mockMem.pullCertificatesFromCloud(),
       mockMem.pullKidsProgressFromCloud(),
