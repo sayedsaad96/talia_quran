@@ -1,4 +1,5 @@
 import '../../features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'learning_launch_context.dart';
 import 'memorization_snapshot.dart';
 import 'pending_ayah_resolver.dart';
 import 'review_record_filters.dart';
@@ -10,6 +11,70 @@ import 'smart_coach_recommendation.dart';
 /// [MemorizationSnapshot.cachedDailyPlan] generation).
 class SmartCoachEngine {
   const SmartCoachEngine();
+
+  /// Highest-priority adult review that is due across every surah.
+  SmartCoachRecommendation? recommendAdultDueReview(
+    Iterable<AyahReviewRecord> reviewRecords, {
+    DateTime? now,
+  }) {
+    final operationNow = (now ?? DateTime.now()).toUtc();
+    final records = reviewRecords
+        .where(ReviewRecordFilters.isAdultCompatible)
+        .toList();
+
+    final weakDue = records.where((record) {
+      final classification = record.classifyAt(operationNow);
+      return classification.isDue &&
+          record.lastRating == PerformanceRating.weak &&
+          !classification.isMemorized;
+    }).toList()..sort(_compareWeakDue);
+    if (weakDue.isNotEmpty) {
+      return _ayahRecommendation(
+        kind: SmartCoachRecommendationKind.reviewWeakAyah,
+        explanationCode: SmartCoachExplanationCode.weakAyahDue,
+        record: weakDue.first,
+        routeBuilder: _v2SessionRoute,
+      );
+    }
+
+    final dueNear = records.where((record) {
+      final classification = record.classifyAt(operationNow);
+      return classification.isDue && classification.isNearRevision;
+    }).toList()..sort(_compareNearFarDue);
+    if (dueNear.isNotEmpty) {
+      return _ayahRecommendation(
+        kind: SmartCoachRecommendationKind.reviewDueNear,
+        explanationCode: SmartCoachExplanationCode.nearRevisionDue,
+        record: dueNear.first,
+      );
+    }
+
+    final dueFar = records.where((record) {
+      final classification = record.classifyAt(operationNow);
+      return classification.isDue && classification.isFarRevision;
+    }).toList()..sort(_compareNearFarDue);
+    if (dueFar.isNotEmpty) {
+      return _ayahRecommendation(
+        kind: SmartCoachRecommendationKind.reviewDueFar,
+        explanationCode: SmartCoachExplanationCode.farRevisionDue,
+        record: dueFar.first,
+      );
+    }
+
+    final memorizedDue = records.where((record) {
+      return record.classifyAt(operationNow).isMemorizedDue;
+    }).toList()..sort(ReviewRecordFilters.compareMemorizedDue);
+    if (memorizedDue.isNotEmpty) {
+      return _ayahRecommendation(
+        kind: SmartCoachRecommendationKind.memorizedReviewDue,
+        explanationCode: SmartCoachExplanationCode.memorizedRetentionDue,
+        record: memorizedDue.first,
+        routeBuilder: _v2SessionRoute,
+      );
+    }
+
+    return null;
+  }
 
   SmartCoachRecommendation? recommend(
     MemorizationSnapshot snapshot, {
@@ -32,113 +97,35 @@ class SmartCoachEngine {
     MemorizationSnapshot snapshot,
     DateTime now,
   ) {
-    final records = snapshot.reviewRecords
-        .where(ReviewRecordFilters.isAdultCompatible)
-        .toList();
-
-    // ── Priority 1: Weak due ───────────────────────────────────────────────
-    // Tie-breakers (in order):
-    //   1. lowest strengthLevel  (weakest knowledge first)
-    //   2. oldest nextReviewDate (most overdue first)
-    //   3. highest totalReviews  (most practiced = most worth protecting)
-    final weakDue = records.where((r) {
-      final classification = r.classifyAt(now);
-      return classification.isDue &&
-          r.lastRating == PerformanceRating.weak &&
-          !classification.isMemorized;
-    }).toList()..sort(_compareWeakDue);
-    if (weakDue.isNotEmpty) {
-      return _ayahRecommendation(
-        kind: SmartCoachRecommendationKind.reviewWeakAyah,
-        explanationCode: SmartCoachExplanationCode.weakAyahDue,
-        record: weakDue.first,
-        routeBuilder: _v2SessionRoute,
-      );
-    }
-
-    // ── Priority 2: Near due ───────────────────────────────────────────────
-    // Tie-breakers (in order):
-    //   1. oldest nextReviewDate  (most overdue first)
-    //   2. lowest strengthLevel   (weakest knowledge first)
-    //   3. highest totalReviews   (most practiced = most worth protecting)
-    final dueNear = records.where((r) {
-      final classification = r.classifyAt(now);
-      return classification.isDue && classification.isNearRevision;
-    }).toList()..sort(_compareNearFarDue);
-    if (dueNear.isNotEmpty) {
-      return _ayahRecommendation(
-        kind: SmartCoachRecommendationKind.reviewDueNear,
-        explanationCode: SmartCoachExplanationCode.nearRevisionDue,
-        record: dueNear.first,
-      );
-    }
-
-    // ── Priority 3: Far due ────────────────────────────────────────────────
-    // Same tie-breaker policy as near due.
-    final dueFar = records.where((r) {
-      final classification = r.classifyAt(now);
-      return classification.isDue && classification.isFarRevision;
-    }).toList()..sort(_compareNearFarDue);
-    if (dueFar.isNotEmpty) {
-      return _ayahRecommendation(
-        kind: SmartCoachRecommendationKind.reviewDueFar,
-        explanationCode: SmartCoachExplanationCode.farRevisionDue,
-        record: dueFar.first,
-      );
-    }
-
-    // ── Priority 4: Memorized-due retention review ─────────────────────────
-    // Tie-breakers (in order):
-    //   1. oldest nextReviewDate  (most overdue first)
-    //   2. lowest strengthLevel   (least solidly memorized first)
-    //   3. highest intervalDays   (longer intervals = more at risk of decay)
-    //   4. highest totalReviews   (most practiced = most worth protecting)
-    //
-    // Sprint 8B: kidsMode and hifz records are excluded via
-    // ReviewRecordFilters.isAdultCompatible. Priorities 1–3 are already
-    // naturally safe because kidsMode records are isMemorized, and weak/
-    // near/far require !isMemorized.
-    final memorizedDue = records.where((r) {
-      return r.classifyAt(now).isMemorizedDue &&
-          ReviewRecordFilters.isAdultCompatible(r);
-    }).toList()..sort(ReviewRecordFilters.compareMemorizedDue);
-    if (memorizedDue.isNotEmpty) {
-      final record = memorizedDue.first;
-      return _ayahRecommendation(
-        kind: SmartCoachRecommendationKind.memorizedReviewDue,
-        explanationCode: SmartCoachExplanationCode.memorizedRetentionDue,
-        record: record,
-        routeBuilder: _v2SessionRoute,
-      );
-    }
+    final dueReview = recommendAdultDueReview(snapshot.reviewRecords, now: now);
+    if (dueReview != null) return dueReview;
 
     // ── Priority 5 & 6: Daily Plan ─────────────────────────────────────────
     final plan = snapshot.cachedDailyPlan;
     if (plan != null && plan.totalItems > 0) {
       final pendingNew = plan.newAyahs
-          .where((a) => !plan.isCompleted(a.ayahNumber))
+          .where((a) => !plan.isAyahCompleted(a.surahId, a.ayahNumber))
           .toList();
-      final pendingNear = plan.nearRevision
-          .where((a) => !plan.isCompleted(a.ayahNumber))
-          .toList();
-      final pendingFar = plan.farRevision
-          .where((a) => !plan.isCompleted(a.ayahNumber))
-          .toList();
-      final pendingCount =
-          pendingNew.length + pendingNear.length + pendingFar.length;
+      final pendingCount = plan.requiredAyahs
+          .where((a) => !plan.isAyahCompleted(a.surahId, a.ayahNumber))
+          .length;
 
       // Priority 5: Continue incomplete daily plan
       // P0 hotfix: use requiredCompletedCount so retention-only completions
       // do not falsely trigger the "continue" card.
       if (plan.requiredCompletedCount > 0 && pendingCount > 0) {
-        final firstPendingAyah = PendingAyahResolver.firstPendingPlanAyah(plan);
-        if (firstPendingAyah == null) return null;
+        final firstPending = PendingAyahResolver.firstPendingPlanTarget(plan);
+        if (firstPending == null) return null;
         return SmartCoachRecommendation(
           kind: SmartCoachRecommendationKind.continueDailyPlan,
           explanationCode: SmartCoachExplanationCode.continueDailyPlan,
-          route: _v2SessionRoute(plan.surahId, firstPendingAyah),
-          surahId: plan.surahId,
-          startAyah: firstPendingAyah,
+          route: _v2SessionRoute(
+            firstPending.surahId,
+            firstPending.ayahNumber,
+            intent: LearningIntent.memorize,
+          ),
+          surahId: firstPending.surahId,
+          startAyah: firstPending.ayahNumber,
           completedCount: plan.requiredCompletedCount,
           totalCount: plan.requiredCompletedCount + pendingCount,
         );
@@ -149,7 +136,11 @@ class SmartCoachEngine {
         return SmartCoachRecommendation(
           kind: SmartCoachRecommendationKind.memorizeNewAyahs,
           explanationCode: SmartCoachExplanationCode.newAyahsAvailable,
-          route: _v2SessionRoute(plan.surahId, pendingNew.first.ayahNumber),
+          route: _v2SessionRoute(
+            plan.surahId,
+            pendingNew.first.ayahNumber,
+            intent: LearningIntent.memorize,
+          ),
           surahId: plan.surahId,
           startAyah: pendingNew.first.ayahNumber,
           endAyah: pendingNew.last.ayahNumber,
@@ -231,8 +222,21 @@ class SmartCoachEngine {
 
   // ── Route builders ─────────────────────────────────────────────────────────
 
-  static String _v2SessionRoute(int surahId, int startAyah) =>
-      '/memorization-v2/session?surahId=$surahId&startAyah=$startAyah';
+  static String _v2SessionRoute(
+    int surahId,
+    int startAyah, {
+    LearningIntent intent = LearningIntent.review,
+  }) {
+    final launchContext = LearningLaunchContext(
+      ayah: AyahReference(surahId: surahId, ayahNumber: startAyah),
+      intent: intent,
+      origin: LearningOrigin.smartCoach,
+    );
+    return Uri(
+      path: '/memorization-v2/session',
+      queryParameters: launchContext.toRouteQuery(),
+    ).toString();
+  }
 
   // ── Comparators ────────────────────────────────────────────────────────────
 

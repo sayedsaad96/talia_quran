@@ -71,12 +71,12 @@ final class PendingAyahResolver {
     int blockSize,
   ) {
     final plan = input.cachedDailyPlan;
-    if (plan != null && plan.surahId == input.surahId) {
-      final pending = firstPendingPlanAyah(plan);
+    if (plan != null) {
+      final pending = firstPendingPlanTarget(plan);
       if (pending != null) {
         return PendingAyahTarget(
-          surahId: input.surahId,
-          startAyah: pending,
+          surahId: pending.surahId,
+          startAyah: pending.ayahNumber,
           blockSize: blockSize,
           intent: PendingAyahIntent.continueDailyPlan,
         );
@@ -126,15 +126,19 @@ final class PendingAyahResolver {
     );
   }
 
-  /// First incomplete required ayah in plan order (new → near → far).
-  static int? firstPendingPlanAyah(DailyPlan plan) {
+  /// First incomplete required ayah in execution order.
+  static DailyPlanAyah? firstPendingPlanTarget(DailyPlan plan) {
     for (final ayah in plan.requiredAyahs) {
-      if (!plan.isCompleted(ayah.ayahNumber)) {
-        return ayah.ayahNumber;
+      if (!plan.isAyahCompleted(ayah.surahId, ayah.ayahNumber)) {
+        return ayah;
       }
     }
     return null;
   }
+
+  /// Compatibility helper for callers that only need the ayah number.
+  static int? firstPendingPlanAyah(DailyPlan plan) =>
+      firstPendingPlanTarget(plan)?.ayahNumber;
 
   int? _firstLearningAyahInSurah(PendingAyahResolverInput input) {
     final ayahCount = input.surahAyahCount;

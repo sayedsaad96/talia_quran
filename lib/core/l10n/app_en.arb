@@ -1320,6 +1320,9 @@
   },
   "hifzEvaluatingReview": "Evaluating review…",
   "hifzLeaveSessionMessage": "Do you want to leave the memorization session? Your current progress will be saved.",
+  "memorizationExitSessionMessage": "Save this session for later or discard it? Failed, unpassed Ayahs will be added to review when discarded.",
+  "memorizationSaveAndLeave": "Save & leave",
+  "memorizationDiscardSession": "Discard session",
   "hifzAyahNumberLabel": "Ayah {ayahNumber}",
   "@hifzAyahNumberLabel": {
     "placeholders": {

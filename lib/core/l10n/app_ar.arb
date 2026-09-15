@@ -1323,6 +1323,9 @@
   },
   "hifzEvaluatingReview": "جارِ تقييم المراجعة...",
   "hifzLeaveSessionMessage": "هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.",
+  "memorizationExitSessionMessage": "هل تريد حفظ هذه الجلسة لوقت لاحق أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.",
+  "memorizationSaveAndLeave": "حفظ وخروج",
+  "memorizationDiscardSession": "التخلّي عن الجلسة",
   "hifzAyahNumberLabel": "آية {ayahNumber}",
   "@hifzAyahNumberLabel": {
     "placeholders": {

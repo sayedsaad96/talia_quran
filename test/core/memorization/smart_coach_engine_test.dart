@@ -131,10 +131,11 @@ void main() {
       expect(recommendation?.completedCount, 1);
       expect(recommendation?.totalCount, 2);
       expect(recommendation?.startAyah, 2);
-      expect(
-        recommendation?.route,
-        '/memorization-v2/session?surahId=67&startAyah=2',
-      );
+      final route = Uri.parse(recommendation!.route);
+      expect(route.queryParameters['surahId'], '67');
+      expect(route.queryParameters['startAyah'], '2');
+      expect(route.queryParameters['intent'], 'memorize');
+      expect(route.queryParameters['origin'], 'smartCoach');
     });
 
     test(
@@ -209,10 +210,11 @@ void main() {
       final recommendation = engine.recommend(snapshot);
 
       expect(recommendation?.kind, SmartCoachRecommendationKind.reviewWeakAyah);
-      expect(
-        recommendation?.route,
-        '/memorization-v2/session?surahId=67&startAyah=5',
-      );
+      final route = Uri.parse(recommendation!.route);
+      expect(route.queryParameters['surahId'], '67');
+      expect(route.queryParameters['startAyah'], '5');
+      expect(route.queryParameters['intent'], 'review');
+      expect(route.queryParameters['origin'], 'smartCoach');
     });
 
     test(
@@ -232,10 +234,11 @@ void main() {
           recommendation?.kind,
           SmartCoachRecommendationKind.memorizedReviewDue,
         );
-        expect(
-          recommendation?.route,
-          '/memorization-v2/session?surahId=67&startAyah=7',
-        );
+        final route = Uri.parse(recommendation!.route);
+        expect(route.queryParameters['surahId'], '67');
+        expect(route.queryParameters['startAyah'], '7');
+        expect(route.queryParameters['intent'], 'review');
+        expect(route.queryParameters['origin'], 'smartCoach');
       },
     );
 

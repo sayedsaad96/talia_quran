@@ -5233,6 +5233,24 @@ abstract class AppLocalizations {
   /// **'هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.'**
   String get hifzLeaveSessionMessage;
 
+  /// No description provided for @memorizationExitSessionMessage.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تريد حفظ هذه الجلسة لوقت لاحق أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.'**
+  String get memorizationExitSessionMessage;
+
+  /// No description provided for @memorizationSaveAndLeave.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ وخروج'**
+  String get memorizationSaveAndLeave;
+
+  /// No description provided for @memorizationDiscardSession.
+  ///
+  /// In ar, this message translates to:
+  /// **'التخلّي عن الجلسة'**
+  String get memorizationDiscardSession;
+
   /// No description provided for @hifzAyahNumberLabel.
   ///
   /// In ar, this message translates to:

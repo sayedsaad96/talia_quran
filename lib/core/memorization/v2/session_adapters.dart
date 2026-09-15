@@ -10,6 +10,7 @@
 import 'package:dartz/dartz.dart';
 
 import '../../../core/error/app_failure.dart';
+import '../../../core/memorization/learning_launch_context.dart';
 import '../../../core/services/achievement_service.dart';
 import '../../../core/services/streak_service.dart';
 import '../../../core/services/xp_service.dart';
@@ -158,6 +159,27 @@ final class V2SessionReviewAdapter {
     }
     return const Right(null);
   }
+
+  /// Schedules one weak review for every failed ayah the learner explicitly
+  /// discards without later passing it in the same session.
+  Future<Either<Failure, void>> recordAbandonedFailures(
+    V2AyahFailureTracker tracker, {
+    required Set<int> passedAyahNumbers,
+  }) async {
+    final abandoned = tracker.allFailures.where(
+      (record) => !passedAyahNumbers.contains(record.ayahNumber),
+    );
+    for (final record in abandoned) {
+      final result = await recordPass(
+        surahId: record.surahId,
+        ayahNumber: record.ayahNumber,
+        hintLevel: V2HintLevel.fullAyah,
+      );
+      final failure = result.fold((value) => value, (_) => null);
+      if (failure != null) return Left(failure);
+    }
+    return const Right(null);
+  }
 }
 
 // ─── V2SessionProgressAdapter ─────────────────────────────────────────────────
@@ -179,7 +201,10 @@ final class V2SessionProgressAdapter {
   final MemorizationAudience _audience;
 
   /// Saves current session state for resume capability.
-  Future<void> save(V2SessionState state) async {
+  Future<void> save(
+    V2SessionState state, {
+    LearningLaunchContext? launchContext,
+  }) async {
     final failureCounts = <int, int>{};
     for (final record in state.failureTracker.allFailures) {
       failureCounts[record.ayahNumber] = record.failureCount;
@@ -199,6 +224,7 @@ final class V2SessionProgressAdapter {
       failureCounts: failureCounts,
       hintLevels: hintLevels,
       blockReviewRequired: state.blockReviewRequired,
+      launchContext: launchContext,
       ownerId: _datasource.currentOwnerId,
       audience: _audience,
     );

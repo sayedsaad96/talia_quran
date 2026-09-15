@@ -18,6 +18,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../../../core/constants/speech_constants.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
+import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/memorization/v2/hint_usage.dart';
 import '../../../../core/memorization/v2/review_effect_outbox_processor.dart';
 import '../../../../core/memorization/v2/review_outcome_committer.dart';
@@ -249,6 +250,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   // ── Session lifecycle ────────────────────────────────────────────────────
 
   V2SessionState? _sessionState;
+  LearningLaunchContext? _launchContext;
+  bool _discardCommitted = false;
+  bool _discardInFlight = false;
 
   /// Starts a new V2 memorization session.
   ///
@@ -258,8 +262,17 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     required int surahId,
     required int startAyah,
     int blockSize = 5,
+    LearningLaunchContext? launchContext,
   }) async {
     emit(const MSLoading());
+    _discardCommitted = false;
+    _launchContext =
+        launchContext ??
+        LearningLaunchContext(
+          ayah: AyahReference(surahId: surahId, ayahNumber: startAyah),
+          intent: LearningIntent.memorize,
+          origin: LearningOrigin.unknown,
+        );
     // Effects are durable and account-scoped. Replaying a previously committed
     // receipt here heals an interrupted session without duplicating rewards.
     unawaited(_processPendingEffects());
@@ -299,6 +312,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         await _progressAdapter.clear(surahId);
       } else if (savedPhase != V2SessionPhase.created &&
           saved.blockAyahNumbers.isNotEmpty) {
+        _launchContext = saved.launchContext;
         _sessionState = V2SessionProgressAdapter.restore(saved, allAyahs);
         emit(
           MSActive(
@@ -309,7 +323,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
             isEvaluating: false,
           ),
         );
-        unawaited(_progressAdapter.save(_sessionState!));
+        unawaited(_saveProgress(_sessionState!));
         unawaited(
           _prefetchBlockAudio(
             _sessionState!.surahId,
@@ -351,10 +365,53 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     );
 
     // 5. Save session state for resume.
-    unawaited(_progressAdapter.save(_sessionState!));
+    unawaited(_saveProgress(_sessionState!));
 
     // 6. Start audio prefetch for the block.
     unawaited(_prefetchBlockAudio(surahId, blockAyahs));
+  }
+
+  Future<void> _saveProgress(V2SessionState sessionState) =>
+      _progressAdapter.save(sessionState, launchContext: _launchContext);
+
+  /// Explicitly abandons the resumable checkpoint. Real failed, unpassed
+  /// ayahs become one weak review each before the checkpoint is removed.
+  Future<bool> discardSession() async {
+    if (_discardCommitted) return true;
+    if (_discardInFlight) return false;
+    final sessionState = _sessionState;
+    if (sessionState == null) return true;
+
+    _discardInFlight = true;
+    try {
+      final weakResult = await _reviewAdapter.recordAbandonedFailures(
+        sessionState.failureTracker,
+        passedAyahNumbers: sessionState.passedAyahNumbers,
+      );
+      if (weakResult.isLeft()) {
+        _emitDiscardPersistenceIssue();
+        return false;
+      }
+      await _progressAdapter.clear(sessionState.surahId);
+      await _appSessionService?.clearLastRestorableLocation();
+      _discardCommitted = true;
+      return true;
+    } catch (error, stack) {
+      TaliaLogger.e('V2: Failed to discard session', error, stack);
+      _emitDiscardPersistenceIssue();
+      return false;
+    } finally {
+      _discardInFlight = false;
+    }
+  }
+
+  void _emitDiscardPersistenceIssue() {
+    if (state is! MSActive) return;
+    emit(
+      (state as MSActive).copyWith(
+        persistenceIssue: CubitMessageCodes.hifzReviewSaveFailed,
+      ),
+    );
   }
 
   // ── Phase transitions (user-driven) ──────────────────────────────────────
@@ -364,7 +421,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     _assertActive();
     _sessionState = _engine.startMemorizing(_sessionState!);
     _emitActive();
-    await _progressAdapter.save(_sessionState!);
+    await _saveProgress(_sessionState!);
   }
 
   /// User is ready to recite after memorizing (or after remediation).
@@ -374,7 +431,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if ((state as MSActive).isPlaying) await stopAudio();
     _sessionState = _engine.startReciting(_sessionState!);
     _emitActive(clearRecognizedText: true);
-    await _progressAdapter.save(_sessionState!);
+    await _saveProgress(_sessionState!);
   }
 
   /// User requests a hint during memorizing.
@@ -384,7 +441,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (!identical(updated, _sessionState)) {
       _sessionState = updated;
       _emitActive();
-      await _progressAdapter.save(_sessionState!);
+      await _saveProgress(_sessionState!);
     }
   }
 
@@ -393,7 +450,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     _assertActive();
     _sessionState = _engine.completeRemediation(_sessionState!);
     _emitActive(clearRecognizedText: true);
-    await _progressAdapter.save(_sessionState!);
+    await _saveProgress(_sessionState!);
   }
 
   /// User starts the block review after all ayahs passed individually.
@@ -401,7 +458,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     _assertActive();
     _sessionState = _engine.startBlockReview(_sessionState!);
     _emitActive(clearRecognizedText: true);
-    await _progressAdapter.save(_sessionState!);
+    await _saveProgress(_sessionState!);
   }
 
   // ── STT recording ────────────────────────────────────────────────────────
@@ -752,7 +809,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       // falsely look completed if finalization failed. It is cleared only
       // after all required review writes succeed.
       if (newState.phase != V2SessionPhase.completed) {
-        await _progressAdapter.save(newState);
+        await _saveProgress(newState);
       }
       return true;
     } catch (error, stack) {

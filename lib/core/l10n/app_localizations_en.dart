@@ -2891,6 +2891,16 @@ class AppLocalizationsEn extends AppLocalizations {
       'Do you want to leave the memorization session? Your current progress will be saved.';
 
   @override
+  String get memorizationExitSessionMessage =>
+      'Save this session for later or discard it? Failed, unpassed Ayahs will be added to review when discarded.';
+
+  @override
+  String get memorizationSaveAndLeave => 'Save & leave';
+
+  @override
+  String get memorizationDiscardSession => 'Discard session';
+
+  @override
   String hifzAyahNumberLabel(int ayahNumber) {
     return 'Ayah $ayahNumber';
   }

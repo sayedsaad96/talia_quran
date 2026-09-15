@@ -11,6 +11,7 @@ import '../../features/memorization_plus/domain/repositories/memorization_plus_r
 import '../constants/app_constants.dart';
 import '../di/injection.dart';
 import '../l10n/app_localizations.dart';
+import '../memorization/learning_launch_context.dart';
 import '../services/get_daily_wird_usecase.dart';
 
 import '../../features/home/presentation/pages/home_page.dart';
@@ -825,10 +826,21 @@ abstract class AppRouter {
           if (!_isValidSurahId(surahId) || startAyah < 1 || blockSize < 1) {
             return const MemorizationHubPage();
           }
-          return V2SessionPage(
+          final launchContext = LearningLaunchContext.fromRouteValues(
             surahId: surahId!,
             startAyah: startAyah,
+            intent:
+                extra?['intent'] as String? ??
+                state.uri.queryParameters['intent'],
+            origin:
+                extra?['origin'] as String? ??
+                state.uri.queryParameters['origin'],
+          );
+          return V2SessionPage(
+            surahId: surahId,
+            startAyah: startAyah,
             blockSize: blockSize,
+            launchContext: launchContext,
           );
         },
       ),
@@ -848,8 +860,7 @@ abstract class AppRouter {
                 pageBuilder: (_, state) => NoTransitionPage(
                   child: HomePage(
                     requestDailyAyahShare:
-                        state.uri.queryParameters['dailyAyahAction'] ==
-                        'share',
+                        state.uri.queryParameters['dailyAyahAction'] == 'share',
                   ),
                 ),
               ),

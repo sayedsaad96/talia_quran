@@ -191,6 +191,7 @@ final class V2ReviewOutcomeCommitter {
         nextState,
         ownerId: ownerId,
         sessionId: sessionId,
+        launchContext: existingSession?.launchContext,
       )..id = existingSession?.id ?? Isar.autoIncrement;
 
       await _isar.isarReviewEvidenceEvents.put(event);
@@ -327,6 +328,7 @@ final class V2ReviewOutcomeCommitter {
         nextState,
         ownerId: ownerId,
         sessionId: sessionId,
+        launchContext: existingSession?.launchContext,
       )..id = existingSession?.id ?? Isar.autoIncrement;
       await _isar.isarV2Sessions.put(checkpoint);
       await _effects.put(
@@ -455,6 +457,7 @@ final class V2ReviewOutcomeCommitter {
         nextState,
         ownerId: ownerId,
         sessionId: sessionId,
+        launchContext: existingSession?.launchContext,
       )..id = existingSession?.id ?? Isar.autoIncrement;
       await _isar.isarV2Sessions.put(checkpoint);
       await _effects.put(

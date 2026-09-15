@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/progress/progress_events_bus.dart';
+import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/services/streak_reader.dart';
 import 'package:talia_quran/features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/memorization_models.dart';
@@ -70,6 +72,81 @@ void main() {
     expect(find.byIcon(Icons.check_circle_rounded), findsOneWidget);
     expect(find.byIcon(Icons.radio_button_unchecked), findsOneWidget);
   });
+
+  testWidgets('tapping a plan ayah opens its exact surah and ayah', (
+    tester,
+  ) async {
+    final plan = DailyPlan(
+      generatedAt: DateTime.now().toUtc(),
+      surahId: 67,
+      newAyahs: const [],
+      weakRecovery: const [
+        DailyPlanAyah(
+          surahId: 36,
+          ayahNumber: 3,
+          ayahText: 'text',
+          record: null,
+        ),
+      ],
+      nearRevision: const [],
+      farRevision: const [],
+      completedAyahNums: const [],
+    );
+    final repository = await _repositoryForPlan(plan);
+    final router = GoRouter(
+      initialLocation: '/plan',
+      routes: [
+        GoRoute(
+          path: '/plan',
+          builder: (_, _) => DailyPlanPage(repositoryOverride: repository),
+        ),
+        GoRoute(
+          path: AppRoutes.memorizationV2Session,
+          builder: (_, state) => Scaffold(
+            body: Text(
+              '${state.uri.queryParameters['surahId']}:'
+              '${state.uri.queryParameters['startAyah']}',
+            ),
+          ),
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(
+      MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Ayah 3'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('36:3'), findsOneWidget);
+  });
+}
+
+Future<MemorizationPlusRepositoryImpl> _repositoryForPlan(
+  DailyPlan plan,
+) async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  final datasource = MemorizationPlusLocalDatasourceImpl(prefs);
+  await datasource.saveDailyPlan(DailyPlanModel.fromEntity(plan));
+  return MemorizationPlusRepositoryImpl(
+    datasource,
+    _UnusedQuranRepository(),
+    _FakeStreakReader(),
+    ProgressEventsBus(),
+    prefs,
+  );
 }
 
 class _FakeStreakReader implements StreakReader {

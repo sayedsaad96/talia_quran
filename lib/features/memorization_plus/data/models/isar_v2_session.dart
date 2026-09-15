@@ -7,6 +7,7 @@
 
 import 'package:isar/isar.dart';
 
+import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/memorization/review_record_identity.dart';
 import '../../domain/entities/kids_session_policy.dart';
 
@@ -35,6 +36,12 @@ class IsarV2Session {
 
   @Index()
   late int surahId;
+
+  /// Original entry context. Nullable only for sessions saved before the
+  /// connected-learning migration.
+  int? launchAyahNumber;
+  String? learningIntentName;
+  String? learningOriginName;
 
   /// JSON-encoded ayah numbers in the current block, e.g. "1,2,3,4,5"
   late String blockAyahNumbersCsv;
@@ -79,6 +86,17 @@ class IsarV2Session {
   @ignore
   Map<int, int> get hintLevels {
     return _parseCountMap(hintLevelsCsv);
+  }
+
+  @ignore
+  LearningLaunchContext get launchContext {
+    final ayahs = blockAyahNumbers;
+    return LearningLaunchContext.fromRouteValues(
+      surahId: surahId,
+      startAyah: launchAyahNumber ?? (ayahs.isEmpty ? 1 : ayahs.first),
+      intent: learningIntentName,
+      origin: learningOriginName,
+    );
   }
 
   /// Invalid persisted CSV never partially advances a session. A malformed
@@ -126,10 +144,21 @@ class IsarV2Session {
     required Map<int, int> failureCounts,
     required Map<int, int> hintLevels,
     required bool blockReviewRequired,
+    LearningLaunchContext? launchContext,
     String? sessionId,
     String ownerId = ReviewRecordIdentity.localOwnerId,
     MemorizationAudience audience = MemorizationAudience.adult,
   }) {
+    final firstBlockAyah = blockAyahNumbers.isEmpty
+        ? 1
+        : blockAyahNumbers.first;
+    final resolvedLaunchContext =
+        launchContext ??
+        LearningLaunchContext(
+          ayah: AyahReference(surahId: surahId, ayahNumber: firstBlockAyah),
+          intent: LearningIntent.memorize,
+          origin: LearningOrigin.unknown,
+        );
     return IsarV2Session()
       ..sessionKey = keyFor(
         ownerId: ownerId,
@@ -140,6 +169,9 @@ class IsarV2Session {
       ..ownerId = ownerId
       ..audienceIndex = audience.index
       ..surahId = surahId
+      ..launchAyahNumber = resolvedLaunchContext.ayah.ayahNumber
+      ..learningIntentName = resolvedLaunchContext.intent.name
+      ..learningOriginName = resolvedLaunchContext.origin.name
       ..blockAyahNumbersCsv = blockAyahNumbers.join(',')
       ..currentAyahIndex = currentAyahIndex
       ..phaseIndex = phaseIndex

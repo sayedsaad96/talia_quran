@@ -79,6 +79,12 @@ class _DailyPlanPageState extends State<DailyPlanPage> {
           return _DailyPlanBody(
             plan: plan,
             isDark: isDark,
+            onOpenAyah: (ayah) async {
+              await context.push(
+                MemorizationNavigationResolver.dailyPlanAyahLocation(ayah),
+              );
+              if (mounted) _retry();
+            },
             onContinue: plan.isRequiredPlanCompleted
                 ? null
                 : () async {
@@ -103,11 +109,13 @@ class _DailyPlanBody extends StatelessWidget {
   const _DailyPlanBody({
     required this.plan,
     required this.isDark,
+    required this.onOpenAyah,
     this.onContinue,
   });
 
   final DailyPlan plan;
   final bool isDark;
+  final Future<void> Function(DailyPlanAyah ayah) onOpenAyah;
   final Future<void> Function()? onContinue;
 
   @override
@@ -157,6 +165,7 @@ class _DailyPlanBody extends StatelessWidget {
             ayahs: plan.newAyahs,
             plan: plan,
             isDark: isDark,
+            onOpenAyah: onOpenAyah,
           ),
         if (plan.weakRecovery.isNotEmpty)
           _PlanBucketSection(
@@ -164,6 +173,7 @@ class _DailyPlanBody extends StatelessWidget {
             ayahs: plan.weakRecovery,
             plan: plan,
             isDark: isDark,
+            onOpenAyah: onOpenAyah,
           ),
         if (plan.nearRevision.isNotEmpty)
           _PlanBucketSection(
@@ -171,6 +181,7 @@ class _DailyPlanBody extends StatelessWidget {
             ayahs: plan.nearRevision,
             plan: plan,
             isDark: isDark,
+            onOpenAyah: onOpenAyah,
           ),
         if (plan.farRevision.isNotEmpty)
           _PlanBucketSection(
@@ -178,6 +189,7 @@ class _DailyPlanBody extends StatelessWidget {
             ayahs: plan.farRevision,
             plan: plan,
             isDark: isDark,
+            onOpenAyah: onOpenAyah,
           ),
         if (plan.retentionReview.isNotEmpty)
           _PlanBucketSection(
@@ -185,6 +197,7 @@ class _DailyPlanBody extends StatelessWidget {
             ayahs: plan.retentionReview,
             plan: plan,
             isDark: isDark,
+            onOpenAyah: onOpenAyah,
           ),
         if (onContinue != null) ...[
           const SizedBox(height: AppSpacing.lg),
@@ -205,12 +218,14 @@ class _PlanBucketSection extends StatelessWidget {
     required this.ayahs,
     required this.plan,
     required this.isDark,
+    required this.onOpenAyah,
   });
 
   final String title;
   final List<DailyPlanAyah> ayahs;
   final DailyPlan plan;
   final bool isDark;
+  final Future<void> Function(DailyPlanAyah ayah) onOpenAyah;
 
   @override
   Widget build(BuildContext context) {
@@ -233,6 +248,7 @@ class _PlanBucketSection extends StatelessWidget {
               ayah: ayah,
               isCompleted: plan.isAyahCompleted(ayah.surahId, ayah.ayahNumber),
               isDark: isDark,
+              onTap: () => onOpenAyah(ayah),
             ),
         ],
       ),
@@ -245,11 +261,13 @@ class _PlanAyahTile extends StatelessWidget {
     required this.ayah,
     required this.isCompleted,
     required this.isDark,
+    required this.onTap,
   });
 
   final DailyPlanAyah ayah;
   final bool isCompleted;
   final bool isDark;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -257,6 +275,7 @@ class _PlanAyahTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       color: isDark ? AppColors.darkCard : AppColors.lightCard,
       child: ListTile(
+        onTap: onTap,
         leading: Icon(
           isCompleted
               ? Icons.check_circle_rounded

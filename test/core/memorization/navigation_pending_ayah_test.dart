@@ -49,31 +49,80 @@ void main() {
       expect(target.intent, PendingAyahIntent.continueDailyPlan);
     });
 
-    test('practiceSurah uses first unstarted ayah when surah ayah count known',
-        () {
-      final target = resolver.resolve(
-        PendingAyahResolverInput(
-          surahId: 2,
-          intent: PendingAyahIntent.practiceSurah,
-          surahAyahCount: 286,
-          reviewRecords: [
-            AyahReviewRecord(
-              surahId: 2,
-              ayahNumber: 1,
-              strengthLevel: 6,
-              intervalDays: 30,
-              lastReviewedAt: t,
-              nextReviewDate: t,
-              totalReviews: 3,
-              lastRating: PerformanceRating.excellent,
-              createdByMode: ReviewRecordCreatedByMode.v2Session,
+    test(
+      'continueDailyPlan opens the first incomplete weak ayah across surahs',
+      () {
+        final now = DateTime.now().toUtc();
+        final target = resolver.resolve(
+          PendingAyahResolverInput(
+            surahId: 67,
+            intent: PendingAyahIntent.continueDailyPlan,
+            cachedDailyPlan: DailyPlan(
+              generatedAt: now,
+              surahId: 67,
+              newAyahs: const [
+                DailyPlanAyah(
+                  surahId: 67,
+                  ayahNumber: 7,
+                  ayahText: 'new',
+                  record: null,
+                ),
+              ],
+              weakRecovery: const [
+                DailyPlanAyah(
+                  surahId: 36,
+                  ayahNumber: 2,
+                  ayahText: 'completed weak',
+                  record: null,
+                ),
+                DailyPlanAyah(
+                  surahId: 36,
+                  ayahNumber: 3,
+                  ayahText: 'pending weak',
+                  record: null,
+                ),
+              ],
+              nearRevision: const [],
+              farRevision: const [],
+              completedAyahNums: const [],
+              completedAyahKeys: const ['36:2'],
             ),
-          ],
-        ),
-      );
+            reviewRecords: const [],
+          ),
+        );
 
-      expect(target.startAyah, 2);
-    });
+        expect(target.surahId, 36);
+        expect(target.startAyah, 3);
+      },
+    );
+
+    test(
+      'practiceSurah uses first unstarted ayah when surah ayah count known',
+      () {
+        final target = resolver.resolve(
+          PendingAyahResolverInput(
+            surahId: 2,
+            intent: PendingAyahIntent.practiceSurah,
+            surahAyahCount: 286,
+            reviewRecords: [
+              AyahReviewRecord(
+                surahId: 2,
+                ayahNumber: 1,
+                strengthLevel: 6,
+                intervalDays: 30,
+                lastReviewedAt: t,
+                nextReviewDate: t,
+                totalReviews: 3,
+                lastRating: PerformanceRating.excellent,
+                createdByMode: ReviewRecordCreatedByMode.v2Session,
+              ),
+            ],
+          ),
+        );
+
+        expect(target.startAyah, 2);
+      },
+    );
 
     test('reviewSession prefers first due ayah in surah', () {
       final now = DateTime.now().toUtc();
@@ -102,33 +151,66 @@ void main() {
   });
 
   group('MemorizationNavigationResolver pending ayah (B5)', () {
-    test('today plan location includes pending startAyah from cached plan',
-        () async {
-      final nav = MemorizationNavigationResolver(
-        _FakeRepository(
-          cachedPlan: DailyPlan(
-            generatedAt: DateTime.utc(2026, 7, 8),
-            surahId: 2,
-            newAyahs: const [
-              DailyPlanAyah(
-                surahId: 2,
-                ayahNumber: 4,
-                ayahText: 'text',
-                record: null,
-              ),
-            ],
-            nearRevision: const [],
-            farRevision: const [],
-            completedAyahNums: const [1, 2, 3],
+    test(
+      'today plan location includes pending startAyah from cached plan',
+      () async {
+        final nav = MemorizationNavigationResolver(
+          _FakeRepository(
+            cachedPlan: DailyPlan(
+              generatedAt: DateTime.utc(2026, 7, 8),
+              surahId: 2,
+              newAyahs: const [
+                DailyPlanAyah(
+                  surahId: 2,
+                  ayahNumber: 4,
+                  ayahText: 'text',
+                  record: null,
+                ),
+              ],
+              nearRevision: const [],
+              farRevision: const [],
+              completedAyahNums: const [1, 2, 3],
+            ),
           ),
-        ),
-      );
+        );
 
-      final targets = await nav.resolve();
+        final targets = await nav.resolve();
 
-      expect(targets.todayPlanLocation, contains('surahId=2'));
-      expect(targets.todayPlanLocation, contains('startAyah=4'));
-    });
+        expect(targets.todayPlanLocation, contains('surahId=2'));
+        expect(targets.todayPlanLocation, contains('startAyah=4'));
+      },
+    );
+
+    test(
+      'today plan location carries its learning intent and origin',
+      () async {
+        final nav = MemorizationNavigationResolver(
+          _FakeRepository(
+            cachedPlan: DailyPlan(
+              generatedAt: DateTime.utc(2026, 7, 8),
+              surahId: 2,
+              newAyahs: const [
+                DailyPlanAyah(
+                  surahId: 2,
+                  ayahNumber: 4,
+                  ayahText: 'text',
+                  record: null,
+                ),
+              ],
+              nearRevision: const [],
+              farRevision: const [],
+              completedAyahNums: const [],
+            ),
+          ),
+        );
+
+        final targets = await nav.resolve();
+        final query = Uri.parse(targets.todayPlanLocation).queryParameters;
+
+        expect(query['intent'], 'memorize');
+        expect(query['origin'], 'dailyPlan');
+      },
+    );
 
     test('completed daily plan does not open a V2 session at ayah 1', () async {
       final nav = MemorizationNavigationResolver(
@@ -157,18 +239,20 @@ void main() {
       expect(targets.todayPlanLocation, isNot(contains('startAyah=1')));
     });
 
-    test('practiceSurahSessionLocation resolves learning ayah for Hifz tile',
-        () async {
-      final nav = MemorizationNavigationResolver(_FakeRepository());
+    test(
+      'practiceSurahSessionLocation resolves learning ayah for Hifz tile',
+      () async {
+        final nav = MemorizationNavigationResolver(_FakeRepository());
 
-      final route = await nav.practiceSurahSessionLocation(
-        114,
-        surahAyahCount: 6,
-      );
+        final route = await nav.practiceSurahSessionLocation(
+          114,
+          surahAyahCount: 6,
+        );
 
-      expect(route, contains('surahId=114'));
-      expect(route, contains('startAyah=1'));
-    });
+        expect(route, contains('surahId=114'));
+        expect(route, contains('startAyah=1'));
+      },
+    );
   });
 }
 
@@ -184,8 +268,7 @@ class _FakeRepository implements MemorizationPlusRepository {
   @override
   Future<Either<Failure, List<AyahReviewRecord>>> getAllReviewRecords({
     ReviewRecordReadScope scope = ReviewRecordReadScope.adult,
-  }) async =>
-      const Right([]);
+  }) async => const Right([]);
 
   @override
   Future<Either<Failure, MemorizationProfile>> getMemorizationProfile() async =>

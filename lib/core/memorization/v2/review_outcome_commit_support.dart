@@ -6,6 +6,7 @@ import '../../../features/memorization_plus/data/models/isar_review_effect_outbo
 import '../../../features/memorization_plus/data/models/isar_v2_session.dart';
 import '../../../features/memorization_plus/domain/entities/ayah_review_record.dart';
 import '../../../features/memorization_plus/domain/entities/kids_session_policy.dart';
+import '../learning_launch_context.dart';
 import 'hint_usage.dart';
 import 'session_state.dart';
 
@@ -15,6 +16,7 @@ abstract final class V2ReviewOutcomeCommitSupport {
     V2SessionState state, {
     required String ownerId,
     required String sessionId,
+    required LearningLaunchContext? launchContext,
   }) {
     final failures = <int, int>{};
     for (final failure in state.failureTracker.allFailures) {
@@ -38,6 +40,7 @@ abstract final class V2ReviewOutcomeCommitSupport {
       ownerId: ownerId,
       audience: MemorizationAudience.adult,
       sessionId: sessionId,
+      launchContext: launchContext,
     );
   }
 

@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/l10n/localization_helpers.dart';
+import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/memorization/v2/session_phase.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -38,26 +39,37 @@ export 'v2/v2_remediation_page.dart' show V2RemediationPage;
 /// Creates the [MemorizationSessionCubit] and starts the session.
 /// Delegates phase rendering to the dedicated page widgets in `v2/`.
 class V2SessionPage extends StatelessWidget {
-  const V2SessionPage({
+  V2SessionPage({
     super.key,
     required this.surahId,
     required this.startAyah,
     this.blockSize = 5,
-  });
+    LearningLaunchContext? launchContext,
+    this.cubitOverride,
+  }) : launchContext =
+           launchContext ??
+           LearningLaunchContext(
+             ayah: AyahReference(surahId: surahId, ayahNumber: startAyah),
+             intent: LearningIntent.memorize,
+             origin: LearningOrigin.unknown,
+           );
 
   final int surahId;
   final int startAyah;
   final int blockSize;
+  final LearningLaunchContext launchContext;
+  final MemorizationSessionCubit? cubitOverride;
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => getIt<MemorizationSessionCubit>()
-        ..startSession(
-          surahId: surahId,
-          startAyah: startAyah,
-          blockSize: blockSize,
-        ),
+      create: (_) =>
+          (cubitOverride ?? getIt<MemorizationSessionCubit>())..startSession(
+            surahId: surahId,
+            startAyah: startAyah,
+            blockSize: blockSize,
+            launchContext: launchContext,
+          ),
       child: const _V2SessionView(),
     );
   }
@@ -80,23 +92,35 @@ class _V2SessionViewState extends State<_V2SessionView> {
   }) async {
     if (didPop || sessionAllowsPop || _forceAllowPop) return;
     final l10n = context.l10n;
-    final shouldLeave = await showDialog<bool>(
+    final action = await showDialog<_V2SessionExitAction>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        content: Text(l10n.hifzLeaveSessionMessage),
+        content: Text(l10n.memorizationExitSessionMessage),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
+            onPressed: () => Navigator.pop(dialogContext),
             child: Text(l10n.cancel),
           ),
           TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(l10n.confirm),
+            onPressed: () =>
+                Navigator.pop(dialogContext, _V2SessionExitAction.saveAndLeave),
+            child: Text(l10n.memorizationSaveAndLeave),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, _V2SessionExitAction.discard),
+            child: Text(l10n.memorizationDiscardSession),
           ),
         ],
       ),
     );
-    if (shouldLeave != true || !mounted) return;
+    if (action == null || !mounted) return;
+    if (action == _V2SessionExitAction.discard) {
+      final discarded = await context
+          .read<MemorizationSessionCubit>()
+          .discardSession();
+      if (!discarded || !mounted) return;
+    }
     setState(() => _forceAllowPop = true);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -206,3 +230,5 @@ class _V2SessionViewState extends State<_V2SessionView> {
     };
   }
 }
+
+enum _V2SessionExitAction { saveAndLeave, discard }

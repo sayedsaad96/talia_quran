@@ -17,6 +17,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
+import 'package:talia_quran/core/memorization/learning_launch_context.dart';
 import 'package:talia_quran/core/memorization/v2/ayah_failure_tracker.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/session_adapters.dart';
@@ -162,6 +163,38 @@ void main() {
         expect(restored.blockReviewRequired, isTrue);
       },
     );
+
+    test('save round-trips the typed learning launch context', () async {
+      const live = V2SessionState(
+        surahId: 1,
+        blockAyahs: _blockAyahs,
+        currentAyahIndex: 0,
+        phase: V2SessionPhase.learning,
+        passedAyahNumbers: {},
+        hintTracker: V2HintTracker.empty,
+        failureTracker: V2AyahFailureTracker.empty,
+        blockReviewRequired: true,
+      );
+
+      await adapter.save(
+        live,
+        launchContext: const LearningLaunchContext(
+          ayah: AyahReference(surahId: 1, ayahNumber: 1),
+          intent: LearningIntent.review,
+          origin: LearningOrigin.smartCoach,
+        ),
+      );
+
+      final loaded = await adapter.loadIfExists(1);
+      final launchContext = loaded.fold(
+        () => null,
+        (saved) => saved.launchContext,
+      );
+
+      expect(launchContext?.intent, LearningIntent.review);
+      expect(launchContext?.origin, LearningOrigin.smartCoach);
+      expect(launchContext?.ayah.ayahNumber, 1);
+    });
 
     test(
       'unique surah index upserts — re-save replaces, never duplicates',

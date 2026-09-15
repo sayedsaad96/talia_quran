@@ -1,5 +1,7 @@
+import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/memorization/pending_ayah_resolver.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
+import '../../../../core/memorization/smart_coach_engine.dart';
 import '../../../../core/router/app_router.dart';
 import '../entities/memorization_entities.dart';
 import '../repositories/memorization_plus_repository.dart';
@@ -45,6 +47,9 @@ class MemorizationNavigationResolver {
     final adultPlanSurahId =
         cachedPlanSurahId ?? await _activeAdultPlanSurahId(customPlan);
     final quizSurahId = await _reviewQuizSurahId(adultPlanSurahId);
+    final dueReview = profile?.isChild == true
+        ? null
+        : const SmartCoachEngine().recommendAdultDueReview(reviewRecords);
     final kidsSurahId = await _activeKidsSurahId();
 
     return MemorizationNavigationTargets(
@@ -55,12 +60,14 @@ class MemorizationNavigationResolver {
         cachedPlan: cachedPlan,
         reviewRecords: reviewRecords,
       ),
-      reviewQuizLocation: _v2SessionLocation(
-        surahId: quizSurahId,
-        intent: PendingAyahIntent.reviewSession,
-        cachedPlan: cachedPlan,
-        reviewRecords: reviewRecords,
-      ),
+      reviewQuizLocation:
+          dueReview?.route ??
+          _v2SessionLocation(
+            surahId: quizSurahId,
+            intent: PendingAyahIntent.reviewSession,
+            cachedPlan: cachedPlan,
+            reviewRecords: reviewRecords,
+          ),
       kidsHomeLocation: _kidsHomeLocation(kidsSurahId),
       kidsJourneyLocation: _kidsJourneyLocation(kidsSurahId),
     );
@@ -250,13 +257,36 @@ class MemorizationNavigationResolver {
         surahAyahCount: surahAyahCount,
       ),
     );
+    final launchContext = switch (intent) {
+      PendingAyahIntent.continueDailyPlan => LearningLaunchContext(
+        ayah: AyahReference(
+          surahId: target.surahId,
+          ayahNumber: target.startAyah,
+        ),
+        intent: LearningIntent.memorize,
+        origin: LearningOrigin.dailyPlan,
+      ),
+      PendingAyahIntent.reviewSession => LearningLaunchContext(
+        ayah: AyahReference(
+          surahId: target.surahId,
+          ayahNumber: target.startAyah,
+        ),
+        intent: LearningIntent.review,
+        origin: LearningOrigin.review,
+      ),
+      PendingAyahIntent.practiceSurah => LearningLaunchContext(
+        ayah: AyahReference(
+          surahId: target.surahId,
+          ayahNumber: target.startAyah,
+        ),
+        intent: LearningIntent.memorize,
+        origin: LearningOrigin.surahPractice,
+      ),
+    };
 
     return Uri(
       path: AppRoutes.memorizationV2Session,
-      queryParameters: {
-        'surahId': '${target.surahId}',
-        'startAyah': '${target.startAyah}',
-      },
+      queryParameters: launchContext.toRouteQuery(),
     ).toString();
   }
 
@@ -284,4 +314,16 @@ class MemorizationNavigationResolver {
         ? surahId
         : KidsJourneyCursor.initial.activeSurahId,
   );
+
+  static String dailyPlanAyahLocation(DailyPlanAyah ayah) {
+    final launchContext = LearningLaunchContext(
+      ayah: AyahReference(surahId: ayah.surahId, ayahNumber: ayah.ayahNumber),
+      intent: LearningIntent.memorize,
+      origin: LearningOrigin.dailyPlan,
+    );
+    return Uri(
+      path: AppRoutes.memorizationV2Session,
+      queryParameters: launchContext.toRouteQuery(),
+    ).toString();
+  }
 }

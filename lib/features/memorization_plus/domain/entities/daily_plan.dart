@@ -65,11 +65,11 @@ class DailyPlan extends Equatable {
   List<DailyPlanAyah> get requiredAyahs {
     final unique = <String, DailyPlanAyah>{};
     for (final ayah in [
-      ...newAyahs,
       ...weakRecovery,
       ...nearRevision,
       ...farRevision,
       ...retentionReview,
+      ...newAyahs,
     ]) {
       unique.putIfAbsent('${ayah.surahId}:${ayah.ayahNumber}', () => ayah);
     }

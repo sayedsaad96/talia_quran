@@ -5,6 +5,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:talia_quran/core/error/app_failure.dart';
+import 'package:talia_quran/core/memorization/learning_launch_context.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:speech_to_text/speech_to_text.dart';
@@ -192,6 +193,52 @@ void main() {
       final active = cubit.state as MSActive;
       expect(active.sessionState.phase, V2SessionPhase.learning);
     });
+
+    test('persists the launch context supplied by the route', () async {
+      const launchContext = LearningLaunchContext(
+        ayah: AyahReference(surahId: 1, ayahNumber: 1),
+        intent: LearningIntent.review,
+        origin: LearningOrigin.smartCoach,
+      );
+
+      await cubit.startSession(
+        surahId: 1,
+        startAyah: 1,
+        blockSize: 5,
+        launchContext: launchContext,
+      );
+      await untilCalled(mockLocalDatasource.saveSession(any));
+
+      final saved =
+          verify(mockLocalDatasource.saveSession(captureAny)).captured.last
+              as IsarV2Session;
+      expect(saved.launchContext.intent, LearningIntent.review);
+      expect(saved.launchContext.origin, LearningOrigin.smartCoach);
+    });
+
+    test('keeps the launch context on later session checkpoints', () async {
+      const launchContext = LearningLaunchContext(
+        ayah: AyahReference(surahId: 1, ayahNumber: 1),
+        intent: LearningIntent.review,
+        origin: LearningOrigin.smartCoach,
+      );
+      await cubit.startSession(
+        surahId: 1,
+        startAyah: 1,
+        blockSize: 5,
+        launchContext: launchContext,
+      );
+      await untilCalled(mockLocalDatasource.saveSession(any));
+      clearInteractions(mockLocalDatasource);
+
+      await cubit.advanceToMemorizing();
+
+      final saved =
+          verify(mockLocalDatasource.saveSession(captureAny)).captured.single
+              as IsarV2Session;
+      expect(saved.launchContext.intent, LearningIntent.review);
+      expect(saved.launchContext.origin, LearningOrigin.smartCoach);
+    });
   });
 
   group('advanceToMemorizing', () {
@@ -223,6 +270,37 @@ void main() {
         (cubit.state as MSActive).sessionState.phase,
         V2SessionPhase.memorizing,
       );
+    });
+  });
+
+  group('discardSession', () {
+    test('schedules each failed unpassed ayah once before clearing', () async {
+      stubReviewWrite();
+      final saved = IsarV2Session.create(
+        surahId: 1,
+        blockAyahNumbers: const [1, 2],
+        currentAyahIndex: 1,
+        phaseIndex: V2SessionPhase.remediation.index,
+        passedAyahNumbers: const {1},
+        failureCounts: const {1: 1, 2: 1},
+        hintLevels: const {},
+        blockReviewRequired: true,
+      );
+      when(mockLocalDatasource.getSession(1)).thenAnswer((_) async => saved);
+      await cubit.startSession(surahId: 1, startAyah: 1, blockSize: 2);
+
+      final firstDiscard = await cubit.discardSession();
+      final repeatedDiscard = await cubit.discardSession();
+
+      expect(firstDiscard, isTrue);
+      expect(repeatedDiscard, isTrue);
+      final scheduled = verify(
+        mockMemRepo.saveReviewRecord(captureAny),
+      ).captured.cast<AyahReviewRecord>();
+      expect(scheduled, hasLength(1));
+      expect(scheduled.single.ayahNumber, 2);
+      expect(scheduled.single.lastRating, PerformanceRating.weak);
+      verify(mockLocalDatasource.clearSession(1)).called(1);
     });
   });
 

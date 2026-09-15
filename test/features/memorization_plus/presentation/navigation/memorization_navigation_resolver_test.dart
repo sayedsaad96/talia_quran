@@ -25,6 +25,26 @@ void main() {
       },
     );
 
+    test(
+      'Review Quiz opens the highest-priority due ayah across surahs',
+      () async {
+        final resolver = MemorizationNavigationResolver(
+          _FakeRepository(
+            cachedPlan: _dailyPlan(2),
+            reviewRecords: [_dueAdultWeakRecord(surahId: 36, ayahNumber: 3)],
+          ),
+        );
+
+        final targets = await resolver.resolve();
+        final uri = Uri.parse(targets.reviewQuizLocation);
+
+        expect(uri.queryParameters['surahId'], '36');
+        expect(uri.queryParameters['startAyah'], '3');
+        expect(uri.queryParameters['intent'], 'review');
+        expect(uri.queryParameters['origin'], 'smartCoach');
+      },
+    );
+
     test('kids Journey uses latest active kids session surah', () async {
       final resolver = MemorizationNavigationResolver(
         _FakeRepository(
@@ -152,6 +172,22 @@ AyahReviewRecord _dueKidsRecord({
   lastRating: PerformanceRating.average,
   createdByMode: ReviewRecordCreatedByMode.kidsMode,
 );
+
+AyahReviewRecord _dueAdultWeakRecord({
+  required int surahId,
+  required int ayahNumber,
+}) => AyahReviewRecord(
+  surahId: surahId,
+  ayahNumber: ayahNumber,
+  strengthLevel: 1,
+  intervalDays: 1,
+  lastReviewedAt: DateTime.utc(2025, 12, 1),
+  nextReviewDate: DateTime.utc(2025, 12, 2),
+  totalReviews: 4,
+  lastRating: PerformanceRating.weak,
+  createdByMode: ReviewRecordCreatedByMode.v2Session,
+);
+
 CustomMemorizationPlan _customPlan(int surahId, PlanTargetUser targetUser) =>
     CustomMemorizationPlan(
       name: 'Plan',

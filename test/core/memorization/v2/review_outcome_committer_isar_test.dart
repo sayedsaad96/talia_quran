@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:isar/isar.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
+import 'package:talia_quran/core/memorization/learning_launch_context.dart';
 import 'package:talia_quran/core/memorization/v2/ayah_failure_tracker.dart';
 import 'package:talia_quran/core/memorization/v2/hint_usage.dart';
 import 'package:talia_quran/core/memorization/v2/review_outcome_committer.dart';
@@ -100,6 +101,40 @@ void main() {
         expect(await isar.isarReviewEffectOutboxs.count(), 2);
       },
     );
+
+    test('outcome checkpoints preserve the session launch context', () async {
+      await isar.writeTxn(() async {
+        await isar.isarV2Sessions.put(
+          IsarV2Session.create(
+            surahId: 1,
+            blockAyahNumbers: const [1],
+            currentAyahIndex: 0,
+            phaseIndex: V2SessionPhase.reciting.index,
+            passedAyahNumbers: const {},
+            failureCounts: const {},
+            hintLevels: const {},
+            blockReviewRequired: true,
+            ownerId: 'owner-a',
+            sessionId: 'session-with-context',
+            launchContext: const LearningLaunchContext(
+              ayah: AyahReference(surahId: 1, ayahNumber: 1),
+              intent: LearningIntent.review,
+              origin: LearningOrigin.smartCoach,
+            ),
+          ),
+        );
+      });
+
+      await committer.commitAutomaticPass(
+        previousState: _recitingState,
+        nextState: _nextState,
+        taskId: 'ayah-1',
+      );
+
+      final checkpoint = await isar.isarV2Sessions.where().findFirst();
+      expect(checkpoint?.launchContext.intent, LearningIntent.review);
+      expect(checkpoint?.launchContext.origin, LearningOrigin.smartCoach);
+    });
 
     test(
       'terminal pass stores a recoverable checkpoint and completion effect',

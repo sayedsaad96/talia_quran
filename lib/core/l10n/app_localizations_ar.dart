@@ -2860,6 +2860,16 @@ class AppLocalizationsAr extends AppLocalizations {
       'هل تريد الخروج من جلسة الحفظ؟ سيتم حفظ تقدمك الحالي.';
 
   @override
+  String get memorizationExitSessionMessage =>
+      'هل تريد حفظ هذه الجلسة لوقت لاحق أم التخلّي عنها؟ ستُضاف الآيات التي أخفقت فيها ولم تجتزها إلى المراجعة عند التخلّي.';
+
+  @override
+  String get memorizationSaveAndLeave => 'حفظ وخروج';
+
+  @override
+  String get memorizationDiscardSession => 'التخلّي عن الجلسة';
+
+  @override
   String hifzAyahNumberLabel(int ayahNumber) {
     return 'آية $ayahNumber';
   }
