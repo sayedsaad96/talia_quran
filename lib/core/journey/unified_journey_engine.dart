@@ -1,3 +1,4 @@
+import '../memorization/smart_coach_recommendation.dart';
 import 'unified_journey_action.dart';
 import 'unified_journey_input.dart';
 
@@ -11,6 +12,7 @@ class UnifiedJourneyEngine {
 
   List<UnifiedJourneyAction> evaluateAll(UnifiedJourneyInput input) {
     final actions = <UnifiedJourneyAction>[];
+    final coach = input.coachRecommendation;
 
     if (input.lastRestorableLocation != null) {
       actions.add(
@@ -28,15 +30,17 @@ class UnifiedJourneyEngine {
     if (input.hasCriticalLearningAlert || input.hasHighPriorityLearningAlert) {
       actions.add(
         UnifiedJourneyAction(
-          route: input.learningAlertRoute ?? '/memorization',
+          route: coach?.route ?? input.learningAlertRoute ?? '/memorization',
           priority: UnifiedJourneyPriority.p2CriticalAlert,
-          source: 'AdaptiveRecommendations',
+          source: coach == null ? 'AdaptiveRecommendations' : 'SmartCoach',
           actionType: UnifiedJourneyActionType.criticalAlert,
-          intent: JourneyIntent.review,
+          intent: coach == null ? JourneyIntent.review : _coachIntent(coach),
           metadata: {
             if (input.learningAlertType != null)
               'learningAlertType': input.learningAlertType!.name,
+            ..._coachMetadata(coach),
           },
+          coachRecommendation: coach,
         ),
       );
     }
@@ -44,12 +48,16 @@ class UnifiedJourneyEngine {
     if (input.hasReviewBacklog && input.overdueAyahs > 0) {
       actions.add(
         UnifiedJourneyAction(
-          route: input.reviewBacklogRoute ?? '/memorization',
+          route: coach?.route ?? input.reviewBacklogRoute ?? '/memorization',
           priority: UnifiedJourneyPriority.p3ReviewBacklog,
-          source: 'AdaptiveRecommendations',
+          source: coach == null ? 'AdaptiveRecommendations' : 'SmartCoach',
           actionType: UnifiedJourneyActionType.reviewBacklog,
-          intent: JourneyIntent.review,
-          metadata: {'overdueAyahs': input.overdueAyahs.toString()},
+          intent: coach == null ? JourneyIntent.review : _coachIntent(coach),
+          metadata: {
+            'overdueAyahs': input.overdueAyahs.toString(),
+            ..._coachMetadata(coach),
+          },
+          coachRecommendation: coach,
         ),
       );
     }
@@ -57,17 +65,21 @@ class UnifiedJourneyEngine {
     if (input.hasSmartPlan) {
       actions.add(
         UnifiedJourneyAction(
-          route: input.smartPlanRoute ?? '/memorization',
+          route: coach?.route ?? input.smartPlanRoute ?? '/memorization',
           priority: UnifiedJourneyPriority.p4SmartPlan,
-          source: 'SmartCoach',
+          source: coach == null ? 'CustomMemorizationPlan' : 'SmartCoach',
           actionType: UnifiedJourneyActionType.smartPlan,
-          intent: input.isSmartPlanReview
-              ? JourneyIntent.review
-              : JourneyIntent.memorize,
+          intent: coach == null
+              ? (input.isSmartPlanReview
+                    ? JourneyIntent.review
+                    : JourneyIntent.memorize)
+              : _coachIntent(coach),
           metadata: {
             if (input.smartPlanType != null)
               'smartPlanType': input.smartPlanType!.name,
+            ..._coachMetadata(coach),
           },
+          coachRecommendation: coach,
         ),
       );
     }
@@ -119,6 +131,25 @@ class UnifiedJourneyEngine {
     final routes = <String>{};
     return actions.where((action) => routes.add(action.route)).toList();
   }
+
+  JourneyIntent _coachIntent(SmartCoachRecommendation coach) {
+    return switch (coach.kind) {
+      SmartCoachRecommendationKind.reviewDueNear ||
+      SmartCoachRecommendationKind.reviewDueFar ||
+      SmartCoachRecommendationKind.memorizedReviewDue ||
+      SmartCoachRecommendationKind.reviewWeakAyah => JourneyIntent.review,
+      SmartCoachRecommendationKind.continueDailyPlan ||
+      SmartCoachRecommendationKind.memorizeNewAyahs ||
+      SmartCoachRecommendationKind.kidsCurrentMission ||
+      SmartCoachRecommendationKind.continueV2Session => JourneyIntent.memorize,
+    };
+  }
+
+  Map<String, String> _coachMetadata(SmartCoachRecommendation? coach) => {
+    if (coach != null) 'smartCoachKind': coach.kind.name,
+    if (coach?.explanationCode != null)
+      'smartCoachExplanation': coach!.explanationCode!.name,
+  };
 
   UnifiedJourneyAction _explore(UnifiedJourneyInput input) {
     if (input.isKids) {

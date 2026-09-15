@@ -1,4 +1,5 @@
 import '../../features/memorization_plus/domain/entities/memorization_recommendation.dart';
+import '../memorization/smart_coach_recommendation.dart';
 
 enum SmartPlanType {
   continueMemorization,
@@ -13,6 +14,7 @@ class UnifiedJourneyInput {
     this.hasHighPriorityLearningAlert = false,
     this.learningAlertType,
     this.learningAlertRoute,
+    this.coachRecommendation,
     this.hasReviewBacklog = false,
     this.overdueAyahs = 0,
     this.reviewBacklogRoute,
@@ -35,6 +37,7 @@ class UnifiedJourneyInput {
   final bool hasHighPriorityLearningAlert;
   final RecommendationType? learningAlertType;
   final String? learningAlertRoute;
+  final SmartCoachRecommendation? coachRecommendation;
 
   // Review Backlog (Priority 3)
   final bool hasReviewBacklog;

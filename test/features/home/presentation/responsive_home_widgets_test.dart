@@ -40,6 +40,7 @@ import 'package:talia_quran/features/home/presentation/widgets/home_daily_challe
 import 'package:talia_quran/features/home/presentation/widgets/home_first_run.dart';
 import 'package:talia_quran/features/home/presentation/widgets/home_momentum_strip.dart';
 import 'package:talia_quran/features/home/presentation/widgets/home_night_header.dart';
+import 'package:talia_quran/features/home/presentation/widgets/home_start_khatmah_card.dart';
 import 'package:talia_quran/features/home/presentation/widgets/home_parent_children.dart';
 import 'package:talia_quran/features/home/presentation/widgets/home_quick_access.dart';
 import 'package:talia_quran/features/home/presentation/widgets/home_resume_chips.dart';
@@ -259,6 +260,7 @@ HomeLoaded _homeLoaded({
   List<ActivityEvent> recentActivity = const [],
   PrayerTimesSnapshot? prayerSnapshot,
   UnifiedJourneyAction? heroAction,
+  List<UnifiedJourneyAction> alternativeActions = const [],
   bool unifiedJourneyEnabled = true,
 }) {
   return HomeLoaded(
@@ -280,6 +282,7 @@ HomeLoaded _homeLoaded({
     activityCountsByDay: const {},
     heroMinutes: 45,
     heroAction: heroAction,
+    alternativeActions: alternativeActions,
     unifiedJourneyEnabled: unifiedJourneyEnabled,
     continueRecitation: continueRecitation,
     recentActivity: recentActivity,
@@ -985,6 +988,68 @@ void main() {
       );
 
       expect(find.byType(NextBestActionCard), findsOneWidget);
+    });
+
+    testWidgets('keeps daily wird reachable below Start Khatmah', (tester) async {
+      final skin = HomeSkin.forBrightness(Brightness.light);
+      await _pumpPage(
+        tester,
+        HomeBackground(
+          skin: skin,
+          child: HomeLoadedView(
+            state: _homeLoaded(
+              heroAction: const UnifiedJourneyAction(
+                route: '/quran/page/12',
+                priority: UnifiedJourneyPriority.p5DailyGoal,
+                source: 'DailyWird',
+                actionType: UnifiedJourneyActionType.dailyReading,
+                intent: JourneyIntent.reading,
+              ),
+            ),
+            skin: skin,
+          ),
+        ),
+        width: 360,
+        textScale: 1,
+        locale: const Locale('en'),
+        brightness: Brightness.light,
+        providers: _profileProviders(),
+      );
+
+      expect(find.byType(HomeStartKhatmahCard), findsOneWidget);
+      expect(find.byType(UnifiedHeroActionCard), findsOneWidget);
+    });
+
+    testWidgets('keeps no-data exploration reachable below Start Khatmah', (
+      tester,
+    ) async {
+      final skin = HomeSkin.forBrightness(Brightness.light);
+      await _pumpPage(
+        tester,
+        HomeBackground(
+          skin: skin,
+          child: HomeLoadedView(
+            state: _homeLoaded(
+              heroAction: const UnifiedJourneyAction(
+                route: '/quran',
+                priority: UnifiedJourneyPriority.p6FreeExploration,
+                source: 'Default',
+                actionType: UnifiedJourneyActionType.explore,
+                intent: JourneyIntent.explore,
+              ),
+            ),
+            skin: skin,
+          ),
+        ),
+        width: 360,
+        textScale: 1,
+        locale: const Locale('en'),
+        brightness: Brightness.light,
+        providers: _profileProviders(),
+      );
+
+      expect(find.byType(HomeStartKhatmahCard), findsOneWidget);
+      expect(find.byType(UnifiedHeroActionCard), findsOneWidget);
     });
 
     _forEachViewportAndTheme('renders without overflow', (

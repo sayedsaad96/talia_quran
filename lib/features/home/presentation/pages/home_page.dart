@@ -441,9 +441,15 @@ class _PrimaryAction extends StatelessWidget {
       );
     } else if (kind == HomePrimaryActionKind.startKhatmah &&
         journeyEnabled) {
-      child = HomeStartKhatmahCard(
-        skin: skin,
-        isDark: isDark,
+      child = Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          HomeStartKhatmahCard(skin: skin, isDark: isDark),
+          if (state.heroAction != null) ...[
+            const SizedBox(height: AppSpacing.md),
+            _JourneyHeroAction(state: state, isDark: isDark),
+          ],
+        ],
       );
     } else {
       // Interim (Tasks 1-3): preserves today's rendering exactly.

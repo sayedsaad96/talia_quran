@@ -699,6 +699,7 @@ class HomeCubit extends Cubit<HomeState> {
       hasCriticalLearningAlert: criticals.isNotEmpty,
       learningAlertType: criticals.isNotEmpty ? criticals.first.type : null,
       learningAlertRoute: coachRecommendation?.route,
+      coachRecommendation: coachRecommendation,
       hasReviewBacklog:
           (overallProgress?.reviewAyahs ?? 0) > 0 && backlogs.isNotEmpty,
       overdueAyahs: overallProgress?.overdueReviews ?? 0,
@@ -716,7 +717,9 @@ class HomeCubit extends Cubit<HomeState> {
                   SmartCoachRecommendationKind.reviewWeakAyah),
       smartPlanType: customPlan != null
           ? SmartPlanType.customPlan
-          : (coachRecommendation != null ? SmartPlanType.reviewPlan : null),
+          : coachRecommendation == null
+          ? null
+          : _smartPlanTypeForCoach(coachRecommendation),
       smartPlanRoute:
           coachRecommendation?.route ??
           (customPlan != null ? '/memorization' : null),
@@ -735,6 +738,16 @@ class HomeCubit extends Cubit<HomeState> {
   }
 
   bool _isCurrentLoad(int revision) => !isClosed && revision == _loadRevision;
+
+  SmartPlanType _smartPlanTypeForCoach(SmartCoachRecommendation coach) {
+    return switch (coach.kind) {
+      SmartCoachRecommendationKind.reviewDueNear ||
+      SmartCoachRecommendationKind.reviewDueFar ||
+      SmartCoachRecommendationKind.memorizedReviewDue ||
+      SmartCoachRecommendationKind.reviewWeakAyah => SmartPlanType.reviewPlan,
+      _ => SmartPlanType.continueMemorization,
+    };
+  }
 
   @override
   Future<void> close() async {

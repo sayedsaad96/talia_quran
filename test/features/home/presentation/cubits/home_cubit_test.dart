@@ -252,7 +252,45 @@ void main() {
     );
   });
 
-  test('Scenario 3: Review Backlog emits P3 Action', () async {
+  test('critical alert keeps the overlapping Coach memorization intent',
+      () async {
+    final record = AyahReviewRecord(
+      surahId: 1,
+      ayahNumber: 1,
+      lastReviewedAt: DateTime.now().subtract(const Duration(days: 30)),
+      nextReviewDate: DateTime.now().subtract(const Duration(days: 10)),
+      totalReviews: 1,
+      intervalDays: 1,
+      easeFactor: 1.0,
+      strengthLevel: 0,
+      reviewState: ReviewState.learning,
+      lastRating: PerformanceRating.average,
+      createdByMode: ReviewRecordCreatedByMode.v2Session,
+    );
+    const coach = SmartCoachRecommendation(
+      kind: SmartCoachRecommendationKind.memorizeNewAyahs,
+      explanationCode: SmartCoachExplanationCode.newAyahsAvailable,
+      route:
+          '/memorization-v2/session?surahId=2&ayahNumber=4&intent=memorize&origin=smartCoach',
+    );
+    when(
+      mockMemRepo.getAllReviewRecords(),
+    ).thenAnswer((_) async => Right([record]));
+    when(
+      mockGetCoachRecommendation.call(),
+    ).thenAnswer((_) async => const Right(coach));
+
+    await cubit.load();
+    final action = (cubit.state as HomeLoaded).heroAction!;
+
+    expect(action.priority, UnifiedJourneyPriority.p2CriticalAlert);
+    expect(action.intent, JourneyIntent.memorize);
+    expect(action.source, 'SmartCoach');
+    expect(action.metadata['smartCoachKind'], 'memorizeNewAyahs');
+    expect(action.metadata['smartCoachExplanation'], 'newAyahsAvailable');
+  });
+
+  test('overdue workload emits the p2 overload alert', () async {
     final records = List.generate(
       101,
       (index) => AyahReviewRecord(
@@ -277,8 +315,6 @@ void main() {
     final state = cubit.state as HomeLoaded;
 
     expect(state.heroAction, isNotNull);
-    // Note: because dueAyahs > 100 also triggers overloadRisk (priority: high),
-    // HomeCubit will prioritize p2CriticalAlert over p3ReviewBacklog.
     expect(state.heroAction!.priority, UnifiedJourneyPriority.p2CriticalAlert);
     expect(state.heroAction!.intent, JourneyIntent.review);
   });

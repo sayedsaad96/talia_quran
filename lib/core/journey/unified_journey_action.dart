@@ -1,3 +1,5 @@
+import '../memorization/smart_coach_recommendation.dart';
+
 enum JourneyIntent {
   resume,
   review,
@@ -33,6 +35,7 @@ class UnifiedJourneyAction {
     required this.actionType,
     required this.intent,
     this.metadata = const {},
+    this.coachRecommendation,
   });
 
   final String route;
@@ -41,4 +44,5 @@ class UnifiedJourneyAction {
   final UnifiedJourneyActionType actionType;
   final JourneyIntent intent;
   final Map<String, String> metadata;
+  final SmartCoachRecommendation? coachRecommendation;
 }
