@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/journey/unified_journey_action.dart';
 import 'package:talia_quran/core/journey/unified_journey_input.dart';
 import 'package:talia_quran/core/journey/unified_journey_engine.dart';
+import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart';
 
 void main() {
   late UnifiedJourneyEngine engine;
@@ -43,19 +44,31 @@ void main() {
       expect(result.intent, JourneyIntent.review);
     });
 
-    test('Priority 3: Review Backlog -> review', () {
+    test('Priority 3: Review Backlog reaches the Coach review outcome', () {
       const exactCoachRoute =
           '/memorization-v2/session?surahId=9&ayahNumber=5&intent=review&origin=smartCoach';
       const input = UnifiedJourneyInput(
         hasReviewBacklog: true,
         overdueAyahs: 20,
         reviewBacklogRoute: exactCoachRoute,
+        coachRecommendation: SmartCoachRecommendation(
+          kind: SmartCoachRecommendationKind.reviewWeakAyah,
+          explanationCode: SmartCoachExplanationCode.weakAyahDue,
+          route: exactCoachRoute,
+          surahId: 9,
+          startAyah: 5,
+        ),
       );
 
       final result = engine.evaluate(input);
 
       expect(result.priority, UnifiedJourneyPriority.p3ReviewBacklog);
       expect(result.intent, JourneyIntent.review);
+      expect(result.source, 'SmartCoach');
+      expect(
+        result.coachRecommendation?.kind,
+        SmartCoachRecommendationKind.reviewWeakAyah,
+      );
       final route = Uri.parse(result.route);
       expect(route.queryParameters['surahId'], '9');
       expect(route.queryParameters['ayahNumber'], '5');

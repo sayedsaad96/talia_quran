@@ -7,12 +7,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/journey/journey_presentation_data.dart';
 import 'package:talia_quran/core/journey/unified_journey_action.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/memorization/smart_coach_recommendation.dart';
 import 'package:talia_quran/core/services/audio_resume_store.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
@@ -933,6 +935,79 @@ void main() {
   });
 
   group('HomeLoadedView', () {
+    testWidgets('active Khatmah keeps urgent Coach review ordered and tappable',
+        (tester) async {
+      const route =
+          '/memorization-v2/session?surahId=2&ayahNumber=255&intent=review&origin=smartCoach';
+      const coach = SmartCoachRecommendation(
+        kind: SmartCoachRecommendationKind.reviewWeakAyah,
+        explanationCode: SmartCoachExplanationCode.weakAyahDue,
+        route: route,
+        surahId: 2,
+        startAyah: 255,
+      );
+      final skin = HomeSkin.forBrightness(Brightness.light);
+      final state = _homeLoaded(
+        continueRecitation: _continueRecitation(),
+        heroAction: const UnifiedJourneyAction(
+          route: route,
+          priority: UnifiedJourneyPriority.p2CriticalAlert,
+          source: 'SmartCoach',
+          actionType: UnifiedJourneyActionType.criticalAlert,
+          intent: JourneyIntent.review,
+          coachRecommendation: coach,
+        ),
+      );
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => MultiBlocProvider(
+              providers: _profileProviders(),
+              child: Scaffold(
+                body: HomeBackground(
+                  skin: skin,
+                  child: HomeLoadedView(state: state, skin: skin),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/memorization-v2/session',
+            builder: (_, _) => const Scaffold(body: Text('review destination')),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final continueCard = find.byType(HomeContinueCard);
+      final reviewCard = find.byType(UnifiedHeroActionCard);
+      expect(continueCard, findsOneWidget);
+      expect(reviewCard, findsOneWidget);
+      expect(
+        tester.getTopLeft(reviewCard).dy,
+        greaterThan(tester.getTopLeft(continueCard).dy),
+      );
+      final action = tester.widget<UnifiedHeroActionCard>(reviewCard);
+      final uri = Uri.parse(action.data.route);
+      expect(uri.path, '/memorization-v2/session');
+      expect(uri.queryParameters['surahId'], '2');
+      expect(uri.queryParameters['ayahNumber'], '255');
+      expect(uri.queryParameters['intent'], 'review');
+      expect(uri.queryParameters['origin'], 'smartCoach');
+
+      await tester.tap(reviewCard);
+      await tester.pumpAndSettle();
+      expect(find.text('review destination'), findsOneWidget);
+    });
+
     testWidgets('keeps urgent review visible below active Khatmah', (
       tester,
     ) async {
