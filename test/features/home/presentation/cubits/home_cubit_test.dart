@@ -290,18 +290,20 @@ void main() {
     expect(action.metadata['smartCoachExplanation'], 'newAyahsAvailable');
   });
 
-  test('overdue workload emits the p2 overload alert', () async {
+  test('genuinely separate leech recovery emits the p2 critical alert',
+      () async {
     final records = List.generate(
-      101,
+      10,
       (index) => AyahReviewRecord(
         surahId: 1,
         ayahNumber: index + 1,
         lastReviewedAt: DateTime.now().subtract(const Duration(days: 5)),
-        nextReviewDate: DateTime.now().subtract(const Duration(days: 1)),
+        nextReviewDate: DateTime.now().add(const Duration(days: 1)),
         totalReviews: 3,
         intervalDays: 5,
         easeFactor: 2.5,
         strengthLevel: 3,
+        lapses: 8,
         reviewState: ReviewState.relearning,
         lastRating: PerformanceRating.excellent,
         createdByMode: ReviewRecordCreatedByMode.v2Session,
@@ -317,6 +319,59 @@ void main() {
     expect(state.heroAction, isNotNull);
     expect(state.heroAction!.priority, UnifiedJourneyPriority.p2CriticalAlert);
     expect(state.heroAction!.intent, JourneyIntent.review);
+  });
+
+  test('review backlog without p1 or p2 selects the exact P3 outcome',
+      () async {
+    final records = List.generate(
+      101,
+      (index) => AyahReviewRecord(
+        surahId: 2,
+        ayahNumber: index + 1,
+        lastReviewedAt: DateTime.now().subtract(const Duration(days: 5)),
+        nextReviewDate: DateTime.now().subtract(const Duration(days: 1)),
+        totalReviews: 1,
+        intervalDays: 7,
+        easeFactor: 2.5,
+        strengthLevel: 1,
+        reviewState: ReviewState.review,
+        lastRating: PerformanceRating.excellent,
+        createdByMode: ReviewRecordCreatedByMode.v2Session,
+      ),
+    );
+    when(mockMemRepo.getAllReviewRecords())
+        .thenAnswer((_) async => Right(records));
+    when(mockGetProgress.call()).thenAnswer(
+      (_) async => const Right(
+        OverallProgress(
+          memorizedAyahs: 10,
+          totalAyahs: 100,
+          memorizedSurahs: 1,
+          totalSurahs: 114,
+          memorizedJuz: 0,
+          totalJuz: 30,
+          readAyahs: 50,
+          readSurahs: 2,
+          readJuz: 1,
+          streakDays: 5,
+          lastActiveDate: null,
+          achievements: [],
+          readPagesCount: 10,
+          totalQuranPages: 604,
+          learningAyahs: 5,
+          reviewAyahs: 101,
+          overdueReviews: 101,
+        ),
+      ),
+    );
+
+    await cubit.load();
+    final action = (cubit.state as HomeLoaded).heroAction!;
+
+    expect(action.priority, UnifiedJourneyPriority.p3ReviewBacklog);
+    expect(action.source, 'AdaptiveRecommendations');
+    expect(action.intent, JourneyIntent.review);
+    expect(action.route, '/memorization');
   });
 
   test('ignores kids rows when evaluating the adult review workload', () async {

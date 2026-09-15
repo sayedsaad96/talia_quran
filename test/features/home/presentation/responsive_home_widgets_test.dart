@@ -1127,6 +1127,91 @@ void main() {
       expect(find.byType(UnifiedHeroActionCard), findsOneWidget);
     });
 
+    testWidgets('Start Khatmah exposes and navigates exact alternatives',
+        (tester) async {
+      const primary = UnifiedJourneyAction(
+        route: '/quran/page/12',
+        priority: UnifiedJourneyPriority.p5DailyGoal,
+        source: 'DailyWird',
+        actionType: UnifiedJourneyActionType.dailyReading,
+        intent: JourneyIntent.reading,
+      );
+      const alternativeRoute =
+          '/memorization-v2/session?surahId=36&ayahNumber=12&intent=review&origin=smartCoach';
+      const alternative = UnifiedJourneyAction(
+        route: alternativeRoute,
+        priority: UnifiedJourneyPriority.p4SmartPlan,
+        source: 'SmartCoach',
+        actionType: UnifiedJourneyActionType.smartPlan,
+        intent: JourneyIntent.review,
+        coachRecommendation: SmartCoachRecommendation(
+          kind: SmartCoachRecommendationKind.reviewWeakAyah,
+          explanationCode: SmartCoachExplanationCode.weakAyahDue,
+          route: alternativeRoute,
+          surahId: 36,
+          startAyah: 12,
+        ),
+      );
+      final skin = HomeSkin.forBrightness(Brightness.light);
+      final state = _homeLoaded(
+        heroAction: primary,
+        alternativeActions: const [primary, alternative],
+      );
+      final router = GoRouter(
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (_, _) => MultiBlocProvider(
+              providers: _profileProviders(),
+              child: Scaffold(
+                body: HomeBackground(
+                  skin: skin,
+                  child: HomeLoadedView(state: state, skin: skin),
+                ),
+              ),
+            ),
+          ),
+          GoRoute(
+            path: '/memorization-v2/session',
+            builder: (_, state) => Scaffold(
+              body: Text(
+                'alternative ${state.uri.queryParameters['surahId']} '
+                '${state.uri.queryParameters['ayahNumber']} '
+                '${state.uri.queryParameters['intent']} '
+                '${state.uri.queryParameters['origin']}',
+              ),
+            ),
+          ),
+        ],
+      );
+      await tester.pumpWidget(
+        MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(HomeStartKhatmahCard), findsOneWidget);
+      expect(find.text('Something else'), findsOneWidget);
+
+      await tester.tap(find.text('Something else'));
+      await tester.pumpAndSettle();
+      expect(find.text('Review a difficult ayah'), findsOneWidget);
+
+      final uri = Uri.parse(alternativeRoute);
+      expect(uri.path, '/memorization-v2/session');
+      expect(uri.queryParameters['surahId'], '36');
+      expect(uri.queryParameters['ayahNumber'], '12');
+      expect(uri.queryParameters['intent'], 'review');
+      expect(uri.queryParameters['origin'], 'smartCoach');
+
+      await tester.tap(find.text('Review a difficult ayah'));
+      await tester.pumpAndSettle();
+      expect(find.text('alternative 36 12 review smartCoach'), findsOneWidget);
+    });
+
     _forEachViewportAndTheme('renders without overflow', (
       tester,
       width,

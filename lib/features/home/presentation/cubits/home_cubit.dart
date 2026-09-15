@@ -676,16 +676,18 @@ class HomeCubit extends Cubit<HomeState> {
         ? const <MemorizationRecommendation>[]
         : adaptiveUsecase.generate(insights).recommendations;
 
+    final backlogs = recommendations
+        .where((r) => r.type == RecommendationType.reviewBacklog)
+        .toList();
     final criticals = recommendations
         .where(
           (r) =>
               (r.priority == RecommendationPriority.critical ||
                   r.priority == RecommendationPriority.high) &&
-              r.type != RecommendationType.reviewBacklog,
+              r.type != RecommendationType.reviewBacklog &&
+              !(backlogs.isNotEmpty &&
+                  r.type == RecommendationType.overloadRisk),
         )
-        .toList();
-    final backlogs = recommendations
-        .where((r) => r.type == RecommendationType.reviewBacklog)
         .toList();
 
     final khatmahRoute = activeKhatmah == null
