@@ -149,6 +149,7 @@ class _HomePrayerTimelineState extends State<HomePrayerTimeline>
       snapshot: widget.snapshot,
       hijriLabel: widget.hijriLabel,
       skin: widget.skin,
+      now: widget.now,
     );
   }
 
@@ -217,6 +218,7 @@ class _HomePrayerTimelineState extends State<HomePrayerTimeline>
                   stations: stations,
                   skin: skin,
                   pulse: _pulse,
+                  minutesUntil: widget.snapshot.minutesUntil,
                   formatTime: (t) => _formattedTime(t, context),
                 ),
               ],
@@ -237,12 +239,14 @@ class _TimelineRow extends StatelessWidget {
     required this.stations,
     required this.skin,
     required this.pulse,
+    required this.minutesUntil,
     required this.formatTime,
   });
 
   final List<_StationData> stations;
   final HomeSkin skin;
   final AnimationController pulse;
+  final int minutesUntil;
   final String Function(DateTime) formatTime;
 
   @override
@@ -256,6 +260,7 @@ class _TimelineRow extends StatelessWidget {
               data: stations[i],
               skin: skin,
               pulse: pulse,
+              minutesUntil: minutesUntil,
               formatTime: formatTime,
             ),
           ),
@@ -317,12 +322,14 @@ class _StationNode extends StatelessWidget {
     required this.data,
     required this.skin,
     required this.pulse,
+    required this.minutesUntil,
     required this.formatTime,
   });
 
   final _StationData data;
   final HomeSkin skin;
   final AnimationController pulse;
+  final int minutesUntil;
   final String Function(DateTime) formatTime;
 
   @override
@@ -367,7 +374,7 @@ class _StationNode extends StatelessWidget {
 
     return Semantics(
       label: '${data.name}${timeText != null ? " $timeText" : ""}'
-          '${isNext ? " — ${context.l10n.homePrayerChip(data.name, 0)}" : ""}',
+          '${isNext ? " — ${context.l10n.homePrayerChip(data.name, minutesUntil)}" : ""}',
       child: Opacity(
         opacity: opacity,
         child: Column(
