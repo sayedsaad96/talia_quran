@@ -14,6 +14,7 @@ import '../cubits/home_cubit.dart';
 import '../theme/home_skin.dart';
 import 'home_background.dart';
 import 'home_context_bar.dart';
+import 'home_prayer_timeline.dart';
 import 'home_prayer_times_sheet.dart';
 
 class HomeNightHeader extends StatelessWidget {
@@ -27,12 +28,6 @@ class HomeNightHeader extends StatelessWidget {
     final chips = <Widget>[
       if (state.occasion != HomeOccasion.none)
         _OccasionChip(occasion: state.occasion, skin: skin),
-      if (state.prayerSnapshot != null)
-        HomePrayerChip(
-          snapshot: state.prayerSnapshot!,
-          skin: skin,
-          hijriLabel: state.hijriLabel,
-        ),
       HomeAchievementChip(
         progress: state.progress,
         isKids: state.isKids,
@@ -70,6 +65,14 @@ class HomeNightHeader extends StatelessWidget {
                 runSpacing: AppSpacing.sm,
                 children: chips,
               ),
+              if (state.prayerSnapshot != null) ...[
+                const SizedBox(height: AppSpacing.md),
+                HomePrayerTimeline(
+                  snapshot: state.prayerSnapshot!,
+                  skin: skin,
+                  hijriLabel: state.hijriLabel,
+                ),
+              ],
             ],
           ),
         ),
