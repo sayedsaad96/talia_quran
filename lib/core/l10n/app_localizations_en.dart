@@ -3995,6 +3995,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dailyWirdSubtitle => 'Read your daily portion';
 
   @override
+  String get khatmahContinueTitle => 'Continue Khatmah';
+
+  @override
+  String get khatmahContinueSubtitle => 'Continue your Quran completion plan';
+
+  @override
   String get exploreAzkarTitle => 'Time for Dhikr';
 
   @override
@@ -4902,6 +4908,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String homePrayerChip(String name, int minutes) {
     return '$name in $minutes min';
+  }
+
+  @override
+  String prayerTimelineNext(String name, int minutes) {
+    return '$name in $minutes min';
+  }
+
+  @override
+  String prayerTimelineSunriseNext(int minutes) {
+    return 'Sunrise in $minutes min';
   }
 
   @override

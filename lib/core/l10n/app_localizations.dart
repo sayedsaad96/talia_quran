@@ -7249,6 +7249,18 @@ abstract class AppLocalizations {
   /// **'اقرأ وردك اليومي'**
   String get dailyWirdSubtitle;
 
+  /// No description provided for @khatmahContinueTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة الختمة'**
+  String get khatmahContinueTitle;
+
+  /// No description provided for @khatmahContinueSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل قراءة ختمتك'**
+  String get khatmahContinueSubtitle;
+
   /// No description provided for @exploreAzkarTitle.
   ///
   /// In ar, this message translates to:
@@ -8827,6 +8839,18 @@ abstract class AppLocalizations {
   /// **'{name} بعد {minutes} د'**
   String homePrayerChip(String name, int minutes);
 
+  /// No description provided for @prayerTimelineNext.
+  ///
+  /// In ar, this message translates to:
+  /// **'أذان {name} خلال {minutes} دقيقة'**
+  String prayerTimelineNext(String name, int minutes);
+
+  /// No description provided for @prayerTimelineSunriseNext.
+  ///
+  /// In ar, this message translates to:
+  /// **'الشروق خلال {minutes} دقيقة'**
+  String prayerTimelineSunriseNext(int minutes);
+
   /// No description provided for @prayerFajr.
   ///
   /// In ar, this message translates to:
@@ -8896,7 +8920,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeBrandSubtitle.
   ///
   /// In ar, this message translates to:
-  /// **'تالية قرآن'**
+  /// **'تالية القرآن'**
   String get homeBrandSubtitle;
 
   /// No description provided for @homeWelcomeUser.

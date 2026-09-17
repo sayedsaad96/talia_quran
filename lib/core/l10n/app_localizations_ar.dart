@@ -4058,6 +4058,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dailyWirdSubtitle => 'اقرأ وردك اليومي';
 
   @override
+  String get khatmahContinueTitle => 'متابعة الختمة';
+
+  @override
+  String get khatmahContinueSubtitle => 'أكمل قراءة ختمتك';
+
+  @override
   String get exploreAzkarTitle => 'وقت الذكر';
 
   @override
@@ -4952,6 +4958,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String prayerTimelineNext(String name, int minutes) {
+    return 'أذان $name خلال $minutes دقيقة';
+  }
+
+  @override
+  String prayerTimelineSunriseNext(int minutes) {
+    return 'الشروق خلال $minutes دقيقة';
+  }
+
+  @override
   String get prayerFajr => 'الفجر';
 
   @override
@@ -4985,7 +5001,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get prayerMethodNorthAmerica => 'إسنا';
 
   @override
-  String get homeBrandSubtitle => 'تالية قرآن';
+  String get homeBrandSubtitle => 'تالية القرآن';
 
   @override
   String homeWelcomeUser(String name) {
