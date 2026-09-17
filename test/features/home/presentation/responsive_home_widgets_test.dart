@@ -133,7 +133,10 @@ Future<void> _pumpPage(
         return MediaQuery(
           data: MediaQuery.of(
             context,
-          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          ).copyWith(
+            textScaler: TextScaler.linear(textScale),
+            disableAnimations: true,
+          ),
           child: Scaffold(body: child),
         );
       },

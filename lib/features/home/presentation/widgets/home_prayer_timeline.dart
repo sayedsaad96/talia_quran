@@ -52,6 +52,9 @@ class HomePrayerTimeline extends StatefulWidget {
   /// to pin the current time without depending on the system clock.
   final DateTime Function()? now;
 
+  /// Global flag for tests or goldens to disable repeating animations.
+  static bool enableAnimations = true;
+
   @override
   State<HomePrayerTimeline> createState() => _HomePrayerTimelineState();
 }
@@ -71,7 +74,8 @@ class _HomePrayerTimelineState extends State<HomePrayerTimeline>
     );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      if (!MediaQuery.disableAnimationsOf(context)) {
+      if (HomePrayerTimeline.enableAnimations &&
+          !MediaQuery.disableAnimationsOf(context)) {
         _pulse.repeat(reverse: true);
       }
     });
