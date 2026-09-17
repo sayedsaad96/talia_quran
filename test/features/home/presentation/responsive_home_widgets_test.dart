@@ -89,7 +89,10 @@ Future<void> _pump(
         return MediaQuery(
           data: MediaQuery.of(
             context,
-          ).copyWith(textScaler: TextScaler.linear(textScale)),
+          ).copyWith(
+            textScaler: TextScaler.linear(textScale),
+            disableAnimations: true,
+          ),
           child: Scaffold(
             body: SingleChildScrollView(
               child: Padding(
