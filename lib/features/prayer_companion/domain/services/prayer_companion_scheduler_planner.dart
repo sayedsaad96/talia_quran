@@ -89,6 +89,8 @@ class PrayerCompanionPlanner {
     for (var dayOffset = 0; dayOffset < 2; dayOffset++) {
       final date = today.add(Duration(days: dayOffset));
       final times = await _prayerTimesService.timesForDate(date);
+      // Sunrise is deliberately excluded: only the five obligatory prayers
+      // are planned (non-matching keys are dropped by _prayerKeyFor).
       final timesByKey = <PrayerKey, DateTime>{
         for (final entry in times) ?_prayerKeyFor(entry.key): entry.time,
       };

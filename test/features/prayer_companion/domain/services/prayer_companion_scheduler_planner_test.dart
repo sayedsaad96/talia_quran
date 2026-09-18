@@ -216,6 +216,30 @@ void main() {
       );
     });
 
+    test(
+      'disabled prayer with a pending follow-up has no event at all',
+      () async {
+        await prefs.setBool(TaliaNotificationService.prayerAsrKey, false);
+        await enableCompanion();
+        await repository.save(
+          recordFor(
+            PrayerKey.asr,
+            PrayerCompanionStatus.remindLater,
+            followUpAt: DateTime(2026, 9, 16, 15, 45),
+            followUpCount: 1,
+          ),
+        );
+        final plan = await buildPlanner().plan(
+          now: DateTime(2026, 9, 16, 15, 31),
+        );
+        // The per-prayer skip suppresses prep, check-in, AND follow-up.
+        expect(
+          plan.where((e) => e.occurrence.prayerKey == PrayerKey.asr),
+          isEmpty,
+        );
+      },
+    );
+
     test('individually disabled prayer is excluded from the plan', () async {
       await prefs.setBool(TaliaNotificationService.prayerAsrKey, false);
       await enableCompanion();
@@ -307,6 +331,8 @@ void main() {
         );
         expect(ishaCheckInTomorrow.id, 2119);
         expect(ishaCheckInTomorrow.scheduledAt, DateTime(2026, 9, 17, 20, 20));
+        // Plan-wide uniqueness guard against future ID collisions.
+        expect(plan.map((e) => e.id).toSet().length, plan.length);
       },
     );
 

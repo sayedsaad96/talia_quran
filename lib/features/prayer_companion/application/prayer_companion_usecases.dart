@@ -40,13 +40,20 @@ class ApplyPrayerCompanionCommand {
 /// records, and the actionable occurrence is the most recent prayer whose
 /// time has passed, whose window (until the next prayer) contains `now`, and
 /// whose status is not confirmed.
+///
+/// Isha has no next prayer on the same civil date, so its window runs until
+/// the civil-date rollover — this rollover IS the intentional V1 cap for
+/// Isha (spec §4.3 allows "a capped end-of-day/Fajr boundary for Isha").
 class GetPrayerCompanionDaySummary {
-  const GetPrayerCompanionDaySummary(this._repository, this._owner);
+  const GetPrayerCompanionDaySummary(
+    this._repository,
+    this._owner, [
+    this._policy = const PrayerCompanionPolicy(),
+  ]);
 
   final PrayerCompanionRepository _repository;
   final RecordOwnerProvider _owner;
-
-  static const _policy = PrayerCompanionPolicy();
+  final PrayerCompanionPolicy _policy;
 
   Future<PrayerCompanionDaySummary> call({
     required DateTime localDate,

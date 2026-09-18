@@ -221,5 +221,24 @@ void main() {
       final summary = await summaryAt(DateTime(2026, 9, 16, 23));
       expect(summary.actionableOccurrence?.prayerKey, PrayerKey.isha);
     });
+
+    test('isha remains actionable at 23:30 with no record '
+        '(civil-date rollover is the intentional V1 cap, spec §4.3)', () async {
+      // Isha at 21:00, no record, now 23:30: the Isha window is capped
+      // only by the civil-date boundary in V1, so Isha is still actionable.
+      final times = <({PrayerKey key, DateTime time})>[
+        (key: PrayerKey.fajr, time: DateTime(2026, 9, 16, 5)),
+        (key: PrayerKey.dhuhr, time: DateTime(2026, 9, 16, 12)),
+        (key: PrayerKey.asr, time: DateTime(2026, 9, 16, 15)),
+        (key: PrayerKey.maghrib, time: DateTime(2026, 9, 16, 18, 30)),
+        (key: PrayerKey.isha, time: DateTime(2026, 9, 16, 21)),
+      ];
+      final summary = await useCase(
+        localDate: day,
+        prayerTimes: times,
+        now: DateTime(2026, 9, 16, 23, 30),
+      );
+      expect(summary.actionableOccurrence?.prayerKey, PrayerKey.isha);
+    });
   });
 }
