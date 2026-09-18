@@ -255,18 +255,37 @@ class HomeLoadedView extends StatelessWidget {
                   child: HomeStartKhatmahCard(skin: skin, isDark: isDark),
                 ),
               ),
-            if (state.activeSlot != null)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.pagePadding,
-                    AppSpacing.md,
-                    AppSpacing.pagePadding,
-                    0,
-                  ),
-                  child: HomeContextualSlot(state: state, skin: skin),
-                ),
+            SliverToBoxAdapter(
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                switchInCurve: Curves.easeOutCubic,
+                switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: SlideTransition(
+                      position: Tween<Offset>(
+                        begin: const Offset(0, 0.1),
+                        end: Offset.zero,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
+                child: state.activeSlot != null
+                    ? Padding(
+                        key: ValueKey(state.activeSlot!.kind),
+                        padding: const EdgeInsets.fromLTRB(
+                          AppSpacing.pagePadding,
+                          AppSpacing.md,
+                          AppSpacing.pagePadding,
+                          0,
+                        ),
+                        child: HomeContextualSlot(state: state, skin: skin),
+                      )
+                    : const SizedBox.shrink(key: ValueKey('empty_slot')),
               ),
+            ),
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
