@@ -16,15 +16,22 @@ import 'home_prayer_timeline.dart';
 import 'home_prayer_times_sheet.dart';
 
 class HomeNightHeader extends StatelessWidget {
-  const HomeNightHeader({super.key, required this.state, required this.skin});
+  const HomeNightHeader({
+    super.key,
+    required this.state,
+    required this.skin,
+    this.parallaxOffset = 0.0,
+  });
 
   final HomeLoaded state;
   final HomeSkin skin;
+  final double parallaxOffset;
 
   @override
   Widget build(BuildContext context) {
     return HomeHeroBanner(
       skin: skin,
+      parallaxOffset: parallaxOffset,
       child: SafeArea(
         bottom: false,
         child: Padding(

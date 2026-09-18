@@ -48,14 +48,22 @@ class HomeBackground extends StatelessWidget {
 /// content on top always uses [HomeSkin.textOnHero] and never depends on the
 /// active brightness for contrast.
 class HomeHeroBanner extends StatelessWidget {
-  const HomeHeroBanner({super.key, required this.skin, required this.child});
+  const HomeHeroBanner({
+    super.key,
+    required this.skin,
+    required this.child,
+    this.parallaxOffset = 0.0,
+  });
 
   final HomeSkin skin;
   final Widget child;
+  final double parallaxOffset;
 
   @override
   Widget build(BuildContext context) {
     const radius = BorderRadius.vertical(bottom: Radius.circular(32));
+    final alignment = Alignment(0.0, -1.0 + parallaxOffset * 0.3);
+    
     return ClipRRect(
       borderRadius: radius,
       child: DecoratedBox(
@@ -67,8 +75,7 @@ class HomeHeroBanner extends StatelessWidget {
                 HomeSkin.backgroundAsset,
                 fit: BoxFit.cover,
                 cacheWidth: 1080,
-                // The skyline sits along the bottom-left of the artwork.
-                alignment: Alignment.bottomLeft,
+                alignment: alignment,
                 errorBuilder: (_, _, _) => const SizedBox.shrink(),
               ),
             ),

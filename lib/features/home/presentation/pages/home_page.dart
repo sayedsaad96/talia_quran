@@ -187,7 +187,7 @@ class _HomeView extends StatelessWidget {
     );
   }
 }
-class HomeLoadedView extends StatelessWidget {
+class HomeLoadedView extends StatefulWidget {
   const HomeLoadedView({
     super.key,
     required this.state,
@@ -198,27 +198,52 @@ class HomeLoadedView extends StatelessWidget {
   final HomeSkin skin;
 
   @override
+  State<HomeLoadedView> createState() => _HomeLoadedViewState();
+}
+
+class _HomeLoadedViewState extends State<HomeLoadedView> {
+  final _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final isDark = skin.isDark;
+    final isDark = widget.skin.isDark;
     final journeyEnabled =
-        JourneyFeatureFlags.unifiedJourneyEnabled && state.unifiedJourneyEnabled;
-    final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+        JourneyFeatureFlags.unifiedJourneyEnabled && widget.state.unifiedJourneyEnabled;
     return RefreshIndicator(
-      color: skin.accent,
+      color: widget.skin.accent,
       onRefresh: () => context.read<HomeCubit>().load(),
       child: CustomScrollView(
+        controller: _scrollController,
         physics: const BouncingScrollPhysics(
           parent: AlwaysScrollableScrollPhysics(),
         ),
         slivers: [
           SliverToBoxAdapter(
-            child: HomeNightHeader(state: state, skin: skin),
+            child: AnimatedBuilder(
+              animation: _scrollController,
+              builder: (context, child) {
+                final offset = _scrollController.hasClients
+                    ? _scrollController.offset
+                    : 0.0;
+                return HomeNightHeader(
+                  state: widget.state,
+                  skin: widget.skin,
+                  parallaxOffset: offset,
+                );
+              },
+            ),
           ),
-          if (state.isRefreshing)
+          if (widget.state.isRefreshing)
             const SliverToBoxAdapter(
               child: LinearProgressIndicator(minHeight: 2),
             ),
-          if (state.isFirstRun)
+          if (widget.state.isFirstRun)
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -228,8 +253,8 @@ class HomeLoadedView extends StatelessWidget {
                   0,
                 ),
                 child: GlassPanel(
-                  skin: skin,
-                  child: HomeFirstRun(skin: skin, isDark: isDark),
+                  skin: widget.skin,
+                  child: HomeFirstRun(skin: widget.skin),
                 ),
               ),
             )
@@ -237,15 +262,15 @@ class HomeLoadedView extends StatelessWidget {
             SliverToBoxAdapter(
               child: StaggeredFadeSlide(
                 delay: const Duration(milliseconds: 0),
-                child: _PrimaryAction(state: state, skin: skin),
+                child: _PrimaryAction(state: widget.state, skin: widget.skin),
               ),
             ),
             if (journeyEnabled &&
-                state.continueRecitation == null &&
+                widget.state.continueRecitation == null &&
                 const HomePrimaryActionResolver().resolve(
                       unifiedJourneyEnabled: journeyEnabled,
                       hasContinueRecitation: false,
-                      heroPriority: state.heroAction?.priority,
+                      heroPriority: widget.state.heroAction?.priority,
                     ) ==
                     HomePrimaryActionKind.journeyHero)
               SliverToBoxAdapter(
@@ -256,7 +281,7 @@ class HomeLoadedView extends StatelessWidget {
                     AppSpacing.pagePadding,
                     0,
                   ),
-                  child: HomeStartKhatmahCard(skin: skin, isDark: isDark),
+                  child: HomeStartKhatmahCard(skin: widget.skin, isDark: isDark),
                 ),
               ),
             SliverToBoxAdapter(
@@ -276,21 +301,21 @@ class HomeLoadedView extends StatelessWidget {
                     ),
                   );
                 },
-                child: state.activeSlot != null
+                child: widget.state.activeSlot != null
                     ? Padding(
-                        key: ValueKey(state.activeSlot!.kind),
+                        key: ValueKey(widget.state.activeSlot!.kind),
                         padding: const EdgeInsets.fromLTRB(
                           AppSpacing.pagePadding,
                           AppSpacing.md,
                           AppSpacing.pagePadding,
                           0,
                         ),
-                        child: HomeContextualSlot(state: state, skin: skin),
+                        child: HomeContextualSlot(state: widget.state, skin: widget.skin),
                       )
                     : const SizedBox.shrink(key: ValueKey('empty_slot')),
               ),
             ),
-            if (state.familyChildren.isNotEmpty)
+            if (widget.state.familyChildren.isNotEmpty)
               SliverToBoxAdapter(
                 child: StaggeredFadeSlide(
                   delay: const Duration(milliseconds: 160),
@@ -302,8 +327,8 @@ class HomeLoadedView extends StatelessWidget {
                       0,
                     ),
                     child: HomeParentChildren(
-                      children: state.familyChildren,
-                      skin: skin,
+                      children: widget.state.familyChildren,
+                      skin: widget.skin,
                     ),
                   ),
                 ),
@@ -318,11 +343,11 @@ class HomeLoadedView extends StatelessWidget {
                     AppSpacing.pagePadding,
                     0,
                   ),
-                  child: HomeUnifiedProgress(state: state, skin: skin),
+                  child: HomeUnifiedProgress(state: widget.state, skin: widget.skin),
                 ),
               ),
             ),
-            if (state.ayahOfDay != null)
+            if (widget.state.ayahOfDay != null)
               SliverToBoxAdapter(
                 child: StaggeredFadeSlide(
                   delay: const Duration(milliseconds: 320),
@@ -334,8 +359,8 @@ class HomeLoadedView extends StatelessWidget {
                       0,
                     ),
                     child: HomeAyahOfDayCard(
-                      ayah: state.ayahOfDay!,
-                      skin: skin,
+                      ayah: widget.state.ayahOfDay!,
+                      skin: widget.skin,
                     ),
                   ),
                 ),
@@ -350,7 +375,7 @@ class HomeLoadedView extends StatelessWidget {
                     AppSpacing.pagePadding,
                     0,
                   ),
-                  child: HomeActivityFeed(state: state, skin: skin),
+                  child: HomeActivityFeed(state: widget.state, skin: widget.skin),
                 ),
               ),
             ),
@@ -369,7 +394,7 @@ class HomeLoadedView extends StatelessWidget {
                 style: TextStyle(
                   fontFamily: 'Amiri',
                   fontSize: 14,
-                  color: skin.textSecondary,
+                  color: widget.skin.textSecondary,
                 ),
               ),
             ),
@@ -443,14 +468,11 @@ class _PrimaryAction extends StatelessWidget {
       } else if (state.lastRestorableLocation != null) {
         child = ResumeSessionCard(
           location: state.lastRestorableLocation!,
-          isDark: isDark,
-          isKids: state.isKids,
           skin: skin,
         );
       } else {
         child = NextBestActionCard(
           state: state,
-          isDark: isDark,
           isKids: state.isKids,
           skin: skin,
         );
