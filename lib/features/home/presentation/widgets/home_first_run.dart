@@ -4,65 +4,82 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../theme/home_skin.dart';
+import 'islamic_pattern_painter.dart';
+import 'spring_tap.dart';
 
 class HomeFirstRun extends StatelessWidget {
-  const HomeFirstRun({super.key, required this.isDark});
+  const HomeFirstRun({super.key, required this.skin});
 
-  final bool isDark;
+  final HomeSkin skin;
 
   @override
   Widget build(BuildContext context) {
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          context.l10n.homeFirstRunTitle,
-          style: AppTypography.headlineSmall.copyWith(
-            color: textColor,
-            fontFamily: 'Amiri',
-            fontWeight: FontWeight.w800,
-          ),
+    return SpringTap(
+      onTap: () => context.push(AppRoutes.quran),
+      child: Container(
+        padding: const EdgeInsets.all(AppSpacing.cardPadding),
+        decoration: BoxDecoration(
+          gradient: skin.meshGradient,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+          boxShadow: skin.shadow,
         ),
-        const SizedBox(height: AppSpacing.sm),
-        Text(
-          context.l10n.homeFirstRunBody,
-          style: AppTypography.bodyMedium,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton.icon(
-            onPressed: () => context.push(AppRoutes.quran),
-            icon: const Icon(Icons.menu_book_rounded),
-            label: Text(
-              context.l10n.homeFirstRunRead,
-              overflow: TextOverflow.ellipsis,
+        child: Stack(
+          children: [
+            IslamicPatternOverlay(
+              color: skin.textOnHero,
+              opacity: skin.heroCardTextureOpacity,
             ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            onPressed: () => context.push(AppRoutes.memorizationHub),
-            icon: const Icon(Icons.psychology_alt_rounded),
-            label: Text(
-              context.l10n.homeFirstRunMemorize,
-              overflow: TextOverflow.ellipsis,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  context.l10n.homeFirstRunTitle,
+                  style: AppTypography.displaySmall.copyWith(
+                    color: skin.textOnHero,
+                    fontSize: 28,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  context.l10n.homeFirstRunBody,
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: skin.textOnHeroMuted,
+                    height: 1.5,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.22),
+                      ),
+                    ),
+                    child: Text(
+                      context.l10n.homeFirstRunRead,
+                      style: AppTypography.labelMedium.copyWith(
+                        color: skin.textOnHero,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ),
+          ],
         ),
-        const SizedBox(height: AppSpacing.sm),
-        TextButton(
-          onPressed: () => context.push(AppRoutes.khatmahSetup),
-          child: Text(context.l10n.khatmahStartAction),
-        ),
-      ],
+      ),
     );
   }
 }

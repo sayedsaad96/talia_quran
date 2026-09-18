@@ -8,20 +8,22 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/memorization/smart_coach_recommendation.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/home_cubit.dart';
+import '../theme/home_skin.dart';
+import 'islamic_pattern_painter.dart';
+import 'spring_tap.dart';
 
 class NextBestActionCard extends StatefulWidget {
   const NextBestActionCard({
     super.key,
     required this.state,
-    required this.isDark,
+    required this.skin,
     this.isKids = false,
   });
 
   final HomeLoaded state;
-  final bool isDark;
+  final HomeSkin skin;
   final bool isKids;
 
   @override
@@ -177,59 +179,62 @@ class _NextBestActionCardState extends State<NextBestActionCard> {
 
   @override
   Widget build(BuildContext context) {
-    final primary = widget.isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor = widget.isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subTextColor = widget.isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
     final action = _action(context);
+    final skin = widget.skin;
 
     return Semantics(
       button: true,
       label: action.$1,
       hint: action.$2,
-      child: InkWell(
+      child: SpringTap(
         onTap: () => context.push(action.$4),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: primary.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-            border: Border.all(color: primary.withValues(alpha: 0.24)),
+            gradient: skin.meshGradient,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            boxShadow: skin.shadow,
           ),
-          child: Row(
+          child: Stack(
             children: [
-              Icon(action.$3, color: primary, size: 30),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              IslamicPatternOverlay(
+                color: skin.textOnHero,
+                opacity: skin.heroCardTextureOpacity,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.md),
+                child: Row(
                   children: [
-                    Text(
-                      action.$1,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.titleMedium.copyWith(
-                        color: textColor,
-                        fontFamily: 'Amiri',
-                        fontWeight: FontWeight.w800,
+                    Icon(action.$3, color: skin.gold, size: 30),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            action.$1,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.titleMedium.copyWith(
+                              color: skin.textOnHero,
+                              fontFamily: 'Amiri',
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            action.$2,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: skin.textOnHeroMuted,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Text(
-                      action.$2,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodySmall.copyWith(
-                        color: subTextColor,
-                      ),
-                    ),
+                    Icon(context.forwardChevron, color: skin.gold, size: 16),
                   ],
                 ),
               ),
-              Icon(context.forwardChevron, color: primary, size: 16),
             ],
           ),
         ),
