@@ -113,6 +113,49 @@ void main() {
       expect(confirmed.record.updatedAt, at1506);
       expect(confirmed.record.statusUpdatedAt, at1506);
     });
+
+    test('manual correction from confirmed: notYet moves back to notYet', () {
+      final confirmed = policy.apply(
+        existing: null,
+        occurrence: asr,
+        command: PrayerCompanionCommand.confirm,
+        now: at1505,
+      );
+      final corrected = policy.apply(
+        existing: confirmed.record,
+        occurrence: asr,
+        command: PrayerCompanionCommand.notYet,
+        now: at1506,
+      );
+      expect(corrected.record.status, PrayerCompanionStatus.notYet);
+      expect(corrected.record.followUpAt, isNull);
+      expect(corrected.shouldCancelFollowUp, isTrue);
+      expect(corrected.shouldScheduleFollowUp, isFalse);
+      expect(corrected.record.createdAt, at1505);
+    });
+
+    test(
+      'manual correction from confirmed: clear moves back to unconfirmed',
+      () {
+        final confirmed = policy.apply(
+          existing: null,
+          occurrence: asr,
+          command: PrayerCompanionCommand.confirm,
+          now: at1505,
+        );
+        final corrected = policy.apply(
+          existing: confirmed.record,
+          occurrence: asr,
+          command: PrayerCompanionCommand.clear,
+          now: at1506,
+        );
+        expect(corrected.record.status, PrayerCompanionStatus.unconfirmed);
+        expect(corrected.record.followUpAt, isNull);
+        expect(corrected.shouldCancelFollowUp, isTrue);
+        expect(corrected.shouldScheduleFollowUp, isFalse);
+        expect(corrected.record.createdAt, at1505);
+      },
+    );
   });
 
   group('prayNow', () {
@@ -358,27 +401,132 @@ void main() {
         isNull,
       );
     });
+
+    test('a follow-up due exactly at now expires (boundary inclusive)', () {
+      final reminded = policy.apply(
+        existing: null,
+        occurrence: asr,
+        command: PrayerCompanionCommand.remindLater,
+        now: at1505,
+        nextPrayerAt: DateTime(2026, 9, 16, 18),
+      );
+      expect(reminded.record.followUpAt, DateTime(2026, 9, 16, 15, 15));
+      final expired = policy.expireFollowUp(
+        record: reminded.record,
+        now: DateTime(2026, 9, 16, 15, 15),
+      );
+      expect(expired, isNotNull);
+      expect(expired!.followUpAt, isNull);
+      expect(expired.followUpCount, 0);
+    });
+
+    test('expiry re-arms the follow-up: a new remindLater schedules again', () {
+      final reminded = policy.apply(
+        existing: null,
+        occurrence: asr,
+        command: PrayerCompanionCommand.remindLater,
+        now: at1505,
+        nextPrayerAt: DateTime(2026, 9, 16, 18),
+      );
+      final expired = policy.expireFollowUp(
+        record: reminded.record,
+        now: DateTime(2026, 9, 16, 15, 16),
+      )!;
+      expect(expired.followUpCount, 0);
+      final rearmed = policy.apply(
+        existing: expired,
+        occurrence: asr,
+        command: PrayerCompanionCommand.remindLater,
+        now: DateTime(2026, 9, 16, 15, 20),
+        nextPrayerAt: DateTime(2026, 9, 16, 18),
+      );
+      expect(rearmed.record.followUpAt, DateTime(2026, 9, 16, 15, 30));
+      expect(rearmed.record.followUpCount, 1);
+      expect(rearmed.shouldScheduleFollowUp, isTrue);
+      expect(rearmed.shouldCancelFollowUp, isFalse);
+    });
   });
 
   group('PrayerCompanionDaySummary', () {
-    test('only confirmed counts in a summary', () {
-      const summary = PrayerCompanionDaySummary(
-        statusByPrayer: {
-          PrayerKey.fajr: PrayerCompanionStatus.confirmed,
-          PrayerKey.dhuhr: PrayerCompanionStatus.notYet,
-          PrayerKey.asr: PrayerCompanionStatus.prayNow,
-          PrayerKey.maghrib: PrayerCompanionStatus.remindLater,
-        },
-        confirmedCount: 1,
+    test(
+      'only confirmed records count in a summary built from policy output',
+      () {
+        final fajr = occurrenceFor(
+          PrayerKey.fajr,
+          DateTime(2026, 9, 16, 4, 30),
+        );
+        final dhuhr = occurrenceFor(
+          PrayerKey.dhuhr,
+          DateTime(2026, 9, 16, 12, 30),
+        );
+        final records = [
+          policy
+              .apply(
+                existing: null,
+                occurrence: fajr,
+                command: PrayerCompanionCommand.confirm,
+                now: DateTime(2026, 9, 16, 4, 45),
+              )
+              .record,
+          policy
+              .apply(
+                existing: null,
+                occurrence: dhuhr,
+                command: PrayerCompanionCommand.notYet,
+                now: DateTime(2026, 9, 16, 12, 45),
+              )
+              .record,
+        ];
+        final confirmedCount = records
+            .where((r) => r.status == PrayerCompanionStatus.confirmed)
+            .length;
+        final summary = PrayerCompanionDaySummary(
+          statusByPrayer: {
+            for (final r in records) r.occurrence.prayerKey: r.status,
+          },
+          confirmedCount: confirmedCount,
+        );
+        expect(summary.confirmedCount, 1);
+        expect(summary.actionableOccurrence, isNull);
+      },
+    );
+  });
+
+  group('idempotent no-op', () {
+    test('clear on an unconfirmed record returns the same instance', () {
+      final cleared = policy.apply(
+        existing: null,
+        occurrence: asr,
+        command: PrayerCompanionCommand.clear,
+        now: at1505,
       );
-      expect(summary.confirmedCount, 1);
-      expect(
-        summary.statusByPrayer.values
-            .where((s) => s == PrayerCompanionStatus.confirmed)
-            .length,
-        summary.confirmedCount,
+      final again = policy.apply(
+        existing: cleared.record,
+        occurrence: asr,
+        command: PrayerCompanionCommand.clear,
+        now: at1506,
       );
-      expect(summary.actionableOccurrence, isNull);
+      expect(again.record, same(cleared.record));
+      expect(again.shouldScheduleFollowUp, isFalse);
+      expect(again.shouldCancelFollowUp, isTrue);
+    });
+
+    test('repeated notYet returns the same instance', () {
+      final first = policy.apply(
+        existing: null,
+        occurrence: asr,
+        command: PrayerCompanionCommand.notYet,
+        now: at1505,
+      );
+      final second = policy.apply(
+        existing: first.record,
+        occurrence: asr,
+        command: PrayerCompanionCommand.notYet,
+        now: at1506,
+      );
+      expect(second.record, same(first.record));
+      expect(second.shouldScheduleFollowUp, isFalse);
+      expect(second.shouldCancelFollowUp, isTrue);
     });
   });
 
@@ -386,7 +534,7 @@ void main() {
     test('companion defaults off with neutral defaults', () {
       const settings = PrayerCompanionSettings();
       expect(settings.enabled, isFalse);
-      expect(settings.preparationMinutes, 10);
+      expect(settings.preparationMinutes, 0);
       expect(settings.checkInEnabled, isTrue);
       expect(settings.followUpEnabled, isTrue);
     });

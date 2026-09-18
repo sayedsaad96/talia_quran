@@ -41,10 +41,11 @@ class PrayerCompanionPolicy {
     required DateTime now,
     DateTime? nextPrayerAt,
   }) {
+    final existingRecord = existing;
     if (command == PrayerCompanionCommand.confirm &&
-        existing?.status == PrayerCompanionStatus.confirmed) {
+        existingRecord?.status == PrayerCompanionStatus.confirmed) {
       return PrayerCompanionTransition(
-        record: existing!,
+        record: existingRecord!,
         shouldScheduleFollowUp: false,
         shouldCancelFollowUp: true,
       );
@@ -65,6 +66,18 @@ class PrayerCompanionPolicy {
       PrayerCompanionCommand.notYet => PrayerCompanionStatus.notYet,
       PrayerCompanionCommand.clear => PrayerCompanionStatus.unconfirmed,
     };
+    // Idempotent no-op: same status, no pending follow-up, and the command
+    // produces none. Return the existing record untouched.
+    if (existingRecord != null &&
+        status == existingRecord.status &&
+        existingRecord.followUpAt == null &&
+        candidateFollowUp == null) {
+      return PrayerCompanionTransition(
+        record: existingRecord,
+        shouldScheduleFollowUp: false,
+        shouldCancelFollowUp: true,
+      );
+    }
     return PrayerCompanionTransition(
       record: PrayerCompanionRecord(
         occurrence: occurrence,
@@ -82,6 +95,9 @@ class PrayerCompanionPolicy {
 
   /// Derives the display status without persisting anything. An occurrence
   /// with no record is [PrayerCompanionStatus.unconfirmed], never notYet.
+  ///
+  /// [occurrence] and [now] are part of the stable signature for future
+  /// time-derived states; they are currently unused.
   PrayerCompanionStatus statusFor({
     required PrayerOccurrence occurrence,
     required PrayerCompanionRecord? record,

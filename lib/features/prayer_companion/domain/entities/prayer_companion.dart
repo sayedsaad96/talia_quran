@@ -61,14 +61,21 @@ class PrayerOccurrence extends Equatable {
 class PrayerCompanionSettings extends Equatable {
   const PrayerCompanionSettings({
     this.enabled = false,
-    this.preparationMinutes = 10,
+    this.preparationMinutes = 0,
     this.checkInEnabled = true,
     this.followUpEnabled = true,
-  });
+  }) : assert(
+         preparationMinutes == 0 ||
+             preparationMinutes == 5 ||
+             preparationMinutes == 10 ||
+             preparationMinutes == 15,
+         'preparationMinutes must be 0, 5, 10, or 15',
+       );
 
   final bool enabled;
 
   /// Minutes before the prayer for a preparation reminder (0/5/10/15).
+  /// 0 disables the preparation reminder and is the default.
   final int preparationMinutes;
 
   /// Whether a check-in is scheduled 20 minutes after the prayer.
@@ -117,8 +124,10 @@ class PrayerCompanionRecord extends Equatable {
   final DateTime statusUpdatedAt;
   final DateTime? followUpAt;
 
-  /// Number of follow-ups already scheduled for this occurrence. The policy
-  /// allows at most one, so this is only ever 0 or 1.
+  /// Number of follow-ups scheduled in the CURRENT follow-up cycle for this
+  /// occurrence. The policy allows at most one at a time, so this is only
+  /// ever 0 or 1. It resets to 0 when the follow-up expires or is cancelled,
+  /// which re-arms a fresh follow-up for the same occurrence.
   final int followUpCount;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -131,6 +140,10 @@ class PrayerCompanionRecord extends Equatable {
     int? followUpCount,
     DateTime? updatedAt,
   }) {
+    assert(
+      !clearFollowUp || followUpAt == null,
+      'clearFollowUp cannot be combined with a new followUpAt',
+    );
     return PrayerCompanionRecord(
       occurrence: occurrence,
       status: status ?? this.status,
