@@ -604,6 +604,44 @@ void main() {
     expect((cubit.state as HomeLoaded).isRefreshing, isFalse);
   });
 
+  test('starts the profile lookup while the daily Quran page is loading',
+      () async {
+    final pendingPage = Completer<Either<Failure, QuranPageDetail>>();
+    when(mockGetQuranPage.call(any)).thenAnswer((_) => pendingPage.future);
+
+    final load = cubit.load();
+    await Future<void>.delayed(Duration.zero);
+    await Future<void>.delayed(Duration.zero);
+
+    verify(mockGetQuranPage.call(any)).called(1);
+    verify(mockMemRepo.getMemorizationProfile()).called(1);
+
+    pendingPage.complete(const Left(CacheFailure('no cache')));
+    await load;
+  });
+
+  test('starts optional home content without waiting for activity history',
+      () async {
+    final feed = _PendingActivityFeed();
+    final ayah = _MockGetAyahOfDay();
+    when(ayah.call()).thenAnswer((_) async => null);
+    await cubit.close();
+    cubit = buildCubit(
+      getAyahOfDay: ayah,
+      getRecentActivity: GetRecentActivityUsecase(feed),
+    );
+
+    final load = cubit.load();
+    await feed.kindsRequested.future;
+    await Future<void>.delayed(Duration.zero);
+
+    verify(ayah.call()).called(1);
+
+    feed.kinds.complete(const {});
+    feed.pendingRecent.complete(const []);
+    await load;
+  });
+
   test('load completes quietly when cubit closes during XP fetch', () async {
     xpService.pendingTotalXp = Completer<int>();
 
@@ -749,6 +787,24 @@ class _MemoryActivityFeed implements ActivityFeedRepository {
     for (final event in events)
       if (!event.occurredAt.isBefore(start)) event.kind,
   };
+}
+
+class _PendingActivityFeed implements ActivityFeedRepository {
+  final kinds = Completer<Set<ActivityEventKind>>();
+  final pendingRecent = Completer<List<ActivityEvent>>();
+  final kindsRequested = Completer<void>();
+
+  @override
+  Future<void> append(ActivityEvent event) async {}
+
+  @override
+  Future<Set<ActivityEventKind>> kindsSince(DateTime start) {
+    if (!kindsRequested.isCompleted) kindsRequested.complete();
+    return kinds.future;
+  }
+
+  @override
+  Future<List<ActivityEvent>> recent({int limit = 20}) => pendingRecent.future;
 }
 
 class _FakeXpService implements XpService {

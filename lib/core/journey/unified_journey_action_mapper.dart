@@ -65,7 +65,22 @@ class UnifiedJourneyActionMapper {
 
       case UnifiedJourneyActionType.dailyReading:
         title = context.l10n.dailyWirdTitle;
-        subtitle = context.l10n.dailyWirdSubtitle;
+        final pageStr = action.metadata['pageNumber'];
+        final surahName = context.isArabic
+            ? action.metadata['surahNameAr']
+            : action.metadata['surahNameEn'];
+        if (pageStr != null && surahName != null && surahName.isNotEmpty) {
+          subtitle = context.l10n.homeDailyWirdSurahPage(pageStr, surahName);
+        } else if (pageStr != null) {
+          subtitle = context.l10n.homeDailyWirdPage(pageStr);
+        } else {
+          subtitle = context.l10n.dailyWirdSubtitle;
+        }
+        break;
+
+      case UnifiedJourneyActionType.khatmah:
+        title = context.l10n.khatmahContinueTitle;
+        subtitle = context.l10n.khatmahContinueSubtitle;
         break;
 
       case UnifiedJourneyActionType.explore:

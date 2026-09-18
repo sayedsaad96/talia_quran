@@ -259,13 +259,16 @@ class HomeCubit extends Cubit<HomeState> {
       emit((state as HomeLoaded).copyWith(isRefreshing: true));
     }
 
-    final wirdPage = await _resolveWirdPage();
-
+    // Start every independent local read before resolving the daily page.
+    // The daily-page resolver can itself read the memorization plan; waiting
+    // for it first made the initial home skeleton accumulate the latency of
+    // all the remaining data sources.
     final progressFuture = _getProgress();
-    final quranPageFuture = _getQuranPage(wirdPage);
     final planFuture = _getCustomPlan();
     final heatmapFuture = _getHeatmap();
     final coachFuture = _getCoachRecommendation();
+    final profileFuture = _memorizationRepository.getMemorizationProfile();
+    final totalXpFuture = _xpService.getTotalXp();
     Object? khatmahError;
     final khatmahFuture =
         Future<KhatmahPlan?>.sync(() => _getActiveKhatmah?.call()).catchError((
@@ -274,6 +277,9 @@ class HomeCubit extends Cubit<HomeState> {
           khatmahError = error;
           return null;
         });
+
+    final wirdPage = await _resolveWirdPage();
+    final quranPageFuture = _getQuranPage(wirdPage);
 
     final progressResult = await progressFuture;
     OverallProgress? overallProgress;
@@ -293,8 +299,7 @@ class HomeCubit extends Cubit<HomeState> {
 
     final lastLocation = _sessionService.getLastRestorableLocation();
 
-    final profileResult = await _memorizationRepository
-        .getMemorizationProfile();
+    final profileResult = await profileFuture;
     final profile = profileResult.fold((_) => null, (p) => p);
     final selectedTrack = profile?.selectedPath == MemorizationPath.child
         ? MemorizationTrack.kids
@@ -327,7 +332,7 @@ class HomeCubit extends Cubit<HomeState> {
     }
 
     if (isClosed) return;
-    final totalXp = await _xpService.getTotalXp();
+    final totalXp = await totalXpFuture;
     if (isClosed) return;
     try {
       _checkKhatmahAuthority(activeKhatmah);
@@ -439,67 +444,113 @@ class HomeCubit extends Cubit<HomeState> {
     required UnifiedJourneyAction? heroAction,
   }) async {
     final occasion = _occasionService.current(isArabic: true);
-
-    // Drives the checklist's memorize/review completion from work the user
-    // actually logged today rather than from lifetime totals.
-    var kindsToday = const <ActivityEventKind>{};
-    try {
-      kindsToday = await _getRecentActivity?.kindsToday() ?? const {};
-    } catch (_) {}
-
-    StreakRisk? risk;
-    try {
-      final streak = await _streakService?.getStreak();
-      if (streak != null) {
-        risk = _streakRiskEvaluator.evaluate(streak);
-      }
-    } catch (_) {}
-
-    DailyPlan? dailyPlan;
-    try {
-      final planResult = await _memorizationRepository.getCachedDailyPlan();
-      dailyPlan = planResult.fold((_) => null, (plan) => plan);
-    } catch (_) {}
-
-    var memorizeRoute = AppRoutes.memorizationHub;
-    var reviewRoute = AppRoutes.memorizationHub;
-    try {
-      final targets = await MemorizationNavigationResolver(
-        _memorizationRepository,
-      ).resolve();
-      memorizeRoute = targets.todayPlanLocation;
-      reviewRoute = targets.reviewQuizLocation;
-    } catch (_) {}
-
     final hour = DateTime.now().hour;
     final azkarCategory = hour < 12
         ? AzkarCategory.morning
         : hour >= 16
         ? AzkarCategory.evening
         : AzkarCategory.general;
-    var azkarComplete = false;
-    try {
-      if (_azkarStore != null && _getAzkar != null) {
-        final items = await _getAzkar(azkarCategory);
-        items.fold((_) {}, (zikr) {
-          azkarComplete = _azkarStore.isCompleteFromSessions(
-            category: azkarCategory,
-            items: zikr,
-          );
-        });
-      } else {
-        azkarComplete = _azkarStore?.isCategoryComplete(azkarCategory) ?? false;
-      }
-    } catch (_) {}
 
-    final readingComplete =
-        _readingLog?.contains(wirdPage) ?? false;
-    final readingRoute = activeKhatmah != null &&
-            activeKhatmah.status == KhatmahStatus.active
-        ? '/quran/page/${activeKhatmah.nextUnreadPage}?mode=khatmah'
-        : activeKhatmah != null && activeKhatmah.status == KhatmahStatus.paused
-        ? AppRoutes.khatmahDashboard
-        : '/quran/page/$wirdPage';
+    // These reads are independent. Starting them together prevents the home
+    // skeleton from paying the sum of several local-store reads on first load.
+    final kindsTodayFuture = Future<Set<ActivityEventKind>>.sync(() async {
+      try {
+        return await _getRecentActivity?.kindsToday() ?? const {};
+      } catch (_) {
+        return const {};
+      }
+    });
+    final streakRiskFuture = Future<StreakRisk?>.sync(() async {
+      try {
+        final streak = await _streakService?.getStreak();
+        return streak == null ? null : _streakRiskEvaluator.evaluate(streak);
+      } catch (_) {
+        return null;
+      }
+    });
+    final dailyPlanFuture = Future<DailyPlan?>.sync(() async {
+      try {
+        final planResult = await _memorizationRepository.getCachedDailyPlan();
+        return await planResult.fold((_) => null, (plan) => plan);
+      } catch (_) {
+        return null;
+      }
+    });
+    final navigationFuture = Future<(String, String)>.sync(() async {
+      try {
+        final targets = await MemorizationNavigationResolver(
+          _memorizationRepository,
+        ).resolve();
+        return (targets.todayPlanLocation, targets.reviewQuizLocation);
+      } catch (_) {
+        return (AppRoutes.memorizationHub, AppRoutes.memorizationHub);
+      }
+    });
+    final azkarCompleteFuture = Future<bool>.sync(() async {
+      try {
+        if (_azkarStore != null && _getAzkar != null) {
+          final items = await _getAzkar(azkarCategory);
+          return await items.fold(
+            (_) => false,
+            (zikr) => _azkarStore.isCompleteFromSessions(
+              category: azkarCategory,
+              items: zikr,
+            ),
+          );
+        }
+        return _azkarStore?.isCategoryComplete(azkarCategory) ?? false;
+      } catch (_) {
+        return false;
+      }
+    });
+    final ayahFuture = Future<AyahOfDay?>.sync(() async {
+      try {
+        final userGoal = _prefs.getString('user_primary_goal');
+        return userGoal == null
+            ? await _getAyahOfDay?.call()
+            : await _getAyahOfDay?.call(userGoal: userGoal);
+      } catch (_) {
+        return null;
+      }
+    });
+    final prayerFuture = Future<PrayerTimesSnapshot?>.sync(() async {
+      try {
+        return await _prayerTimes?.current(isArabic: true);
+      } catch (_) {
+        return null;
+      }
+    });
+    final bookmarkFuture = Future<String?>.sync(() async {
+      try {
+        await _bookmarkService?.ensureLoaded();
+        final recent = _bookmarkService?.getAll().firstOrNull;
+        return recent is BookmarkEntry ? bookmarkReaderLocation(recent) : null;
+      } catch (_) {
+        return null;
+      }
+    });
+    final recentActivityFuture = Future<List<ActivityEvent>>.sync(() async {
+      try {
+        return await _getRecentActivity?.call() ?? const [];
+      } catch (_) {
+        return const [];
+      }
+    });
+
+    // Drives the checklist's memorize/review completion from work the user
+    // actually logged today rather than from lifetime totals.
+    final kindsToday = await kindsTodayFuture;
+    final risk = await streakRiskFuture;
+    final dailyPlan = await dailyPlanFuture;
+    final navigation = await navigationFuture;
+    final memorizeRoute = navigation.$1;
+    final reviewRoute = navigation.$2;
+    final azkarComplete = await azkarCompleteFuture;
+
+    final readingComplete = _readingLog?.contains(wirdPage) ?? false;
+    // Reading route always opens the Quran in free mode (daily wird).
+    // The khatmah has its own hero card; it must not hijack this route.
+    final readingRoute = '/quran/page/$wirdPage';
 
     TodayChecklist? checklist;
     if (progress != null) {
@@ -513,7 +564,6 @@ class HomeCubit extends Cubit<HomeState> {
           reviewRoute: reviewRoute,
           azkarRoute: '/azkar/${azkarCategory.name}',
           azkarComplete: azkarComplete,
-          khatmah: activeKhatmah,
           dailyPlan: dailyPlan,
           azkarCategory: azkarCategory,
           memorizedToday: kindsToday.contains(ActivityEventKind.memorize),
@@ -522,31 +572,14 @@ class HomeCubit extends Cubit<HomeState> {
       );
     }
 
-    AyahOfDay? ayah;
-    try {
-      final userGoal = _prefs.getString('user_primary_goal');
-      ayah = userGoal == null
-          ? await _getAyahOfDay?.call()
-          : await _getAyahOfDay?.call(userGoal: userGoal);
-    } catch (_) {}
+    final ayah = await ayahFuture;
 
     // Family data stays exclusively behind FamilyDashboardCubit's PIN gate.
     // Home shows the parent-tools entry point but never fetches child details.
     const children = <FamilyChildEntry>[];
 
-    PrayerTimesSnapshot? prayer;
-    try {
-      prayer = await _prayerTimes?.current(isArabic: true);
-    } catch (_) {}
-
-    String? bookmarkRoute;
-    try {
-      await _bookmarkService?.ensureLoaded();
-      final recent = _bookmarkService?.getAll().firstOrNull;
-      if (recent is BookmarkEntry) {
-        bookmarkRoute = bookmarkReaderLocation(recent);
-      }
-    } catch (_) {}
+    final prayer = await prayerFuture;
+    final bookmarkRoute = await bookmarkFuture;
 
     var weeklyDays = 0;
     var weeklyCount = 0;
@@ -614,10 +647,7 @@ class HomeCubit extends Cubit<HomeState> {
       isSnoozed: snoozeStore.isSnoozed,
     );
 
-    List<ActivityEvent> recent = const [];
-    try {
-      recent = await _getRecentActivity?.call() ?? const [];
-    } catch (_) {}
+    final recent = await recentActivityFuture;
 
     final continueRecitation = const ContinueRecitationMapper().map(
       isArabic: true,
@@ -727,6 +757,14 @@ class HomeCubit extends Cubit<HomeState> {
           (customPlan != null ? '/memorization' : null),
       hasDailyWird: dailyWirdDetail != null,
       dailyWirdPageNumber: dailyWirdDetail?.pageNumber,
+      dailyWirdSurahNameAr:
+          dailyWirdDetail != null && dailyWirdDetail.surahs.isNotEmpty
+          ? dailyWirdDetail.surahs.first.nameAr
+          : null,
+      dailyWirdSurahNameEn:
+          dailyWirdDetail != null && dailyWirdDetail.surahs.isNotEmpty
+          ? dailyWirdDetail.surahs.first.nameEn
+          : null,
       hasActiveKhatmah:
           activeKhatmah != null &&
           activeKhatmah.status != KhatmahStatus.completed,

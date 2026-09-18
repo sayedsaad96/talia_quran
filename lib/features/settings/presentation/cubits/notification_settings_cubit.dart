@@ -57,6 +57,8 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         ) ??
         false;
 
+    final prayerAthan =
+        _prefs.getBool(TaliaNotificationService.prayerAthanKey) ?? false;
     final prayerFajr =
         _prefs.getBool(TaliaNotificationService.prayerFajrKey) ?? true;
     final prayerDhuhr =
@@ -93,6 +95,7 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         tahajjud: tahajjud,
         khatmahReminder: khatmahReminder,
         prayerNotifications: prayerNotifications,
+        prayerAthan: prayerAthan,
         prayerFajr: prayerFajr,
         prayerDhuhr: prayerDhuhr,
         prayerAsr: prayerAsr,
@@ -206,6 +209,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       ),
       TaliaNotificationService.prayerNotificationsPreferenceKey =>
         state.copyWith(prayerNotifications: value),
+      TaliaNotificationService.prayerAthanKey => state.copyWith(
+        prayerAthan: value,
+      ),
       TaliaNotificationService.quietHoursPreferenceKey => state.copyWith(
         quietHoursEnabled: value,
       ),

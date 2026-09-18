@@ -24,6 +24,8 @@ class UnifiedJourneyInput {
     this.smartPlanRoute,
     this.hasDailyWird = false,
     this.dailyWirdPageNumber,
+    this.dailyWirdSurahNameAr,
+    this.dailyWirdSurahNameEn,
     this.hasActiveKhatmah = false,
     this.khatmahRoute,
     this.isKids = false,
@@ -53,6 +55,8 @@ class UnifiedJourneyInput {
   // Daily Goal / Wird (Priority 5)
   final bool hasDailyWird;
   final int? dailyWirdPageNumber;
+  final String? dailyWirdSurahNameAr;
+  final String? dailyWirdSurahNameEn;
   final bool hasActiveKhatmah;
   final String? khatmahRoute;
 

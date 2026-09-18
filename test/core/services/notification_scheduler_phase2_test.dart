@@ -9,6 +9,8 @@ import 'package:talia_quran/core/services/notification_service.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
 import 'package:talia_quran/features/khatmah/domain/entities/khatmah_plan.dart';
 import 'package:talia_quran/features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
+import 'package:timezone/data/latest.dart' as tz_data;
+import 'package:timezone/timezone.dart';
 
 class MockTaliaNotificationService extends Mock
     implements TaliaNotificationService {}
@@ -37,17 +39,22 @@ void main() {
     mockPrayerTimesService = MockPrayerTimesService();
     mockGetActiveKhatmahUsecase = MockGetActiveKhatmahUsecase();
 
-    when(() => mockPrayerTimesService.isReadyForNotificationScheduling)
-        .thenReturn(false);
+    when(
+      () => mockPrayerTimesService.isReadyForNotificationScheduling,
+    ).thenReturn(false);
 
-    when(() => mockNotificationService.configureLocalTimezone())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelStreakAlert())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelStreakGentleNudge())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelSmartReminder())
-        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.configureLocalTimezone(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelStreakAlert(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelStreakGentleNudge(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelSmartReminder(),
+    ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.scheduleStreakGentleNudge(
         title: any(named: 'title'),
@@ -65,26 +72,36 @@ void main() {
         minute: any(named: 'minute'),
       ),
     ).thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelFridayKahfReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelTahajjudReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelKhatmahReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelPrayerTimesReminders())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelDailyReviewReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelDailyAyahReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelMorningAzkarReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelEveningAzkarReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelDailyDuaReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelKidsReviewReminder())
-        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelFridayKahfReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelTahajjudReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelKhatmahReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelPrayerTimesReminders(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelDailyReviewReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelDailyAyahReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelMorningAzkarReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelEveningAzkarReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelDailyDuaReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelKidsReviewReminder(),
+    ).thenAnswer((_) async {});
 
     when(
       () => mockNotificationService.scheduleDailyReviewReminder(
@@ -149,14 +166,18 @@ void main() {
     ).thenAnswer((_) async {});
 
     // Phase 2 stubbing
-    when(() => mockNotificationService.cancelFridayKahfReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelTahajjudReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelKhatmahReminder())
-        .thenAnswer((_) async {});
-    when(() => mockNotificationService.cancelPrayerTimesReminders())
-        .thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelFridayKahfReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelTahajjudReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelKhatmahReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelPrayerTimesReminders(),
+    ).thenAnswer((_) async {});
 
     when(
       () => mockNotificationService.scheduleFridayKahfReminder(
@@ -226,7 +247,9 @@ void main() {
 
       await scheduler.refreshNotifications(l10n);
 
-      verify(() => mockNotificationService.cancelFridayKahfReminder()).called(1);
+      verify(
+        () => mockNotificationService.cancelFridayKahfReminder(),
+      ).called(1);
       verifyNever(
         () => mockNotificationService.scheduleFridayKahfReminder(
           title: any(named: 'title'),
@@ -282,42 +305,46 @@ void main() {
   });
 
   group('Khatmah progress reminder', () {
-    test('schedules Khatmah reminder with smart target when active plan exists', () async {
-      SharedPreferences.setMockInitialValues({
-        TaliaNotificationService.khatmahReminderPreferenceKey: true,
-      });
+    test(
+      'schedules Khatmah reminder with smart target when active plan exists',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          TaliaNotificationService.khatmahReminderPreferenceKey: true,
+        });
 
-      final now = DateTime.now();
-      final activePlan = KhatmahPlan(
-        id: 'plan-1',
-        title: 'Ramadan Khatmah',
-        startDate: now.subtract(const Duration(days: 2)),
-        expectedEndDate: now.add(const Duration(days: 28)),
-        targetDays: 30,
-        targetPagesPerDay: 20,
-      );
+        final now = DateTime.now();
+        final activePlan = KhatmahPlan(
+          id: 'plan-1',
+          title: 'Ramadan Khatmah',
+          startDate: now.subtract(const Duration(days: 2)),
+          expectedEndDate: now.add(const Duration(days: 28)),
+          targetDays: 30,
+          targetPagesPerDay: 20,
+        );
 
-      when(() => mockGetActiveKhatmahUsecase.call())
-          .thenAnswer((_) async => activePlan);
+        when(
+          () => mockGetActiveKhatmahUsecase.call(),
+        ).thenAnswer((_) async => activePlan);
 
-      final scheduler = NotificationScheduler(
-        mockNotificationService,
-        getActiveKhatmah: mockGetActiveKhatmahUsecase,
-      );
-      final l10n = lookupAppLocalizations(const Locale('ar'));
+        final scheduler = NotificationScheduler(
+          mockNotificationService,
+          getActiveKhatmah: mockGetActiveKhatmahUsecase,
+        );
+        final l10n = lookupAppLocalizations(const Locale('ar'));
 
-      await scheduler.refreshNotifications(l10n);
+        await scheduler.refreshNotifications(l10n);
 
-      verify(
-        () => mockNotificationService.scheduleKhatmahReminder(
-          title: l10n.notificationKhatmahTitle,
-          body: any(named: 'body'),
-          payload: any(named: 'payload'),
-          hour: 17,
-          minute: 0,
-        ),
-      ).called(1);
-    });
+        verify(
+          () => mockNotificationService.scheduleKhatmahReminder(
+            title: l10n.notificationKhatmahTitle,
+            body: any(named: 'body'),
+            payload: any(named: 'payload'),
+            hour: 17,
+            minute: 0,
+          ),
+        ).called(1);
+      },
+    );
 
     test('cancels Khatmah reminder when disabled', () async {
       SharedPreferences.setMockInitialValues({
@@ -343,28 +370,32 @@ void main() {
   });
 
   group('Prayer times rolling reminders', () {
-    test('cancels prayer reminders until the prayer location is configured', () async {
-      SharedPreferences.setMockInitialValues({
-        TaliaNotificationService.prayerNotificationsPreferenceKey: true,
-      });
+    test(
+      'cancels prayer reminders until the prayer location is configured',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          TaliaNotificationService.prayerNotificationsPreferenceKey: true,
+        });
 
-      final scheduler = NotificationScheduler(
-        mockNotificationService,
-        prayerTimesService: mockPrayerTimesService,
-      );
+        final scheduler = NotificationScheduler(
+          mockNotificationService,
+          prayerTimesService: mockPrayerTimesService,
+        );
 
-      await scheduler.refreshNotifications(
-        lookupAppLocalizations(const Locale('ar')),
-      );
+        await scheduler.refreshNotifications(
+          lookupAppLocalizations(const Locale('ar')),
+        );
 
-      verify(() => mockNotificationService.cancelPrayerTimesReminders())
-          .called(1);
-      verifyNever(
-        () => mockNotificationService.schedulePrayerTimesReminders(
-          prayers: any(named: 'prayers'),
-        ),
-      );
-    });
+        verify(
+          () => mockNotificationService.cancelPrayerTimesReminders(),
+        ).called(1);
+        verifyNever(
+          () => mockNotificationService.schedulePrayerTimesReminders(
+            prayers: any(named: 'prayers'),
+          ),
+        );
+      },
+    );
 
     test('schedules prayer times for rolling window when enabled', () async {
       SharedPreferences.setMockInitialValues({
@@ -376,18 +407,46 @@ void main() {
         TaliaNotificationService.prayerIshaKey: true,
       });
 
-      when(() => mockPrayerTimesService.timesForDate(any())).thenAnswer((inv) async {
+      when(() => mockPrayerTimesService.timesForDate(any())).thenAnswer((
+        inv,
+      ) async {
         final date = inv.positionalArguments[0] as DateTime;
         return [
-          (key: 'fajr', nameAr: 'الفجر', nameEn: 'Fajr', time: DateTime(date.year, date.month, date.day, 4, 30)),
-          (key: 'dhuhr', nameAr: 'الظهر', nameEn: 'Dhuhr', time: DateTime(date.year, date.month, date.day, 12, 15)),
-          (key: 'asr', nameAr: 'العصر', nameEn: 'Asr', time: DateTime(date.year, date.month, date.day, 15, 45)),
-          (key: 'maghrib', nameAr: 'المغرب', nameEn: 'Maghrib', time: DateTime(date.year, date.month, date.day, 18, 20)),
-          (key: 'isha', nameAr: 'العشاء', nameEn: 'Isha', time: DateTime(date.year, date.month, date.day, 19, 45)),
+          (
+            key: 'fajr',
+            nameAr: 'الفجر',
+            nameEn: 'Fajr',
+            time: DateTime(date.year, date.month, date.day, 4, 30),
+          ),
+          (
+            key: 'dhuhr',
+            nameAr: 'الظهر',
+            nameEn: 'Dhuhr',
+            time: DateTime(date.year, date.month, date.day, 12, 15),
+          ),
+          (
+            key: 'asr',
+            nameAr: 'العصر',
+            nameEn: 'Asr',
+            time: DateTime(date.year, date.month, date.day, 15, 45),
+          ),
+          (
+            key: 'maghrib',
+            nameAr: 'المغرب',
+            nameEn: 'Maghrib',
+            time: DateTime(date.year, date.month, date.day, 18, 20),
+          ),
+          (
+            key: 'isha',
+            nameAr: 'العشاء',
+            nameEn: 'Isha',
+            time: DateTime(date.year, date.month, date.day, 19, 45),
+          ),
         ];
       });
-      when(() => mockPrayerTimesService.isReadyForNotificationScheduling)
-          .thenReturn(true);
+      when(
+        () => mockPrayerTimesService.isReadyForNotificationScheduling,
+      ).thenReturn(true);
 
       final scheduler = NotificationScheduler(
         mockNotificationService,
@@ -420,18 +479,46 @@ void main() {
         TaliaNotificationService.prayerIshaKey: true,
       });
 
-      when(() => mockPrayerTimesService.timesForDate(any())).thenAnswer((inv) async {
+      when(() => mockPrayerTimesService.timesForDate(any())).thenAnswer((
+        inv,
+      ) async {
         final date = inv.positionalArguments[0] as DateTime;
         return [
-          (key: 'fajr', nameAr: 'الفجر', nameEn: 'Fajr', time: DateTime(date.year, date.month, date.day, 4, 30)),
-          (key: 'dhuhr', nameAr: 'الظهر', nameEn: 'Dhuhr', time: DateTime(date.year, date.month, date.day, 12, 15)),
-          (key: 'asr', nameAr: 'العصر', nameEn: 'Asr', time: DateTime(date.year, date.month, date.day, 15, 45)),
-          (key: 'maghrib', nameAr: 'المغرب', nameEn: 'Maghrib', time: DateTime(date.year, date.month, date.day, 18, 20)),
-          (key: 'isha', nameAr: 'العشاء', nameEn: 'Isha', time: DateTime(date.year, date.month, date.day, 19, 45)),
+          (
+            key: 'fajr',
+            nameAr: 'الفجر',
+            nameEn: 'Fajr',
+            time: DateTime(date.year, date.month, date.day, 4, 30),
+          ),
+          (
+            key: 'dhuhr',
+            nameAr: 'الظهر',
+            nameEn: 'Dhuhr',
+            time: DateTime(date.year, date.month, date.day, 12, 15),
+          ),
+          (
+            key: 'asr',
+            nameAr: 'العصر',
+            nameEn: 'Asr',
+            time: DateTime(date.year, date.month, date.day, 15, 45),
+          ),
+          (
+            key: 'maghrib',
+            nameAr: 'المغرب',
+            nameEn: 'Maghrib',
+            time: DateTime(date.year, date.month, date.day, 18, 20),
+          ),
+          (
+            key: 'isha',
+            nameAr: 'العشاء',
+            nameEn: 'Isha',
+            time: DateTime(date.year, date.month, date.day, 19, 45),
+          ),
         ];
       });
-      when(() => mockPrayerTimesService.isReadyForNotificationScheduling)
-          .thenReturn(true);
+      when(
+        () => mockPrayerTimesService.isReadyForNotificationScheduling,
+      ).thenReturn(true);
 
       final scheduler = NotificationScheduler(
         mockNotificationService,
@@ -456,6 +543,76 @@ void main() {
       expect(fajrNotifications, isEmpty);
     });
 
+    test(
+      'forwards city-zone prayer instants unchanged to the scheduler',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          TaliaNotificationService.prayerNotificationsPreferenceKey: true,
+          TaliaNotificationService.prayerFajrKey: true,
+          TaliaNotificationService.prayerDhuhrKey: true,
+          TaliaNotificationService.prayerAsrKey: true,
+          TaliaNotificationService.prayerMaghribKey: true,
+          TaliaNotificationService.prayerIshaKey: true,
+        });
+
+        tz_data.initializeTimeZones();
+        final london = getLocation('Europe/London');
+        when(() => mockPrayerTimesService.timesForDate(any())).thenAnswer((
+          inv,
+        ) async {
+          final date = inv.positionalArguments[0] as DateTime;
+          final day = TZDateTime.from(date, london);
+          DateTime at(int hour, int minute) =>
+              TZDateTime(london, day.year, day.month, day.day, hour, minute);
+          return [
+            (key: 'fajr', nameAr: 'الفجر', nameEn: 'Fajr', time: at(2, 30)),
+            (key: 'dhuhr', nameAr: 'الظهر', nameEn: 'Dhuhr', time: at(13, 5)),
+            (key: 'asr', nameAr: 'العصر', nameEn: 'Asr', time: at(17, 40)),
+            (
+              key: 'maghrib',
+              nameAr: 'المغرب',
+              nameEn: 'Maghrib',
+              time: at(21, 20),
+            ),
+            (key: 'isha', nameAr: 'العشاء', nameEn: 'Isha', time: at(23, 10)),
+          ];
+        });
+        when(
+          () => mockPrayerTimesService.isReadyForNotificationScheduling,
+        ).thenReturn(true);
+
+        final scheduler = NotificationScheduler(
+          mockNotificationService,
+          prayerTimesService: mockPrayerTimesService,
+        );
+
+        await scheduler.refreshNotifications(
+          lookupAppLocalizations(const Locale('ar')),
+        );
+
+        final captured = verify(
+          () => mockNotificationService.schedulePrayerTimesReminders(
+            prayers: captureAny(named: 'prayers'),
+          ),
+        ).captured;
+        final scheduledList =
+            captured.first as List<ScheduledPrayerNotification>;
+        expect(scheduledList.length, 35);
+        expect(
+          scheduledList.take(5).map((p) => p.prayerKey),
+          ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'],
+        );
+        for (final prayer in scheduledList) {
+          final time = prayer.scheduledDate as TZDateTime;
+          expect(
+            time.location.name,
+            'Europe/London',
+            reason: 'scheduler must not reinterpret city times in device zone',
+          );
+        }
+      },
+    );
+
     test('cancels prayer reminders when overall switch is disabled', () async {
       SharedPreferences.setMockInitialValues({
         TaliaNotificationService.prayerNotificationsPreferenceKey: false,
@@ -469,7 +626,9 @@ void main() {
 
       await scheduler.refreshNotifications(l10n);
 
-      verify(() => mockNotificationService.cancelPrayerTimesReminders()).called(1);
+      verify(
+        () => mockNotificationService.cancelPrayerTimesReminders(),
+      ).called(1);
       verifyNever(
         () => mockNotificationService.schedulePrayerTimesReminders(
           prayers: any(named: 'prayers'),

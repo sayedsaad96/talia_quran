@@ -3222,6 +3222,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'تنبيهات عند دخول وقت الصلاة';
 
   @override
+  String get notificationChannelPrayerAthanName => 'صوت أذان الصلاة';
+
+  @override
+  String get notificationChannelPrayerAthanDescription =>
+      'تنبيهات الصلوات بمقطع الأذان المرفق';
+
+  @override
   String get notificationDailyAyahTitle => 'آية تفتح لك يومك ✨';
 
   @override
@@ -3314,6 +3321,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notificationSettingsPrayerTimesSub =>
       'تنبيهات عند حلول أوقات الصلوات الخمس';
+
+  @override
+  String get notificationSettingsPrayerAthan => 'صوت الأذان';
+
+  @override
+  String get notificationSettingsPrayerAthanSub =>
+      'تشغيل مقطع الأذان المرفق بدل صوت التنبيه الافتراضي';
 
   @override
   String get homeTourTitle => 'تحتاج جولة سريعة؟';
@@ -4947,10 +4961,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homePrayerTimesEnabled => 'إظهار الصلاة التالية في الرئيسية';
 
   @override
+  String get homePrayerCountry => 'البلد';
+
+  @override
   String get homePrayerCity => 'المدينة';
 
   @override
   String get homePrayerMethod => 'طريقة الحساب';
+
+  @override
+  String get prayerMethodAuto => 'تلقائي حسب البلد';
 
   @override
   String homePrayerChip(String name, int minutes) {

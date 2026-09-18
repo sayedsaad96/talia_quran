@@ -3257,6 +3257,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Alerts when a prayer time enters';
 
   @override
+  String get notificationChannelPrayerAthanName => 'Prayer athan sound';
+
+  @override
+  String get notificationChannelPrayerAthanDescription =>
+      'Prayer alerts with the bundled athan clip';
+
+  @override
   String get notificationDailyAyahTitle => 'Ayah of the Day ✨';
 
   @override
@@ -3349,6 +3356,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationSettingsPrayerTimesSub =>
       'Reminders at the time of each of the 5 daily prayers';
+
+  @override
+  String get notificationSettingsPrayerAthan => 'Athan sound';
+
+  @override
+  String get notificationSettingsPrayerAthanSub =>
+      'Play the bundled athan clip instead of the default sound';
 
   @override
   String get homeTourTitle => 'Need a quick tour?';
@@ -4900,10 +4914,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homePrayerTimesEnabled => 'Show next prayer on Home';
 
   @override
+  String get homePrayerCountry => 'Country';
+
+  @override
   String get homePrayerCity => 'City';
 
   @override
   String get homePrayerMethod => 'Calculation method';
+
+  @override
+  String get prayerMethodAuto => 'Automatic by country';
 
   @override
   String homePrayerChip(String name, int minutes) {

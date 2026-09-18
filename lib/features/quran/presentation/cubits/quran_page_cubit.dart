@@ -63,12 +63,29 @@ class QuranPageCubit extends Cubit<QuranPageState> {
     );
   }
 
-  /// Confirms ordinary Quran reading. Khatmah progress is intentionally owned
-  /// by KhatmahCubit after this method returns true.
-  Future<bool> confirmRead(int pageNumber) async {
+  /// Confirms a page read in the ordinary Quran-reading journey.
+  ///
+  /// Khatmah progress is owned by [KhatmahCubit]. Its reader only needs the
+  /// confirmation gate to succeed; it must not enter this generic pipeline,
+  /// because generic read pages feed the daily-wird state and reading metrics.
+  Future<bool> confirmRead(
+    int pageNumber, {
+    bool recordOrdinaryReading = true,
+  }) async {
     final current = state;
     if (current is! QuranPageLoaded) return false;
     if (current.isReadConfirmed) return true;
+
+    if (!recordOrdinaryReading) {
+      emit(
+        QuranPageLoaded(
+          current.detail,
+          isReadConfirmed: true,
+          readConfirmationError: current.readConfirmationError,
+        ),
+      );
+      return true;
+    }
 
     final saveResult = await _saveReadPage(pageNumber);
     final failure = saveResult.fold((failure) => failure, (_) => null);

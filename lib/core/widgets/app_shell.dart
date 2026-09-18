@@ -1,8 +1,11 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/quran/presentation/widgets/quran_mini_player_bar.dart';
+import '../constants/app_spacing.dart';
 import '../extensions/context_extensions.dart';
 import '../router/app_router.dart';
 import '../theme/app_colors.dart';
@@ -16,14 +19,31 @@ class AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   static const _tabs = [
-    _TabItem(icon: Icons.home_rounded, route: AppRoutes.home),
-    _TabItem(icon: Icons.menu_book_rounded, route: AppRoutes.quran),
     _TabItem(
-      icon: Icons.auto_stories_rounded,
+      icon: Icons.home_outlined,
+      selectedIcon: Icons.home_rounded,
+      route: AppRoutes.home,
+    ),
+    _TabItem(
+      icon: Icons.menu_book_outlined,
+      selectedIcon: Icons.menu_book_rounded,
+      route: AppRoutes.quran,
+    ),
+    _TabItem(
+      icon: Icons.psychology_outlined,
+      selectedIcon: Icons.psychology_rounded,
       route: AppRoutes.memorizationHub,
     ),
-    _TabItem(icon: Icons.spa_rounded, route: AppRoutes.azkar),
-    _TabItem(icon: Icons.bar_chart_rounded, route: AppRoutes.progress),
+    _TabItem(
+      icon: Icons.auto_awesome_outlined,
+      selectedIcon: Icons.auto_awesome_rounded,
+      route: AppRoutes.azkar,
+    ),
+    _TabItem(
+      icon: Icons.emoji_events_outlined,
+      selectedIcon: Icons.emoji_events_rounded,
+      route: AppRoutes.progress,
+    ),
   ];
 
   void _onTap(int index) {
@@ -116,7 +136,7 @@ class _TaliaNavRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final labels = _labels(context);
-    final selectedColor = isDark ? AppColors.primaryLight : AppColors.primary;
+    final selectedColor = isDark ? AppColors.goldLight : AppColors.primary;
     final unselectedColor = isDark
         ? AppColors.darkTextHint
         : AppColors.lightTextHint;
@@ -140,7 +160,7 @@ class _TaliaNavRail extends StatelessWidget {
         tabs.length,
         (i) => NavigationRailDestination(
           icon: Icon(tabs[i].icon),
-          selectedIcon: Icon(tabs[i].icon),
+          selectedIcon: Icon(tabs[i].selectedIcon),
           label: Text(labels[i]),
         ),
       ),
@@ -172,45 +192,68 @@ class _TaliaBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final labels = _labels(context);
-    final selectedColor = isDark ? AppColors.primaryLight : AppColors.primary;
-    final unselectedColor = isDark
-        ? AppColors.darkTextHint
-        : AppColors.lightTextHint;
 
     return SafeArea(
       top: false,
-      child: NavigationBarTheme(
-        data: NavigationBarThemeData(
-          backgroundColor: isDark
-              ? AppColors.darkSurface
-              : AppColors.lightSurface,
-          indicatorColor: selectedColor.withValues(alpha: isDark ? 0.2 : 0.12),
-          iconTheme: WidgetStateProperty.resolveWith((states) {
-            final selected = states.contains(WidgetState.selected);
-            return IconThemeData(
-              color: selected ? selectedColor : unselectedColor,
-              size: 24,
-            );
-          }),
-          labelTextStyle: WidgetStateProperty.resolveWith((states) {
-            final selected = states.contains(WidgetState.selected);
-            return AppTypography.labelSmall.copyWith(
-              color: selected ? selectedColor : unselectedColor,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            );
-          }),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          AppSpacing.md,
+          AppSpacing.xs,
+          AppSpacing.md,
+          AppSpacing.sm,
         ),
-        child: NavigationBar(
-          selectedIndex: currentIndex,
-          onDestinationSelected: onTap,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-          destinations: List.generate(
-            tabs.length,
-            (i) => NavigationDestination(
-              icon: Icon(tabs[i].icon),
-              selectedIcon: Icon(tabs[i].icon),
-              label: labels[i],
-              tooltip: labels[i],
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(26),
+            color: isDark ? const Color(0xEB041D1A) : const Color(0xF2FFFFFF),
+            border: Border.all(
+              color: isDark ? const Color(0x26FFFFFF) : const Color(0x1F0D5C53),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.45)
+                    : AppColors.primaryDark.withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+              if (isDark)
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.15),
+                  blurRadius: 16,
+                  spreadRadius: -4,
+                ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(26),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                child: MediaQuery.withClampedTextScaling(
+                  maxScaleFactor: 1.2,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: List.generate(tabs.length, (index) {
+                      final isSelected = index == currentIndex;
+                      final tab = tabs[index];
+                      final label = labels[index];
+
+                      return Expanded(
+                        child: _TaliaNavItem(
+                          tab: tab,
+                          label: label,
+                          isSelected: isSelected,
+                          isDark: isDark,
+                          onTap: () => onTap(index),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -219,8 +262,128 @@ class _TaliaBottomNav extends StatelessWidget {
   }
 }
 
+class _TaliaNavItem extends StatelessWidget {
+  const _TaliaNavItem({
+    required this.tab,
+    required this.label,
+    required this.isSelected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  final _TabItem tab;
+  final String label;
+  final bool isSelected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final activeColor = isDark ? AppColors.goldLight : AppColors.primary;
+    final inactiveColor = isDark
+        ? AppColors.darkTextHint
+        : AppColors.lightTextHint;
+
+    final capsuleBg = isDark
+        ? AppColors.gold.withValues(alpha: 0.14)
+        : AppColors.primary.withValues(alpha: 0.1);
+    final capsuleBorder = isDark
+        ? AppColors.gold.withValues(alpha: 0.28)
+        : AppColors.primary.withValues(alpha: 0.18);
+
+    return Semantics(
+      button: true,
+      selected: isSelected,
+      label: label,
+      child: InkResponse(
+        onTap: onTap,
+        highlightColor: Colors.transparent,
+        splashColor: (isDark ? AppColors.gold : AppColors.primary)
+            .withValues(alpha: 0.08),
+        radius: 36,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 2),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Animated icon capsule
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                curve: Curves.easeOutCubic,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSelected ? 12 : 8,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: isSelected ? capsuleBg : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isSelected ? capsuleBorder : Colors.transparent,
+                    width: 1,
+                  ),
+                ),
+                child: AnimatedScale(
+                  scale: isSelected ? 1.08 : 1.0,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutBack,
+                  child: Icon(
+                    isSelected ? tab.selectedIcon : tab.icon,
+                    color: isSelected ? activeColor : inactiveColor,
+                    size: 22,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 2),
+              // Animated Label
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
+                style: AppTypography.labelSmall.copyWith(
+                  color: isSelected ? activeColor : inactiveColor,
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  fontSize: 10.5,
+                  height: 1.2,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                child: Text(label),
+              ),
+              const SizedBox(height: 3),
+              // Subtle Glowing Indicator Dot
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 240),
+                curve: Curves.easeOutCubic,
+                width: isSelected ? 4 : 0,
+                height: isSelected ? 4 : 0,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: isDark ? AppColors.gold : AppColors.primary,
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: (isDark ? AppColors.gold : AppColors.primary)
+                                .withValues(alpha: 0.6),
+                            blurRadius: 4,
+                            spreadRadius: 0.5,
+                          ),
+                        ]
+                      : null,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _TabItem {
-  const _TabItem({required this.icon, required this.route});
+  const _TabItem({
+    required this.icon,
+    required this.selectedIcon,
+    required this.route,
+  });
   final IconData icon;
+  final IconData selectedIcon;
   final String route;
 }

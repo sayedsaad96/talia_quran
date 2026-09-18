@@ -443,13 +443,18 @@ class NotificationScheduler {
 
       KhatmahPlan? activePlan;
       try {
-        final usecase = _getActiveKhatmah ??
+        final usecase =
+            _getActiveKhatmah ??
             (getIt.isRegistered<GetActiveKhatmahUsecase>()
                 ? getIt<GetActiveKhatmahUsecase>()
                 : null);
         activePlan = await usecase?.call();
       } catch (e, stack) {
-        TaliaLogger.w('Failed to load active khatmah for notification', e, stack);
+        TaliaLogger.w(
+          'Failed to load active khatmah for notification',
+          e,
+          stack,
+        );
       }
 
       final String body;
@@ -486,7 +491,8 @@ class NotificationScheduler {
           TaliaNotificationService.prayerNotificationsPreferenceKey,
         ) ??
         false;
-    final prayerService = _prayerTimesService ??
+    final prayerService =
+        _prayerTimesService ??
         (getIt.isRegistered<PrayerTimesService>()
             ? getIt<PrayerTimesService>()
             : null);
@@ -529,6 +535,7 @@ class NotificationScheduler {
                 scheduledPrayers.add(
                   ScheduledPrayerNotification(
                     idOffset: offset,
+                    prayerKey: prayer.key,
                     title: l10n.notificationPrayerTitle(prayerName),
                     body: l10n.notificationPrayerBody,
                     scheduledDate: prayer.time,
@@ -538,7 +545,12 @@ class NotificationScheduler {
               offset++;
             }
           }
-          await _service.schedulePrayerTimesReminders(prayers: scheduledPrayers);
+          final athanEnabled =
+              prefs.getBool(TaliaNotificationService.prayerAthanKey) ?? false;
+          await _service.schedulePrayerTimesReminders(
+            prayers: scheduledPrayers,
+            athanEnabled: athanEnabled,
+          );
         } catch (e, stack) {
           TaliaLogger.w(
             'Failed to schedule prayer times notifications',
@@ -587,8 +599,8 @@ class NotificationScheduler {
     try {
       final prefs = await SharedPreferences.getInstance();
       final currentHour = (now ?? DateTime.now()).toLocal().hour.toString();
-      final entries = prefs.getStringList(_smartReminderOpenHoursKey) ??
-          <String>[];
+      final entries =
+          prefs.getStringList(_smartReminderOpenHoursKey) ?? <String>[];
       // Collapse consecutive duplicates (same hour opened repeatedly).
       if (entries.isEmpty || entries.last != currentHour) {
         entries.add(currentHour);
@@ -623,8 +635,7 @@ class NotificationScheduler {
     int best = hours.first;
     for (final hour in counts.keys) {
       if (counts[hour]! > counts[best]! ||
-          (counts[hour] == counts[best] &&
-              lastSeen[hour]! > lastSeen[best]!)) {
+          (counts[hour] == counts[best] && lastSeen[hour]! > lastSeen[best]!)) {
         best = hour;
       }
     }

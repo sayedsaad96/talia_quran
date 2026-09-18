@@ -15,6 +15,65 @@ import '../router/launch_destination.dart';
 import '../content/approved_azkar_content.dart';
 import '../utils/talia_logger.dart';
 import 'daily_ayah_notification_target.dart';
+import 'prayer_sound.dart';
+
+bool _timezoneDatabaseInitialized = false;
+bool _localLocationConfigured = false;
+
+void _ensureTimezoneDatabaseInitialized() {
+  if (_timezoneDatabaseInitialized) return;
+  tz_data.initializeTimeZones();
+  _timezoneDatabaseInitialized = true;
+}
+
+/// Guarantees `tz.local` is usable before anything schedules a notification.
+///
+/// Background WorkManager isolates never run [TaliaNotificationService.initialize],
+/// so if every device-timezone lookup fails there, `tz.local` (a `late`
+/// variable in timezone 0.11) would throw a LateError the first time a
+/// reminder is scheduled — crashing the task and making Android retry it
+/// forever. UTC is only a safety net: [configureLocalTimezone] replaces it
+/// with the real device timezone whenever one can be resolved.
+void _ensureLocalLocationReady() {
+  _ensureTimezoneDatabaseInitialized();
+  if (_localLocationConfigured) return;
+  tz.setLocalLocation(tz.UTC);
+  _localLocationConfigured = true;
+}
+
+/// Android OEMs and emulators often report offset IDs like "GMT+03:00" that
+/// don't exist in the tz database. Maps them to the equivalent (sign
+/// inverted) "Etc/GMT" zone; returns other identifiers unchanged.
+String _normalizeTimezoneIdentifier(String identifier) {
+  final trimmed = identifier.trim();
+  if (trimmed == 'GMT' || trimmed == 'UTC') return 'UTC';
+  final match = RegExp(
+    r'^GMT([+-])(\d{1,2})(?::(\d{2}))?$',
+  ).firstMatch(trimmed);
+  if (match == null) return trimmed;
+  final hours = int.parse(match.group(2)!);
+  if (hours == 0) return 'UTC';
+  // "Etc/GMT" zones invert the sign: GMT+03:00 == Etc/GMT-3.
+  final sign = match.group(1) == '+' ? '-' : '+';
+  return 'Etc/GMT$sign$hours';
+}
+
+/// Resolves [identifier] against the tz database, retrying with the
+/// normalized form. Returns null when neither resolves.
+tz.Location? _tryGetLocation(String identifier) {
+  final candidates = <String>[
+    identifier.trim(),
+    _normalizeTimezoneIdentifier(identifier),
+  ];
+  for (final candidate in candidates) {
+    try {
+      return tz.getLocation(candidate);
+    } catch (_) {
+      // Unknown ID — try the next candidate.
+    }
+  }
+  return null;
+}
 
 /// Smart notification service for Talia Quran.
 ///
@@ -25,12 +84,17 @@ import 'daily_ayah_notification_target.dart';
 class ScheduledPrayerNotification {
   const ScheduledPrayerNotification({
     required this.idOffset,
+    required this.prayerKey,
     required this.title,
     required this.body,
     required this.scheduledDate,
   });
 
   final int idOffset;
+
+  /// Prayer identifier (fajr/dhuhr/asr/maghrib/isha); selects the
+  /// notification sound, including the future fajr-specific athan clip.
+  final String prayerKey;
   final String title;
   final String body;
   final DateTime scheduledDate;
@@ -153,6 +217,7 @@ class TaliaNotificationService {
   static const String prayerAsrKey = 'notifications_prayer_asr';
   static const String prayerMaghribKey = 'notifications_prayer_maghrib';
   static const String prayerIshaKey = 'notifications_prayer_isha';
+  static const String prayerAthanKey = 'notifications_prayer_athan';
   static const String quietHoursPreferenceKey = 'notifications_quiet_hours';
   static const String quietHoursStartKey = 'notifications_quiet_start';
   static const String quietHoursEndKey = 'notifications_quiet_end';
@@ -826,6 +891,36 @@ class TaliaNotificationService {
     ),
   );
 
+  /// Athan variant of the prayer channel. The clip comes from the `awqat`
+  /// package (Android `res/raw/adhan.mp3`, iOS bundle `adhan.caf`). It uses a
+  /// separate channel id because Android freezes a channel's sound at
+  /// creation: reusing the legacy id would keep the old sound on
+  /// already-installed apps.
+  NotificationDetails _prayerAthanDetails(String prayerKey) {
+    final sound = resolvePrayerSound(athanEnabled: true, prayerKey: prayerKey);
+    return NotificationDetails(
+      android: AndroidNotificationDetails(
+        sound.androidChannelId,
+        _l10n.notificationChannelPrayerAthanName,
+        channelDescription: _l10n.notificationChannelPrayerAthanDescription,
+        importance: Importance.max,
+        priority: Priority.max,
+        color: const Color(0xFF1E824C),
+        icon: _notificationIcon,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound(sound.androidSoundName),
+        actions: _prayerActions,
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: true,
+        presentBadge: true,
+        presentSound: true,
+        sound: sound.iOSSoundName,
+        categoryIdentifier: 'prayer_category',
+      ),
+    );
+  }
+
   /// Initialize the notification system. Must be called on app startup.
   Future<void> initialize() async {
     if (_initialized) return;
@@ -835,7 +930,7 @@ class TaliaNotificationService {
       return;
     }
 
-    tz_data.initializeTimeZones();
+    _ensureTimezoneDatabaseInitialized();
 
     // CODE-3 FIX: Detect and set the device's actual local timezone
     await configureLocalTimezone();
@@ -895,19 +990,31 @@ class TaliaNotificationService {
   String? takePendingLaunchPayload() => takePendingLaunch()?.payload;
 
   Future<void> configureLocalTimezone() async {
+    // Background WorkManager isolates do not execute [initialize()]. Load the
+    // database here as well and guarantee a usable tz.local (UTC fallback) so
+    // scheduling can never crash with a LateError.
+    _ensureLocalLocationReady();
+
     // Some Android OEMs return identifiers ("GMT+03:00") that don't exist in
-    // the tz database; swallowing that silently leaves tz.local on UTC and
-    // every daily reminder fires hours off. Retain the last verified device
-    // timezone rather than guessing a regional timezone.
+    // the tz database; normalize those to their "Etc/GMT" equivalents before
+    // giving up. Retain the last verified device timezone rather than
+    // guessing a regional timezone.
     try {
       final localTimezone = await FlutterTimezone.getLocalTimezone();
-      tz.setLocalLocation(tz.getLocation(localTimezone.identifier));
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        lastKnownTimezonePreferenceKey,
-        localTimezone.identifier,
+      final deviceLocation = _tryGetLocation(localTimezone.identifier);
+      if (deviceLocation != null) {
+        tz.setLocalLocation(deviceLocation);
+        _localLocationConfigured = true;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(
+          lastKnownTimezonePreferenceKey,
+          deviceLocation.name,
+        );
+        return;
+      }
+      TaliaLogger.w(
+        'Device timezone "${localTimezone.identifier}" is not in the tz database',
       );
-      return;
     } catch (error, stack) {
       TaliaLogger.w('Device timezone lookup failed', error, stack);
     }
@@ -915,16 +1022,28 @@ class TaliaNotificationService {
       final prefs = await SharedPreferences.getInstance();
       final lastKnownTimezone = prefs.getString(lastKnownTimezonePreferenceKey);
       if (lastKnownTimezone != null) {
-        tz.setLocalLocation(tz.getLocation(lastKnownTimezone));
-        TaliaLogger.w('Timezone fallback: using last known device timezone');
-        return;
+        final savedLocation = _tryGetLocation(lastKnownTimezone);
+        if (savedLocation != null) {
+          tz.setLocalLocation(savedLocation);
+          _localLocationConfigured = true;
+          TaliaLogger.w('Timezone fallback: using last known device timezone');
+          return;
+        }
+        // Purge invalid saved values so they cannot poison future runs.
+        await prefs.remove(lastKnownTimezonePreferenceKey);
+        TaliaLogger.w(
+          'Saved timezone "$lastKnownTimezone" is invalid; removed preference',
+        );
       }
     } catch (error, stack) {
       TaliaLogger.w('Saved timezone fallback failed', error, stack);
     }
-    TaliaLogger.w(
-      'No valid device timezone is available; keeping the timezone package default',
-    );
+    // Final safety net: explicitly fall back to UTC so scheduling can never
+    // crash with a LateError on an unconfigured tz.local.
+    _ensureTimezoneDatabaseInitialized();
+    tz.setLocalLocation(tz.UTC);
+    _localLocationConfigured = true;
+    TaliaLogger.w('No valid device timezone is available; using UTC fallback');
   }
 
   /// Request permissions for local notifications (iOS and Android 13+)
@@ -1438,9 +1557,11 @@ class TaliaNotificationService {
 
   // ─── Prayer Times Reminders ────────────────────────────────────────────────
 
-  /// Schedules rolling prayer time reminders.
+  /// Schedules rolling prayer time reminders. When [athanEnabled] is true the
+  /// bundled athan clip replaces the system sound (dedicated channel).
   Future<void> schedulePrayerTimesReminders({
     required List<ScheduledPrayerNotification> prayers,
+    bool athanEnabled = false,
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await cancelPrayerTimesReminders();
@@ -1453,6 +1574,8 @@ class TaliaNotificationService {
         .toList(growable: false);
     await _reserveSlotsForPrayerNotifications(upcomingPrayers.length);
     final availableSlots = await _availableScheduledNotificationSlots();
+    // Safety net for background isolates where tz.local may not be configured.
+    _ensureLocalLocationReady();
     for (final prayer in upcomingPrayers.take(availableSlots)) {
       final tzDate = tz.TZDateTime.from(prayer.scheduledDate, tz.local);
       await _plugin.zonedSchedule(
@@ -1460,7 +1583,9 @@ class TaliaNotificationService {
         title: prayer.title,
         body: prayer.body,
         scheduledDate: tzDate,
-        notificationDetails: _prayerNotificationDetails,
+        notificationDetails: athanEnabled
+            ? _prayerAthanDetails(prayer.prayerKey)
+            : _prayerNotificationDetails,
         androidScheduleMode: scheduleMode,
         payload: '/',
       );
@@ -1581,6 +1706,9 @@ class TaliaNotificationService {
   // ─── Helper ────────────────────────────────────────────────────────────────
 
   tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {
+    // Safety net for background isolates where configureLocalTimezone could
+    // not resolve any device timezone.
+    _ensureLocalLocationReady();
     final now = tz.TZDateTime.now(tz.local);
     var scheduled = tz.TZDateTime(
       tz.local,

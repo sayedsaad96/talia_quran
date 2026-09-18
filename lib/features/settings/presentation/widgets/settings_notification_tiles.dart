@@ -54,6 +54,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
   static const _prayerAsrKey = TaliaNotificationService.prayerAsrKey;
   static const _prayerMaghribKey = TaliaNotificationService.prayerMaghribKey;
   static const _prayerIshaKey = TaliaNotificationService.prayerIshaKey;
+  static const _prayerAthanKey = TaliaNotificationService.prayerAthanKey;
 
   late final NotificationSettingsCubit _cubit;
   bool _ownsCubit = false;
@@ -359,6 +360,31 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                 ),
               ],
             ),
+          ),
+        if (state.prayerNotifications)
+          SwitchListTile(
+            contentPadding: const EdgeInsetsDirectional.only(
+              start: AppSpacing.xl,
+              end: AppSpacing.md,
+            ),
+            title: Text(
+              context.l10n.notificationSettingsPrayerAthan,
+              style: AppTypography.bodyMedium.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              context.l10n.notificationSettingsPrayerAthanSub,
+              style: AppTypography.bodySmall.copyWith(color: subtextColor),
+            ),
+            value: state.prayerAthan,
+            onChanged: (v) => _cubit.toggleReminder(
+              _prayerAthanKey,
+              v,
+              l10n: context.l10n,
+            ),
+            activeThumbColor: primary,
           ),
         if (Platform.isAndroid && state.prayerNotifications)
           Padding(

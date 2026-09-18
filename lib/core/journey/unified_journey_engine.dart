@@ -84,32 +84,20 @@ class UnifiedJourneyEngine {
       );
     }
 
+    // Khatmah and daily wird are independent tracks — both are added when present.
     if (input.hasActiveKhatmah && input.khatmahRoute != null) {
       actions.add(
         UnifiedJourneyAction(
           route: input.khatmahRoute!,
           priority: UnifiedJourneyPriority.p5DailyGoal,
           source: 'Khatmah',
-          actionType: UnifiedJourneyActionType.dailyReading,
-          intent: JourneyIntent.reading,
-        ),
-      );
-    } else if (input.hasDailyWird && input.dailyWirdPageNumber != null) {
-      actions.add(
-        UnifiedJourneyAction(
-          route: '/quran/page/${input.dailyWirdPageNumber}',
-          priority: UnifiedJourneyPriority.p5DailyGoal,
-          source: 'DailyWird',
-          actionType: UnifiedJourneyActionType.dailyReading,
+          actionType: UnifiedJourneyActionType.khatmah,
           intent: JourneyIntent.reading,
         ),
       );
     }
 
-    if (input.hasActiveKhatmah &&
-        input.hasDailyWird &&
-        input.dailyWirdPageNumber != null &&
-        input.khatmahRoute != '/quran/page/${input.dailyWirdPageNumber}') {
+    if (input.hasDailyWird && input.dailyWirdPageNumber != null) {
       actions.add(
         UnifiedJourneyAction(
           route: '/quran/page/${input.dailyWirdPageNumber}',
@@ -117,6 +105,13 @@ class UnifiedJourneyEngine {
           source: 'DailyWird',
           actionType: UnifiedJourneyActionType.dailyReading,
           intent: JourneyIntent.reading,
+          metadata: {
+            'pageNumber': '${input.dailyWirdPageNumber}',
+            if (input.dailyWirdSurahNameAr != null)
+              'surahNameAr': input.dailyWirdSurahNameAr!,
+            if (input.dailyWirdSurahNameEn != null)
+              'surahNameEn': input.dailyWirdSurahNameEn!,
+          },
         ),
       );
     }

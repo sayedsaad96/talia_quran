@@ -235,10 +235,19 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   }
 
   Future<void> _confirmThenRecordKhatmah(int pageNumber) async {
-    final confirmed = await _quranPageCubit.confirmRead(pageNumber);
+    final confirmed = await _quranPageCubit.confirmRead(
+      pageNumber,
+      recordOrdinaryReading: widget.readerMode != QuranReaderMode.khatmah,
+    );
     if (!confirmed) return;
     if (widget.readerMode == QuranReaderMode.khatmah) {
       await _khatmahCubit?.recordDigitalPage(pageNumber);
+    } else {
+      // Free / daily-wird mode: persist progress so the next wird page is
+      // computed independently of any active khatmah plan.
+      unawaited(
+        getIt<AppSessionService>().saveDailyWirdLastCompletedPage(pageNumber),
+      );
     }
   }
 

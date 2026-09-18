@@ -7,6 +7,7 @@ class AppSessionService {
 
   static const _lastLocationKey = 'last_restorable_location';
   static const _dailyWirdTargetPrefix = 'daily_wird_target_';
+  static const _dailyWirdLastCompletedKey = 'daily_wird_last_completed_page';
 
   final SharedPreferences _prefs;
 
@@ -40,6 +41,29 @@ class AppSessionService {
     final authority = barrier.capture();
     await barrier.run<void>((lease) async {
       await _prefs.setInt(_dailyWirdTargetKey(date), pageNumber);
+      lease.check();
+    }, authority: authority);
+  }
+
+  /// Returns the last Quran page the user confirmed as their daily wird.
+  ///
+  /// This is used to compute the next wird page (lastCompleted + 1) when no
+  /// explicit target has been saved yet for today. Returns null if the user
+  /// has never confirmed a wird page.
+  int? getDailyWirdLastCompletedPage() {
+    final page = _prefs.getInt(_dailyWirdLastCompletedKey);
+    return page != null && page >= 1 && page <= 604 ? page : null;
+  }
+
+  /// Saves [pageNumber] as the last confirmed wird page.
+  ///
+  /// Call this when the user finishes reading their daily wird (free mode only).
+  Future<void> saveDailyWirdLastCompletedPage(int pageNumber) async {
+    if (pageNumber < 1 || pageNumber > 604) return;
+    final barrier = AccountDataBarrier.forPreferences(_prefs);
+    final authority = barrier.capture();
+    await barrier.run<void>((lease) async {
+      await _prefs.setInt(_dailyWirdLastCompletedKey, pageNumber);
       lease.check();
     }, authority: authority);
   }

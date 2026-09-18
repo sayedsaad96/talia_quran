@@ -348,7 +348,10 @@ void main() {
             source: KhatmahReadingSource.digital,
           ),
         ).called(1);
-        verify(() => mockSaveRead(42)).called(1);
+        // Khatmah owns its own progress. Its confirmation must not enter the
+        // ordinary reading pipeline, because that pipeline feeds the daily
+        // wird target and completion state.
+        verifyNever(() => mockSaveRead(42));
         await fixture.cubit.close();
       },
     );

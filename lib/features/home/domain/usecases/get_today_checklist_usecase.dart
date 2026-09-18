@@ -1,5 +1,4 @@
 import '../../../azkar/domain/entities/azkar_entities.dart';
-import '../../../khatmah/domain/entities/khatmah_plan.dart';
 import '../../../memorization_plus/domain/entities/daily_plan.dart';
 import '../../../progress/domain/entities/progress_entities.dart';
 import '../entities/today_checklist.dart';
@@ -14,13 +13,11 @@ class TodayChecklistParams {
     required this.reviewRoute,
     required this.azkarRoute,
     required this.azkarComplete,
-    this.khatmah,
     this.dailyPlan,
     this.azkarCategory = AzkarCategory.morning,
     this.memorizedToday = false,
     this.reviewedToday = false,
-    DateTime Function()? now,
-  }) : _now = now ?? DateTime.now;
+  });
 
   final OverallProgress progress;
   final int wirdPage;
@@ -30,7 +27,6 @@ class TodayChecklistParams {
   final String reviewRoute;
   final String azkarRoute;
   final bool azkarComplete;
-  final KhatmahPlan? khatmah;
   final DailyPlan? dailyPlan;
   final AzkarCategory azkarCategory;
 
@@ -39,24 +35,16 @@ class TodayChecklistParams {
 
   /// A review session was logged during the current local day.
   final bool reviewedToday;
-
-  final DateTime Function() _now;
 }
 
 class GetTodayChecklistUsecase {
   const GetTodayChecklistUsecase();
 
   TodayChecklist call(TodayChecklistParams params) {
-    final today = params._now();
-    final khatmah = params.khatmah;
-    final readingComplete = khatmah != null &&
-            khatmah.status == KhatmahStatus.active
-        ? khatmah.isDailyTargetComplete(today)
-        : params.wirdComplete;
-    final readingDetail = khatmah != null &&
-            khatmah.status == KhatmahStatus.active
-        ? '${khatmah.dailyTargetFor(today).startPage}-${khatmah.dailyTargetFor(today).endPage}'
-        : '${params.wirdPage}';
+    // Reading task represents the daily wird exclusively.
+    // Khatmah progress is tracked separately via its own hero card.
+    final readingComplete = params.wirdComplete;
+    final readingDetail = '${params.wirdPage}';
 
     // Lifetime memorization says nothing about today, so completion needs
     // either a finished daily plan or a session logged during this day.

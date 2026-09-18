@@ -16,6 +16,7 @@ class NotificationSettingsState extends Equatable {
     this.tahajjud = false,
     this.khatmahReminder = true,
     this.prayerNotifications = false,
+    this.prayerAthan = false,
     this.prayerFajr = true,
     this.prayerDhuhr = true,
     this.prayerAsr = true,
@@ -54,6 +55,7 @@ class NotificationSettingsState extends Equatable {
 
   // Prayer Times and individual prayer filters
   final bool prayerNotifications;
+  final bool prayerAthan;
   final bool prayerFajr;
   final bool prayerDhuhr;
   final bool prayerAsr;
@@ -113,6 +115,7 @@ class NotificationSettingsState extends Equatable {
     bool? tahajjud,
     bool? khatmahReminder,
     bool? prayerNotifications,
+    bool? prayerAthan,
     bool? prayerFajr,
     bool? prayerDhuhr,
     bool? prayerAsr,
@@ -147,6 +150,7 @@ class NotificationSettingsState extends Equatable {
       tahajjud: tahajjud ?? this.tahajjud,
       khatmahReminder: khatmahReminder ?? this.khatmahReminder,
       prayerNotifications: prayerNotifications ?? this.prayerNotifications,
+      prayerAthan: prayerAthan ?? this.prayerAthan,
       prayerFajr: prayerFajr ?? this.prayerFajr,
       prayerDhuhr: prayerDhuhr ?? this.prayerDhuhr,
       prayerAsr: prayerAsr ?? this.prayerAsr,
@@ -184,6 +188,7 @@ class NotificationSettingsState extends Equatable {
     tahajjud,
     khatmahReminder,
     prayerNotifications,
+    prayerAthan,
     prayerFajr,
     prayerDhuhr,
     prayerAsr,

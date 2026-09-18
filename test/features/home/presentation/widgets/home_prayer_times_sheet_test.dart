@@ -14,6 +14,11 @@ void main() {
     nameEn: 'Cairo',
     latitude: 30.0444,
     longitude: 31.2357,
+    timeZone: 'Africa/Cairo',
+    countryId: 'eg',
+    countryAr: 'مصر',
+    countryEn: 'Egypt',
+    defaultMethod: 'egyptian',
   );
 
   final now = DateTime(2026, 9, 12, 11, 30);

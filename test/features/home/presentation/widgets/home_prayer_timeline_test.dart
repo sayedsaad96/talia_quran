@@ -14,6 +14,11 @@ void main() {
     nameEn: 'Cairo',
     latitude: 30.0444,
     longitude: 31.2357,
+    timeZone: 'Africa/Cairo',
+    countryId: 'eg',
+    countryAr: 'مصر',
+    countryEn: 'Egypt',
+    defaultMethod: 'egyptian',
   );
 
   // now = 11:30 → Fajr (04:15) and Sunrise (05:40) are past; Dhuhr is next.

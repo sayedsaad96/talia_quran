@@ -420,7 +420,7 @@ git commit -m "feat(home): add Islamic geometric pattern CustomPainter overlay"
 - Consumes: `HomeSkin` (including new `consolidatedBadgeFill`, `consolidatedBadgeBorder`), `HomeLoaded` state, `StaggeredFadeSlide`
 - Produces: Restructured `HomeNightHeader` with centered logo, symmetrical icon row, and single consolidated badge replacing scattered chips
 
-- [ ] **Step 1: Restructure `HomeNightHeader.build()` — replace chips with consolidated badge**
+- [x] **Step 1: Restructure `HomeNightHeader.build()` — replace chips with consolidated badge**
 
 Replace the current `Wrap` of chips (lines 62-67) with a single consolidated glass pill:
 
@@ -429,7 +429,7 @@ Replace the current `Wrap` of chips (lines 62-67) with a single consolidated gla
 _ConsolidatedBadge(state: state, skin: skin),
 ```
 
-- [ ] **Step 2: Restructure `_TopRow` — symmetrical layout**
+- [x] **Step 2: Restructure `_TopRow` — symmetrical layout**
 
 Modify `_TopRow` to place the logo center with icons on both sides. Remove the profile avatar + name from the top row (it moves into the consolidated badge or is removed). Keep Search and Settings icons:
 
@@ -468,11 +468,11 @@ Widget build(BuildContext context) {
 }
 ```
 
-- [ ] **Step 3: Remove `_BrandLockup` — logo now lives in `_TopRow`**
+- [x] **Step 3: Remove `_BrandLockup` — logo now lives in `_TopRow`**
 
 Delete the `_BrandLockup` widget class entirely. Remove `_BrandLockup(skin: skin)` and its `SizedBox(height: AppSpacing.sm)` from `HomeNightHeader.build()`.
 
-- [ ] **Step 4: Create `_ConsolidatedBadge` widget**
+- [x] **Step 4: Create `_ConsolidatedBadge` widget**
 
 ```dart
 class _ConsolidatedBadge extends StatelessWidget {
@@ -534,16 +534,16 @@ class _ConsolidatedBadge extends StatelessWidget {
 }
 ```
 
-- [ ] **Step 5: Move `HomeAchievementChip` into consolidated badge or remove from header**
+- [x] **Step 5: Move `HomeAchievementChip` into consolidated badge or remove from header**
 
 Remove `HomeAchievementChip` from the header chips area. It will be shown inside the Unified Progress Panel (Task 7) instead.
 
-- [ ] **Step 6: Verify compilation and hot-reload**
+- [x] **Step 6: Verify compilation and hot-reload**
 
 Run: `dart analyze lib/features/home/presentation/widgets/home_night_header.dart`
 Expected: No errors. Hot-reload to verify visual result.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add lib/features/home/presentation/widgets/home_night_header.dart
@@ -1042,7 +1042,7 @@ git commit -m "feat(home): redesign Ayah of Day as editorial floating typography
 - Consumes: `HomeSkin`, `SpringTap`, `IslamicPatternOverlay`
 - Produces: Visual consistency across all primary action variants
 
-- [ ] **Step 1: Redesign `HomeFirstRun` as a luxury welcome card**
+- [x] **Step 1: Redesign `HomeFirstRun` as a luxury welcome card**
 
 Replace the stacked buttons layout with a single Hero-style emerald card:
 
@@ -1119,7 +1119,7 @@ Widget build(BuildContext context) {
 
 Note: `HomeFirstRun` will need `HomeSkin skin` as a parameter. Update its constructor accordingly.
 
-- [ ] **Step 2: Upgrade `ResumeSessionCard` and `NextBestActionCard` visuals**
+- [x] **Step 2: Upgrade `ResumeSessionCard` and `NextBestActionCard` visuals**
 
 Apply the Hero Card visual treatment to both fallback cards:
 - Replace the existing `Container` decoration with `gradient: skin.meshGradient` and `borderRadius: AppSpacing.radiusXl`
@@ -1129,12 +1129,12 @@ Apply the Hero Card visual treatment to both fallback cards:
 
 Both cards need `HomeSkin skin` as a constructor parameter.
 
-- [ ] **Step 3: Verify compilation**
+- [x] **Step 3: Verify compilation**
 
 Run: `dart analyze lib/features/home/presentation/widgets/home_first_run.dart lib/features/home/presentation/widgets/resume_session_card.dart lib/features/home/presentation/widgets/next_best_action_card.dart`
 Expected: No errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add lib/features/home/presentation/widgets/home_first_run.dart lib/features/home/presentation/widgets/resume_session_card.dart lib/features/home/presentation/widgets/next_best_action_card.dart

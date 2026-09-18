@@ -24,6 +24,7 @@ enum UnifiedJourneyActionType {
   reviewBacklog,
   smartPlan,
   dailyReading,
+  khatmah,
   explore,
 }
 

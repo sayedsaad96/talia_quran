@@ -600,7 +600,6 @@ Future<void> configureDependencies({bool background = false}) async {
       getCustomPlan: getIt<GetCustomPlanUsecase>(),
       readPages: getIt<ProgressLocalDatasource>(),
       getSurahs: getIt<GetSurahsUsecase>(),
-      getActiveKhatmah: getIt<GetActiveKhatmahUsecase>(),
     ),
   );
   getIt.registerLazySingleton<GetKhatmahHistoryUsecase>(

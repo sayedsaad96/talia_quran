@@ -5857,6 +5857,18 @@ abstract class AppLocalizations {
   /// **'تنبيهات عند دخول وقت الصلاة'**
   String get notificationChannelPrayerDescription;
 
+  /// No description provided for @notificationChannelPrayerAthanName.
+  ///
+  /// In ar, this message translates to:
+  /// **'صوت أذان الصلاة'**
+  String get notificationChannelPrayerAthanName;
+
+  /// No description provided for @notificationChannelPrayerAthanDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيهات الصلوات بمقطع الأذان المرفق'**
+  String get notificationChannelPrayerAthanDescription;
+
   /// No description provided for @notificationDailyAyahTitle.
   ///
   /// In ar, this message translates to:
@@ -6012,6 +6024,18 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'تنبيهات عند حلول أوقات الصلوات الخمس'**
   String get notificationSettingsPrayerTimesSub;
+
+  /// No description provided for @notificationSettingsPrayerAthan.
+  ///
+  /// In ar, this message translates to:
+  /// **'صوت الأذان'**
+  String get notificationSettingsPrayerAthan;
+
+  /// No description provided for @notificationSettingsPrayerAthanSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'تشغيل مقطع الأذان المرفق بدل صوت التنبيه الافتراضي'**
+  String get notificationSettingsPrayerAthanSub;
 
   /// No description provided for @homeTourTitle.
   ///
@@ -8821,6 +8845,12 @@ abstract class AppLocalizations {
   /// **'إظهار الصلاة التالية في الرئيسية'**
   String get homePrayerTimesEnabled;
 
+  /// No description provided for @homePrayerCountry.
+  ///
+  /// In ar, this message translates to:
+  /// **'البلد'**
+  String get homePrayerCountry;
+
   /// No description provided for @homePrayerCity.
   ///
   /// In ar, this message translates to:
@@ -8832,6 +8862,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'طريقة الحساب'**
   String get homePrayerMethod;
+
+  /// No description provided for @prayerMethodAuto.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلقائي حسب البلد'**
+  String get prayerMethodAuto;
 
   /// No description provided for @homePrayerChip.
   ///
