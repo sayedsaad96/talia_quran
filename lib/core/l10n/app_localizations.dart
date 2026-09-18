@@ -6037,6 +6037,42 @@ abstract class AppLocalizations {
   /// **'ذكرني لاحقاً'**
   String get notificationActionCompanionRemindLater;
 
+  /// No description provided for @notificationCompanionPreparationTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعداد للصلاة'**
+  String get notificationCompanionPreparationTitle;
+
+  /// No description provided for @notificationCompanionPreparationBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقترب وقت صلاة {prayer}'**
+  String notificationCompanionPreparationBody(Object prayer);
+
+  /// No description provided for @notificationCompanionCheckInTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرافق الصلاة'**
+  String get notificationCompanionCheckInTitle;
+
+  /// No description provided for @notificationCompanionCheckInBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل صليت {prayer}؟'**
+  String notificationCompanionCheckInBody(Object prayer);
+
+  /// No description provided for @notificationCompanionFollowUpTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرافق الصلاة'**
+  String get notificationCompanionFollowUpTitle;
+
+  /// No description provided for @notificationCompanionFollowUpBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير لطيف: هل صليت {prayer}؟'**
+  String notificationCompanionFollowUpBody(Object prayer);
+
   /// No description provided for @notificationDailyAyahTitle.
   ///
   /// In ar, this message translates to:

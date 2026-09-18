@@ -84,6 +84,7 @@ import '../../features/prayer_companion/data/datasources/prayer_companion_prefer
 import '../../features/prayer_companion/data/models/prayer_companion_record_isar.dart';
 import '../../features/prayer_companion/data/repositories/prayer_companion_repository_impl.dart';
 import '../../features/prayer_companion/domain/repositories/prayer_companion_repository.dart';
+import '../../features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
 import '../../features/home/data/repositories/heatmap_repository_impl.dart';
 import '../../features/home/data/repositories/activity_feed_repository_impl.dart';
 import '../../features/home/data/models/activity_event_isar.dart';
@@ -266,6 +267,9 @@ Future<void> configureDependencies({bool background = false}) async {
     () => NotificationScheduler(
       getIt<TaliaNotificationService>(),
       getAyahOfDay: getIt<GetAyahOfDayUsecase>(),
+      prayerTimesService: getIt<PrayerTimesService>(),
+      prayerCompanionPlanner: getIt<PrayerCompanionPlanner>(),
+      prayerCompanionPreferences: getIt<PrayerCompanionPreferences>(),
       kidsSessionDatesLoader: () async {
         if (!getIt.isRegistered<MemorizationPlusRepository>()) return [];
         final result = await getIt<MemorizationPlusRepository>()
@@ -353,6 +357,15 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<PrayerTimesService>(
     () => PrayerTimesService(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<PrayerCompanionPlanner>(
+    () => PrayerCompanionPlanner(
+      prayerTimesService: getIt<PrayerTimesService>(),
+      preferences: getIt<PrayerCompanionPreferences>(),
+      repository: getIt<PrayerCompanionRepository>(),
+      prefs: Future.value(getIt<SharedPreferences>()),
+      owner: getIt<RecordOwnerProvider>(),
+    ),
   );
   getIt.registerLazySingleton<HomeOccasionService>(
     () => const HomeOccasionService(),

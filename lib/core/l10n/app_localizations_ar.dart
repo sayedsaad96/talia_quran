@@ -3318,6 +3318,30 @@ class AppLocalizationsAr extends AppLocalizations {
   String get notificationActionCompanionRemindLater => 'ذكرني لاحقاً';
 
   @override
+  String get notificationCompanionPreparationTitle => 'استعداد للصلاة';
+
+  @override
+  String notificationCompanionPreparationBody(Object prayer) {
+    return 'اقترب وقت صلاة $prayer';
+  }
+
+  @override
+  String get notificationCompanionCheckInTitle => 'مرافق الصلاة';
+
+  @override
+  String notificationCompanionCheckInBody(Object prayer) {
+    return 'هل صليت $prayer؟';
+  }
+
+  @override
+  String get notificationCompanionFollowUpTitle => 'مرافق الصلاة';
+
+  @override
+  String notificationCompanionFollowUpBody(Object prayer) {
+    return 'تذكير لطيف: هل صليت $prayer؟';
+  }
+
+  @override
   String get notificationDailyAyahTitle => 'آية تفتح لك يومك ✨';
 
   @override

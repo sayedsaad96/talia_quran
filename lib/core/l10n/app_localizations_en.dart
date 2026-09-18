@@ -3353,6 +3353,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notificationActionCompanionRemindLater => 'Remind me later';
 
   @override
+  String get notificationCompanionPreparationTitle => 'Get ready for prayer';
+
+  @override
+  String notificationCompanionPreparationBody(Object prayer) {
+    return '$prayer prayer is coming up soon';
+  }
+
+  @override
+  String get notificationCompanionCheckInTitle => 'Prayer Companion';
+
+  @override
+  String notificationCompanionCheckInBody(Object prayer) {
+    return 'Did you pray $prayer?';
+  }
+
+  @override
+  String get notificationCompanionFollowUpTitle => 'Prayer Companion';
+
+  @override
+  String notificationCompanionFollowUpBody(Object prayer) {
+    return 'A gentle reminder: did you pray $prayer?';
+  }
+
+  @override
   String get notificationDailyAyahTitle => 'Ayah of the Day ✨';
 
   @override

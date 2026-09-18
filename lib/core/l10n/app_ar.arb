@@ -1492,6 +1492,27 @@
   "notificationActionCompanionConfirm": "نعم، صليتها",
   "notificationActionCompanionPrayNow": "سأصلي الآن",
   "notificationActionCompanionRemindLater": "ذكرني لاحقاً",
+  "notificationCompanionPreparationTitle": "استعداد للصلاة",
+  "notificationCompanionPreparationBody": "اقترب وقت صلاة {prayer}",
+  "@notificationCompanionPreparationBody": {
+    "placeholders": {
+      "prayer": {}
+    }
+  },
+  "notificationCompanionCheckInTitle": "مرافق الصلاة",
+  "notificationCompanionCheckInBody": "هل صليت {prayer}؟",
+  "@notificationCompanionCheckInBody": {
+    "placeholders": {
+      "prayer": {}
+    }
+  },
+  "notificationCompanionFollowUpTitle": "مرافق الصلاة",
+  "notificationCompanionFollowUpBody": "تذكير لطيف: هل صليت {prayer}؟",
+  "@notificationCompanionFollowUpBody": {
+    "placeholders": {
+      "prayer": {}
+    }
+  },
 
   "notificationDailyAyahTitle": "آية تفتح لك يومك ✨",
   "notificationDailyAyahBody": "خدلك دقيقة روق بالك مع وردك النهاردة من القرآن الكريم 🌿",

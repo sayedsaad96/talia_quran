@@ -1503,6 +1503,27 @@
   "notificationActionCompanionConfirm": "Yes, I prayed it",
   "notificationActionCompanionPrayNow": "I will pray now",
   "notificationActionCompanionRemindLater": "Remind me later",
+  "notificationCompanionPreparationTitle": "Get ready for prayer",
+  "notificationCompanionPreparationBody": "{prayer} prayer is coming up soon",
+  "@notificationCompanionPreparationBody": {
+    "placeholders": {
+      "prayer": {}
+    }
+  },
+  "notificationCompanionCheckInTitle": "Prayer Companion",
+  "notificationCompanionCheckInBody": "Did you pray {prayer}?",
+  "@notificationCompanionCheckInBody": {
+    "placeholders": {
+      "prayer": {}
+    }
+  },
+  "notificationCompanionFollowUpTitle": "Prayer Companion",
+  "notificationCompanionFollowUpBody": "A gentle reminder: did you pray {prayer}?",
+  "@notificationCompanionFollowUpBody": {
+    "placeholders": {
+      "prayer": {}
+    }
+  },
 
   "notificationDailyAyahBody": "Read your daily Wird from the Holy Quran",
   "notificationMorningAzkarTitle": "Morning Azkar ☀️",

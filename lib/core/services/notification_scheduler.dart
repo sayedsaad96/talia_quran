@@ -8,6 +8,9 @@ import '../../features/progress/domain/repositories/progress_repository.dart';
 import '../../features/home/domain/usecases/get_ayah_of_day_usecase.dart';
 import '../../features/khatmah/domain/entities/khatmah_plan.dart';
 import '../../features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
+import '../../features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
+import '../../features/prayer_companion/domain/entities/prayer_companion.dart';
+import '../../features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
 
 import 'daily_ayah_notification_target.dart';
 import 'notification_service.dart';
@@ -62,6 +65,8 @@ class NotificationScheduler {
   final StreakRiskEvaluator _streakRiskEvaluator;
   final PrayerTimesService? _prayerTimesService;
   final GetActiveKhatmahUsecase? _getActiveKhatmah;
+  final PrayerCompanionPlanner? _prayerCompanionPlanner;
+  final PrayerCompanionPreferences? _prayerCompanionPreferences;
 
   NotificationScheduler(
     this._service, {
@@ -70,11 +75,15 @@ class NotificationScheduler {
     StreakRiskEvaluator streakRiskEvaluator = const StreakRiskEvaluator(),
     PrayerTimesService? prayerTimesService,
     GetActiveKhatmahUsecase? getActiveKhatmah,
+    PrayerCompanionPlanner? prayerCompanionPlanner,
+    PrayerCompanionPreferences? prayerCompanionPreferences,
   }) : _kidsSessionDatesLoader = kidsSessionDatesLoader,
        _getAyahOfDay = getAyahOfDay,
        _streakRiskEvaluator = streakRiskEvaluator,
        _prayerTimesService = prayerTimesService,
-       _getActiveKhatmah = getActiveKhatmah;
+       _getActiveKhatmah = getActiveKhatmah,
+       _prayerCompanionPlanner = prayerCompanionPlanner,
+       _prayerCompanionPreferences = prayerCompanionPreferences;
 
   String? _lastRollingDateKey;
 
@@ -563,6 +572,11 @@ class NotificationScheduler {
       await _service.cancelPrayerTimesReminders();
     }
 
+    // Prayer Companion (additive, after the legacy prayer block): shares the
+    // same readiness check so a city/method reset cancels Companion events
+    // on the same refresh path.
+    await _refreshPrayerCompanion(l10n, now, prayerService);
+
     if (shouldRefreshRolling) {
       _lastRollingDateKey = todayKey;
     }
@@ -586,6 +600,77 @@ class NotificationScheduler {
       }
     } else {
       await _service.cancelSmartReminder();
+    }
+  }
+
+  /// Schedules (or cancels) the opt-in Prayer Companion reminders.
+  ///
+  /// Mirrors the legacy prayer block's readiness check: when the Companion
+  /// is disabled, its dependencies are absent, or no city/method has been
+  /// persisted, only the Companion namespace (2100–2129) is cancelled —
+  /// legacy prayer notifications are never touched here.
+  Future<void> _refreshPrayerCompanion(
+    AppLocalizations l10n,
+    DateTime now,
+    PrayerTimesService? prayerService,
+  ) async {
+    try {
+      final planner = _prayerCompanionPlanner;
+      final settings = _prayerCompanionPreferences?.read();
+      if (planner == null ||
+          settings == null ||
+          !settings.enabled ||
+          prayerService == null ||
+          !prayerService.isReadyForNotificationScheduling) {
+        await _service.cancelPrayerCompanionReminders();
+        return;
+      }
+      final reminders = await planner.plan(now: now);
+      final isArabic = l10n.localeName.startsWith('ar');
+      String prayerNameFor(PrayerKey key) => switch (key) {
+        PrayerKey.fajr => isArabic ? 'الفجر' : 'Fajr',
+        PrayerKey.dhuhr => isArabic ? 'الظهر' : 'Dhuhr',
+        PrayerKey.asr => isArabic ? 'العصر' : 'Asr',
+        PrayerKey.maghrib => isArabic ? 'المغرب' : 'Maghrib',
+        PrayerKey.isha => isArabic ? 'العشاء' : 'Isha',
+      };
+      await _service.schedulePrayerCompanionReminders(
+        reminders: reminders,
+        titleFor: (reminder) => switch (reminder.kind) {
+          PrayerCompanionNotificationKind.preparation =>
+            l10n.notificationCompanionPreparationTitle,
+          PrayerCompanionNotificationKind.checkIn =>
+            l10n.notificationCompanionCheckInTitle,
+          PrayerCompanionNotificationKind.followUp =>
+            l10n.notificationCompanionFollowUpTitle,
+        },
+        bodyFor: (reminder) {
+          final prayerName = prayerNameFor(reminder.occurrence.prayerKey);
+          return switch (reminder.kind) {
+            PrayerCompanionNotificationKind.preparation =>
+              l10n.notificationCompanionPreparationBody(prayerName),
+            PrayerCompanionNotificationKind.checkIn =>
+              l10n.notificationCompanionCheckInBody(prayerName),
+            PrayerCompanionNotificationKind.followUp =>
+              l10n.notificationCompanionFollowUpBody(prayerName),
+          };
+        },
+      );
+    } catch (e, stack) {
+      TaliaLogger.w(
+        'Failed to refresh prayer companion notifications',
+        e,
+        stack,
+      );
+      try {
+        await _service.cancelPrayerCompanionReminders();
+      } catch (cancelError, cancelStack) {
+        TaliaLogger.w(
+          'Failed to cancel prayer companion notifications',
+          cancelError,
+          cancelStack,
+        );
+      }
     }
   }
 
