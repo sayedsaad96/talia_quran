@@ -8,6 +8,8 @@ import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../theme/home_skin.dart';
 import 'glass_panel.dart';
+import 'islamic_pattern_painter.dart';
+import 'spring_tap.dart';
 
 class HomeStartKhatmahCard extends StatelessWidget {
   const HomeStartKhatmahCard({
@@ -34,65 +36,72 @@ class HomeStartKhatmahCard extends StatelessWidget {
       child: GlassPanel(
         skin: skin,
         padding: EdgeInsets.zero,
-        gradient: skin.heroGradient,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        gradient: skin.meshGradient,
+        child: SpringTap(
           onTap: handleStart,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.cardPadding),
-            child: MediaQuery.withClampedTextScaling(
-              maxScaleFactor: 1.4,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+          child: Stack(
+            children: [
+              IslamicPatternOverlay(
+                color: skin.textOnHero,
+                opacity: skin.heroCardTextureOpacity,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.cardPadding),
+                child: MediaQuery.withClampedTextScaling(
+                  maxScaleFactor: 1.4,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: skin.gold.withValues(alpha: 0.2),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.auto_stories_rounded,
-                          size: 20,
-                          color: skin.gold,
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: skin.gold.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.auto_stories_rounded,
+                              size: 20,
+                              color: skin.gold,
+                            ),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              headline,
+                              style: AppTypography.titleMedium.copyWith(
+                                color: skin.textOnHero,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(
+                        subtitle,
+                        style: AppTypography.bodySmall.copyWith(
+                          color: skin.textOnHeroMuted,
+                          height: 1.4,
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          headline,
-                          style: AppTypography.titleMedium.copyWith(
-                            color: skin.textOnHero,
-                            fontWeight: FontWeight.w800,
-                          ),
+                      const SizedBox(height: AppSpacing.md),
+                      Align(
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: AppButton(
+                          label: cta,
+                          size: AppButtonSize.small,
+                          variant: AppButtonVariant.goldPrimary,
+                          onPressed: handleStart,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    subtitle,
-                    style: AppTypography.bodySmall.copyWith(
-                      color: skin.textOnHeroMuted,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: AppButton(
-                      label: cta,
-                      size: AppButtonSize.small,
-                      variant: AppButtonVariant.goldPrimary,
-                      onPressed: handleStart,
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),

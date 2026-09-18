@@ -7,6 +7,8 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/continue_recitation.dart';
 import '../theme/home_skin.dart';
+import 'islamic_pattern_painter.dart';
+import 'spring_tap.dart';
 
 class HomeContinueCard extends StatelessWidget {
   const HomeContinueCard({
@@ -44,12 +46,11 @@ class HomeContinueCard extends StatelessWidget {
       label: '${context.l10n.homeContinueRecitation}. $name',
       child: Material(
         color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+        child: SpringTap(
           onTap: () => context.push(recitation.route),
           child: Ink(
             decoration: BoxDecoration(
-              gradient: skin.heroGradient,
+              gradient: skin.meshGradient,
               borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
               boxShadow: skin.shadow,
             ),
@@ -75,6 +76,10 @@ class HomeContinueCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  ),
+                  IslamicPatternOverlay(
+                    color: skin.textOnHero,
+                    opacity: skin.heroCardTextureOpacity,
                   ),
                   Padding(
                     padding: const EdgeInsets.all(AppSpacing.cardPadding),
@@ -114,9 +119,10 @@ class HomeContinueCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.displaySmall.copyWith(
-                            fontSize: 26,
+                            fontSize: 30,
+                            fontWeight: FontWeight.w700,
                             color: skin.textOnHero,
-                            fontWeight: FontWeight.w800,
+                            height: 1.3,
                           ),
                         ),
                         if (range != null)
@@ -125,7 +131,7 @@ class HomeContinueCard extends StatelessWidget {
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: AppTypography.bodySmall.copyWith(
-                              color: skin.textOnHeroMuted,
+                              color: skin.gold,
                             ),
                           ),
                         const SizedBox(height: AppSpacing.md),
