@@ -68,7 +68,7 @@ class IslamicPatternOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (opacity <= 0) return const SizedBox.shrink();
+    final textDirection = Directionality.maybeOf(context) ?? TextDirection.rtl;
     return Positioned.fill(
       child: IgnorePointer(
         child: ClipRect(
@@ -81,7 +81,7 @@ class IslamicPatternOverlay extends StatelessWidget {
                   begin: AlignmentDirectional.centerEnd,
                   end: AlignmentDirectional.centerStart,
                   colors: [Colors.white, Colors.transparent],
-                ).createShader(bounds),
+                ).createShader(bounds, textDirection: textDirection),
                 blendMode: BlendMode.dstIn,
                 child: CustomPaint(
                   painter: IslamicPatternPainter(
