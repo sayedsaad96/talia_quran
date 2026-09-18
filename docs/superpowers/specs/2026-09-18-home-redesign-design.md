@@ -47,6 +47,11 @@
 * **Removed**: `HomeQuickAccess` (Bottom shortcuts to Surahs/Index).
 * *Reasoning*: These destinations belong in the Bottom Navigation Bar. Removing them from the Home Page enforces focus on the user's primary daily habit (The Hero Action).
 
+### 3.5. Motion & Animation (الحيوية والتفاعل)
+* **Staggered Entry (دخول متدرج)**: Widgets on the home page will cascade in with slight delays and a soft vertical translation (fade + slide up) upon loading, making the page feel organic and avoiding abrupt UI popping.
+* **Spring Physics (فيزياء مرنة)**: All interactive surfaces, particularly the Hero Card and Bento grids, will utilize smooth spring-based animations for touch feedback (e.g., smoothly scaling to 0.98 on press) rather than rigid, instant transitions.
+* **Ambient Breathing (توهج حيوي)**: Gentle, continuous ambient motion, such as a soft pulse on the "Next Prayer" indicator or the Khatmah progression ring, ensuring the interface feels premium, alive, and responsive to the user.
+
 ## 4. Technical Constraints
 * **Stack**: Flutter / Dart.
 * **Styling**: Update existing `HomeSkin` to support the new glass materials and mesh gradients. Avoid creating parallel component trees where possible; modify existing widgets (`_TopRow`, `HomePrayerTimeline`, `HomeContinueCard`) to adopt the new UI constraints.
