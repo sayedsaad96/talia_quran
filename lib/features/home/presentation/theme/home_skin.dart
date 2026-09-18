@@ -28,6 +28,11 @@ class HomeSkin {
     required this.progressTrack,
     required this.heroGradient,
     required this.shadow,
+    required this.meshGradient,
+    required this.editorialBackground,
+    required this.consolidatedBadgeFill,
+    required this.consolidatedBadgeBorder,
+    required this.heroCardTextureOpacity,
   });
 
   final bool isDark;
@@ -58,6 +63,27 @@ class HomeSkin {
   final Color progressTrack;
   final LinearGradient heroGradient;
   final List<BoxShadow> shadow;
+
+  /// Mesh-like gradient for the Hero Card background.
+  final LinearGradient meshGradient;
+
+  /// Subtle background for the editorial Ayah of the Day section.
+  final Color editorialBackground;
+
+  /// Glass fill for the consolidated status badge in the header.
+  final Color consolidatedBadgeFill;
+
+  /// Border for the consolidated status badge.
+  final Color consolidatedBadgeBorder;
+
+  /// Opacity for the faint Islamic geometric pattern overlay on Hero Card.
+  final double heroCardTextureOpacity;
+
+  /// Unified spring animation curve for tactile interactions.
+  static const Curve springCurve = Curves.easeOutBack;
+
+  /// Spring animation duration for tactile press feedback.
+  static const Duration springDuration = Duration(milliseconds: 200);
 
   static const backgroundAsset = 'assets/images/mosque_bg.png';
   static const logoAsset = 'assets/images/logo_new_padded.png';
@@ -111,6 +137,16 @@ class HomeSkin {
             offset: const Offset(0, 10),
           ),
         ],
+        meshGradient: const LinearGradient(
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
+          colors: [Color(0xFF12655A), Color(0xFF0A3D36), Color(0xFF06312B)],
+          stops: [0.0, 0.5, 1.0],
+        ),
+        editorialBackground: Colors.white.withValues(alpha: 0.03),
+        consolidatedBadgeFill: Colors.white.withValues(alpha: 0.12),
+        consolidatedBadgeBorder: Colors.white.withValues(alpha: 0.18),
+        heroCardTextureOpacity: 0.06,
       );
     }
     return HomeSkin(
@@ -142,6 +178,16 @@ class HomeSkin {
           offset: const Offset(0, 6),
         ),
       ],
+      meshGradient: const LinearGradient(
+        begin: AlignmentDirectional.topStart,
+        end: AlignmentDirectional.bottomEnd,
+        colors: [Color(0xFF0D5C53), Color(0xFF094A43), Color(0xFF06332E)],
+        stops: [0.0, 0.5, 1.0],
+      ),
+      editorialBackground: AppColors.primary.withValues(alpha: 0.03),
+      consolidatedBadgeFill: AppColors.primary.withValues(alpha: 0.08),
+      consolidatedBadgeBorder: AppColors.primary.withValues(alpha: 0.14),
+      heroCardTextureOpacity: 0.04,
     );
   }
 }
