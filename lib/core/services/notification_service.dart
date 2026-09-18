@@ -160,6 +160,10 @@ class TaliaNotificationService {
   /// Delivers the RAW notification response (payload + action id). Companion
   /// `pc1|…` payloads and unknown actions are forwarded here untouched; legacy
   /// route navigation keeps flowing through [onPayloadReceived].
+  ///
+  /// WARNING: legacy routing must treat companion (`pc1`) payloads as a no-op,
+  /// and companion action ids must NOT be registered in
+  /// `LaunchDestination.mapNotificationAction`, to avoid double-handling.
   void Function(NotificationResponseEvent event)? onNotificationResponse;
 
   /// Test seam: the real platform check (`Platform.isAndroid || isIOS`) is
@@ -997,10 +1001,11 @@ class TaliaNotificationService {
     );
   }
 
-  /// Companion check-in / preparation / follow-up presentation. Reuses the
-  /// existing prayer channel and color so the visual treatment matches the
-  /// prayer reminders, but attaches the companion actions/category — the
-  /// legacy `prayer_category` actions stay untouched.
+  /// Companion check-in / preparation / follow-up presentation. Uses a NEW,
+  /// parallel Android channel (`talia_prayer_companion`) alongside the prayer
+  /// alerts channel, with the same color and visual treatment as the prayer
+  /// reminders, but attaches the companion actions/category — the legacy
+  /// `prayer_category` actions stay untouched.
   NotificationDetails get _prayerCompanionNotificationDetails =>
       NotificationDetails(
         android: AndroidNotificationDetails(
@@ -1782,6 +1787,14 @@ class TaliaNotificationService {
     // Safety net for background isolates where tz.local may not be configured.
     _ensureLocalLocationReady();
     for (final reminder in upcoming.take(availableSlots)) {
+      // Defense-in-depth: the planner owns ID assignment, but never schedule
+      // outside the 2100–2129 companion namespace.
+      assert(
+        reminder.id >= companionPlannedBaseId &&
+            reminder.id < companionFollowUpBaseId + companionFollowUpMaxCount,
+        'Companion reminder id ${reminder.id} is outside the 2100–2129 '
+        'companion namespace',
+      );
       await _plugin.zonedSchedule(
         id: reminder.id,
         title: titleFor(reminder),

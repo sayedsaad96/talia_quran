@@ -67,6 +67,25 @@ void main() {
         source,
       );
     });
+
+    test('round-trips unicode owner ids and owner ids containing =', () {
+      for (final ownerId in ['مستخدم=1', 'owner==']) {
+        final source = PrayerCompanionNotificationIntent(
+          occurrence: PrayerOccurrence(
+            ownerId: ownerId,
+            localDate: DateTime(2026, 9, 20),
+            prayerKey: PrayerKey.asr,
+            scheduledAt: DateTime(2026, 9, 20, 15, 32),
+          ),
+          kind: PrayerCompanionNotificationKind.checkIn,
+        );
+
+        expect(
+          PrayerCompanionNotificationIntent.tryParse(source.encode()),
+          source,
+        );
+      }
+    });
   });
 
   group('tryParse strict validation', () {

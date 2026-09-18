@@ -201,6 +201,7 @@ void main() {
             'action_prayer_companion_remind_later',
           ]),
         );
+        expect(android.actions?.every((a) => a.showsUserInterface), isTrue);
         expect(details.iOS?.categoryIdentifier, 'prayer_companion_category');
       },
     );
