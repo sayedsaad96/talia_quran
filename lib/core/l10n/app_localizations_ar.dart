@@ -1587,6 +1587,79 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingStartJourney => 'ابدأ رحلتك';
 
   @override
+  String get onboardingSlide1Title => 'مصحفك اليومي بتلاوة وتدبر';
+
+  @override
+  String get onboardingSlide1Subtitle =>
+      'قراءة مصحفية أصيلة، خطوط عثمانية مريحة للعين، واستماع لكبار القراء مع التفسير الميسر.';
+
+  @override
+  String get onboardingBentoMushafSurah => 'سورة الفاتحة';
+
+  @override
+  String get onboardingBentoMushafAyah =>
+      'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ';
+
+  @override
+  String get onboardingBentoListeningTitle => 'تلاوات متقنة';
+
+  @override
+  String get onboardingBentoListeningDesc => 'استماع وتكرار صوتي';
+
+  @override
+  String get onboardingBentoTafsirTitle => 'تفسير ميسر';
+
+  @override
+  String get onboardingBentoTafsirDesc => 'معاني الآيات فوراً';
+
+  @override
+  String get onboardingSlide2Title => 'احفظ القرآن ورسّخه بذكاء';
+
+  @override
+  String get onboardingSlide2Subtitle =>
+      'تقنيات تكرار ذكية ومتباعدة تقيس قوة حفظك وتمنع النسيان قبل وقوعه.';
+
+  @override
+  String get onboardingBentoMasteryTitle => 'نسبة الإتقان والتثبيت';
+
+  @override
+  String get onboardingBentoMasteryValue => '٩٨٪ متقن';
+
+  @override
+  String get onboardingBentoActiveRecallTitle => 'استرجاع نشط';
+
+  @override
+  String get onboardingBentoActiveRecallDesc => 'إخفاء الكلمات للاختبار الذاتي';
+
+  @override
+  String get onboardingBentoReviewScheduleTitle => 'مراجعة ذكية';
+
+  @override
+  String get onboardingBentoReviewScheduleDesc => 'تذكير تلقائي لمنع النسيان';
+
+  @override
+  String get onboardingSlide3Title => 'ورد مستمر وتجربة لكل العائلة';
+
+  @override
+  String get onboardingSlide3Subtitle =>
+      'ابنِ عادة قرآنية يومية لا تنقطع، مع مسار تفاعلي ممتع مخصص للأطفال، وبدون إنترنت.';
+
+  @override
+  String get onboardingBentoStreakTitle => 'سلسلة الورد اليومي';
+
+  @override
+  String get onboardingBentoStreakDays => '٧ أيام متواصلة 🔥';
+
+  @override
+  String get onboardingBentoOfflineBadge => 'يعمل ١٠٠٪ دون إنترنت';
+
+  @override
+  String get onboardingBentoKidsTeaserTitle => 'مسار براعم تالية';
+
+  @override
+  String get onboardingBentoKidsTeaserDesc => 'نجوم، أصوات ومكافآت محفزة';
+
+  @override
   String get onboardingPillarReadTitle => 'تلاوة ومصحف أصيل';
 
   @override
@@ -4714,7 +4787,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get khatmahDedicationPreference =>
-      'إهداء الختمة متاح للحي والمتوفى، والمتوفى أولى؛ وفق مراجعة شرعية نقلها صاحب التطبيق.';
+      'إهداء الختمة متاح للحي والمتوفى، والمتوفى أولى، والله أعلى وأعلم.';
 
   @override
   String get khatmahWriteYourOwnNote => 'اكتب ملاحظتك الشخصية هنا';

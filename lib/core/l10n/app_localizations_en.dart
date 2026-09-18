@@ -1595,6 +1595,79 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingStartJourney => 'Start Your Journey';
 
   @override
+  String get onboardingSlide1Title => 'Your Daily Quran Sanctuary';
+
+  @override
+  String get onboardingSlide1Subtitle =>
+      'Authentic Uthmani Mushaf, eye-comfort reading, recitations from renowned reciters, and easy tafsir.';
+
+  @override
+  String get onboardingBentoMushafSurah => 'Surat Al-Fatihah';
+
+  @override
+  String get onboardingBentoMushafAyah =>
+      'All praise is for Allah—Lord of all worlds';
+
+  @override
+  String get onboardingBentoListeningTitle => 'Masterful Recitation';
+
+  @override
+  String get onboardingBentoListeningDesc => 'Audio listening & repeat';
+
+  @override
+  String get onboardingBentoTafsirTitle => 'Easy Tafsir';
+
+  @override
+  String get onboardingBentoTafsirDesc => 'Instant word meanings';
+
+  @override
+  String get onboardingSlide2Title => 'Smart Memorization & Mastery';
+
+  @override
+  String get onboardingSlide2Subtitle =>
+      'Intelligent spaced repetition algorithms that track memory strength and prevent forgetting.';
+
+  @override
+  String get onboardingBentoMasteryTitle => 'Mastery & Retention';
+
+  @override
+  String get onboardingBentoMasteryValue => '98% Mastered';
+
+  @override
+  String get onboardingBentoActiveRecallTitle => 'Active Recall';
+
+  @override
+  String get onboardingBentoActiveRecallDesc => 'Hide words for self-testing';
+
+  @override
+  String get onboardingBentoReviewScheduleTitle => 'Smart Review';
+
+  @override
+  String get onboardingBentoReviewScheduleDesc => 'Timely memory refresh';
+
+  @override
+  String get onboardingSlide3Title => 'Daily Habit & Family Journeys';
+
+  @override
+  String get onboardingSlide3Subtitle =>
+      'Build an unbreakable daily Quran habit, with a fun interactive kids path, completely offline.';
+
+  @override
+  String get onboardingBentoStreakTitle => 'Daily Streak';
+
+  @override
+  String get onboardingBentoStreakDays => '7 Days Streak 🔥';
+
+  @override
+  String get onboardingBentoOfflineBadge => 'Works 100% Offline';
+
+  @override
+  String get onboardingBentoKidsTeaserTitle => 'Talia Kids Journey';
+
+  @override
+  String get onboardingBentoKidsTeaserDesc => 'Stars, audios & joyful rewards';
+
+  @override
   String get onboardingPillarReadTitle => 'Authentic Mushaf Reading';
 
   @override
@@ -4661,7 +4734,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get khatmahDedicationPreference =>
-      'Dedication is available for living and deceased recipients. Deceased recipients are preferred, based on scholarly consultation reported by the app owner.';
+      'Dedication is available for living and deceased recipients. Deceased recipients are preferred, and Allah knows best.';
 
   @override
   String get khatmahWriteYourOwnNote => 'Write your personal note here';

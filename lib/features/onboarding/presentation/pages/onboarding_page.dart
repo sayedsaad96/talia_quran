@@ -31,16 +31,17 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/onboarding_cubit.dart';
 import '../widgets/experience_fork_view.dart';
+import '../widgets/onboarding_cta.dart';
+import '../widgets/onboarding_habit_bento_view.dart';
+import '../widgets/onboarding_memorize_bento_view.dart';
+import '../widgets/onboarding_mushaf_bento_view.dart';
 import '../widgets/onboarding_night_scene.dart';
-import '../widgets/welcome_step_view.dart';
 
-/// The Night Journey — a two-step first-run flow on a committed night
-/// ground:
-/// 1. The Horizon: welcome beneath the golden mihrab sanctuary.
-/// 2. The Fork: choose the adult sanctuary or the child journey, then enter.
-///
-/// Cubit behavior, persisted keys, and destinations are unchanged from the
-/// incumbent flow; only the world the visitor walks through is new.
+/// The Night Journey — a four-step first-run flow on a committed night ground:
+/// 1. Mushaf & Recitation (Bento View)
+/// 2. Smart Memorization & Mastery (Bento View)
+/// 3. Daily Habit, Offline & Kids (Bento View)
+/// 4. The Fork: choose the adult sanctuary or the child journey, then enter.
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});
 
@@ -84,7 +85,7 @@ class _OnboardingViewState extends State<_OnboardingView> {
     context.read<OnboardingCubit>().goToStep(step);
     _pageController.animateToPage(
       step,
-      duration: const Duration(milliseconds: 480),
+      duration: const Duration(milliseconds: 450),
       curve: Curves.easeInOutCubic,
     );
   }
@@ -92,6 +93,7 @@ class _OnboardingViewState extends State<_OnboardingView> {
   @override
   Widget build(BuildContext context) {
     final page = _page;
+    final l10n = context.l10n;
 
     return BlocConsumer<OnboardingCubit, OnboardingState>(
       listenWhen: (previous, current) =>
@@ -135,11 +137,39 @@ class _OnboardingViewState extends State<_OnboardingView> {
                             onPageChanged: (step) =>
                                 context.read<OnboardingCubit>().goToStep(step),
                             children: [
-                              WelcomeStepView(onStart: () => _goToStep(1)),
+                              const OnboardingMushafBentoView(),
+                              const OnboardingMemorizeBentoView(),
+                              const OnboardingHabitBentoView(),
                               ExperienceForkView(state: state),
                             ],
                           ),
                         ),
+                        if (state.currentStep < 3)
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpacing.pagePadding,
+                              AppSpacing.xs,
+                              AppSpacing.pagePadding,
+                              AppSpacing.md,
+                            ),
+                            child: Row(
+                              children: [
+                                _AnimatedStepDots(
+                                  currentStep: state.currentStep,
+                                  onDotTap: _goToStep,
+                                ),
+                                const SizedBox(width: AppSpacing.md),
+                                Expanded(
+                                  child: OnboardingPrimaryCta(
+                                    label: state.currentStep == 2
+                                        ? l10n.onboardingStartJourney
+                                        : l10n.next,
+                                    onTap: () => _goToStep(state.currentStep + 1),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -220,8 +250,7 @@ class _JourneyTopBar extends StatelessWidget {
   }
 }
 
-/// Two waypoints of the journey — the horizon and the fork — joined by a
-/// path that fills with gold as the visitor climbs.
+/// Waypoints of the journey joined by a path that fills with gold as the visitor climbs.
 class _JourneyProgress extends StatelessWidget {
   const _JourneyProgress({required this.currentStep});
 
@@ -231,7 +260,7 @@ class _JourneyProgress extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: SizedBox(
-        width: 84,
+        width: 128,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(OnboardingState.stepCount, (index) {
@@ -260,6 +289,57 @@ class _JourneyProgress extends StatelessWidget {
           }),
         ),
       ),
+    );
+  }
+}
+
+/// Interactive animated step indicator capsules at the bottom of the slides.
+class _AnimatedStepDots extends StatelessWidget {
+  const _AnimatedStepDots({
+    required this.currentStep,
+    required this.onDotTap,
+  });
+
+  final int currentStep;
+  final ValueChanged<int> onDotTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(OnboardingState.stepCount, (index) {
+        final isCurrent = index == currentStep;
+        final isPassed = index < currentStep;
+
+        return GestureDetector(
+          onTap: () => onDotTap(index),
+          behavior: HitTestBehavior.opaque,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 260),
+            curve: Curves.easeOutCubic,
+            margin: const EdgeInsets.symmetric(horizontal: 3),
+            width: isCurrent ? 24 : 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: isCurrent
+                  ? AppColors.goldLight
+                  : (isPassed
+                      ? AppColors.primaryLight.withValues(alpha: 0.6)
+                      : AppColors.darkDivider),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+              boxShadow: isCurrent
+                  ? [
+                      BoxShadow(
+                        color: AppColors.gold.withValues(alpha: 0.4),
+                        blurRadius: 6,
+                        offset: const Offset(0, 1),
+                      ),
+                    ]
+                  : null,
+            ),
+          ),
+        );
+      }),
     );
   }
 }

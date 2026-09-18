@@ -36,6 +36,18 @@ class OnboardingCubit extends Cubit<OnboardingState> {
     );
   }
 
+  void nextStep() {
+    if (state.currentStep < OnboardingState.stepCount - 1) {
+      goToStep(state.currentStep + 1);
+    }
+  }
+
+  void previousStep() {
+    if (state.currentStep > 0) {
+      goToStep(state.currentStep - 1);
+    }
+  }
+
   void selectUserType(OnboardingUserType userType) {
     final defaultGoal = userType == OnboardingUserType.child
         ? OnboardingGoal.childJourney

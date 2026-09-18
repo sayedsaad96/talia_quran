@@ -53,16 +53,24 @@ void main() {
     });
   });
 
-  group('Streamlined 2-step onboarding flow', () {
+  group('Modern 4-step Bento onboarding flow', () {
+    Future<void> navigateToFork(WidgetTester tester) async {
+      // Step 0: Mushaf Bento -> Next
+      await _tapVisible(tester, 'Next');
+      // Step 1: Memorization Bento -> Next
+      await _tapVisible(tester, 'Next');
+      // Step 2: Habit Bento -> Start Your Journey
+      await _tapVisible(tester, 'Start Your Journey');
+    }
+
     testWidgets(
       'adult guest flow routes directly to Home and saves preferences',
       (tester) async {
         final repo = await _registerCore();
         await _pumpOnboarding(tester);
 
-        // Step 1: Welcome -> Start Journey
-        await _tapVisible(tester, 'Start Your Journey');
-        // Step 2: Adult is selected by default -> Continue as guest
+        await navigateToFork(tester);
+        // Step 3: Adult is selected by default -> Continue as guest
         await _tapVisible(tester, 'Continue as guest');
         await tester.pumpAndSettle();
 
@@ -78,7 +86,7 @@ void main() {
       final repo = await _registerCore();
       await _pumpOnboarding(tester);
 
-      await _tapVisible(tester, 'Start Your Journey');
+      await navigateToFork(tester);
       await _tapVisible(tester, 'Sign in / Create account');
       await tester.pumpAndSettle();
 
@@ -93,7 +101,7 @@ void main() {
         final repo = await _registerCore();
         await _pumpOnboarding(tester);
 
-        await _tapVisible(tester, 'Start Your Journey');
+        await navigateToFork(tester);
         await _tapVisible(tester, 'Kids & Buds Journey');
         await _tapVisible(tester, 'Continue as guest');
         await tester.pumpAndSettle();
@@ -110,7 +118,7 @@ void main() {
       final repo = await _registerCore();
       await _pumpOnboarding(tester);
 
-      await _tapVisible(tester, 'Start Your Journey');
+      await navigateToFork(tester);
       await _tapVisible(tester, 'Kids & Buds Journey');
       await _tapVisible(tester, 'Sign in / Create account');
       await tester.pumpAndSettle();
@@ -138,7 +146,7 @@ void main() {
       await _registerCore();
       await _pumpOnboarding(tester);
 
-      final context = tester.element(find.text('Welcome to Talia'));
+      final context = tester.element(find.text('Your Daily Quran Sanctuary'));
       expect(Directionality.of(context), TextDirection.ltr);
     });
 
@@ -146,64 +154,56 @@ void main() {
       await _registerCore();
       await _pumpOnboarding(tester, locale: const Locale('ar'));
 
-      final context = tester.element(find.text('مرحباً بك في تالية'));
+      final context = tester.element(find.text('مصحفك اليومي بتلاوة وتدبر'));
       expect(Directionality.of(context), TextDirection.rtl);
     });
 
     testWidgets('dark and light onboarding smoke test', (tester) async {
       await _registerCore();
       await _pumpOnboarding(tester, themeMode: ThemeMode.dark);
-      expect(find.text('Welcome to Talia'), findsOneWidget);
+      expect(find.text('Your Daily Quran Sanctuary'), findsOneWidget);
 
       await _pumpOnboarding(tester, themeMode: ThemeMode.light);
-      expect(find.text('Welcome to Talia'), findsOneWidget);
+      expect(find.text('Your Daily Quran Sanctuary'), findsOneWidget);
     });
 
-    testWidgets('welcome uses the hero artwork as the only brand mark', (
+    testWidgets('first slide displays Mushaf sanctuary and recitation bento cards', (
       tester,
     ) async {
       await _registerCore();
       await _pumpOnboarding(tester);
 
-      expect(
-        find.image(const AssetImage('assets/images/logo_new_padded.png')),
-        findsNothing,
-      );
-      expect(
-        find.image(const AssetImage('assets/images/onboarding/splash_new.png')),
-        findsOneWidget,
-      );
+      expect(find.text('Surat Al-Fatihah'), findsOneWidget);
+      expect(find.text('Masterful Recitation'), findsOneWidget);
+      expect(find.text('Easy Tafsir'), findsOneWidget);
     });
 
-    testWidgets('welcome copy stays visually separated from the hero artwork', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(390, 844);
-      tester.view.devicePixelRatio = 1;
-      addTearDown(tester.view.reset);
-
-      await _registerCore();
-      await _pumpOnboarding(tester);
-
-      final heroBottom = tester
-          .getRect(
-            find.image(
-              const AssetImage('assets/images/onboarding/splash_new.png'),
-            ),
-          )
-          .bottom;
-      final titleTop = tester.getRect(find.text('Welcome to Talia')).top;
-
-      expect(titleTop - heroBottom, greaterThanOrEqualTo(16));
-    });
-
-    testWidgets('fork shows living previews, trust line, and two waypoints', (
+    testWidgets('second and third slides showcase smart memorization and habit continuity', (
       tester,
     ) async {
       await _registerCore();
       await _pumpOnboarding(tester);
 
-      await _tapVisible(tester, 'Start Your Journey');
+      // Advance to Slide 1: Memorization
+      await _tapVisible(tester, 'Next');
+      expect(find.text('Smart Memorization & Mastery'), findsOneWidget);
+      expect(find.text('Mastery & Retention'), findsOneWidget);
+      expect(find.text('Active Recall'), findsOneWidget);
+
+      // Advance to Slide 2: Habit
+      await _tapVisible(tester, 'Next');
+      expect(find.text('Daily Habit & Family Journeys'), findsOneWidget);
+      expect(find.text('Daily Streak'), findsOneWidget);
+      expect(find.text('Talia Kids Journey'), findsOneWidget);
+    });
+
+    testWidgets('fork shows living previews, trust line, and waypoints', (
+      tester,
+    ) async {
+      await _registerCore();
+      await _pumpOnboarding(tester);
+
+      await navigateToFork(tester);
 
       // The mushaf window and the child night window prove both worlds.
       expect(find.text('وَرَتِّلِ ٱلْقُرْآنَ تَرْتِيلًا'), findsOneWidget);
@@ -225,19 +225,19 @@ void main() {
       expect(find.text('Kids & Buds Journey'), findsOneWidget);
     });
 
-    testWidgets('back button returns from the fork to the horizon', (
+    testWidgets('back button returns from the fork to previous bento slide', (
       tester,
     ) async {
       await _registerCore();
       await _pumpOnboarding(tester);
 
-      await _tapVisible(tester, 'Start Your Journey');
-      expect(find.text('Welcome to Talia'), findsNothing);
+      await navigateToFork(tester);
+      expect(find.text('Daily Habit & Family Journeys'), findsNothing);
 
       await tester.tap(find.byTooltip('Previous'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Welcome to Talia'), findsOneWidget);
+      expect(find.text('Daily Habit & Family Journeys'), findsOneWidget);
     });
 
     testWidgets('swiping the PageView keeps the cubit step in sync', (
@@ -249,8 +249,7 @@ void main() {
       await tester.fling(find.byType(PageView), const Offset(-400, 0), 800);
       await tester.pumpAndSettle();
 
-      expect(find.text('Choose Your Experience'), findsOneWidget);
-      // Step synced: the back affordance appeared with the fork.
+      expect(find.text('Smart Memorization & Mastery'), findsOneWidget);
       expect(find.byTooltip('Previous'), findsOneWidget);
     });
 
@@ -260,7 +259,7 @@ void main() {
       final repo = await _registerCore();
       await _pumpOnboarding(tester);
 
-      await _tapVisible(tester, 'Start Your Journey');
+      await navigateToFork(tester);
       await _tapVisible(tester, 'Kids & Buds Journey');
 
       repo.failNextSelect = StateError('disk full');

@@ -40,7 +40,7 @@ class OnboardingState extends Equatable {
     this.errorMessage,
   });
 
-  static const stepCount = 2;
+  static const stepCount = 4;
 
   final OnboardingUserType selectedUserType;
   final OnboardingGoal selectedGoal;
@@ -52,6 +52,8 @@ class OnboardingState extends Equatable {
 
   bool get isChild => selectedUserType == OnboardingUserType.child;
   bool get isLoading => status == OnboardingStatus.loading;
+  bool get isLastStep => currentStep == stepCount - 1;
+  bool get isFirstStep => currentStep == 0;
 
   OnboardingState copyWith({
     OnboardingUserType? selectedUserType,

@@ -3003,6 +3003,144 @@ abstract class AppLocalizations {
   /// **'ابدأ رحلتك'**
   String get onboardingStartJourney;
 
+  /// No description provided for @onboardingSlide1Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'مصحفك اليومي بتلاوة وتدبر'**
+  String get onboardingSlide1Title;
+
+  /// No description provided for @onboardingSlide1Subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'قراءة مصحفية أصيلة، خطوط عثمانية مريحة للعين، واستماع لكبار القراء مع التفسير الميسر.'**
+  String get onboardingSlide1Subtitle;
+
+  /// No description provided for @onboardingBentoMushafSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة الفاتحة'**
+  String get onboardingBentoMushafSurah;
+
+  /// No description provided for @onboardingBentoMushafAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ'**
+  String get onboardingBentoMushafAyah;
+
+  /// No description provided for @onboardingBentoListeningTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تلاوات متقنة'**
+  String get onboardingBentoListeningTitle;
+
+  /// No description provided for @onboardingBentoListeningDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'استماع وتكرار صوتي'**
+  String get onboardingBentoListeningDesc;
+
+  /// No description provided for @onboardingBentoTafsirTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفسير ميسر'**
+  String get onboardingBentoTafsirTitle;
+
+  /// No description provided for @onboardingBentoTafsirDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاني الآيات فوراً'**
+  String get onboardingBentoTafsirDesc;
+
+  /// No description provided for @onboardingSlide2Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ القرآن ورسّخه بذكاء'**
+  String get onboardingSlide2Title;
+
+  /// No description provided for @onboardingSlide2Subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تقنيات تكرار ذكية ومتباعدة تقيس قوة حفظك وتمنع النسيان قبل وقوعه.'**
+  String get onboardingSlide2Subtitle;
+
+  /// No description provided for @onboardingBentoMasteryTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسبة الإتقان والتثبيت'**
+  String get onboardingBentoMasteryTitle;
+
+  /// No description provided for @onboardingBentoMasteryValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'٩٨٪ متقن'**
+  String get onboardingBentoMasteryValue;
+
+  /// No description provided for @onboardingBentoActiveRecallTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استرجاع نشط'**
+  String get onboardingBentoActiveRecallTitle;
+
+  /// No description provided for @onboardingBentoActiveRecallDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'إخفاء الكلمات للاختبار الذاتي'**
+  String get onboardingBentoActiveRecallDesc;
+
+  /// No description provided for @onboardingBentoReviewScheduleTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة ذكية'**
+  String get onboardingBentoReviewScheduleTitle;
+
+  /// No description provided for @onboardingBentoReviewScheduleDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير تلقائي لمنع النسيان'**
+  String get onboardingBentoReviewScheduleDesc;
+
+  /// No description provided for @onboardingSlide3Title.
+  ///
+  /// In ar, this message translates to:
+  /// **'ورد مستمر وتجربة لكل العائلة'**
+  String get onboardingSlide3Title;
+
+  /// No description provided for @onboardingSlide3Subtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابنِ عادة قرآنية يومية لا تنقطع، مع مسار تفاعلي ممتع مخصص للأطفال، وبدون إنترنت.'**
+  String get onboardingSlide3Subtitle;
+
+  /// No description provided for @onboardingBentoStreakTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'سلسلة الورد اليومي'**
+  String get onboardingBentoStreakTitle;
+
+  /// No description provided for @onboardingBentoStreakDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'٧ أيام متواصلة 🔥'**
+  String get onboardingBentoStreakDays;
+
+  /// No description provided for @onboardingBentoOfflineBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'يعمل ١٠٠٪ دون إنترنت'**
+  String get onboardingBentoOfflineBadge;
+
+  /// No description provided for @onboardingBentoKidsTeaserTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسار براعم تالية'**
+  String get onboardingBentoKidsTeaserTitle;
+
+  /// No description provided for @onboardingBentoKidsTeaserDesc.
+  ///
+  /// In ar, this message translates to:
+  /// **'نجوم، أصوات ومكافآت محفزة'**
+  String get onboardingBentoKidsTeaserDesc;
+
   /// No description provided for @onboardingPillarReadTitle.
   ///
   /// In ar, this message translates to:
@@ -8398,7 +8536,7 @@ abstract class AppLocalizations {
   /// No description provided for @khatmahDedicationPreference.
   ///
   /// In ar, this message translates to:
-  /// **'إهداء الختمة متاح للحي والمتوفى، والمتوفى أولى؛ وفق مراجعة شرعية نقلها صاحب التطبيق.'**
+  /// **'إهداء الختمة متاح للحي والمتوفى، والمتوفى أولى، والله أعلى وأعلم.'**
   String get khatmahDedicationPreference;
 
   /// No description provided for @khatmahWriteYourOwnNote.

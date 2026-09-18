@@ -18,7 +18,7 @@ class OnboardingNightScene extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = page.clamp(0.0, 1.0);
+    final t = (page / 3.0).clamp(0.0, 1.0);
 
     return RepaintBoundary(
       child: Stack(
