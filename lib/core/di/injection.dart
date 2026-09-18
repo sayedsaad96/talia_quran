@@ -79,6 +79,11 @@ import '../../features/progress/domain/usecases/get_progress_usecase.dart';
 import '../../features/progress/domain/usecases/save_read_page_usecase.dart';
 import '../../features/progress/presentation/cubits/progress_cubit.dart';
 import '../../features/home/presentation/cubits/home_cubit.dart';
+import '../../features/prayer_companion/data/datasources/prayer_companion_local_datasource.dart';
+import '../../features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
+import '../../features/prayer_companion/data/models/prayer_companion_record_isar.dart';
+import '../../features/prayer_companion/data/repositories/prayer_companion_repository_impl.dart';
+import '../../features/prayer_companion/domain/repositories/prayer_companion_repository.dart';
 import '../../features/home/data/repositories/heatmap_repository_impl.dart';
 import '../../features/home/data/repositories/activity_feed_repository_impl.dart';
 import '../../features/home/data/models/activity_event_isar.dart';
@@ -161,6 +166,7 @@ Future<void> configureDependencies({bool background = false}) async {
     DailyActivityIsarSchema, // For yearly activity heatmap
     ActivityEventIsarSchema,
     CloudSyncQueueItemSchema,
+    PrayerCompanionRecordIsarSchema,
   ];
   final isar =
       Isar.getInstance() ?? await Isar.open(schemas, directory: dir.path);
@@ -332,6 +338,18 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<StreakRiskEvaluator>(
     () => const StreakRiskEvaluator(),
+  );
+  getIt.registerLazySingleton<PrayerCompanionPreferences>(
+    () => PrayerCompanionPreferences(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<PrayerCompanionLocalDatasource>(
+    () => PrayerCompanionLocalDatasource(getIt<Isar>()),
+  );
+  getIt.registerLazySingleton<PrayerCompanionRepository>(
+    () => PrayerCompanionRepositoryImpl(
+      getIt<PrayerCompanionLocalDatasource>(),
+      owner: getIt<RecordOwnerProvider>(),
+    ),
   );
   getIt.registerLazySingleton<PrayerTimesService>(
     () => PrayerTimesService(getIt<SharedPreferences>()),

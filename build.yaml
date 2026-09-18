@@ -13,6 +13,7 @@ targets:
           - lib/features/memorization_plus/data/models/isar_ayah_review_record.dart
           - lib/features/memorization_plus/data/models/isar_v2_session.dart
           - lib/features/memorization_plus/data/models/isar_review_evidence_event.dart
+          - lib/features/prayer_companion/data/models/prayer_companion_record_isar.dart
       mockito:mockBuilder:
         generate_for:
           - test/features/memorization_plus/presentation/cubits/memorization_session_cubit_test.dart
