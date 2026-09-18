@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' show Locale;
 
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -10,6 +11,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz_data;
 
+import '../../features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
+import '../../features/prayer_companion/notifications/prayer_companion_notification_intent.dart';
 import '../l10n/app_localizations.dart';
 import '../router/launch_destination.dart';
 import '../content/approved_azkar_content.dart';
@@ -115,6 +118,7 @@ List<int> notificationIdsToCancelForBudget({
 
   int priority(int id) {
     if (id >= 2000 && id < 2040) return 0; // prayer times: never evict
+    if (id >= 2100 && id < 2130) return 0; // prayer companion: never evict
     if (id >= 1040 && id < 1061) return 1; // daily ayah
     if (id >= 1070 && id < 1084) return 2; // morning azkar
     if (id >= 1090 && id < 1104) return 3; // evening azkar
@@ -128,19 +132,43 @@ List<int> notificationIdsToCancelForBudget({
   return candidates.take(needed).toList(growable: false);
 }
 
+/// A raw notification response delivered to the app: the payload plus the
+/// tapped action id (null/empty for a body tap). Unlike the legacy
+/// String-only callback, this keeps companion payloads (`pc1|…`) intact so
+/// feature code can validate them instead of routing blindly.
+class NotificationResponseEvent {
+  const NotificationResponseEvent({this.payload, this.actionId});
+
+  final String? payload;
+  final String? actionId;
+}
+
 /// - Morning and evening azkar reminders
 class TaliaNotificationService {
-  TaliaNotificationService();
+  TaliaNotificationService({FlutterLocalNotificationsPlugin? plugin})
+    : _plugin = plugin ?? FlutterLocalNotificationsPlugin();
 
   static const MethodChannel _badgeChannel = MethodChannel('talia/badge');
-  final FlutterLocalNotificationsPlugin _plugin =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin;
 
   bool _initialized = false;
   AppLocalizations? _attachedL10n;
   String? _pendingLaunchPayload;
   String? _pendingLaunchActionId;
   void Function(String payload)? onPayloadReceived;
+
+  /// Delivers the RAW notification response (payload + action id). Companion
+  /// `pc1|…` payloads and unknown actions are forwarded here untouched; legacy
+  /// route navigation keeps flowing through [onPayloadReceived].
+  void Function(NotificationResponseEvent event)? onNotificationResponse;
+
+  /// Test seam: the real platform check (`Platform.isAndroid || isIOS`) is
+  /// always false under the host test runner, so companion scheduling tests
+  /// flip this to exercise the scheduling logic with an injected plugin.
+  /// Read ONLY by the companion methods; legacy methods keep their original
+  /// guards.
+  @visibleForTesting
+  bool debugSupportsNotifications = false;
 
   /// Localization used for action-button labels and channel names. The
   /// scheduler attaches the current locale at the top of every refresh so
@@ -247,6 +275,14 @@ class TaliaNotificationService {
   static const int _azkarScheduleDays = 14;
   static const int _prayerTimesBaseId = 2000;
   static const int _prayerTimesMaxCount = 40;
+  // Prayer Companion namespace. Planned events (preparation + check-in, two
+  // rolling days × five prayers) occupy 2100–2119; follow-ups occupy
+  // 2120–2129. These ranges never overlap the legacy prayer IDs (2000–2039)
+  // and are protected equally by notificationIdsToCancelForBudget.
+  static const int companionPlannedBaseId = 2100;
+  static const int companionPlannedMaxCount = 20;
+  static const int companionFollowUpBaseId = 2120;
+  static const int companionFollowUpMaxCount = 10;
   // iOS only keeps 64 pending local notifications. Leave headroom for
   // notifications created outside this service and never ask the OS to trim
   // them silently.
@@ -469,6 +505,29 @@ class TaliaNotificationService {
     ),
   ];
 
+  // 12. Prayer Companion Actions. Distinct namespace from the legacy prayer
+  // actions ('action_quran'/'action_azkar') which stay unchanged.
+  List<AndroidNotificationAction> get _prayerCompanionActions => [
+    AndroidNotificationAction(
+      'action_prayer_companion_confirm',
+      _l10n.notificationActionCompanionConfirm,
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+    AndroidNotificationAction(
+      'action_prayer_companion_pray_now',
+      _l10n.notificationActionCompanionPrayNow,
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+    AndroidNotificationAction(
+      'action_prayer_companion_remind_later',
+      _l10n.notificationActionCompanionRemindLater,
+      showsUserInterface: true,
+      cancelNotification: true,
+    ),
+  ];
+
   List<DarwinNotificationCategory> get _darwinCategories => [
     DarwinNotificationCategory(
       'review_category',
@@ -602,6 +661,23 @@ class TaliaNotificationService {
         DarwinNotificationAction.plain(
           'action_azkar',
           _l10n.notificationActionPostPrayerAzkar,
+        ),
+      ],
+    ),
+    DarwinNotificationCategory(
+      'prayer_companion_category',
+      actions: <DarwinNotificationAction>[
+        DarwinNotificationAction.plain(
+          'action_prayer_companion_confirm',
+          _l10n.notificationActionCompanionConfirm,
+        ),
+        DarwinNotificationAction.plain(
+          'action_prayer_companion_pray_now',
+          _l10n.notificationActionCompanionPrayNow,
+        ),
+        DarwinNotificationAction.plain(
+          'action_prayer_companion_remind_later',
+          _l10n.notificationActionCompanionRemindLater,
         ),
       ],
     ),
@@ -921,6 +997,32 @@ class TaliaNotificationService {
     );
   }
 
+  /// Companion check-in / preparation / follow-up presentation. Reuses the
+  /// existing prayer channel and color so the visual treatment matches the
+  /// prayer reminders, but attaches the companion actions/category — the
+  /// legacy `prayer_category` actions stay untouched.
+  NotificationDetails get _prayerCompanionNotificationDetails =>
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          'talia_prayer_companion',
+          _l10n.notificationChannelPrayerCompanionName,
+          channelDescription:
+              _l10n.notificationChannelPrayerCompanionDescription,
+          importance: Importance.high,
+          priority: Priority.high,
+          color: const Color(0xFF1E824C),
+          icon: _notificationIcon,
+          playSound: true,
+          actions: _prayerCompanionActions,
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+          categoryIdentifier: 'prayer_companion_category',
+        ),
+      );
+
   /// Initialize the notification system. Must be called on app startup.
   Future<void> initialize() async {
     if (_initialized) return;
@@ -962,6 +1064,16 @@ class TaliaNotificationService {
   }
 
   void _onNotificationTapped(NotificationResponse response) {
+    // Always forward the raw response: companion `pc1|…` payloads and
+    // companion action ids must reach the feature layer unmodified.
+    onNotificationResponse?.call(
+      NotificationResponseEvent(
+        payload: response.payload,
+        actionId: response.actionId,
+      ),
+    );
+
+    // Legacy path: reduce known actions/payloads to a go_router route.
     final payload = response.actionId == 'action_daily_ayah'
         ? response.payload
         : LaunchDestination.mapNotificationAction(response.actionId) ??
@@ -1629,6 +1741,77 @@ class TaliaNotificationService {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     for (var i = 0; i < _prayerTimesMaxCount; i++) {
       await _plugin.cancel(id: _prayerTimesBaseId + i);
+    }
+  }
+
+  // ─── Prayer Companion Reminders ─────────────────────────────────────────────
+
+  /// True when companion notifications may touch the plugin: the real mobile
+  /// platforms, or a test that opted in via [debugSupportsNotifications].
+  bool get _companionSupported =>
+      Platform.isAndroid || Platform.isIOS || debugSupportsNotifications;
+
+  /// Schedules the two-day rolling Companion reminders produced by
+  /// `PrayerCompanionPlanner`. Each reminder's notification id is supplied by
+  /// the planner inside the 2100–2129 namespace.
+  ///
+  /// Copy (title/body) is NOT resolved here: companion notification strings
+  /// arrive as already-localized values via [titleFor]/[bodyFor] (the
+  /// scheduler supplies them from `AppLocalizations` in Task 5), mirroring
+  /// how other reminders receive resolved strings per call.
+  Future<void> schedulePrayerCompanionReminders({
+    required List<ScheduledPrayerCompanionNotification> reminders,
+    required String Function(ScheduledPrayerCompanionNotification reminder)
+    titleFor,
+    required String Function(ScheduledPrayerCompanionNotification reminder)
+    bodyFor,
+  }) async {
+    if (!_companionSupported) return;
+    await cancelPrayerCompanionReminders();
+    if (reminders.isEmpty) return;
+
+    final now = DateTime.now();
+    final scheduleMode = await resolveTimeCriticalScheduleMode(
+      'prayer_companion',
+    );
+    final upcoming = reminders
+        .where((reminder) => reminder.scheduledAt.isAfter(now))
+        .toList(growable: false);
+    await _reserveSlotsForPrayerNotifications(upcoming.length);
+    final availableSlots = await _availableScheduledNotificationSlots();
+    // Safety net for background isolates where tz.local may not be configured.
+    _ensureLocalLocationReady();
+    for (final reminder in upcoming.take(availableSlots)) {
+      await _plugin.zonedSchedule(
+        id: reminder.id,
+        title: titleFor(reminder),
+        body: bodyFor(reminder),
+        scheduledDate: tz.TZDateTime.from(reminder.scheduledAt, tz.local),
+        notificationDetails: _prayerCompanionNotificationDetails,
+        androidScheduleMode: scheduleMode,
+        payload: PrayerCompanionNotificationIntent(
+          occurrence: reminder.occurrence,
+          kind: reminder.kind,
+        ).encode(),
+      );
+    }
+    if (availableSlots < upcoming.length) {
+      TaliaLogger.w(
+        'iOS notification budget deferred '
+        '${upcoming.length - availableSlots} companion reminders',
+      );
+    }
+  }
+
+  /// Cancels ONLY the Companion namespace (2100–2129). Legacy prayer IDs
+  /// (2000–2039) and every other category are never touched.
+  Future<void> cancelPrayerCompanionReminders() async {
+    if (!_companionSupported) return;
+    for (var i = 0; i < companionPlannedMaxCount; i++) {
+      await _plugin.cancel(id: companionPlannedBaseId + i);
+    }
+    for (var i = 0; i < companionFollowUpMaxCount; i++) {
+      await _plugin.cancel(id: companionFollowUpBaseId + i);
     }
   }
 

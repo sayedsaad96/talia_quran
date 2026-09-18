@@ -3302,6 +3302,22 @@ class AppLocalizationsAr extends AppLocalizations {
       'تنبيهات الصلوات بمقطع الأذان المرفق';
 
   @override
+  String get notificationChannelPrayerCompanionName => 'مرافق الصلاة';
+
+  @override
+  String get notificationChannelPrayerCompanionDescription =>
+      'تنبيهات مرافق الصلاة اللطيفة للتأكيد الذاتي';
+
+  @override
+  String get notificationActionCompanionConfirm => 'نعم، صليتها';
+
+  @override
+  String get notificationActionCompanionPrayNow => 'سأصلي الآن';
+
+  @override
+  String get notificationActionCompanionRemindLater => 'ذكرني لاحقاً';
+
+  @override
   String get notificationDailyAyahTitle => 'آية تفتح لك يومك ✨';
 
   @override

@@ -1487,6 +1487,11 @@
   "notificationChannelPrayerDescription": "تنبيهات عند دخول وقت الصلاة",
   "notificationChannelPrayerAthanName": "صوت أذان الصلاة",
   "notificationChannelPrayerAthanDescription": "تنبيهات الصلوات بمقطع الأذان المرفق",
+  "notificationChannelPrayerCompanionName": "مرافق الصلاة",
+  "notificationChannelPrayerCompanionDescription": "تنبيهات مرافق الصلاة اللطيفة للتأكيد الذاتي",
+  "notificationActionCompanionConfirm": "نعم، صليتها",
+  "notificationActionCompanionPrayNow": "سأصلي الآن",
+  "notificationActionCompanionRemindLater": "ذكرني لاحقاً",
 
   "notificationDailyAyahTitle": "آية تفتح لك يومك ✨",
   "notificationDailyAyahBody": "خدلك دقيقة روق بالك مع وردك النهاردة من القرآن الكريم 🌿",

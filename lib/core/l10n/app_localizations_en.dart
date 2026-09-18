@@ -3337,6 +3337,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Prayer alerts with the bundled athan clip';
 
   @override
+  String get notificationChannelPrayerCompanionName => 'Prayer Companion';
+
+  @override
+  String get notificationChannelPrayerCompanionDescription =>
+      'Gentle Prayer Companion self-confirmation reminders';
+
+  @override
+  String get notificationActionCompanionConfirm => 'Yes, I prayed it';
+
+  @override
+  String get notificationActionCompanionPrayNow => 'I will pray now';
+
+  @override
+  String get notificationActionCompanionRemindLater => 'Remind me later';
+
+  @override
   String get notificationDailyAyahTitle => 'Ayah of the Day ✨';
 
   @override

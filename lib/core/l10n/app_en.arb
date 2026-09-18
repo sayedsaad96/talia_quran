@@ -1498,6 +1498,11 @@
   "notificationChannelPrayerDescription": "Alerts when a prayer time enters",
   "notificationChannelPrayerAthanName": "Prayer athan sound",
   "notificationChannelPrayerAthanDescription": "Prayer alerts with the bundled athan clip",
+  "notificationChannelPrayerCompanionName": "Prayer Companion",
+  "notificationChannelPrayerCompanionDescription": "Gentle Prayer Companion self-confirmation reminders",
+  "notificationActionCompanionConfirm": "Yes, I prayed it",
+  "notificationActionCompanionPrayNow": "I will pray now",
+  "notificationActionCompanionRemindLater": "Remind me later",
 
   "notificationDailyAyahBody": "Read your daily Wird from the Holy Quran",
   "notificationMorningAzkarTitle": "Morning Azkar ☀️",

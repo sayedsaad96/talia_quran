@@ -6007,6 +6007,36 @@ abstract class AppLocalizations {
   /// **'تنبيهات الصلوات بمقطع الأذان المرفق'**
   String get notificationChannelPrayerAthanDescription;
 
+  /// No description provided for @notificationChannelPrayerCompanionName.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرافق الصلاة'**
+  String get notificationChannelPrayerCompanionName;
+
+  /// No description provided for @notificationChannelPrayerCompanionDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيهات مرافق الصلاة اللطيفة للتأكيد الذاتي'**
+  String get notificationChannelPrayerCompanionDescription;
+
+  /// No description provided for @notificationActionCompanionConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'نعم، صليتها'**
+  String get notificationActionCompanionConfirm;
+
+  /// No description provided for @notificationActionCompanionPrayNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'سأصلي الآن'**
+  String get notificationActionCompanionPrayNow;
+
+  /// No description provided for @notificationActionCompanionRemindLater.
+  ///
+  /// In ar, this message translates to:
+  /// **'ذكرني لاحقاً'**
+  String get notificationActionCompanionRemindLater;
+
   /// No description provided for @notificationDailyAyahTitle.
   ///
   /// In ar, this message translates to:
