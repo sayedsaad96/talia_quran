@@ -110,7 +110,11 @@ Future<void> showMemorizationPathSettingsSheet(
                       .getMemorizationProfile();
                   final requiresGuardianPin = profileResult.fold(
                     (_) => true,
-                    (profile) => profile.isChild,
+                    // Only require PIN when a guardian is linked on another
+                    // device. A standalone child profile (no linked guardian)
+                    // does not need PIN verification — the parent confirmed
+                    // the reset in the dialog above.
+                    (profile) => profile.isChild && profile.isGuardianLinked,
                   );
                   if (requiresGuardianPin) {
                     if (!context.mounted) return;
@@ -145,21 +149,76 @@ Future<void> showMemorizationPathSettingsSheet(
 }
 
 Future<bool> _verifyGuardianPin(BuildContext context) async {
-  final controller = TextEditingController();
-  String? error;
   final verified = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
-    builder: (dialogContext) => StatefulBuilder(
-      builder: (context, setState) => AlertDialog(
-        title: Text(context.l10n.parentDashboardEnterPinTitle),
-        content: Column(
+    builder: (dialogContext) => const _GuardianPinDialog(),
+  );
+  return verified == true;
+}
+
+class _GuardianPinDialog extends StatefulWidget {
+  const _GuardianPinDialog();
+
+  @override
+  State<_GuardianPinDialog> createState() => _GuardianPinDialogState();
+}
+
+class _GuardianPinDialogState extends State<_GuardianPinDialog> {
+  late final TextEditingController _controller;
+  String? _error;
+  bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleConfirm() async {
+    if (_isSubmitting) return;
+    final pin = _controller.text.trim();
+    if (pin.length != 4 || int.tryParse(pin) == null) {
+      setState(() => _error = context.l10n.parentDashboardPinInvalid);
+      return;
+    }
+    setState(() {
+      _isSubmitting = true;
+      _error = null;
+    });
+    final result =
+        await getIt<MemorizationPlusRepository>().verifyParentPin(pin);
+    final isValid = result.getOrElse(() => false);
+    if (!mounted) return;
+    if (isValid) {
+      Navigator.pop(context, true);
+    } else {
+      setState(() {
+        _isSubmitting = false;
+        _error = context.l10n.parentDashboardPinIncorrect;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(context.l10n.parentDashboardEnterPinTitle),
+      content: SingleChildScrollView(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(context.l10n.parentDashboardPinHelp),
             const SizedBox(height: AppSpacing.md),
             TextField(
-              controller: controller,
+              controller: _controller,
               autofocus: true,
               keyboardType: TextInputType.number,
               obscureText: true,
@@ -167,41 +226,24 @@ Future<bool> _verifyGuardianPin(BuildContext context) async {
               decoration: InputDecoration(
                 counterText: '',
                 labelText: 'PIN',
-                errorText: error,
+                errorText: _error,
               ),
+              onSubmitted: (_) => _handleConfirm(),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () async {
-              final pin = controller.text.trim();
-              if (pin.length != 4 || int.tryParse(pin) == null) {
-                setState(() => error = context.l10n.parentDashboardPinInvalid);
-                return;
-              }
-              final result = await getIt<MemorizationPlusRepository>()
-                  .verifyParentPin(pin);
-              final isValid = result.getOrElse(() => false);
-              if (!dialogContext.mounted) return;
-              if (isValid) {
-                Navigator.pop(dialogContext, true);
-              } else {
-                setState(
-                  () => error = context.l10n.parentDashboardPinIncorrect,
-                );
-              }
-            },
-            child: Text(context.l10n.reset),
-          ),
-        ],
       ),
-    ),
-  );
-  controller.dispose();
-  return verified == true;
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: Text(context.l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: _isSubmitting ? null : _handleConfirm,
+          child: Text(context.l10n.reset),
+        ),
+      ],
+    );
+  }
 }
+

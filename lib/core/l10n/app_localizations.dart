@@ -9016,14 +9016,14 @@ abstract class AppLocalizations {
   /// No description provided for @prayerTimelineNext.
   ///
   /// In ar, this message translates to:
-  /// **'أذان {name} خلال {minutes} دقيقة'**
-  String prayerTimelineNext(String name, int minutes);
+  /// **'أذان {name} خلال {timeRemaining}'**
+  String prayerTimelineNext(String name, String timeRemaining);
 
   /// No description provided for @prayerTimelineSunriseNext.
   ///
   /// In ar, this message translates to:
-  /// **'الشروق خلال {minutes} دقيقة'**
-  String prayerTimelineSunriseNext(int minutes);
+  /// **'الشروق خلال {timeRemaining}'**
+  String prayerTimelineSunriseNext(String timeRemaining);
 
   /// No description provided for @prayerFajr.
   ///

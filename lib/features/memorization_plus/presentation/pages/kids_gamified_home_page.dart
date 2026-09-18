@@ -15,6 +15,7 @@ import '../theme/kids_theme.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
 import '../widgets/kids_mission_card.dart';
 import '../widgets/kids_progress_header.dart';
+import '../widgets/kids_ui.dart';
 
 class KidsGamifiedHomePage extends StatelessWidget {
   const KidsGamifiedHomePage({
@@ -143,8 +144,7 @@ class KidsGamifiedHomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(gradient: KidsTheme.backgroundGradient),
+    return KidsBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         bottomNavigationBar: _KidsHomeBottomNav(
@@ -217,6 +217,19 @@ class _KidsHomeBottomNav extends StatelessWidget {
       selectedIndex: 0,
       backgroundColor: KidsTheme.nightSkyMid,
       indicatorColor: KidsTheme.goldStar.withValues(alpha: 0.18),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (states) => TextStyle(
+          color: states.contains(WidgetState.selected)
+              ? KidsTheme.goldLight
+              : KidsTheme.shellTextSecondary,
+          fontWeight: states.contains(WidgetState.selected)
+              ? FontWeight.w700
+              : FontWeight.w500,
+        ),
+      ),
       labelBehavior: isCompact
           ? NavigationDestinationLabelBehavior.onlyShowSelected
           : NavigationDestinationLabelBehavior.alwaysShow,

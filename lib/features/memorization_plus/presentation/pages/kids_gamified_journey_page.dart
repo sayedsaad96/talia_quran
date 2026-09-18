@@ -15,6 +15,7 @@ import '../theme/kids_theme.dart';
 import '../widgets/kids_house_card.dart';
 import '../widgets/kids_journey_signpost.dart';
 import '../widgets/kids_progress_header.dart';
+import '../widgets/kids_ui.dart';
 import '../widgets/memorization_path_settings_sheet.dart';
 
 class KidsGamifiedJourneyPage extends StatelessWidget {
@@ -39,7 +40,7 @@ class _KidsGamifiedJourneyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: KidsTheme.landscapeGrass,
+      backgroundColor: KidsTheme.nightSkyDark,
       body: BlocConsumer<KidsJourneyCubit, KidsJourneyState>(
         listener: (context, state) {
           if (state is KidsJourneyLoaded && state.message != null) {
@@ -151,22 +152,26 @@ class _KidsGamifiedJourneyContentState
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: KidsTheme.skyLandscapeGradient,
-      ),
+    return KidsBackground(
       child: Stack(
         children: [
           // Lightweight vector horizon scenery (0 raster overhead)
           const Positioned.fill(
-            child: RepaintBoundary(
-              child: CustomPaint(painter: _LandscapeBackdropPainter()),
+            child: Opacity(
+              opacity: 0.24,
+              child: RepaintBoundary(
+                child: CustomPaint(painter: _LandscapeBackdropPainter()),
+              ),
             ),
           ),
           SafeArea(
             child: Column(
               children: [
-                _KidsGamifiedJourneyAppBar(onBack: widget.onBack),
+                KidsTopBar(
+                  title: context.l10n.kidsJourneyTitle,
+                  subtitle: context.l10n.kidsJourneySubtitle,
+                  onBack: widget.onBack,
+                ),
                 Expanded(
                   child: RefreshIndicator(
                     onRefresh: widget.onRefresh ?? () async {},
@@ -280,14 +285,14 @@ class _JourneyMapHeader extends StatelessWidget {
           children: [
             const Icon(
               Icons.explore_rounded,
-              color: KidsTheme.pathStone,
+              color: KidsTheme.goldLight,
               size: 24,
             ),
             const SizedBox(width: AppSpacing.xs),
             Text(
               mapTitle,
               style: AppTypography.headlineSmall.copyWith(
-                color: Colors.white,
+                color: KidsTheme.shellTextPrimary,
                 fontFamily: 'Amiri',
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0,
@@ -306,7 +311,7 @@ class _JourneyMapHeader extends StatelessWidget {
         Text(
           subtitle,
           style: AppTypography.bodySmall.copyWith(
-            color: Colors.white.withValues(alpha: 0.88),
+            color: KidsTheme.shellTextSecondary,
             fontFamily: 'Amiri',
             letterSpacing: 0,
           ),
@@ -539,55 +544,6 @@ class _LandscapeBackdropPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class _KidsGamifiedJourneyAppBar extends StatelessWidget {
-  const _KidsGamifiedJourneyAppBar({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.sm,
-        AppSpacing.xs,
-        AppSpacing.lg,
-        AppSpacing.xs,
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            onPressed: onBack,
-            icon: const BackButtonIcon(),
-            color: Colors.white,
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          Expanded(
-            child: Text(
-              context.l10n.kidsJourneyTitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.titleLarge.copyWith(
-                color: Colors.white,
-                fontFamily: 'Amiri',
-                fontWeight: FontWeight.bold,
-                letterSpacing: 0,
-                shadows: const [
-                  Shadow(
-                    color: Color(0x66000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 String _stageDetailsLocation(KidsJourneyStage stage) {

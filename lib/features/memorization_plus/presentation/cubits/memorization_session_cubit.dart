@@ -216,7 +216,10 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
       );
     } catch (e, stack) {
       _speechEnabled = false;
-      TaliaLogger.e('V2: Failed to initialize speech recognition', e, stack);
+      // Speech recognition is unavailable on this device (e.g. no recogniser
+      // installed). This is an expected, gracefully-handled degradation — the
+      // session continues in manual-grade mode. Use warn, not error.
+      TaliaLogger.w('V2: Speech recognition unavailable on this device', e, stack);
     }
   }
 

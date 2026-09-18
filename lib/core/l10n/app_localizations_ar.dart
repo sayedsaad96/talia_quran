@@ -5051,13 +5051,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String prayerTimelineNext(String name, int minutes) {
-    return 'أذان $name خلال $minutes دقيقة';
+  String prayerTimelineNext(String name, String timeRemaining) {
+    return 'أذان $name خلال $timeRemaining';
   }
 
   @override
-  String prayerTimelineSunriseNext(int minutes) {
-    return 'الشروق خلال $minutes دقيقة';
+  String prayerTimelineSunriseNext(String timeRemaining) {
+    return 'الشروق خلال $timeRemaining';
   }
 
   @override

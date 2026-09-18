@@ -46,30 +46,14 @@ class ChildDetailPage extends StatelessWidget {
   }
 
   Future<void> _showAddRewardDialog(BuildContext context) async {
-    final controller = TextEditingController();
     final title = await showDialog<String>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(context.l10n.parentDashboardRemoteRewardTitle),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: context.l10n.parentDashboardRewardHint,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: Text(context.l10n.save),
-          ),
-        ],
+      builder: (_) => _TextInputDialog(
+        title: context.l10n.parentDashboardRemoteRewardTitle,
+        hintText: context.l10n.parentDashboardRewardHint,
+        actionLabel: context.l10n.save,
       ),
     );
-    controller.dispose();
     if (title != null && title.isNotEmpty && context.mounted) {
       await context.read<FamilyDashboardCubit>().addReward(
         title,
@@ -153,30 +137,15 @@ class _ChildDetailBody extends StatelessWidget {
   }
 
   Future<void> _showChangeNicknameDialog(BuildContext context) async {
-    final controller = TextEditingController(text: child.displayName);
     final newName = await showDialog<String>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(context.l10n.parentDashboardEditChild),
-        content: TextField(
-          controller: controller,
-          decoration: InputDecoration(
-            hintText: context.l10n.familyDashboardAddChild,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, controller.text.trim()),
-            child: Text(context.l10n.save),
-          ),
-        ],
+      builder: (_) => _TextInputDialog(
+        title: context.l10n.parentDashboardEditChild,
+        hintText: context.l10n.familyDashboardAddChild,
+        actionLabel: context.l10n.save,
+        initialText: child.displayName,
       ),
     );
-    controller.dispose();
     if (newName != null && context.mounted) {
       await context.read<FamilyDashboardCubit>().updateLocalChildNickname(
         newName,
@@ -573,3 +542,62 @@ class _Panel extends StatelessWidget {
     );
   }
 }
+
+class _TextInputDialog extends StatefulWidget {
+  const _TextInputDialog({
+    required this.title,
+    required this.hintText,
+    required this.actionLabel,
+    this.initialText = '',
+  });
+
+  final String title;
+  final String hintText;
+  final String actionLabel;
+  final String initialText;
+
+  @override
+  State<_TextInputDialog> createState() => _TextInputDialogState();
+}
+
+class _TextInputDialogState extends State<_TextInputDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialText);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SingleChildScrollView(
+        child: TextField(
+          controller: _controller,
+          autofocus: true,
+          decoration: InputDecoration(hintText: widget.hintText),
+          onSubmitted: (value) => Navigator.pop(context, value.trim()),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(context.l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _controller.text.trim()),
+          child: Text(widget.actionLabel),
+        ),
+      ],
+    );
+  }
+}
+

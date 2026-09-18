@@ -24,6 +24,12 @@ abstract final class KidsTheme {
   static const Color successGreen = AppColors.success;
   static const Color errorRed = AppColors.error;
 
+  // Shared shell tokens. Screen-specific colors should not replace these.
+  static const Color shellTextPrimary = Color(0xFFF8FAFC);
+  static const Color shellTextSecondary = Color(0xC7E2E8F0);
+  static const Color shellDivider = Color(0x331ABC9C);
+  static const Color mapSurface = Color(0x351A4B43);
+
   // ─── Sky Palette ───────────────────────────────────────────────────────────
   static const Color skyBlueDeep = Color(0xFF0B1437);
   static const Color skyBlueMid = Color(0xFF1A2E5A);

@@ -5,12 +5,12 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_stage_details.dart';
+import '../widgets/kids_ui.dart';
 
 class KidsGamifiedStagePage extends StatefulWidget {
   const KidsGamifiedStagePage({
@@ -113,14 +113,16 @@ class KidsGamifiedStageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(gradient: KidsTheme.backgroundGradient),
+    return KidsBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
           child: Column(
             children: [
-              _KidsGamifiedStageAppBar(onBack: onBack),
+              KidsTopBar(
+                title: context.l10n.kidsGamifiedMissions,
+                onBack: onBack,
+              ),
               Expanded(
                 child: CustomScrollView(
                   key: const PageStorageKey<String>('kids-gamified-stage'),
@@ -169,47 +171,6 @@ class KidsGamifiedStageContent extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _KidsGamifiedStageAppBar extends StatelessWidget {
-  const _KidsGamifiedStageAppBar({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.sm,
-        AppSpacing.sm,
-        AppSpacing.lg,
-        AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            onPressed: onBack,
-            icon: const BackButtonIcon(),
-            color: Colors.white,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              context.l10n.kidsGamifiedMissions,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.titleLarge.copyWith(
-                color: Colors.white,
-                fontFamily: 'Amiri',
-                letterSpacing: 0,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

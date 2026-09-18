@@ -4,6 +4,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/prayer_time_formatter.dart';
 import '../theme/home_skin.dart';
 import 'home_prayer_times_sheet.dart';
 
@@ -120,8 +121,12 @@ class _HomePrayerTimelineState extends State<HomePrayerTimeline>
   String _headerText(BuildContext context) {
     final l10n = context.l10n;
     final s = widget.snapshot;
+    final timeRemaining = formatPrayerRemainingTime(
+      s.minutesUntil,
+      isArabic: context.isArabic,
+    );
     if (s.nextName == 'sunrise') {
-      return l10n.prayerTimelineSunriseNext(s.minutesUntil);
+      return l10n.prayerTimelineSunriseNext(timeRemaining);
     }
     final name = switch (s.nextName) {
       'fajr' => l10n.prayerFajr,
@@ -131,7 +136,7 @@ class _HomePrayerTimelineState extends State<HomePrayerTimeline>
       'isha' => l10n.prayerIsha,
       _ => s.nextName,
     };
-    return l10n.prayerTimelineNext(name, s.minutesUntil);
+    return l10n.prayerTimelineNext(name, timeRemaining);
   }
 
   String _formattedTime(DateTime t, BuildContext context) {

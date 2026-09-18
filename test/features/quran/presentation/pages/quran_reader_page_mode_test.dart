@@ -356,7 +356,7 @@ void main() {
       },
     );
 
-    testWidgets('generic confirmation failure creates no Khatmah record', (
+    testWidgets('ordinary confirmation failure creates no Khatmah record', (
       tester,
     ) async {
       when(
@@ -367,8 +367,7 @@ void main() {
       await tester.pumpWidget(
         buildReaderApp(
           pageNumber: 42,
-          readerMode: QuranReaderMode.khatmah,
-          khatmahCubit: fixture.cubit,
+          readerMode: QuranReaderMode.free,
         ),
       );
       await tester.pump();

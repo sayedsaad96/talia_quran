@@ -101,6 +101,32 @@ void main() {
     expect(find.textContaining('25'), findsWidgets);
   });
 
+  testWidgets('header shows hours and minutes when next prayer is > 60 min away',
+      (tester) async {
+    final longSnap = PrayerTimesSnapshot(
+      city: city,
+      nextName: 'fajr',
+      nextTime: DateTime(2026, 9, 13, 5, 14),
+      minutesUntil: 394, // 6 hours and 34 minutes
+      fajr: DateTime(2026, 9, 13, 5, 14),
+      sunrise: DateTime(2026, 9, 13, 6, 41),
+      dhuhr: DateTime(2026, 9, 13, 12, 50),
+      asr: DateTime(2026, 9, 13, 16, 18),
+      maghrib: DateTime(2026, 9, 13, 18, 57),
+      isha: DateTime(2026, 9, 13, 20, 15),
+    );
+
+    // Arabic test
+    await tester.pumpWidget(buildHarness(snap: longSnap));
+    await tester.pump();
+    expect(find.textContaining('أذان الفجر خلال 6 ساعات و 34 دقيقة'), findsOneWidget);
+
+    // English test
+    await tester.pumpWidget(buildHarness(snap: longSnap, locale: const Locale('en')));
+    await tester.pump();
+    expect(find.textContaining('Fajr in 6h 34m'), findsOneWidget);
+  });
+
   testWidgets('header uses sunrise-specific text when nextName is sunrise',
       (tester) async {
     final sunriseSnap = PrayerTimesSnapshot(

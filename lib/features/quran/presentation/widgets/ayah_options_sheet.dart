@@ -3,10 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/memorization/learning_launch_context.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../../core/services/quran_continuous_player_service.dart';
 import '../../../../core/services/quran_reciter.dart';
 import '../../../../core/services/quran_reciter_service.dart';
@@ -54,6 +57,25 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
     } else {
       await cubit.playAyah(widget.ayah.surahId, widget.ayah.numberInSurah);
     }
+  }
+
+  void _startLearning() {
+    widget.onInteraction();
+    final router = GoRouter.of(context);
+    final location = Uri(
+      path: AppRoutes.memorizationV2Session,
+      queryParameters: LearningLaunchContext(
+        ayah: AyahReference(
+          surahId: widget.ayah.surahId,
+          ayahNumber: widget.ayah.numberInSurah,
+        ),
+        intent: LearningIntent.memorize,
+        origin: LearningOrigin.quranReader,
+      ).toRouteQuery(),
+    ).toString();
+
+    Navigator.of(context).pop();
+    router.push(location);
   }
 
   @override
@@ -166,6 +188,12 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                 spacing: AppSpacing.md,
                 runSpacing: AppSpacing.md,
                 children: [
+                  AyahOptionButton(
+                    icon: Icons.school_rounded,
+                    label: context.l10n.startMemorizing,
+                    color: primary,
+                    onTap: _startLearning,
+                  ),
                   BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
                     builder: (context, audioState) {
                       final isPlayingThisAyah =

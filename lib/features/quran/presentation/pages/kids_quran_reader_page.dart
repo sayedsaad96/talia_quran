@@ -13,6 +13,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/entities/quran_entities.dart';
+import '../../../memorization_plus/presentation/theme/kids_theme.dart';
 import '../cubits/quran_page_cubit.dart';
 import '../widgets/app_quran_page_view.dart';
 import '../widgets/quran_page_font_guard.dart';
@@ -142,7 +143,9 @@ class KidsQuranReaderContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final bg = isDark ? AppColors.parchmentDark : AppColors.parchmentLight;
-    final accent = isDark ? AppColors.primaryLight : AppColors.primary;
+    // Keep the Quran surface calm and parchment-based, while using the same
+    // kids-path accent family for navigation and page metadata.
+    final accent = isDark ? KidsTheme.goldLight : KidsTheme.forestGreen;
 
     return Scaffold(
       backgroundColor: bg,

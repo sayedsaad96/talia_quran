@@ -4,6 +4,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/prayer_time_formatter.dart';
 import '../theme/home_skin.dart';
 
 /// Shows the full [HomePrayerTimesSheet] as a modal bottom sheet.
@@ -457,7 +458,10 @@ class _PrayerCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 3),
                           Text(
-                            '$minutesUntil ${isArabic ? "د" : "min"}',
+                            formatPrayerRemainingTimeCompact(
+                              minutesUntil,
+                              isArabic: isArabic,
+                            ),
                             style: AppTypography.labelSmall.copyWith(
                               color: skin.gold,
                               fontWeight: FontWeight.w700,

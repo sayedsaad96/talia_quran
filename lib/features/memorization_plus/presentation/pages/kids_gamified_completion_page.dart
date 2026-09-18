@@ -6,8 +6,8 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/router/app_router.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
-import '../theme/kids_theme.dart';
 import '../widgets/kids_reward_dialog.dart';
+import '../widgets/kids_ui.dart';
 
 class KidsGamifiedCompletionPage extends StatefulWidget {
   const KidsGamifiedCompletionPage({
@@ -133,8 +133,7 @@ class KidsGamifiedCompletionContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(gradient: KidsTheme.backgroundGradient),
+    return KidsBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(

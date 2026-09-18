@@ -886,15 +886,49 @@ Future<void> _openScanner(BuildContext context) async {
 }
 
 Future<void> _showManualTokenDialog(BuildContext context) async {
-  final controller = TextEditingController();
   final token = await showDialog<String>(
     context: context,
-    builder: (_) => AlertDialog(
+    builder: (_) => const _ManualTokenDialog(),
+  );
+  if (token != null && token.isNotEmpty && context.mounted) {
+    await context.read<FamilyDashboardCubit>().acceptRemoteToken(token);
+  }
+}
+
+class _ManualTokenDialog extends StatefulWidget {
+  const _ManualTokenDialog();
+
+  @override
+  State<_ManualTokenDialog> createState() => _ManualTokenDialogState();
+}
+
+class _ManualTokenDialogState extends State<_ManualTokenDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
       title: Text(context.l10n.parentDashboardEnterLinkingCode),
-      content: TextField(
-        controller: controller,
-        decoration: InputDecoration(
-          hintText: context.l10n.parentDashboardLinkHint,
+      content: SingleChildScrollView(
+        child: TextField(
+          controller: _controller,
+          autofocus: true,
+          decoration: InputDecoration(
+            hintText: context.l10n.parentDashboardLinkHint,
+          ),
+          onSubmitted: (value) => Navigator.pop(context, value.trim()),
         ),
       ),
       actions: [
@@ -903,15 +937,11 @@ Future<void> _showManualTokenDialog(BuildContext context) async {
           child: Text(context.l10n.cancel),
         ),
         FilledButton(
-          onPressed: () => Navigator.pop(context, controller.text.trim()),
+          onPressed: () => Navigator.pop(context, _controller.text.trim()),
           child: Text(context.l10n.parentDashboardLinkAction),
         ),
       ],
-    ),
-  );
-  controller.dispose();
-  if (token != null && token.isNotEmpty && context.mounted) {
-    await context.read<FamilyDashboardCubit>().acceptRemoteToken(token);
+    );
   }
 }
 

@@ -15,4 +15,19 @@ void main() {
     expect(context.intent, LearningIntent.review);
     expect(context.origin, LearningOrigin.smartCoach);
   });
+
+  test('preserves the Quran reader entry point in the learning route payload', () {
+    const context = LearningLaunchContext(
+      ayah: AyahReference(surahId: 2, ayahNumber: 255),
+      intent: LearningIntent.memorize,
+      origin: LearningOrigin.quranReader,
+    );
+
+    expect(context.toRouteQuery(), {
+      'surahId': '2',
+      'startAyah': '255',
+      'intent': 'memorize',
+      'origin': 'quranReader',
+    });
+  });
 }

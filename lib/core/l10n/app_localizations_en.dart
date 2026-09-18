@@ -5004,13 +5004,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String prayerTimelineNext(String name, int minutes) {
-    return '$name in $minutes min';
+  String prayerTimelineNext(String name, String timeRemaining) {
+    return '$name in $timeRemaining';
   }
 
   @override
-  String prayerTimelineSunriseNext(int minutes) {
-    return 'Sunrise in $minutes min';
+  String prayerTimelineSunriseNext(String timeRemaining) {
+    return 'Sunrise in $timeRemaining';
   }
 
   @override

@@ -19,6 +19,7 @@ import '../cubits/kids_mode_cubit.dart';
 import '../../domain/navigation/memorization_navigation_resolver.dart';
 import '../theme/kids_theme.dart';
 import '../widgets/kids_ayah_card.dart';
+import '../widgets/kids_ui.dart';
 
 class KidsGamifiedListenPage extends StatelessWidget {
   const KidsGamifiedListenPage({
@@ -64,36 +65,10 @@ class _KidsGamifiedListenView extends StatelessWidget {
   final KidsMissionType missionType;
 
   Future<void> _submitGuardianCompletion(BuildContext context) async {
-    final pinController = TextEditingController();
     final pin = await showDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(context.l10n.parentDashboardEnterPinTitle),
-        content: TextField(
-          controller: pinController,
-          autofocus: true,
-          obscureText: true,
-          keyboardType: TextInputType.number,
-          maxLength: 4,
-          decoration: InputDecoration(
-            helperText: context.l10n.parentDashboardPinHelp,
-          ),
-          onSubmitted: (value) => Navigator.pop(dialogContext, value.trim()),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text(context.l10n.cancel),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, pinController.text.trim()),
-            child: Text(context.l10n.confirm),
-          ),
-        ],
-      ),
+      builder: (_) => const _GuardianPinConfirmationDialog(),
     );
-    pinController.dispose();
     if (pin == null || !context.mounted) return;
 
     final accepted = await context.read<KidsModeCubit>().submitManualCompletion(
@@ -235,14 +210,16 @@ class KidsGamifiedListenContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final audioUnavailable = state.audioError != null;
 
-    return Container(
-      decoration: const BoxDecoration(gradient: KidsTheme.backgroundGradient),
+    return KidsBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SafeArea(
           child: Column(
             children: [
-              _KidsGamifiedListenAppBar(onBack: onBack),
+              KidsTopBar(
+                title: context.l10n.kidsGamifiedListenAndRepeat,
+                onBack: onBack,
+              ),
               Expanded(
                 child: CustomScrollView(
                   key: const PageStorageKey<String>('kids-gamified-listen'),
@@ -332,47 +309,6 @@ class _KidsHiddenRecallCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _KidsGamifiedListenAppBar extends StatelessWidget {
-  const _KidsGamifiedListenAppBar({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.sm,
-        AppSpacing.sm,
-        AppSpacing.lg,
-        AppSpacing.sm,
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-            onPressed: onBack,
-            icon: const BackButtonIcon(),
-            color: Colors.white,
-          ),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              context.l10n.kidsGamifiedListenAndRepeat,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTypography.titleLarge.copyWith(
-                color: Colors.white,
-                fontFamily: 'Amiri',
-                letterSpacing: 0,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -734,3 +670,59 @@ Future<void> _navigateAfterKidsCompletion(
     '&starsEarned=${state.sessionStarsEarned}',
   );
 }
+
+class _GuardianPinConfirmationDialog extends StatefulWidget {
+  const _GuardianPinConfirmationDialog();
+
+  @override
+  State<_GuardianPinConfirmationDialog> createState() =>
+      _GuardianPinConfirmationDialogState();
+}
+
+class _GuardianPinConfirmationDialogState
+    extends State<_GuardianPinConfirmationDialog> {
+  late final TextEditingController _pinController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pinController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _pinController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(context.l10n.parentDashboardEnterPinTitle),
+      content: SingleChildScrollView(
+        child: TextField(
+          controller: _pinController,
+          autofocus: true,
+          obscureText: true,
+          keyboardType: TextInputType.number,
+          maxLength: 4,
+          decoration: InputDecoration(
+            helperText: context.l10n.parentDashboardPinHelp,
+          ),
+          onSubmitted: (value) => Navigator.pop(context, value.trim()),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text(context.l10n.cancel),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, _pinController.text.trim()),
+          child: Text(context.l10n.confirm),
+        ),
+      ],
+    );
+  }
+}
+
