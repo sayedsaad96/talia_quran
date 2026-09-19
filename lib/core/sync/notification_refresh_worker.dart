@@ -97,6 +97,15 @@ NotificationScheduler _createLocalScheduler({
 /// otherwise opens one with just the Companion schema in the headless
 /// isolate. Returns null if Isar cannot be opened — the scheduler then
 /// cancels Companion events instead of crashing the background task.
+///
+/// V1 limitation (documented): the planner's default
+/// `SupabaseRecordOwnerProvider` resolves the owner from the active Supabase
+/// session, which is unavailable in a headless isolate, so it falls back to
+/// `ReviewRecordIdentity.localOwnerId`. No cached owner id is persisted
+/// anywhere yet (verified against `RecordOwnerProvider`/SharedPreferences),
+/// so until the app next opens, a signed-in user's Companion events may be
+/// re-planned against the local owner scope. Records are never lost, and the
+/// next foreground refresh corrects the schedule.
 Future<PrayerCompanionPlanner?> _createLocalCompanionPlanner(
   SharedPreferences prefs,
 ) async {

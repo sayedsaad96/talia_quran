@@ -296,5 +296,112 @@ void main() {
 
       verify(() => service.cancelPrayerCompanionReminders()).called(1);
     });
+
+    group('quiet hours suppression', () {
+      ScheduledPrayerCompanionNotification reminderAt(
+        int id,
+        DateTime scheduledAt,
+      ) => ScheduledPrayerCompanionNotification(
+        id: id,
+        kind: PrayerCompanionNotificationKind.checkIn,
+        occurrence: occurrence(PrayerKey.fajr),
+        scheduledAt: scheduledAt,
+      );
+
+      List<ScheduledPrayerCompanionNotification> capturedReminders() {
+        final captured = verify(
+          () => service.schedulePrayerCompanionReminders(
+            reminders: captureAny(named: 'reminders'),
+            titleFor: any(named: 'titleFor'),
+            bodyFor: any(named: 'bodyFor'),
+          ),
+        ).captured;
+        return captured.single as List<ScheduledPrayerCompanionNotification>;
+      }
+
+      test(
+        'check-in inside the quiet window is dropped before scheduling',
+        () async {
+          SharedPreferences.setMockInitialValues({
+            PrayerCompanionPreferences.enabledKey: true,
+            TaliaNotificationService.quietHoursPreferenceKey: true,
+            TaliaNotificationService.quietHoursStartKey: 21,
+            TaliaNotificationService.quietHoursEndKey: 5,
+          });
+          when(
+            () => prayerTimes.isReadyForNotificationScheduling,
+          ).thenReturn(true);
+          final insideQuiet = reminderAt(
+            PrayerCompanionPlanner.plannedBaseId + 1,
+            DateTime(2026, 9, 20, 22, 30),
+          );
+          final outsideQuiet = reminderAt(
+            PrayerCompanionPlanner.plannedBaseId + 2,
+            DateTime(2026, 9, 20, 12, 0),
+          );
+          when(
+            () => planner.plan(now: any(named: 'now')),
+          ).thenAnswer((_) async => [insideQuiet, outsideQuiet]);
+
+          final scheduler = await buildScheduler();
+          await scheduler.refreshNotifications(l10n, force: true);
+
+          expect(capturedReminders(), [outsideQuiet]);
+        },
+      );
+
+      test('quiet hours disabled suppresses nothing', () async {
+        SharedPreferences.setMockInitialValues({
+          PrayerCompanionPreferences.enabledKey: true,
+          TaliaNotificationService.quietHoursPreferenceKey: false,
+          TaliaNotificationService.quietHoursStartKey: 21,
+          TaliaNotificationService.quietHoursEndKey: 5,
+        });
+        when(
+          () => prayerTimes.isReadyForNotificationScheduling,
+        ).thenReturn(true);
+        final insideWindowButAllowed = reminderAt(
+          PrayerCompanionPlanner.plannedBaseId + 1,
+          DateTime(2026, 9, 20, 22, 30),
+        );
+        when(
+          () => planner.plan(now: any(named: 'now')),
+        ).thenAnswer((_) async => [insideWindowButAllowed]);
+
+        final scheduler = await buildScheduler();
+        await scheduler.refreshNotifications(l10n, force: true);
+
+        expect(capturedReminders(), [insideWindowButAllowed]);
+      });
+
+      test('overnight window boundaries: 04:50 suppressed, 05:10 kept '
+          '(21:00-05:00)', () async {
+        SharedPreferences.setMockInitialValues({
+          PrayerCompanionPreferences.enabledKey: true,
+          TaliaNotificationService.quietHoursPreferenceKey: true,
+          TaliaNotificationService.quietHoursStartKey: 21,
+          TaliaNotificationService.quietHoursEndKey: 5,
+        });
+        when(
+          () => prayerTimes.isReadyForNotificationScheduling,
+        ).thenReturn(true);
+        final insideOvernight = reminderAt(
+          PrayerCompanionPlanner.plannedBaseId + 1,
+          DateTime(2026, 9, 20, 4, 50),
+        );
+        final afterWindow = reminderAt(
+          PrayerCompanionPlanner.plannedBaseId + 2,
+          DateTime(2026, 9, 20, 5, 10),
+        );
+        when(
+          () => planner.plan(now: any(named: 'now')),
+        ).thenAnswer((_) async => [insideOvernight, afterWindow]);
+
+        final scheduler = await buildScheduler();
+        await scheduler.refreshNotifications(l10n, force: true);
+
+        expect(capturedReminders(), [afterWindow]);
+      });
+    });
   });
 }

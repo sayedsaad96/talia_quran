@@ -44,6 +44,19 @@ bool _isInQuietWindow(int hour, int startHour, int endHour) {
   return hour >= startHour || hour < endHour;
 }
 
+/// True when [time]'s local clock hour falls inside the quiet window
+/// ([startHour]..[endHour], possibly wrapping midnight). Uses the same
+/// hour-granularity containment semantics as [applyQuietHours].
+bool isInQuietHoursWindow(
+  DateTime time, {
+  required bool enabled,
+  required int startHour,
+  required int endHour,
+}) {
+  if (!enabled) return false;
+  return _isInQuietWindow(time.toLocal().hour, startHour, endHour);
+}
+
 ({int hour, int minute}) applyQuietHours({
   required int hour,
   required int minute,
@@ -625,7 +638,28 @@ class NotificationScheduler {
         await _service.cancelPrayerCompanionReminders();
         return;
       }
-      final reminders = await planner.plan(now: now);
+      final planned = await planner.plan(now: now);
+      // Spec §4.4: a Companion event inside quiet hours is SUPPRESSED, never
+      // shifted into a misleading next-day slot like other reminder
+      // categories. Prayer-time alerts stay exempt from quiet hours.
+      final prefs = await SharedPreferences.getInstance();
+      final quietEnabled =
+          prefs.getBool(TaliaNotificationService.quietHoursPreferenceKey) ??
+          false;
+      final quietStartHour =
+          prefs.getInt(TaliaNotificationService.quietHoursStartKey) ?? 23;
+      final quietEndHour =
+          prefs.getInt(TaliaNotificationService.quietHoursEndKey) ?? 4;
+      final reminders = planned
+          .where(
+            (reminder) => !isInQuietHoursWindow(
+              reminder.scheduledAt,
+              enabled: quietEnabled,
+              startHour: quietStartHour,
+              endHour: quietEndHour,
+            ),
+          )
+          .toList();
       final isArabic = l10n.localeName.startsWith('ar');
       String prayerNameFor(PrayerKey key) => switch (key) {
         PrayerKey.fajr => isArabic ? 'الفجر' : 'Fajr',
@@ -663,6 +697,9 @@ class NotificationScheduler {
         stack,
       );
       try {
+        // Deliberate fail-safe: on planner failure the Companion schedule is
+        // cancelled (silence rather than stale reminders); the next
+        // successful refresh rebuilds it.
         await _service.cancelPrayerCompanionReminders();
       } catch (cancelError, cancelStack) {
         TaliaLogger.w(
