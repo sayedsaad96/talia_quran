@@ -79,11 +79,14 @@ import '../../features/progress/domain/usecases/get_progress_usecase.dart';
 import '../../features/progress/domain/usecases/save_read_page_usecase.dart';
 import '../../features/progress/presentation/cubits/progress_cubit.dart';
 import '../../features/home/presentation/cubits/home_cubit.dart';
+import '../../features/prayer_companion/application/prayer_companion_controller.dart';
+import '../../features/prayer_companion/application/prayer_companion_usecases.dart';
 import '../../features/prayer_companion/data/datasources/prayer_companion_local_datasource.dart';
 import '../../features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
 import '../../features/prayer_companion/data/models/prayer_companion_record_isar.dart';
 import '../../features/prayer_companion/data/repositories/prayer_companion_repository_impl.dart';
 import '../../features/prayer_companion/domain/repositories/prayer_companion_repository.dart';
+import '../../features/prayer_companion/domain/services/prayer_companion_policy.dart';
 import '../../features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
 import '../../features/home/data/repositories/heatmap_repository_impl.dart';
 import '../../features/home/data/repositories/activity_feed_repository_impl.dart';
@@ -365,6 +368,30 @@ Future<void> configureDependencies({bool background = false}) async {
       repository: getIt<PrayerCompanionRepository>(),
       prefs: Future.value(getIt<SharedPreferences>()),
       owner: getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerLazySingleton<ApplyPrayerCompanionCommand>(
+    () => ApplyPrayerCompanionCommand(
+      getIt<PrayerCompanionRepository>(),
+      const PrayerCompanionPolicy(),
+    ),
+  );
+  getIt.registerLazySingleton<PrayerCompanionController>(
+    () => PrayerCompanionController(
+      applyCommand: getIt<ApplyPrayerCompanionCommand>(),
+      scheduler: getIt<NotificationScheduler>(),
+      locale: () => getIt<LocaleCubit>().state,
+      nextPrayerAt: () async {
+        try {
+          final snapshot = await getIt<PrayerTimesService>().current(
+            isArabic: getIt<LocaleCubit>().state.languageCode == 'ar',
+          );
+          return snapshot?.nextTime;
+        } catch (_) {
+          // Without prayer times the follow-up cap is simply unknown.
+          return null;
+        }
+      },
     ),
   );
   getIt.registerLazySingleton<HomeOccasionService>(

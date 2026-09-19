@@ -18,6 +18,7 @@ import 'core/services/app_initializer.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_cubit.dart';
 import 'features/auth/presentation/cubits/auth_cubit.dart';
+import 'features/prayer_companion/application/prayer_companion_controller.dart';
 import 'features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import 'features/settings/presentation/cubits/profile_cubit.dart';
 
@@ -110,6 +111,7 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
       _fullAppWired = true;
       final notificationService = getIt<TaliaNotificationService>();
       notificationService.onPayloadReceived = _openNotification;
+      notificationService.onNotificationResponse = _handleNotificationResponse;
 
       // Theme, locale, and profile are already loaded during AppInitializer.
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -135,7 +137,9 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
             rootScaffoldMessengerKey.currentState?.showSnackBar(
               SnackBar(
                 content: Text(
-                  lookupAppLocalizations(locale).accountSwitchOfflineDataDiscarded,
+                  lookupAppLocalizations(
+                    locale,
+                  ).accountSwitchOfflineDataDiscarded,
                 ),
               ),
             );
@@ -191,7 +195,25 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
     );
   }
 
-  void _applyLaunchNavigation(TaliaNotificationService notificationService) {
+  /// Foreground notification tap: the companion controller persists any
+  /// companion command first, then navigation follows its outcome. Legacy
+  /// routing keeps flowing through [_openNotification]; companion (`pc1`)
+  /// payloads are a no-op there because they never start with '/'.
+  Future<void> _handleNotificationResponse(
+    NotificationResponseEvent event,
+  ) async {
+    if (!mounted || !AppInitializer.isInitialized) return;
+    final outcome = await getIt<PrayerCompanionController>().handle(event);
+    if (!mounted) return;
+    AppRouter.router.go(outcome.route);
+  }
+
+  /// Cold start: dependencies are ready here, so the pending launch goes
+  /// through the same controller — a companion action is written once during
+  /// startup, then the route is applied.
+  Future<void> _applyLaunchNavigation(
+    TaliaNotificationService notificationService,
+  ) async {
     if (!mounted) return;
     final isFirstTime =
         getIt<SharedPreferences>().getBool(
@@ -199,13 +221,25 @@ class _TaliaAppState extends State<TaliaApp> with WidgetsBindingObserver {
         ) ??
         true;
     final pending = notificationService.takePendingLaunch();
-    final location = LaunchDestination.resolve(
-      isFirstTime: isFirstTime,
-      payload: pending?.payload,
-      actionId: pending?.actionId,
+    if (pending == null) {
+      if (!isFirstTime) return;
+      AppRouter.router.go(AppRoutes.onboarding);
+      return;
+    }
+    final event = NotificationResponseEvent(
+      payload: pending.payload,
+      actionId: pending.actionId,
     );
-    if (location != AppRoutes.home) {
-      AppRouter.router.go(location);
+    if (isFirstTime) {
+      // First-time users always go to onboarding; no notification response
+      // (companion or legacy) is applied before onboarding completes.
+      AppRouter.router.go(AppRoutes.onboarding);
+      return;
+    }
+    final outcome = await getIt<PrayerCompanionController>().handle(event);
+    if (!mounted) return;
+    if (outcome.route != AppRoutes.home) {
+      AppRouter.router.go(outcome.route);
     }
   }
 
