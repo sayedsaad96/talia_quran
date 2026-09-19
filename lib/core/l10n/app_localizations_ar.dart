@@ -5323,6 +5323,46 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homePrayerTimesSheetTitle => 'مواقيت الصلاة';
 
   @override
+  String get prayerCompanionStatusConfirmed => 'تم التأكيد';
+
+  @override
+  String get prayerCompanionStatusUnconfirmedPast => 'لم يتم التأكيد بعد';
+
+  @override
+  String get prayerCompanionStatusUpcoming => 'قادمة';
+
+  @override
+  String get prayerCompanionStatusPrayNow => 'سأصلي الآن';
+
+  @override
+  String get prayerCompanionStatusRemindLater => 'تم ضبط تذكير';
+
+  @override
+  String get prayerCompanionStatusNotYet => 'ليس بعد';
+
+  @override
+  String get prayerCompanionActionConfirm => 'صليت';
+
+  @override
+  String get prayerCompanionActionPrayNow => 'سأصلي الآن';
+
+  @override
+  String get prayerCompanionActionRemindLater => 'ذكرني لاحقاً';
+
+  @override
+  String get prayerCompanionActionNotYet => 'ليس بعد';
+
+  @override
+  String prayerCompanionConfirmedCount(int confirmed, int total) {
+    return 'تم تأكيد $confirmed من $total';
+  }
+
+  @override
+  String prayerCompanionRowSemantics(String prayer, String status) {
+    return '$prayer: $status';
+  }
+
+  @override
   String get weekdayMonday => 'الاثنين';
 
   @override

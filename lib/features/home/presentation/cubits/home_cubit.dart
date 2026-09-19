@@ -51,6 +51,9 @@ import '../../../khatmah/domain/usecases/get_active_khatmah_usecase.dart';
 import '../../../azkar/domain/entities/azkar_entities.dart';
 import '../../../azkar/domain/usecases/get_azkar_usecase.dart';
 import '../../../azkar/data/datasources/azkar_completion_store.dart';
+import '../../../prayer_companion/application/prayer_companion_usecases.dart';
+import '../../../prayer_companion/data/datasources/prayer_companion_preferences.dart';
+import '../../../prayer_companion/domain/entities/prayer_companion.dart';
 import '../../../../core/router/app_router.dart';
 
 part 'home_state.dart';
@@ -79,6 +82,8 @@ class HomeCubit extends Cubit<HomeState> {
   final BookmarkService? _bookmarkService;
   final GetAyahOfDayUsecase? _getAyahOfDay;
   final PrayerTimesService? _prayerTimes;
+  final PrayerCompanionPreferences? _companionPreferences;
+  final GetPrayerCompanionDaySummary? _getCompanionSummary;
   final HomeOccasionService _occasionService;
   final GetTodayChecklistUsecase _todayChecklist;
   final GetRecentActivityUsecase? _getRecentActivity;
@@ -113,6 +118,8 @@ class HomeCubit extends Cubit<HomeState> {
        _bookmarkService = null,
        _getAyahOfDay = null,
        _prayerTimes = null,
+       _companionPreferences = null,
+       _getCompanionSummary = null,
        _occasionService = const HomeOccasionService(),
        _todayChecklist = const GetTodayChecklistUsecase(),
        _getRecentActivity = null,
@@ -145,6 +152,8 @@ class HomeCubit extends Cubit<HomeState> {
     BookmarkService? bookmarkService,
     GetAyahOfDayUsecase? getAyahOfDay,
     PrayerTimesService? prayerTimes,
+    PrayerCompanionPreferences? companionPreferences,
+    GetPrayerCompanionDaySummary? getCompanionSummary,
     HomeOccasionService occasionService = const HomeOccasionService(),
     GetTodayChecklistUsecase todayChecklist = const GetTodayChecklistUsecase(),
     GetRecentActivityUsecase? getRecentActivity,
@@ -159,6 +168,8 @@ class HomeCubit extends Cubit<HomeState> {
        _bookmarkService = bookmarkService,
        _getAyahOfDay = getAyahOfDay,
        _prayerTimes = prayerTimes,
+       _companionPreferences = companionPreferences,
+       _getCompanionSummary = getCompanionSummary,
        _occasionService = occasionService,
        _todayChecklist = todayChecklist,
        _getRecentActivity = getRecentActivity,
@@ -391,6 +402,7 @@ class HomeCubit extends Cubit<HomeState> {
           activeSlot: extras.activeSlot,
           familyChildren: extras.familyChildren,
           prayerSnapshot: extras.prayerSnapshot,
+          prayerCompanionSummary: extras.prayerCompanionSummary,
           weeklyActiveDays: extras.weeklyActiveDays,
           weeklyActivityCount: extras.weeklyActivityCount,
           recentBookmarkRoute: extras.recentBookmarkRoute,
@@ -424,6 +436,7 @@ class HomeCubit extends Cubit<HomeState> {
       HomeSlotCandidate? activeSlot,
       List<FamilyChildEntry> familyChildren,
       PrayerTimesSnapshot? prayerSnapshot,
+      PrayerCompanionDaySummary? prayerCompanionSummary,
       int weeklyActiveDays,
       int weeklyActivityCount,
       String? recentBookmarkRoute,
@@ -520,6 +533,36 @@ class HomeCubit extends Cubit<HomeState> {
         return null;
       }
     });
+
+    // Companion summary is queried at most once per load, only when the
+    // feature is enabled; it is never queried per row and failures degrade
+    // to a null summary (the sheet then renders like the legacy time list).
+    Future<PrayerCompanionDaySummary?> companionSummaryFor(
+      PrayerTimesSnapshot? prayer,
+    ) async {
+      final getSummary = _getCompanionSummary;
+      if (prayer == null || getSummary == null) return null;
+      if (!(_companionPreferences?.read().enabled ?? false)) return null;
+      try {
+        final times = <({PrayerKey key, DateTime time})>[
+          if (prayer.fajr != null) (key: PrayerKey.fajr, time: prayer.fajr!),
+          if (prayer.dhuhr != null) (key: PrayerKey.dhuhr, time: prayer.dhuhr!),
+          if (prayer.asr != null) (key: PrayerKey.asr, time: prayer.asr!),
+          if (prayer.maghrib != null)
+            (key: PrayerKey.maghrib, time: prayer.maghrib!),
+          if (prayer.isha != null) (key: PrayerKey.isha, time: prayer.isha!),
+        ];
+        final now = DateTime.now();
+        return await getSummary(
+          localDate: DateTime(now.year, now.month, now.day),
+          prayerTimes: times,
+          now: now,
+        );
+      } catch (_) {
+        return null;
+      }
+    }
+
     final bookmarkFuture = Future<String?>.sync(() async {
       try {
         await _bookmarkService?.ensureLoaded();
@@ -579,6 +622,7 @@ class HomeCubit extends Cubit<HomeState> {
     const children = <FamilyChildEntry>[];
 
     final prayer = await prayerFuture;
+    final companionSummary = await companionSummaryFor(prayer);
     final bookmarkRoute = await bookmarkFuture;
 
     var weeklyDays = 0;
@@ -670,6 +714,7 @@ class HomeCubit extends Cubit<HomeState> {
       activeSlot: slot,
       familyChildren: children,
       prayerSnapshot: prayer,
+      prayerCompanionSummary: companionSummary,
       weeklyActiveDays: weeklyDays,
       weeklyActivityCount: weeklyCount,
       recentBookmarkRoute: bookmarkRoute,

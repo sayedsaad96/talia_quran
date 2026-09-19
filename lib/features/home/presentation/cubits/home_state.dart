@@ -49,6 +49,7 @@ class HomeLoaded extends HomeState {
     this.activeSlot,
     this.familyChildren = const [],
     this.prayerSnapshot,
+    this.prayerCompanionSummary,
     this.weeklyActiveDays = 0,
     this.weeklyActivityCount = 0,
     this.recentBookmarkRoute,
@@ -88,6 +89,7 @@ class HomeLoaded extends HomeState {
     HomeSlotCandidate? activeSlot,
     List<FamilyChildEntry>? familyChildren,
     PrayerTimesSnapshot? prayerSnapshot,
+    PrayerCompanionDaySummary? prayerCompanionSummary,
     int? weeklyActiveDays,
     int? weeklyActivityCount,
     String? recentBookmarkRoute,
@@ -130,6 +132,8 @@ class HomeLoaded extends HomeState {
       activeSlot: activeSlot ?? this.activeSlot,
       familyChildren: familyChildren ?? this.familyChildren,
       prayerSnapshot: prayerSnapshot ?? this.prayerSnapshot,
+      prayerCompanionSummary:
+          prayerCompanionSummary ?? this.prayerCompanionSummary,
       weeklyActiveDays: weeklyActiveDays ?? this.weeklyActiveDays,
       weeklyActivityCount: weeklyActivityCount ?? this.weeklyActivityCount,
       recentBookmarkRoute: recentBookmarkRoute ?? this.recentBookmarkRoute,
@@ -166,6 +170,7 @@ class HomeLoaded extends HomeState {
   final HomeSlotCandidate? activeSlot;
   final List<FamilyChildEntry> familyChildren;
   final PrayerTimesSnapshot? prayerSnapshot;
+  final PrayerCompanionDaySummary? prayerCompanionSummary;
   final int weeklyActiveDays;
   final int weeklyActivityCount;
   final String? recentBookmarkRoute;
@@ -226,6 +231,7 @@ class HomeLoaded extends HomeState {
     activeSlot,
     familyChildren,
     prayerSnapshot,
+    prayerCompanionSummary,
     weeklyActiveDays,
     weeklyActivityCount,
     recentBookmarkRoute,

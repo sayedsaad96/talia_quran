@@ -9481,6 +9481,78 @@ abstract class AppLocalizations {
   /// **'مواقيت الصلاة'**
   String get homePrayerTimesSheetTitle;
 
+  /// No description provided for @prayerCompanionStatusConfirmed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم التأكيد'**
+  String get prayerCompanionStatusConfirmed;
+
+  /// No description provided for @prayerCompanionStatusUnconfirmedPast.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم التأكيد بعد'**
+  String get prayerCompanionStatusUnconfirmedPast;
+
+  /// No description provided for @prayerCompanionStatusUpcoming.
+  ///
+  /// In ar, this message translates to:
+  /// **'قادمة'**
+  String get prayerCompanionStatusUpcoming;
+
+  /// No description provided for @prayerCompanionStatusPrayNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'سأصلي الآن'**
+  String get prayerCompanionStatusPrayNow;
+
+  /// No description provided for @prayerCompanionStatusRemindLater.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم ضبط تذكير'**
+  String get prayerCompanionStatusRemindLater;
+
+  /// No description provided for @prayerCompanionStatusNotYet.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس بعد'**
+  String get prayerCompanionStatusNotYet;
+
+  /// No description provided for @prayerCompanionActionConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'صليت'**
+  String get prayerCompanionActionConfirm;
+
+  /// No description provided for @prayerCompanionActionPrayNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'سأصلي الآن'**
+  String get prayerCompanionActionPrayNow;
+
+  /// No description provided for @prayerCompanionActionRemindLater.
+  ///
+  /// In ar, this message translates to:
+  /// **'ذكرني لاحقاً'**
+  String get prayerCompanionActionRemindLater;
+
+  /// No description provided for @prayerCompanionActionNotYet.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس بعد'**
+  String get prayerCompanionActionNotYet;
+
+  /// No description provided for @prayerCompanionConfirmedCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تأكيد {confirmed} من {total}'**
+  String prayerCompanionConfirmedCount(int confirmed, int total);
+
+  /// No description provided for @prayerCompanionRowSemantics.
+  ///
+  /// In ar, this message translates to:
+  /// **'{prayer}: {status}'**
+  String prayerCompanionRowSemantics(String prayer, String status);
+
   /// No description provided for @weekdayMonday.
   ///
   /// In ar, this message translates to:

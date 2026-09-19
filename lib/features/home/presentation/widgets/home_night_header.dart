@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 
+import 'dart:async';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../prayer_companion/application/prayer_companion_controller.dart';
 import '../../domain/services/home_occasion_service.dart';
 import '../cubits/home_cubit.dart';
 import '../theme/home_skin.dart';
@@ -56,6 +61,12 @@ class HomeNightHeader extends StatelessWidget {
                   snapshot: state.prayerSnapshot!,
                   skin: skin,
                   hijriLabel: state.hijriLabel,
+                  companionSummary: state.prayerCompanionSummary,
+                  companionController: state.prayerCompanionSummary == null
+                      ? null
+                      : getIt<PrayerCompanionController>(),
+                  onCompanionChanged: () =>
+                      unawaited(context.read<HomeCubit>().load()),
                 ),
               ],
             ],

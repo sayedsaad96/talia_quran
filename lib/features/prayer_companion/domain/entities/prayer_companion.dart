@@ -183,6 +183,9 @@ class PrayerCompanionDaySummary extends Equatable {
   /// The occurrence the user can act on right now, if any.
   final PrayerOccurrence? actionableOccurrence;
 
+  /// The five obligatory prayers the summary always covers.
+  static const totalObligatoryPrayers = 5;
+
   @override
   List<Object?> get props => [
     statusByPrayer,

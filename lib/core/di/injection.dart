@@ -377,6 +377,12 @@ Future<void> configureDependencies({bool background = false}) async {
       const PrayerCompanionPolicy(),
     ),
   );
+  getIt.registerLazySingleton<GetPrayerCompanionDaySummary>(
+    () => GetPrayerCompanionDaySummary(
+      getIt<PrayerCompanionRepository>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
   getIt.registerLazySingleton<PrayerCompanionController>(
     () => PrayerCompanionController(
       applyCommand: getIt<ApplyPrayerCompanionCommand>(),
@@ -871,6 +877,8 @@ Future<void> configureDependencies({bool background = false}) async {
       bookmarkService: getIt<BookmarkService>(),
       getAyahOfDay: getIt<GetAyahOfDayUsecase>(),
       prayerTimes: getIt<PrayerTimesService>(),
+      companionPreferences: getIt<PrayerCompanionPreferences>(),
+      getCompanionSummary: getIt<GetPrayerCompanionDaySummary>(),
       occasionService: getIt<HomeOccasionService>(),
       todayChecklist: getIt<GetTodayChecklistUsecase>(),
       getRecentActivity: getIt<GetRecentActivityUsecase>(),

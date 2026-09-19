@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/prayer_time_formatter.dart';
+import '../../../prayer_companion/application/prayer_companion_controller.dart';
+import '../../../prayer_companion/domain/entities/prayer_companion.dart';
+import '../../../prayer_companion/presentation/cubits/prayer_companion_cubit.dart';
+import '../../../prayer_companion/presentation/widgets/prayer_companion_status.dart';
 import '../theme/home_skin.dart';
 
 /// Shows the full [HomePrayerTimesSheet] as a modal bottom sheet.
@@ -14,8 +19,12 @@ Future<void> showHomePrayerTimesSheet(
   required String hijriLabel,
   HomeSkin? skin,
   DateTime Function()? now,
+  PrayerCompanionDaySummary? companionSummary,
+  PrayerCompanionController? companionController,
+  VoidCallback? onCompanionChanged,
 }) {
-  final themeSkin = skin ?? HomeSkin.forBrightness(Theme.of(context).brightness);
+  final themeSkin =
+      skin ?? HomeSkin.forBrightness(Theme.of(context).brightness);
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -27,6 +36,9 @@ Future<void> showHomePrayerTimesSheet(
       hijriLabel: hijriLabel,
       skin: themeSkin,
       now: now,
+      companionSummary: companionSummary,
+      companionController: companionController,
+      onCompanionChanged: onCompanionChanged,
     ),
   );
 }
@@ -38,12 +50,26 @@ class HomePrayerTimesSheet extends StatefulWidget {
     required this.hijriLabel,
     this.skin,
     this.now,
+    this.companionSummary,
+    this.companionController,
+    this.onCompanionChanged,
   });
 
   final PrayerTimesSnapshot snapshot;
   final String hijriLabel;
   final HomeSkin? skin;
   final DateTime Function()? now;
+
+  /// Optional Prayer Companion projection. When null (feature off or
+  /// unavailable) the sheet renders exactly like the legacy time list.
+  final PrayerCompanionDaySummary? companionSummary;
+
+  /// Optional Companion bridge used by the in-sheet action buttons.
+  final PrayerCompanionController? companionController;
+
+  /// Invoked once after a Companion action persists successfully (the host
+  /// uses it to reload Home so statuses refresh).
+  final VoidCallback? onCompanionChanged;
 
   @override
   State<HomePrayerTimesSheet> createState() => _HomePrayerTimesSheetState();
@@ -139,6 +165,10 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
         icon: Icons.nights_stay_rounded,
       ),
     ];
+
+    final summary = widget.companionSummary;
+    final companionActive =
+        summary != null && widget.companionController != null;
 
     return Container(
       constraints: BoxConstraints(
@@ -247,6 +277,25 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
+                            if (summary != null) ...[
+                              Text(
+                                '•',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: themeSkin.textSecondary,
+                                ),
+                              ),
+                              Text(
+                                l10n.prayerCompanionConfirmedCount(
+                                  summary.confirmedCount,
+                                  PrayerCompanionDaySummary
+                                      .totalObligatoryPrayers,
+                                ),
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: themeSkin.textSecondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ],
@@ -274,11 +323,13 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
                   AppSpacing.lg,
                 ),
                 itemCount: prayers.length,
-                separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.sm),
+                separatorBuilder: (_, _) =>
+                    const SizedBox(height: AppSpacing.sm),
                 itemBuilder: (context, index) {
                   final prayer = prayers[index];
                   final isNext = prayer.key == widget.snapshot.nextName;
-                  final isPast = prayer.time != null &&
+                  final isPast =
+                      prayer.time != null &&
                       currentTime.isAfter(prayer.time!) &&
                       !isNext;
 
@@ -312,6 +363,20 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
                       isPast: isPast,
                       minutesUntil: widget.snapshot.minutesUntil,
                       skin: themeSkin,
+                      companionStatus: summary == null
+                          ? null
+                          : _companionStatusFor(summary, prayer.key),
+                      companionAction:
+                          companionActive &&
+                              summary.actionableOccurrence != null &&
+                              _prayerKeyForRow(prayer.key) ==
+                                  summary.actionableOccurrence!.prayerKey
+                          ? _CompanionActionData(
+                              occurrence: summary.actionableOccurrence!,
+                              controller: widget.companionController!,
+                              onChanged: widget.onCompanionChanged,
+                            )
+                          : null,
                     ),
                   );
                 },
@@ -345,6 +410,8 @@ class _PrayerCard extends StatelessWidget {
     required this.isPast,
     required this.minutesUntil,
     required this.skin,
+    this.companionStatus,
+    this.companionAction,
   });
 
   final _PrayerData prayer;
@@ -352,6 +419,8 @@ class _PrayerCard extends StatelessWidget {
   final bool isPast;
   final int minutesUntil;
   final HomeSkin skin;
+  final PrayerCompanionStatus? companionStatus;
+  final _CompanionActionData? companionAction;
 
   String _formatTime(BuildContext context, DateTime? time) {
     if (time == null) return '--:--';
@@ -405,97 +474,258 @@ class _PrayerCard extends StatelessWidget {
           border: border,
           boxShadow: shadows,
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: isNext
-                    ? skin.gold.withValues(alpha: 0.2)
-                    : skin.scaffold.withValues(alpha: 0.6),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                prayer.icon,
-                color: isNext ? skin.gold : skin.textSecondary,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: AppSpacing.md),
-            Expanded(
-              child: Row(
-                children: [
-                  Text(
-                    prayer.name,
-                    style: AppTypography.bodyLarge.copyWith(
-                      color: isNext ? skin.gold : skin.textPrimary,
-                      fontWeight: isNext ? FontWeight.w800 : FontWeight.w600,
-                    ),
-                  ),
-                  if (isNext) ...[
-                    const SizedBox(width: AppSpacing.sm),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: skin.gold.withValues(alpha: 0.2),
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.radiusFull),
-                        border: Border.all(
-                          color: skin.gold.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.schedule_rounded,
-                            size: 11,
-                            color: skin.gold,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            formatPrayerRemainingTimeCompact(
-                              minutesUntil,
-                              isArabic: isArabic,
-                            ),
-                            style: AppTypography.labelSmall.copyWith(
-                              color: skin.gold,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
             Row(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  formattedTime,
-                  style: AppTypography.titleSmall.copyWith(
-                    color: isNext ? skin.gold : skin.textPrimary,
-                    fontWeight: isNext ? FontWeight.w800 : FontWeight.w600,
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: isNext
+                        ? skin.gold.withValues(alpha: 0.2)
+                        : skin.scaffold.withValues(alpha: 0.6),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    prayer.icon,
+                    color: isNext ? skin.gold : skin.textSecondary,
+                    size: 20,
                   ),
                 ),
-                if (isPast) ...[
-                  const SizedBox(width: AppSpacing.xs),
-                  Icon(
-                    Icons.check_circle_outline_rounded,
-                    size: 16,
-                    color: skin.textSecondary.withValues(alpha: 0.7),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Text(
+                        prayer.name,
+                        style: AppTypography.bodyLarge.copyWith(
+                          color: isNext ? skin.gold : skin.textPrimary,
+                          fontWeight: isNext
+                              ? FontWeight.w800
+                              : FontWeight.w600,
+                        ),
+                      ),
+                      if (isNext) ...[
+                        const SizedBox(width: AppSpacing.sm),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: skin.gold.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusFull,
+                            ),
+                            border: Border.all(
+                              color: skin.gold.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.schedule_rounded,
+                                size: 11,
+                                color: skin.gold,
+                              ),
+                              const SizedBox(width: 3),
+                              Text(
+                                formatPrayerRemainingTimeCompact(
+                                  minutesUntil,
+                                  isArabic: isArabic,
+                                ),
+                                style: AppTypography.labelSmall.copyWith(
+                                  color: skin.gold,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      formattedTime,
+                      style: AppTypography.titleSmall.copyWith(
+                        color: isNext ? skin.gold : skin.textPrimary,
+                        fontWeight: isNext ? FontWeight.w800 : FontWeight.w600,
+                      ),
+                    ),
+                    if (isPast) ...[
+                      const SizedBox(width: AppSpacing.xs),
+                      Icon(
+                        Icons.check_circle_outline_rounded,
+                        size: 16,
+                        color: skin.textSecondary.withValues(alpha: 0.7),
+                      ),
+                    ],
+                  ],
+                ),
               ],
             ),
+            if (companionStatus != null) ...[
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  // Aligns the status chip under the prayer name column.
+                  const SizedBox(width: 36 + AppSpacing.md),
+                  PrayerCompanionStatusWidget(
+                    status: companionStatus!,
+                    isPast: isPast,
+                    prayerName: prayer.name,
+                    skin: skin,
+                  ),
+                ],
+              ),
+            ],
+            if (companionAction != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              _CompanionActionRow(data: companionAction!, skin: skin),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Maps a sheet row key to its [PrayerKey]; sunrise and unknown rows return
+/// null so they never receive Companion state.
+PrayerKey? _prayerKeyForRow(String key) {
+  for (final prayerKey in PrayerKey.values) {
+    if (prayerKey.name == key) return prayerKey;
+  }
+  return null;
+}
+
+/// Resolves the Companion status for one row, or null for non-obligatory
+/// rows (sunrise) that carry no Companion state.
+PrayerCompanionStatus? _companionStatusFor(
+  PrayerCompanionDaySummary summary,
+  String key,
+) {
+  final prayerKey = _prayerKeyForRow(key);
+  if (prayerKey == null) return null;
+  return summary.statusByPrayer[prayerKey] ?? PrayerCompanionStatus.unconfirmed;
+}
+
+class _CompanionActionData {
+  const _CompanionActionData({
+    required this.occurrence,
+    required this.controller,
+    this.onChanged,
+  });
+
+  final PrayerOccurrence occurrence;
+  final PrayerCompanionController controller;
+  final VoidCallback? onChanged;
+}
+
+/// The in-sheet Companion action group for the current actionable prayer.
+///
+/// Buttons are disabled while a submission is in flight; success asks the
+/// host to reload Home so the summary and statuses refresh, and failure
+/// surfaces a recoverable snackbar without ever showing a false success.
+class _CompanionActionRow extends StatelessWidget {
+  const _CompanionActionRow({required this.data, required this.skin});
+
+  final _CompanionActionData data;
+  final HomeSkin skin;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return BlocProvider(
+      create: (_) => PrayerCompanionCubit(
+        controller: data.controller,
+        occurrence: data.occurrence,
+      ),
+      child: BlocConsumer<PrayerCompanionCubit, PrayerCompanionState>(
+        listener: (context, state) {
+          if (state is PrayerCompanionSuccess) {
+            data.onChanged?.call();
+          } else if (state is PrayerCompanionFailure) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.errorOccurred)));
+          }
+        },
+        builder: (context, state) {
+          final submitting = state is PrayerCompanionSubmitting;
+          final cubit = context.read<PrayerCompanionCubit>();
+          return Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.xs,
+            children: [
+              _actionButton(
+                context,
+                label: l10n.prayerCompanionActionConfirm,
+                command: PrayerCompanionCommand.confirm,
+                enabled: !submitting,
+                cubit: cubit,
+              ),
+              _actionButton(
+                context,
+                label: l10n.prayerCompanionActionPrayNow,
+                command: PrayerCompanionCommand.prayNow,
+                enabled: !submitting,
+                cubit: cubit,
+              ),
+              _actionButton(
+                context,
+                label: l10n.prayerCompanionActionRemindLater,
+                command: PrayerCompanionCommand.remindLater,
+                enabled: !submitting,
+                cubit: cubit,
+              ),
+              _actionButton(
+                context,
+                label: l10n.prayerCompanionActionNotYet,
+                command: PrayerCompanionCommand.notYet,
+                enabled: !submitting,
+                cubit: cubit,
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _actionButton(
+    BuildContext context, {
+    required String label,
+    required PrayerCompanionCommand command,
+    required bool enabled,
+    required PrayerCompanionCubit cubit,
+  }) {
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: label,
+      child: OutlinedButton(
+        onPressed: enabled ? () => cubit.submit(command) : null,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: skin.gold,
+          side: BorderSide(color: skin.gold.withValues(alpha: 0.5)),
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.sm,
+            vertical: AppSpacing.xs,
+          ),
+          minimumSize: const Size(0, 34),
+          textStyle: AppTypography.labelMedium.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        child: Text(label),
       ),
     );
   }

@@ -5,6 +5,8 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/utils/prayer_time_formatter.dart';
+import '../../../prayer_companion/application/prayer_companion_controller.dart';
+import '../../../prayer_companion/domain/entities/prayer_companion.dart';
 import '../theme/home_skin.dart';
 import 'home_prayer_times_sheet.dart';
 
@@ -42,12 +44,22 @@ class HomePrayerTimeline extends StatefulWidget {
     required this.hijriLabel,
     this.onTap,
     this.now,
+    this.companionSummary,
+    this.companionController,
+    this.onCompanionChanged,
   });
 
   final PrayerTimesSnapshot snapshot;
   final HomeSkin skin;
   final String hijriLabel;
   final VoidCallback? onTap;
+
+  /// Optional Prayer Companion projection handed through to the prayer
+  /// times sheet. Null when the feature is disabled — the sheet then
+  /// renders like the legacy time list.
+  final PrayerCompanionDaySummary? companionSummary;
+  final PrayerCompanionController? companionController;
+  final VoidCallback? onCompanionChanged;
 
   /// Injectable clock — defaults to [DateTime.now] when null. Used in tests
   /// to pin the current time without depending on the system clock.
@@ -114,7 +126,13 @@ class _HomePrayerTimelineState extends State<HomePrayerTimeline>
       } else {
         st = _StationState.future;
       }
-      return _StationData(key: key, name: r.$2, icon: r.$3, time: time, state: st);
+      return _StationData(
+        key: key,
+        name: r.$2,
+        icon: r.$3,
+        time: time,
+        state: st,
+      );
     }).toList();
   }
 
@@ -159,6 +177,9 @@ class _HomePrayerTimelineState extends State<HomePrayerTimeline>
       hijriLabel: widget.hijriLabel,
       skin: widget.skin,
       now: widget.now,
+      companionSummary: widget.companionSummary,
+      companionController: widget.companionController,
+      onCompanionChanged: widget.onCompanionChanged,
     );
   }
 
@@ -382,7 +403,8 @@ class _StationNode extends StatelessWidget {
     }
 
     return Semantics(
-      label: '${data.name}${timeText != null ? " $timeText" : ""}'
+      label:
+          '${data.name}${timeText != null ? " $timeText" : ""}'
           '${isNext ? " — ${context.l10n.homePrayerChip(data.name, minutesUntil)}" : ""}',
       child: Opacity(
         opacity: opacity,

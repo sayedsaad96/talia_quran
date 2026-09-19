@@ -5277,6 +5277,46 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homePrayerTimesSheetTitle => 'Prayer Times';
 
   @override
+  String get prayerCompanionStatusConfirmed => 'Confirmed';
+
+  @override
+  String get prayerCompanionStatusUnconfirmedPast => 'Not confirmed yet';
+
+  @override
+  String get prayerCompanionStatusUpcoming => 'Upcoming';
+
+  @override
+  String get prayerCompanionStatusPrayNow => 'Will pray now';
+
+  @override
+  String get prayerCompanionStatusRemindLater => 'Reminder set';
+
+  @override
+  String get prayerCompanionStatusNotYet => 'Not yet';
+
+  @override
+  String get prayerCompanionActionConfirm => 'I prayed';
+
+  @override
+  String get prayerCompanionActionPrayNow => 'I will pray now';
+
+  @override
+  String get prayerCompanionActionRemindLater => 'Remind me later';
+
+  @override
+  String get prayerCompanionActionNotYet => 'Not yet';
+
+  @override
+  String prayerCompanionConfirmedCount(int confirmed, int total) {
+    return '$confirmed of $total confirmed';
+  }
+
+  @override
+  String prayerCompanionRowSemantics(String prayer, String status) {
+    return '$prayer: $status';
+  }
+
+  @override
   String get weekdayMonday => 'Monday';
 
   @override
