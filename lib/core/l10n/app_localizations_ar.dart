@@ -5363,6 +5363,68 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get prayerCompanionSettingsTitle => 'مرافق الصلاة';
+
+  @override
+  String get prayerCompanionEnable => 'تفعيل مرافق الصلاة';
+
+  @override
+  String get prayerCompanionPreparation => 'تذكير الاستعداد';
+
+  @override
+  String get prayerCompanionPreparationDisabled => 'معطّل';
+
+  @override
+  String prayerCompanionMinutesValue(int minutes) {
+    return '$minutes دقائق';
+  }
+
+  @override
+  String get prayerCompanionCheckIn => 'تذكير بعد الصلاة';
+
+  @override
+  String get prayerCompanionCheckInSub =>
+      'يصل تذكير لطيف بعد 20 دقيقة من وقت الصلاة.';
+
+  @override
+  String get prayerCompanionFollowUp => 'السماح بتذكير لاحق واحد';
+
+  @override
+  String get prayerCompanionFollowUpSub =>
+      'يُرسل مرة واحدة عند اختيار «سأصلي الآن» أو «ذكرني لاحقاً».';
+
+  @override
+  String get prayerCompanionLocalOnly =>
+      'تُحفظ تأكيداتك على هذا الجهاز فقط ولا تُرفع إلى أي خدمة سحابية.';
+
+  @override
+  String get prayerCompanionClear => 'مسح تأكيدات الصلاة';
+
+  @override
+  String get prayerCompanionClearSub =>
+      'يحذف التأكيدات المحفوظة على هذا الجهاز.';
+
+  @override
+  String get prayerCompanionClearConfirmTitle => 'مسح التأكيدات؟';
+
+  @override
+  String get prayerCompanionClearConfirmBody =>
+      'هل تريد مسح التأكيدات المحفوظة على هذا الجهاز؟';
+
+  @override
+  String get prayerCompanionClearConfirmButton => 'مسح';
+
+  @override
+  String get prayerCompanionClearCancel => 'إلغاء';
+
+  @override
+  String get prayerCompanionClearFailed =>
+      'تعذّر مسح التأكيدات. حاول مرة أخرى.';
+
+  @override
+  String get prayerCompanionCleared => 'تم مسح التأكيدات.';
+
+  @override
   String get weekdayMonday => 'الاثنين';
 
   @override

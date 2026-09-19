@@ -5317,6 +5317,68 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get prayerCompanionSettingsTitle => 'Prayer Companion';
+
+  @override
+  String get prayerCompanionEnable => 'Enable Prayer Companion';
+
+  @override
+  String get prayerCompanionPreparation => 'Preparation reminder';
+
+  @override
+  String get prayerCompanionPreparationDisabled => 'Disabled';
+
+  @override
+  String prayerCompanionMinutesValue(int minutes) {
+    return '$minutes minutes';
+  }
+
+  @override
+  String get prayerCompanionCheckIn => 'Post-prayer check-in';
+
+  @override
+  String get prayerCompanionCheckInSub =>
+      'A gentle reminder arrives 20 minutes after the prayer.';
+
+  @override
+  String get prayerCompanionFollowUp => 'Allow one follow-up reminder';
+
+  @override
+  String get prayerCompanionFollowUpSub =>
+      'Sent once when you choose \"I will pray now\" or \"Remind me later\".';
+
+  @override
+  String get prayerCompanionLocalOnly =>
+      'Your confirmations stay on this device only and are never uploaded.';
+
+  @override
+  String get prayerCompanionClear => 'Clear prayer confirmations';
+
+  @override
+  String get prayerCompanionClearSub =>
+      'Deletes your saved confirmations on this device.';
+
+  @override
+  String get prayerCompanionClearConfirmTitle => 'Clear confirmations?';
+
+  @override
+  String get prayerCompanionClearConfirmBody =>
+      'Do you want to clear the confirmations saved on this device?';
+
+  @override
+  String get prayerCompanionClearConfirmButton => 'Clear';
+
+  @override
+  String get prayerCompanionClearCancel => 'Cancel';
+
+  @override
+  String get prayerCompanionClearFailed =>
+      'Could not clear confirmations. Please try again.';
+
+  @override
+  String get prayerCompanionCleared => 'Confirmations cleared.';
+
+  @override
   String get weekdayMonday => 'Monday';
 
   @override

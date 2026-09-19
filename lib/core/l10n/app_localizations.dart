@@ -9553,6 +9553,114 @@ abstract class AppLocalizations {
   /// **'{prayer}: {status}'**
   String prayerCompanionRowSemantics(String prayer, String status);
 
+  /// No description provided for @prayerCompanionSettingsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرافق الصلاة'**
+  String get prayerCompanionSettingsTitle;
+
+  /// No description provided for @prayerCompanionEnable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفعيل مرافق الصلاة'**
+  String get prayerCompanionEnable;
+
+  /// No description provided for @prayerCompanionPreparation.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير الاستعداد'**
+  String get prayerCompanionPreparation;
+
+  /// No description provided for @prayerCompanionPreparationDisabled.
+  ///
+  /// In ar, this message translates to:
+  /// **'معطّل'**
+  String get prayerCompanionPreparationDisabled;
+
+  /// No description provided for @prayerCompanionMinutesValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'{minutes} دقائق'**
+  String prayerCompanionMinutesValue(int minutes);
+
+  /// No description provided for @prayerCompanionCheckIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير بعد الصلاة'**
+  String get prayerCompanionCheckIn;
+
+  /// No description provided for @prayerCompanionCheckInSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'يصل تذكير لطيف بعد 20 دقيقة من وقت الصلاة.'**
+  String get prayerCompanionCheckInSub;
+
+  /// No description provided for @prayerCompanionFollowUp.
+  ///
+  /// In ar, this message translates to:
+  /// **'السماح بتذكير لاحق واحد'**
+  String get prayerCompanionFollowUp;
+
+  /// No description provided for @prayerCompanionFollowUpSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'يُرسل مرة واحدة عند اختيار «سأصلي الآن» أو «ذكرني لاحقاً».'**
+  String get prayerCompanionFollowUpSub;
+
+  /// No description provided for @prayerCompanionLocalOnly.
+  ///
+  /// In ar, this message translates to:
+  /// **'تُحفظ تأكيداتك على هذا الجهاز فقط ولا تُرفع إلى أي خدمة سحابية.'**
+  String get prayerCompanionLocalOnly;
+
+  /// No description provided for @prayerCompanionClear.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح تأكيدات الصلاة'**
+  String get prayerCompanionClear;
+
+  /// No description provided for @prayerCompanionClearSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'يحذف التأكيدات المحفوظة على هذا الجهاز.'**
+  String get prayerCompanionClearSub;
+
+  /// No description provided for @prayerCompanionClearConfirmTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح التأكيدات؟'**
+  String get prayerCompanionClearConfirmTitle;
+
+  /// No description provided for @prayerCompanionClearConfirmBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تريد مسح التأكيدات المحفوظة على هذا الجهاز؟'**
+  String get prayerCompanionClearConfirmBody;
+
+  /// No description provided for @prayerCompanionClearConfirmButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح'**
+  String get prayerCompanionClearConfirmButton;
+
+  /// No description provided for @prayerCompanionClearCancel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء'**
+  String get prayerCompanionClearCancel;
+
+  /// No description provided for @prayerCompanionClearFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر مسح التأكيدات. حاول مرة أخرى.'**
+  String get prayerCompanionClearFailed;
+
+  /// No description provided for @prayerCompanionCleared.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم مسح التأكيدات.'**
+  String get prayerCompanionCleared;
+
   /// No description provided for @weekdayMonday.
   ///
   /// In ar, this message translates to:

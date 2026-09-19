@@ -7,6 +7,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
+import '../../../prayer_companion/presentation/widgets/prayer_companion_settings_section.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
@@ -259,6 +260,19 @@ class _SettingsView extends StatelessWidget {
                                 initiallyExpanded: false,
                                 children: [
                                   PrayerTimesSettingsSection(isDark: isDark),
+                                ],
+                              ),
+                              SettingsSection(
+                                title:
+                                    context.l10n.prayerCompanionSettingsTitle,
+                                accentColor: accentColor,
+                                icon: Icons.favorite_border_rounded,
+                                collapsible: true,
+                                initiallyExpanded: false,
+                                children: [
+                                  PrayerCompanionSettingsSection(
+                                    isDark: isDark,
+                                  ),
                                 ],
                               ),
                               SettingsSection(
