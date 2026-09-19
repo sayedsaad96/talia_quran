@@ -66,20 +66,22 @@ void main() {
       expect(TaliaNotificationService.companionPlannedBaseId, 2100);
       expect(TaliaNotificationService.companionPlannedMaxCount, 20);
       expect(TaliaNotificationService.companionFollowUpBaseId, 2120);
-      expect(TaliaNotificationService.companionFollowUpMaxCount, 10);
+      // 2120–2129 covers the two rolling days; 2130–2134 covers yesterday's
+      // midnight-spilling follow-ups (see PrayerCompanionPlanner).
+      expect(TaliaNotificationService.companionFollowUpMaxCount, 15);
     });
   });
 
   group('cancelPrayerCompanionReminders', () {
-    test('cancels only IDs 2100-2129, never legacy prayer IDs', () async {
+    test('cancels only IDs 2100-2134, never legacy prayer IDs', () async {
       await service.cancelPrayerCompanionReminders();
 
       final cancelledIds = verify(
         () => plugin.cancel(id: captureAny(named: 'id')),
       ).captured;
 
-      expect(cancelledIds, hasLength(30));
-      expect(cancelledIds, everyElement(inInclusiveRange(2100, 2129)));
+      expect(cancelledIds, hasLength(35));
+      expect(cancelledIds, everyElement(inInclusiveRange(2100, 2134)));
       expect(
         cancelledIds.any((id) => (id as int) >= 2000 && id <= 2039),
         isFalse,
@@ -137,8 +139,8 @@ void main() {
         () => plugin.cancel(id: captureAny(named: 'id')),
       ).captured;
 
-      expect(cancelledIds, hasLength(30));
-      expect(cancelledIds, everyElement(inInclusiveRange(2100, 2129)));
+      expect(cancelledIds, hasLength(35));
+      expect(cancelledIds, everyElement(inInclusiveRange(2100, 2134)));
     });
 
     test('skips reminders whose scheduled time is in the past', () async {

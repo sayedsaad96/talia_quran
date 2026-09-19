@@ -67,11 +67,13 @@ class PrayerCompanionPolicy {
       PrayerCompanionCommand.clear => PrayerCompanionStatus.unconfirmed,
     };
     // Idempotent no-op: a repeated command producing the same status returns
-    // the existing record untouched. When a follow-up is already pending
-    // (followUpAt != null) it must NOT be re-armed — that would increment
-    // followUpCount and violate "never more than one follow-up per
-    // occurrence". After expiry followUpAt is null, so a post-expiry
-    // remindLater/prayNow still re-arms through the normal path.
+    // the existing record untouched. When a follow-up is still stored
+    // (followUpAt != null — pending or already elapsed) it must NOT be
+    // re-armed: that would increment followUpCount and violate "never more
+    // than one pending follow-up per occurrence". Only once the follow-up is
+    // CLEARED — by an explicit status change (confirm/notYet/clear) or a
+    // future reconciliation pass via expireFollowUp — can a new command
+    // schedule one fresh follow-up.
     if (existingRecord != null &&
         status == existingRecord.status &&
         (existingRecord.followUpAt != null || candidateFollowUp == null)) {
@@ -112,6 +114,12 @@ class PrayerCompanionPolicy {
 
   /// Clears an elapsed pending follow-up, returning the updated record, or
   /// null when there is nothing to expire.
+  ///
+  /// V1 note: production does not call this automatically — the planner
+  /// simply stops surfacing elapsed follow-ups, and the stored `followUpAt`
+  /// is cleared by the next explicit status change (confirm/notYet/clear).
+  /// The method exists for future reconciliation passes and is covered by
+  /// tests pinning the expiry boundary and re-arm semantics.
   PrayerCompanionRecord? expireFollowUp({
     required PrayerCompanionRecord record,
     required DateTime now,

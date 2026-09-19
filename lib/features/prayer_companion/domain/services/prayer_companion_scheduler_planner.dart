@@ -33,7 +33,10 @@ class ScheduledPrayerCompanionNotification extends Equatable {
 ///
 /// - Planned events: `2100 + dayOffset * 10 + prayerIndex * 2 + eventIndex`
 ///   where eventIndex is 0 for preparation and 1 for check-in.
-/// - Follow-ups: `2120 + dayOffset * 5 + prayerIndex`.
+/// - Follow-ups: `2120 + dayOffset * 5 + prayerIndex` for the two rolling
+///   days (2120–2129).
+/// - Spillover follow-ups: `2120 + 10 + prayerIndex` (2130–2134) re-plans
+///   yesterday's still-pending follow-up that fires just past midnight.
 ///
 /// prayerIndex follows [PrayerKey] declaration order (fajr=0 … isha=4).
 ///
@@ -98,6 +101,52 @@ class PrayerCompanionPlanner {
         ownerId: ownerId,
         localDate: date,
       );
+
+      // A follow-up requested late in the evening (e.g. isha at 23:55) can
+      // fire a few minutes past midnight. A replan after 00:00 no longer sees
+      // yesterday's records and the cancel-first reschedule would silently
+      // drop that pending follow-up, so yesterday's still-pending follow-ups
+      // are re-planned here under the dedicated spillover ID range
+      // (2130–2134) with their original occurrence identity.
+      if (dayOffset == 0) {
+        final yesterday = today.subtract(const Duration(days: 1));
+        final yesterdayRecords = await _repository.readDay(
+          ownerId: ownerId,
+          localDate: yesterday,
+        );
+        final todayFajr = timesByKey[PrayerKey.fajr];
+        for (final prayerKey in PrayerKey.values) {
+          if (!(prefs.getBool(prayerFilterKeys[prayerKey]!) ?? true)) continue;
+          if (!settings.followUpEnabled) continue;
+          final record = yesterdayRecords[prayerKey];
+          final followUpAt = record?.followUpAt;
+          if (record == null ||
+              record.status == PrayerCompanionStatus.confirmed ||
+              followUpAt == null ||
+              !followUpAt.isAfter(now)) {
+            continue;
+          }
+          // The spillover window is bounded: a follow-up is scheduled at
+          // most 15 minutes after its command, so any still-future spillover
+          // must land before today's fajr (the next obligatory prayer after
+          // yesterday's isha). Anything later belongs to an expired window.
+          if (todayFajr != null && !followUpAt.isBefore(todayFajr)) continue;
+          if (followUpAt.isAfter(windowEnd)) continue;
+          events.add(
+            ScheduledPrayerCompanionNotification(
+              id: followUpBaseId + 2 * 5 + prayerKey.index,
+              kind: PrayerCompanionNotificationKind.followUp,
+              occurrence: PrayerOccurrence(
+                ownerId: ownerId,
+                localDate: yesterday,
+                prayerKey: prayerKey,
+                scheduledAt: followUpAt,
+              ),
+              scheduledAt: followUpAt,
+            ),
+          );
+        }
+      }
 
       for (final prayerKey in PrayerKey.values) {
         if (!(prefs.getBool(prayerFilterKeys[prayerKey]!) ?? true)) continue;

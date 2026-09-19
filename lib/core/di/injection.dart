@@ -375,6 +375,7 @@ Future<void> configureDependencies({bool background = false}) async {
     () => ApplyPrayerCompanionCommand(
       getIt<PrayerCompanionRepository>(),
       const PrayerCompanionPolicy(),
+      getIt<RecordOwnerProvider>(),
     ),
   );
   getIt.registerLazySingleton<GetPrayerCompanionDaySummary>(

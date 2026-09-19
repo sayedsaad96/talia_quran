@@ -125,9 +125,17 @@ class PrayerCompanionRecord extends Equatable {
   final DateTime? followUpAt;
 
   /// Number of follow-ups scheduled in the CURRENT follow-up cycle for this
-  /// occurrence. The policy allows at most one at a time, so this is only
-  /// ever 0 or 1. It resets to 0 when the follow-up expires or is cancelled,
-  /// which re-arms a fresh follow-up for the same occurrence.
+  /// occurrence. The policy allows at most one PENDING follow-up at a time,
+  /// so this is only ever 0 or 1 while a follow-up is active.
+  ///
+  /// V1 semantics: a follow-up whose time passes without a new explicit
+  /// command is simply no longer surfaced (the planner skips elapsed
+  /// follow-ups); the stored `followUpAt` lingers until the next explicit
+  /// status change clears it. A fresh follow-up for the same occurrence can
+  /// only be scheduled after that clearing (for example notYet → remindLater).
+  /// This is the documented interpretation of the plan's "never more than
+  /// once per occurrence": never more than one PENDING follow-up, never an
+  /// escalating sequence.
   final int followUpCount;
   final DateTime createdAt;
   final DateTime updatedAt;

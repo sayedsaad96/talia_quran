@@ -118,7 +118,7 @@ List<int> notificationIdsToCancelForBudget({
 
   int priority(int id) {
     if (id >= 2000 && id < 2040) return 0; // prayer times: never evict
-    if (id >= 2100 && id < 2130) return 0; // prayer companion: never evict
+    if (id >= 2100 && id < 2135) return 0; // prayer companion: never evict
     if (id >= 1040 && id < 1061) return 1; // daily ayah
     if (id >= 1070 && id < 1084) return 2; // morning azkar
     if (id >= 1090 && id < 1104) return 3; // evening azkar
@@ -281,12 +281,15 @@ class TaliaNotificationService {
   static const int _prayerTimesMaxCount = 40;
   // Prayer Companion namespace. Planned events (preparation + check-in, two
   // rolling days × five prayers) occupy 2100–2119; follow-ups occupy
-  // 2120–2129. These ranges never overlap the legacy prayer IDs (2000–2039)
-  // and are protected equally by notificationIdsToCancelForBudget.
+  // 2120–2134: 2120–2129 for the two rolling days, and 2130–2134 for
+  // yesterday's isha follow-ups that spill a few minutes past midnight and
+  // must survive a post-midnight replan (see PrayerCompanionPlanner). These
+  // ranges never overlap the legacy prayer IDs (2000–2039) and are protected
+  // equally by notificationIdsToCancelForBudget.
   static const int companionPlannedBaseId = 2100;
   static const int companionPlannedMaxCount = 20;
   static const int companionFollowUpBaseId = 2120;
-  static const int companionFollowUpMaxCount = 10;
+  static const int companionFollowUpMaxCount = 15;
   // iOS only keeps 64 pending local notifications. Leave headroom for
   // notifications created outside this service and never ask the OS to trim
   // them silently.

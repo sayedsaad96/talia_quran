@@ -37,7 +37,7 @@ void main() {
       limit: 60,
     );
 
-    expect(evicted.any((id) => id >= 2100 && id < 2130), isFalse);
+    expect(evicted.any((id) => id >= 2100 && id < 2135), isFalse);
     expect(evicted, contains(1040));
   });
 
@@ -58,7 +58,7 @@ void main() {
       );
 
       expect(evicted.any((id) => id >= 2000 && id < 2040), isFalse);
-      expect(evicted.any((id) => id >= 2100 && id < 2130), isFalse);
+      expect(evicted.any((id) => id >= 2100 && id < 2135), isFalse);
     },
   );
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/services/notification_scheduler.dart';
 import 'package:talia_quran/core/services/prayer_times_service.dart';
@@ -87,6 +88,7 @@ void main() {
       applyCommand: ApplyPrayerCompanionCommand(
         repository,
         const PrayerCompanionPolicy(),
+        const FixedRecordOwnerProvider('owner-a'),
       ),
       scheduler: scheduler,
       locale: () => const Locale('ar'),

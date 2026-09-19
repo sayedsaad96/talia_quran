@@ -360,6 +360,57 @@ void main() {
       expect(followUp.occurrence.prayerKey, PrayerKey.asr);
     });
 
+    test(
+      'yesterday midnight-spilling follow-up survives a post-midnight replan',
+      () async {
+        await enableCompanion();
+        // Isha yesterday (2026-09-15 20:00) with a follow-up requested at
+        // 23:55 that fires at 00:05 today — after the civil-date rollover.
+        await repository.save(
+          recordFor(
+            PrayerKey.isha,
+            PrayerCompanionStatus.remindLater,
+            localDate: DateTime(2026, 9, 15),
+            followUpAt: DateTime(2026, 9, 16, 0, 5),
+            followUpCount: 1,
+          ),
+        );
+        final plan = await buildPlanner().plan(
+          now: DateTime(2026, 9, 16, 0, 2),
+        );
+
+        final spillover = plan.singleWhere(
+          (e) => e.kind == PrayerCompanionNotificationKind.followUp,
+        );
+        // Spillover ID: 2120 + 2 * 5 + isha index (4).
+        expect(spillover.id, 2134);
+        expect(spillover.scheduledAt, DateTime(2026, 9, 16, 0, 5));
+        expect(spillover.occurrence.localDate, DateTime(2026, 9, 15));
+        expect(spillover.occurrence.prayerKey, PrayerKey.isha);
+        // No collision with the rolling follow-up IDs.
+        expect(plan.map((e) => e.id).toSet().length, plan.length);
+      },
+    );
+
+    test('spillover follow-up past today fajr window is dropped', () async {
+      await enableCompanion();
+      await repository.save(
+        recordFor(
+          PrayerKey.isha,
+          PrayerCompanionStatus.remindLater,
+          localDate: DateTime(2026, 9, 15),
+          followUpAt: DateTime(2026, 9, 16, 5, 30),
+          followUpCount: 1,
+        ),
+      );
+      final plan = await buildPlanner().plan(now: DateTime(2026, 9, 16, 0, 2));
+
+      expect(
+        plan.where((e) => e.kind == PrayerCompanionNotificationKind.followUp),
+        isEmpty,
+      );
+    });
+
     test('elapsed follow-up is skipped', () async {
       await enableCompanion();
       await repository.save(

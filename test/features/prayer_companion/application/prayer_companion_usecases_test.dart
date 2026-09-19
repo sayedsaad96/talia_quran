@@ -92,6 +92,7 @@ void main() {
       useCase = ApplyPrayerCompanionCommand(
         repository,
         const PrayerCompanionPolicy(),
+        const FixedRecordOwnerProvider(ownerId),
       );
     });
 

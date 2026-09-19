@@ -123,6 +123,7 @@ void main() {
       applyCommand: ApplyPrayerCompanionCommand(
         repository,
         const PrayerCompanionPolicy(),
+        const FixedRecordOwnerProvider(ownerId),
       ),
       scheduler: scheduler,
       locale: () => const Locale('ar'),
@@ -277,16 +278,49 @@ void main() {
     },
   );
 
-  test('a refresh cycle preserves explicit user statements', () async {
+  test('stored statements keep their identity across refresh cycles', () async {
     final asr = occurrenceFor(PrayerKey.asr, DateTime(2026, 9, 16, 15, 25));
     await controller.applyInApp(asr, PrayerCompanionCommand.notYet);
 
+    // The scheduler is mocked here, so this exercises only the storage
+    // contract: records are keyed by occurrence identity, not by refresh
+    // state, and a reschedule never rewrites scheduledAt. End-to-end
+    // refresh behavior is covered by the scheduler tests.
     await scheduler.refreshNotifications(_FakeAppLocalizations(), force: true);
 
     final saved = await repository.read(asr);
     expect(saved!.status, PrayerCompanionStatus.notYet);
     expect(saved.occurrence.scheduledAt, DateTime(2026, 9, 16, 15, 25));
   });
+
+  test(
+    'a stale-owner notification action is re-owned to the active account',
+    () async {
+      // A notification scheduled under a previous account fires after another
+      // account signed in; the tap must be attributed to the active owner.
+      final staleOccurrence = PrayerOccurrence(
+        ownerId: 'owner-old',
+        localDate: localDate,
+        prayerKey: PrayerKey.asr,
+        scheduledAt: DateTime(2026, 9, 16, 15, 25),
+      );
+
+      await controller.applyInApp(
+        staleOccurrence,
+        PrayerCompanionCommand.confirm,
+      );
+
+      final saved = await repository.read(
+        occurrenceFor(PrayerKey.asr, DateTime(2026, 9, 16, 15, 25)),
+      );
+      expect(saved!.status, PrayerCompanionStatus.confirmed);
+      expect(saved.occurrence.ownerId, ownerId);
+      expect(
+        await repository.readDay(ownerId: ownerId, localDate: localDate),
+        hasLength(1),
+      );
+    },
+  );
 
   test('account reset clears local history', () async {
     final asr = occurrenceFor(PrayerKey.asr, DateTime(2026, 9, 16, 15, 25));

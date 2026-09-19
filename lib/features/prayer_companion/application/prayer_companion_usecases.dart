@@ -9,11 +9,23 @@ import '../domain/services/prayer_companion_policy.dart';
 /// resulting record through the repository, and returns the saved record.
 /// Follow-up notification rescheduling is handled by the notification
 /// response controller, not here.
+///
+/// An occurrence stamped with a previous account's owner id (for example a
+/// Companion notification that fires after another account signed in) is
+/// re-owned to the CURRENT active owner before persisting: the tap is a
+/// self-reported statement of the person using the device, and storing it
+/// under a stale owner would make it invisible to the active account and to
+/// the daily summary.
 class ApplyPrayerCompanionCommand {
-  const ApplyPrayerCompanionCommand(this._repository, this._policy);
+  const ApplyPrayerCompanionCommand(
+    this._repository,
+    this._policy, [
+    this._owner = const SupabaseRecordOwnerProvider(),
+  ]);
 
   final PrayerCompanionRepository _repository;
   final PrayerCompanionPolicy _policy;
+  final RecordOwnerProvider _owner;
 
   Future<PrayerCompanionRecord> call({
     required PrayerOccurrence occurrence,
@@ -21,10 +33,19 @@ class ApplyPrayerCompanionCommand {
     required DateTime now,
     DateTime? nextPrayerAt,
   }) async {
-    final existing = await _repository.read(occurrence);
+    final activeOwnerId = _owner.currentOwnerId;
+    final effectiveOccurrence = occurrence.ownerId == activeOwnerId
+        ? occurrence
+        : PrayerOccurrence(
+            ownerId: activeOwnerId,
+            localDate: occurrence.localDate,
+            prayerKey: occurrence.prayerKey,
+            scheduledAt: occurrence.scheduledAt,
+          );
+    final existing = await _repository.read(effectiveOccurrence);
     final transition = _policy.apply(
       existing: existing,
-      occurrence: occurrence,
+      occurrence: effectiveOccurrence,
       command: command,
       now: now,
       nextPrayerAt: nextPrayerAt,

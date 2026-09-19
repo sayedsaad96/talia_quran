@@ -27,7 +27,15 @@ class PrayerCompanionSettingsSection extends StatefulWidget {
 
 class _PrayerCompanionSettingsSectionState
     extends State<PrayerCompanionSettingsSection> {
-  final _preferences = getIt<PrayerCompanionPreferences>();
+  // Guard convention: the NotificationScheduler lookup is guarded with
+  // `isRegistered` because it is optional in stripped test/host environments.
+  // With the settings page building every section up front, the preferences
+  // store is resolved defensively too — the section renders nothing instead
+  // of crashing the page when core DI is absent (isolated widget tests).
+  final PrayerCompanionPreferences? _preferences =
+      getIt.isRegistered<PrayerCompanionPreferences>()
+      ? getIt<PrayerCompanionPreferences>()
+      : null;
   late PrayerCompanionSettings _settings;
 
   /// Preparation intervals offered in V1: disabled or 5/10/15 minutes.
@@ -36,15 +44,17 @@ class _PrayerCompanionSettingsSectionState
   @override
   void initState() {
     super.initState();
-    _settings = _preferences.read();
+    _settings = _preferences?.read() ?? const PrayerCompanionSettings();
   }
 
   /// Every preference change is persisted before notifications are
   /// rescheduled, so the scheduler always sees the new value.
   Future<void> _apply(PrayerCompanionSettings next) async {
-    await _preferences.write(next);
+    final preferences = _preferences;
+    if (preferences == null) return;
+    await preferences.write(next);
     if (!mounted) return;
-    setState(() => _settings = _preferences.read());
+    setState(() => _settings = preferences.read());
     await _refreshNotifications();
   }
 
@@ -92,6 +102,10 @@ class _PrayerCompanionSettingsSectionState
     try {
       final ownerId = getIt<RecordOwnerProvider>().currentOwnerId;
       await getIt<PrayerCompanionRepository>().clearOwner(ownerId);
+      // Cleared records can leave check-in/follow-up events pending in the
+      // OS; force a refresh so they are cancelled immediately instead of
+      // waiting for the next scheduled refresh.
+      await _refreshNotifications();
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -107,6 +121,7 @@ class _PrayerCompanionSettingsSectionState
 
   @override
   Widget build(BuildContext context) {
+    if (_preferences == null) return const SizedBox.shrink();
     final l10n = context.l10n;
     return Column(
       children: [

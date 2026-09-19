@@ -2,6 +2,7 @@ import 'dart:ui' show Locale;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
+import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/services/notification_scheduler.dart';
@@ -70,6 +71,7 @@ void main() {
       applyCommand: ApplyPrayerCompanionCommand(
         repository,
         const PrayerCompanionPolicy(),
+        const FixedRecordOwnerProvider('owner-a'),
       ),
       scheduler: scheduler,
       locale: () => const Locale('en'),
@@ -235,6 +237,7 @@ void main() {
           applyCommand: ApplyPrayerCompanionCommand(
             repository,
             const PrayerCompanionPolicy(),
+            const FixedRecordOwnerProvider('owner-a'),
           ),
           scheduler: scheduler,
           locale: () => const Locale('en'),
