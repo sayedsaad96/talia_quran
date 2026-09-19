@@ -62,7 +62,9 @@ class HomeNightHeader extends StatelessWidget {
                   skin: skin,
                   hijriLabel: state.hijriLabel,
                   companionSummary: state.prayerCompanionSummary,
-                  companionController: state.prayerCompanionSummary == null
+                  companionController:
+                      state.prayerCompanionSummary == null ||
+                          !getIt.isRegistered<PrayerCompanionController>()
                       ? null
                       : getIt<PrayerCompanionController>(),
                   onCompanionChanged: () =>
