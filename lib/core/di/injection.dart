@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show Locale;
 
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -380,7 +381,15 @@ Future<void> configureDependencies({bool background = false}) async {
     () => PrayerCompanionController(
       applyCommand: getIt<ApplyPrayerCompanionCommand>(),
       scheduler: getIt<NotificationScheduler>(),
-      locale: () => getIt<LocaleCubit>().state,
+      locale: () {
+        try {
+          return getIt<LocaleCubit>().state;
+        } catch (_) {
+          // Mirrors the nextPrayerAt pattern: fall back to the default
+          // locale rather than failing a companion response.
+          return const Locale('ar');
+        }
+      },
       nextPrayerAt: () async {
         try {
           final snapshot = await getIt<PrayerTimesService>().current(

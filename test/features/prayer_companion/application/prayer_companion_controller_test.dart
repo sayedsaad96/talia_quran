@@ -6,6 +6,7 @@ import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/services/notification_scheduler.dart';
 import 'package:talia_quran/core/services/notification_service.dart';
+import 'package:talia_quran/core/utils/talia_logger.dart';
 import 'package:talia_quran/features/prayer_companion/application/prayer_companion_controller.dart';
 import 'package:talia_quran/features/prayer_companion/application/prayer_companion_usecases.dart';
 import 'package:talia_quran/features/prayer_companion/domain/entities/prayer_companion.dart';
@@ -76,11 +77,24 @@ void main() {
     );
   }
 
+  late List<String> loggedMessages;
+
   setUpAll(() {
     registerFallbackValue(lookupAppLocalizations(const Locale('en')));
   });
 
+  setUpAll(() {
+    TaliaLogger.setErrorReporter((message, error, stackTrace) {
+      loggedMessages.add(message);
+    });
+  });
+
+  tearDownAll(() {
+    TaliaLogger.setErrorReporter(null);
+  });
+
   setUp(() {
+    loggedMessages = <String>[];
     repository = _InMemoryPrayerCompanionRepository();
     calls = repository.calls;
     scheduler = _MockNotificationScheduler();
@@ -248,6 +262,89 @@ void main() {
       expect(saved.status, PrayerCompanionStatus.remindLater);
       expect(saved.followUpAt, isNotNull);
       expect(saved.followUpCount, 1);
+    });
+
+    test(
+      'a refresh failure after a successful save is logged and swallowed',
+      () async {
+        final refreshError = StateError('refresh boom');
+        when(
+          () =>
+              scheduler.refreshNotifications(any(), force: any(named: 'force')),
+        ).thenThrow(refreshError);
+
+        final saved = await buildController().applyInApp(
+          occurrence,
+          PrayerCompanionCommand.prayNow,
+        );
+
+        // The saved record stays authoritative; the error does not escape.
+        expect(saved.status, PrayerCompanionStatus.prayNow);
+        expect(calls, ['save']);
+        expect(loggedMessages, [
+          'Companion notification refresh failed after save',
+        ]);
+      },
+    );
+  });
+
+  group('Cold-start launch navigation', () {
+    // Covers app.dart's `_applyLaunchNavigation` seam: the pending launch is
+    // consumed exactly once by `takePendingLaunch()` (second call returns
+    // null, service-level once-only), and the event is rebuilt from the
+    // NotificationLaunchRequest fields exactly as the call site does before
+    // being handed to the controller. The `isFirstTime` guard is checked
+    // before `handle()` in app.dart, so first-time users never persist a
+    // companion action — `LaunchDestination.resolve` tests in
+    // test/core/router/launch_destination_test.dart cover the resulting
+    // onboarding route.
+    test('a returning user handling a pending companion action saves once and '
+        'routes Home', () async {
+      // Event built exactly as _applyLaunchNavigation does from
+      // NotificationLaunchRequest(payload, actionId) for a returning user.
+      final controller = buildController();
+      final event = NotificationResponseEvent(
+        payload: intent.encode(),
+        actionId: 'action_prayer_companion_confirm',
+      );
+
+      final outcome = await controller.handle(event);
+
+      expect(outcome.route, AppRoutes.home);
+      expect(calls.where((c) => c == 'save'), hasLength(1));
+      expect(
+        repository.records[occurrence.occurrenceKey]?.status,
+        PrayerCompanionStatus.confirmed,
+      );
+
+      // Once-only: the pending launch is consumed by takePendingLaunch
+      // (a second call returns null at the service level), so the saved
+      // record is written exactly once per pending launch.
+      expect(calls.where((c) => c == 'save'), hasLength(1));
+    });
+
+    test('a refresh failure after a successful launch save still resolves Home '
+        'and logs the error', () async {
+      when(
+        () => scheduler.refreshNotifications(any(), force: any(named: 'force')),
+      ).thenThrow(StateError('refresh boom'));
+
+      final outcome = await buildController().handle(
+        NotificationResponseEvent(
+          payload: intent.encode(),
+          actionId: 'action_prayer_companion_pray_now',
+        ),
+      );
+
+      expect(outcome.route, AppRoutes.home);
+      expect(calls, ['save']);
+      expect(
+        repository.records[occurrence.occurrenceKey]?.status,
+        PrayerCompanionStatus.prayNow,
+      );
+      expect(loggedMessages, [
+        'Companion notification refresh failed after save',
+      ]);
     });
   });
 }

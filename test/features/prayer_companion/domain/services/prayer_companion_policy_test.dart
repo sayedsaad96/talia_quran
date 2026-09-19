@@ -493,6 +493,60 @@ void main() {
   });
 
   group('idempotent no-op', () {
+    test('repeated prayNow returns the same record with followUpCount 1', () {
+      final first = policy.apply(
+        existing: null,
+        occurrence: asr,
+        command: PrayerCompanionCommand.prayNow,
+        now: at1505,
+        nextPrayerAt: DateTime(2026, 9, 16, 18),
+      );
+      expect(first.record.followUpAt, DateTime(2026, 9, 16, 15, 20));
+      expect(first.record.followUpCount, 1);
+
+      final second = policy.apply(
+        existing: first.record,
+        occurrence: asr,
+        command: PrayerCompanionCommand.prayNow,
+        now: at1506,
+        nextPrayerAt: DateTime(2026, 9, 16, 18),
+      );
+      // The pending follow-up is NOT re-armed: never more than one
+      // follow-up per occurrence.
+      expect(second.record, same(first.record));
+      expect(second.record.followUpCount, 1);
+      expect(second.record.followUpAt, DateTime(2026, 9, 16, 15, 20));
+      expect(second.shouldScheduleFollowUp, isFalse);
+      expect(second.shouldCancelFollowUp, isTrue);
+    });
+
+    test(
+      'repeated remindLater returns the same record with followUpCount 1',
+      () {
+        final first = policy.apply(
+          existing: null,
+          occurrence: asr,
+          command: PrayerCompanionCommand.remindLater,
+          now: at1505,
+          nextPrayerAt: DateTime(2026, 9, 16, 18),
+        );
+        expect(first.record.followUpCount, 1);
+
+        final second = policy.apply(
+          existing: first.record,
+          occurrence: asr,
+          command: PrayerCompanionCommand.remindLater,
+          now: at1506,
+          nextPrayerAt: DateTime(2026, 9, 16, 18),
+        );
+        expect(second.record, same(first.record));
+        expect(second.record.followUpCount, 1);
+        expect(second.record.followUpAt, DateTime(2026, 9, 16, 15, 15));
+        expect(second.shouldScheduleFollowUp, isFalse);
+        expect(second.shouldCancelFollowUp, isTrue);
+      },
+    );
+
     test('clear on an unconfirmed record returns the same instance', () {
       final cleared = policy.apply(
         existing: null,

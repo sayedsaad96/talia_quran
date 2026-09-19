@@ -3,6 +3,7 @@ import 'dart:ui' show Locale;
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/router/launch_destination.dart';
+import '../../../core/utils/talia_logger.dart';
 import '../../../core/services/notification_scheduler.dart';
 import '../../../core/services/notification_service.dart';
 import '../domain/entities/prayer_companion.dart';
@@ -54,6 +55,11 @@ class PrayerCompanionController {
   /// Applies [command] from an in-app surface: persists FIRST, then
   /// force-refreshes local notifications so superseded check-in/follow-up
   /// events are cancelled and new follow-ups scheduled.
+  ///
+  /// The saved record stays authoritative (spec §5): if the refresh throws,
+  /// the failure is logged and the saved record is still returned — the next
+  /// scheduled refresh retries. Navigation after [handle] must never be
+  /// stranded by a scheduling failure.
   Future<PrayerCompanionRecord> applyInApp(
     PrayerOccurrence occurrence,
     PrayerCompanionCommand command,
@@ -64,10 +70,18 @@ class PrayerCompanionController {
       now: DateTime.now(),
       nextPrayerAt: await _nextPrayerAt?.call(),
     );
-    await _scheduler.refreshNotifications(
-      lookupAppLocalizations(_locale()),
-      force: true,
-    );
+    try {
+      await _scheduler.refreshNotifications(
+        lookupAppLocalizations(_locale()),
+        force: true,
+      );
+    } catch (error, stackTrace) {
+      TaliaLogger.e(
+        'Companion notification refresh failed after save',
+        error,
+        stackTrace,
+      );
+    }
     return saved;
   }
 
