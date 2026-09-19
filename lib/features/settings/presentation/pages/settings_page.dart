@@ -1,24 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_typography.dart';
 import '../../../auth/presentation/cubits/auth_cubit.dart';
-import '../../../prayer_companion/presentation/widgets/prayer_companion_settings_section.dart';
 import '../cubits/profile_cubit.dart';
 import '../cubits/settings_cubit.dart';
 import '../cubits/settings_state.dart';
 import '../widgets/settings_account_tiles.dart';
 import '../widgets/settings_appearance_tiles.dart';
-import '../widgets/settings_info_tiles.dart';
-import '../widgets/settings_memorization_tiles.dart';
-import '../widgets/settings_notification_tiles.dart';
-import '../widgets/settings_parent_tiles.dart';
-import '../widgets/settings_prayer_tiles.dart';
+import '../widgets/settings_nav_tile.dart';
 import '../widgets/settings_section.dart';
+import 'subpages/about_settings_page.dart';
+import 'subpages/kids_settings_page.dart';
+import 'subpages/notification_settings_page.dart';
+import 'subpages/prayer_settings_page.dart';
+import 'subpages/quran_settings_page.dart';
 
 void _showSettingsError(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
@@ -75,18 +76,19 @@ class _SettingsView extends StatelessWidget {
           }
         },
         builder: (context, state) {
-          final accentColor = isDark
-              ? AppColors.primaryLight
-              : AppColors.primary;
+          final accentColor =
+              isDark ? AppColors.primaryLight : AppColors.primary;
+          final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
+          final borderColor =
+              isDark ? AppColors.darkDivider : AppColors.lightDivider;
 
           return Scaffold(
-            backgroundColor: isDark
-                ? AppColors.darkBackground
-                : AppColors.lightBackground,
+            backgroundColor:
+                isDark ? AppColors.darkBackground : AppColors.lightBackground,
             body: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1040),
+                constraints: const BoxConstraints(maxWidth: 800),
                 child: CustomScrollView(
                   slivers: [
                     _buildAppBar(context, isDark),
@@ -95,10 +97,11 @@ class _SettingsView extends StatelessWidget {
                         AppSpacing.pagePadding,
                         AppSpacing.md,
                         AppSpacing.pagePadding,
-                        120,
+                        100,
                       ),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
+                          // ── 1. Account Section ──
                           SettingsSection(
                             title: context.l10n.settingsSectionAccount,
                             accentColor: accentColor,
@@ -110,6 +113,8 @@ class _SettingsView extends StatelessWidget {
                             ],
                           ),
                           const SizedBox(height: AppSpacing.lg),
+
+                          // ── 2. Quick Preferences (Theme & Language) ──
                           SettingsSection(
                             title: context.l10n.settingsQuickPreferences,
                             subtitle: context.l10n.settingsSectionAppearance,
@@ -133,161 +138,142 @@ class _SettingsView extends StatelessWidget {
                               ThemeSettingTile(isDark: isDark),
                             ],
                           ),
-                          const SizedBox(height: AppSpacing.xl),
-                          Padding(
-                            padding: const EdgeInsetsDirectional.only(
-                              start: AppSpacing.xs,
-                              bottom: AppSpacing.md,
+                          const SizedBox(height: AppSpacing.lg),
+
+                          // ── 3. Navigation Menu Hub ──
+                          Container(
+                            decoration: BoxDecoration(
+                              color: cardColor,
+                              borderRadius:
+                                  BorderRadius.circular(AppSpacing.radiusLg),
+                              border: Border.all(color: borderColor),
                             ),
-                            child: Text(
-                              context.l10n.settingsMoreSettings,
-                              style: AppTypography.titleMedium.copyWith(
-                                color: isDark
-                                    ? AppColors.darkTextSecondary
-                                    : AppColors.lightTextSecondary,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          SettingsAdaptiveGrid(
-                            children: [
-                              SettingsSection(
-                                title: context
-                                    .l10n
-                                    .settingsSectionQuranMemorization,
-                                accentColor: accentColor,
-                                icon: Icons.auto_stories_rounded,
-                                collapsible: true,
-                                initiallyExpanded: false,
-                                children: [
-                                  AccuracySettingTile(isDark: isDark),
-                                  SettingsDivider(isDark: isDark),
-                                  MemorizationPathSummaryTile(
-                                    isDark: isDark,
-                                    profile: state.memorizationProfile,
-                                  ),
-                                  if (state
-                                          .memorizationProfile
-                                          ?.hasSelectedPath ==
-                                      true) ...[
-                                    SettingsDivider(isDark: isDark),
-                                    ResetMemorizationPathTile(
-                                      isDark: isDark,
-                                      onReset: context
-                                          .read<SettingsCubit>()
-                                          .resetMemorizationIdentity,
-                                    ),
-                                  ],
-                                ],
-                              ),
-                              if (state.isAdultPath ||
-                                  state.shouldShowParentSection)
-                                SettingsSection(
-                                  title:
-                                      context.l10n.settingsSectionKidsGuardian,
-                                  accentColor: accentColor,
-                                  icon: Icons.family_restroom_rounded,
-                                  collapsible: true,
-                                  initiallyExpanded: false,
-                                  children: [
-                                    if (state.isAdultPath)
-                                      ParentModeToggle(
-                                        isDark: isDark,
-                                        isParentMode: state.isParentMode,
-                                        onChanged: context
-                                            .read<SettingsCubit>()
-                                            .toggleParentMode,
+                            child: Column(
+                              children: [
+                                // Quran & Memorization
+                                SettingsNavTile(
+                                  icon: Icons.auto_stories_rounded,
+                                  iconColor: isDark
+                                      ? AppColors.primaryLight
+                                      : AppColors.primary,
+                                  title: context
+                                      .l10n.settingsSectionQuranMemorization,
+                                  subtitle: state.memorizationProfile
+                                              ?.hasSelectedPath ==
+                                          true
+                                      ? (state.memorizationProfile?.isAdult ==
+                                              true
+                                          ? 'مسار الكبار'
+                                          : 'مسار الأطفال')
+                                      : null,
+                                  isDark: isDark,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => BlocProvider.value(
+                                          value: context.read<SettingsCubit>(),
+                                          child: const QuranSettingsPage(),
+                                        ),
                                       ),
-                                    if (state.isAdultPath &&
-                                        state.shouldShowParentSection)
-                                      SettingsDivider(isDark: isDark),
-                                    if (state.shouldShowParentSection)
-                                      ParentDashboardTile(isDark: isDark),
-                                  ],
+                                    );
+                                  },
                                 ),
-                              SettingsSection(
-                                title: context
-                                    .l10n
-                                    .settingsSectionProgressAchievements,
-                                accentColor: accentColor,
-                                icon: Icons.notifications_active_rounded,
-                                collapsible: true,
-                                initiallyExpanded: false,
-                                children: [
-                                  NotificationSettingTile(isDark: isDark),
-                                ],
-                              ),
-                              SettingsSection(
-                                title: context.l10n.settingsSectionHelpTutorial,
-                                accentColor: accentColor,
-                                icon: Icons.help_outline_rounded,
-                                collapsible: true,
-                                initiallyExpanded: false,
-                                children: [TutorialGuideTile(isDark: isDark)],
-                              ),
-                              SettingsSection(
-                                title:
-                                    context.l10n.settingsSectionPrivacySecurity,
-                                accentColor: accentColor,
-                                icon: Icons.security_rounded,
-                                collapsible: true,
-                                initiallyExpanded: false,
-                                children: [
-                                  PrivacyPolicyTile(isDark: isDark),
-                                  BlocBuilder<AuthCubit, AuthState>(
-                                    builder: (context, authState) {
-                                      if (authState is! AuthAuthenticated) {
-                                        return const SizedBox.shrink();
-                                      }
-                                      return Column(
-                                        children: [
-                                          SettingsDivider(isDark: isDark),
-                                          DeleteAccountTile(
-                                            isDark: isDark,
-                                            email: authState.user.email,
+                                SettingsDivider(isDark: isDark),
+
+                                // Prayer Times
+                                SettingsNavTile(
+                                  icon: Icons.schedule_rounded,
+                                  iconColor: const Color(0xFF10B981),
+                                  title: context.l10n.homePrayerTimes,
+                                  subtitle: context
+                                      .l10n.prayerCompanionSettingsTitle,
+                                  isDark: isDark,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const PrayerSettingsPage(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                                SettingsDivider(isDark: isDark),
+
+                                // Notifications & Reminders
+                                SettingsNavTile(
+                                  icon: Icons.notifications_active_rounded,
+                                  iconColor: AppColors.gold,
+                                  title: context.l10n
+                                      .settingsSectionProgressAchievements,
+                                  isDark: isDark,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) =>
+                                            const NotificationSettingsPage(),
+                                      ),
+                                    );
+                                  },
+                                ),
+
+                                // Kids & Guardian (conditional)
+                                if (state.isAdultPath ||
+                                    state.shouldShowParentSection) ...[
+                                  SettingsDivider(isDark: isDark),
+                                  SettingsNavTile(
+                                    icon: Icons.family_restroom_rounded,
+                                    iconColor: const Color(0xFF3B82F6),
+                                    title: context
+                                        .l10n.settingsSectionKidsGuardian,
+                                    isDark: isDark,
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) => BlocProvider.value(
+                                            value:
+                                                context.read<SettingsCubit>(),
+                                            child: const KidsSettingsPage(),
                                           ),
-                                        ],
+                                        ),
                                       );
                                     },
                                   ),
                                 ],
-                              ),
-                              SettingsSection(
-                                title: context.l10n.homePrayerTimes,
-                                accentColor: accentColor,
-                                icon: Icons.schedule_rounded,
-                                collapsible: true,
-                                initiallyExpanded: false,
-                                children: [
-                                  PrayerTimesSettingsSection(isDark: isDark),
-                                ],
-                              ),
-                              SettingsSection(
-                                title:
-                                    context.l10n.prayerCompanionSettingsTitle,
-                                accentColor: accentColor,
-                                icon: Icons.favorite_border_rounded,
-                                collapsible: true,
-                                initiallyExpanded: false,
-                                children: [
-                                  PrayerCompanionSettingsSection(
-                                    isDark: isDark,
-                                  ),
-                                ],
-                              ),
-                              SettingsSection(
-                                title: context.l10n.settingsSectionAboutTalia,
-                                accentColor: accentColor,
-                                icon: Icons.info_outline_rounded,
-                                collapsible: true,
-                                initiallyExpanded: false,
-                                children: [
-                                  AboutTile(isDark: isDark),
-                                  SettingsDivider(isDark: isDark),
-                                  ShareAppTile(isDark: isDark),
-                                ],
-                              ),
-                            ],
+                                SettingsDivider(isDark: isDark),
+
+                                // Help & About Talia
+                                SettingsNavTile(
+                                  icon: Icons.info_outline_rounded,
+                                  iconColor: const Color(0xFF8B5CF6),
+                                  title: context.l10n.settingsSectionAboutTalia,
+                                  subtitle:
+                                      '${context.l10n.settingsSectionHelpTutorial} • ${context.l10n.settingsSectionPrivacySecurity}',
+                                  isDark: isDark,
+                                  onTap: () {
+                                    Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (_) => MultiBlocProvider(
+                                          providers: [
+                                            BlocProvider.value(
+                                              value: context.read<AuthCubit>(),
+                                            ),
+                                            BlocProvider.value(
+                                              value:
+                                                  context.read<ProfileCubit>(),
+                                            ),
+                                            BlocProvider.value(
+                                              value:
+                                                  context.read<SettingsCubit>(),
+                                            ),
+                                          ],
+                                          child: const AboutSettingsPage(),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
                           ),
                         ]),
                       ),
@@ -305,10 +291,9 @@ class _SettingsView extends StatelessWidget {
   SliverAppBar _buildAppBar(BuildContext context, bool isDark) {
     return SliverAppBar(
       pinned: true,
-      expandedHeight: 136,
-      backgroundColor: isDark
-          ? AppColors.darkBackground
-          : AppColors.lightBackground,
+      expandedHeight: 100,
+      backgroundColor:
+          isDark ? AppColors.darkBackground : AppColors.lightBackground,
       elevation: 0,
       scrolledUnderElevation: 0.5,
       leading: IconButton(
@@ -344,43 +329,12 @@ class _SettingsView extends StatelessWidget {
             fontSize: 20,
           ),
         ),
-        background: Stack(
-          children: [
-            Positioned.fill(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: isDark
-                      ? AppColors.heroGradientDark
-                      : AppColors.heroGradientLight,
-                ),
-              ),
-            ),
-            Positioned(
-              left: Directionality.of(context) == TextDirection.rtl
-                  ? null
-                  : -20,
-              right: Directionality.of(context) == TextDirection.rtl
-                  ? -20
-                  : null,
-              top: -10,
-              child: Icon(
-                Icons.settings_rounded,
-                size: 170,
-                color: Colors.white.withValues(alpha: 0.07),
-              ),
-            ),
-            PositionedDirectional(
-              start: AppSpacing.pagePadding,
-              top: 68,
-              child: Text(
-                context.l10n.settingsPageSubtitle,
-                style: AppTypography.bodySmall.copyWith(
-                  color: Colors.white.withValues(alpha: 0.8),
-                  fontSize: 12,
-                ),
-              ),
-            ),
-          ],
+        background: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: isDark
+                ? AppColors.heroGradientDark
+                : AppColors.heroGradientLight,
+          ),
         ),
       ),
     );

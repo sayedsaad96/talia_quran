@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:google_fonts/google_fonts.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 import 'app.dart';
 import 'core/utils/talia_logger.dart';
@@ -80,6 +81,19 @@ Future<void> _bootstrapAndRun() async {
       statusBarBrightness: Brightness.light,
     ),
   );
+
+  // Initialize background audio for continuous Quran recitation
+  try {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'com.example.talia_quran.channel.audio',
+      androidNotificationChannelName: 'تلاوة القرآن الكريم',
+      androidNotificationOngoing: true,
+      androidStopForegroundOnPause: true,
+      androidNotificationIcon: 'mipmap/launcher_icon',
+    );
+  } catch (e, st) {
+    TaliaLogger.w('Failed to initialize JustAudioBackground', e, st);
+  }
 
   runApp(const TaliaApp());
 }

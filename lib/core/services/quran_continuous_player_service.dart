@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/surah_names.dart';
 import '../utils/talia_logger.dart';
@@ -94,8 +96,35 @@ class QuranContinuousPlayerService {
   }) : _quranRepository = quranRepository,
        _reciterService = reciterService,
        _player = player ?? AudioPlayer() {
-    AudioLifecycleManager.instance.register(_player);
+    AudioLifecycleManager.instance.register(
+      _player,
+      shouldPause: () => !_isBackgroundPlaybackEnabled,
+    );
     _initPlayerListeners();
+    _loadBackgroundPlaybackPreference();
+  }
+
+  static const String _prefKeyBackgroundPlayback = 'quran_background_playback_enabled';
+  bool _isBackgroundPlaybackEnabled = true;
+
+  /// Whether Quran recitation continues in the background with notification controls.
+  bool get isBackgroundPlaybackEnabled => _isBackgroundPlaybackEnabled;
+
+  /// Updates whether recitation continues in the background.
+  Future<void> setBackgroundPlaybackEnabled(bool enabled) async {
+    _isBackgroundPlaybackEnabled = enabled;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_prefKeyBackgroundPlayback, enabled);
+    } catch (_) {}
+  }
+
+  Future<void> _loadBackgroundPlaybackPreference() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isBackgroundPlaybackEnabled =
+          prefs.getBool(_prefKeyBackgroundPlayback) ?? true;
+    } catch (_) {}
   }
 
   final QuranRepository _quranRepository;
@@ -408,7 +437,8 @@ class QuranContinuousPlayerService {
   }
 
   /// Builds a list of [AudioSource] for every ayah in [_queue].
-  /// Uses [AudioSource.uri] so just_audio streams and caches each file.
+  /// Uses [AudioSource.uri] with [MediaItem] tag so just_audio_background
+  /// displays metadata and controls in the notification drawer & lock screen.
   List<AudioSource> _buildAudioSources(QuranReciter activeReciter) {
     return _queue.map((ayah) {
       final url = QuranAudioService.buildUrl(
@@ -416,7 +446,16 @@ class QuranContinuousPlayerService {
         ayah.numberInSurah,
         reciter: activeReciter,
       );
-      return AudioSource.uri(Uri.parse(url));
+      final surahName = SurahNames.arabic[ayah.surahId] ?? 'القرآن الكريم';
+      return AudioSource.uri(
+        Uri.parse(url),
+        tag: MediaItem(
+          id: '${ayah.surahId}_${ayah.numberInSurah}',
+          album: 'القرآن الكريم',
+          title: 'سورة $surahName — الآية ${ayah.numberInSurah}',
+          artist: activeReciter.name,
+        ),
+      );
     }).toList();
   }
 

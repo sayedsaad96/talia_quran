@@ -2,10 +2,14 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/quran/presentation/cubits/quran_audio_player_cubit.dart';
+import '../../features/quran/presentation/widgets/quran_background_exit_dialog.dart';
 import '../../features/quran/presentation/widgets/quran_mini_player_bar.dart';
 import '../constants/app_spacing.dart';
+import '../constants/surah_names.dart';
 import '../extensions/context_extensions.dart';
 import '../router/app_router.dart';
 import '../theme/app_colors.dart';
@@ -56,58 +60,94 @@ class AppShell extends StatelessWidget {
     );
   }
 
+  Future<void> _handlePopScope(BuildContext context, bool didPop) async {
+    if (didPop) return;
+
+    // If user is on a secondary tab, return to Home tab first
+    if (navigationShell.currentIndex != 0) {
+      navigationShell.goBranch(0);
+      return;
+    }
+
+    final audioCubit = context.read<QuranAudioPlayerCubit>();
+    if (audioCubit.state.isPlaying) {
+      final surahId = audioCubit.state.currentSurahId;
+      final surahName = surahId != null ? SurahNames.arabic[surahId] : null;
+
+      final action = await showQuranBackgroundExitDialog(
+        context: context,
+        surahName: surahName,
+      );
+
+      if (action == null) return;
+
+      if (action == QuranBackgroundExitAction.continueInBackground) {
+        await SystemNavigator.pop();
+      } else if (action == QuranBackgroundExitAction.stopAndExit) {
+        await audioCubit.stop();
+        await SystemNavigator.pop();
+      }
+    } else {
+      await SystemNavigator.pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final isWide = context.screenWidth >= 600;
 
-    if (isWide) {
-      return Scaffold(
-        body: Row(
-          children: [
-            _TaliaNavRail(
-              currentIndex: navigationShell.currentIndex,
-              isDark: isDark,
-              tabs: _tabs,
-              onTap: _onTap,
-            ),
-            VerticalDivider(
-              width: 1,
-              thickness: 1,
-              color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
-            ),
-            Expanded(
-              child: Stack(
-                children: [
-                  navigationShell,
-                  const PositionedDirectional(
-                    start: 0,
-                    end: 0,
-                    bottom: 0,
-                    child: QuranMiniPlayerBar(),
+    final Widget scaffold = isWide
+        ? Scaffold(
+            body: Row(
+              children: [
+                _TaliaNavRail(
+                  currentIndex: navigationShell.currentIndex,
+                  isDark: isDark,
+                  tabs: _tabs,
+                  onTap: _onTap,
+                ),
+                VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: isDark ? AppColors.darkDivider : AppColors.lightDivider,
+                ),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      navigationShell,
+                      const PositionedDirectional(
+                        start: 0,
+                        end: 0,
+                        bottom: 0,
+                        child: QuranMiniPlayerBar(),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      );
-    }
+          )
+        : Scaffold(
+            body: navigationShell,
+            bottomNavigationBar: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const QuranMiniPlayerBar(),
+                _TaliaBottomNav(
+                  currentIndex: navigationShell.currentIndex,
+                  isDark: isDark,
+                  tabs: _tabs,
+                  onTap: _onTap,
+                ),
+              ],
+            ),
+          );
 
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const QuranMiniPlayerBar(),
-          _TaliaBottomNav(
-            currentIndex: navigationShell.currentIndex,
-            isDark: isDark,
-            tabs: _tabs,
-            onTap: _onTap,
-          ),
-        ],
-      ),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) => _handlePopScope(context, didPop),
+      child: scaffold,
     );
   }
 }

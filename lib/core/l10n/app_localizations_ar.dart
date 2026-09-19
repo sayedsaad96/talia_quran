@@ -4368,6 +4368,33 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2CompletionSubtitle => 'تم حفظ آيات هذا المقطع بنجاح.';
 
   @override
+  String get v2ClosingMomentLabel => 'لحظة ختام';
+
+  @override
+  String get v2ClosingAyah => 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ';
+
+  @override
+  String get v2ClosingAyahSource => 'سورة الرعد · الآية ٢٨';
+
+  @override
+  String v2ClosingSummary(int count) {
+    return 'حفظتَ $count آيات في هذه الجلسة — أثرٌ باقٍ بإذن الله.';
+  }
+
+  @override
+  String get v2ClosingDuaButton => 'دعاء الختام';
+
+  @override
+  String get v2ClosingDua =>
+      'اللَّهُمَّ اجْعَلْ مَا حَفِظْتُ نُورًا لِي فِي قَلْبِي، وَذِكْرًا لِي عِنْدَكَ، وَاجْعَلْهُ نَاصِرًا لِي، وَانْفَعْنِي بِمَا عَلَّمْتَنِي وَعَلِّمْنِي مَا يَنْفَعُنِي.';
+
+  @override
+  String get v2ClosingDuaAmen => 'آمين';
+
+  @override
+  String get v2ClosingRestNote => 'خذ نفسًا… حفظك ينتظرك غدًا بإذن الله.';
+
+  @override
   String get v2MemorizationHub => 'مركز الحفظ';
 
   @override

@@ -7807,6 +7807,54 @@ abstract class AppLocalizations {
   /// **'تم حفظ آيات هذا المقطع بنجاح.'**
   String get v2CompletionSubtitle;
 
+  /// No description provided for @v2ClosingMomentLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'لحظة ختام'**
+  String get v2ClosingMomentLabel;
+
+  /// No description provided for @v2ClosingAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ'**
+  String get v2ClosingAyah;
+
+  /// No description provided for @v2ClosingAyahSource.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة الرعد · الآية ٢٨'**
+  String get v2ClosingAyahSource;
+
+  /// No description provided for @v2ClosingSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظتَ {count} آيات في هذه الجلسة — أثرٌ باقٍ بإذن الله.'**
+  String v2ClosingSummary(int count);
+
+  /// No description provided for @v2ClosingDuaButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعاء الختام'**
+  String get v2ClosingDuaButton;
+
+  /// No description provided for @v2ClosingDua.
+  ///
+  /// In ar, this message translates to:
+  /// **'اللَّهُمَّ اجْعَلْ مَا حَفِظْتُ نُورًا لِي فِي قَلْبِي، وَذِكْرًا لِي عِنْدَكَ، وَاجْعَلْهُ نَاصِرًا لِي، وَانْفَعْنِي بِمَا عَلَّمْتَنِي وَعَلِّمْنِي مَا يَنْفَعُنِي.'**
+  String get v2ClosingDua;
+
+  /// No description provided for @v2ClosingDuaAmen.
+  ///
+  /// In ar, this message translates to:
+  /// **'آمين'**
+  String get v2ClosingDuaAmen;
+
+  /// No description provided for @v2ClosingRestNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'خذ نفسًا… حفظك ينتظرك غدًا بإذن الله.'**
+  String get v2ClosingRestNote;
+
   /// No description provided for @v2MemorizationHub.
   ///
   /// In ar, this message translates to:

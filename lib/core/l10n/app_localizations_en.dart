@@ -4307,6 +4307,34 @@ class AppLocalizationsEn extends AppLocalizations {
       'This memorization block has been completed.';
 
   @override
+  String get v2ClosingMomentLabel => 'A moment of closure';
+
+  @override
+  String get v2ClosingAyah => 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ';
+
+  @override
+  String get v2ClosingAyahSource => 'Surah Ar-Ra\'d · Ayah 28';
+
+  @override
+  String v2ClosingSummary(int count) {
+    return 'You committed $count ayahs to memory this session — a lasting impact, in shaa Allah.';
+  }
+
+  @override
+  String get v2ClosingDuaButton => 'Closing dua';
+
+  @override
+  String get v2ClosingDua =>
+      'O Allah, make what I have memorized a light in my heart and a remembrance with You. Make it a supporter for me, benefit me with what You have taught me, and teach me what benefits me.';
+
+  @override
+  String get v2ClosingDuaAmen => 'Ameen';
+
+  @override
+  String get v2ClosingRestNote =>
+      'Take a breath… your memorization awaits you tomorrow, in shaa Allah.';
+
+  @override
   String get v2MemorizationHub => 'Memorization Hub';
 
   @override
