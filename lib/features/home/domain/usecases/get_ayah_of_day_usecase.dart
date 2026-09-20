@@ -46,6 +46,8 @@ class GetAyahOfDayUsecase {
             surahNameEn: surah.surah.nameEn,
             pageNumber: ayah.page ?? surah.surah.page,
             context: context,
+            surahType: surah.surah.type,
+            surahAyahCount: surah.surah.ayahCount,
           );
         }
       }

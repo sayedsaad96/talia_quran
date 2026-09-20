@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:isar/isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
@@ -5,6 +7,8 @@ import '../../features/streak/domain/entities/streak_entity.dart';
 import '../../features/streak/domain/entities/streak_result.dart';
 import '../progress/progress_changed_reason.dart';
 import '../progress/progress_events_bus.dart';
+import 'milestone_notification.dart';
+import 'streak_mercy_policy.dart';
 import 'streak_reader.dart';
 
 class StreakService implements StreakReader {
@@ -12,6 +16,9 @@ class StreakService implements StreakReader {
 
   final Isar _isar;
   final ProgressEventsBus _progressEvents;
+
+  /// "يوم الرحمة" (Mercy Day) grace rule — see [StreakMercyPolicy].
+  static const StreakMercyPolicy _mercyPolicy = StreakMercyPolicy();
 
   static const List<int> _milestones = [3, 7, 14, 30, 60, 100, 365];
 
@@ -38,8 +45,9 @@ class StreakService implements StreakReader {
     final dayKey =
         todayDate.year * 10000 + todayDate.month * 100 + todayDate.day;
 
-    return _isar.writeTxn(() async {
+    final result = await _isar.writeTxn(() async {
       // ── 1. Update Streak record ────────────────────────────────────────────
+      var mercyApplied = false;
       final data = await _isar.streakIsars.get(1) ?? StreakIsar();
       final lastDate = data.lastActivityDate;
 
@@ -64,8 +72,22 @@ class StreakService implements StreakReader {
           // Consecutive day
           data.currentStreak += 1;
         } else {
-          // Streak broken — reset to 1
-          data.currentStreak = 1;
+          // Streak broken. "يوم الرحمة" (Mercy Day): missing exactly one day
+          // is forgiven at most once per week — the streak is re-lit instead
+          // of reset, because الله رحيم and so is Talia.
+          final missedDays = todayDate.difference(lastNormalized).inDays - 1;
+          final mercyGranted = _mercyPolicy.allowsMercy(
+            missedDays: missedDays,
+            lastMercyDate: data.lastMercyDate,
+            today: todayDate,
+          );
+          if (mercyGranted) {
+            data.currentStreak += 1;
+            data.lastMercyDate = todayDate;
+            mercyApplied = true;
+          } else {
+            data.currentStreak = 1;
+          }
         }
       } else {
         // First time
@@ -92,8 +114,15 @@ class StreakService implements StreakReader {
         milestoneReached: _milestones.contains(data.currentStreak)
             ? data.currentStreak
             : null,
+        mercyApplied: mercyApplied,
       );
     });
+
+    if (result.mercyApplied) {
+      // The gentle mercy moment — fire-and-forget, never blocks the write.
+      unawaited(fireStreakMercyCelebration());
+    }
+    return result;
   }
 
   /// Upsert a daily activity record (inside an existing write transaction).

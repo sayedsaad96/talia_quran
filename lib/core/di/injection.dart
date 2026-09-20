@@ -23,6 +23,8 @@ import '../services/audio_resume_store.dart';
 import '../services/streak_risk_evaluator.dart';
 import '../services/get_daily_wird_usecase.dart';
 import '../services/prayer_times_service.dart';
+import '../services/prayer_serenity_watcher.dart';
+import '../l10n/app_localizations.dart';
 import '../services/activity_event_recorder.dart';
 import '../services/achievement_service.dart';
 import '../theme/theme_cubit.dart';
@@ -361,6 +363,43 @@ Future<void> configureDependencies({bool background = false}) async {
   );
   getIt.registerLazySingleton<PrayerTimesService>(
     () => PrayerTimesService(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<PrayerSerenityWatcher>(
+    () => PrayerSerenityWatcher(
+      prayerTimesProvider: () async {
+        final snapshot = await getIt<PrayerTimesService>().current(
+          isArabic: true,
+        );
+        if (snapshot == null) return null;
+        final times = <String, DateTime>{
+          if (snapshot.fajr != null) 'fajr': snapshot.fajr!,
+          if (snapshot.dhuhr != null) 'dhuhr': snapshot.dhuhr!,
+          if (snapshot.asr != null) 'asr': snapshot.asr!,
+          if (snapshot.maghrib != null) 'maghrib': snapshot.maghrib!,
+          if (snapshot.isha != null) 'isha': snapshot.isha!,
+        };
+        return times.isEmpty ? null : times;
+      },
+      pauseAudio: () async {
+        if (!getIt.isRegistered<QuranContinuousPlayerService>()) return;
+        await getIt<QuranContinuousPlayerService>().pause();
+      },
+      showSerenityMoment: () async {
+        if (!getIt.isRegistered<TaliaNotificationService>()) return;
+        final l10n = lookupAppLocalizations(
+          Locale(getIt<SharedPreferences>().getString('app_locale') ?? 'ar'),
+        );
+        await getIt<TaliaNotificationService>().showPrayerSerenityMoment(
+          title: l10n.prayerSerenityNotificationTitle,
+          body: l10n.prayerSerenityNotificationBody,
+        );
+      },
+      isEnabled: () async =>
+          getIt<SharedPreferences>().getBool(
+            PrayerSerenityWatcher.enabledKey,
+          ) ??
+          true,
+    ),
   );
   getIt.registerLazySingleton<PrayerCompanionPlanner>(
     () => PrayerCompanionPlanner(

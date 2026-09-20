@@ -1,4 +1,4 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
@@ -78,6 +78,15 @@ void main() {
     when(() => service.cancelStreakGentleNudge()).thenAnswer((_) async {});
     when(() => service.cancelSmartReminder()).thenAnswer((_) async {});
     when(() => service.cancelFridayKahfReminder()).thenAnswer((_) async {});
+    when(() => service.cancelWeeklyImpactReminder()).thenAnswer((_) async {});
+    when(
+      () => service.scheduleWeeklyImpactReminder(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        hour: any(named: 'hour'),
+        minute: any(named: 'minute'),
+      ),
+    ).thenAnswer((_) async {});
     when(() => service.cancelTahajjudReminder()).thenAnswer((_) async {});
     when(() => service.cancelKhatmahReminder()).thenAnswer((_) async {});
     when(() => service.cancelPrayerTimesReminders()).thenAnswer((_) async {});

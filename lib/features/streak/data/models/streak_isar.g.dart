@@ -37,13 +37,18 @@ const StreakIsarSchema = CollectionSchema(
       name: r'lastActivityDate',
       type: IsarType.dateTime,
     ),
-    r'lastSyncedAt': PropertySchema(
+    r'lastMercyDate': PropertySchema(
       id: 4,
+      name: r'lastMercyDate',
+      type: IsarType.dateTime,
+    ),
+    r'lastSyncedAt': PropertySchema(
+      id: 5,
       name: r'lastSyncedAt',
       type: IsarType.dateTime,
     ),
     r'longestStreak': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'longestStreak',
       type: IsarType.long,
     )
@@ -81,8 +86,9 @@ void _streakIsarSerialize(
   writer.writeLong(offsets[1], object.currentStreak);
   writer.writeLong(offsets[2], object.freezesAvailable);
   writer.writeDateTime(offsets[3], object.lastActivityDate);
-  writer.writeDateTime(offsets[4], object.lastSyncedAt);
-  writer.writeLong(offsets[5], object.longestStreak);
+  writer.writeDateTime(offsets[4], object.lastMercyDate);
+  writer.writeDateTime(offsets[5], object.lastSyncedAt);
+  writer.writeLong(offsets[6], object.longestStreak);
 }
 
 StreakIsar _streakIsarDeserialize(
@@ -97,8 +103,9 @@ StreakIsar _streakIsarDeserialize(
   object.freezesAvailable = reader.readLong(offsets[2]);
   object.id = id;
   object.lastActivityDate = reader.readDateTimeOrNull(offsets[3]);
-  object.lastSyncedAt = reader.readDateTimeOrNull(offsets[4]);
-  object.longestStreak = reader.readLong(offsets[5]);
+  object.lastMercyDate = reader.readDateTimeOrNull(offsets[4]);
+  object.lastSyncedAt = reader.readDateTimeOrNull(offsets[5]);
+  object.longestStreak = reader.readLong(offsets[6]);
   return object;
 }
 
@@ -120,6 +127,8 @@ P _streakIsarDeserializeProp<P>(
     case 4:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 5:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 6:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -485,6 +494,80 @@ extension StreakIsarQueryFilter
   }
 
   QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastMercyDateIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastMercyDate',
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastMercyDateIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastMercyDate',
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastMercyDateEqualTo(DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastMercyDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastMercyDateGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastMercyDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastMercyDateLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastMercyDate',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
+      lastMercyDateBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastMercyDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterFilterCondition>
       lastSyncedAtIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -673,6 +756,18 @@ extension StreakIsarQuerySortBy
     });
   }
 
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> sortByLastMercyDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastMercyDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> sortByLastMercyDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastMercyDate', Sort.desc);
+    });
+  }
+
   QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> sortByLastSyncedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastSyncedAt', Sort.asc);
@@ -762,6 +857,18 @@ extension StreakIsarQuerySortThenBy
     });
   }
 
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> thenByLastMercyDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastMercyDate', Sort.asc);
+    });
+  }
+
+  QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> thenByLastMercyDateDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastMercyDate', Sort.desc);
+    });
+  }
+
   QueryBuilder<StreakIsar, StreakIsar, QAfterSortBy> thenByLastSyncedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'lastSyncedAt', Sort.asc);
@@ -813,6 +920,12 @@ extension StreakIsarQueryWhereDistinct
     });
   }
 
+  QueryBuilder<StreakIsar, StreakIsar, QDistinct> distinctByLastMercyDate() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastMercyDate');
+    });
+  }
+
   QueryBuilder<StreakIsar, StreakIsar, QDistinct> distinctByLastSyncedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'lastSyncedAt');
@@ -856,6 +969,13 @@ extension StreakIsarQueryProperty
       lastActivityDateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'lastActivityDate');
+    });
+  }
+
+  QueryBuilder<StreakIsar, DateTime?, QQueryOperations>
+      lastMercyDateProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastMercyDate');
     });
   }
 

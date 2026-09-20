@@ -14,6 +14,7 @@ import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/utils/mushaf_hizb_helper.dart';
+import '../../../../core/widgets/closing_moment.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../data/datasources/bookmark_service.dart';
 import '../../domain/entities/quran_entities.dart';
@@ -79,6 +80,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
   // Keep these for internal logic that doesn't need to trigger UI rebuild.
   int? _currentPageNumber;
   bool _hasNavigatedToCompletion = false;
+  bool _hasShownWirdClosingMoment = false;
 
   final QuranReadConfirmationGate _readConfirmationGate =
       QuranReadConfirmationGate();
@@ -274,7 +276,75 @@ class _QuranReaderPageState extends State<QuranReaderPage>
           newlyCompletedPages: state.newlyCompletedPages,
         ),
       );
+      return;
     }
+    if (state is KhatmahWirdCompleted && !_hasShownWirdClosingMoment) {
+      _hasShownWirdClosingMoment = true;
+      _showWirdClosingMoment(context, state.plan);
+    }
+  }
+
+  /// Talia's closing moment for the daily khatmah wird: instead of letting
+  /// the reader silently continue, pause on serenity — an ayah of
+  /// tranquility, the wird page range as a quiet summary, and a closing dua.
+  void _showWirdClosingMoment(BuildContext context, KhatmahPlan plan) {
+    final isDark = context.isDark;
+    final isArabic = context.isArabic;
+    final date = _khatmahCubit?.displayDate ?? DateTime.now();
+    final wird = plan.dailyTargetFor(date);
+    String pageLabel(int page) =>
+        isArabic ? MushafHizbHelper.toArabicNumber(page) : page.toString();
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        final dialogL10n = dialogContext.l10n;
+        return Dialog(
+          backgroundColor:
+              isDark ? AppColors.darkCard : AppColors.lightCard,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          ),
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ClosingMomentAyahCard(
+                    key: const Key('khatmah_wird_closing_moment'),
+                    summary: dialogL10n.closingSummaryKhatmahWird(
+                      pageLabel(wird.startPage),
+                      pageLabel(wird.endPage),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  OutlinedButton.icon(
+                    key: const Key('khatmah_wird_closing_dua_button'),
+                    onPressed: () => showClosingDuaSheet(dialogContext),
+                    icon: const Icon(Icons.volunteer_activism_rounded),
+                    label: Text(dialogL10n.closingDuaButton),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  FilledButton(
+                    key: const Key('khatmah_wird_closing_done_button'),
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: isDark
+                          ? AppColors.primaryLight
+                          : AppColors.primary,
+                    ),
+                    child: Text(dialogL10n.closingDone),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _startReadTimer(QuranPageDetail detail, BuildContext context) {

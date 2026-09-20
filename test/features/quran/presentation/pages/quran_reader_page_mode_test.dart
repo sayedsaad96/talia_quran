@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
@@ -593,6 +593,69 @@ void main() {
         await tester.pump(const Duration(milliseconds: 100));
         expect(completionBuilds, 1);
         await fixture.cubit.close();
+      },
+    );
+  });
+
+  group('QuranReaderPage wird closing moment', () {
+    testWidgets(
+      'shows serene closing moment when the daily wird completes',
+      (tester) async {
+        final wirdStates = StreamController<KhatmahState>.broadcast();
+        addTearDown(wirdStates.close);
+        when(() => mockKhatmahCubit.state).thenReturn(
+          KhatmahActive(plan: testPlan, wirdStartPage: 41, wirdEndPage: 44),
+        );
+        when(
+          () => mockKhatmahCubit.stream,
+        ).thenAnswer((_) => wirdStates.stream);
+
+        tester.view.devicePixelRatio = 1.0;
+        tester.view.physicalSize = const Size(1200, 2400);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        addTearDown(tester.view.resetPhysicalSize);
+
+        await tester.pumpWidget(
+          buildReaderApp(
+            pageNumber: 44,
+            readerMode: QuranReaderMode.khatmah,
+            khatmahCubit: mockKhatmahCubit,
+            locale: const Locale('en'),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+
+        wirdStates.add(KhatmahWirdCompleted(plan: testPlan));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(
+          find.byKey(const Key('khatmah_wird_closing_moment')),
+          findsOneWidget,
+        );
+        // testPlan: pages 1–42 completed, 4 pages/day → today's wird 43–46.
+        expect(
+          find.text(
+            "You completed today's wird — pages 43 to 46 — a lasting impact, in shaa Allah.",
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('khatmah_wird_closing_dua_button')),
+          findsOneWidget,
+        );
+        expect(find.text('Done, praise be to Allah'), findsOneWidget);
+
+        await tester.tap(
+          find.byKey(const Key('khatmah_wird_closing_done_button')),
+        );
+        // One pump starts the pop transition; the second completes it.
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(
+          find.byKey(const Key('khatmah_wird_closing_moment')),
+          findsNothing,
+        );
       },
     );
   });

@@ -5641,6 +5641,18 @@ abstract class AppLocalizations {
   /// **'يلا بينا نرجع للمصحف ونثبت حفظ اليوم 🌸'**
   String get notificationDailyReviewBody;
 
+  /// No description provided for @notificationStreakMercyTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الله رحيم — سلسلتك مستنياك 🌿'**
+  String get notificationStreakMercyTitle;
+
+  /// No description provided for @notificationStreakMercyBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'فاتك يوم، وسلسلتك رجعت من جديد… كمّل وردك النهاردة 🤍'**
+  String get notificationStreakMercyBody;
+
   /// No description provided for @notificationStreakAlertTitle.
   ///
   /// In ar, this message translates to:
@@ -6132,6 +6144,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'نور ما بين الجمعتين 🌿'**
   String get notificationFridayKahfTitle;
+
+  /// No description provided for @notificationWeeklyImpactTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أثرك هذا الأسبوع 🌿'**
+  String get notificationWeeklyImpactTitle;
+
+  /// No description provided for @notificationWeeklyImpactBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} أيام من أسبوعك كانت مع القرآن — وكل صفحة فيها أثر باقٍ'**
+  String notificationWeeklyImpactBody(int count);
+
+  /// No description provided for @notificationWeeklyImpactQuietBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'أسبوع جديد يبدأ — وصفحة واحدة بتفرق 🌱'**
+  String get notificationWeeklyImpactQuietBody;
+
+  /// No description provided for @notificationSettingsWeeklyImpact.
+  ///
+  /// In ar, this message translates to:
+  /// **'أثر الأسبوع (الجمعة)'**
+  String get notificationSettingsWeeklyImpact;
 
   /// No description provided for @notificationFridayKahfBody.
   ///
@@ -7807,53 +7843,65 @@ abstract class AppLocalizations {
   /// **'تم حفظ آيات هذا المقطع بنجاح.'**
   String get v2CompletionSubtitle;
 
-  /// No description provided for @v2ClosingMomentLabel.
+  /// No description provided for @closingMomentLabel.
   ///
   /// In ar, this message translates to:
   /// **'لحظة ختام'**
-  String get v2ClosingMomentLabel;
+  String get closingMomentLabel;
 
-  /// No description provided for @v2ClosingAyah.
+  /// No description provided for @closingAyah.
   ///
   /// In ar, this message translates to:
   /// **'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ'**
-  String get v2ClosingAyah;
+  String get closingAyah;
 
-  /// No description provided for @v2ClosingAyahSource.
+  /// No description provided for @closingAyahSource.
   ///
   /// In ar, this message translates to:
   /// **'سورة الرعد · الآية ٢٨'**
-  String get v2ClosingAyahSource;
+  String get closingAyahSource;
 
-  /// No description provided for @v2ClosingSummary.
+  /// No description provided for @closingSummaryMemorization.
   ///
   /// In ar, this message translates to:
   /// **'حفظتَ {count} آيات في هذه الجلسة — أثرٌ باقٍ بإذن الله.'**
-  String v2ClosingSummary(int count);
+  String closingSummaryMemorization(int count);
 
-  /// No description provided for @v2ClosingDuaButton.
+  /// No description provided for @closingSummaryKhatmahWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممتَ ورد اليوم — من صفحة {start} إلى {end} — أثرٌ باقٍ بإذن الله.'**
+  String closingSummaryKhatmahWird(String start, String end);
+
+  /// No description provided for @closingDuaButton.
   ///
   /// In ar, this message translates to:
   /// **'دعاء الختام'**
-  String get v2ClosingDuaButton;
+  String get closingDuaButton;
 
-  /// No description provided for @v2ClosingDua.
+  /// No description provided for @closingDua.
   ///
   /// In ar, this message translates to:
   /// **'اللَّهُمَّ اجْعَلْ مَا حَفِظْتُ نُورًا لِي فِي قَلْبِي، وَذِكْرًا لِي عِنْدَكَ، وَاجْعَلْهُ نَاصِرًا لِي، وَانْفَعْنِي بِمَا عَلَّمْتَنِي وَعَلِّمْنِي مَا يَنْفَعُنِي.'**
-  String get v2ClosingDua;
+  String get closingDua;
 
-  /// No description provided for @v2ClosingDuaAmen.
+  /// No description provided for @closingDuaAmen.
   ///
   /// In ar, this message translates to:
   /// **'آمين'**
-  String get v2ClosingDuaAmen;
+  String get closingDuaAmen;
 
-  /// No description provided for @v2ClosingRestNote.
+  /// No description provided for @closingDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم بحمد الله'**
+  String get closingDone;
+
+  /// No description provided for @closingRestNote.
   ///
   /// In ar, this message translates to:
   /// **'خذ نفسًا… حفظك ينتظرك غدًا بإذن الله.'**
-  String get v2ClosingRestNote;
+  String get closingRestNote;
 
   /// No description provided for @v2MemorizationHub.
   ///
@@ -8863,6 +8911,30 @@ abstract class AppLocalizations {
   /// **'آية اليوم'**
   String get homeAyahOfDay;
 
+  /// No description provided for @surahRevelationMeccan.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكية'**
+  String get surahRevelationMeccan;
+
+  /// No description provided for @surahRevelationMedinan.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدنية'**
+  String get surahRevelationMedinan;
+
+  /// No description provided for @ayahOfDaySurahMeta.
+  ///
+  /// In ar, this message translates to:
+  /// **'{revelation} · {count} آية'**
+  String ayahOfDaySurahMeta(String revelation, String count);
+
+  /// No description provided for @ayahOfDayReadSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ السورة كاملة'**
+  String get ayahOfDayReadSurah;
+
   /// No description provided for @homeAyahContextFriday.
   ///
   /// In ar, this message translates to:
@@ -9606,6 +9678,60 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'مرافق الصلاة'**
   String get prayerCompanionSettingsTitle;
+
+  /// No description provided for @microReviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لمحة مراجعة'**
+  String get microReviewTitle;
+
+  /// No description provided for @microReviewQuestion.
+  ///
+  /// In ar, this message translates to:
+  /// **'من حفظك القديم… لسه فاكرها؟'**
+  String get microReviewQuestion;
+
+  /// No description provided for @microReviewReference.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surah} · آية {ayah}'**
+  String microReviewReference(String surah, String ayah);
+
+  /// No description provided for @microReviewRevealHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرّب تفتكرها… ثم اضغط لعرضها'**
+  String get microReviewRevealHint;
+
+  /// No description provided for @microReviewRecite.
+  ///
+  /// In ar, this message translates to:
+  /// **'سمّع نفسك'**
+  String get microReviewRecite;
+
+  /// No description provided for @prayerSerenityTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'وضع سكينة الصلاة'**
+  String get prayerSerenityTitle;
+
+  /// No description provided for @prayerSerenitySubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نوقف التلاوة بهدوء عند دخول وقت الصلاة'**
+  String get prayerSerenitySubtitle;
+
+  /// No description provided for @prayerSerenityNotificationTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حان وقت اللقاء 🕌'**
+  String get prayerSerenityNotificationTitle;
+
+  /// No description provided for @prayerSerenityNotificationBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'أوقفنا التلاوة بهدوء… حان وقت الصلاة، تقبّل الله'**
+  String get prayerSerenityNotificationBody;
 
   /// No description provided for @prayerCompanionEnable.
   ///

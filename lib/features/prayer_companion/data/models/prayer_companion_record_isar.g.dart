@@ -43,7 +43,11 @@ const PrayerCompanionRecordIsarSchema = CollectionSchema(
       name: r'occurrenceKey',
       type: IsarType.string,
     ),
-    r'ownerId': PropertySchema(id: 5, name: r'ownerId', type: IsarType.string),
+    r'ownerId': PropertySchema(
+      id: 5,
+      name: r'ownerId',
+      type: IsarType.string,
+    ),
     r'prayerKeyIndex': PropertySchema(
       id: 6,
       name: r'prayerKeyIndex',
@@ -68,7 +72,7 @@ const PrayerCompanionRecordIsarSchema = CollectionSchema(
       id: 10,
       name: r'updatedAt',
       type: IsarType.dateTime,
-    ),
+    )
   },
   estimateSize: _prayerCompanionRecordIsarEstimateSize,
   serialize: _prayerCompanionRecordIsarSerialize,
@@ -86,7 +90,7 @@ const PrayerCompanionRecordIsarSchema = CollectionSchema(
           name: r'occurrenceKey',
           type: IndexType.hash,
           caseSensitive: true,
-        ),
+        )
       ],
     ),
     r'ownerId': IndexSchema(
@@ -99,7 +103,7 @@ const PrayerCompanionRecordIsarSchema = CollectionSchema(
           name: r'ownerId',
           type: IndexType.hash,
           caseSensitive: true,
-        ),
+        )
       ],
     ),
     r'localDayKey': IndexSchema(
@@ -112,9 +116,9 @@ const PrayerCompanionRecordIsarSchema = CollectionSchema(
           name: r'localDayKey',
           type: IndexType.value,
           caseSensitive: false,
-        ),
+        )
       ],
-    ),
+    )
   },
   links: {},
   embeddedSchemas: {},
@@ -215,16 +219,12 @@ Id _prayerCompanionRecordIsarGetId(PrayerCompanionRecordIsar object) {
 }
 
 List<IsarLinkBase<dynamic>> _prayerCompanionRecordIsarGetLinks(
-  PrayerCompanionRecordIsar object,
-) {
+    PrayerCompanionRecordIsar object) {
   return [];
 }
 
 void _prayerCompanionRecordIsarAttach(
-  IsarCollection<dynamic> col,
-  Id id,
-  PrayerCompanionRecordIsar object,
-) {
+    IsarCollection<dynamic> col, Id id, PrayerCompanionRecordIsar object) {
   object.id = id;
 }
 
@@ -247,15 +247,13 @@ extension PrayerCompanionRecordIsarByIndex
   }
 
   Future<List<PrayerCompanionRecordIsar?>> getAllByOccurrenceKey(
-    List<String> occurrenceKeyValues,
-  ) {
+      List<String> occurrenceKeyValues) {
     final values = occurrenceKeyValues.map((e) => [e]).toList();
     return getAllByIndex(r'occurrenceKey', values);
   }
 
   List<PrayerCompanionRecordIsar?> getAllByOccurrenceKeySync(
-    List<String> occurrenceKeyValues,
-  ) {
+      List<String> occurrenceKeyValues) {
     final values = occurrenceKeyValues.map((e) => [e]).toList();
     return getAllByIndexSync(r'occurrenceKey', values);
   }
@@ -274,51 +272,33 @@ extension PrayerCompanionRecordIsarByIndex
     return putByIndex(r'occurrenceKey', object);
   }
 
-  Id putByOccurrenceKeySync(
-    PrayerCompanionRecordIsar object, {
-    bool saveLinks = true,
-  }) {
+  Id putByOccurrenceKeySync(PrayerCompanionRecordIsar object,
+      {bool saveLinks = true}) {
     return putByIndexSync(r'occurrenceKey', object, saveLinks: saveLinks);
   }
 
   Future<List<Id>> putAllByOccurrenceKey(
-    List<PrayerCompanionRecordIsar> objects,
-  ) {
+      List<PrayerCompanionRecordIsar> objects) {
     return putAllByIndex(r'occurrenceKey', objects);
   }
 
-  List<Id> putAllByOccurrenceKeySync(
-    List<PrayerCompanionRecordIsar> objects, {
-    bool saveLinks = true,
-  }) {
+  List<Id> putAllByOccurrenceKeySync(List<PrayerCompanionRecordIsar> objects,
+      {bool saveLinks = true}) {
     return putAllByIndexSync(r'occurrenceKey', objects, saveLinks: saveLinks);
   }
 }
 
-extension PrayerCompanionRecordIsarQueryWhereSort
-    on
-        QueryBuilder<
-          PrayerCompanionRecordIsar,
-          PrayerCompanionRecordIsar,
-          QWhere
-        > {
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhere
-  >
-  anyId() {
+extension PrayerCompanionRecordIsarQueryWhereSort on QueryBuilder<
+    PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QWhere> {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhere
-  >
-  anyLocalDayKey() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhere> anyLocalDayKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         const IndexWhereClause.any(indexName: r'localDayKey'),
@@ -327,30 +307,20 @@ extension PrayerCompanionRecordIsarQueryWhereSort
   }
 }
 
-extension PrayerCompanionRecordIsarQueryWhere
-    on
-        QueryBuilder<
-          PrayerCompanionRecordIsar,
-          PrayerCompanionRecordIsar,
-          QWhereClause
-        > {
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  idEqualTo(Id id) {
+extension PrayerCompanionRecordIsarQueryWhere on QueryBuilder<
+    PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QWhereClause> {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> idEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(IdWhereClause.between(lower: id, upper: id));
+      return query.addWhereClause(IdWhereClause.between(
+        lower: id,
+        upper: id,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  idNotEqualTo(Id id) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> idNotEqualTo(Id id) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
@@ -372,12 +342,8 @@ extension PrayerCompanionRecordIsarQueryWhere
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  idGreaterThan(Id id, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> idGreaterThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.greaterThan(lower: id, includeLower: include),
@@ -385,12 +351,8 @@ extension PrayerCompanionRecordIsarQueryWhere
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  idLessThan(Id id, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> idLessThan(Id id, {bool include = false}) {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(
         IdWhereClause.lessThan(upper: id, includeUpper: include),
@@ -398,731 +360,555 @@ extension PrayerCompanionRecordIsarQueryWhere
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  idBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> idBetween(
     Id lowerId,
     Id upperId, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IdWhereClause.between(
-          lower: lowerId,
-          includeLower: includeLower,
-          upper: upperId,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IdWhereClause.between(
+        lower: lowerId,
+        includeLower: includeLower,
+        upper: upperId,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  occurrenceKeyEqualTo(String occurrenceKey) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> occurrenceKeyEqualTo(String occurrenceKey) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'occurrenceKey',
-          value: [occurrenceKey],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'occurrenceKey',
+        value: [occurrenceKey],
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  occurrenceKeyNotEqualTo(String occurrenceKey) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> occurrenceKeyNotEqualTo(String occurrenceKey) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'occurrenceKey',
-                lower: [],
-                upper: [occurrenceKey],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'occurrenceKey',
-                lower: [occurrenceKey],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'occurrenceKey',
+              lower: [],
+              upper: [occurrenceKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'occurrenceKey',
+              lower: [occurrenceKey],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'occurrenceKey',
-                lower: [occurrenceKey],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'occurrenceKey',
-                lower: [],
-                upper: [occurrenceKey],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'occurrenceKey',
+              lower: [occurrenceKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'occurrenceKey',
+              lower: [],
+              upper: [occurrenceKey],
+              includeUpper: false,
+            ));
       }
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  ownerIdEqualTo(String ownerId) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> ownerIdEqualTo(String ownerId) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(indexName: r'ownerId', value: [ownerId]),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'ownerId',
+        value: [ownerId],
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  ownerIdNotEqualTo(String ownerId) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> ownerIdNotEqualTo(String ownerId) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerId',
-                lower: [],
-                upper: [ownerId],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerId',
-                lower: [ownerId],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerId',
+              lower: [],
+              upper: [ownerId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerId',
+              lower: [ownerId],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerId',
-                lower: [ownerId],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'ownerId',
-                lower: [],
-                upper: [ownerId],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerId',
+              lower: [ownerId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'ownerId',
+              lower: [],
+              upper: [ownerId],
+              includeUpper: false,
+            ));
       }
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  localDayKeyEqualTo(int localDayKey) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> localDayKeyEqualTo(int localDayKey) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.equalTo(
-          indexName: r'localDayKey',
-          value: [localDayKey],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'localDayKey',
+        value: [localDayKey],
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  localDayKeyNotEqualTo(int localDayKey) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> localDayKeyNotEqualTo(int localDayKey) {
     return QueryBuilder.apply(this, (query) {
       if (query.whereSort == Sort.asc) {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'localDayKey',
-                lower: [],
-                upper: [localDayKey],
-                includeUpper: false,
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'localDayKey',
-                lower: [localDayKey],
-                includeLower: false,
-                upper: [],
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'localDayKey',
+              lower: [],
+              upper: [localDayKey],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'localDayKey',
+              lower: [localDayKey],
+              includeLower: false,
+              upper: [],
+            ));
       } else {
         return query
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'localDayKey',
-                lower: [localDayKey],
-                includeLower: false,
-                upper: [],
-              ),
-            )
-            .addWhereClause(
-              IndexWhereClause.between(
-                indexName: r'localDayKey',
-                lower: [],
-                upper: [localDayKey],
-                includeUpper: false,
-              ),
-            );
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'localDayKey',
+              lower: [localDayKey],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'localDayKey',
+              lower: [],
+              upper: [localDayKey],
+              includeUpper: false,
+            ));
       }
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  localDayKeyGreaterThan(int localDayKey, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> localDayKeyGreaterThan(
+    int localDayKey, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'localDayKey',
-          lower: [localDayKey],
-          includeLower: include,
-          upper: [],
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'localDayKey',
+        lower: [localDayKey],
+        includeLower: include,
+        upper: [],
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  localDayKeyLessThan(int localDayKey, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> localDayKeyLessThan(
+    int localDayKey, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'localDayKey',
-          lower: [],
-          upper: [localDayKey],
-          includeUpper: include,
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'localDayKey',
+        lower: [],
+        upper: [localDayKey],
+        includeUpper: include,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterWhereClause
-  >
-  localDayKeyBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterWhereClause> localDayKeyBetween(
     int lowerLocalDayKey,
     int upperLocalDayKey, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addWhereClause(
-        IndexWhereClause.between(
-          indexName: r'localDayKey',
-          lower: [lowerLocalDayKey],
-          includeLower: includeLower,
-          upper: [upperLocalDayKey],
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'localDayKey',
+        lower: [lowerLocalDayKey],
+        includeLower: includeLower,
+        upper: [upperLocalDayKey],
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
 
-extension PrayerCompanionRecordIsarQueryFilter
-    on
-        QueryBuilder<
-          PrayerCompanionRecordIsar,
-          PrayerCompanionRecordIsar,
-          QFilterCondition
-        > {
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  createdAtEqualTo(DateTime value) {
+extension PrayerCompanionRecordIsarQueryFilter on QueryBuilder<
+    PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QFilterCondition> {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> createdAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'createdAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  createdAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> createdAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'createdAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  createdAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> createdAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'createdAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  createdAtBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> createdAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'createdAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'createdAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  followUpAtIsNull() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> followUpAtIsNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNull(property: r'followUpAt'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'followUpAt',
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  followUpAtIsNotNull() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> followUpAtIsNotNull() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        const FilterCondition.isNotNull(property: r'followUpAt'),
-      );
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'followUpAt',
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  followUpAtEqualTo(DateTime? value) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> followUpAtEqualTo(DateTime? value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'followUpAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'followUpAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  followUpAtGreaterThan(DateTime? value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> followUpAtGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'followUpAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'followUpAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  followUpAtLessThan(DateTime? value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> followUpAtLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'followUpAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'followUpAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  followUpAtBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> followUpAtBetween(
     DateTime? lower,
     DateTime? upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'followUpAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'followUpAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  followUpCountEqualTo(int value) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> followUpCountEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'followUpCount', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'followUpCount',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  followUpCountGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> followUpCountGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'followUpCount',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'followUpCount',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  followUpCountLessThan(int value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> followUpCountLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'followUpCount',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'followUpCount',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  followUpCountBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> followUpCountBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'followUpCount',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'followUpCount',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  idEqualTo(Id value) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> idEqualTo(Id value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'id', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  idGreaterThan(Id value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> idGreaterThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  idLessThan(Id value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> idLessThan(
+    Id value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'id',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'id',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  idBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> idBetween(
     Id lower,
     Id upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'id',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'id',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  localDayKeyEqualTo(int value) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> localDayKeyEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'localDayKey', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'localDayKey',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  localDayKeyGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> localDayKeyGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'localDayKey',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'localDayKey',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  localDayKeyLessThan(int value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> localDayKeyLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'localDayKey',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'localDayKey',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  localDayKeyBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> localDayKeyBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'localDayKey',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'localDayKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  occurrenceKeyEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> occurrenceKeyEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'occurrenceKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'occurrenceKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  occurrenceKeyGreaterThan(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> occurrenceKeyGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'occurrenceKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'occurrenceKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  occurrenceKeyLessThan(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> occurrenceKeyLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'occurrenceKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'occurrenceKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  occurrenceKeyBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> occurrenceKeyBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1130,180 +916,137 @@ extension PrayerCompanionRecordIsarQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'occurrenceKey',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'occurrenceKey',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  occurrenceKeyStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> occurrenceKeyStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'occurrenceKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'occurrenceKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  occurrenceKeyEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> occurrenceKeyEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'occurrenceKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'occurrenceKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  occurrenceKeyContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+          QAfterFilterCondition>
+      occurrenceKeyContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'occurrenceKey',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'occurrenceKey',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  occurrenceKeyMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+          QAfterFilterCondition>
+      occurrenceKeyMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'occurrenceKey',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'occurrenceKey',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  occurrenceKeyIsEmpty() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> occurrenceKeyIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'occurrenceKey', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'occurrenceKey',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  occurrenceKeyIsNotEmpty() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> occurrenceKeyIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'occurrenceKey', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'occurrenceKey',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  ownerIdEqualTo(String value, {bool caseSensitive = true}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> ownerIdEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  ownerIdGreaterThan(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> ownerIdGreaterThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  ownerIdLessThan(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> ownerIdLessThan(
     String value, {
     bool include = false,
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  ownerIdBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> ownerIdBetween(
     String lower,
     String upper, {
     bool includeLower = true,
@@ -1311,1102 +1054,787 @@ extension PrayerCompanionRecordIsarQueryFilter
     bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'ownerId',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'ownerId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  ownerIdStartsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> ownerIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.startsWith(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  ownerIdEndsWith(String value, {bool caseSensitive = true}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> ownerIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.endsWith(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  ownerIdContains(String value, {bool caseSensitive = true}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+          QAfterFilterCondition>
+      ownerIdContains(String value, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.contains(
-          property: r'ownerId',
-          value: value,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'ownerId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  ownerIdMatches(String pattern, {bool caseSensitive = true}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+          QAfterFilterCondition>
+      ownerIdMatches(String pattern, {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.matches(
-          property: r'ownerId',
-          wildcard: pattern,
-          caseSensitive: caseSensitive,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'ownerId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  ownerIdIsEmpty() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> ownerIdIsEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'ownerId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'ownerId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  ownerIdIsNotEmpty() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> ownerIdIsNotEmpty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(property: r'ownerId', value: ''),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'ownerId',
+        value: '',
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  prayerKeyIndexEqualTo(int value) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> prayerKeyIndexEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'prayerKeyIndex', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'prayerKeyIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  prayerKeyIndexGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> prayerKeyIndexGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'prayerKeyIndex',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'prayerKeyIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  prayerKeyIndexLessThan(int value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> prayerKeyIndexLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'prayerKeyIndex',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'prayerKeyIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  prayerKeyIndexBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> prayerKeyIndexBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'prayerKeyIndex',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'prayerKeyIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  scheduledAtEqualTo(DateTime value) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> scheduledAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'scheduledAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'scheduledAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  scheduledAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> scheduledAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'scheduledAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'scheduledAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  scheduledAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> scheduledAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'scheduledAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'scheduledAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  scheduledAtBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> scheduledAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'scheduledAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'scheduledAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  statusIndexEqualTo(int value) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> statusIndexEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'statusIndex', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'statusIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  statusIndexGreaterThan(int value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> statusIndexGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'statusIndex',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'statusIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  statusIndexLessThan(int value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> statusIndexLessThan(
+    int value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'statusIndex',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'statusIndex',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  statusIndexBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> statusIndexBetween(
     int lower,
     int upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'statusIndex',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'statusIndex',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  statusUpdatedAtEqualTo(DateTime value) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> statusUpdatedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'statusUpdatedAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'statusUpdatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  statusUpdatedAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> statusUpdatedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'statusUpdatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'statusUpdatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  statusUpdatedAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> statusUpdatedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'statusUpdatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'statusUpdatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  statusUpdatedAtBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> statusUpdatedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'statusUpdatedAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'statusUpdatedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  updatedAtEqualTo(DateTime value) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> updatedAtEqualTo(DateTime value) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.equalTo(property: r'updatedAt', value: value),
-      );
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  updatedAtGreaterThan(DateTime value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> updatedAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.greaterThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  updatedAtLessThan(DateTime value, {bool include = false}) {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> updatedAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.lessThan(
-          include: include,
-          property: r'updatedAt',
-          value: value,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'updatedAt',
+        value: value,
+      ));
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterFilterCondition
-  >
-  updatedAtBetween(
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterFilterCondition> updatedAtBetween(
     DateTime lower,
     DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(
-        FilterCondition.between(
-          property: r'updatedAt',
-          lower: lower,
-          includeLower: includeLower,
-          upper: upper,
-          includeUpper: includeUpper,
-        ),
-      );
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'updatedAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
     });
   }
 }
 
-extension PrayerCompanionRecordIsarQueryObject
-    on
-        QueryBuilder<
-          PrayerCompanionRecordIsar,
-          PrayerCompanionRecordIsar,
-          QFilterCondition
-        > {}
+extension PrayerCompanionRecordIsarQueryObject on QueryBuilder<
+    PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QFilterCondition> {}
 
-extension PrayerCompanionRecordIsarQueryLinks
-    on
-        QueryBuilder<
-          PrayerCompanionRecordIsar,
-          PrayerCompanionRecordIsar,
-          QFilterCondition
-        > {}
+extension PrayerCompanionRecordIsarQueryLinks on QueryBuilder<
+    PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QFilterCondition> {}
 
-extension PrayerCompanionRecordIsarQuerySortBy
-    on
-        QueryBuilder<
-          PrayerCompanionRecordIsar,
-          PrayerCompanionRecordIsar,
-          QSortBy
-        > {
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByCreatedAt() {
+extension PrayerCompanionRecordIsarQuerySortBy on QueryBuilder<
+    PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QSortBy> {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByCreatedAtDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByFollowUpAt() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByFollowUpAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'followUpAt', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByFollowUpAtDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByFollowUpAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'followUpAt', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByFollowUpCount() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByFollowUpCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'followUpCount', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByFollowUpCountDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByFollowUpCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'followUpCount', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByLocalDayKey() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByLocalDayKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'localDayKey', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByLocalDayKeyDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByLocalDayKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'localDayKey', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByOccurrenceKey() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByOccurrenceKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'occurrenceKey', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByOccurrenceKeyDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByOccurrenceKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'occurrenceKey', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByOwnerId() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByOwnerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByOwnerIdDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByOwnerIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByPrayerKeyIndex() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByPrayerKeyIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'prayerKeyIndex', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByPrayerKeyIndexDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByPrayerKeyIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'prayerKeyIndex', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByScheduledAt() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByScheduledAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'scheduledAt', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByScheduledAtDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByScheduledAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'scheduledAt', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByStatusIndex() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByStatusIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'statusIndex', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByStatusIndexDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByStatusIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'statusIndex', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByStatusUpdatedAt() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByStatusUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'statusUpdatedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByStatusUpdatedAtDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByStatusUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'statusUpdatedAt', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByUpdatedAt() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  sortByUpdatedAtDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 }
 
-extension PrayerCompanionRecordIsarQuerySortThenBy
-    on
-        QueryBuilder<
-          PrayerCompanionRecordIsar,
-          PrayerCompanionRecordIsar,
-          QSortThenBy
-        > {
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByCreatedAt() {
+extension PrayerCompanionRecordIsarQuerySortThenBy on QueryBuilder<
+    PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QSortThenBy> {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByCreatedAtDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByCreatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByFollowUpAt() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByFollowUpAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'followUpAt', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByFollowUpAtDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByFollowUpAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'followUpAt', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByFollowUpCount() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByFollowUpCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'followUpCount', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByFollowUpCountDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByFollowUpCountDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'followUpCount', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenById() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByIdDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByLocalDayKey() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByLocalDayKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'localDayKey', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByLocalDayKeyDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByLocalDayKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'localDayKey', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByOccurrenceKey() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByOccurrenceKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'occurrenceKey', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByOccurrenceKeyDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByOccurrenceKeyDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'occurrenceKey', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByOwnerId() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByOwnerId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByOwnerIdDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByOwnerIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'ownerId', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByPrayerKeyIndex() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByPrayerKeyIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'prayerKeyIndex', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByPrayerKeyIndexDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByPrayerKeyIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'prayerKeyIndex', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByScheduledAt() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByScheduledAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'scheduledAt', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByScheduledAtDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByScheduledAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'scheduledAt', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByStatusIndex() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByStatusIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'statusIndex', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByStatusIndexDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByStatusIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'statusIndex', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByStatusUpdatedAt() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByStatusUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'statusUpdatedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByStatusUpdatedAtDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByStatusUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'statusUpdatedAt', Sort.desc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByUpdatedAt() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<
-    PrayerCompanionRecordIsar,
-    PrayerCompanionRecordIsar,
-    QAfterSortBy
-  >
-  thenByUpdatedAtDesc() {
+  QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar,
+      QAfterSortBy> thenByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 }
 
-extension PrayerCompanionRecordIsarQueryWhereDistinct
-    on
-        QueryBuilder<
-          PrayerCompanionRecordIsar,
-          PrayerCompanionRecordIsar,
-          QDistinct
-        > {
+extension PrayerCompanionRecordIsarQueryWhereDistinct on QueryBuilder<
+    PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct> {
   QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct>
-  distinctByCreatedAt() {
+      distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct>
-  distinctByFollowUpAt() {
+      distinctByFollowUpAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'followUpAt');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct>
-  distinctByFollowUpCount() {
+      distinctByFollowUpCount() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'followUpCount');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct>
-  distinctByLocalDayKey() {
+      distinctByLocalDayKey() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'localDayKey');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct>
-  distinctByOccurrenceKey({bool caseSensitive = true}) {
+      distinctByOccurrenceKey({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(
-        r'occurrenceKey',
-        caseSensitive: caseSensitive,
-      );
+      return query.addDistinctBy(r'occurrenceKey',
+          caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct>
-  distinctByOwnerId({bool caseSensitive = true}) {
+      distinctByOwnerId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'ownerId', caseSensitive: caseSensitive);
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct>
-  distinctByPrayerKeyIndex() {
+      distinctByPrayerKeyIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'prayerKeyIndex');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct>
-  distinctByScheduledAt() {
+      distinctByScheduledAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'scheduledAt');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct>
-  distinctByStatusIndex() {
+      distinctByStatusIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'statusIndex');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct>
-  distinctByStatusUpdatedAt() {
+      distinctByStatusUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'statusUpdatedAt');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QDistinct>
-  distinctByUpdatedAt() {
+      distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'updatedAt');
     });
   }
 }
 
-extension PrayerCompanionRecordIsarQueryProperty
-    on
-        QueryBuilder<
-          PrayerCompanionRecordIsar,
-          PrayerCompanionRecordIsar,
-          QQueryProperty
-        > {
+extension PrayerCompanionRecordIsarQueryProperty on QueryBuilder<
+    PrayerCompanionRecordIsar, PrayerCompanionRecordIsar, QQueryProperty> {
   QueryBuilder<PrayerCompanionRecordIsar, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
@@ -2414,77 +1842,77 @@ extension PrayerCompanionRecordIsarQueryProperty
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, DateTime, QQueryOperations>
-  createdAtProperty() {
+      createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'createdAt');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, DateTime?, QQueryOperations>
-  followUpAtProperty() {
+      followUpAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'followUpAt');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, int, QQueryOperations>
-  followUpCountProperty() {
+      followUpCountProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'followUpCount');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, int, QQueryOperations>
-  localDayKeyProperty() {
+      localDayKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'localDayKey');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, String, QQueryOperations>
-  occurrenceKeyProperty() {
+      occurrenceKeyProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'occurrenceKey');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, String, QQueryOperations>
-  ownerIdProperty() {
+      ownerIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'ownerId');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, int, QQueryOperations>
-  prayerKeyIndexProperty() {
+      prayerKeyIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'prayerKeyIndex');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, DateTime, QQueryOperations>
-  scheduledAtProperty() {
+      scheduledAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'scheduledAt');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, int, QQueryOperations>
-  statusIndexProperty() {
+      statusIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'statusIndex');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, DateTime, QQueryOperations>
-  statusUpdatedAtProperty() {
+      statusUpdatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'statusUpdatedAt');
     });
   }
 
   QueryBuilder<PrayerCompanionRecordIsar, DateTime, QQueryOperations>
-  updatedAtProperty() {
+      updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'updatedAt');
     });

@@ -10,6 +10,10 @@ class StreakIsar {
   DateTime? lastActivityDate;
   int freezesAvailable = 0;
 
+  /// Last day "يوم الرحمة" (Mercy Day) revived a broken streak. Local-only
+  /// (not synced to cloud); null on fresh installs means mercy is available.
+  DateTime? lastMercyDate;
+
   /// Null on legacy rows is treated as dirty until first successful cloud push.
   bool? cloudDirty;
 

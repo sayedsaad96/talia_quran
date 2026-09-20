@@ -1,0 +1,13 @@
+00:00 +0: loading D:/Flutter/talia_quran/test/core/services/notification_scheduler_streak_test.dart
+00:00 +0 -1: loading D:/Flutter/talia_quran/test/core/services/notification_scheduler_streak_test.dart [E]
+  Error: Flutter failed to copy file from "C:\Users\SAYEDS~1\AppData\Local\Temp\flutter_tools.35bb25ca\flutter_test_compiler.ffa88bb2\output.dill" to "C:\Users\SAYEDS~1\AppData\Local\Temp\flutter_tools.35bb25ca\flutter_test_listener.6ccd94a3\listener.dart.dill". The target device is full.
+  FileSystemException: Cannot copy file to 'C:\Users\SAYEDS~1\AppData\Local\Temp\flutter_tools.35bb25ca\flutter_test_listener.6ccd94a3\listener.dart.dill', path = 'C:\Users\SAYEDS~1\AppData\Local\Temp\flutter_tools.35bb25ca\flutter_test_compiler.ffa88bb2\output.dill' (OS Error: There is not enough space on the disk, errno = 112)
+  Free up space and try again.
+  package:flutter_tools/src/base/common.dart 34:3               throwToolExit
+  package:flutter_tools/src/base/error_handling_io.dart 1492:3  _throwFileSystemException
+  package:flutter_tools/src/base/error_handling_io.dart 1482:3  _handleWindowsException
+  package:flutter_tools/src/base/error_handling_io.dart 1334:5  _onFileSystemException
+  package:flutter_tools/src/base/error_handling_io.dart 1074:7  _run
+  ===== asynchronous gap ===========================
+  package:flutter_tools/src/test/test_compiler.dart 280:41      TestCompiler._onCompilationRequest
+  

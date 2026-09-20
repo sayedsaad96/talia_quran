@@ -1524,6 +1524,17 @@ class MockAppSessionService extends _i1.Mock implements _i16.AppSessionService {
         returnValue: _i5.Future<void>.value(),
         returnValueForMissingStub: _i5.Future<void>.value(),
       ) as _i5.Future<void>);
+
+  @override
+  _i5.Future<void> saveDailyWirdLastCompletedPage(int? pageNumber) =>
+      (super.noSuchMethod(
+        Invocation.method(
+          #saveDailyWirdLastCompletedPage,
+          [pageNumber],
+        ),
+        returnValue: _i5.Future<void>.value(),
+        returnValueForMissingStub: _i5.Future<void>.value(),
+      ) as _i5.Future<void>);
 }
 
 /// A class which mocks [GetActivityHeatmapUsecase].

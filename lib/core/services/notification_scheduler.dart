@@ -3,6 +3,7 @@ import '../di/injection.dart';
 import '../l10n/app_localizations.dart';
 import '../services/streak_reader.dart';
 import '../services/streak_risk_evaluator.dart';
+import '../services/streak_service.dart';
 import '../utils/talia_logger.dart';
 import '../../features/progress/domain/repositories/progress_repository.dart';
 import '../../features/home/domain/usecases/get_ayah_of_day_usecase.dart';
@@ -420,6 +421,47 @@ class NotificationScheduler {
       );
     } else {
       await _service.cancelFridayKahfReminder();
+    }
+
+    // Weekly Impact ("أثر الأسبوع"): one gentle weekly summary framed as
+    // impact rather than statistics. The body reflects the last 7 days at
+    // schedule time; every app-open and background refresh recomputes it
+    // before Friday, so it stays truthful.
+    final weeklyImpactEnabled =
+        prefs.getBool(TaliaNotificationService.weeklyImpactPreferenceKey) ??
+        true;
+    if (weeklyImpactEnabled) {
+      var daysWithQuran = 0;
+      try {
+        if (getIt.isRegistered<StreakService>()) {
+          final activity = await getIt<StreakService>().getActivityMap(
+            days: 7,
+          );
+          daysWithQuran = activity.values.where((count) => count > 0).length;
+        }
+      } catch (e, stack) {
+        TaliaLogger.w('Weekly impact activity load failed', e, stack);
+      }
+      final hour =
+          prefs.getInt(
+            '${TaliaNotificationService.weeklyImpactPreferenceKey}_hour',
+          ) ??
+          16;
+      final minute =
+          prefs.getInt(
+            '${TaliaNotificationService.weeklyImpactPreferenceKey}_minute',
+          ) ??
+          0;
+      await _service.scheduleWeeklyImpactReminder(
+        title: l10n.notificationWeeklyImpactTitle,
+        body: daysWithQuran > 0
+            ? l10n.notificationWeeklyImpactBody(daysWithQuran)
+            : l10n.notificationWeeklyImpactQuietBody,
+        hour: hour,
+        minute: minute,
+      );
+    } else {
+      await _service.cancelWeeklyImpactReminder();
     }
 
     // Tahajjud / Qiyam Al-Layl Reminder

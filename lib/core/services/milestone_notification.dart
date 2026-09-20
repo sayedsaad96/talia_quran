@@ -76,6 +76,32 @@ Future<void> fireKhatmahMilestone() => fireMilestoneCelebration((
   surahName: null,
 ));
 
+/// Streak mercy ("يوم الرحمة") path: fired when a broken streak is mercifully
+/// re-lit instead of reset — the gentle "الله رحيم، سلسلتك مستنياك" moment.
+Future<void> fireStreakMercyCelebration() async {
+  if (!Platform.isAndroid && !Platform.isIOS) return;
+  try {
+    if (!getIt.isRegistered<TaliaNotificationService>()) return;
+    final l10n = await _loadSavedLocaleL10n();
+    await getIt<TaliaNotificationService>().showMilestoneCelebration(
+      title: l10n.notificationStreakMercyTitle,
+      body: l10n.notificationStreakMercyBody,
+      payload: '/home',
+    );
+  } catch (error, stack) {
+    TaliaLogger.w('Streak mercy celebration failed', error, stack);
+  }
+}
+
+/// Resolves AppLocalizations through the saved app-locale preference (same
+/// fallback pattern as NotificationSettingsCubit._reschedule — these fire
+/// outside the widget tree).
+Future<AppLocalizations> _loadSavedLocaleL10n() async {
+  final prefs = await SharedPreferences.getInstance();
+  final languageCode = prefs.getString('app_locale') ?? 'ar';
+  return lookupAppLocalizations(Locale(languageCode));
+}
+
 /// Resolves the milestone strings through the saved app-locale preference
 /// (same fallback pattern as NotificationSettingsCubit._reschedule — these
 /// fire outside the widget tree), then shows the immediate celebration.
@@ -83,9 +109,7 @@ Future<void> fireMilestoneCelebration(MilestoneNotificationData data) async {
   if (!Platform.isAndroid && !Platform.isIOS) return;
   try {
     if (!getIt.isRegistered<TaliaNotificationService>()) return;
-    final prefs = await SharedPreferences.getInstance();
-    final languageCode = prefs.getString('app_locale') ?? 'ar';
-    final l10n = lookupAppLocalizations(Locale(languageCode));
+    final l10n = await _loadSavedLocaleL10n();
     final (title, body) = switch (data.type) {
       MilestoneNotificationType.juz => (
         l10n.notificationMilestoneJuzTitle(data.juzNumber!),

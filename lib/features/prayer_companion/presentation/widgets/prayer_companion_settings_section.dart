@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/identity/record_owner_provider.dart';
 import '../../../../core/services/notification_scheduler.dart';
+import '../../../../core/services/prayer_serenity_watcher.dart';
 import '../../../../core/utils/talia_logger.dart';
 import '../../data/datasources/prayer_companion_preferences.dart';
 import '../../domain/entities/prayer_companion.dart';
@@ -38,6 +40,9 @@ class _PrayerCompanionSettingsSectionState
       : null;
   late PrayerCompanionSettings _settings;
 
+  /// Prayer Serenity Mode (وضع سكينة الصلاة) — independent of the Companion.
+  bool _serenityEnabled = true;
+
   /// Preparation intervals offered in V1: disabled or 5/10/15 minutes.
   static const List<int> _preparationOptions = [0, 5, 10, 15];
 
@@ -45,6 +50,36 @@ class _PrayerCompanionSettingsSectionState
   void initState() {
     super.initState();
     _settings = _preferences?.read() ?? const PrayerCompanionSettings();
+    _loadSerenityEnabled();
+  }
+
+  void _loadSerenityEnabled() {
+    try {
+      if (!getIt.isRegistered<SharedPreferences>()) return;
+      setState(() {
+        _serenityEnabled =
+            getIt<SharedPreferences>().getBool(
+              PrayerSerenityWatcher.enabledKey,
+            ) ??
+            true;
+      });
+    } catch (_) {
+      // Stripped test/host environments — keep the default.
+    }
+  }
+
+  Future<void> _toggleSerenity(bool value) async {
+    try {
+      if (!getIt.isRegistered<SharedPreferences>()) return;
+      await getIt<SharedPreferences>().setBool(
+        PrayerSerenityWatcher.enabledKey,
+        value,
+      );
+      if (!mounted) return;
+      setState(() => _serenityEnabled = value);
+    } catch (error, stackTrace) {
+      TaliaLogger.w('Prayer serenity toggle failed', error, stackTrace);
+    }
   }
 
   /// Every preference change is persisted before notifications are
@@ -125,6 +160,14 @@ class _PrayerCompanionSettingsSectionState
     final l10n = context.l10n;
     return Column(
       children: [
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: Text(l10n.prayerSerenityTitle),
+          subtitle: Text(l10n.prayerSerenitySubtitle),
+          value: _serenityEnabled,
+          onChanged: _toggleSerenity,
+        ),
+        SettingsDivider(isDark: widget.isDark),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(l10n.prayerCompanionEnable),

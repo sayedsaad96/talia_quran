@@ -46,6 +46,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         false;
     final fridayKahf =
         _prefs.getBool(TaliaNotificationService.fridayKahfPreferenceKey) ?? true;
+    final weeklyImpact =
+        _prefs.getBool(TaliaNotificationService.weeklyImpactPreferenceKey) ??
+        true;
     final tahajjud =
         _prefs.getBool(TaliaNotificationService.tahajjudPreferenceKey) ?? false;
     final khatmahReminder =
@@ -92,6 +95,7 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         dailyDua: dailyDua,
         kidsReminder: kidsReminder,
         fridayKahf: fridayKahf,
+        weeklyImpact: weeklyImpact,
         tahajjud: tahajjud,
         khatmahReminder: khatmahReminder,
         prayerNotifications: prayerNotifications,
@@ -143,6 +147,11 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
         fridayKahfTime: _readTime(
           TaliaNotificationService.fridayKahfPreferenceKey,
           defaultHour: 9,
+          defaultMinute: 0,
+        ),
+        weeklyImpactTime: _readTime(
+          TaliaNotificationService.weeklyImpactPreferenceKey,
+          defaultHour: 16,
           defaultMinute: 0,
         ),
         tahajjudTime: _readTime(
@@ -201,6 +210,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       TaliaNotificationService.fridayKahfPreferenceKey => state.copyWith(
         fridayKahf: value,
       ),
+      TaliaNotificationService.weeklyImpactPreferenceKey => state.copyWith(
+        weeklyImpact: value,
+      ),
       TaliaNotificationService.tahajjudPreferenceKey => state.copyWith(
         tahajjud: value,
       ),
@@ -258,6 +270,9 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
       ),
       TaliaNotificationService.fridayKahfPreferenceKey => state.copyWith(
         fridayKahfTime: time,
+      ),
+      TaliaNotificationService.weeklyImpactPreferenceKey => state.copyWith(
+        weeklyImpactTime: time,
       ),
       TaliaNotificationService.tahajjudPreferenceKey => state.copyWith(
         tahajjudTime: time,

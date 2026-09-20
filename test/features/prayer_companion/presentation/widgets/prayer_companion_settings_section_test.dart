@@ -7,6 +7,7 @@ import 'package:talia_quran/core/di/injection.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/identity/record_owner_provider.dart';
 import 'package:talia_quran/core/services/notification_scheduler.dart';
+import 'package:talia_quran/core/services/prayer_serenity_watcher.dart';
 import 'package:talia_quran/features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
 import 'package:talia_quran/features/prayer_companion/domain/repositories/prayer_companion_repository.dart';
 import 'package:talia_quran/features/prayer_companion/presentation/widgets/prayer_companion_settings_section.dart';
@@ -86,11 +87,34 @@ void main() {
     expect(find.text('تفعيل مرافق الصلاة'), findsOneWidget);
     expect(find.text('مسح تأكيدات الصلاة'), findsOneWidget);
 
-    await tester.tap(find.byType(SwitchListTile).first);
+    await tester.tap(
+      find.widgetWithText(SwitchListTile, 'تفعيل مرافق الصلاة'),
+    );
     await tester.pumpAndSettle();
 
     expect(prefs.getBool(PrayerCompanionPreferences.enabledKey), isTrue);
     verify(() => scheduler.refreshNotifications(any(), force: true)).called(1);
+  });
+
+  testWidgets('serenity toggle persists independently of the companion', (
+    tester,
+  ) async {
+    await tester.pumpWidget(harness());
+    await tester.pumpAndSettle();
+
+    // Default is ON.
+    expect(
+      prefs.getBool(PrayerSerenityWatcher.enabledKey) ?? true,
+      isTrue,
+    );
+    expect(find.text('وضع سكينة الصلاة'), findsOneWidget);
+
+    await tester.tap(find.widgetWithText(SwitchListTile, 'وضع سكينة الصلاة'));
+    await tester.pumpAndSettle();
+
+    expect(prefs.getBool(PrayerSerenityWatcher.enabledKey), isFalse);
+    // Toggling serenity must never touch the Companion preference.
+    expect(prefs.getBool(PrayerCompanionPreferences.enabledKey), isNull);
   });
 
   testWidgets('clear confirmations requires consent', (tester) async {

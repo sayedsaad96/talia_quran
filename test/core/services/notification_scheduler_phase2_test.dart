@@ -1,4 +1,4 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -74,6 +74,17 @@ void main() {
     ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.cancelFridayKahfReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelWeeklyImpactReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.scheduleWeeklyImpactReminder(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        hour: any(named: 'hour'),
+        minute: any(named: 'minute'),
+      ),
     ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.cancelTahajjudReminder(),
@@ -168,6 +179,17 @@ void main() {
     // Phase 2 stubbing
     when(
       () => mockNotificationService.cancelFridayKahfReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.cancelWeeklyImpactReminder(),
+    ).thenAnswer((_) async {});
+    when(
+      () => mockNotificationService.scheduleWeeklyImpactReminder(
+        title: any(named: 'title'),
+        body: any(named: 'body'),
+        hour: any(named: 'hour'),
+        minute: any(named: 'minute'),
+      ),
     ).thenAnswer((_) async {});
     when(
       () => mockNotificationService.cancelTahajjudReminder(),

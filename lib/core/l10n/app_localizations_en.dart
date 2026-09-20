@@ -3121,6 +3121,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'It\'s time for your daily memorization review';
 
   @override
+  String get notificationStreakMercyTitle =>
+      'Allah is Merciful — your streak awaits you 🌿';
+
+  @override
+  String get notificationStreakMercyBody =>
+      'You missed a day, and your streak has been re-lit… continue your reading today 🤍';
+
+  @override
   String notificationStreakAlertTitle(Object count) {
     return '⚠️ Don\'t lose your $count day streak!';
   }
@@ -3409,6 +3417,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationFridayKahfTitle => 'Surah Al-Kahf Reminder 🌿';
+
+  @override
+  String get notificationWeeklyImpactTitle => 'Your impact this week 🌿';
+
+  @override
+  String notificationWeeklyImpactBody(int count) {
+    return '$count days of your week were with the Quran — every page leaves a lasting impact';
+  }
+
+  @override
+  String get notificationWeeklyImpactQuietBody =>
+      'A new week begins — one page makes a difference 🌱';
+
+  @override
+  String get notificationSettingsWeeklyImpact => 'Weekly impact (Friday)';
 
   @override
   String get notificationFridayKahfBody =>
@@ -4307,31 +4330,39 @@ class AppLocalizationsEn extends AppLocalizations {
       'This memorization block has been completed.';
 
   @override
-  String get v2ClosingMomentLabel => 'A moment of closure';
+  String get closingMomentLabel => 'A moment of closure';
 
   @override
-  String get v2ClosingAyah => 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ';
+  String get closingAyah => 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ';
 
   @override
-  String get v2ClosingAyahSource => 'Surah Ar-Ra\'d · Ayah 28';
+  String get closingAyahSource => 'Surah Ar-Ra\'d · Ayah 28';
 
   @override
-  String v2ClosingSummary(int count) {
+  String closingSummaryMemorization(int count) {
     return 'You committed $count ayahs to memory this session — a lasting impact, in shaa Allah.';
   }
 
   @override
-  String get v2ClosingDuaButton => 'Closing dua';
+  String closingSummaryKhatmahWird(String start, String end) {
+    return 'You completed today\'s wird — pages $start to $end — a lasting impact, in shaa Allah.';
+  }
 
   @override
-  String get v2ClosingDua =>
+  String get closingDuaButton => 'Closing dua';
+
+  @override
+  String get closingDua =>
       'O Allah, make what I have memorized a light in my heart and a remembrance with You. Make it a supporter for me, benefit me with what You have taught me, and teach me what benefits me.';
 
   @override
-  String get v2ClosingDuaAmen => 'Ameen';
+  String get closingDuaAmen => 'Ameen';
 
   @override
-  String get v2ClosingRestNote =>
+  String get closingDone => 'Done, praise be to Allah';
+
+  @override
+  String get closingRestNote =>
       'Take a breath… your memorization awaits you tomorrow, in shaa Allah.';
 
   @override
@@ -4924,6 +4955,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeAyahOfDay => 'Ayah of the day';
 
   @override
+  String get surahRevelationMeccan => 'Meccan';
+
+  @override
+  String get surahRevelationMedinan => 'Medinan';
+
+  @override
+  String ayahOfDaySurahMeta(String revelation, String count) {
+    return '$revelation · $count ayahs';
+  }
+
+  @override
+  String get ayahOfDayReadSurah => 'Read the full surah';
+
+  @override
   String get homeAyahContextFriday => 'An ayah for Friday';
 
   @override
@@ -5346,6 +5391,38 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get prayerCompanionSettingsTitle => 'Prayer Companion';
+
+  @override
+  String get microReviewTitle => 'Memory flash';
+
+  @override
+  String get microReviewQuestion =>
+      'From your older memorization — do you still recall it?';
+
+  @override
+  String microReviewReference(String surah, String ayah) {
+    return 'Surah $surah · Ayah $ayah';
+  }
+
+  @override
+  String get microReviewRevealHint => 'Try to recall it… then tap to reveal';
+
+  @override
+  String get microReviewRecite => 'Recite it';
+
+  @override
+  String get prayerSerenityTitle => 'Prayer Serenity Mode';
+
+  @override
+  String get prayerSerenitySubtitle =>
+      'Recitation pauses gently at prayer time';
+
+  @override
+  String get prayerSerenityNotificationTitle => 'It is time for the meeting 🕌';
+
+  @override
+  String get prayerSerenityNotificationBody =>
+      'We paused the recitation gently… it is time for prayer. May Allah accept it';
 
   @override
   String get prayerCompanionEnable => 'Enable Prayer Companion';

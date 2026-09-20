@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
@@ -24,8 +24,10 @@ void main() {
 
       expect(find.byKey(const Key('v2_closing_moment')), findsOneWidget);
       expect(find.text('A moment of closure'), findsOneWidget);
-      expect(find.text('أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ'),
-          findsOneWidget);
+      expect(
+        find.text('أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ'),
+        findsOneWidget,
+      );
       expect(find.text("Surah Ar-Ra'd · Ayah 28"), findsOneWidget);
       expect(
         find.text(
@@ -33,8 +35,12 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('Take a breath… your memorization awaits you tomorrow, in shaa Allah.'),
-          findsOneWidget);
+      expect(
+        find.text(
+          'Take a breath… your memorization awaits you tomorrow, in shaa Allah.',
+        ),
+        findsOneWidget,
+      );
       expect(find.text('3/3'), findsOneWidget);
       expect(find.text('Closing dua'), findsOneWidget);
       expect(find.text('Share memorization milestone'), findsOneWidget);
@@ -55,11 +61,8 @@ void main() {
       await tester.tap(find.byKey(const Key('v2_closing_dua_button')));
       await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('v2_closing_dua_text')),
-        findsOneWidget,
-      );
-      expect(find.byKey(const Key('v2_closing_dua_amen')), findsOneWidget);
+      expect(find.byKey(const Key('closing_dua_text')), findsOneWidget);
+      expect(find.byKey(const Key('closing_dua_amen')), findsOneWidget);
       expect(find.text('Ameen'), findsOneWidget);
     });
   });
@@ -81,7 +84,9 @@ V2SessionState _completedState({required int passed}) {
     blockReviewRequired: false,
   ).copyWith(
     phase: V2SessionPhase.completed,
-    passedAyahNumbers: Set<int>.from(Iterable<int>.generate(passed, (i) => i + 1)),
+    passedAyahNumbers: Set<int>.from(
+      Iterable<int>.generate(passed, (i) => i + 1),
+    ),
   );
 }
 

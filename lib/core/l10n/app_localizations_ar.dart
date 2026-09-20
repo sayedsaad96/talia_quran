@@ -3086,6 +3086,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'يلا بينا نرجع للمصحف ونثبت حفظ اليوم 🌸';
 
   @override
+  String get notificationStreakMercyTitle => 'الله رحيم — سلسلتك مستنياك 🌿';
+
+  @override
+  String get notificationStreakMercyBody =>
+      'فاتك يوم، وسلسلتك رجعت من جديد… كمّل وردك النهاردة 🤍';
+
+  @override
   String notificationStreakAlertTitle(Object count) {
     return '⚠️ متضيعش إنجاز $count يوم!';
   }
@@ -3374,6 +3381,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationFridayKahfTitle => 'نور ما بين الجمعتين 🌿';
+
+  @override
+  String get notificationWeeklyImpactTitle => 'أثرك هذا الأسبوع 🌿';
+
+  @override
+  String notificationWeeklyImpactBody(int count) {
+    return '$count أيام من أسبوعك كانت مع القرآن — وكل صفحة فيها أثر باقٍ';
+  }
+
+  @override
+  String get notificationWeeklyImpactQuietBody =>
+      'أسبوع جديد يبدأ — وصفحة واحدة بتفرق 🌱';
+
+  @override
+  String get notificationSettingsWeeklyImpact => 'أثر الأسبوع (الجمعة)';
 
   @override
   String get notificationFridayKahfBody =>
@@ -4368,31 +4390,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get v2CompletionSubtitle => 'تم حفظ آيات هذا المقطع بنجاح.';
 
   @override
-  String get v2ClosingMomentLabel => 'لحظة ختام';
+  String get closingMomentLabel => 'لحظة ختام';
 
   @override
-  String get v2ClosingAyah => 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ';
+  String get closingAyah => 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ';
 
   @override
-  String get v2ClosingAyahSource => 'سورة الرعد · الآية ٢٨';
+  String get closingAyahSource => 'سورة الرعد · الآية ٢٨';
 
   @override
-  String v2ClosingSummary(int count) {
+  String closingSummaryMemorization(int count) {
     return 'حفظتَ $count آيات في هذه الجلسة — أثرٌ باقٍ بإذن الله.';
   }
 
   @override
-  String get v2ClosingDuaButton => 'دعاء الختام';
+  String closingSummaryKhatmahWird(String start, String end) {
+    return 'أتممتَ ورد اليوم — من صفحة $start إلى $end — أثرٌ باقٍ بإذن الله.';
+  }
 
   @override
-  String get v2ClosingDua =>
+  String get closingDuaButton => 'دعاء الختام';
+
+  @override
+  String get closingDua =>
       'اللَّهُمَّ اجْعَلْ مَا حَفِظْتُ نُورًا لِي فِي قَلْبِي، وَذِكْرًا لِي عِنْدَكَ، وَاجْعَلْهُ نَاصِرًا لِي، وَانْفَعْنِي بِمَا عَلَّمْتَنِي وَعَلِّمْنِي مَا يَنْفَعُنِي.';
 
   @override
-  String get v2ClosingDuaAmen => 'آمين';
+  String get closingDuaAmen => 'آمين';
 
   @override
-  String get v2ClosingRestNote => 'خذ نفسًا… حفظك ينتظرك غدًا بإذن الله.';
+  String get closingDone => 'تم بحمد الله';
+
+  @override
+  String get closingRestNote => 'خذ نفسًا… حفظك ينتظرك غدًا بإذن الله.';
 
   @override
   String get v2MemorizationHub => 'مركز الحفظ';
@@ -4974,6 +5004,20 @@ class AppLocalizationsAr extends AppLocalizations {
   String get homeAyahOfDay => 'آية اليوم';
 
   @override
+  String get surahRevelationMeccan => 'مكية';
+
+  @override
+  String get surahRevelationMedinan => 'مدنية';
+
+  @override
+  String ayahOfDaySurahMeta(String revelation, String count) {
+    return '$revelation · $count آية';
+  }
+
+  @override
+  String get ayahOfDayReadSurah => 'اقرأ السورة كاملة';
+
+  @override
   String get homeAyahContextFriday => 'آية ليوم الجمعة';
 
   @override
@@ -5391,6 +5435,36 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get prayerCompanionSettingsTitle => 'مرافق الصلاة';
+
+  @override
+  String get microReviewTitle => 'لمحة مراجعة';
+
+  @override
+  String get microReviewQuestion => 'من حفظك القديم… لسه فاكرها؟';
+
+  @override
+  String microReviewReference(String surah, String ayah) {
+    return 'سورة $surah · آية $ayah';
+  }
+
+  @override
+  String get microReviewRevealHint => 'جرّب تفتكرها… ثم اضغط لعرضها';
+
+  @override
+  String get microReviewRecite => 'سمّع نفسك';
+
+  @override
+  String get prayerSerenityTitle => 'وضع سكينة الصلاة';
+
+  @override
+  String get prayerSerenitySubtitle => 'نوقف التلاوة بهدوء عند دخول وقت الصلاة';
+
+  @override
+  String get prayerSerenityNotificationTitle => 'حان وقت اللقاء 🕌';
+
+  @override
+  String get prayerSerenityNotificationBody =>
+      'أوقفنا التلاوة بهدوء… حان وقت الصلاة، تقبّل الله';
 
   @override
   String get prayerCompanionEnable => 'تفعيل مرافق الصلاة';

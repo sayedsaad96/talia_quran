@@ -240,6 +240,7 @@ class TaliaNotificationService {
   static const String dailyAyahPreferenceKey = 'notifications_daily_ayah';
   static const String kidsReminderPreferenceKey = 'notifications_kids_review';
   static const String fridayKahfPreferenceKey = 'notifications_friday_kahf';
+  static const String weeklyImpactPreferenceKey = 'notifications_weekly_impact';
   static const String tahajjudPreferenceKey = 'notifications_tahajjud';
   static const String khatmahReminderPreferenceKey = 'notifications_khatmah';
   static const String prayerNotificationsPreferenceKey =
@@ -271,9 +272,11 @@ class TaliaNotificationService {
   static const int _dailyAyahBaseId = 1040;
   static const int _dailyAyahScheduleDays = 21;
   static const int _fridayKahfId = 1060;
+  static const int _weeklyImpactId = 1064;
   static const int _tahajjudId = 1061;
   static const int _khatmahReminderId = 1062;
   static const int _milestoneCelebrationId = 1100;
+  static const int _prayerSerenityId = 1063;
   static const int _morningAzkarBaseId = 1070;
   static const int _eveningAzkarBaseId = 1090;
   static const int _azkarScheduleDays = 14;
@@ -1614,6 +1617,39 @@ class TaliaNotificationService {
     await _plugin.cancel(id: _fridayKahfId);
   }
 
+  // ─── Weekly Impact ("أثر الأسبوع") ──────────────────────────────────────────
+
+  /// Schedules the weekly impact summary — one gentle weekly reflection
+  /// framed as impact rather than statistics. Repeats every Friday; the body
+  /// reflects the last 7 days at schedule time and is recomputed on every
+  /// scheduler refresh.
+  Future<void> scheduleWeeklyImpactReminder({
+    required String title,
+    required String body,
+    int hour = 16,
+    int minute = 0,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await cancelWeeklyImpactReminder();
+
+    await _plugin.zonedSchedule(
+      id: _weeklyImpactId,
+      title: title,
+      body: body,
+      scheduledDate: _nextInstanceOfDayAndTime(DateTime.friday, hour, minute),
+      notificationDetails: _milestoneCelebrationNotificationDetails,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      payload: '/progress',
+    );
+  }
+
+  /// Cancel the weekly impact summary.
+  Future<void> cancelWeeklyImpactReminder() async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.cancel(id: _weeklyImpactId);
+  }
+
   // ─── Tahajjud / Qiyam Al-Layl Reminder ──────────────────────────────────────
 
   /// Schedules a daily reminder for Tahajjud and night prayer in the last third of the night.
@@ -1742,6 +1778,23 @@ class TaliaNotificationService {
   Future<void> cancelMilestoneCelebration() async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await _plugin.cancel(id: _milestoneCelebrationId);
+  }
+
+  /// Shows the immediate "حان وقت اللقاء" moment for Prayer Serenity Mode
+  /// (وضع سكينة الصلاة): recitation was paused at the prayer time. Fired
+  /// once per prayer occurrence by [PrayerSerenityWatcher].
+  Future<void> showPrayerSerenityMoment({
+    required String title,
+    required String body,
+  }) async {
+    if (!Platform.isAndroid && !Platform.isIOS) return;
+    await _plugin.show(
+      id: _prayerSerenityId,
+      title: title,
+      body: body,
+      notificationDetails: _milestoneCelebrationNotificationDetails,
+      payload: '/home',
+    );
   }
 
   /// Cancel all scheduled prayer times reminders.

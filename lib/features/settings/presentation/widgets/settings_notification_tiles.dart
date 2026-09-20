@@ -43,6 +43,8 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
   static const _dailyAyahKey = TaliaNotificationService.dailyAyahPreferenceKey;
   static const _fridayKahfKey =
       TaliaNotificationService.fridayKahfPreferenceKey;
+  static const _weeklyImpactKey =
+      TaliaNotificationService.weeklyImpactPreferenceKey;
   static const _tahajjudKey =
       TaliaNotificationService.tahajjudPreferenceKey;
   static const _khatmahKey =
@@ -680,8 +682,8 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                                 ? 'تنبيه: أذونات الإشعارات معطلة في النظام'
                                 : 'Warning: Notifications disabled in device settings')
                             : (context.isArabic
-                                ? 'حالة التنبيهات: ${state.enabledCount} من 10 تذكيرات مفعلة'
-                                : 'Notification status: ${state.enabledCount} of 10 reminders active'),
+                                ? 'حالة التنبيهات: ${state.enabledCount} من ${state.totalCount} تذكيرات مفعلة'
+                                : 'Notification status: ${state.enabledCount} of ${state.totalCount} reminders active'),
                         style: AppTypography.labelMedium.copyWith(
                           color: state.isSystemPermissionBlocked
                               ? AppColors.warning
@@ -851,7 +853,28 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
             ),
             SettingsDivider(isDark: widget.isDark),
 
-            // 8. Tahajjud / Qiyam Al-Layl Reminder
+            // 8. Weekly Impact ("أثر الأسبوع")
+            _buildTimeEditorTile(
+              title: context.l10n.notificationSettingsWeeklyImpact,
+              time: state.weeklyImpactTime,
+              isEnabled: state.weeklyImpact,
+              onToggle: (v) => _cubit.toggleReminder(
+                _weeklyImpactKey,
+                v,
+                l10n: context.l10n,
+              ),
+              icon: Icons.insights_rounded,
+              primaryColor: primary,
+              textColor: textColor,
+              subtextColor: subtextColor,
+              onTapEdit: () => _pickTime(
+                _weeklyImpactKey,
+                state.weeklyImpactTime,
+              ),
+            ),
+            SettingsDivider(isDark: widget.isDark),
+
+            // 9. Tahajjud / Qiyam Al-Layl Reminder
             _buildTimeEditorTile(
               title: context.l10n.notificationSettingsTahajjud,
               time: state.tahajjudTime,

@@ -1,0 +1,30 @@
+00:00 +0: loading D:/Flutter/talia_quran/test/core/services/achievement_cloud_merge_test.dart
+00:00 +0 -1: loading D:/Flutter/talia_quran/test/core/services/achievement_cloud_merge_test.dart [E]
+  Error: Flutter failed to copy file from "C:\Users\SAYEDS~1\AppData\Local\Temp\flutter_tools.e0a2c984\flutter_test_compiler.af969fde\output.dill" to "C:\Users\SAYEDS~1\AppData\Local\Temp\flutter_tools.e0a2c984\flutter_test_listener.476fefa6\listener.dart.dill". The target device is full.
+  FileSystemException: Cannot copy file to 'C:\Users\SAYEDS~1\AppData\Local\Temp\flutter_tools.e0a2c984\flutter_test_listener.476fefa6\listener.dart.dill', path = 'C:\Users\SAYEDS~1\AppData\Local\Temp\flutter_tools.e0a2c984\flutter_test_compiler.af969fde\output.dill' (OS Error: There is not enough space on the disk, errno = 112)
+  Free up space and try again.
+  package:flutter_tools/src/base/common.dart 34:3               throwToolExit
+  package:flutter_tools/src/base/error_handling_io.dart 1492:3  _throwFileSystemException
+  package:flutter_tools/src/base/error_handling_io.dart 1482:3  _handleWindowsException
+  package:flutter_tools/src/base/error_handling_io.dart 1334:5  _onFileSystemException
+  package:flutter_tools/src/base/error_handling_io.dart 1074:7  _run
+  ===== asynchronous gap ===========================
+  package:flutter_tools/src/test/test_compiler.dart 280:41      TestCompiler._onCompilationRequest
+  
+00:00 +0 -1: D:/Flutter/talia_quran/test/core/services/achievement_cloud_merge_test.dart: mergeEarnedFromCloud adds missing adult certificates only once
+00:00 +1 -1: D:/Flutter/talia_quran/test/core/services/achievement_cloud_merge_test.dart: CertificateAward.fromCloudRow parses juz and surah ids
+00:00 +2 -1: D:/Flutter/talia_quran/test/core/services/achievement_service_test.dart: AchievementService does not award a surah or juz certificate before 100%
+00:00 +3 -1: D:/Flutter/talia_quran/test/core/services/achievement_service_test.dart: AchievementService awards a surah certificate for any fully memorized surah
+00:00 +4 -1: D:/Flutter/talia_quran/test/core/services/achievement_service_test.dart: AchievementService awards a juz certificate only when all juz ayahs are memorized
+00:01 +5 -1: D:/Flutter/talia_quran/test/core/services/achievement_service_test.dart: AchievementService counts MemorizationPlus strength 6 records as memorized
+00:01 +6 -1: D:/Flutter/talia_quran/test/core/services/achievement_service_test.dart: AchievementService returns multiple new certificates once and does not duplicate them
+00:01 +7 -1: D:/Flutter/talia_quran/test/core/services/achievement_service_test.dart: AchievementService pushes every newly-earned certificate to the cloud repository
+00:01 +8 -1: D:/Flutter/talia_quran/test/core/services/achievement_service_test.dart: AchievementService does not push to the cloud when no repository is configured
+00:01 +9 -1: D:/Flutter/talia_quran/test/core/services/app_session_service_test.dart: saves and restores a valid Quran reader page
+00:01 +10 -1: D:/Flutter/talia_quran/test/core/services/app_session_service_test.dart: saves and restores the active family dashboard route
+00:01 +11 -1: D:/Flutter/talia_quran/test/core/services/app_session_service_test.dart: does not save startup or onboarding routes
+00:01 +12 -1: D:/Flutter/talia_quran/test/core/services/app_session_service_test.dart: does not restore incomplete memorization routes
+00:01 +13 -1: D:/Flutter/talia_quran/test/core/services/app_session_service_test.dart: does not restore kids listen route until persistence exists
+00:01 +14 -1: D:/Flutter/talia_quran/test/core/services/app_session_service_test.dart: restores memorization routes when required query data exists
+00:01 +15 -1: D:/Flutter/talia_quran/test/core/services/app_session_service_test.dart: restores Kids Journey route aliases with a valid journey id
+00:01 +16 -1: D:/Flutter/talia_quran/test/core/services/app_session_service_test.dart: does not restore Kids Journey route aliases without a valid id
