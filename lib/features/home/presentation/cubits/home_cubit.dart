@@ -16,6 +16,7 @@ import '../../../memorization_plus/domain/usecases/memorization_plus_usecases.da
 import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../../../memorization_plus/domain/navigation/memorization_navigation_resolver.dart';
 import '../../../../core/memorization/memorization_path_resolver.dart';
+import '../../../../core/memorization/micro_review_picker.dart';
 import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/memorization/smart_coach_recommendation.dart';
 import '../../../../core/memorization/usecases/get_smart_coach_recommendation_usecase.dart';
@@ -320,6 +321,23 @@ class HomeCubit extends Cubit<HomeState> {
     final isParentMode = profile?.isParentGuardian ?? false;
     final isKids = profile?.isChild ?? false;
 
+    var reviewRecords = const <AyahReviewRecord>[];
+    try {
+      final reviewRecordsResult = await _memorizationRepository
+          .getAllReviewRecords(
+            scope: isKids
+                ? ReviewRecordReadScope.kids
+                : ReviewRecordReadScope.adult,
+          );
+      reviewRecords = reviewRecordsResult.getOrElse(() => []);
+    } catch (error, stackTrace) {
+      TaliaLogger.w('Failed to load home review records', error, stackTrace);
+    }
+    final microReview = const MicroReviewPicker().pick(
+      records: reviewRecords,
+      now: DateTime.now(),
+    );
+
     if (isClosed) return;
     UnifiedJourneyAction? heroAction;
     var alternativeActions = const <UnifiedJourneyAction>[];
@@ -332,6 +350,7 @@ class HomeCubit extends Cubit<HomeState> {
         customPlan: customPlan,
         dailyWirdDetail: dailyWirdDetail,
         isKids: isKids,
+        reviewRecords: reviewRecords,
         overallProgress: overallProgress,
         activeKhatmah: activeKhatmah,
         isEnabled: unifiedJourneyEnabled,
@@ -409,6 +428,7 @@ class HomeCubit extends Cubit<HomeState> {
           heroMinutes: extras.heroMinutes,
           continueRecitation: extras.continueRecitation,
           recentActivity: extras.recentActivity,
+          microReview: microReview,
         ),
       );
     });
@@ -731,6 +751,7 @@ class HomeCubit extends Cubit<HomeState> {
     required CustomMemorizationPlan? customPlan,
     required QuranPageDetail? dailyWirdDetail,
     required bool isKids,
+    required List<AyahReviewRecord> reviewRecords,
     required OverallProgress? overallProgress,
     required KhatmahPlan? activeKhatmah,
     required bool isEnabled,
@@ -739,13 +760,9 @@ class HomeCubit extends Cubit<HomeState> {
       return (null, const <UnifiedJourneyAction>[]);
     }
 
-    final recordsResult = await _memorizationRepository.getAllReviewRecords(
-      scope: isKids ? ReviewRecordReadScope.kids : ReviewRecordReadScope.adult,
-    );
-    final records = recordsResult.getOrElse(() => []);
     final now = DateTime.now().toUtc();
     const aggregator = MemorizationInsightsAggregator();
-    final insights = aggregator.generateAdultProduction(records, now);
+    final insights = aggregator.generateAdultProduction(reviewRecords, now);
     const adaptiveUsecase = AdaptiveRecommendationsUsecase();
     final recommendations = insights.totalRecordsAnalyzed == 0
         ? const <MemorizationRecommendation>[]

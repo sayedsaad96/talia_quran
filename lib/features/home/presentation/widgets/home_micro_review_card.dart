@@ -6,70 +6,41 @@ import 'package:qcf_quran_plus/qcf_quran_plus.dart' as qcf;
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/surah_names.dart';
-import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
-import '../../../../core/memorization/micro_review_picker.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../memorization_plus/domain/entities/ayah_review_record.dart';
-import '../../../memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import '../theme/home_skin.dart';
 import 'glass_panel.dart';
 
 /// "لمحة مراجعة" (Micro-Review): one quiet ayah from the user's older
 /// memorization, hidden until tapped — a 30-second active-recall moment.
 ///
-/// Self-contained: loads its own data via DI and renders nothing when there
-/// is nothing to review, so it never disturbs the home layout of new users.
+/// The HomeCubit owns data loading; this widget only renders the selected
+/// record and stays invisible when there is nothing to review.
 class HomeMicroReviewCard extends StatefulWidget {
-  const HomeMicroReviewCard({super.key, required this.skin});
+  const HomeMicroReviewCard({
+    super.key,
+    required this.skin,
+    required this.record,
+  });
 
   final HomeSkin skin;
+  final AyahReviewRecord? record;
 
   @override
   State<HomeMicroReviewCard> createState() => _HomeMicroReviewCardState();
 }
 
 class _HomeMicroReviewCardState extends State<HomeMicroReviewCard> {
-  final MicroReviewPicker _picker = const MicroReviewPicker();
-  AyahReviewRecord? _pick;
   bool _revealed = false;
-  bool _loaded = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  Future<void> _load() async {
-    try {
-      if (!getIt.isRegistered<MemorizationPlusRepository>()) {
-        if (mounted) setState(() => _loaded = true);
-        return;
-      }
-      final result = await getIt<MemorizationPlusRepository>()
-          .getAllReviewRecords();
-      final pick = result.fold(
-        (_) => null,
-        (records) => _picker.pick(records: records, now: DateTime.now()),
-      );
-      if (!mounted) return;
-      setState(() {
-        _pick = pick;
-        _loaded = true;
-      });
-    } catch (_) {
-      if (mounted) setState(() => _loaded = true);
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     // Quiet until loaded, invisible when there is nothing to review.
-    if (!_loaded || _pick == null) return const SizedBox.shrink();
+    if (widget.record == null) return const SizedBox.shrink();
 
-    final record = _pick!;
+    final record = widget.record!;
     final l10n = context.l10n;
     final skin = widget.skin;
     final surahName = context.isArabic

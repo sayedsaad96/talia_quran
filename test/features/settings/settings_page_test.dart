@@ -23,6 +23,7 @@ import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
+import 'package:talia_quran/features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/profile_cubit.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/settings_cubit.dart';
 import 'package:talia_quran/features/settings/presentation/pages/settings_page.dart';
@@ -504,6 +505,9 @@ class _SettingsTestApp extends StatelessWidget {
         BlocProvider.value(value: getIt<ProfileCubit>()),
         BlocProvider.value(value: getIt<ThemeCubit>()),
         BlocProvider.value(value: getIt<LocaleCubit>()),
+        BlocProvider<QuranAudioPlayerCubit>(
+          create: (_) => _FakeQuranAudioPlayerCubit(),
+        ),
       ],
       child: MaterialApp.router(
         locale: locale,
@@ -574,6 +578,24 @@ class _FakeAppVersionInfoProvider implements AppVersionInfoProvider {
 
   @override
   Future<AppVersionInfo> getVersionInfo() async => info;
+}
+
+class _FakeQuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState>
+    implements QuranAudioPlayerCubit {
+  _FakeQuranAudioPlayerCubit() : super(const QuranAudioPlayerState());
+
+  bool _backgroundPlaybackEnabled = true;
+
+  @override
+  bool get isBackgroundPlaybackEnabled => _backgroundPlaybackEnabled;
+
+  @override
+  Future<void> setBackgroundPlaybackEnabled(bool enabled) async {
+    _backgroundPlaybackEnabled = enabled;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _FakeAuthRepository implements AuthRepository {

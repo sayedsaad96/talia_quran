@@ -680,18 +680,25 @@ class TaliaNotificationService {
         DarwinNotificationAction.plain(
           'action_prayer_companion_confirm',
           _l10n.notificationActionCompanionConfirm,
+          options: const {DarwinNotificationActionOption.foreground},
         ),
         DarwinNotificationAction.plain(
           'action_prayer_companion_pray_now',
           _l10n.notificationActionCompanionPrayNow,
+          options: const {DarwinNotificationActionOption.foreground},
         ),
         DarwinNotificationAction.plain(
           'action_prayer_companion_remind_later',
           _l10n.notificationActionCompanionRemindLater,
+          options: const {DarwinNotificationActionOption.foreground},
         ),
       ],
     ),
   ];
+
+  @visibleForTesting
+  List<DarwinNotificationCategory> get debugDarwinCategories =>
+      _darwinCategories;
 
   NotificationDetails get _dailyReviewNotificationDetails =>
       NotificationDetails(

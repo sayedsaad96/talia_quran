@@ -19,8 +19,10 @@ import 'package:talia_quran/features/home/presentation/pages/home_page.dart';
 import 'package:talia_quran/features/home/presentation/theme/home_skin.dart';
 import 'package:talia_quran/features/home/presentation/widgets/home_background.dart';
 import 'package:talia_quran/features/progress/domain/entities/progress_entities.dart';
+import 'package:talia_quran/features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import 'package:talia_quran/features/settings/data/user_profile.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/profile_cubit.dart';
+import 'package:talia_quran/features/streak/presentation/cubits/streak_cubit.dart';
 
 Future<void> _loadFont(String family, List<String> paths) async {
   final loader = FontLoader(family);
@@ -131,7 +133,8 @@ void main() {
         ayahOfDay: const AyahOfDay(
           surahId: 1,
           ayahNumber: 1,
-          text: 'وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ لِلْمُؤْمِنِينَ',
+          text:
+              'وَنُنَزِّلُ مِنَ الْقُرْآنِ مَا هُوَ شِفَاءٌ وَرَحْمَةٌ لِلْمُؤْمِنِينَ',
           surahNameAr: 'الإسراء',
           surahNameEn: 'Al-Isra',
           pageNumber: 291,
@@ -171,6 +174,12 @@ void main() {
                 ),
               ),
               BlocProvider<HomeCubit>.value(value: _FakeHomeCubit(state)),
+              BlocProvider<StreakCubit>(
+                create: (_) => _FakeStreakCubit(const StreakInitial()),
+              ),
+              BlocProvider<QuranAudioPlayerCubit>(
+                create: (_) => _FakeQuranAudioPlayerCubit(),
+              ),
             ],
             child: Scaffold(
               body: HomeBackground(
@@ -210,6 +219,24 @@ class _FakeHomeCubit extends Cubit<HomeState> implements HomeCubit {
   _FakeHomeCubit(super.initialState);
   @override
   Future<void> load() async {}
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeStreakCubit extends Cubit<StreakState> implements StreakCubit {
+  _FakeStreakCubit(super.initialState);
+
+  @override
+  Future<void> loadStreak() async {}
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class _FakeQuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState>
+    implements QuranAudioPlayerCubit {
+  _FakeQuranAudioPlayerCubit() : super(const QuranAudioPlayerState());
+
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

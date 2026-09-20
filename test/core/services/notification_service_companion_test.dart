@@ -72,6 +72,34 @@ void main() {
     });
   });
 
+  group('Darwin companion actions', () {
+    test(
+      'launch the app so the foreground persistence handler receives them',
+      () {
+        final category = service.debugDarwinCategories.singleWhere(
+          (candidate) => candidate.identifier == 'prayer_companion_category',
+        );
+
+        expect(
+          category.actions.map((action) => action.identifier),
+          containsAll(<String>[
+            'action_prayer_companion_confirm',
+            'action_prayer_companion_pray_now',
+            'action_prayer_companion_remind_later',
+          ]),
+        );
+        expect(
+          category.actions.every(
+            (action) => action.options.contains(
+              DarwinNotificationActionOption.foreground,
+            ),
+          ),
+          isTrue,
+        );
+      },
+    );
+  });
+
   group('cancelPrayerCompanionReminders', () {
     test('cancels only IDs 2100-2134, never legacy prayer IDs', () async {
       await service.cancelPrayerCompanionReminders();

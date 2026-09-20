@@ -56,9 +56,11 @@ class HomeLoaded extends HomeState {
     this.heroMinutes = 0,
     this.continueRecitation,
     this.recentActivity = const [],
+    this.microReview,
   });
 
   static const Object _khatmahSentinel = Object();
+  static const Object _microReviewSentinel = Object();
 
   HomeLoaded copyWith({
     OverallProgress? progress,
@@ -96,6 +98,7 @@ class HomeLoaded extends HomeState {
     int? heroMinutes,
     ContinueRecitation? continueRecitation,
     List<ActivityEvent>? recentActivity,
+    Object? microReview = _microReviewSentinel,
   }) {
     return HomeLoaded(
       progress: progress ?? this.progress,
@@ -140,6 +143,9 @@ class HomeLoaded extends HomeState {
       heroMinutes: heroMinutes ?? this.heroMinutes,
       continueRecitation: continueRecitation ?? this.continueRecitation,
       recentActivity: recentActivity ?? this.recentActivity,
+      microReview: identical(microReview, _microReviewSentinel)
+          ? this.microReview
+          : microReview as AyahReviewRecord?,
     );
   }
 
@@ -177,6 +183,7 @@ class HomeLoaded extends HomeState {
   final int heroMinutes;
   final ContinueRecitation? continueRecitation;
   final List<ActivityEvent> recentActivity;
+  final AyahReviewRecord? microReview;
 
   HomeKhatmahPlanState get khatmahPlanState {
     if (activeKhatmah == null) return HomeKhatmahPlanState.none;
@@ -238,6 +245,7 @@ class HomeLoaded extends HomeState {
     heroMinutes,
     continueRecitation,
     recentActivity,
+    microReview,
   ];
 }
 

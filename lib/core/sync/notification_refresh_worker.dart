@@ -6,13 +6,13 @@ import 'package:workmanager/workmanager.dart';
 
 import '../../features/prayer_companion/data/datasources/prayer_companion_local_datasource.dart';
 import '../../features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
-import '../../features/prayer_companion/data/models/prayer_companion_record_isar.dart';
 import '../../features/prayer_companion/data/repositories/prayer_companion_repository_impl.dart';
 import '../../features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
 import '../l10n/app_localizations.dart';
 import '../services/notification_scheduler.dart';
 import '../services/notification_service.dart';
 import '../services/prayer_times_service.dart';
+import '../storage/app_isar.dart';
 import '../utils/talia_logger.dart';
 
 /// Task name used when registering the periodic notification refresh.
@@ -94,8 +94,8 @@ NotificationScheduler _createLocalScheduler({
 /// Builds the Companion planner from local storage only.
 ///
 /// Uses the already-open Isar instance when present (the app isolate) and
-/// otherwise opens one with just the Companion schema in the headless
-/// isolate. Returns null if Isar cannot be opened — the scheduler then
+/// otherwise opens the default database with the complete application schema
+/// in the headless isolate. Returns null if Isar cannot be opened — the scheduler then
 /// cancels Companion events instead of crashing the background task.
 ///
 /// V1 limitation (documented): the planner's default
@@ -110,11 +110,7 @@ Future<PrayerCompanionPlanner?> _createLocalCompanionPlanner(
   SharedPreferences prefs,
 ) async {
   try {
-    final isar =
-        Isar.getInstance() ??
-        await Isar.open([
-          PrayerCompanionRecordIsarSchema,
-        ], directory: (await getApplicationDocumentsDirectory()).path);
+    final isar = await openNotificationRefreshIsar();
     final datasource = PrayerCompanionLocalDatasource(isar);
     final repository = PrayerCompanionRepositoryImpl(datasource);
     final preferences = PrayerCompanionPreferences(prefs);
@@ -128,6 +124,18 @@ Future<PrayerCompanionPlanner?> _createLocalCompanionPlanner(
     TaliaLogger.w('Failed to build headless companion planner', error, stack);
     return null;
   }
+}
+
+/// Opens the same complete database schema used by foreground dependency
+/// injection. [directory] and [name] are injectable for destructive migration
+/// regression tests so no test ever touches a user's database.
+Future<Isar> openNotificationRefreshIsar({
+  String? directory,
+  String name = Isar.defaultName,
+}) async {
+  final databaseDirectory =
+      directory ?? (await getApplicationDocumentsDirectory()).path;
+  return openAppIsar(directory: databaseDirectory, name: name);
 }
 
 /// Standalone entry-point dispatcher for the notification refresh task.

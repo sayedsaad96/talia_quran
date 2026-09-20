@@ -1,12 +1,13 @@
 import 'dart:async';
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../constants/surah_names.dart';
 import '../utils/talia_logger.dart';
 import 'audio_lifecycle_manager.dart';
+import 'quran_background_audio_handler.dart';
 import 'quran_audio_service.dart';
 import 'quran_reciter.dart';
 import 'quran_reciter_service.dart';
@@ -93,8 +94,10 @@ class QuranContinuousPlayerService {
     required QuranRepository quranRepository,
     required QuranReciterService reciterService,
     AudioPlayer? player,
+    bool enableBackgroundAudioIntegration = false,
   }) : _quranRepository = quranRepository,
        _reciterService = reciterService,
+       _enableBackgroundAudioIntegration = enableBackgroundAudioIntegration,
        _player = player ?? AudioPlayer() {
     AudioLifecycleManager.instance.register(
       _player,
@@ -104,7 +107,8 @@ class QuranContinuousPlayerService {
     _loadBackgroundPlaybackPreference();
   }
 
-  static const String _prefKeyBackgroundPlayback = 'quran_background_playback_enabled';
+  static const String _prefKeyBackgroundPlayback =
+      'quran_background_playback_enabled';
   bool _isBackgroundPlaybackEnabled = true;
 
   /// Whether Quran recitation continues in the background with notification controls.
@@ -129,7 +133,10 @@ class QuranContinuousPlayerService {
 
   final QuranRepository _quranRepository;
   final QuranReciterService _reciterService;
+  final bool _enableBackgroundAudioIntegration;
   final AudioPlayer _player;
+  QuranBackgroundAudioHandler? _backgroundAudioHandler;
+  Future<QuranBackgroundAudioHandler?>? _backgroundAudioInitialization;
 
   final ValueNotifier<ContinuousPlaybackState> _stateNotifier =
       ValueNotifier<ContinuousPlaybackState>(const ContinuousPlaybackState());
@@ -179,7 +186,7 @@ class QuranContinuousPlayerService {
           // Only show the loading state during the very first cold start
           // (status is explicitly loading and never reached playing yet).
           if (_stateNotifier.value.status != PlaybackStatus.loading) return;
-          // Already in loading — keep it; no need to re-emit.
+        // Already in loading — keep it; no need to re-emit.
         case ProcessingState.ready:
           _emitState(
             _stateNotifier.value.copyWith(
@@ -344,10 +351,7 @@ class QuranContinuousPlayerService {
       }
 
       _queue = [ayah];
-      await _loadPlaylistAndPlay(
-        startIndex: 0,
-        activeReciter: activeReciter,
-      );
+      await _loadPlaylistAndPlay(startIndex: 0, activeReciter: activeReciter);
       return;
     }
 
@@ -377,9 +381,11 @@ class QuranContinuousPlayerService {
     required QuranReciter activeReciter,
   }) async {
     try {
+      final backgroundHandler = await _ensureBackgroundAudioHandler();
       await _player.stop();
 
-      final audioSources = _buildAudioSources(activeReciter);
+      final mediaItems = _buildMediaItems(activeReciter);
+      final audioSources = _buildAudioSources(activeReciter, mediaItems);
 
       if (audioSources.isEmpty) {
         _emitState(
@@ -392,6 +398,7 @@ class QuranContinuousPlayerService {
       }
 
       _currentIndex = startIndex;
+      backgroundHandler?.setQueueItems(mediaItems);
 
       final firstAyah = _queue[startIndex];
       _emitState(
@@ -424,7 +431,6 @@ class QuranContinuousPlayerService {
       // stuck when the subsequent buffering event is suppressed.
       unawaited(_player.play());
       _emitState(_stateNotifier.value.copyWith(status: PlaybackStatus.playing));
-
     } catch (e, stack) {
       TaliaLogger.w('Continuous player failed to load playlist', e, stack);
       _emitState(
@@ -436,27 +442,35 @@ class QuranContinuousPlayerService {
     }
   }
 
-  /// Builds a list of [AudioSource] for every ayah in [_queue].
-  /// Uses [AudioSource.uri] with [MediaItem] tag so just_audio_background
-  /// displays metadata and controls in the notification drawer & lock screen.
-  List<AudioSource> _buildAudioSources(QuranReciter activeReciter) {
-    return _queue.map((ayah) {
+  List<MediaItem> _buildMediaItems(QuranReciter activeReciter) {
+    return _queue
+        .map((ayah) {
+          final surahName = SurahNames.arabic[ayah.surahId] ?? 'القرآن الكريم';
+          return MediaItem(
+            id: '${ayah.surahId}_${ayah.numberInSurah}',
+            album: 'القرآن الكريم',
+            title: 'سورة $surahName — الآية ${ayah.numberInSurah}',
+            artist: activeReciter.name,
+          );
+        })
+        .toList(growable: false);
+  }
+
+  /// Builds the just_audio playlist. Metadata is also handed explicitly to
+  /// the scoped [QuranBackgroundAudioHandler] for platform media controls.
+  List<AudioSource> _buildAudioSources(
+    QuranReciter activeReciter,
+    List<MediaItem> mediaItems,
+  ) {
+    return List<AudioSource>.generate(_queue.length, (index) {
+      final ayah = _queue[index];
       final url = QuranAudioService.buildUrl(
         ayah.surahId,
         ayah.numberInSurah,
         reciter: activeReciter,
       );
-      final surahName = SurahNames.arabic[ayah.surahId] ?? 'القرآن الكريم';
-      return AudioSource.uri(
-        Uri.parse(url),
-        tag: MediaItem(
-          id: '${ayah.surahId}_${ayah.numberInSurah}',
-          album: 'القرآن الكريم',
-          title: 'سورة $surahName — الآية ${ayah.numberInSurah}',
-          artist: activeReciter.name,
-        ),
-      );
-    }).toList();
+      return AudioSource.uri(Uri.parse(url), tag: mediaItems[index]);
+    });
   }
 
   // ---------------------------------------------------------------------------
@@ -519,8 +533,11 @@ class QuranContinuousPlayerService {
     } catch (_) {}
     _queue = [];
     _currentIndex = -1;
+    _backgroundAudioHandler?.clearQueue();
     _emitState(const ContinuousPlaybackState(status: PlaybackStatus.idle));
   }
+
+  Future<void> seek(Duration position) => _player.seek(position);
 
   Future<void> changeReciter(QuranReciter reciter) async {
     if (_stateNotifier.value.reciter == reciter) return;
@@ -537,8 +554,48 @@ class QuranContinuousPlayerService {
     AudioLifecycleManager.instance.unregister(_player);
     _currentIndexSub?.cancel();
     _playerStateSub?.cancel();
+    unawaited(_backgroundAudioHandler?.disposeHandler());
     unawaited(_player.dispose());
     _stateNotifier.dispose();
+  }
+
+  Future<QuranBackgroundAudioHandler?> _ensureBackgroundAudioHandler() {
+    if (!_enableBackgroundAudioIntegration) {
+      return Future<QuranBackgroundAudioHandler?>.value(null);
+    }
+    return _backgroundAudioInitialization ??= _initializeBackgroundAudio();
+  }
+
+  Future<QuranBackgroundAudioHandler?> _initializeBackgroundAudio() async {
+    try {
+      final handler = await AudioService.init<QuranBackgroundAudioHandler>(
+        builder: () => QuranBackgroundAudioHandler(
+          player: _player,
+          onPlay: resume,
+          onPause: pause,
+          onStop: stop,
+          onNext: nextAyah,
+          onPrevious: previousAyah,
+          onSeek: seek,
+        ),
+        config: const AudioServiceConfig(
+          androidNotificationChannelId: 'com.example.talia_quran.channel.audio',
+          androidNotificationChannelName: 'تلاوة القرآن الكريم',
+          androidNotificationOngoing: true,
+          androidStopForegroundOnPause: true,
+          androidNotificationIcon: 'mipmap/launcher_icon',
+        ),
+      );
+      _backgroundAudioHandler = handler;
+      return handler;
+    } catch (error, stack) {
+      TaliaLogger.w(
+        'Failed to initialize scoped Quran background audio',
+        error,
+        stack,
+      );
+      return null;
+    }
   }
 
   // ---------------------------------------------------------------------------

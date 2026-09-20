@@ -1,18 +1,10 @@
-import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mocktail/mocktail.dart';
-import 'package:talia_quran/core/di/injection.dart';
-import 'package:talia_quran/core/error/app_failure.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/home/presentation/theme/home_skin.dart';
 import 'package:talia_quran/features/home/presentation/widgets/home_micro_review_card.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/ayah_review_record.dart';
-import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
-
-class _MockMemorizationRepository extends Mock
-    implements MemorizationPlusRepository {}
 
 AyahReviewRecord _record(int surahId, int ayahNumber) {
   final now = DateTime(2025, 9, 19);
@@ -29,21 +21,7 @@ AyahReviewRecord _record(int surahId, int ayahNumber) {
 }
 
 void main() {
-  late _MockMemorizationRepository repository;
-
-  setUp(() {
-    if (getIt.isRegistered<MemorizationPlusRepository>()) {
-      getIt.reset();
-    }
-    repository = _MockMemorizationRepository();
-    getIt.registerSingleton<MemorizationPlusRepository>(repository);
-  });
-
-  tearDown(() async {
-    await getIt.reset();
-  });
-
-  Widget harness() {
+  Widget harness({AyahReviewRecord? record}) {
     return MaterialApp(
       locale: const Locale('en'),
       localizationsDelegates: const [
@@ -57,6 +35,7 @@ void main() {
         body: SingleChildScrollView(
           child: HomeMicroReviewCard(
             skin: HomeSkin.forBrightness(Brightness.light),
+            record: record,
           ),
         ),
       ),
@@ -65,11 +44,7 @@ void main() {
 
   testWidgets('renders the hidden active-recall card with actions',
       (tester) async {
-    when(() => repository.getAllReviewRecords()).thenAnswer(
-      (_) async => Right([_record(2, 255)]),
-    );
-
-    await tester.pumpWidget(harness());
+    await tester.pumpWidget(harness(record: _record(2, 255)));
     await tester.pumpAndSettle();
 
     expect(find.text('Memory flash'), findsOneWidget);
@@ -89,11 +64,7 @@ void main() {
   });
 
   testWidgets('tapping the hidden card reveals the ayah', (tester) async {
-    when(() => repository.getAllReviewRecords()).thenAnswer(
-      (_) async => Right([_record(2, 255)]),
-    );
-
-    await tester.pumpWidget(harness());
+    await tester.pumpWidget(harness(record: _record(2, 255)));
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const ValueKey('hidden')));
@@ -105,23 +76,10 @@ void main() {
 
   testWidgets('renders nothing when the user has no memorized ayahs',
       (tester) async {
-    when(
-      () => repository.getAllReviewRecords(),
-    ).thenAnswer((_) async => const Right([]));
     await tester.pumpWidget(harness());
     await tester.pumpAndSettle();
 
     expect(find.text('Memory flash'), findsNothing);
   });
 
-  testWidgets('renders nothing when the repository fails', (tester) async {
-    when(() => repository.getAllReviewRecords()).thenAnswer(
-      (_) async => const Left(UnknownFailure('boom')),
-    );
-
-    await tester.pumpWidget(harness());
-    await tester.pumpAndSettle();
-
-    expect(find.text('Memory flash'), findsNothing);
-  });
 }

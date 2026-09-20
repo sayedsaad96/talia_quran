@@ -182,6 +182,15 @@ void main() {
     progressEvents.dispose();
   });
 
+  test('loads the micro-review candidate into HomeLoaded state', () async {
+    await cubit.load();
+
+    final state = cubit.state as HomeLoaded;
+    expect(state.microReview, isNotNull);
+    expect(state.microReview!.surahId, 1);
+    expect(state.microReview!.ayahNumber, 1);
+  });
+
   test('Scenario 1: Resume Session emits P1 Action', () async {
     when(
       mockSessionService.getLastRestorableLocation(),

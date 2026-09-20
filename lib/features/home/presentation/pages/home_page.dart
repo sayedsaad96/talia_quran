@@ -360,7 +360,10 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                     AppSpacing.pagePadding,
                     0,
                   ),
-                  child: HomeMicroReviewCard(skin: widget.skin),
+                  child: HomeMicroReviewCard(
+                    skin: widget.skin,
+                    record: widget.state.microReview,
+                  ),
                 ),
               ),
             ),

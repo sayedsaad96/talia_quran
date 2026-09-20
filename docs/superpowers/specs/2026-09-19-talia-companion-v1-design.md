@@ -1,9 +1,9 @@
 # Talia Companion V1 — Design Specification
 
-**Product:** Talia Quran  
-**Feature:** Talia Companion  
-**Version:** V1  
-**Date:** 2026-09-19  
+**Product:** Talia Quran
+**Feature:** Talia Companion
+**Version:** V1
+**Date:** 2026-09-19
 **Status:** Design approved in brainstorming; implementation plan not started yet.
 
 ---
@@ -270,9 +270,9 @@ P10 Ambient idle
 
 ### Non-negotiable principles
 
-> Suppression beats engagement.  
-> User intent beats adaptation.  
-> Relevance beats visibility.  
+> Suppression beats engagement.
+> User intent beats adaptation.
+> Relevance beats visibility.
 > One Talia moment at a time.
 
 ### Quran sacred focus

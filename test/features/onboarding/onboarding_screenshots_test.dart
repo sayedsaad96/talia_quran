@@ -14,6 +14,7 @@ import 'package:talia_quran/features/memorization_plus/domain/entities/memorizat
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
 import 'package:talia_quran/features/onboarding/presentation/cubits/onboarding_cubit.dart';
 import 'package:talia_quran/features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:talia_quran/features/onboarding/presentation/widgets/onboarding_cta.dart';
 
 /// Renders the onboarding with real fonts and real assets and captures
 /// golden screenshots for visual inspection. Run with --update-goldens to
@@ -37,10 +38,10 @@ void main() {
 
   final variants = [
     ('ar_welcome', const Locale('ar'), 0, false),
-    ('ar_fork_adult', const Locale('ar'), 1, false),
-    ('ar_fork_child', const Locale('ar'), 1, true),
+    ('ar_fork_adult', const Locale('ar'), 3, false),
+    ('ar_fork_child', const Locale('ar'), 3, true),
     ('en_welcome', const Locale('en'), 0, false),
-    ('en_fork_adult', const Locale('en'), 1, false),
+    ('en_fork_adult', const Locale('en'), 3, false),
   ];
 
   for (final (name, locale, step, selectChild) in variants) {
@@ -60,8 +61,14 @@ void main() {
         _ShotApp(locale: locale, router: _onboardingRouter()),
       );
 
-      if (step == 1) {
-        await tester.tap(find.text(_startJourneyLabel(locale)));
+      for (var currentStep = 0; currentStep < step; currentStep++) {
+        final primaryCta = find.byType(OnboardingPrimaryCta);
+        expect(
+          primaryCta,
+          findsOneWidget,
+          reason: 'Expected the primary CTA for onboarding step $currentStep.',
+        );
+        await tester.tap(primaryCta);
         await tester.pumpAndSettle();
       }
       if (selectChild) {
@@ -87,9 +94,6 @@ const _shotAssets = [
   'assets/images/onboarding/splash_new.png',
   'assets/images/character/Talia_Master_Character.png',
 ];
-
-String _startJourneyLabel(Locale locale) =>
-    locale.languageCode == 'ar' ? 'ابدأ رحلتك' : 'Start Your Journey';
 
 String _kidsJourneyLabel(Locale locale) => locale.languageCode == 'ar'
     ? 'مسار البراعم والأطفال'

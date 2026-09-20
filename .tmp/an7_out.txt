@@ -1,5 +1,0 @@
-Analyzing 2 items...                                            
-
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - test\features\home\presentation\widgets\home_micro_review_card_test.dart:120:20 - prefer_const_constructors
-   info - Use 'const' with the constructor to improve performance. Try adding the 'const' keyword to the constructor invocation - test\features\home\presentation\widgets\home_micro_review_card_test.dart:120:25 - prefer_const_constructors
-

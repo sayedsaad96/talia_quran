@@ -71,7 +71,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- just_audio_background / audio_service -->
+        <!-- Scoped audio_service handler for continuous Quran playback -->
         <service android:name="com.ryanheise.audioservice.AudioService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="true" tools:ignore="Instantiatable">

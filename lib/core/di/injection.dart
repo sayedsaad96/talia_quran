@@ -20,6 +20,7 @@ import '../services/streak_service.dart';
 import '../services/xp_service.dart';
 import '../services/daily_reading_log_service.dart';
 import '../services/audio_resume_store.dart';
+import '../storage/app_isar.dart';
 import '../services/streak_risk_evaluator.dart';
 import '../services/get_daily_wird_usecase.dart';
 import '../services/prayer_times_service.dart';
@@ -46,7 +47,6 @@ import '../memorization/v2/session_phase.dart';
 import '../progress/progress_events_bus.dart';
 import '../identity/record_owner_provider.dart';
 import '../sync/cloud_sync_queue.dart';
-import '../sync/cloud_sync_queue_item.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../security/parent_pin_secure_store.dart';
 import '../security/encrypted_account_preferences_store.dart';
@@ -63,7 +63,6 @@ import '../../features/quran/presentation/cubits/surah_detail_cubit.dart';
 import '../../features/quran/presentation/cubits/quran_page_cubit.dart';
 import '../../features/hifz/data/datasources/hifz_local_datasource.dart';
 import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dart';
-import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/memorization_plus/presentation/cubits/practice_surah_cubit.dart';
@@ -86,14 +85,12 @@ import '../../features/prayer_companion/application/prayer_companion_controller.
 import '../../features/prayer_companion/application/prayer_companion_usecases.dart';
 import '../../features/prayer_companion/data/datasources/prayer_companion_local_datasource.dart';
 import '../../features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
-import '../../features/prayer_companion/data/models/prayer_companion_record_isar.dart';
 import '../../features/prayer_companion/data/repositories/prayer_companion_repository_impl.dart';
 import '../../features/prayer_companion/domain/repositories/prayer_companion_repository.dart';
 import '../../features/prayer_companion/domain/services/prayer_companion_policy.dart';
 import '../../features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
 import '../../features/home/data/repositories/heatmap_repository_impl.dart';
 import '../../features/home/data/repositories/activity_feed_repository_impl.dart';
-import '../../features/home/data/models/activity_event_isar.dart';
 import '../../features/home/domain/repositories/heatmap_repository.dart';
 import '../../features/home/domain/repositories/activity_feed_repository.dart';
 import '../../features/home/domain/usecases/get_activity_heatmap_usecase.dart';
@@ -102,10 +99,6 @@ import '../../features/home/domain/usecases/get_today_checklist_usecase.dart';
 import '../../features/home/domain/usecases/get_recent_activity_usecase.dart';
 import '../../features/home/domain/services/home_occasion_service.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
-import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
-import '../../features/memorization_plus/data/models/isar_review_effect_outbox.dart';
-import '../../features/memorization_plus/data/models/isar_review_evidence_event.dart';
-import '../../features/memorization_plus/data/models/isar_v2_session.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_policy.dart';
@@ -127,10 +120,7 @@ import '../../features/settings/presentation/cubits/settings_cubit.dart';
 import '../../features/settings/presentation/cubits/notification_settings_cubit.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
-import '../../features/streak/data/models/streak_isar.dart';
-import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/presentation/cubits/streak_cubit.dart';
-import '../../features/xp/data/models/xp_isar.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/application/cloud_sync_coordinator.dart';
@@ -162,21 +152,7 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerSingleton<SharedPreferences>(sharedPrefs);
 
   final dir = await getApplicationDocumentsDirectory();
-  final schemas = [
-    IsarAyahProgressSchema,
-    IsarAyahReviewRecordSchema,
-    IsarV2SessionSchema, // V2 session persistence
-    IsarReviewEvidenceEventSchema,
-    IsarReviewEffectOutboxSchema,
-    StreakIsarSchema,
-    XpIsarSchema,
-    DailyActivityIsarSchema, // For yearly activity heatmap
-    ActivityEventIsarSchema,
-    CloudSyncQueueItemSchema,
-    PrayerCompanionRecordIsarSchema,
-  ];
-  final isar =
-      Isar.getInstance() ?? await Isar.open(schemas, directory: dir.path);
+  final isar = await openAppIsar(directory: dir.path);
   getIt.registerSingleton<Isar>(isar);
   getIt.registerLazySingleton<V2SessionLocalDatasource>(
     () => V2SessionLocalDatasource(getIt<Isar>()),
@@ -490,6 +466,7 @@ Future<void> configureDependencies({bool background = false}) async {
       final service = QuranContinuousPlayerService(
         quranRepository: getIt<QuranRepository>(),
         reciterService: getIt<QuranReciterService>(),
+        enableBackgroundAudioIntegration: true,
       );
       // Attach after the player exists — never during configureDependencies.
       // Constructing AudioPlayer() while splash init is still running can
