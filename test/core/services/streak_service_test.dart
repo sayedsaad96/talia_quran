@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:talia_quran/core/services/streak_mercy_policy.dart';
 import 'package:talia_quran/features/streak/domain/entities/streak_entity.dart';
 
 /// Pure-Dart tests for streak business logic.
@@ -22,7 +23,9 @@ void main() {
     required DateTime? lastActivityDate,
     required int currentStreak,
     required DateTime today,
+    DateTime? lastMercyDate,
   }) {
+    const mercyPolicy = StreakMercyPolicy();
     if (lastActivityDate == null) return 1;
 
     final lastNorm = DateTime.utc(
@@ -35,7 +38,16 @@ void main() {
     if (lastNorm == todayNorm) return currentStreak; // same day
     final yesterday = todayNorm.subtract(const Duration(days: 1));
     if (lastNorm == yesterday) return currentStreak + 1; // consecutive
-    return 1; // broken
+
+    // Broken — "يوم الرحمة" may re-light it.
+    final missedDays = todayNorm.difference(lastNorm).inDays - 1;
+    final mercyGranted = mercyPolicy.allowsMercy(
+      missedDays: missedDays,
+      lastMercyDate: lastMercyDate,
+      today: todayNorm,
+    );
+    if (mercyGranted) return currentStreak + 1; // mercy re-ignition
+    return 1; // reset
   }
 
   DateTime simulateFreeze(DateTime lastActivityDate) {
@@ -135,7 +147,7 @@ void main() {
   // ─── Broken streak ───────────────────────────────────────────────────────
 
   group('Broken streak', () {
-    test('resets to 1 after a 1-day gap', () {
+    test('mercy re-lights the streak after a 1-day missed gap', () {
       final twoDaysAgo = DateTime.utc(2025, 6, 13);
       final today = DateTime.utc(2025, 6, 15);
       final result = simulateStreak(
@@ -143,7 +155,7 @@ void main() {
         currentStreak: 7,
         today: today,
       );
-      expect(result, equals(1));
+      expect(result, equals(8), reason: 'يوم الرحمة: one missed day is forgiven');
     });
 
     test('resets to 1 after a long absence', () {
@@ -169,17 +181,62 @@ void main() {
     });
   });
 
+  // ─── Mercy Day (يوم الرحمة) ───────────────────────────────────────────────
+
+  group('Mercy Day', () {
+    test('re-lights the streak once per week, then resets', () {
+      final twoDaysAgo = DateTime.utc(2025, 6, 13);
+      final today = DateTime.utc(2025, 6, 15);
+
+      // First miss of the week — mercy applies.
+      final revived = simulateStreak(
+        lastActivityDate: twoDaysAgo,
+        currentStreak: 7,
+        today: today,
+      );
+      expect(revived, equals(8));
+
+      // Mercy granted 3 days ago — a second miss within the week resets.
+      final recentMercy = DateTime.utc(2025, 6, 12);
+      final result = simulateStreak(
+        lastActivityDate: twoDaysAgo,
+        currentStreak: 7,
+        today: today,
+        lastMercyDate: recentMercy,
+      );
+      expect(result, equals(1));
+    });
+
+    test('mercy applies again a week after the last grant', () {
+      final twoDaysAgo = DateTime.utc(2025, 6, 13);
+      final today = DateTime.utc(2025, 6, 15);
+      final weekOldMercy = DateTime.utc(2025, 6, 8);
+
+      final result = simulateStreak(
+        lastActivityDate: twoDaysAgo,
+        currentStreak: 7,
+        today: today,
+        lastMercyDate: weekOldMercy,
+      );
+      expect(result, equals(8));
+    });
+  });
+
   // ─── Freeze protection ──────────────────────────────────────────────────
 
   group('Freeze protection', () {
-    test('skipping one day resets streak without a freeze', () {
+    test('skipping one day resets streak without a freeze or mercy', () {
       final twoDaysAgo = DateTime.utc(2025, 6, 13);
       final today = DateTime.utc(2025, 6, 15);
+      // Mercy was granted recently — today it is not available, so without a
+      // freeze the broken streak resets.
+      final recentMercy = DateTime.utc(2025, 6, 12);
 
       final result = simulateStreak(
         lastActivityDate: twoDaysAgo,
         currentStreak: 12,
         today: today,
+        lastMercyDate: recentMercy,
       );
 
       expect(result, equals(1));

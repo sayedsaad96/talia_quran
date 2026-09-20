@@ -3121,6 +3121,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'It\'s time for your daily memorization review';
 
   @override
+  String get notificationStreakMercyTitle =>
+      'Allah is Merciful — your streak awaits you 🌿';
+
+  @override
+  String get notificationStreakMercyBody =>
+      'You missed a day, and your streak has been re-lit… continue your reading today 🤍';
+
+  @override
   String notificationStreakAlertTitle(Object count) {
     return '⚠️ Don\'t lose your $count day streak!';
   }
@@ -3337,6 +3345,46 @@ class AppLocalizationsEn extends AppLocalizations {
       'Prayer alerts with the bundled athan clip';
 
   @override
+  String get notificationChannelPrayerCompanionName => 'Prayer Companion';
+
+  @override
+  String get notificationChannelPrayerCompanionDescription =>
+      'Gentle Prayer Companion self-confirmation reminders';
+
+  @override
+  String get notificationActionCompanionConfirm => 'Yes, I prayed it';
+
+  @override
+  String get notificationActionCompanionPrayNow => 'I will pray now';
+
+  @override
+  String get notificationActionCompanionRemindLater => 'Remind me later';
+
+  @override
+  String get notificationCompanionPreparationTitle => 'Get ready for prayer';
+
+  @override
+  String notificationCompanionPreparationBody(Object prayer) {
+    return '$prayer prayer is coming up soon';
+  }
+
+  @override
+  String get notificationCompanionCheckInTitle => 'Prayer Companion';
+
+  @override
+  String notificationCompanionCheckInBody(Object prayer) {
+    return 'Did you pray $prayer?';
+  }
+
+  @override
+  String get notificationCompanionFollowUpTitle => 'Prayer Companion';
+
+  @override
+  String notificationCompanionFollowUpBody(Object prayer) {
+    return 'A gentle reminder: did you pray $prayer?';
+  }
+
+  @override
   String get notificationDailyAyahTitle => 'Ayah of the Day ✨';
 
   @override
@@ -3369,6 +3417,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationFridayKahfTitle => 'Surah Al-Kahf Reminder 🌿';
+
+  @override
+  String get notificationWeeklyImpactTitle => 'Your impact this week 🌿';
+
+  @override
+  String notificationWeeklyImpactBody(int count) {
+    return '$count days of your week were with the Quran — every page leaves a lasting impact';
+  }
+
+  @override
+  String get notificationWeeklyImpactQuietBody =>
+      'A new week begins — one page makes a difference 🌱';
+
+  @override
+  String get notificationSettingsWeeklyImpact => 'Weekly impact (Friday)';
 
   @override
   String get notificationFridayKahfBody =>
@@ -4267,6 +4330,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'This memorization block has been completed.';
 
   @override
+  String get closingMomentLabel => 'A moment of closure';
+
+  @override
+  String get closingAyah => 'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ';
+
+  @override
+  String get closingAyahSource => 'Surah Ar-Ra\'d · Ayah 28';
+
+  @override
+  String closingSummaryMemorization(int count) {
+    return 'You committed $count ayahs to memory this session — a lasting impact, in shaa Allah.';
+  }
+
+  @override
+  String closingSummaryKhatmahWird(String start, String end) {
+    return 'You completed today\'s wird — pages $start to $end — a lasting impact, in shaa Allah.';
+  }
+
+  @override
+  String get closingDuaButton => 'Closing dua';
+
+  @override
+  String get closingDua =>
+      'O Allah, make what I have memorized a light in my heart and a remembrance with You. Make it a supporter for me, benefit me with what You have taught me, and teach me what benefits me.';
+
+  @override
+  String get closingDuaAmen => 'Ameen';
+
+  @override
+  String get closingDone => 'Done, praise be to Allah';
+
+  @override
+  String get closingRestNote =>
+      'Take a breath… your memorization awaits you tomorrow, in shaa Allah.';
+
+  @override
   String get v2MemorizationHub => 'Memorization Hub';
 
   @override
@@ -4856,6 +4955,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeAyahOfDay => 'Ayah of the day';
 
   @override
+  String get surahRevelationMeccan => 'Meccan';
+
+  @override
+  String get surahRevelationMedinan => 'Medinan';
+
+  @override
+  String ayahOfDaySurahMeta(String revelation, String count) {
+    return '$revelation · $count ayahs';
+  }
+
+  @override
+  String get ayahOfDayReadSurah => 'Read the full surah';
+
+  @override
   String get homeAyahContextFriday => 'An ayah for Friday';
 
   @override
@@ -5235,6 +5348,140 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get homePrayerTimesSheetTitle => 'Prayer Times';
+
+  @override
+  String get prayerCompanionStatusConfirmed => 'Confirmed';
+
+  @override
+  String get prayerCompanionStatusUnconfirmedPast => 'Not confirmed yet';
+
+  @override
+  String get prayerCompanionStatusUpcoming => 'Upcoming';
+
+  @override
+  String get prayerCompanionStatusPrayNow => 'Will pray now';
+
+  @override
+  String get prayerCompanionStatusRemindLater => 'Reminder set';
+
+  @override
+  String get prayerCompanionStatusNotYet => 'Not yet';
+
+  @override
+  String get prayerCompanionActionConfirm => 'I prayed';
+
+  @override
+  String get prayerCompanionActionPrayNow => 'I will pray now';
+
+  @override
+  String get prayerCompanionActionRemindLater => 'Remind me later';
+
+  @override
+  String get prayerCompanionActionNotYet => 'Not yet';
+
+  @override
+  String prayerCompanionConfirmedCount(int confirmed, int total) {
+    return '$confirmed of $total confirmed';
+  }
+
+  @override
+  String prayerCompanionRowSemantics(String prayer, String status) {
+    return '$prayer: $status';
+  }
+
+  @override
+  String get prayerCompanionSettingsTitle => 'Prayer Companion';
+
+  @override
+  String get microReviewTitle => 'Memory flash';
+
+  @override
+  String get microReviewQuestion =>
+      'From your older memorization — do you still recall it?';
+
+  @override
+  String microReviewReference(String surah, String ayah) {
+    return 'Surah $surah · Ayah $ayah';
+  }
+
+  @override
+  String get microReviewRevealHint => 'Try to recall it… then tap to reveal';
+
+  @override
+  String get microReviewRecite => 'Recite it';
+
+  @override
+  String get prayerSerenityTitle => 'Prayer Serenity Mode';
+
+  @override
+  String get prayerSerenitySubtitle =>
+      'Recitation pauses gently at prayer time';
+
+  @override
+  String get prayerSerenityNotificationTitle => 'It is time for the meeting 🕌';
+
+  @override
+  String get prayerSerenityNotificationBody =>
+      'We paused the recitation gently… it is time for prayer. May Allah accept it';
+
+  @override
+  String get prayerCompanionEnable => 'Enable Prayer Companion';
+
+  @override
+  String get prayerCompanionPreparation => 'Preparation reminder';
+
+  @override
+  String get prayerCompanionPreparationDisabled => 'Disabled';
+
+  @override
+  String prayerCompanionMinutesValue(int minutes) {
+    return '$minutes minutes';
+  }
+
+  @override
+  String get prayerCompanionCheckIn => 'Post-prayer check-in';
+
+  @override
+  String get prayerCompanionCheckInSub =>
+      'A gentle reminder arrives 20 minutes after the prayer.';
+
+  @override
+  String get prayerCompanionFollowUp => 'Allow one follow-up reminder';
+
+  @override
+  String get prayerCompanionFollowUpSub =>
+      'Sent once when you choose \"I will pray now\" or \"Remind me later\".';
+
+  @override
+  String get prayerCompanionLocalOnly =>
+      'Your confirmations stay on this device only and are never uploaded.';
+
+  @override
+  String get prayerCompanionClear => 'Clear prayer confirmations';
+
+  @override
+  String get prayerCompanionClearSub =>
+      'Deletes your saved confirmations on this device.';
+
+  @override
+  String get prayerCompanionClearConfirmTitle => 'Clear confirmations?';
+
+  @override
+  String get prayerCompanionClearConfirmBody =>
+      'Do you want to clear the confirmations saved on this device?';
+
+  @override
+  String get prayerCompanionClearConfirmButton => 'Clear';
+
+  @override
+  String get prayerCompanionClearCancel => 'Cancel';
+
+  @override
+  String get prayerCompanionClearFailed =>
+      'Could not clear confirmations. Please try again.';
+
+  @override
+  String get prayerCompanionCleared => 'Confirmations cleared.';
 
   @override
   String get weekdayMonday => 'Monday';

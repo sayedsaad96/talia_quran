@@ -1,4 +1,4 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'dart:io';
 
 import 'package:dartz/dartz.dart';
@@ -119,6 +119,20 @@ void main() {
     expect(goalAyah!.context, DailyAyahContext.memorization);
     expect('${goalAyah.surahId}:${goalAyah.ayahNumber}', '54:17');
     expect(generalAyah!.context, DailyAyahContext.general);
+  });
+
+  test('threads factual surah context into the ayah-of-day entity', () async {
+    final ayah = await GetAyahOfDayUsecase(
+      const _AnyAyahQuranRepository(),
+      now: () => DateTime(2026, 2, 18),
+      contextResolver: const DailyAyahContextResolver(
+        hijriDateFor: _noHijriDate,
+      ),
+    )();
+
+    expect(ayah, isNotNull);
+    expect(ayah!.surahType, equals('meccan'));
+    expect(ayah.surahAyahCount, equals(300));
   });
 }
 

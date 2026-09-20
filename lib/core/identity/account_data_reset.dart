@@ -18,6 +18,7 @@ import '../../features/memorization_plus/data/models/isar_v2_session.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_policy.dart';
 import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/home/data/models/activity_event_isar.dart';
+import '../../features/prayer_companion/data/models/prayer_companion_record_isar.dart';
 import '../../features/streak/data/models/streak_isar.dart';
 import '../../features/xp/data/models/xp_isar.dart';
 
@@ -112,6 +113,8 @@ class AccountDataReset {
     // Day-scoped reading proof and its fixed ordinary-wird target.
     'daily_read_pages_',
     'daily_wird_target_',
+    // Opt-in Prayer Companion settings are account-owned device data.
+    'prayer_companion_',
   };
 
   /// Device-level preferences that must survive a logout.
@@ -429,6 +432,9 @@ class AccountDataReset {
       await _isar.dailyActivityIsars.clear();
       await _runWhenCollectionSchemaAvailable(
         () => _isar.activityEventIsars.clear(),
+      );
+      await _runWhenCollectionSchemaAvailable(
+        () => _isar.prayerCompanionRecordIsars.clear(),
       );
       if (protectedOwners.isEmpty) {
         await _isar.cloudSyncQueueItems.clear();

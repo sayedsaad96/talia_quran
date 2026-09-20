@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_typography.dart';
+import '../../../../core/utils/mushaf_hizb_helper.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../quran/presentation/cubits/quran_audio_player_cubit.dart';
@@ -86,6 +87,21 @@ class HomeAyahOfDayCard extends StatelessWidget {
                         color: skin.gold,
                       ),
                     ),
+                    // Factual surah context (revelation type + ayah count) —
+                    // governed data only, never authored interpretation.
+                    if (ayah.surahType != null && ayah.surahAyahCount != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: AppSpacing.xs),
+                        child: Text(
+                          context.l10n.ayahOfDaySurahMeta(
+                            _revelationLabel(context, ayah.surahType!),
+                            _formatCount(context, ayah.surahAyahCount!),
+                          ),
+                          style: AppTypography.labelSmall.copyWith(
+                            color: skin.textSecondary,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -151,6 +167,13 @@ class HomeAyahOfDayCard extends StatelessWidget {
                 },
               ),
               const SizedBox(width: AppSpacing.lg),
+              // Read the full surah
+              _GhostIcon(
+                icon: Icons.menu_book_outlined,
+                skin: skin,
+                onTap: () => context.push('/quran/surah/${ayah.surahId}'),
+              ),
+              const SizedBox(width: AppSpacing.lg),
               // Share button
               _GhostIcon(
                 icon: Icons.share_outlined,
@@ -171,6 +194,22 @@ class HomeAyahOfDayCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Factual revelation label — Meccan/Medinan is well-established Quran
+  /// structure data, not authored interpretation.
+  String _revelationLabel(BuildContext context, String surahType) {
+    final l10n = context.l10n;
+    return surahType == 'medinan'
+        ? l10n.surahRevelationMedinan
+        : l10n.surahRevelationMeccan;
+  }
+
+  String _formatCount(BuildContext context, int count) {
+    final isArabic = context.isArabic;
+    return isArabic
+        ? MushafHizbHelper.toArabicNumber(count)
+        : count.toString();
   }
 
   String? _contextLabel(BuildContext context) {

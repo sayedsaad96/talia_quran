@@ -132,6 +132,13 @@ class QuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState> {
   Future<void> changeReciter(QuranReciter reciter) =>
       _playerService.changeReciter(reciter);
 
+  /// Whether continuous Quran playback continues in the background with notifications.
+  bool get isBackgroundPlaybackEnabled => _playerService.isBackgroundPlaybackEnabled;
+
+  /// Updates whether continuous Quran playback continues in the background.
+  Future<void> setBackgroundPlaybackEnabled(bool enabled) =>
+      _playerService.setBackgroundPlaybackEnabled(enabled);
+
   @override
   Future<void> close() {
     _playerService.stateNotifier.removeListener(_onServiceStateChanged);

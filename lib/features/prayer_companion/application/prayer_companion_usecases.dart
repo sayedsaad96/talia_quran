@@ -1,0 +1,130 @@
+import '../../../../core/identity/record_owner_provider.dart';
+import '../domain/entities/prayer_companion.dart';
+import '../domain/repositories/prayer_companion_repository.dart';
+import '../domain/services/prayer_companion_policy.dart';
+
+/// Applies a single explicit user command to one prayer occurrence.
+///
+/// The use case delegates all transition rules to the policy, persists the
+/// resulting record through the repository, and returns the saved record.
+/// Follow-up notification rescheduling is handled by the notification
+/// response controller, not here.
+///
+/// An occurrence stamped with a previous account's owner id (for example a
+/// Companion notification that fires after another account signed in) is
+/// re-owned to the CURRENT active owner before persisting: the tap is a
+/// self-reported statement of the person using the device, and storing it
+/// under a stale owner would make it invisible to the active account and to
+/// the daily summary.
+class ApplyPrayerCompanionCommand {
+  const ApplyPrayerCompanionCommand(
+    this._repository,
+    this._policy, [
+    this._owner = const SupabaseRecordOwnerProvider(),
+  ]);
+
+  final PrayerCompanionRepository _repository;
+  final PrayerCompanionPolicy _policy;
+  final RecordOwnerProvider _owner;
+
+  Future<PrayerCompanionRecord> call({
+    required PrayerOccurrence occurrence,
+    required PrayerCompanionCommand command,
+    required DateTime now,
+    DateTime? nextPrayerAt,
+  }) async {
+    final activeOwnerId = _owner.currentOwnerId;
+    final effectiveOccurrence = occurrence.ownerId == activeOwnerId
+        ? occurrence
+        : PrayerOccurrence(
+            ownerId: activeOwnerId,
+            localDate: occurrence.localDate,
+            prayerKey: occurrence.prayerKey,
+            scheduledAt: occurrence.scheduledAt,
+          );
+    final existing = await _repository.read(effectiveOccurrence);
+    final transition = _policy.apply(
+      existing: existing,
+      occurrence: effectiveOccurrence,
+      command: command,
+      now: now,
+      nextPrayerAt: nextPrayerAt,
+    );
+    return _repository.save(transition.record);
+  }
+}
+
+/// Builds the compact per-day projection shown in the prayer-times sheet.
+///
+/// Statuses are derived through the policy (never persisted by this use
+/// case), [PrayerCompanionDaySummary.confirmedCount] counts only confirmed
+/// records, and the actionable occurrence is the most recent prayer whose
+/// time has passed, whose window (until the next prayer) contains `now`, and
+/// whose status is not confirmed.
+///
+/// Isha has no next prayer on the same civil date, so its window runs until
+/// the civil-date rollover — this rollover IS the intentional V1 cap for
+/// Isha (spec §4.3 allows "a capped end-of-day/Fajr boundary for Isha").
+class GetPrayerCompanionDaySummary {
+  const GetPrayerCompanionDaySummary(
+    this._repository,
+    this._owner, [
+    this._policy = const PrayerCompanionPolicy(),
+  ]);
+
+  final PrayerCompanionRepository _repository;
+  final RecordOwnerProvider _owner;
+  final PrayerCompanionPolicy _policy;
+
+  Future<PrayerCompanionDaySummary> call({
+    required DateTime localDate,
+    required List<({PrayerKey key, DateTime time})> prayerTimes,
+    required DateTime now,
+  }) async {
+    final ownerId = _owner.currentOwnerId;
+    final date = DateTime(localDate.year, localDate.month, localDate.day);
+    final records = await _repository.readDay(
+      ownerId: ownerId,
+      localDate: date,
+    );
+
+    final statusByPrayer = <PrayerKey, PrayerCompanionStatus>{};
+    var confirmedCount = 0;
+    PrayerOccurrence? actionable;
+
+    final entries = List<({PrayerKey key, DateTime time})>.of(prayerTimes)
+      ..sort((a, b) => a.time.compareTo(b.time));
+
+    for (var i = 0; i < entries.length; i++) {
+      final entry = entries[i];
+      final record = records[entry.key];
+      final occurrence = PrayerOccurrence(
+        ownerId: ownerId,
+        localDate: date,
+        prayerKey: entry.key,
+        scheduledAt: entry.time,
+      );
+      final status = _policy.statusFor(
+        occurrence: occurrence,
+        record: record,
+        now: now,
+      );
+      statusByPrayer[entry.key] = status;
+      if (status == PrayerCompanionStatus.confirmed) confirmedCount++;
+
+      final windowEnd = i + 1 < entries.length ? entries[i + 1].time : null;
+      final inWindow =
+          !now.isBefore(entry.time) &&
+          (windowEnd == null || now.isBefore(windowEnd));
+      if (inWindow && status != PrayerCompanionStatus.confirmed) {
+        actionable = occurrence;
+      }
+    }
+
+    return PrayerCompanionDaySummary(
+      statusByPrayer: statusByPrayer,
+      confirmedCount: confirmedCount,
+      actionableOccurrence: actionable,
+    );
+  }
+}

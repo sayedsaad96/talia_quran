@@ -21,7 +21,14 @@ class _PrayerTimesSettingsSectionState
     extends State<PrayerTimesSettingsSection> {
   static const _autoValue = 'auto';
 
-  final _service = getIt<PrayerTimesService>();
+  // Resolved defensively: the settings page builds every section up front, so
+  // this widget can be mounted in stripped environments (isolated widget
+  // tests) where core DI is not registered. The section then renders nothing
+  // instead of crashing the whole settings page — the same pattern used by
+  // NotificationSettingsSection.
+  final PrayerTimesService? _service = getIt.isRegistered<PrayerTimesService>()
+      ? getIt<PrayerTimesService>()
+      : null;
   late bool _enabled;
   String? _countryId;
   String? _cityId;
@@ -32,11 +39,13 @@ class _PrayerTimesSettingsSectionState
   @override
   void initState() {
     super.initState();
-    _enabled = _service.isEnabled;
-    _cityId = _service.selectedCityId;
-    _method = _service.calculationMethod;
-    _methodAuto = !_service.isMethodManual;
-    _service.countries().then((countries) {
+    final service = _service;
+    if (service == null) return;
+    _enabled = service.isEnabled;
+    _cityId = service.selectedCityId;
+    _method = service.calculationMethod;
+    _methodAuto = !service.isMethodManual;
+    service.countries().then((countries) {
       if (!mounted) return;
       setState(() {
         _countries = countries;
@@ -46,7 +55,7 @@ class _PrayerTimesSettingsSectionState
         _cityId ??= _citiesOf(_countryId).isEmpty
             ? null
             : _citiesOf(_countryId).first.id;
-        if (_methodAuto) _method = _service.calculationMethod;
+        if (_methodAuto) _method = service.calculationMethod;
       });
     });
   }
@@ -75,14 +84,16 @@ class _PrayerTimesSettingsSectionState
   }
 
   Future<void> _setEnabled(bool value) async {
-    await _service.setEnabled(value);
+    final service = _service;
+    if (service == null) return;
+    await service.setEnabled(value);
     // A visible default in the dropdowns is not a confirmed location. Persist
     // the currently chosen location and method as soon as prayer times are
     // enabled, so reminder scheduling never falls back to Makkah implicitly.
     if (value && _cityId != null) {
-      await _service.setCityId(_cityId!);
-      if (!_methodAuto) await _service.setCalculationMethod(_method);
-      _method = _service.calculationMethod;
+      await service.setCityId(_cityId!);
+      if (!_methodAuto) await service.setCalculationMethod(_method);
+      _method = service.calculationMethod;
     }
     if (!mounted) return;
     setState(() => _enabled = value);
@@ -98,28 +109,30 @@ class _PrayerTimesSettingsSectionState
   }
 
   Future<void> _setCity(String? id) async {
-    if (id == null) return;
-    await _service.setCityId(id);
+    final service = _service;
+    if (id == null || service == null) return;
+    await service.setCityId(id);
     if (!mounted) return;
     setState(() {
       _cityId = id;
       _countryId = _countryFor(id)?.id ?? _countryId;
-      if (_methodAuto) _method = _service.calculationMethod;
+      if (_methodAuto) _method = service.calculationMethod;
     });
     await _refreshNotifications();
   }
 
   Future<void> _setMethod(String? method) async {
-    if (method == null) return;
+    final service = _service;
+    if (method == null || service == null) return;
     if (method == _autoValue) {
-      await _service.setMethodAutomatic();
+      await service.setMethodAutomatic();
     } else {
-      await _service.setCalculationMethod(method);
+      await service.setCalculationMethod(method);
     }
     if (!mounted) return;
     setState(() {
       _methodAuto = method == _autoValue;
-      _method = _service.calculationMethod;
+      _method = service.calculationMethod;
     });
     await _refreshNotifications();
   }
@@ -137,6 +150,8 @@ class _PrayerTimesSettingsSectionState
 
   @override
   Widget build(BuildContext context) {
+    final service = _service;
+    if (service == null) return const SizedBox.shrink();
     final cities = _citiesOf(_countryId);
     return Column(
       children: [

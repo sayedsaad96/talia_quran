@@ -7,6 +7,7 @@ class StreakResult extends Equatable {
     required this.isNewActivity,
     this.isNewRecord = false,
     this.milestoneReached,
+    this.mercyApplied = false,
   });
 
   /// Used when same day — no change in Streak
@@ -15,13 +16,19 @@ class StreakResult extends Equatable {
       longestStreak = 0,
       isNewActivity = false,
       isNewRecord = false,
-      milestoneReached = null;
+      milestoneReached = null,
+      mercyApplied = false;
 
   final int currentStreak;
   final int longestStreak;
   final bool isNewActivity;
   final bool isNewRecord;
   final int? milestoneReached; // null or milestone number (3, 7, 14, 30 ...)
+
+  /// True when "يوم الرحمة" (Mercy Day) revived a broken streak instead of
+  /// resetting it — the user missed exactly one day and the weekly mercy
+  /// cooldown had elapsed.
+  final bool mercyApplied;
 
   @override
   List<Object?> get props => [
@@ -30,5 +37,6 @@ class StreakResult extends Equatable {
     isNewActivity,
     isNewRecord,
     milestoneReached,
+    mercyApplied,
   ];
 }

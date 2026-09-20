@@ -49,15 +49,18 @@ class HomeLoaded extends HomeState {
     this.activeSlot,
     this.familyChildren = const [],
     this.prayerSnapshot,
+    this.prayerCompanionSummary,
     this.weeklyActiveDays = 0,
     this.weeklyActivityCount = 0,
     this.recentBookmarkRoute,
     this.heroMinutes = 0,
     this.continueRecitation,
     this.recentActivity = const [],
+    this.microReview,
   });
 
   static const Object _khatmahSentinel = Object();
+  static const Object _microReviewSentinel = Object();
 
   HomeLoaded copyWith({
     OverallProgress? progress,
@@ -88,12 +91,14 @@ class HomeLoaded extends HomeState {
     HomeSlotCandidate? activeSlot,
     List<FamilyChildEntry>? familyChildren,
     PrayerTimesSnapshot? prayerSnapshot,
+    PrayerCompanionDaySummary? prayerCompanionSummary,
     int? weeklyActiveDays,
     int? weeklyActivityCount,
     String? recentBookmarkRoute,
     int? heroMinutes,
     ContinueRecitation? continueRecitation,
     List<ActivityEvent>? recentActivity,
+    Object? microReview = _microReviewSentinel,
   }) {
     return HomeLoaded(
       progress: progress ?? this.progress,
@@ -130,12 +135,17 @@ class HomeLoaded extends HomeState {
       activeSlot: activeSlot ?? this.activeSlot,
       familyChildren: familyChildren ?? this.familyChildren,
       prayerSnapshot: prayerSnapshot ?? this.prayerSnapshot,
+      prayerCompanionSummary:
+          prayerCompanionSummary ?? this.prayerCompanionSummary,
       weeklyActiveDays: weeklyActiveDays ?? this.weeklyActiveDays,
       weeklyActivityCount: weeklyActivityCount ?? this.weeklyActivityCount,
       recentBookmarkRoute: recentBookmarkRoute ?? this.recentBookmarkRoute,
       heroMinutes: heroMinutes ?? this.heroMinutes,
       continueRecitation: continueRecitation ?? this.continueRecitation,
       recentActivity: recentActivity ?? this.recentActivity,
+      microReview: identical(microReview, _microReviewSentinel)
+          ? this.microReview
+          : microReview as AyahReviewRecord?,
     );
   }
 
@@ -166,12 +176,14 @@ class HomeLoaded extends HomeState {
   final HomeSlotCandidate? activeSlot;
   final List<FamilyChildEntry> familyChildren;
   final PrayerTimesSnapshot? prayerSnapshot;
+  final PrayerCompanionDaySummary? prayerCompanionSummary;
   final int weeklyActiveDays;
   final int weeklyActivityCount;
   final String? recentBookmarkRoute;
   final int heroMinutes;
   final ContinueRecitation? continueRecitation;
   final List<ActivityEvent> recentActivity;
+  final AyahReviewRecord? microReview;
 
   HomeKhatmahPlanState get khatmahPlanState {
     if (activeKhatmah == null) return HomeKhatmahPlanState.none;
@@ -226,12 +238,14 @@ class HomeLoaded extends HomeState {
     activeSlot,
     familyChildren,
     prayerSnapshot,
+    prayerCompanionSummary,
     weeklyActiveDays,
     weeklyActivityCount,
     recentBookmarkRoute,
     heroMinutes,
     continueRecitation,
     recentActivity,
+    microReview,
   ];
 }
 

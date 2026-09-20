@@ -3,11 +3,15 @@ import '../di/injection.dart';
 import '../l10n/app_localizations.dart';
 import '../services/streak_reader.dart';
 import '../services/streak_risk_evaluator.dart';
+import '../services/streak_service.dart';
 import '../utils/talia_logger.dart';
 import '../../features/progress/domain/repositories/progress_repository.dart';
 import '../../features/home/domain/usecases/get_ayah_of_day_usecase.dart';
 import '../../features/khatmah/domain/entities/khatmah_plan.dart';
 import '../../features/khatmah/domain/usecases/get_active_khatmah_usecase.dart';
+import '../../features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
+import '../../features/prayer_companion/domain/entities/prayer_companion.dart';
+import '../../features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
 
 import 'daily_ayah_notification_target.dart';
 import 'notification_service.dart';
@@ -41,6 +45,19 @@ bool _isInQuietWindow(int hour, int startHour, int endHour) {
   return hour >= startHour || hour < endHour;
 }
 
+/// True when [time]'s local clock hour falls inside the quiet window
+/// ([startHour]..[endHour], possibly wrapping midnight). Uses the same
+/// hour-granularity containment semantics as [applyQuietHours].
+bool isInQuietHoursWindow(
+  DateTime time, {
+  required bool enabled,
+  required int startHour,
+  required int endHour,
+}) {
+  if (!enabled) return false;
+  return _isInQuietWindow(time.toLocal().hour, startHour, endHour);
+}
+
 ({int hour, int minute}) applyQuietHours({
   required int hour,
   required int minute,
@@ -62,6 +79,8 @@ class NotificationScheduler {
   final StreakRiskEvaluator _streakRiskEvaluator;
   final PrayerTimesService? _prayerTimesService;
   final GetActiveKhatmahUsecase? _getActiveKhatmah;
+  final PrayerCompanionPlanner? _prayerCompanionPlanner;
+  final PrayerCompanionPreferences? _prayerCompanionPreferences;
 
   NotificationScheduler(
     this._service, {
@@ -70,11 +89,15 @@ class NotificationScheduler {
     StreakRiskEvaluator streakRiskEvaluator = const StreakRiskEvaluator(),
     PrayerTimesService? prayerTimesService,
     GetActiveKhatmahUsecase? getActiveKhatmah,
+    PrayerCompanionPlanner? prayerCompanionPlanner,
+    PrayerCompanionPreferences? prayerCompanionPreferences,
   }) : _kidsSessionDatesLoader = kidsSessionDatesLoader,
        _getAyahOfDay = getAyahOfDay,
        _streakRiskEvaluator = streakRiskEvaluator,
        _prayerTimesService = prayerTimesService,
-       _getActiveKhatmah = getActiveKhatmah;
+       _getActiveKhatmah = getActiveKhatmah,
+       _prayerCompanionPlanner = prayerCompanionPlanner,
+       _prayerCompanionPreferences = prayerCompanionPreferences;
 
   String? _lastRollingDateKey;
 
@@ -400,6 +423,47 @@ class NotificationScheduler {
       await _service.cancelFridayKahfReminder();
     }
 
+    // Weekly Impact ("أثر الأسبوع"): one gentle weekly summary framed as
+    // impact rather than statistics. The body reflects the last 7 days at
+    // schedule time; every app-open and background refresh recomputes it
+    // before Friday, so it stays truthful.
+    final weeklyImpactEnabled =
+        prefs.getBool(TaliaNotificationService.weeklyImpactPreferenceKey) ??
+        true;
+    if (weeklyImpactEnabled) {
+      var daysWithQuran = 0;
+      try {
+        if (getIt.isRegistered<StreakService>()) {
+          final activity = await getIt<StreakService>().getActivityMap(
+            days: 7,
+          );
+          daysWithQuran = activity.values.where((count) => count > 0).length;
+        }
+      } catch (e, stack) {
+        TaliaLogger.w('Weekly impact activity load failed', e, stack);
+      }
+      final hour =
+          prefs.getInt(
+            '${TaliaNotificationService.weeklyImpactPreferenceKey}_hour',
+          ) ??
+          16;
+      final minute =
+          prefs.getInt(
+            '${TaliaNotificationService.weeklyImpactPreferenceKey}_minute',
+          ) ??
+          0;
+      await _service.scheduleWeeklyImpactReminder(
+        title: l10n.notificationWeeklyImpactTitle,
+        body: daysWithQuran > 0
+            ? l10n.notificationWeeklyImpactBody(daysWithQuran)
+            : l10n.notificationWeeklyImpactQuietBody,
+        hour: hour,
+        minute: minute,
+      );
+    } else {
+      await _service.cancelWeeklyImpactReminder();
+    }
+
     // Tahajjud / Qiyam Al-Layl Reminder
     final tahajjudEnabled =
         prefs.getBool(TaliaNotificationService.tahajjudPreferenceKey) ?? false;
@@ -563,6 +627,11 @@ class NotificationScheduler {
       await _service.cancelPrayerTimesReminders();
     }
 
+    // Prayer Companion (additive, after the legacy prayer block): shares the
+    // same readiness check so a city/method reset cancels Companion events
+    // on the same refresh path.
+    await _refreshPrayerCompanion(l10n, now, prayerService);
+
     if (shouldRefreshRolling) {
       _lastRollingDateKey = todayKey;
     }
@@ -586,6 +655,101 @@ class NotificationScheduler {
       }
     } else {
       await _service.cancelSmartReminder();
+    }
+  }
+
+  /// Schedules (or cancels) the opt-in Prayer Companion reminders.
+  ///
+  /// Mirrors the legacy prayer block's readiness check: when the Companion
+  /// is disabled, its dependencies are absent, or no city/method has been
+  /// persisted, only the Companion namespace (2100–2129) is cancelled —
+  /// legacy prayer notifications are never touched here.
+  Future<void> _refreshPrayerCompanion(
+    AppLocalizations l10n,
+    DateTime now,
+    PrayerTimesService? prayerService,
+  ) async {
+    try {
+      final planner = _prayerCompanionPlanner;
+      final settings = _prayerCompanionPreferences?.read();
+      if (planner == null ||
+          settings == null ||
+          !settings.enabled ||
+          prayerService == null ||
+          !prayerService.isReadyForNotificationScheduling) {
+        await _service.cancelPrayerCompanionReminders();
+        return;
+      }
+      final planned = await planner.plan(now: now);
+      // Spec §4.4: a Companion event inside quiet hours is SUPPRESSED, never
+      // shifted into a misleading next-day slot like other reminder
+      // categories. Prayer-time alerts stay exempt from quiet hours.
+      final prefs = await SharedPreferences.getInstance();
+      final quietEnabled =
+          prefs.getBool(TaliaNotificationService.quietHoursPreferenceKey) ??
+          false;
+      final quietStartHour =
+          prefs.getInt(TaliaNotificationService.quietHoursStartKey) ?? 23;
+      final quietEndHour =
+          prefs.getInt(TaliaNotificationService.quietHoursEndKey) ?? 4;
+      final reminders = planned
+          .where(
+            (reminder) => !isInQuietHoursWindow(
+              reminder.scheduledAt,
+              enabled: quietEnabled,
+              startHour: quietStartHour,
+              endHour: quietEndHour,
+            ),
+          )
+          .toList();
+      final isArabic = l10n.localeName.startsWith('ar');
+      String prayerNameFor(PrayerKey key) => switch (key) {
+        PrayerKey.fajr => isArabic ? 'الفجر' : 'Fajr',
+        PrayerKey.dhuhr => isArabic ? 'الظهر' : 'Dhuhr',
+        PrayerKey.asr => isArabic ? 'العصر' : 'Asr',
+        PrayerKey.maghrib => isArabic ? 'المغرب' : 'Maghrib',
+        PrayerKey.isha => isArabic ? 'العشاء' : 'Isha',
+      };
+      await _service.schedulePrayerCompanionReminders(
+        reminders: reminders,
+        titleFor: (reminder) => switch (reminder.kind) {
+          PrayerCompanionNotificationKind.preparation =>
+            l10n.notificationCompanionPreparationTitle,
+          PrayerCompanionNotificationKind.checkIn =>
+            l10n.notificationCompanionCheckInTitle,
+          PrayerCompanionNotificationKind.followUp =>
+            l10n.notificationCompanionFollowUpTitle,
+        },
+        bodyFor: (reminder) {
+          final prayerName = prayerNameFor(reminder.occurrence.prayerKey);
+          return switch (reminder.kind) {
+            PrayerCompanionNotificationKind.preparation =>
+              l10n.notificationCompanionPreparationBody(prayerName),
+            PrayerCompanionNotificationKind.checkIn =>
+              l10n.notificationCompanionCheckInBody(prayerName),
+            PrayerCompanionNotificationKind.followUp =>
+              l10n.notificationCompanionFollowUpBody(prayerName),
+          };
+        },
+      );
+    } catch (e, stack) {
+      TaliaLogger.w(
+        'Failed to refresh prayer companion notifications',
+        e,
+        stack,
+      );
+      try {
+        // Deliberate fail-safe: on planner failure the Companion schedule is
+        // cancelled (silence rather than stale reminders); the next
+        // successful refresh rebuilds it.
+        await _service.cancelPrayerCompanionReminders();
+      } catch (cancelError, cancelStack) {
+        TaliaLogger.w(
+          'Failed to cancel prayer companion notifications',
+          cancelError,
+          cancelStack,
+        );
+      }
     }
   }
 

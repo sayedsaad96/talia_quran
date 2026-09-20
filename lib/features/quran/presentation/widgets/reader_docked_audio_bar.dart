@@ -8,6 +8,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/quran_audio_player_cubit.dart';
+import 'quran_audio_equalizer.dart';
 
 /// Docked audio bar for the adult reader (presentation only).
 ///
@@ -117,19 +118,34 @@ class ReaderDockedAudioBar extends StatelessWidget {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: Text(
-                    ayahText.isEmpty
-                        ? surahName
-                        : '$surahName • $ayahText',
-                    style: AppTypography.titleSmall.copyWith(
-                      color: primary,
-                      fontWeight: FontWeight.bold,
-                      fontFamily: context.isArabic ? 'Amiri' : null,
-                      fontSize: 14,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          ayahText.isEmpty
+                              ? surahName
+                              : '$surahName • $ayahText',
+                          style: AppTypography.titleSmall.copyWith(
+                            color: primary,
+                            fontWeight: FontWeight.bold,
+                            fontFamily: context.isArabic ? 'Amiri' : null,
+                            fontSize: 14,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      QuranAudioEqualizer(
+                        isPlaying: state.isPlaying,
+                        color: primary,
+                        maxHeight: 12,
+                        barWidth: 2.2,
+                      ),
+                    ],
                   ),
                 ),
               ),

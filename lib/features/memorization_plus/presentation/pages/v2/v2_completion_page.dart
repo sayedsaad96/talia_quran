@@ -1,10 +1,11 @@
-// lib/features/memorization_plus/presentation/pages/v2/v2_completion_page.dart
+﻿// lib/features/memorization_plus/presentation/pages/v2/v2_completion_page.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../../core/constants/app_spacing.dart';
+import '../../../../../core/widgets/closing_moment.dart';
 import '../../../../../core/extensions/context_extensions.dart';
 import '../../../../../core/memorization/v2/session_state.dart';
 import '../../../../../core/router/app_router.dart';
@@ -15,7 +16,7 @@ import '../../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../../features/settings/presentation/cubits/profile_cubit.dart';
 import 'v2_session_widgets.dart';
 
-/// V2 Phase 6: Completion — the block is fully memorized.
+/// V2 Phase 6: Completion â€” the block is fully memorized.
 /// Shows a summary of passed ayahs and retry count, then navigates back.
 class V2CompletionPage extends StatelessWidget {
   const V2CompletionPage({super.key, required this.finalState});
@@ -26,8 +27,9 @@ class V2CompletionPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = context.isDark;
     final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final title = context.l10n.v2CompletionTitle;
-    final subtitle = context.l10n.v2CompletionSubtitle;
+    final textSecondary =
+        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
+    final l10n = context.l10n;
 
     return SafeArea(
       child: Padding(
@@ -36,34 +38,33 @@ class V2CompletionPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const Spacer(),
-            Icon(Icons.verified_rounded, size: 72, color: primary),
+            // â”€â”€ Closing moment: Ø³ÙƒÙŠÙ†Ø© before statistics â”€â”€
+            ClosingMomentAyahCard(
+              key: const Key('v2_closing_moment'),
+              summary: l10n.closingSummaryMemorization(
+                finalState.passedAyahNumbers.length,
+              ),
+            ),
             const SizedBox(height: AppSpacing.lg),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: AppTypography.headlineLarge.copyWith(
-                color: isDark
-                    ? AppColors.darkTextPrimary
-                    : AppColors.lightTextPrimary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              style: AppTypography.bodyMedium.copyWith(
-                color: isDark
-                    ? AppColors.darkTextSecondary
-                    : AppColors.lightTextSecondary,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xl),
             V2SummaryRow(
               passed: finalState.passedAyahNumbers.length,
               total: finalState.totalAyahsInBlock,
               failures: finalState.failureTracker.totalFailures,
             ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              l10n.closingRestNote,
+              textAlign: TextAlign.center,
+              style: AppTypography.bodySmall.copyWith(color: textSecondary),
+            ),
             const Spacer(),
+            OutlinedButton.icon(
+              key: const Key('v2_closing_dua_button'),
+              onPressed: () => showClosingDuaSheet(context),
+              icon: const Icon(Icons.volunteer_activism_rounded),
+              label: Text(l10n.closingDuaButton),
+            ),
+            const SizedBox(height: AppSpacing.sm),
             OutlinedButton.icon(
               onPressed: () {
                 final profileState = context.read<ProfileCubit>().state;
@@ -84,6 +85,7 @@ class V2CompletionPage extends StatelessWidget {
             const SizedBox(height: AppSpacing.sm),
             FilledButton.icon(
               onPressed: () => context.go(AppRoutes.memorizationHub),
+              style: FilledButton.styleFrom(backgroundColor: primary),
               icon: const Icon(Icons.hub_rounded),
               label: Text(context.l10n.v2MemorizationHub),
             ),
@@ -92,4 +94,5 @@ class V2CompletionPage extends StatelessWidget {
       ),
     );
   }
+
 }

@@ -20,6 +20,9 @@ import 'package:talia_quran/core/sync/cloud_sync_queue_item.dart';
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:talia_quran/features/hifz/data/models/isar_ayah_progress.dart';
 import 'package:talia_quran/features/hifz/domain/entities/hifz_entities.dart';
+import 'package:talia_quran/features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
+import 'package:talia_quran/features/prayer_companion/data/models/prayer_companion_record_isar.dart';
+import 'package:talia_quran/features/prayer_companion/domain/entities/prayer_companion.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_ayah_review_record.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_review_effect_outbox.dart';
 import 'package:talia_quran/features/memorization_plus/data/models/isar_review_evidence_event.dart';
@@ -165,6 +168,7 @@ void main() {
           XpIsarSchema,
           DailyActivityIsarSchema,
           CloudSyncQueueItemSchema,
+          PrayerCompanionRecordIsarSchema,
         ],
         directory: dir.path,
         name: 'reset_${DateTime.now().microsecondsSinceEpoch}',
@@ -265,6 +269,40 @@ void main() {
       expect(await isar.xpIsars.where().count(), 0);
       expect(await isar.dailyActivityIsars.where().count(), 0);
       expect(await isar.cloudSyncQueueItems.where().count(), 0);
+    });
+
+    test('clears prayer companion rows and preferences', () async {
+      final occurrence = PrayerOccurrence(
+        ownerId: 'user-a',
+        localDate: DateTime(2026, 9, 16),
+        prayerKey: PrayerKey.asr,
+        scheduledAt: DateTime(2026, 9, 16, 15, 30),
+      );
+      await isar.writeTxn(() async {
+        await isar.prayerCompanionRecordIsars.put(
+          PrayerCompanionRecordIsar.fromDomain(
+            PrayerCompanionRecord(
+              occurrence: occurrence,
+              status: PrayerCompanionStatus.confirmed,
+              statusUpdatedAt: DateTime(2026, 9, 16, 16),
+              followUpCount: 0,
+              createdAt: DateTime(2026, 9, 16, 16),
+              updatedAt: DateTime(2026, 9, 16, 16),
+            ),
+          ),
+        );
+      });
+      await prefs.setBool(PrayerCompanionPreferences.enabledKey, true);
+      await prefs.setInt(PrayerCompanionPreferences.preparationMinutesKey, 10);
+      await prefs.setBool(PrayerCompanionPreferences.checkInEnabledKey, false);
+      await prefs.setBool(PrayerCompanionPreferences.followUpEnabledKey, false);
+
+      await AccountDataReset(isar, prefs).clearAccountOwnedData();
+
+      expect(await isar.prayerCompanionRecordIsars.where().count(), 0);
+      for (final key in prefs.getKeys()) {
+        expect(key.startsWith('prayer_companion_'), isFalse, reason: key);
+      }
     });
 
     test('clears the sync cursor and certificate bookkeeping', () async {

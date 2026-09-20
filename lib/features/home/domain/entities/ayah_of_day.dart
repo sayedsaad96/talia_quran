@@ -36,6 +36,8 @@ class AyahOfDay extends Equatable {
     required this.surahNameEn,
     required this.pageNumber,
     this.context = DailyAyahContext.general,
+    this.surahType,
+    this.surahAyahCount,
   });
 
   final int surahId;
@@ -46,8 +48,23 @@ class AyahOfDay extends Equatable {
   final int pageNumber;
   final DailyAyahContext context;
 
+  /// Factual revelation type of the surah (`'meccan'` / `'medinan'`), for the
+  /// surah context line. Null on legacy constructions.
+  final String? surahType;
+
+  /// Total ayah count of the surah, for the surah context line.
+  final int? surahAyahCount;
+
   @override
-  List<Object?> get props => [surahId, ayahNumber, text, pageNumber, context];
+  List<Object?> get props => [
+    surahId,
+    ayahNumber,
+    text,
+    pageNumber,
+    context,
+    surahType,
+    surahAyahCount,
+  ];
 }
 
 class DailyAyahRef {

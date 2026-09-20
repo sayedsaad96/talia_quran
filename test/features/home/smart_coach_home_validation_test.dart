@@ -48,22 +48,26 @@ void main() {
   });
 
   group('Smart Coach Home validation', () {
-    testWidgets(
-      'home header keeps its greeting and product identity without a basmalah',
-      (tester) async {
-        await _registerHome(_homeLoaded());
+    testWidgets('home header keeps its product identity without a basmalah', (
+      tester,
+    ) async {
+      await _registerHome(_homeLoaded());
 
-        await _pumpHome(tester);
-        await _pumpHomeInitialFrames(tester);
+      await _pumpHome(tester);
+      await _pumpHomeInitialFrames(tester);
 
-        expect(find.text('Talia Quran'), findsOneWidget);
-        expect(find.textContaining('Welcome'), findsOneWidget);
-        expect(
-          find.text('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'),
-          findsNothing,
-        );
-      },
-    );
+      expect(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is Image && widget.width == 72 && widget.height == 72,
+          description: 'the centered Talia logo',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.search_rounded), findsOneWidget);
+      expect(find.byIcon(Icons.settings_suggest_rounded), findsOneWidget);
+      expect(find.text('بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ'), findsNothing);
+    });
 
     testWidgets('resume session takes precedence over Smart Coach card', (
       tester,
@@ -674,7 +678,7 @@ Future<void> _pumpHomeAfterInteraction(WidgetTester tester) {
 
 Future<void> _pumpHomeFrames(WidgetTester tester) async {
   await tester.pump();
-  await tester.pump(const Duration(milliseconds: 100));
+  await tester.pump(const Duration(milliseconds: 500));
 }
 
 class _StaticHomeCubit extends Cubit<HomeState> implements HomeCubit {

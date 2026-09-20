@@ -1,4 +1,4 @@
-import 'package:equatable/equatable.dart';
+﻿import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 
 class NotificationSettingsState extends Equatable {
@@ -13,6 +13,7 @@ class NotificationSettingsState extends Equatable {
     this.dailyDua = true,
     this.kidsReminder = false,
     this.fridayKahf = true,
+    this.weeklyImpact = true,
     this.tahajjud = false,
     this.khatmahReminder = true,
     this.prayerNotifications = false,
@@ -34,6 +35,7 @@ class NotificationSettingsState extends Equatable {
     this.dailyDuaTime = const TimeOfDay(hour: 9, minute: 0),
     this.kidsReminderTime = const TimeOfDay(hour: 18, minute: 30),
     this.fridayKahfTime = const TimeOfDay(hour: 9, minute: 0),
+    this.weeklyImpactTime = const TimeOfDay(hour: 16, minute: 0),
     this.tahajjudTime = const TimeOfDay(hour: 3, minute: 30),
     this.khatmahReminderTime = const TimeOfDay(hour: 17, minute: 0),
   });
@@ -50,6 +52,7 @@ class NotificationSettingsState extends Equatable {
   final bool dailyDua;
   final bool kidsReminder;
   final bool fridayKahf;
+  final bool weeklyImpact;
   final bool tahajjud;
   final bool khatmahReminder;
 
@@ -76,6 +79,7 @@ class NotificationSettingsState extends Equatable {
   final TimeOfDay dailyDuaTime;
   final TimeOfDay kidsReminderTime;
   final TimeOfDay fridayKahfTime;
+  final TimeOfDay weeklyImpactTime;
   final TimeOfDay tahajjudTime;
   final TimeOfDay khatmahReminderTime;
 
@@ -90,13 +94,14 @@ class NotificationSettingsState extends Equatable {
     if (dailyDua) count++;
     if (kidsReminder) count++;
     if (fridayKahf) count++;
+    if (weeklyImpact) count++;
     if (tahajjud) count++;
     if (khatmahReminder) count++;
     return count;
   }
 
   /// Total number of customizable notification categories.
-  int get totalCount => 10;
+  int get totalCount => 11;
 
   /// Returns true if system-level notifications are blocked by the OS.
   bool get isSystemPermissionBlocked => !hasSystemPermission;
@@ -112,6 +117,7 @@ class NotificationSettingsState extends Equatable {
     bool? dailyDua,
     bool? kidsReminder,
     bool? fridayKahf,
+    bool? weeklyImpact,
     bool? tahajjud,
     bool? khatmahReminder,
     bool? prayerNotifications,
@@ -134,6 +140,7 @@ class NotificationSettingsState extends Equatable {
     TimeOfDay? kidsReminderTime,
     TimeOfDay? fridayKahfTime,
     TimeOfDay? tahajjudTime,
+    TimeOfDay? weeklyImpactTime,
     TimeOfDay? khatmahReminderTime,
   }) {
     return NotificationSettingsState(
@@ -147,6 +154,7 @@ class NotificationSettingsState extends Equatable {
       dailyDua: dailyDua ?? this.dailyDua,
       kidsReminder: kidsReminder ?? this.kidsReminder,
       fridayKahf: fridayKahf ?? this.fridayKahf,
+      weeklyImpact: weeklyImpact ?? this.weeklyImpact,
       tahajjud: tahajjud ?? this.tahajjud,
       khatmahReminder: khatmahReminder ?? this.khatmahReminder,
       prayerNotifications: prayerNotifications ?? this.prayerNotifications,
@@ -168,6 +176,7 @@ class NotificationSettingsState extends Equatable {
       dailyDuaTime: dailyDuaTime ?? this.dailyDuaTime,
       kidsReminderTime: kidsReminderTime ?? this.kidsReminderTime,
       fridayKahfTime: fridayKahfTime ?? this.fridayKahfTime,
+      weeklyImpactTime: weeklyImpactTime ?? this.weeklyImpactTime,
       tahajjudTime: tahajjudTime ?? this.tahajjudTime,
       khatmahReminderTime: khatmahReminderTime ?? this.khatmahReminderTime,
     );
@@ -185,6 +194,7 @@ class NotificationSettingsState extends Equatable {
     dailyDua,
     kidsReminder,
     fridayKahf,
+    weeklyImpact,
     tahajjud,
     khatmahReminder,
     prayerNotifications,
@@ -206,6 +216,7 @@ class NotificationSettingsState extends Equatable {
     dailyDuaTime,
     kidsReminderTime,
     fridayKahfTime,
+    weeklyImpactTime,
     tahajjudTime,
     khatmahReminderTime,
   ];

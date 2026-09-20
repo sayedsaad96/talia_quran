@@ -14,6 +14,7 @@ import 'package:talia_quran/core/l10n/locale_cubit.dart';
 import 'package:talia_quran/core/memorization/memorization_path_resolver.dart';
 import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/core/services/app_version_service.dart';
+import 'package:talia_quran/core/services/prayer_times_service.dart';
 import 'package:talia_quran/core/theme/app_colors.dart';
 import 'package:talia_quran/core/theme/theme_cubit.dart';
 import 'package:talia_quran/features/auth/domain/entities/app_user.dart';
@@ -21,6 +22,8 @@ import 'package:talia_quran/features/auth/domain/repositories/auth_repository.da
 import 'package:talia_quran/features/auth/presentation/cubits/auth_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/domain/repositories/memorization_plus_repository.dart';
+import 'package:talia_quran/features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
+import 'package:talia_quran/features/quran/presentation/cubits/quran_audio_player_cubit.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/profile_cubit.dart';
 import 'package:talia_quran/features/settings/presentation/cubits/settings_cubit.dart';
 import 'package:talia_quran/features/settings/presentation/pages/settings_page.dart';
@@ -75,21 +78,23 @@ void main() {
     expect(find.text('Theme'), findsOneWidget);
   });
 
-  testWidgets(
-    'mobile layout prioritizes quick preferences and progressively reveals secondary settings',
-    (tester) async {
-      await _pumpSettings(tester, viewSize: const Size(420, 900));
+  testWidgets('mobile layout shows settings hub with navigation tiles', (
+    tester,
+  ) async {
+    await _pumpSettings(tester, viewSize: const Size(420, 900));
 
-      expect(find.text('Quick preferences'), findsOneWidget);
-      expect(find.text('Language'), findsOneWidget);
-      expect(find.text('Theme'), findsOneWidget);
-      expect(find.text('Talia user guide'), findsNothing);
+    expect(find.text('Quick preferences'), findsOneWidget);
+    expect(find.text('Language'), findsOneWidget);
+    expect(find.text('Theme'), findsOneWidget);
 
-      await _tapVisibleText(tester, 'Help & Tutorial');
+    await _scrollUntilVisible(tester, 'Quran & Memorization');
+    expect(find.text('Quran & Memorization'), findsOneWidget);
+    expect(find.text('Prayer times'), findsOneWidget);
+    expect(find.text('About Talia'), findsOneWidget);
 
-      expect(find.text('Talia user guide'), findsOneWidget);
-    },
-  );
+    await _tapVisibleText(tester, 'About Talia');
+    expect(find.text('Talia user guide'), findsOneWidget);
+  });
 
   testWidgets('quick preferences use compact horizontal choices', (
     tester,
@@ -115,16 +120,14 @@ void main() {
     expect((lightCenter.dx - darkCenter.dx).abs(), greaterThan(70));
   });
 
-  testWidgets('wide layout presents secondary settings in two columns', (
+  testWidgets('wide layout presents secondary settings cleanly', (
     tester,
   ) async {
     await _pumpSettings(tester, viewSize: const Size(1100, 1800));
 
-    final helpCenter = tester.getCenter(find.text('Help & Tutorial'));
-    final privacyCenter = tester.getCenter(find.text('Privacy & Security'));
-
-    expect((helpCenter.dy - privacyCenter.dy).abs(), lessThan(4));
-    expect((helpCenter.dx - privacyCenter.dx).abs(), greaterThan(200));
+    expect(find.text('Quran & Memorization'), findsOneWidget);
+    expect(find.text('Prayer times'), findsOneWidget);
+    expect(find.text('About Talia'), findsOneWidget);
   });
 
   testWidgets(
@@ -146,9 +149,9 @@ void main() {
   ) async {
     await _pumpSettings(tester, path: MemorizationPath.adult);
 
+    expect(find.text('Kids & Guardian'), findsOneWidget);
     await _tapVisibleText(tester, 'Kids & Guardian');
 
-    expect(find.text('Kids & Guardian'), findsOneWidget);
     expect(find.text('I am a parent/guardian'), findsOneWidget);
     expect(find.text('Parent Dashboard'), findsNothing);
   });
@@ -198,7 +201,7 @@ void main() {
     );
 
     expect(find.text('Parent Dashboard'), findsNothing);
-    expect(find.text('I am a parent/guardian'), findsNothing);
+    expect(find.text('Kids & Guardian'), findsNothing);
   });
 
   testWidgets(
@@ -206,8 +209,7 @@ void main() {
     (tester) async {
       await _pumpSettings(tester, user: _signedInUser);
 
-      await _scrollUntilVisible(tester, 'Privacy & Security');
-      await _tapVisibleText(tester, 'Privacy & Security');
+      await _tapVisibleText(tester, 'About Talia');
 
       expect(find.text('Privacy & Security'), findsOneWidget);
       expect(find.text('Privacy Policy'), findsOneWidget);
@@ -218,8 +220,7 @@ void main() {
   testWidgets('help and tutorial contains tutorial guide', (tester) async {
     await _pumpSettings(tester);
 
-    await _scrollUntilVisible(tester, 'Help & Tutorial');
-    await _tapVisibleText(tester, 'Help & Tutorial');
+    await _tapVisibleText(tester, 'About Talia');
 
     expect(find.text('Help & Tutorial'), findsOneWidget);
     expect(find.text('Talia user guide'), findsOneWidget);
@@ -233,7 +234,6 @@ void main() {
       versionInfo: const AppVersionInfo(version: '1.3.0', buildNumber: '45'),
     );
 
-    await _scrollUntilVisible(tester, 'About Talia');
     await _tapVisibleText(tester, 'About Talia');
 
     expect(find.text('v1.3.0 (45)'), findsOneWidget);
@@ -247,7 +247,6 @@ void main() {
       versionInfo: const AppVersionInfo.unavailable(),
     );
 
-    await _scrollUntilVisible(tester, 'About Talia');
     await _tapVisibleText(tester, 'About Talia');
 
     expect(find.text('v— (—)'), findsOneWidget);
@@ -258,7 +257,6 @@ void main() {
   ) async {
     await _pumpSettings(tester);
 
-    await _scrollUntilVisible(tester, 'Progress & Achievements');
     await _tapVisibleText(tester, 'Progress & Achievements');
 
     expect(find.text('Daily Review Reminder'), findsOneWidget);
@@ -292,7 +290,7 @@ void main() {
   ) async {
     await _pumpSettings(tester);
 
-    await _tapVisibleText(tester, 'Privacy & Security');
+    await _tapVisibleText(tester, 'About Talia');
     await _tapVisibleText(tester, 'Privacy Policy');
 
     expect(find.text('privacy route'), findsOneWidget);
@@ -303,7 +301,7 @@ void main() {
   ) async {
     await _pumpSettings(tester);
 
-    await _tapVisibleText(tester, 'Help & Tutorial');
+    await _tapVisibleText(tester, 'About Talia');
     await _tapVisibleText(tester, 'Talia user guide');
 
     expect(find.text('tutorial route'), findsOneWidget);
@@ -435,6 +433,12 @@ Future<_FakeMemorizationRepository> _registerSettingsDependencies({
   getIt.registerSingleton<ProfileCubit>(profileCubit);
   getIt.registerSingleton<ThemeCubit>(themeCubit);
   getIt.registerSingleton<LocaleCubit>(localeCubit);
+  // The settings page builds every section up front (no accordion), so the
+  // prayer-times and prayer-companion sections need their stores registered.
+  getIt.registerSingleton<PrayerTimesService>(PrayerTimesService(prefs));
+  getIt.registerSingleton<PrayerCompanionPreferences>(
+    PrayerCompanionPreferences(prefs),
+  );
   getIt.registerSingleton<AppVersionInfoProvider>(
     _FakeAppVersionInfoProvider(versionInfo),
   );
@@ -501,6 +505,9 @@ class _SettingsTestApp extends StatelessWidget {
         BlocProvider.value(value: getIt<ProfileCubit>()),
         BlocProvider.value(value: getIt<ThemeCubit>()),
         BlocProvider.value(value: getIt<LocaleCubit>()),
+        BlocProvider<QuranAudioPlayerCubit>(
+          create: (_) => _FakeQuranAudioPlayerCubit(),
+        ),
       ],
       child: MaterialApp.router(
         locale: locale,
@@ -541,7 +548,7 @@ Future<void> _scrollUntilVisible(WidgetTester tester, String text) async {
   await tester.scrollUntilVisible(
     finder,
     400,
-    scrollable: find.byType(Scrollable).first,
+    scrollable: find.byType(Scrollable).last,
   );
   await tester.pumpAndSettle();
 }
@@ -571,6 +578,24 @@ class _FakeAppVersionInfoProvider implements AppVersionInfoProvider {
 
   @override
   Future<AppVersionInfo> getVersionInfo() async => info;
+}
+
+class _FakeQuranAudioPlayerCubit extends Cubit<QuranAudioPlayerState>
+    implements QuranAudioPlayerCubit {
+  _FakeQuranAudioPlayerCubit() : super(const QuranAudioPlayerState());
+
+  bool _backgroundPlaybackEnabled = true;
+
+  @override
+  bool get isBackgroundPlaybackEnabled => _backgroundPlaybackEnabled;
+
+  @override
+  Future<void> setBackgroundPlaybackEnabled(bool enabled) async {
+    _backgroundPlaybackEnabled = enabled;
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
 class _FakeAuthRepository implements AuthRepository {

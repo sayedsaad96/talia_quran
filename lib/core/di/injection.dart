@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui' show Locale;
 
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,9 +20,12 @@ import '../services/streak_service.dart';
 import '../services/xp_service.dart';
 import '../services/daily_reading_log_service.dart';
 import '../services/audio_resume_store.dart';
+import '../storage/app_isar.dart';
 import '../services/streak_risk_evaluator.dart';
 import '../services/get_daily_wird_usecase.dart';
 import '../services/prayer_times_service.dart';
+import '../services/prayer_serenity_watcher.dart';
+import '../l10n/app_localizations.dart';
 import '../services/activity_event_recorder.dart';
 import '../services/achievement_service.dart';
 import '../theme/theme_cubit.dart';
@@ -43,7 +47,6 @@ import '../memorization/v2/session_phase.dart';
 import '../progress/progress_events_bus.dart';
 import '../identity/record_owner_provider.dart';
 import '../sync/cloud_sync_queue.dart';
-import '../sync/cloud_sync_queue_item.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../security/parent_pin_secure_store.dart';
 import '../security/encrypted_account_preferences_store.dart';
@@ -60,7 +63,6 @@ import '../../features/quran/presentation/cubits/surah_detail_cubit.dart';
 import '../../features/quran/presentation/cubits/quran_page_cubit.dart';
 import '../../features/hifz/data/datasources/hifz_local_datasource.dart';
 import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dart';
-import '../../features/hifz/data/models/isar_ayah_progress.dart';
 import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/memorization_plus/presentation/cubits/practice_surah_cubit.dart';
@@ -79,9 +81,16 @@ import '../../features/progress/domain/usecases/get_progress_usecase.dart';
 import '../../features/progress/domain/usecases/save_read_page_usecase.dart';
 import '../../features/progress/presentation/cubits/progress_cubit.dart';
 import '../../features/home/presentation/cubits/home_cubit.dart';
+import '../../features/prayer_companion/application/prayer_companion_controller.dart';
+import '../../features/prayer_companion/application/prayer_companion_usecases.dart';
+import '../../features/prayer_companion/data/datasources/prayer_companion_local_datasource.dart';
+import '../../features/prayer_companion/data/datasources/prayer_companion_preferences.dart';
+import '../../features/prayer_companion/data/repositories/prayer_companion_repository_impl.dart';
+import '../../features/prayer_companion/domain/repositories/prayer_companion_repository.dart';
+import '../../features/prayer_companion/domain/services/prayer_companion_policy.dart';
+import '../../features/prayer_companion/domain/services/prayer_companion_scheduler_planner.dart';
 import '../../features/home/data/repositories/heatmap_repository_impl.dart';
 import '../../features/home/data/repositories/activity_feed_repository_impl.dart';
-import '../../features/home/data/models/activity_event_isar.dart';
 import '../../features/home/domain/repositories/heatmap_repository.dart';
 import '../../features/home/domain/repositories/activity_feed_repository.dart';
 import '../../features/home/domain/usecases/get_activity_heatmap_usecase.dart';
@@ -90,10 +99,6 @@ import '../../features/home/domain/usecases/get_today_checklist_usecase.dart';
 import '../../features/home/domain/usecases/get_recent_activity_usecase.dart';
 import '../../features/home/domain/services/home_occasion_service.dart';
 import '../../features/memorization_plus/data/datasources/memorization_plus_local_datasource.dart';
-import '../../features/memorization_plus/data/models/isar_ayah_review_record.dart';
-import '../../features/memorization_plus/data/models/isar_review_effect_outbox.dart';
-import '../../features/memorization_plus/data/models/isar_review_evidence_event.dart';
-import '../../features/memorization_plus/data/models/isar_v2_session.dart';
 import '../../features/memorization_plus/data/datasources/v2_session_local_datasource.dart';
 import '../../features/memorization_plus/data/repositories/memorization_plus_repository_impl.dart';
 import '../../features/memorization_plus/domain/entities/kids_session_policy.dart';
@@ -115,10 +120,7 @@ import '../../features/settings/presentation/cubits/settings_cubit.dart';
 import '../../features/settings/presentation/cubits/notification_settings_cubit.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
-import '../../features/streak/data/models/streak_isar.dart';
-import '../../features/streak/data/models/daily_activity_isar.dart';
 import '../../features/streak/presentation/cubits/streak_cubit.dart';
-import '../../features/xp/data/models/xp_isar.dart';
 import '../../features/auth/domain/repositories/auth_repository.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/application/cloud_sync_coordinator.dart';
@@ -150,20 +152,7 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerSingleton<SharedPreferences>(sharedPrefs);
 
   final dir = await getApplicationDocumentsDirectory();
-  final schemas = [
-    IsarAyahProgressSchema,
-    IsarAyahReviewRecordSchema,
-    IsarV2SessionSchema, // V2 session persistence
-    IsarReviewEvidenceEventSchema,
-    IsarReviewEffectOutboxSchema,
-    StreakIsarSchema,
-    XpIsarSchema,
-    DailyActivityIsarSchema, // For yearly activity heatmap
-    ActivityEventIsarSchema,
-    CloudSyncQueueItemSchema,
-  ];
-  final isar =
-      Isar.getInstance() ?? await Isar.open(schemas, directory: dir.path);
+  final isar = await openAppIsar(directory: dir.path);
   getIt.registerSingleton<Isar>(isar);
   getIt.registerLazySingleton<V2SessionLocalDatasource>(
     () => V2SessionLocalDatasource(getIt<Isar>()),
@@ -260,6 +249,9 @@ Future<void> configureDependencies({bool background = false}) async {
     () => NotificationScheduler(
       getIt<TaliaNotificationService>(),
       getAyahOfDay: getIt<GetAyahOfDayUsecase>(),
+      prayerTimesService: getIt<PrayerTimesService>(),
+      prayerCompanionPlanner: getIt<PrayerCompanionPlanner>(),
+      prayerCompanionPreferences: getIt<PrayerCompanionPreferences>(),
       kidsSessionDatesLoader: () async {
         if (!getIt.isRegistered<MemorizationPlusRepository>()) return [];
         final result = await getIt<MemorizationPlusRepository>()
@@ -333,8 +325,105 @@ Future<void> configureDependencies({bool background = false}) async {
   getIt.registerLazySingleton<StreakRiskEvaluator>(
     () => const StreakRiskEvaluator(),
   );
+  getIt.registerLazySingleton<PrayerCompanionPreferences>(
+    () => PrayerCompanionPreferences(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<PrayerCompanionLocalDatasource>(
+    () => PrayerCompanionLocalDatasource(getIt<Isar>()),
+  );
+  getIt.registerLazySingleton<PrayerCompanionRepository>(
+    () => PrayerCompanionRepositoryImpl(
+      getIt<PrayerCompanionLocalDatasource>(),
+      owner: getIt<RecordOwnerProvider>(),
+    ),
+  );
   getIt.registerLazySingleton<PrayerTimesService>(
     () => PrayerTimesService(getIt<SharedPreferences>()),
+  );
+  getIt.registerLazySingleton<PrayerSerenityWatcher>(
+    () => PrayerSerenityWatcher(
+      prayerTimesProvider: () async {
+        final snapshot = await getIt<PrayerTimesService>().current(
+          isArabic: true,
+        );
+        if (snapshot == null) return null;
+        final times = <String, DateTime>{
+          if (snapshot.fajr != null) 'fajr': snapshot.fajr!,
+          if (snapshot.dhuhr != null) 'dhuhr': snapshot.dhuhr!,
+          if (snapshot.asr != null) 'asr': snapshot.asr!,
+          if (snapshot.maghrib != null) 'maghrib': snapshot.maghrib!,
+          if (snapshot.isha != null) 'isha': snapshot.isha!,
+        };
+        return times.isEmpty ? null : times;
+      },
+      pauseAudio: () async {
+        if (!getIt.isRegistered<QuranContinuousPlayerService>()) return;
+        await getIt<QuranContinuousPlayerService>().pause();
+      },
+      showSerenityMoment: () async {
+        if (!getIt.isRegistered<TaliaNotificationService>()) return;
+        final l10n = lookupAppLocalizations(
+          Locale(getIt<SharedPreferences>().getString('app_locale') ?? 'ar'),
+        );
+        await getIt<TaliaNotificationService>().showPrayerSerenityMoment(
+          title: l10n.prayerSerenityNotificationTitle,
+          body: l10n.prayerSerenityNotificationBody,
+        );
+      },
+      isEnabled: () async =>
+          getIt<SharedPreferences>().getBool(
+            PrayerSerenityWatcher.enabledKey,
+          ) ??
+          true,
+    ),
+  );
+  getIt.registerLazySingleton<PrayerCompanionPlanner>(
+    () => PrayerCompanionPlanner(
+      prayerTimesService: getIt<PrayerTimesService>(),
+      preferences: getIt<PrayerCompanionPreferences>(),
+      repository: getIt<PrayerCompanionRepository>(),
+      prefs: Future.value(getIt<SharedPreferences>()),
+      owner: getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerLazySingleton<ApplyPrayerCompanionCommand>(
+    () => ApplyPrayerCompanionCommand(
+      getIt<PrayerCompanionRepository>(),
+      const PrayerCompanionPolicy(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerLazySingleton<GetPrayerCompanionDaySummary>(
+    () => GetPrayerCompanionDaySummary(
+      getIt<PrayerCompanionRepository>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerLazySingleton<PrayerCompanionController>(
+    () => PrayerCompanionController(
+      applyCommand: getIt<ApplyPrayerCompanionCommand>(),
+      scheduler: getIt<NotificationScheduler>(),
+      locale: () {
+        try {
+          return getIt<LocaleCubit>().state;
+        } catch (_) {
+          // Mirrors the nextPrayerAt pattern: fall back to the default
+          // locale rather than failing a companion response.
+          return const Locale('ar');
+        }
+      },
+      nextPrayerAt: () async {
+        try {
+          final snapshot = await getIt<PrayerTimesService>().current(
+            isArabic: getIt<LocaleCubit>().state.languageCode == 'ar',
+          );
+          return snapshot?.nextTime;
+        } catch (_) {
+          // Without prayer times the follow-up cap is simply unknown.
+          return null;
+        }
+      },
+    ),
   );
   getIt.registerLazySingleton<HomeOccasionService>(
     () => const HomeOccasionService(),
@@ -377,6 +466,7 @@ Future<void> configureDependencies({bool background = false}) async {
       final service = QuranContinuousPlayerService(
         quranRepository: getIt<QuranRepository>(),
         reciterService: getIt<QuranReciterService>(),
+        enableBackgroundAudioIntegration: true,
       );
       // Attach after the player exists — never during configureDependencies.
       // Constructing AudioPlayer() while splash init is still running can
@@ -804,6 +894,8 @@ Future<void> configureDependencies({bool background = false}) async {
       bookmarkService: getIt<BookmarkService>(),
       getAyahOfDay: getIt<GetAyahOfDayUsecase>(),
       prayerTimes: getIt<PrayerTimesService>(),
+      companionPreferences: getIt<PrayerCompanionPreferences>(),
+      getCompanionSummary: getIt<GetPrayerCompanionDaySummary>(),
       occasionService: getIt<HomeOccasionService>(),
       todayChecklist: getIt<GetTodayChecklistUsecase>(),
       getRecentActivity: getIt<GetRecentActivityUsecase>(),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
 
 /// Centralized manager that pauses every registered [AudioPlayer] the moment
@@ -20,21 +20,33 @@ class AudioLifecycleManager {
 
   late final AppLifecycleListener _listener;
 
-  final Set<AudioPlayer> _players = {};
+  final Map<AudioPlayer, bool Function()?> _players = {};
 
   /// Register a player to be paused on background.
-  void register(AudioPlayer player) => _players.add(player);
+  /// If [shouldPause] is provided, it is evaluated when the app enters the background;
+  /// returning `false` will exempt this player from being paused (e.g. for background Quran playback).
+  void register(AudioPlayer player, {bool Function()? shouldPause}) {
+    _players[player] = shouldPause;
+  }
 
   /// Unregister when the player is disposed.
   void unregister(AudioPlayer player) => _players.remove(player);
 
   void _pauseAll() {
-    for (final p in List<AudioPlayer>.from(_players)) {
-      if (p.playing) {
-        p.pause();
+    for (final entry in Map<AudioPlayer, bool Function()?>.from(_players).entries) {
+      final player = entry.key;
+      final shouldPause = entry.value;
+      if (shouldPause != null && !shouldPause()) {
+        continue;
+      }
+      if (player.playing) {
+        player.pause();
       }
     }
   }
+
+  /// Manually triggers pausing for all eligible registered players.
+  void pauseAll() => _pauseAll();
 
   /// Dispose the lifecycle listener. Call only on app shutdown.
   void dispose() {

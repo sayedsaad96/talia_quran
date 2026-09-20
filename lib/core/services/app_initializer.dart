@@ -13,6 +13,7 @@ import '../l10n/locale_cubit.dart';
 import '../services/hifz_migration_service.dart';
 import '../services/notification_scheduler.dart';
 import '../services/notification_service.dart';
+import '../services/prayer_serenity_watcher.dart';
 import '../sync/background_sync_scheduler.dart';
 import '../sync/notification_refresh_worker.dart';
 import '../theme/theme_cubit.dart';
@@ -90,6 +91,13 @@ class AppInitializer {
         unawaited(_scheduleFirstLaunchNotifications());
         unawaited(getIt<QuranWarmupService>().warmUp());
         unawaited(getIt<BookmarkService>().ensureLoaded());
+
+        // Prayer Serenity Mode (وضع سكينة الصلاة): foreground watcher that
+        // pauses recitation at prayer times. Foreground-only — background
+        // isolates have no audio session to pause.
+        if (getIt.isRegistered<PrayerSerenityWatcher>()) {
+          getIt<PrayerSerenityWatcher>().start();
+        }
 
         // Step 5: Register background tasks non-blocking so splash dismisses immediately.
         // Never run inside a background isolate.

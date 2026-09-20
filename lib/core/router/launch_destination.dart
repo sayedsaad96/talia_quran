@@ -1,3 +1,4 @@
+import '../services/notification_service.dart' show NotificationResponseEvent;
 import 'app_router.dart';
 
 /// Cold-start notification tap captured before the full router is ready.
@@ -37,6 +38,23 @@ abstract final class LaunchDestination {
 
     if (payload != null && payload.startsWith('/')) return payload;
     return AppRoutes.home;
+  }
+
+  /// Resolves the go_router location for a raw notification response
+  /// (foreground tap or cold-start pending launch).
+  ///
+  /// Retains the legacy precedence of [resolve] (scheduled daily-ayah target,
+  /// then action-id mapping, then payload-as-route). Companion (`pc1`)
+  /// payloads never start with '/', so they can never be mistaken for a
+  /// route and fall through to [AppRoutes.home]; Companion action ids are
+  /// deliberately absent from [mapNotificationAction] so the companion
+  /// controller stays the single writer for those responses.
+  static String routeForResponse(NotificationResponseEvent event) {
+    return resolve(
+      isFirstTime: false,
+      payload: event.payload,
+      actionId: event.actionId,
+    );
   }
 
   static String? mapNotificationAction(String? actionId) {

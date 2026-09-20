@@ -23,6 +23,7 @@ import '../widgets/glass_panel.dart';
 import '../widgets/home_activity_feed.dart';
 import '../widgets/home_ayah_of_day.dart';
 import '../widgets/home_background.dart';
+import '../widgets/home_micro_review_card.dart';
 import '../widgets/home_continue_card.dart';
 import '../widgets/home_contextual_slot.dart';
 import '../widgets/home_first_run.dart';
@@ -344,6 +345,25 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
                     0,
                   ),
                   child: HomeUnifiedProgress(state: widget.state, skin: widget.skin),
+                ),
+              ),
+            ),
+            // "لمحة مراجعة": quiet surprise-recall ayah; renders nothing for
+            // users without memorized ayahs.
+            SliverToBoxAdapter(
+              child: StaggeredFadeSlide(
+                delay: const Duration(milliseconds: 280),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSpacing.pagePadding,
+                    AppSpacing.md,
+                    AppSpacing.pagePadding,
+                    0,
+                  ),
+                  child: HomeMicroReviewCard(
+                    skin: widget.skin,
+                    record: widget.state.microReview,
+                  ),
                 ),
               ),
             ),

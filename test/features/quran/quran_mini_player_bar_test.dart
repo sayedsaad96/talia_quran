@@ -1,110 +1,100 @@
-import 'package:dartz/dartz.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:talia_quran/core/error/app_failure.dart';
-import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:mocktail/mocktail.dart';
 import 'package:talia_quran/core/services/quran_continuous_player_service.dart';
 import 'package:talia_quran/core/services/quran_reciter.dart';
-import 'package:talia_quran/core/services/quran_reciter_service.dart';
 import 'package:talia_quran/features/quran/domain/entities/quran_entities.dart';
-import 'package:talia_quran/features/quran/domain/repositories/quran_repository.dart';
 import 'package:talia_quran/features/quran/presentation/cubits/quran_audio_player_cubit.dart';
+import 'package:talia_quran/features/quran/presentation/widgets/quran_audio_equalizer.dart';
 import 'package:talia_quran/features/quran/presentation/widgets/quran_mini_player_bar.dart';
 
-class StubRepo implements QuranRepository {
-  @override
-  Future<Either<Failure, SurahDetail>> getSurahDetail(int surahId) async =>
-      const Left(NotFoundFailure());
-
-  @override
-  Future<Either<Failure, QuranPageDetail>> getQuranPage(int pageNumber) async =>
-      const Left(NotFoundFailure());
-
-  @override
-  Future<Either<Failure, List<Surah>>> getSurahs() async => const Right([]);
-
-  @override
-  Future<Either<Failure, List<Ayah>>> searchAyahs(String query) async =>
-      const Right([]);
-
-  @override
-  Future<Either<Failure, List<Surah>>> searchSurahs(String query) async =>
-      const Right([]);
-}
+class MockQuranAudioPlayerCubit extends Mock implements QuranAudioPlayerCubit {}
 
 void main() {
-  TestWidgetsFlutterBinding.ensureInitialized();
+  late MockQuranAudioPlayerCubit mockCubit;
 
-  late QuranContinuousPlayerService service;
-  late QuranAudioPlayerCubit cubit;
-
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    final reciterService = QuranReciterService(prefs);
-    service = QuranContinuousPlayerService(
-      quranRepository: StubRepo(),
-      reciterService: reciterService,
-    );
-    cubit = QuranAudioPlayerCubit(service);
+  setUp(() {
+    mockCubit = MockQuranAudioPlayerCubit();
   });
 
-  tearDown(() {
-    cubit.close();
-    service.dispose();
-  });
+  testWidgets('does not render when hasActiveAudio is false', (tester) async {
+    when(() => mockCubit.state).thenReturn(const QuranAudioPlayerState());
+    when(() => mockCubit.stream).thenAnswer((_) => const Stream.empty());
 
-  testWidgets('QuranMiniPlayerBar renders nothing when idle', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: BlocProvider.value(
-          value: cubit,
-          child: const Scaffold(
-            body: QuranMiniPlayerBar(),
+        home: Scaffold(
+          body: BlocProvider<QuranAudioPlayerCubit>.value(
+            value: mockCubit,
+            child: const QuranMiniPlayerBar(),
           ),
         ),
       ),
     );
-    await tester.pump();
 
-    expect(find.byType(InkWell), findsNothing);
+    expect(find.byType(QuranAudioEqualizer), findsNothing);
+    expect(find.text('الفاتحة'), findsNothing);
   });
 
-  testWidgets('QuranMiniPlayerBar renders content when audio state is playing', (
-    tester,
-  ) async {
-    cubit.emit(
-      const QuranAudioPlayerState(
-        status: PlaybackStatus.playing,
-        currentSurahId: 1,
-        currentAyahNumber: 1,
-        currentPageNumber: 1,
-        reciter: QuranReciter.abdulbasit,
-        scope: PlayScope.surah,
+  testWidgets('renders Mushaf badge, equalizer, surah name, reciter, and controls when active', (tester) async {
+    const activeState = QuranAudioPlayerState(
+      status: PlaybackStatus.playing,
+      currentSurahId: 1,
+      currentAyahNumber: 1,
+      reciter: QuranReciter.alafasy,
+      scope: PlayScope.surah,
+      hasNext: true,
+      hasPrevious: false,
+      currentAyah: Ayah(
+        number: 1,
+        surahId: 1,
+        text: 'بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ',
+        numberInSurah: 1,
       ),
     );
+
+    when(() => mockCubit.state).thenReturn(activeState);
+    when(() => mockCubit.stream).thenAnswer((_) => const Stream.empty());
 
     await tester.pumpWidget(
       MaterialApp(
         locale: const Locale('ar'),
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
-        home: BlocProvider.value(
-          value: cubit,
-          child: const Scaffold(
-            body: QuranMiniPlayerBar(),
+        supportedLocales: const [Locale('ar'), Locale('en')],
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: Scaffold(
+          body: BlocProvider<QuranAudioPlayerCubit>.value(
+            value: mockCubit,
+            child: const QuranMiniPlayerBar(),
           ),
         ),
       ),
     );
-    await tester.pump();
 
+    // Verify Mushaf badge icon is rendered
+    expect(find.byIcon(Icons.menu_book_rounded), findsOneWidget);
+
+    // Verify Surah Name
     expect(find.text('الفاتحة'), findsOneWidget);
+
+    // Verify Ayah pill
+    expect(find.text('آية 1'), findsOneWidget);
+
+    // Verify Reciter name
+    expect(find.text('مشاري راشد العفاسي'), findsOneWidget);
+
+    // Verify Animated Equalizer is present
+    expect(find.byType(QuranAudioEqualizer), findsOneWidget);
+
+    // Verify Play/Pause button (pause icon since isPlaying)
     expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+
+    // Verify Close button
     expect(find.byIcon(Icons.close_rounded), findsOneWidget);
   });
 }

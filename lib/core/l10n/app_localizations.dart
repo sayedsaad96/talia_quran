@@ -5641,6 +5641,18 @@ abstract class AppLocalizations {
   /// **'يلا بينا نرجع للمصحف ونثبت حفظ اليوم 🌸'**
   String get notificationDailyReviewBody;
 
+  /// No description provided for @notificationStreakMercyTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'الله رحيم — سلسلتك مستنياك 🌿'**
+  String get notificationStreakMercyTitle;
+
+  /// No description provided for @notificationStreakMercyBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'فاتك يوم، وسلسلتك رجعت من جديد… كمّل وردك النهاردة 🤍'**
+  String get notificationStreakMercyBody;
+
   /// No description provided for @notificationStreakAlertTitle.
   ///
   /// In ar, this message translates to:
@@ -6007,6 +6019,72 @@ abstract class AppLocalizations {
   /// **'تنبيهات الصلوات بمقطع الأذان المرفق'**
   String get notificationChannelPrayerAthanDescription;
 
+  /// No description provided for @notificationChannelPrayerCompanionName.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرافق الصلاة'**
+  String get notificationChannelPrayerCompanionName;
+
+  /// No description provided for @notificationChannelPrayerCompanionDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'تنبيهات مرافق الصلاة اللطيفة للتأكيد الذاتي'**
+  String get notificationChannelPrayerCompanionDescription;
+
+  /// No description provided for @notificationActionCompanionConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'نعم، صليتها'**
+  String get notificationActionCompanionConfirm;
+
+  /// No description provided for @notificationActionCompanionPrayNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'سأصلي الآن'**
+  String get notificationActionCompanionPrayNow;
+
+  /// No description provided for @notificationActionCompanionRemindLater.
+  ///
+  /// In ar, this message translates to:
+  /// **'ذكرني لاحقاً'**
+  String get notificationActionCompanionRemindLater;
+
+  /// No description provided for @notificationCompanionPreparationTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'استعداد للصلاة'**
+  String get notificationCompanionPreparationTitle;
+
+  /// No description provided for @notificationCompanionPreparationBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقترب وقت صلاة {prayer}'**
+  String notificationCompanionPreparationBody(Object prayer);
+
+  /// No description provided for @notificationCompanionCheckInTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرافق الصلاة'**
+  String get notificationCompanionCheckInTitle;
+
+  /// No description provided for @notificationCompanionCheckInBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل صليت {prayer}؟'**
+  String notificationCompanionCheckInBody(Object prayer);
+
+  /// No description provided for @notificationCompanionFollowUpTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرافق الصلاة'**
+  String get notificationCompanionFollowUpTitle;
+
+  /// No description provided for @notificationCompanionFollowUpBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير لطيف: هل صليت {prayer}؟'**
+  String notificationCompanionFollowUpBody(Object prayer);
+
   /// No description provided for @notificationDailyAyahTitle.
   ///
   /// In ar, this message translates to:
@@ -6066,6 +6144,30 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'نور ما بين الجمعتين 🌿'**
   String get notificationFridayKahfTitle;
+
+  /// No description provided for @notificationWeeklyImpactTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أثرك هذا الأسبوع 🌿'**
+  String get notificationWeeklyImpactTitle;
+
+  /// No description provided for @notificationWeeklyImpactBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} أيام من أسبوعك كانت مع القرآن — وكل صفحة فيها أثر باقٍ'**
+  String notificationWeeklyImpactBody(int count);
+
+  /// No description provided for @notificationWeeklyImpactQuietBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'أسبوع جديد يبدأ — وصفحة واحدة بتفرق 🌱'**
+  String get notificationWeeklyImpactQuietBody;
+
+  /// No description provided for @notificationSettingsWeeklyImpact.
+  ///
+  /// In ar, this message translates to:
+  /// **'أثر الأسبوع (الجمعة)'**
+  String get notificationSettingsWeeklyImpact;
 
   /// No description provided for @notificationFridayKahfBody.
   ///
@@ -7741,6 +7843,66 @@ abstract class AppLocalizations {
   /// **'تم حفظ آيات هذا المقطع بنجاح.'**
   String get v2CompletionSubtitle;
 
+  /// No description provided for @closingMomentLabel.
+  ///
+  /// In ar, this message translates to:
+  /// **'لحظة ختام'**
+  String get closingMomentLabel;
+
+  /// No description provided for @closingAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ'**
+  String get closingAyah;
+
+  /// No description provided for @closingAyahSource.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة الرعد · الآية ٢٨'**
+  String get closingAyahSource;
+
+  /// No description provided for @closingSummaryMemorization.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظتَ {count} آيات في هذه الجلسة — أثرٌ باقٍ بإذن الله.'**
+  String closingSummaryMemorization(int count);
+
+  /// No description provided for @closingSummaryKhatmahWird.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتممتَ ورد اليوم — من صفحة {start} إلى {end} — أثرٌ باقٍ بإذن الله.'**
+  String closingSummaryKhatmahWird(String start, String end);
+
+  /// No description provided for @closingDuaButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'دعاء الختام'**
+  String get closingDuaButton;
+
+  /// No description provided for @closingDua.
+  ///
+  /// In ar, this message translates to:
+  /// **'اللَّهُمَّ اجْعَلْ مَا حَفِظْتُ نُورًا لِي فِي قَلْبِي، وَذِكْرًا لِي عِنْدَكَ، وَاجْعَلْهُ نَاصِرًا لِي، وَانْفَعْنِي بِمَا عَلَّمْتَنِي وَعَلِّمْنِي مَا يَنْفَعُنِي.'**
+  String get closingDua;
+
+  /// No description provided for @closingDuaAmen.
+  ///
+  /// In ar, this message translates to:
+  /// **'آمين'**
+  String get closingDuaAmen;
+
+  /// No description provided for @closingDone.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم بحمد الله'**
+  String get closingDone;
+
+  /// No description provided for @closingRestNote.
+  ///
+  /// In ar, this message translates to:
+  /// **'خذ نفسًا… حفظك ينتظرك غدًا بإذن الله.'**
+  String get closingRestNote;
+
   /// No description provided for @v2MemorizationHub.
   ///
   /// In ar, this message translates to:
@@ -8749,6 +8911,30 @@ abstract class AppLocalizations {
   /// **'آية اليوم'**
   String get homeAyahOfDay;
 
+  /// No description provided for @surahRevelationMeccan.
+  ///
+  /// In ar, this message translates to:
+  /// **'مكية'**
+  String get surahRevelationMeccan;
+
+  /// No description provided for @surahRevelationMedinan.
+  ///
+  /// In ar, this message translates to:
+  /// **'مدنية'**
+  String get surahRevelationMedinan;
+
+  /// No description provided for @ayahOfDaySurahMeta.
+  ///
+  /// In ar, this message translates to:
+  /// **'{revelation} · {count} آية'**
+  String ayahOfDaySurahMeta(String revelation, String count);
+
+  /// No description provided for @ayahOfDayReadSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقرأ السورة كاملة'**
+  String get ayahOfDayReadSurah;
+
   /// No description provided for @homeAyahContextFriday.
   ///
   /// In ar, this message translates to:
@@ -9414,6 +9600,240 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'مواقيت الصلاة'**
   String get homePrayerTimesSheetTitle;
+
+  /// No description provided for @prayerCompanionStatusConfirmed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم التأكيد'**
+  String get prayerCompanionStatusConfirmed;
+
+  /// No description provided for @prayerCompanionStatusUnconfirmedPast.
+  ///
+  /// In ar, this message translates to:
+  /// **'لم يتم التأكيد بعد'**
+  String get prayerCompanionStatusUnconfirmedPast;
+
+  /// No description provided for @prayerCompanionStatusUpcoming.
+  ///
+  /// In ar, this message translates to:
+  /// **'قادمة'**
+  String get prayerCompanionStatusUpcoming;
+
+  /// No description provided for @prayerCompanionStatusPrayNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'سأصلي الآن'**
+  String get prayerCompanionStatusPrayNow;
+
+  /// No description provided for @prayerCompanionStatusRemindLater.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم ضبط تذكير'**
+  String get prayerCompanionStatusRemindLater;
+
+  /// No description provided for @prayerCompanionStatusNotYet.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس بعد'**
+  String get prayerCompanionStatusNotYet;
+
+  /// No description provided for @prayerCompanionActionConfirm.
+  ///
+  /// In ar, this message translates to:
+  /// **'صليت'**
+  String get prayerCompanionActionConfirm;
+
+  /// No description provided for @prayerCompanionActionPrayNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'سأصلي الآن'**
+  String get prayerCompanionActionPrayNow;
+
+  /// No description provided for @prayerCompanionActionRemindLater.
+  ///
+  /// In ar, this message translates to:
+  /// **'ذكرني لاحقاً'**
+  String get prayerCompanionActionRemindLater;
+
+  /// No description provided for @prayerCompanionActionNotYet.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليس بعد'**
+  String get prayerCompanionActionNotYet;
+
+  /// No description provided for @prayerCompanionConfirmedCount.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تأكيد {confirmed} من {total}'**
+  String prayerCompanionConfirmedCount(int confirmed, int total);
+
+  /// No description provided for @prayerCompanionRowSemantics.
+  ///
+  /// In ar, this message translates to:
+  /// **'{prayer}: {status}'**
+  String prayerCompanionRowSemantics(String prayer, String status);
+
+  /// No description provided for @prayerCompanionSettingsTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مرافق الصلاة'**
+  String get prayerCompanionSettingsTitle;
+
+  /// No description provided for @microReviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'لمحة مراجعة'**
+  String get microReviewTitle;
+
+  /// No description provided for @microReviewQuestion.
+  ///
+  /// In ar, this message translates to:
+  /// **'من حفظك القديم… لسه فاكرها؟'**
+  String get microReviewQuestion;
+
+  /// No description provided for @microReviewReference.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surah} · آية {ayah}'**
+  String microReviewReference(String surah, String ayah);
+
+  /// No description provided for @microReviewRevealHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'جرّب تفتكرها… ثم اضغط لعرضها'**
+  String get microReviewRevealHint;
+
+  /// No description provided for @microReviewRecite.
+  ///
+  /// In ar, this message translates to:
+  /// **'سمّع نفسك'**
+  String get microReviewRecite;
+
+  /// No description provided for @prayerSerenityTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'وضع سكينة الصلاة'**
+  String get prayerSerenityTitle;
+
+  /// No description provided for @prayerSerenitySubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'نوقف التلاوة بهدوء عند دخول وقت الصلاة'**
+  String get prayerSerenitySubtitle;
+
+  /// No description provided for @prayerSerenityNotificationTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'حان وقت اللقاء 🕌'**
+  String get prayerSerenityNotificationTitle;
+
+  /// No description provided for @prayerSerenityNotificationBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'أوقفنا التلاوة بهدوء… حان وقت الصلاة، تقبّل الله'**
+  String get prayerSerenityNotificationBody;
+
+  /// No description provided for @prayerCompanionEnable.
+  ///
+  /// In ar, this message translates to:
+  /// **'تفعيل مرافق الصلاة'**
+  String get prayerCompanionEnable;
+
+  /// No description provided for @prayerCompanionPreparation.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير الاستعداد'**
+  String get prayerCompanionPreparation;
+
+  /// No description provided for @prayerCompanionPreparationDisabled.
+  ///
+  /// In ar, this message translates to:
+  /// **'معطّل'**
+  String get prayerCompanionPreparationDisabled;
+
+  /// No description provided for @prayerCompanionMinutesValue.
+  ///
+  /// In ar, this message translates to:
+  /// **'{minutes} دقائق'**
+  String prayerCompanionMinutesValue(int minutes);
+
+  /// No description provided for @prayerCompanionCheckIn.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكير بعد الصلاة'**
+  String get prayerCompanionCheckIn;
+
+  /// No description provided for @prayerCompanionCheckInSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'يصل تذكير لطيف بعد 20 دقيقة من وقت الصلاة.'**
+  String get prayerCompanionCheckInSub;
+
+  /// No description provided for @prayerCompanionFollowUp.
+  ///
+  /// In ar, this message translates to:
+  /// **'السماح بتذكير لاحق واحد'**
+  String get prayerCompanionFollowUp;
+
+  /// No description provided for @prayerCompanionFollowUpSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'يُرسل مرة واحدة عند اختيار «سأصلي الآن» أو «ذكرني لاحقاً».'**
+  String get prayerCompanionFollowUpSub;
+
+  /// No description provided for @prayerCompanionLocalOnly.
+  ///
+  /// In ar, this message translates to:
+  /// **'تُحفظ تأكيداتك على هذا الجهاز فقط ولا تُرفع إلى أي خدمة سحابية.'**
+  String get prayerCompanionLocalOnly;
+
+  /// No description provided for @prayerCompanionClear.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح تأكيدات الصلاة'**
+  String get prayerCompanionClear;
+
+  /// No description provided for @prayerCompanionClearSub.
+  ///
+  /// In ar, this message translates to:
+  /// **'يحذف التأكيدات المحفوظة على هذا الجهاز.'**
+  String get prayerCompanionClearSub;
+
+  /// No description provided for @prayerCompanionClearConfirmTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح التأكيدات؟'**
+  String get prayerCompanionClearConfirmTitle;
+
+  /// No description provided for @prayerCompanionClearConfirmBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'هل تريد مسح التأكيدات المحفوظة على هذا الجهاز؟'**
+  String get prayerCompanionClearConfirmBody;
+
+  /// No description provided for @prayerCompanionClearConfirmButton.
+  ///
+  /// In ar, this message translates to:
+  /// **'مسح'**
+  String get prayerCompanionClearConfirmButton;
+
+  /// No description provided for @prayerCompanionClearCancel.
+  ///
+  /// In ar, this message translates to:
+  /// **'إلغاء'**
+  String get prayerCompanionClearCancel;
+
+  /// No description provided for @prayerCompanionClearFailed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر مسح التأكيدات. حاول مرة أخرى.'**
+  String get prayerCompanionClearFailed;
+
+  /// No description provided for @prayerCompanionCleared.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم مسح التأكيدات.'**
+  String get prayerCompanionCleared;
 
   /// No description provided for @weekdayMonday.
   ///
