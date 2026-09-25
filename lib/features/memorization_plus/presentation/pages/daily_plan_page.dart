@@ -269,8 +269,42 @@ class _PlanAyahTile extends StatelessWidget {
   final bool isDark;
   final VoidCallback onTap;
 
+  /// Strength bucket colour: weak → error, settling → warning, strong →
+  /// success. Colour is never the only signal — labels accompany it.
+  Color get _strengthColor {
+    final record = ayah.record;
+    if (record == null) return AppColors.primary;
+    if (record.strengthLevel <= 2) return AppColors.error;
+    if (record.strengthLevel <= 5) return AppColors.warning;
+    return AppColors.success;
+  }
+
+  String _strengthLabel(BuildContext context) {
+    final record = ayah.record;
+    if (record == null) return context.l10n.dailyPlanNewLabel;
+    if (record.strengthLevel <= 2) {
+      return context.l10n.dailyPlanStrengthWeak;
+    }
+    if (record.strengthLevel <= 5) {
+      return context.l10n.dailyPlanStrengthLearning;
+    }
+    return context.l10n.dailyPlanStrengthStrong;
+  }
+
+  int get _daysUntilReview {
+    final record = ayah.record;
+    if (record == null) return -1;
+    return record.nextReviewDate
+        .difference(DateTime.now().toUtc())
+        .inDays;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final record = ayah.record;
+    final daysUntilReview = _daysUntilReview;
+    final showNextReview = record != null && daysUntilReview >= 0;
+
     return Card(
       margin: const EdgeInsets.only(bottom: AppSpacing.sm),
       color: isDark ? AppColors.darkCard : AppColors.lightCard,
@@ -286,17 +320,51 @@ class _PlanAyahTile extends StatelessWidget {
           context.l10n.dailyPlanAyahTitle(ayah.ayahNumber),
           style: AppTypography.bodyLarge,
         ),
-        subtitle: ayah.record == null
+        subtitle: record == null
             ? Text(
                 context.l10n.dailyPlanNewLabel,
                 style: AppTypography.bodySmall,
               )
-            : Text(
-                context.l10n.dailyPlanRecordStats(
-                  ayah.record!.strengthLevel,
-                  ayah.record!.totalReviews,
-                ),
-                style: AppTypography.bodySmall,
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _strengthColor,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xs),
+                      Expanded(
+                        child: Text(
+                          '${_strengthLabel(context)} · '
+                          '${context.l10n.dailyPlanRecordStats(
+                            record.strengthLevel,
+                            record.totalReviews,
+                          )}',
+                          style: AppTypography.bodySmall,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (showNextReview)
+                    Text(
+                      context.l10n.dailyPlanNextReviewInDays(
+                        daysUntilReview.clamp(0, 999),
+                      ),
+                      style: AppTypography.bodySmall.copyWith(
+                        color: isDark
+                            ? AppColors.darkTextHint
+                            : AppColors.lightTextHint,
+                      ),
+                    ),
+                ],
               ),
       ),
     );

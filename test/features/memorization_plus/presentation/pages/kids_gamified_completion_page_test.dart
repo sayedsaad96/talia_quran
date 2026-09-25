@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_completion_page.dart';
 
 void main() {
@@ -62,7 +63,56 @@ void main() {
       expect(find.text('Return to map'), findsOneWidget);
     });
 
-    test('completed surah does not reopen its last ayah', () {
+    testWidgets('session points render as a gems pill next to stars', (
+      tester,
+    ) async {
+      // K11: real session points are no longer swallowed — they show next to
+      // the stars, and a level-up adds its own celebration pill.
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedCompletionContent(
+            starsEarned: 2,
+            pointsEarned: 14,
+            leveledUpTo: 3,
+            onNext: () {},
+            onReturnToMap: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('+2 stars'), findsOneWidget);
+      expect(find.text('+14 gems'), findsOneWidget);
+      expect(find.text('Level 3'), findsOneWidget);
+    });
+
+    testWidgets('zero points and no level-up show stars only', (tester) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedCompletionContent(
+            starsEarned: 1,
+            onNext: () {},
+            onReturnToMap: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('+1 stars'), findsOneWidget);
+      expect(find.textContaining('gems'), findsNothing);
+      expect(find.textContaining('Level'), findsNothing);
+    });
+
+    test('completed surah advances instead of reopening its last ayah', () {
+      // After finishing the whole surah, the shared SRS resolver — the same
+      // one the home screen uses — advances to the next surah in the reverse
+      // Juz-Amma path instead of reopening the ayah just completed.
       const stages = [
         KidsJourneyStage(
           stageNumber: 1,
@@ -74,7 +124,15 @@ void main() {
         ),
       ];
 
-      expect(KidsJourneyMissionResolver.nextMission(stages), isNull);
+      final mission = const KidsNextMissionResolver().resolve(
+        activeSurahId: 114,
+        stages: stages,
+        reviewRecords: const [],
+        now: DateTime.utc(2026, 9, 24),
+      );
+
+      expect(mission?.surahId, 113);
+      expect(mission?.startAyah, 1);
     });
     test(
       'selects the current journey mission instead of incrementing ayah',
@@ -98,14 +156,61 @@ void main() {
           ),
         ];
 
-        final mission = KidsJourneyMissionResolver.nextMission(stages);
+        final mission = const KidsNextMissionResolver().resolve(
+          activeSurahId: 114,
+          stages: stages,
+          reviewRecords: const [],
+          now: DateTime.utc(2026, 9, 24),
+        );
 
         expect(mission?.surahId, 114);
-        expect(mission?.ayahNumber, 6);
+        expect(mission?.startAyah, 6);
+      },
+    );
+    test(
+      'a due review outranks new memorization exactly like the home screen',
+      () {
+        const stages = [
+          KidsJourneyStage(
+            stageNumber: 1,
+            surahId: 114,
+            startAyah: 2,
+            endAyah: 2,
+            completedAyahs: [],
+            status: KidsJourneyStageStatus.current,
+          ),
+        ];
+        final mission = const KidsNextMissionResolver().resolve(
+          activeSurahId: 114,
+          stages: stages,
+          reviewRecords: [
+            _dueReviewRecord(surahId: 113, ayahNumber: 3),
+          ],
+          now: DateTime.utc(2026, 9, 24),
+        );
+
+        expect(mission?.type, KidsMissionType.dueReview);
+        expect(mission?.surahId, 113);
+        expect(mission?.startAyah, 3);
       },
     );
   });
 }
+
+AyahReviewRecord _dueReviewRecord({
+  required int surahId,
+  required int ayahNumber,
+}) => AyahReviewRecord(
+  surahId: surahId,
+  ayahNumber: ayahNumber,
+  strengthLevel: 5,
+  intervalDays: 1,
+  lastReviewedAt: DateTime.utc(2026, 8, 30),
+  nextReviewDate: DateTime.utc(2026, 9, 1),
+  totalReviews: 2,
+  lastRating: PerformanceRating.excellent,
+  createdByMode: ReviewRecordCreatedByMode.kidsMode,
+);
 
 class _TestApp extends StatelessWidget {
   const _TestApp({required this.child});

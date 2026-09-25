@@ -463,6 +463,28 @@
   "settingsSectionHelpTutorial": "المساعدة والدليل",
   "settingsSectionPrivacySecurity": "الخصوصية والأمان",
   "settingsSectionAboutTalia": "حول تالية",
+  "settingsBackgroundPlaybackTitle": "التشغيل في الخلفية",
+  "settingsBackgroundPlaybackSubtitle": "تستمر التلاوة بعد مغادرة التطبيق، ويمكن التحكم بها من شريط الإشعارات.",
+  "settingsHubPractice": "الممارسة",
+  "settingsHubReminders": "التنبيهات",
+  "settingsHubSupport": "الدعم",
+  "settingsRemindersGeneral": "عام",
+  "settingsRemindersMemorization": "تذكيرات الحفظ",
+  "settingsRemindersWorship": "الأذكار والعبادة",
+  "settingsRemindersProgress": "التقدم",
+  "notificationPermissionBlockedTitle": "إشعارات التطبيق معطلة في إعدادات الهاتف",
+  "notificationPermissionBlockedBody": "لن تصلك تذكيرات المراجعة أو الأذكار حتى يتم السماح بالإشعارات من إعدادات النظام.",
+  "notificationOpenSystemSettings": "فتح إعدادات الهاتف",
+  "notificationStatusBlocked": "أذونات الإشعارات معطلة في إعدادات النظام",
+  "notificationStatusSummary": "{enabled} من {total} تذكيرات مفعّلة",
+  "@notificationStatusSummary": {
+    "placeholders": {
+      "enabled": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "notificationTestInteractiveTitle": "تجربة الإشعارات",
+  "notificationTestInteractiveSubtitle": "أرسل إشعارًا تجريبيًا للتأكد أن التنبيهات تعمل",
   "settingsGuestStatusTitle": "تستخدم تالية كضيف",
   "settingsGuestStatusSubtitle": "يبقى تقدمك المحلي على هذا الجهاز. أنشئ حساباً لإدارة الحساب وميزات العائلة.",
   "settingsSignInCreateAccount": "تسجيل الدخول / إنشاء حساب",
@@ -832,6 +854,14 @@
     }
   },
   "kidsGamifiedLockedStage": "هذا البيت مغلق الآن",
+  "kidsGamifiedDailyLimitReached": "أنجزت مهام اليوم، ما شاء الله! عُد غداً لبيت جديد.",
+  "@kidsGamifiedDailyLimitReached": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "kidsGamifiedCurrentStage": "مهمتك الحالية",
   "kidsGamifiedCompletedStage": "أحسنت، اكتمل البيت",
   "kidsGamifiedNeedsReview": "جاهز للمراجعة",
@@ -1558,8 +1588,25 @@
   "notificationSettingsKhatmahSub": "تذكير يومي بالورد المحدد لختمتك الحالية",
   "notificationSettingsPrayerTimes": "مواقيت الصلاة",
   "notificationSettingsPrayerTimesSub": "تنبيهات عند حلول أوقات الصلوات الخمس",
-  "notificationSettingsPrayerAthan": "صوت الأذان",
-  "notificationSettingsPrayerAthanSub": "تشغيل مقطع الأذان المرفق بدل صوت التنبيه الافتراضي",
+  "notificationSettingsPrayerAthan": "الأذان الكامل",
+  "notificationSettingsPrayerAthanSub": "تشغيل الأذان الكامل عند دخول وقت الصلاة مع إمكانية إيقافه",
+  "muezzinPickerTitle": "اختيار المؤذن",
+  "muezzinPickerSubtitle": "اختر صوت الأذان المفضل لديك، واستمع لمعاينة قبل الحفظ",
+  "muezzinDefault": "الأذان الافتراضي",
+  "muezzinPickerSave": "حفظ",
+  "muezzinPreviewPlay": "معاينة",
+  "muezzinPreviewStop": "إيقاف المعاينة",
+  "muezzinFajrSectionTitle": "أذان الفجر",
+  "muezzinFajrSameAsGeneral": "مثل باقي الصلوات",
+  "muezzinFajrBadge": "فجر",
+  "muezzinFajrSummary": "{general} للصلوات، و{fajr} للفجر",
+  "@muezzinFajrSummary": {
+    "placeholders": {
+      "general": {"type": "String"},
+      "fajr": {"type": "String"}
+    }
+  },
+  "notificationSettingsPrayerNeedsTimes": "فعّل مواقيت الصلاة أولًا",
   "homeTourTitle": "تحتاج جولة سريعة؟",
   "homeTourDesc": "افتح الدليل متى أردت من هنا أو من المساعدة.",
   "homeTourGuideAction": "الدليل",
@@ -1943,6 +1990,26 @@
   "v2ListenToAyah": "استمع للآية",
   "v2Passed": "تم تسميعها",
   "v2Retries": "محاولات",
+  "v2ResultExcellent": "أحسنت! تسميع متقن",
+  "v2ResultPassed": "تم اجتياز الآية",
+  "v2ResultRetrying": "اقتربت! حاول مرة أخرى",
+  "v2ResultNeedsWork": "يلزم مراجعة الآية",
+  "v2ResultSimilarity": "نسبة التطابق: {score}%",
+  "@v2ResultSimilarity": { "placeholders": { "score": { "type": "int" } } },
+  "v2ResultManualGrade": "تم تقييم التسميع ذاتيًا",
+  "v2ResultContinue": "متابعة",
+  "v2ResultRetryNow": "أعد التسميع الآن",
+  "v2ResultReviewAyah": "راجع الآية",
+  "v2ResultWordsCorrect": "صحيحة",
+  "v2ResultWordsMissing": "ناقصة",
+  "v2ResultWordsWrong": "خاطئة",
+  "v2ResultWordsExtra": "زيادة",
+  "v2LoopOff": "تكرار: بدون",
+  "v2LoopThree": "تكرار: 3 مرات",
+  "v2LoopInfinite": "تكرار: مستمر",
+  "v2MaskedWordsHint": "إظهار الكلمات مخفية",
+  "v2MaskedWordsRevealed": "الكلمات مخفية — حاول التذكر",
+  "v2MaskedWordsFull": "إخفاء الكلمات",
   "v2SurahLoadFailed": "تعذر تحميل بيانات السورة.",
   "v2NoAyahsInRange": "لا توجد آيات في النطاق المحدد.",
   "kidsRecordingUnavailable": "لم يعمل الميكروفون الآن. جرّب مرة أخرى أو اطلب مساعدة ولي الأمر.",
@@ -2300,9 +2367,10 @@
   "weekdayFriday": "الجمعة",
   "weekdaySaturday": "السبت",
   "weekdaySunday": "الأحد",
-  "notificationExactAlarmRequest": "تحسين دقة مواقيت الصلاة",
+  "notificationExactAlarmRequest": "تفعيل التنبيهات الدقيقة",
+  "notificationExactAlarmExplanation": "تضمن وصول تنبيه الصلاة والأذان في وقتهما بالضبط",
   "notificationExactAlarmGranted": "تم تفعيل دقة تنبيهات مواقيت الصلاة.",
-  "notificationExactAlarmDenied": "قد تصل التنبيهات متأخرة قليلًا حتى تمنح إذن المنبهات الدقيقة من إعدادات الهاتف.",
+  "notificationExactAlarmDenied": "ستصلك التنبيهات في وقتها تقريبًا بالوضع العادي، ويمكنك تفعيل الدقة الكاملة لاحقًا من إعدادات الهاتف.",
   "notificationTestFailed": "تعذر إرسال الإشعار. تحقّق من إذن الإشعارات في إعدادات الهاتف."
   ,"notificationQuietHours": "الساعات الهادئة"
   ,"notificationQuietHoursSub": "ينقل التذكيرات العادية خارج الفترة المحددة. مواقيت الصلاة لا تتغير."
@@ -2310,4 +2378,19 @@
   ,"notificationQuietHoursEnd": "النهاية"
   ,"notificationSmartReminder": "تذكير ذكي"
   ,"notificationSmartReminderSub": "يستخدم أوقات فتحك الأخيرة على الجهاز لاختيار وقت التذكير."
+  ,"memorizationHubReviewDueBadge": "{count} آية مستحقة للمراجعة"
+  ,"@memorizationHubReviewDueBadge": { "placeholders": { "count": { "type": "int" } } }
+  ,"memorizationHubReviewDueNone": "لا مراجعات مستحقة الآن"
+  ,"dailyPlanNextReviewInDays": "المراجعة القادمة بعد {count, plural, =0{اليوم} =1{يوم} other{{count} أيام}}"
+  ,"@dailyPlanNextReviewInDays": { "placeholders": { "count": { "type": "int" } } }
+  ,"dailyPlanStrengthWeak": "حفظ ضعيف"
+  ,"dailyPlanStrengthLearning": "قيد الترسيت"
+  ,"dailyPlanStrengthStrong": "حفظ متين"
+  ,"memorizedPageAction": "حفظ هذه الصفحة"
+  ,"memorizedPageSubtext": "ابدأ جلسة حفظ لآيات الصفحة الحالية"
+  ,"memorizedPageUnavailable": "حفظ الصفحة متاح عندما تنتمي كل آياتها لسورة واحدة."
+  ,"customPlanDirectionForward": "اتجاه الحفظ: تصاعدي (من {from} إلى {to})"
+  ,"@customPlanDirectionForward": { "placeholders": { "from": { "type": "String" }, "to": { "type": "String" } } }
+  ,"customPlanDirectionBackward": "اتجاه الحفظ: تنازلي (من {from} إلى {to})"
+  ,"@customPlanDirectionBackward": { "placeholders": { "from": { "type": "String" }, "to": { "type": "String" } } }
 }

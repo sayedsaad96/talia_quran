@@ -8,73 +8,53 @@ import '../../../../../core/theme/app_typography.dart';
 import '../../../../quran/presentation/cubits/quran_audio_player_cubit.dart';
 import '../../cubits/settings_cubit.dart';
 import '../../cubits/settings_state.dart';
+import '../../widgets/settings_group.dart';
 import '../../widgets/settings_memorization_tiles.dart';
 import '../../widgets/settings_section.dart';
+import '../../widgets/settings_subpage_scaffold.dart';
 
-/// Dedicated subpage for Quran & Memorization preferences.
+/// Dedicated subpage for Quran and memorization preferences.
 class QuranSettingsPage extends StatelessWidget {
   const QuranSettingsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final cardColor = isDark ? AppColors.darkCard : AppColors.lightCard;
-    final borderColor = isDark ? AppColors.darkDivider : AppColors.lightDivider;
+    final isDark = context.isDark;
 
-    return Scaffold(
-      backgroundColor:
-          isDark ? AppColors.darkBackground : AppColors.lightBackground,
-      appBar: AppBar(
-        title: Text(context.l10n.settingsSectionQuranMemorization),
-        backgroundColor:
-            isDark ? AppColors.darkBackground : AppColors.lightBackground,
-        elevation: 0,
-        scrolledUnderElevation: 1,
-      ),
-      body: BlocBuilder<SettingsCubit, SettingsState>(
-        builder: (context, state) {
-          return ListView(
-            padding: const EdgeInsets.all(AppSpacing.pagePadding),
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: cardColor,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  border: Border.all(color: borderColor),
+    return SettingsSubpageScaffold(
+      title: context.l10n.settingsSectionQuranMemorization,
+      children: [
+        BlocBuilder<SettingsCubit, SettingsState>(
+          builder: (context, state) {
+            return SettingsGroup(
+              children: [
+                _BackgroundPlaybackSettingTile(isDark: isDark),
+                SettingsDivider(isDark: isDark, indent: 0),
+                AccuracySettingTile(isDark: isDark),
+                SettingsDivider(isDark: isDark, indent: 0),
+                MemorizationPathSummaryTile(
+                  isDark: isDark,
+                  profile: state.memorizationProfile,
                 ),
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                child: Column(
-                  children: [
-                    _BackgroundPlaybackSettingTile(isDark: isDark),
-                    SettingsDivider(isDark: isDark, indent: 0),
-                    AccuracySettingTile(isDark: isDark),
-                    SettingsDivider(isDark: isDark, indent: 0),
-                    MemorizationPathSummaryTile(
-                      isDark: isDark,
-                      profile: state.memorizationProfile,
-                    ),
-                    if (state.memorizationProfile?.hasSelectedPath == true) ...[
-                      SettingsDivider(isDark: isDark, indent: 0),
-                      ResetMemorizationPathTile(
-                        isDark: isDark,
-                        onReset: context
-                            .read<SettingsCubit>()
-                            .resetMemorizationIdentity,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
+                if (state.memorizationProfile?.hasSelectedPath == true) ...[
+                  SettingsDivider(isDark: isDark, indent: 0),
+                  ResetMemorizationPathTile(
+                    isDark: isDark,
+                    onReset: context.read<SettingsCubit>().resetMemorizationIdentity,
+                  ),
+                ],
+              ],
+            );
+          },
+        ),
+      ],
     );
   }
 }
 
 class _BackgroundPlaybackSettingTile extends StatefulWidget {
   const _BackgroundPlaybackSettingTile({required this.isDark});
+
   final bool isDark;
 
   @override
@@ -88,12 +68,13 @@ class _BackgroundPlaybackSettingTileState
   Widget build(BuildContext context) {
     final cubit = context.read<QuranAudioPlayerCubit>();
     final isDark = widget.isDark;
-    final primary = isDark ? AppColors.goldLight : AppColors.primary;
-    final textColor =
-        isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary;
-    final subtextColor =
-        isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary;
-
+    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
+    final textColor = isDark
+        ? AppColors.darkTextPrimary
+        : AppColors.lightTextPrimary;
+    final subtextColor = isDark
+        ? AppColors.darkTextSecondary
+        : AppColors.lightTextSecondary;
     final isEnabled = cubit.isBackgroundPlaybackEnabled;
 
     return Padding(
@@ -103,54 +84,57 @@ class _BackgroundPlaybackSettingTileState
       ),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: primary.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.headphones_rounded,
-              color: primary,
-              size: 22,
-            ),
-          ),
+          _leadingIcon(primary),
           const SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'التشغيل في الخلفية',
-                  style: AppTypography.titleSmall.copyWith(
-                    color: textColor,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'استمرار تلاوة السور عند مغادرة التطبيق مع شريط التحكم في الإشعارات',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: subtextColor,
-                    height: 1.4,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          Expanded(child: _copy(context, textColor, subtextColor)),
           const SizedBox(width: AppSpacing.sm),
           Switch.adaptive(
             value: isEnabled,
-            activeThumbColor: isDark ? AppColors.goldLight : Colors.white,
             activeTrackColor: primary,
-            onChanged: (value) async {
-              await cubit.setBackgroundPlaybackEnabled(value);
-              if (mounted) setState(() {});
-            },
+            onChanged: (value) => _toggle(cubit, value),
           ),
         ],
       ),
     );
+  }
+
+  Widget _leadingIcon(Color primary) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: 0.12),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(Icons.headphones_rounded, color: primary, size: 22),
+    );
+  }
+
+  Widget _copy(BuildContext context, Color textColor, Color subtextColor) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          context.l10n.settingsBackgroundPlaybackTitle,
+          style: AppTypography.titleSmall.copyWith(
+            color: textColor,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          context.l10n.settingsBackgroundPlaybackSubtitle,
+          style: AppTypography.bodySmall.copyWith(
+            color: subtextColor,
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _toggle(QuranAudioPlayerCubit cubit, bool value) async {
+    await cubit.setBackgroundPlaybackEnabled(value);
+    if (mounted) setState(() {});
   }
 }

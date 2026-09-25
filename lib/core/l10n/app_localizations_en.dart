@@ -1376,6 +1376,61 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsSectionAboutTalia => 'About Talia';
 
   @override
+  String get settingsBackgroundPlaybackTitle => 'Background playback';
+
+  @override
+  String get settingsBackgroundPlaybackSubtitle =>
+      'Recitation keeps playing after you leave the app, with controls in the notification.';
+
+  @override
+  String get settingsHubPractice => 'Practice';
+
+  @override
+  String get settingsHubReminders => 'Reminders';
+
+  @override
+  String get settingsHubSupport => 'Support';
+
+  @override
+  String get settingsRemindersGeneral => 'General';
+
+  @override
+  String get settingsRemindersMemorization => 'Memorization reminders';
+
+  @override
+  String get settingsRemindersWorship => 'Worship';
+
+  @override
+  String get settingsRemindersProgress => 'Progress';
+
+  @override
+  String get notificationPermissionBlockedTitle =>
+      'App notifications are off in phone settings';
+
+  @override
+  String get notificationPermissionBlockedBody =>
+      'Review and adhkar reminders will not arrive until notifications are allowed in system settings.';
+
+  @override
+  String get notificationOpenSystemSettings => 'Open phone settings';
+
+  @override
+  String get notificationStatusBlocked =>
+      'Notifications are turned off in system settings';
+
+  @override
+  String notificationStatusSummary(int enabled, int total) {
+    return '$enabled of $total reminders on';
+  }
+
+  @override
+  String get notificationTestInteractiveTitle => 'Try a notification';
+
+  @override
+  String get notificationTestInteractiveSubtitle =>
+      'Send a sample reminder to confirm alerts work';
+
+  @override
   String get settingsGuestStatusTitle => 'Using Talia as guest';
 
   @override
@@ -2094,6 +2149,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get kidsGamifiedLockedStage => 'This house is locked for now';
+
+  @override
+  String kidsGamifiedDailyLimitReached(int count) {
+    return 'You finished today\'s missions. MashaAllah! Come back tomorrow for a new house.';
+  }
 
   @override
   String get kidsGamifiedCurrentStage => 'Your current mission';
@@ -3494,11 +3554,48 @@ class AppLocalizationsEn extends AppLocalizations {
       'Reminders at the time of each of the 5 daily prayers';
 
   @override
-  String get notificationSettingsPrayerAthan => 'Athan sound';
+  String get notificationSettingsPrayerAthan => 'Full Adhan';
 
   @override
   String get notificationSettingsPrayerAthanSub =>
-      'Play the bundled athan clip instead of the default sound';
+      'Plays the full adhan at prayer time with a stop control';
+
+  @override
+  String get muezzinPickerTitle => 'Choose muezzin';
+
+  @override
+  String get muezzinPickerSubtitle =>
+      'Pick your favorite adhan voice and preview it before saving';
+
+  @override
+  String get muezzinDefault => 'Default adhan';
+
+  @override
+  String get muezzinPickerSave => 'Save';
+
+  @override
+  String get muezzinPreviewPlay => 'Preview';
+
+  @override
+  String get muezzinPreviewStop => 'Stop preview';
+
+  @override
+  String get muezzinFajrSectionTitle => 'Fajr adhan';
+
+  @override
+  String get muezzinFajrSameAsGeneral => 'Same as other prayers';
+
+  @override
+  String get muezzinFajrBadge => 'Fajr';
+
+  @override
+  String muezzinFajrSummary(String general, String fajr) {
+    return '$general for prayers, $fajr for Fajr';
+  }
+
+  @override
+  String get notificationSettingsPrayerNeedsTimes =>
+      'Enable prayer times first';
 
   @override
   String get homeTourTitle => 'Need a quick tour?';
@@ -4434,6 +4531,65 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get v2Retries => 'Retries';
+
+  @override
+  String get v2ResultExcellent => 'Excellent! Flawless recitation';
+
+  @override
+  String get v2ResultPassed => 'Ayah passed';
+
+  @override
+  String get v2ResultRetrying => 'So close! Try again';
+
+  @override
+  String get v2ResultNeedsWork => 'This ayah needs review';
+
+  @override
+  String v2ResultSimilarity(int score) {
+    return 'Match: $score%';
+  }
+
+  @override
+  String get v2ResultManualGrade => 'Self-graded recitation';
+
+  @override
+  String get v2ResultContinue => 'Continue';
+
+  @override
+  String get v2ResultRetryNow => 'Recite again now';
+
+  @override
+  String get v2ResultReviewAyah => 'Review the ayah';
+
+  @override
+  String get v2ResultWordsCorrect => 'correct';
+
+  @override
+  String get v2ResultWordsMissing => 'missing';
+
+  @override
+  String get v2ResultWordsWrong => 'wrong';
+
+  @override
+  String get v2ResultWordsExtra => 'extra';
+
+  @override
+  String get v2LoopOff => 'Repeat: off';
+
+  @override
+  String get v2LoopThree => 'Repeat: 3x';
+
+  @override
+  String get v2LoopInfinite => 'Repeat: endless';
+
+  @override
+  String get v2MaskedWordsHint => 'Show masked words';
+
+  @override
+  String get v2MaskedWordsRevealed => 'Words are hidden — try to recall';
+
+  @override
+  String get v2MaskedWordsFull => 'Hide words';
 
   @override
   String get v2SurahLoadFailed => 'Could not load surah data.';
@@ -5505,15 +5661,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get weekdaySunday => 'Sunday';
 
   @override
-  String get notificationExactAlarmRequest => 'Improve prayer-time precision';
+  String get notificationExactAlarmRequest => 'Enable exact alarms';
+
+  @override
+  String get notificationExactAlarmExplanation =>
+      'Ensures prayer reminders and the adhan fire exactly on time';
 
   @override
   String get notificationExactAlarmGranted =>
-      'Prayer-time notification precision is enabled.';
+      'Exact prayer-time alarms are enabled.';
 
   @override
   String get notificationExactAlarmDenied =>
-      'Notifications may arrive slightly late until exact-alarm access is allowed in device settings.';
+      'Reminders still arrive approximately on time; you can grant exact alarms later in system settings.';
 
   @override
   String get notificationTestFailed =>
@@ -5538,4 +5698,54 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notificationSmartReminderSub =>
       'Uses your recent on-device opening times to choose a reminder time.';
+
+  @override
+  String memorizationHubReviewDueBadge(int count) {
+    return '$count ayahs due for review';
+  }
+
+  @override
+  String get memorizationHubReviewDueNone => 'No reviews due right now';
+
+  @override
+  String dailyPlanNextReviewInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '1 day',
+      zero: 'today',
+    );
+    return 'Next review in $_temp0';
+  }
+
+  @override
+  String get dailyPlanStrengthWeak => 'Weak memorization';
+
+  @override
+  String get dailyPlanStrengthLearning => 'Still settling';
+
+  @override
+  String get dailyPlanStrengthStrong => 'Solid memorization';
+
+  @override
+  String get memorizedPageAction => 'Memorize this page';
+
+  @override
+  String get memorizedPageSubtext =>
+      'Start a memorization session for the current page\'s ayahs';
+
+  @override
+  String get memorizedPageUnavailable =>
+      'Page memorization is available when all its ayahs belong to one surah.';
+
+  @override
+  String customPlanDirectionForward(String from, String to) {
+    return 'Memorization direction: forward (from $from to $to)';
+  }
+
+  @override
+  String customPlanDirectionBackward(String from, String to) {
+    return 'Memorization direction: backward (from $from to $to)';
+  }
 }

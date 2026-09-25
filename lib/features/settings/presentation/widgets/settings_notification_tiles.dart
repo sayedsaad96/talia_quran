@@ -9,11 +9,15 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/notification_scheduler.dart';
+import '../../../../core/services/adhan_preview_service.dart';
 import '../../../../core/services/notification_service.dart';
+import '../../../../core/services/prayer_sound.dart';
+import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../cubits/notification_settings_cubit.dart';
 import '../cubits/notification_settings_state.dart';
+import 'settings_group.dart';
 import 'settings_section.dart';
 
 class NotificationSettingTile extends StatefulWidget {
@@ -56,6 +60,8 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
   static const _prayerAsrKey = TaliaNotificationService.prayerAsrKey;
   static const _prayerMaghribKey = TaliaNotificationService.prayerMaghribKey;
   static const _prayerIshaKey = TaliaNotificationService.prayerIshaKey;
+
+  final AdhanPreviewService _previewService = AdhanPreviewService();
   static const _prayerAthanKey = TaliaNotificationService.prayerAthanKey;
 
   late final NotificationSettingsCubit _cubit;
@@ -259,6 +265,14 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
     required Color textColor,
     required Color subtextColor,
   }) {
+    // V2 §27: prayer notifications are the SECOND master switch. The first
+    // one (`prayer_times_enabled`, prayer page) must be ON first — otherwise
+    // this switch renders disabled with an explanation instead of a scary
+    // dead toggle.
+    final prayerTimesService = getIt.isRegistered<PrayerTimesService>()
+        ? getIt<PrayerTimesService>()
+        : null;
+    final prayerTimesEnabled = prayerTimesService?.isEnabled ?? false;
     return Column(
       children: [
         SwitchListTile(
@@ -287,18 +301,25 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
             ),
           ),
           subtitle: Text(
-            context.l10n.notificationSettingsPrayerTimesSub,
-            style: AppTypography.bodySmall.copyWith(color: subtextColor),
+            prayerTimesEnabled
+                ? context.l10n.notificationSettingsPrayerTimesSub
+                : context.l10n.notificationSettingsPrayerNeedsTimes,
+            style: AppTypography.bodySmall.copyWith(
+              color: prayerTimesEnabled ? subtextColor : primary,
+              fontWeight: prayerTimesEnabled ? null : FontWeight.w600,
+            ),
           ),
           value: state.prayerNotifications,
-          onChanged: (v) => _cubit.toggleReminder(
-            _prayerTimesKey,
-            v,
-            l10n: context.l10n,
-          ),
+          onChanged: prayerTimesEnabled
+              ? (v) => _cubit.toggleReminder(
+                  _prayerTimesKey,
+                  v,
+                  l10n: context.l10n,
+                )
+              : null,
           activeThumbColor: primary,
         ),
-        if (state.prayerNotifications)
+        if (state.prayerNotifications && prayerTimesEnabled)
           Padding(
             padding: const EdgeInsets.fromLTRB(
               AppSpacing.xl,
@@ -363,7 +384,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
               ],
             ),
           ),
-        if (state.prayerNotifications)
+        if (state.prayerNotifications && prayerTimesEnabled)
           SwitchListTile(
             contentPadding: const EdgeInsetsDirectional.only(
               start: AppSpacing.xl,
@@ -388,7 +409,15 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
             ),
             activeThumbColor: primary,
           ),
-        if (Platform.isAndroid && state.prayerNotifications)
+        if (state.prayerNotifications && prayerTimesEnabled && state.prayerAthan)
+          _buildMuezzinTile(
+            context,
+            state,
+            primary,
+            textColor,
+            subtextColor,
+          ),
+        if (Platform.isAndroid && state.prayerNotifications && prayerTimesEnabled)
           Padding(
             padding: const EdgeInsetsDirectional.only(
               start: AppSpacing.xl,
@@ -397,7 +426,19 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
             ),
             child: Align(
               alignment: AlignmentDirectional.centerStart,
-              child: OutlinedButton.icon(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // V2 §26: explanation first, then the opt-in button — and a
+                  // soft, non-scary fallback message when denied.
+                  Text(
+                    context.l10n.notificationExactAlarmExplanation,
+                    style: AppTypography.bodySmall.copyWith(
+                      color: subtextColor,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  OutlinedButton.icon(
                 onPressed: () async {
                   final granted =
                       await _cubit.requestExactPrayerTimePermission();
@@ -425,10 +466,105 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
               ),
+                ],
+              ),
             ),
           ),
       ],
     );
+  }
+
+  String get _selectedMuezzinId {
+    final stored = _cubit.prefs.getString(
+      TaliaNotificationService.prayerMuezzinKey,
+    );
+    final id = (stored == null || stored.isEmpty)
+        ? MuezzinCatalog.defaultId
+        : stored;
+    return MuezzinCatalog.isSupported(id) ? id : MuezzinCatalog.defaultId;
+  }
+
+  String get _selectedFajrMuezzinId {
+    final stored = _cubit.prefs.getString(
+      TaliaNotificationService.prayerMuezzinFajrKey,
+    );
+    final id = stored ?? '';
+    return (id.isEmpty || MuezzinCatalog.isSupported(id)) ? id : '';
+  }
+
+  /// Muezzin selection rows, shown under the "Full Adhan" switch.
+  Widget _buildMuezzinTile(
+    BuildContext context,
+    NotificationSettingsState state,
+    Color primary,
+    Color textColor,
+    Color subtextColor,
+  ) {
+    final l10n = context.l10n;
+    final muezzin = MuezzinCatalog.byId(_selectedMuezzinId);
+    final fajrOverride = _selectedFajrMuezzinId.isNotEmpty
+        ? MuezzinCatalog.byId(_selectedFajrMuezzinId)
+        : null;
+    final subtitle = fajrOverride == null
+        ? muezzin?.name(l10n.localeName) ?? l10n.muezzinDefault
+        : l10n.muezzinFajrSummary(
+            muezzin?.name(l10n.localeName) ?? l10n.muezzinDefault,
+            fajrOverride.name(l10n.localeName),
+          );
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(
+        start: AppSpacing.xl,
+        end: AppSpacing.md,
+        bottom: AppSpacing.sm,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+            leading: Icon(Icons.graphic_eq_rounded, color: primary, size: 22),
+            title: Text(
+              l10n.muezzinPickerTitle,
+              style: AppTypography.bodyMedium.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            subtitle: Text(
+              subtitle,
+              style: AppTypography.bodySmall.copyWith(color: subtextColor),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: Icon(
+              Icons.chevron_right_rounded,
+              color: subtextColor,
+              size: 22,
+            ),
+            onTap: () => _openMuezzinPicker(context, primary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openMuezzinPicker(BuildContext context, Color primary) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) => _MuezzinPickerSheet(
+        initialMuezzinId: _selectedMuezzinId,
+        initialFajrMuezzinId: _selectedFajrMuezzinId,
+        primary: primary,
+        previewService: _previewService,
+      ),
+    );
+    // Stop preview if the sheet was dismissed mid-playback.
+    await _previewService.stop();
   }
 
   Widget _buildPrayerChip({
@@ -587,9 +723,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                           const SizedBox(width: AppSpacing.sm),
                           Expanded(
                             child: Text(
-                              context.isArabic
-                                  ? 'إشعارات التطبيق معطلة في إعدادات الهاتف'
-                                  : 'Notifications are disabled in device settings',
+                              context.l10n.notificationPermissionBlockedTitle,
                               style: AppTypography.labelLarge.copyWith(
                                 color: textColor,
                                 fontWeight: FontWeight.bold,
@@ -600,23 +734,19 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        context.isArabic
-                            ? 'لن تصلك تذكيرات المراجعة أو الأذكار حتى يتم السماح بالإشعارات من إعدادات النظام.'
-                            : 'You will not receive review or azkar reminders until notifications are permitted in system settings.',
+                        context.l10n.notificationPermissionBlockedBody,
                         style: AppTypography.bodySmall.copyWith(
                           color: subtextColor,
                         ),
                       ),
                       const SizedBox(height: 10),
                       SizedBox(
-                        height: 36,
+                        height: 48,
                         child: OutlinedButton.icon(
                           onPressed: openAppSettings,
-                          icon: const Icon(Icons.settings_outlined, size: 16),
+                          icon: const Icon(Icons.settings_outlined, size: 18),
                           label: Text(
-                            context.isArabic
-                                ? 'فتح إعدادات الهاتف'
-                                : 'Open Device Settings',
+                            context.l10n.notificationOpenSystemSettings,
                             style: AppTypography.labelSmall.copyWith(
                               fontWeight: FontWeight.bold,
                             ),
@@ -660,30 +790,17 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                                 ? AppColors.success
                                 : AppColors.warning),
                         shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: (state.isSystemPermissionBlocked
-                                    ? AppColors.warning
-                                    : (state.enabledCount > 0
-                                        ? AppColors.success
-                                        : AppColors.warning))
-                                .withValues(alpha: 0.4),
-                            blurRadius: 6,
-                            spreadRadius: 1,
-                          ),
-                        ],
                       ),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         state.isSystemPermissionBlocked
-                            ? (context.isArabic
-                                ? 'تنبيه: أذونات الإشعارات معطلة في النظام'
-                                : 'Warning: Notifications disabled in device settings')
-                            : (context.isArabic
-                                ? 'حالة التنبيهات: ${state.enabledCount} من ${state.totalCount} تذكيرات مفعلة'
-                                : 'Notification status: ${state.enabledCount} of ${state.totalCount} reminders active'),
+                            ? context.l10n.notificationStatusBlocked
+                            : context.l10n.notificationStatusSummary(
+                                state.enabledCount,
+                                state.totalCount,
+                              ),
                         style: AppTypography.labelMedium.copyWith(
                           color: state.isSystemPermissionBlocked
                               ? AppColors.warning
@@ -697,16 +814,16 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
               ),
             ),
 
-            // 1. Daily Review Reminder
+            SettingsInListHeader(title: context.l10n.settingsRemindersGeneral),
             _buildNotificationPreferences(
               state,
               primary,
               textColor,
               subtextColor,
             ),
-            SettingsDivider(isDark: widget.isDark),
-
-            // 1. Daily Review Reminder
+            SettingsInListHeader(
+              title: context.l10n.settingsRemindersMemorization,
+            ),
             _buildTimeEditorTile(
               title: context.l10n.dailyReviewReminder,
               time: state.dailyReviewTime,
@@ -746,9 +863,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                 state.streakAlertTime,
               ),
             ),
-            SettingsDivider(isDark: widget.isDark),
-
-            // 3. Morning Azkar Reminder
+            SettingsInListHeader(title: context.l10n.settingsRemindersWorship),
             _buildTimeEditorTile(
               title: context.l10n.morningAzkarReminder,
               time: state.morningAzkarTime,
@@ -852,29 +967,6 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
               ),
             ),
             SettingsDivider(isDark: widget.isDark),
-
-            // 8. Weekly Impact ("أثر الأسبوع")
-            _buildTimeEditorTile(
-              title: context.l10n.notificationSettingsWeeklyImpact,
-              time: state.weeklyImpactTime,
-              isEnabled: state.weeklyImpact,
-              onToggle: (v) => _cubit.toggleReminder(
-                _weeklyImpactKey,
-                v,
-                l10n: context.l10n,
-              ),
-              icon: Icons.insights_rounded,
-              primaryColor: primary,
-              textColor: textColor,
-              subtextColor: subtextColor,
-              onTapEdit: () => _pickTime(
-                _weeklyImpactKey,
-                state.weeklyImpactTime,
-              ),
-            ),
-            SettingsDivider(isDark: widget.isDark),
-
-            // 9. Tahajjud / Qiyam Al-Layl Reminder
             _buildTimeEditorTile(
               title: context.l10n.notificationSettingsTahajjud,
               time: state.tahajjudTime,
@@ -891,6 +983,25 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
               onTapEdit: () => _pickTime(
                 _tahajjudKey,
                 state.tahajjudTime,
+              ),
+            ),
+            SettingsInListHeader(title: context.l10n.settingsRemindersProgress),
+            _buildTimeEditorTile(
+              title: context.l10n.notificationSettingsWeeklyImpact,
+              time: state.weeklyImpactTime,
+              isEnabled: state.weeklyImpact,
+              onToggle: (v) => _cubit.toggleReminder(
+                _weeklyImpactKey,
+                v,
+                l10n: context.l10n,
+              ),
+              icon: Icons.insights_rounded,
+              primaryColor: primary,
+              textColor: textColor,
+              subtextColor: subtextColor,
+              onTapEdit: () => _pickTime(
+                _weeklyImpactKey,
+                state.weeklyImpactTime,
               ),
             ),
             SettingsDivider(isDark: widget.isDark),
@@ -957,9 +1068,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              context.isArabic
-                                  ? 'تجربة الإشعارات التفاعلية'
-                                  : 'Test Interactive Notification',
+                              context.l10n.notificationTestInteractiveTitle,
                               style: AppTypography.bodyMedium.copyWith(
                                 color: textColor,
                                 fontWeight: FontWeight.bold,
@@ -967,9 +1076,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              context.isArabic
-                                  ? 'اختبار إشعارات المراجعة والتقدم'
-                                  : 'Test review and progress notifications',
+                              context.l10n.notificationTestInteractiveSubtitle,
                               style: AppTypography.bodySmall.copyWith(
                                 color: subtextColor,
                               ),
@@ -1144,6 +1251,251 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
         ),
         behavior: SnackBarBehavior.floating,
       ),
+    );
+  }
+}
+
+/// Bottom-sheet muezzin picker: radio list of the bundled adhan recordings
+/// with an inline preview button per option, plus an optional Fajr-only
+/// override selector. Committing a choice persists it through the cubit,
+/// which reschedules prayer events immediately.
+class _MuezzinPickerSheet extends StatefulWidget {
+  const _MuezzinPickerSheet({
+    required this.initialMuezzinId,
+    required this.initialFajrMuezzinId,
+    required this.primary,
+    required this.previewService,
+  });
+
+  final String initialMuezzinId;
+  final String initialFajrMuezzinId;
+  final Color primary;
+  final AdhanPreviewService previewService;
+
+  @override
+  State<_MuezzinPickerSheet> createState() => _MuezzinPickerSheetState();
+}
+
+class _MuezzinPickerSheetState extends State<_MuezzinPickerSheet> {
+  late String _muezzinId = widget.initialMuezzinId;
+  late String _fajrMuezzinId = widget.initialFajrMuezzinId;
+  String? _previewingId;
+
+  @override
+  void dispose() {
+    // Safety net: never leave audio running after the sheet closes.
+    widget.previewService.stop();
+    super.dispose();
+  }
+
+  Future<void> _togglePreview(String id) async {
+    final service = widget.previewService;
+    if (_previewingId == id) {
+      setState(() => _previewingId = null);
+      await service.stop();
+      return;
+    }
+    setState(() => _previewingId = id);
+    final started = await service.start(id);
+    if (!mounted) return;
+    if (!started) {
+      setState(() => _previewingId = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final subtext = Theme.of(context).textTheme.bodySmall?.color;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: subtext?.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n.muezzinPickerTitle,
+              style: AppTypography.titleMedium.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              l10n.muezzinPickerSubtitle,
+              style: AppTypography.bodySmall.copyWith(color: subtext),
+            ),
+            const SizedBox(height: 8),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    RadioGroup<String>(
+                      groupValue: _muezzinId,
+                      onChanged: (value) => setState(() {
+                        if (value != null) _muezzinId = value;
+                      }),
+                      child: Column(
+                        children: [
+                          for (final muezzin in MuezzinCatalog.all)
+                            _buildRow(
+                              context: context,
+                              id: muezzin.id,
+                              title: muezzin.name(l10n.localeName),
+                              subtitle: muezzin.origin(l10n.localeName),
+                              isFajrSection: false,
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        l10n.muezzinFajrSectionTitle,
+                        style: AppTypography.labelLarge.copyWith(
+                          color: widget.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    RadioGroup<String>(
+                      groupValue: _fajrMuezzinId,
+                      onChanged: (value) =>
+                          setState(() => _fajrMuezzinId = value ?? ''),
+                      child: Column(
+                        children: [
+                          _buildRow(
+                            context: context,
+                            id: '',
+                            title: l10n.muezzinFajrSameAsGeneral,
+                            subtitle: null,
+                            isFajrSection: true,
+                          ),
+                          for (final muezzin in MuezzinCatalog.all)
+                            if (muezzin.id != MuezzinCatalog.defaultId)
+                              _buildRow(
+                                context: context,
+                                id: muezzin.id,
+                                title: muezzin.name(l10n.localeName),
+                                subtitle: muezzin.origin(l10n.localeName),
+                                isFajrSection: true,
+                                fajrOptimized: muezzin.fajrOptimized,
+                              ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () async {
+                  await widget.previewService.stop();
+                  if (!context.mounted) return;
+                  final cubit = context.read<NotificationSettingsCubit>();
+                  await cubit.setMuezzin(_muezzinId, l10n: l10n);
+                  await cubit.setFajrMuezzin(_fajrMuezzinId, l10n: l10n);
+                  if (context.mounted) Navigator.of(context).pop();
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: widget.primary,
+                ),
+                child: Text(l10n.muezzinPickerSave),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRow({
+    required BuildContext context,
+    required String id,
+    required String title,
+    required String? subtitle,
+    required bool isFajrSection,
+    bool fajrOptimized = false,
+  }) {
+    final selected = isFajrSection ? _fajrMuezzinId == id : _muezzinId == id;
+    final previewing = _previewingId == id;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      dense: true,
+      leading: Radio<String>(
+        value: id,
+        activeColor: widget.primary,
+      ),
+      title: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(
+            child: Text(
+              title,
+              style: AppTypography.bodyMedium.copyWith(
+                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+          ),
+          if (fajrOptimized) ...[
+            const SizedBox(width: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: widget.primary.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                context.l10n.muezzinFajrBadge,
+                style: AppTypography.labelSmall.copyWith(
+                  color: widget.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+      subtitle: subtitle == null
+          ? null
+          : Text(
+              subtitle,
+              style: AppTypography.bodySmall.copyWith(
+                color: Theme.of(context).textTheme.bodySmall?.color,
+              ),
+            ),
+      trailing: IconButton(
+        icon: Icon(
+          previewing ? Icons.stop_circle_rounded : Icons.play_circle_rounded,
+          color: widget.primary,
+        ),
+        tooltip: previewing
+            ? context.l10n.muezzinPreviewStop
+            : context.l10n.muezzinPreviewPlay,
+        onPressed: () => _togglePreview(id),
+      ),
+      onTap: () => setState(() {
+        if (isFajrSection) {
+          _fajrMuezzinId = id;
+        } else {
+          _muezzinId = id;
+        }
+      }),
     );
   }
 }

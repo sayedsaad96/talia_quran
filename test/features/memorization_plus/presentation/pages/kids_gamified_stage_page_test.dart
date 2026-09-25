@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
+import 'package:talia_quran/core/router/app_router.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_stage_page.dart';
 
@@ -131,6 +132,28 @@ void main() {
 
       expect(find.text('Memorization House 1'), findsOneWidget);
       expect(find.text('Start mission'), findsOneWidget);
+    });
+    test('stage mission route carries the resolved mission type', () {
+      // An in-progress stage resumes its session instead of restarting.
+      expect(
+        kidsNextMissionLocation(_stage),
+        '${AppRoutes.memorizationPlusKids}'
+        '?surahId=114&ayahNumber=4&missionType=resume',
+      );
+
+      // A fresh stage starts a new memorization session.
+      const freshStage = KidsJourneyStage(
+        stageNumber: 1,
+        surahId: 114,
+        startAyah: 1,
+        endAyah: 2,
+        completedAyahs: [],
+        status: KidsJourneyStageStatus.current,      );
+      expect(
+        kidsNextMissionLocation(freshStage),
+        '${AppRoutes.memorizationPlusKids}'
+        '?surahId=114&ayahNumber=1&missionType=newMemorization',
+      );
     });
   });
 }

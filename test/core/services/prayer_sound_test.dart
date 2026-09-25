@@ -26,7 +26,7 @@ void main() {
     final fajr = resolvePrayerSound(athanEnabled: true, prayerKey: 'fajr');
     final dhuhr = resolvePrayerSound(athanEnabled: true, prayerKey: 'dhuhr');
 
-    // The awqat package ships a single `adhan` clip; the resolver keeps the
+    // The app bundles a single `adhan` clip; the resolver keeps the
     // per-prayer seam so a future `adhan_fajr` asset plugs in without
     // touching the scheduler.
     expect(fajr.androidSoundName, dhuhr.androidSoundName);

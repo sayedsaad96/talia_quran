@@ -35,11 +35,18 @@ class AyahOptionsSheet extends StatefulWidget {
     required this.ayah,
     required this.surahName,
     required this.onInteraction,
+    this.pageMemorizationTarget,
   });
 
   final Ayah ayah;
   final String surahName;
   final VoidCallback onInteraction;
+
+  /// Non-null when every ayah on the current page belongs to one surah —
+  /// enables the "memorize this page" action which launches a V2 session
+  /// at the page's first ayah. V2 sessions are single-surah, so a page
+  /// spanning two surahs is not offered this action.
+  final AyahReference? pageMemorizationTarget;
 
   @override
   State<AyahOptionsSheet> createState() => _AyahOptionsSheetState();
@@ -57,6 +64,26 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
     } else {
       await cubit.playAyah(widget.ayah.surahId, widget.ayah.numberInSurah);
     }
+  }
+
+  /// "Memorize this page" — launches a V2 session covering the page's
+  /// ayahs from the page's first ayah (within a single surah only).
+  void _startPageMemorization() {
+    widget.onInteraction();
+    final target = widget.pageMemorizationTarget;
+    if (target == null) return;
+    final router = GoRouter.of(context);
+    final location = Uri(
+      path: AppRoutes.memorizationV2Session,
+      queryParameters: LearningLaunchContext(
+        ayah: target,
+        intent: LearningIntent.memorize,
+        origin: LearningOrigin.quranReader,
+      ).toRouteQuery(),
+    ).toString();
+
+    Navigator.of(context).pop();
+    router.push(location);
   }
 
   void _startLearning() {
@@ -194,6 +221,13 @@ class _AyahOptionsSheetState extends State<AyahOptionsSheet> {
                     color: primary,
                     onTap: _startLearning,
                   ),
+                  if (widget.pageMemorizationTarget != null)
+                    AyahOptionButton(
+                      icon: Icons.auto_stories_rounded,
+                      label: context.l10n.memorizedPageAction,
+                      color: primary,
+                      onTap: _startPageMemorization,
+                    ),
                   BlocBuilder<QuranAudioPlayerCubit, QuranAudioPlayerState>(
                     builder: (context, audioState) {
                       final isPlayingThisAyah =

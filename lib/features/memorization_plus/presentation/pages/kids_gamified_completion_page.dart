@@ -3,8 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
+import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/router/app_router.dart';
 import '../../domain/entities/memorization_entities.dart';
+import '../../domain/navigation/kids_next_mission_resolver.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
 import '../widgets/kids_reward_dialog.dart';
 import '../widgets/kids_ui.dart';
@@ -15,6 +17,8 @@ class KidsGamifiedCompletionPage extends StatefulWidget {
     required this.surahId,
     required this.completedAyahNumber,
     this.starsEarned = 1,
+    this.pointsEarned = 0,
+    this.leveledUpTo,
     this.onNext,
     this.onReturnToMap,
   });
@@ -22,6 +26,12 @@ class KidsGamifiedCompletionPage extends StatefulWidget {
   final int surahId;
   final int completedAyahNumber;
   final int starsEarned;
+
+  /// K11: points earned by the finished session, shown next to the stars.
+  final int pointsEarned;
+
+  /// K11: new level when this session triggered a level-up; null otherwise.
+  final int? leveledUpTo;
   final VoidCallback? onNext;
   final VoidCallback? onReturnToMap;
 
@@ -32,7 +42,7 @@ class KidsGamifiedCompletionPage extends StatefulWidget {
 
 class _KidsGamifiedCompletionPageState
     extends State<KidsGamifiedCompletionPage> {
-  KidsJourneyMission? _nextMission;
+  KidsNextMission? _nextMission;
 
   @override
   void initState() {
@@ -40,24 +50,39 @@ class _KidsGamifiedCompletionPageState
     _loadNextMission();
   }
 
+  /// Resolves the next mission with the exact same SRS-first priority as the
+  /// kids home screen (due review → resume → linked review → new ayah), so
+  /// "Next" never contradicts the mission the child was shown on home. The
+  /// just-completed ayah is presumed completed before resolving (K5), which
+  /// both skips reopening it and keeps due reviews ahead of new memorization.
   Future<void> _loadNextMission() async {
-    final result = await getIt<MemorizationPlusRepository>().getKidsJourney(
+    final journeyResult = await getIt<MemorizationPlusRepository>().getKidsJourney(
       surahId: widget.surahId,
     );
+    final reviewResult = await getIt<MemorizationPlusRepository>()
+        .getAllReviewRecords(scope: ReviewRecordReadScope.kids);
     if (!mounted) return;
-    final mission = result.fold(
-      (_) => null,
-      KidsJourneyMissionResolver.nextMission,
+
+    final stages = journeyResult.getOrElse(() => const <KidsJourneyStage>[]);
+    final reviewRecords = reviewResult.getOrElse(() => const []);
+    final mission = const KidsNextMissionResolver().resolveSkippingAyah(
+      activeSurahId: widget.surahId,
+      stages: stages,
+      reviewRecords: reviewRecords,
+      now: DateTime.now().toUtc(),
+      justCompletedSurahId: widget.surahId,
+      justCompletedAyah: widget.completedAyahNumber,
     );
-    setState(() {
-      _nextMission = mission;
-    });
+    if (!mounted) return;
+    setState(() => _nextMission = mission);
   }
 
   @override
   Widget build(BuildContext context) {
     return KidsGamifiedCompletionContent(
       starsEarned: widget.starsEarned,
+      pointsEarned: widget.pointsEarned,
+      leveledUpTo: widget.leveledUpTo,
       showNextButton: _nextMission != null,
       onNext: widget.onNext ?? () => _openNextMission(context),
       onReturnToMap: widget.onReturnToMap ?? () => _returnToMap(context),
@@ -73,7 +98,8 @@ class _KidsGamifiedCompletionPageState
 
     context.pushReplacement(
       '${AppRoutes.memorizationPlusKids}?surahId=${mission.surahId}'
-      '&ayahNumber=${mission.ayahNumber}',
+      '&ayahNumber=${mission.startAyah}'
+      '&missionType=${mission.type.name}',
     );
   }
 
@@ -85,48 +111,20 @@ class _KidsGamifiedCompletionPageState
 }
 
 @visibleForTesting
-class KidsJourneyMission {
-  const KidsJourneyMission({required this.surahId, required this.ayahNumber});
-
-  final int surahId;
-  final int ayahNumber;
-}
-
-@visibleForTesting
-abstract final class KidsJourneyMissionResolver {
-  static KidsJourneyMission? nextMission(List<KidsJourneyStage> stages) {
-    KidsJourneyStage? stage;
-    for (final candidate in stages) {
-      if (candidate.status == KidsJourneyStageStatus.current) {
-        stage = candidate;
-        break;
-      }
-    }
-    for (final candidate in stages) {
-      if (stage == null &&
-          candidate.status == KidsJourneyStageStatus.needsReview) {
-        stage = candidate;
-      }
-    }
-    if (stage == null || !stage.isUnlocked) return null;
-    return KidsJourneyMission(
-      surahId: stage.surahId,
-      ayahNumber: stage.nextAyahToStart,
-    );
-  }
-}
-
-@visibleForTesting
 class KidsGamifiedCompletionContent extends StatelessWidget {
   const KidsGamifiedCompletionContent({
     super.key,
     required this.starsEarned,
+    this.pointsEarned = 0,
+    this.leveledUpTo,
     this.showNextButton = true,
     required this.onNext,
     required this.onReturnToMap,
   });
 
   final int starsEarned;
+  final int pointsEarned;
+  final int? leveledUpTo;
   final bool showNextButton;
   final VoidCallback onNext;
   final VoidCallback onReturnToMap;
@@ -142,6 +140,8 @@ class KidsGamifiedCompletionContent extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.lg),
               child: KidsRewardDialog(
                 starsEarned: starsEarned,
+                pointsEarned: pointsEarned,
+                leveledUpTo: leveledUpTo,
                 showNextButton: showNextButton,
                 onNext: onNext,
                 onReturnToMap: onReturnToMap,

@@ -158,6 +158,16 @@ extension TaliaLocalizationHelpers on BuildContext {
       }
     }
 
+    // K15 — daily session-limit gate: '@kids/daily_limit|<count>'.
+    if (message.startsWith(CubitMessageCodes.kidsDailySessionLimitPrefix)) {
+      final count = int.tryParse(
+        message.split('|').last,
+      );
+      if (count != null) {
+        return l10n.kidsGamifiedDailyLimitReached(count);
+      }
+    }
+
     return switch (message) {
       CubitMessageCodes.hifzAudioPlaybackFailed => l10n.hifzAudioPlaybackFailed,
       CubitMessageCodes.hifzReviewSaveFailed => l10n.hifzReviewSaveFailed,

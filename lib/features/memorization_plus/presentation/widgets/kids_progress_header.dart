@@ -150,37 +150,82 @@ class KidsProgressHeader extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
-              // Bottom Row / Section: Level & XP Bar + Star Counter
-              if (isCompact) ...[
-                _LevelProgressSection(
-                  level: progress.currentLevel,
-                  percentage: levelProgress,
-                  progressValue: progress.levelProgress,
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: _StarCounter(count: progress.starsEarned),
-                ),
-              ] else
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: _LevelProgressSection(
-                        level: progress.currentLevel,
-                        percentage: levelProgress,
-                        progressValue: progress.levelProgress,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    _StarCounter(count: progress.starsEarned),
-                  ],
-                ),
+              // K13: the inner sections receive plain values, so they are
+              // reusable without coupling callers to the progress entity.
+              _ProgressHeaderBody(
+                isCompact: isCompact,
+                level: progress.currentLevel,
+                levelPercentage: levelProgress,
+                levelProgressValue: progress.levelProgress,
+                starsEarned: progress.starsEarned,
+                streakDays: progress.currentStreak,
+              ),
             ],
           ),
         );
       },
+    );
+  }
+}
+
+/// K13 — level/XP bar, star counter, and streak badge laid out per the
+/// compact flag. Takes plain values only (never a progress entity), so it
+/// is reusable and trivially testable.
+class _ProgressHeaderBody extends StatelessWidget {
+  const _ProgressHeaderBody({
+    required this.isCompact,
+    required this.level,
+    required this.levelPercentage,
+    required this.levelProgressValue,
+    required this.starsEarned,
+    required this.streakDays,
+  });
+
+  final bool isCompact;
+  final int level;
+  final int levelPercentage;
+  final double levelProgressValue;
+  final int starsEarned;
+  final int streakDays;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (isCompact) ...[
+          _LevelProgressSection(
+            level: level,
+            percentage: levelPercentage,
+            progressValue: levelProgressValue,
+          ),
+          const SizedBox(height: AppSpacing.xs),
+          Align(
+            alignment: AlignmentDirectional.centerEnd,
+            child: _StarCounter(count: starsEarned),
+          ),
+        ] else
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: _LevelProgressSection(
+                  level: level,
+                  percentage: levelPercentage,
+                  progressValue: levelProgressValue,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.md),
+              _StarCounter(count: starsEarned),
+            ],
+          ),
+        // K12: the daily-consistency engine was invisible to kids —
+        // surface the streak right under the level/XP section.
+        if (streakDays > 0) ...[
+          const SizedBox(height: AppSpacing.sm),
+          _StreakBadge(days: streakDays),
+        ],
+      ],
     );
   }
 }
@@ -220,6 +265,56 @@ class _LevelProgressSection extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// K12 — compact daily-streak badge ("{count}-day streak" via homeStreakDays).
+class _StreakBadge extends StatelessWidget {
+  const _StreakBadge({required this.days});
+
+  final int days;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const ValueKey('kids-streak-badge'),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: 6,
+      ),
+      decoration: BoxDecoration(
+        color: KidsTheme.goldStar.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
+        border: Border.all(
+          color: KidsTheme.goldStar.withValues(alpha: 0.45),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.local_fire_department_rounded,
+            color: KidsTheme.goldStar,
+            size: 18,
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              context.l10n.homeStreakDays(days),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: AppTypography.labelMedium.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

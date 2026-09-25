@@ -393,6 +393,9 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
     final isRecording = state.isRecording;
     final loopsComplete = state.currentLoop >= state.maxLoops;
     final micDisabled = state.isCompleted || isRecording || !loopsComplete;
+    // K8: a listen-gated mic is never silent — the button area itself carries
+    // a persistent hint, instead of relying on a one-shot SnackBar.
+    final showListenFirstHint = !state.isCompleted && !isRecording && !loopsComplete;
     final showManualComplete =
         !state.isCompleted &&
         !isRecording &&
@@ -439,20 +442,31 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
                   seconds: state.recordingSeconds,
                   onDone: onStopRecording,
                 )
-              : FilledButton.icon(
-                  key: const ValueKey('kids-gamified-record-recitation-idle'),
-                  onPressed: micDisabled ? null : onRecordRecitation,
-                  icon: const Icon(Icons.mic_rounded),
-                  label: Text(context.l10n.kidsGamifiedRecordYourVoice),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: KidsTheme.forestGreen,
-                    foregroundColor: Colors.white,
-                    minimumSize: const Size.fromHeight(56),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: KidsTheme.buttonRadius,
+              : showListenFirstHint
+                  ? _ListenFirstMicHint(
+                      key: const ValueKey(
+                        'kids-gamified-record-recitation-idle',
+                      ),
+                      remainingListens: state.maxLoops - state.currentLoop,
+                      // Tapping the hint plays the audio (never records).
+                      onPlayPressed: onPlayPause,
+                    )
+                  : FilledButton.icon(
+                      key: const ValueKey(
+                        'kids-gamified-record-recitation-idle',
+                      ),
+                      onPressed: micDisabled ? null : onRecordRecitation,
+                      icon: const Icon(Icons.mic_rounded),
+                      label: Text(context.l10n.kidsGamifiedRecordYourVoice),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: KidsTheme.forestGreen,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(56),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: KidsTheme.buttonRadius,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
         ),
         if (showManualComplete) ...[
           const SizedBox(height: AppSpacing.md),
@@ -481,6 +495,40 @@ class _KidsGamifiedAudioControls extends StatelessWidget {
           ),
         ],
       ],
+    );
+  }
+}
+
+/// K8 — persistent listen-gate hint shown in place of the mic button while
+/// required listens are still pending. Tapping it plays the audio.
+class _ListenFirstMicHint extends StatelessWidget {
+  const _ListenFirstMicHint({
+    super.key,
+    required this.remainingListens,
+    required this.onPlayPressed,
+  });
+
+  final int remainingListens;
+  final VoidCallback onPlayPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      key: const ValueKey('kids-gamified-listen-first-hint'),
+      onPressed: onPlayPressed,
+      icon: const Icon(Icons.headphones_rounded),
+      label: Text(
+        context.l10n.kidsGamifiedListenFirst(remainingListens),
+        textAlign: TextAlign.center,
+      ),
+      style: OutlinedButton.styleFrom(
+        foregroundColor: KidsTheme.goldStar,
+        side: BorderSide(color: KidsTheme.goldStar.withValues(alpha: 0.5)),
+        minimumSize: const Size.fromHeight(56),
+        shape: const RoundedRectangleBorder(
+          borderRadius: KidsTheme.buttonRadius,
+        ),
+      ),
     );
   }
 }
@@ -663,11 +711,17 @@ Future<void> _navigateAfterKidsCompletion(
     await showCertificateCelebrationDialog(context, state.newAwards);
   }
   if (!context.mounted) return;
+  // K11: carry session points (and any level-up) to the completion screen.
+  final levelUpSegment = state.leveledUpTo == null
+      ? ''
+      : '&leveledUpTo=${state.leveledUpTo}';
   context.pushReplacement(
     '${AppRoutes.memorizationPlusKidsCompletion}'
     '?surahId=${state.surahId}'
     '&completedAyahNumber=${state.ayahNumber}'
-    '&starsEarned=${state.sessionStarsEarned}',
+    '&starsEarned=${state.sessionStarsEarned}'
+    '&pointsEarned=${state.sessionPointsEarned}'
+    '$levelUpSegment',
   );
 }
 

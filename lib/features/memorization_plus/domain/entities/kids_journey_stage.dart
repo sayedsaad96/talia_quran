@@ -24,11 +24,18 @@ class KidsJourneyStage extends Equatable {
   double get progress => totalAyahs <= 0 ? 0 : completedCount / totalAyahs;
   bool get isUnlocked => status != KidsJourneyStageStatus.locked;
 
-  /// The next ayah to start memorizing. If all ayahs are completed,
-  /// returns [startAyah] to allow reviewing from the beginning.
-  int get nextAyahToStart => completedAyahs.length >= totalAyahs
-      ? startAyah
-      : startAyah + completedAyahs.length;
+  /// The next ayah to start memorizing: the first ayah of the stage that is
+  /// not completed yet, so completion gaps are skipped instead of replaying
+  /// an already-memorized ayah. If all ayahs are completed, returns
+  /// [startAyah] to allow reviewing from the beginning.
+  int get nextAyahToStart {
+    if (completedAyahs.length >= totalAyahs) return startAyah;
+    final completed = completedAyahs.toSet();
+    for (var ayah = startAyah; ayah <= endAyah; ayah++) {
+      if (!completed.contains(ayah)) return ayah;
+    }
+    return startAyah;
+  }
 
   @override
   List<Object?> get props => [
@@ -39,4 +46,19 @@ class KidsJourneyStage extends Equatable {
     completedAyahs,
     status,
   ];
+
+  /// A copy of this stage with [ayahNumber] marked as completed. A no-op when
+  /// the ayah is already completed or belongs to another stage.
+  KidsJourneyStage copyWithAddedCompletedAyah(int ayahNumber) {
+    if (ayahNumber < startAyah || ayahNumber > endAyah) return this;
+    if (completedAyahs.contains(ayahNumber)) return this;
+    return KidsJourneyStage(
+      stageNumber: stageNumber,
+      surahId: surahId,
+      startAyah: startAyah,
+      endAyah: endAyah,
+      completedAyahs: [...completedAyahs, ayahNumber]..sort(),
+      status: status,
+    );
+  }
 }

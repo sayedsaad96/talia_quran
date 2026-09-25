@@ -2631,6 +2631,102 @@ abstract class AppLocalizations {
   /// **'حول تالية'**
   String get settingsSectionAboutTalia;
 
+  /// No description provided for @settingsBackgroundPlaybackTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'التشغيل في الخلفية'**
+  String get settingsBackgroundPlaybackTitle;
+
+  /// No description provided for @settingsBackgroundPlaybackSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تستمر التلاوة بعد مغادرة التطبيق، ويمكن التحكم بها من شريط الإشعارات.'**
+  String get settingsBackgroundPlaybackSubtitle;
+
+  /// No description provided for @settingsHubPractice.
+  ///
+  /// In ar, this message translates to:
+  /// **'الممارسة'**
+  String get settingsHubPractice;
+
+  /// No description provided for @settingsHubReminders.
+  ///
+  /// In ar, this message translates to:
+  /// **'التنبيهات'**
+  String get settingsHubReminders;
+
+  /// No description provided for @settingsHubSupport.
+  ///
+  /// In ar, this message translates to:
+  /// **'الدعم'**
+  String get settingsHubSupport;
+
+  /// No description provided for @settingsRemindersGeneral.
+  ///
+  /// In ar, this message translates to:
+  /// **'عام'**
+  String get settingsRemindersGeneral;
+
+  /// No description provided for @settingsRemindersMemorization.
+  ///
+  /// In ar, this message translates to:
+  /// **'تذكيرات الحفظ'**
+  String get settingsRemindersMemorization;
+
+  /// No description provided for @settingsRemindersWorship.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأذكار والعبادة'**
+  String get settingsRemindersWorship;
+
+  /// No description provided for @settingsRemindersProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'التقدم'**
+  String get settingsRemindersProgress;
+
+  /// No description provided for @notificationPermissionBlockedTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'إشعارات التطبيق معطلة في إعدادات الهاتف'**
+  String get notificationPermissionBlockedTitle;
+
+  /// No description provided for @notificationPermissionBlockedBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'لن تصلك تذكيرات المراجعة أو الأذكار حتى يتم السماح بالإشعارات من إعدادات النظام.'**
+  String get notificationPermissionBlockedBody;
+
+  /// No description provided for @notificationOpenSystemSettings.
+  ///
+  /// In ar, this message translates to:
+  /// **'فتح إعدادات الهاتف'**
+  String get notificationOpenSystemSettings;
+
+  /// No description provided for @notificationStatusBlocked.
+  ///
+  /// In ar, this message translates to:
+  /// **'أذونات الإشعارات معطلة في إعدادات النظام'**
+  String get notificationStatusBlocked;
+
+  /// No description provided for @notificationStatusSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'{enabled} من {total} تذكيرات مفعّلة'**
+  String notificationStatusSummary(int enabled, int total);
+
+  /// No description provided for @notificationTestInteractiveTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'تجربة الإشعارات'**
+  String get notificationTestInteractiveTitle;
+
+  /// No description provided for @notificationTestInteractiveSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أرسل إشعارًا تجريبيًا للتأكد أن التنبيهات تعمل'**
+  String get notificationTestInteractiveSubtitle;
+
   /// No description provided for @settingsGuestStatusTitle.
   ///
   /// In ar, this message translates to:
@@ -3877,6 +3973,12 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'هذا البيت مغلق الآن'**
   String get kidsGamifiedLockedStage;
+
+  /// No description provided for @kidsGamifiedDailyLimitReached.
+  ///
+  /// In ar, this message translates to:
+  /// **'أنجزت مهام اليوم، ما شاء الله! عُد غداً لبيت جديد.'**
+  String kidsGamifiedDailyLimitReached(int count);
 
   /// No description provided for @kidsGamifiedCurrentStage.
   ///
@@ -6268,14 +6370,80 @@ abstract class AppLocalizations {
   /// No description provided for @notificationSettingsPrayerAthan.
   ///
   /// In ar, this message translates to:
-  /// **'صوت الأذان'**
+  /// **'الأذان الكامل'**
   String get notificationSettingsPrayerAthan;
 
   /// No description provided for @notificationSettingsPrayerAthanSub.
   ///
   /// In ar, this message translates to:
-  /// **'تشغيل مقطع الأذان المرفق بدل صوت التنبيه الافتراضي'**
+  /// **'تشغيل الأذان الكامل عند دخول وقت الصلاة مع إمكانية إيقافه'**
   String get notificationSettingsPrayerAthanSub;
+
+  /// No description provided for @muezzinPickerTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختيار المؤذن'**
+  String get muezzinPickerTitle;
+
+  /// No description provided for @muezzinPickerSubtitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر صوت الأذان المفضل لديك، واستمع لمعاينة قبل الحفظ'**
+  String get muezzinPickerSubtitle;
+
+  /// No description provided for @muezzinDefault.
+  ///
+  /// In ar, this message translates to:
+  /// **'الأذان الافتراضي'**
+  String get muezzinDefault;
+
+  /// No description provided for @muezzinPickerSave.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ'**
+  String get muezzinPickerSave;
+
+  /// No description provided for @muezzinPreviewPlay.
+  ///
+  /// In ar, this message translates to:
+  /// **'معاينة'**
+  String get muezzinPreviewPlay;
+
+  /// No description provided for @muezzinPreviewStop.
+  ///
+  /// In ar, this message translates to:
+  /// **'إيقاف المعاينة'**
+  String get muezzinPreviewStop;
+
+  /// No description provided for @muezzinFajrSectionTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'أذان الفجر'**
+  String get muezzinFajrSectionTitle;
+
+  /// No description provided for @muezzinFajrSameAsGeneral.
+  ///
+  /// In ar, this message translates to:
+  /// **'مثل باقي الصلوات'**
+  String get muezzinFajrSameAsGeneral;
+
+  /// No description provided for @muezzinFajrBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'فجر'**
+  String get muezzinFajrBadge;
+
+  /// No description provided for @muezzinFajrSummary.
+  ///
+  /// In ar, this message translates to:
+  /// **'{general} للصلوات، و{fajr} للفجر'**
+  String muezzinFajrSummary(String general, String fajr);
+
+  /// No description provided for @notificationSettingsPrayerNeedsTimes.
+  ///
+  /// In ar, this message translates to:
+  /// **'فعّل مواقيت الصلاة أولًا'**
+  String get notificationSettingsPrayerNeedsTimes;
 
   /// No description provided for @homeTourTitle.
   ///
@@ -8022,6 +8190,120 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'محاولات'**
   String get v2Retries;
+
+  /// No description provided for @v2ResultExcellent.
+  ///
+  /// In ar, this message translates to:
+  /// **'أحسنت! تسميع متقن'**
+  String get v2ResultExcellent;
+
+  /// No description provided for @v2ResultPassed.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم اجتياز الآية'**
+  String get v2ResultPassed;
+
+  /// No description provided for @v2ResultRetrying.
+  ///
+  /// In ar, this message translates to:
+  /// **'اقتربت! حاول مرة أخرى'**
+  String get v2ResultRetrying;
+
+  /// No description provided for @v2ResultNeedsWork.
+  ///
+  /// In ar, this message translates to:
+  /// **'يلزم مراجعة الآية'**
+  String get v2ResultNeedsWork;
+
+  /// No description provided for @v2ResultSimilarity.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسبة التطابق: {score}%'**
+  String v2ResultSimilarity(int score);
+
+  /// No description provided for @v2ResultManualGrade.
+  ///
+  /// In ar, this message translates to:
+  /// **'تم تقييم التسميع ذاتيًا'**
+  String get v2ResultManualGrade;
+
+  /// No description provided for @v2ResultContinue.
+  ///
+  /// In ar, this message translates to:
+  /// **'متابعة'**
+  String get v2ResultContinue;
+
+  /// No description provided for @v2ResultRetryNow.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعد التسميع الآن'**
+  String get v2ResultRetryNow;
+
+  /// No description provided for @v2ResultReviewAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'راجع الآية'**
+  String get v2ResultReviewAyah;
+
+  /// No description provided for @v2ResultWordsCorrect.
+  ///
+  /// In ar, this message translates to:
+  /// **'صحيحة'**
+  String get v2ResultWordsCorrect;
+
+  /// No description provided for @v2ResultWordsMissing.
+  ///
+  /// In ar, this message translates to:
+  /// **'ناقصة'**
+  String get v2ResultWordsMissing;
+
+  /// No description provided for @v2ResultWordsWrong.
+  ///
+  /// In ar, this message translates to:
+  /// **'خاطئة'**
+  String get v2ResultWordsWrong;
+
+  /// No description provided for @v2ResultWordsExtra.
+  ///
+  /// In ar, this message translates to:
+  /// **'زيادة'**
+  String get v2ResultWordsExtra;
+
+  /// No description provided for @v2LoopOff.
+  ///
+  /// In ar, this message translates to:
+  /// **'تكرار: بدون'**
+  String get v2LoopOff;
+
+  /// No description provided for @v2LoopThree.
+  ///
+  /// In ar, this message translates to:
+  /// **'تكرار: 3 مرات'**
+  String get v2LoopThree;
+
+  /// No description provided for @v2LoopInfinite.
+  ///
+  /// In ar, this message translates to:
+  /// **'تكرار: مستمر'**
+  String get v2LoopInfinite;
+
+  /// No description provided for @v2MaskedWordsHint.
+  ///
+  /// In ar, this message translates to:
+  /// **'إظهار الكلمات مخفية'**
+  String get v2MaskedWordsHint;
+
+  /// No description provided for @v2MaskedWordsRevealed.
+  ///
+  /// In ar, this message translates to:
+  /// **'الكلمات مخفية — حاول التذكر'**
+  String get v2MaskedWordsRevealed;
+
+  /// No description provided for @v2MaskedWordsFull.
+  ///
+  /// In ar, this message translates to:
+  /// **'إخفاء الكلمات'**
+  String get v2MaskedWordsFull;
 
   /// No description provided for @v2SurahLoadFailed.
   ///
@@ -9880,8 +10162,14 @@ abstract class AppLocalizations {
   /// No description provided for @notificationExactAlarmRequest.
   ///
   /// In ar, this message translates to:
-  /// **'تحسين دقة مواقيت الصلاة'**
+  /// **'تفعيل التنبيهات الدقيقة'**
   String get notificationExactAlarmRequest;
+
+  /// No description provided for @notificationExactAlarmExplanation.
+  ///
+  /// In ar, this message translates to:
+  /// **'تضمن وصول تنبيه الصلاة والأذان في وقتهما بالضبط'**
+  String get notificationExactAlarmExplanation;
 
   /// No description provided for @notificationExactAlarmGranted.
   ///
@@ -9892,7 +10180,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationExactAlarmDenied.
   ///
   /// In ar, this message translates to:
-  /// **'قد تصل التنبيهات متأخرة قليلًا حتى تمنح إذن المنبهات الدقيقة من إعدادات الهاتف.'**
+  /// **'ستصلك التنبيهات في وقتها تقريبًا بالوضع العادي، ويمكنك تفعيل الدقة الكاملة لاحقًا من إعدادات الهاتف.'**
   String get notificationExactAlarmDenied;
 
   /// No description provided for @notificationTestFailed.
@@ -9936,6 +10224,72 @@ abstract class AppLocalizations {
   /// In ar, this message translates to:
   /// **'يستخدم أوقات فتحك الأخيرة على الجهاز لاختيار وقت التذكير.'**
   String get notificationSmartReminderSub;
+
+  /// No description provided for @memorizationHubReviewDueBadge.
+  ///
+  /// In ar, this message translates to:
+  /// **'{count} آية مستحقة للمراجعة'**
+  String memorizationHubReviewDueBadge(int count);
+
+  /// No description provided for @memorizationHubReviewDueNone.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا مراجعات مستحقة الآن'**
+  String get memorizationHubReviewDueNone;
+
+  /// No description provided for @dailyPlanNextReviewInDays.
+  ///
+  /// In ar, this message translates to:
+  /// **'المراجعة القادمة بعد {count, plural, =0{اليوم} =1{يوم} other{{count} أيام}}'**
+  String dailyPlanNextReviewInDays(int count);
+
+  /// No description provided for @dailyPlanStrengthWeak.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ ضعيف'**
+  String get dailyPlanStrengthWeak;
+
+  /// No description provided for @dailyPlanStrengthLearning.
+  ///
+  /// In ar, this message translates to:
+  /// **'قيد الترسيت'**
+  String get dailyPlanStrengthLearning;
+
+  /// No description provided for @dailyPlanStrengthStrong.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ متين'**
+  String get dailyPlanStrengthStrong;
+
+  /// No description provided for @memorizedPageAction.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ هذه الصفحة'**
+  String get memorizedPageAction;
+
+  /// No description provided for @memorizedPageSubtext.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ جلسة حفظ لآيات الصفحة الحالية'**
+  String get memorizedPageSubtext;
+
+  /// No description provided for @memorizedPageUnavailable.
+  ///
+  /// In ar, this message translates to:
+  /// **'حفظ الصفحة متاح عندما تنتمي كل آياتها لسورة واحدة.'**
+  String get memorizedPageUnavailable;
+
+  /// No description provided for @customPlanDirectionForward.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتجاه الحفظ: تصاعدي (من {from} إلى {to})'**
+  String customPlanDirectionForward(String from, String to);
+
+  /// No description provided for @customPlanDirectionBackward.
+  ///
+  /// In ar, this message translates to:
+  /// **'اتجاه الحفظ: تنازلي (من {from} إلى {to})'**
+  String customPlanDirectionBackward(String from, String to);
 }
 
 class _AppLocalizationsDelegate

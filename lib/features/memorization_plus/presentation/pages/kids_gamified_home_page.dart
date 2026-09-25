@@ -9,6 +9,7 @@ import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../domain/entities/memorization_entities.dart';
 import '../../domain/navigation/kids_next_mission_resolver.dart';
 import '../cubits/kids_journey_cubit.dart';
 import '../theme/kids_theme.dart';
@@ -175,13 +176,33 @@ class KidsGamifiedHomeContent extends StatelessWidget {
                         onSettingsTap: onPathSettingsTap,
                       ),
                       const SizedBox(height: AppSpacing.xl),
-                      KidsMissionCard(
-                        stage: state.currentStage,
-                        surahName:
-                            state.surahName ??
-                            '${context.l10n.surah} ${state.surahId}',
-                        onContinue: onMissionTap,
-                      ),
+                      if (state.currentStage == null &&
+                          state.nextMission == null &&
+                          // Real progress separates a finished journey from a
+                          // first-time child who has not started yet.
+                          state.progress.ayahsCompleted > 0) ...[
+                        // No stage and no mission after real progress: the
+                        // journey is finished — celebrate instead of a CTA.
+                        EmptyStateWidget(
+                          message: context.l10n.kidsGamifiedJourneyComplete,
+                          icon: Icons.emoji_events_rounded,
+                        ),
+                      ] else ...[
+                        KidsMissionCard(
+                          stage: state.currentStage,
+                          surahName:
+                              state.surahName ??
+                              '${context.l10n.surah} ${state.surahId}',
+                          onContinue: onMissionTap,
+                          // A due SRS review or linked stage review is today's
+                          // task, so the card says "Ready for review".
+                          isReviewMission:
+                              state.nextMission?.type ==
+                                  KidsMissionType.dueReview ||
+                              state.nextMission?.type ==
+                                  KidsMissionType.linkedReview,
+                        ),
+                      ],
                       const SizedBox(height: 96),
                     ],
                   ),

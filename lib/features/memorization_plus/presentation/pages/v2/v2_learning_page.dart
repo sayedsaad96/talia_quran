@@ -33,6 +33,9 @@ class V2LearningPage extends StatelessWidget {
           isPlaying: state.isPlaying,
           onPressed: () =>
               context.read<MemorizationSessionCubit>().playCurrentAyah(),
+          loopMode: state.audioLoopMode,
+          onCycleLoop: () =>
+              context.read<MemorizationSessionCubit>().cycleAudioLoopMode(),
         ),
       ],
     );

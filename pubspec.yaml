@@ -70,10 +70,6 @@ dependencies:
   package_info_plus: ^10.1.0
   hijri: ^3.0.0
   adhan: ^2.0.0+1
-  # Athan notification sound only: the package bundles adhan.mp3 (Android
-  # res/raw) and adhan.caf (iOS bundle). Its scheduler is NOT used; Talia keeps
-  # its own PrayerTimesService + flutter_local_notifications pipeline.
-  awqat: ^0.1.14
 
 
 dev_dependencies:

@@ -3,6 +3,21 @@ import 'app_colors.dart';
 import '../constants/app_spacing.dart';
 
 abstract class AppDecorations {
+  /// Shared header gradient for memorization feature pages (hub, practice
+  /// picker, plan setup). Centralizes the duplicated gradients so all entry
+  /// headers stay visually identical in both themes.
+  static LinearGradient memorizationHeader({required bool isDark}) =>
+      isDark
+          ? const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF0A2A22), Color(0xFF0D1117)],
+            )
+          : const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.primaryLight, AppColors.accentBlue],
+            );
   static BoxDecoration card({
     required bool isDark,
     double radius = AppSpacing.radiusLg,

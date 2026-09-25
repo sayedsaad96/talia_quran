@@ -69,6 +69,10 @@ class HomeNightHeader extends StatelessWidget {
                       : getIt<PrayerCompanionController>(),
                   onCompanionChanged: () =>
                       unawaited(context.read<HomeCubit>().load()),
+                  // V2 §32: when the live countdown hits zero, reload the
+                  // snapshot once to advance to the next prayer.
+                  onSnapshotStale: () =>
+                      unawaited(context.read<HomeCubit>().load()),
                 ),
               ],
             ],

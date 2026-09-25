@@ -12,11 +12,17 @@ class KidsMissionCard extends StatelessWidget {
     required this.stage,
     this.surahName,
     this.onContinue,
+    this.isReviewMission = false,
   });
 
   final KidsJourneyStage? stage;
   final String? surahName;
   final VoidCallback? onContinue;
+
+  /// Whether the resolved next mission is a review task (due SRS review or
+  /// linked stage review) rather than new memorization, so the card titles it
+  /// "Ready for review" instead of "Last mission".
+  final bool isReviewMission;
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +56,13 @@ class KidsMissionCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          context.l10n.kidsGamifiedLastMission,
+          // Review missions (due SRS or linked review) are today's task, not
+          // yesterday's — never label a due review as the "last" mission.
+          isReviewMission
+              ? context.l10n.kidsGamifiedNeedsReview
+              : context.l10n.kidsGamifiedLastMission,
           style: AppTypography.labelMedium.copyWith(
-            color: KidsTheme.forestGreen,
+            color: isReviewMission ? KidsTheme.reviewPurple : KidsTheme.forestGreen,
             letterSpacing: 0,
           ),
         ),

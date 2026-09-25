@@ -18,6 +18,10 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
   final TaliaNotificationService _notificationService;
   final NotificationScheduler? _scheduler;
 
+  /// Read-only access for widgets that need to read a preference that is
+  /// not part of [NotificationSettingsState] (e.g. muezzin selection).
+  SharedPreferences get prefs => _prefs;
+
   /// Loads all notification settings from persistent preferences and OS permission state.
   Future<void> load() async {
     emit(state.copyWith(isLoading: true));
@@ -234,6 +238,30 @@ class NotificationSettingsCubit extends Cubit<NotificationSettingsState> {
     };
 
     emit(updatedState);
+    await _reschedule(l10n);
+  }
+
+  /// Updates the selected muezzin for the full adhan playback and
+  /// reschedules prayer events so the new clip applies within seconds —
+  /// without waiting for the next rolling-window refresh.
+  Future<void> setMuezzin(
+    String muezzinId, {
+    AppLocalizations? l10n,
+  }) async {
+    await _prefs.setString(TaliaNotificationService.prayerMuezzinKey, muezzinId);
+    await _reschedule(l10n);
+  }
+
+  /// Updates the Fajr-only muezzin override. An empty [fajrMuezzinId]
+  /// clears the override (fajr uses the general muezzin).
+  Future<void> setFajrMuezzin(
+    String fajrMuezzinId, {
+    AppLocalizations? l10n,
+  }) async {
+    await _prefs.setString(
+      TaliaNotificationService.prayerMuezzinFajrKey,
+      fajrMuezzinId,
+    );
     await _reschedule(l10n);
   }
 

@@ -17,23 +17,41 @@ void main() {
   late MockFlutterLocalNotificationsPlugin plugin;
   late TaliaNotificationService service;
 
-  PrayerOccurrence occurrenceFor(PrayerKey prayerKey) => PrayerOccurrence(
-    ownerId: 'local',
-    localDate: DateTime(2026, 9, 20),
-    prayerKey: prayerKey,
-    scheduledAt: DateTime(2026, 9, 20, 12, 0),
-  );
+  PrayerOccurrence occurrenceFor(PrayerKey prayerKey) {
+    final now = DateTime.now();
+    final scheduledAt = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      now.minute,
+      now.second,
+    ).add(const Duration(minutes: 10));
+    return PrayerOccurrence(
+      ownerId: 'local',
+      localDate: DateTime(
+        scheduledAt.year,
+        scheduledAt.month,
+        scheduledAt.day,
+      ),
+      prayerKey: prayerKey,
+      scheduledAt: scheduledAt,
+    );
+  }
 
   ScheduledPrayerCompanionNotification reminder({
     required int id,
     required PrayerCompanionNotificationKind kind,
     PrayerKey prayerKey = PrayerKey.dhuhr,
-  }) => ScheduledPrayerCompanionNotification(
-    id: id,
-    kind: kind,
-    occurrence: occurrenceFor(prayerKey),
-    scheduledAt: DateTime(2026, 9, 20, 12, 20),
-  );
+  }) {
+    final occurrence = occurrenceFor(prayerKey);
+    return ScheduledPrayerCompanionNotification(
+      id: id,
+      kind: kind,
+      occurrence: occurrence,
+      scheduledAt: occurrence.scheduledAt.add(const Duration(minutes: 20)),
+    );
+  }
 
   setUpAll(() {
     tz_data.initializeTimeZones();

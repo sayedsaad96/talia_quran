@@ -13,6 +13,7 @@ void main() {
       expect(policy.journeyStageSize, 3);
       expect(policy.blockReviewRequired, isFalse);
       expect(policy.guidanceAudioDefault, isTrue);
+      expect(policy.maxListenRepetitions, 1);
     });
 
     test('ages eight to twelve require linked review and a larger stage', () {
@@ -26,6 +27,7 @@ void main() {
       expect(policy.blockReviewRequired, isTrue);
       expect(policy.linkedReviewAyahs, 3);
       expect(policy.guidanceAudioDefault, isFalse);
+      expect(policy.maxListenRepetitions, 2);
     });
 
     test('rejects ages outside the supported child path', () {

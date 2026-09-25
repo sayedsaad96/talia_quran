@@ -68,7 +68,9 @@ final class KidsNextMissionResolver {
       return KidsNextMission(
         type: KidsMissionType.newMemorization,
         surahId: stage.surahId,
-        ayahNumbers: [_firstIncompleteAyah(stage)],
+        // Single source of truth: the entity's gap-aware next-ayah rule
+        // (K4), so home, stage page, and completion agree by construction.
+        ayahNumbers: [stage.nextAyahToStart],
       );
     }
 
@@ -83,12 +85,33 @@ final class KidsNextMissionResolver {
     return null;
   }
 
-  static int _firstIncompleteAyah(KidsJourneyStage stage) {
-    final completed = stage.completedAyahs.toSet();
-    for (var ayah = stage.startAyah; ayah <= stage.endAyah; ayah++) {
-      if (!completed.contains(ayah)) return ayah;
-    }
-    return stage.startAyah;
+  /// Resolves the next mission right after the child completed one ayah, used
+  /// by the completion screen. Re-runs the exact same SRS-first pipeline with
+  /// that ayah presumed completed, so due reviews (K5) keep their priority and
+  /// the just-completed ayah is never reopened.
+  KidsNextMission? resolveSkippingAyah({
+    required int activeSurahId,
+    required List<KidsJourneyStage> stages,
+    KidsNextMission? resumableMission,
+    required List<AyahReviewRecord> reviewRecords,
+    required DateTime now,
+    required int justCompletedSurahId,
+    required int justCompletedAyah,
+  }) {
+    final adjustedStages = stages
+        .map(
+          (stage) => stage.surahId == justCompletedSurahId
+              ? stage.copyWithAddedCompletedAyah(justCompletedAyah)
+              : stage,
+        )
+        .toList(growable: false);
+    return resolve(
+      activeSurahId: activeSurahId,
+      stages: adjustedStages,
+      resumableMission: resumableMission,
+      reviewRecords: reviewRecords,
+      now: now,
+    );
   }
 
   static List<int> _completedOrRange(KidsJourneyStage stage) {

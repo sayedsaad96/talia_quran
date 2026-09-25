@@ -459,22 +459,152 @@ class V2AudioAction extends StatelessWidget {
     super.key,
     required this.isPlaying,
     required this.onPressed,
+    this.loopMode = V2AudioLoopMode.off,
+    this.onCycleLoop,
   });
 
   final bool isPlaying;
   final VoidCallback onPressed;
+  final V2AudioLoopMode loopMode;
+  final VoidCallback? onCycleLoop;
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: onPressed,
-      icon: Icon(
-        isPlaying ? Icons.volume_up_rounded : Icons.play_arrow_rounded,
-      ),
-      label: Text(
-        isPlaying ? context.l10n.v2Playing : context.l10n.v2ListenToAyah,
+    final loopLabel = switch (loopMode) {
+      V2AudioLoopMode.off => context.l10n.v2LoopOff,
+      V2AudioLoopMode.threeTimes => context.l10n.v2LoopThree,
+      V2AudioLoopMode.endless => context.l10n.v2LoopInfinite,
+    };
+
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: onPressed,
+            icon: Icon(
+              isPlaying ? Icons.volume_up_rounded : Icons.play_arrow_rounded,
+            ),
+            label: Text(
+              isPlaying ? context.l10n.v2Playing : context.l10n.v2ListenToAyah,
+            ),
+          ),
+        ),
+        if (onCycleLoop != null) ...[
+          const SizedBox(width: AppSpacing.sm),
+          IconButton.outlined(
+            key: const Key('v2-audio-loop-toggle'),
+            tooltip: loopLabel,
+            onPressed: onCycleLoop,
+            style: IconButton.styleFrom(
+              side: BorderSide(
+                color: loopMode == V2AudioLoopMode.off
+                    ? Theme.of(context).colorScheme.outline.withValues(alpha: 0.4)
+                    : Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            icon: Badge(
+              isLabelVisible: loopMode != V2AudioLoopMode.off,
+              label: Text(
+                switch (loopMode) {
+                  V2AudioLoopMode.threeTimes => '3',
+                  _ => '∞',
+                },
+              ),
+              child: Icon(
+                loopMode == V2AudioLoopMode.off
+                    ? Icons.repeat_rounded
+                    : Icons.repeat_on_rounded,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ─── Masked-words hint card ─────────────────────────────────────────────────
+
+/// Middle reveal step between first-word and full-ayah hints: the ayah is
+/// rendered with every word masked to its first letter, training recall
+/// before the learner commits to seeing the whole verse.
+class V2MaskedWordsCard extends StatelessWidget {
+  const V2MaskedWordsCard({
+    super.key,
+    required this.text,
+    required this.revealed,
+    required this.onToggle,
+  });
+
+  final String text;
+  final bool revealed;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = context.isDark;
+    final hintColor =
+        isDark ? AppColors.darkTextHint : AppColors.lightTextHint;
+
+    return V2PhaseCard(
+      child: revealed
+          ? Text(
+              text,
+              textAlign: TextAlign.center,
+              style: AppTypography.quranLarge,
+            )
+          : Wrap(
+              spacing: AppSpacing.sm,
+              runSpacing: AppSpacing.sm,
+              alignment: WrapAlignment.center,
+              textDirection: TextDirection.rtl,
+              children: [
+                for (final word in _words)
+                  Text(
+                    _mask(word),
+                    textAlign: TextAlign.center,
+                    style: AppTypography.quranLarge.copyWith(
+                      color: hintColor,
+                      letterSpacing: 2,
+                    ),
+                  ),
+              ],
+            ),
+      footer: Column(
+        children: [
+          Text(
+            revealed
+                ? context.l10n.v2MaskedWordsFull
+                : context.l10n.v2MaskedWordsRevealed,
+            textAlign: TextAlign.center,
+          ),
+          TextButton.icon(
+            key: const Key('v2-masked-words-toggle'),
+            onPressed: onToggle,
+            icon: Icon(
+              revealed
+                  ? Icons.visibility_off_rounded
+                  : Icons.visibility_rounded,
+              size: 16,
+            ),
+            label: Text(
+              revealed
+                  ? context.l10n.v2MaskedWordsFull
+                  : context.l10n.v2MaskedWordsHint,
+            ),
+          ),
+        ],
       ),
     );
+  }
+
+  List<String> get _words =>
+      text.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+
+  /// Masks a word to its first letter plus tashkeel-free dot placeholders.
+  static String _mask(String word) {
+    if (word.isEmpty) return word;
+    return '${word.characters.first}${'•' * (word.characters.length - 1).clamp(0, 6)}';
   }
 }
 

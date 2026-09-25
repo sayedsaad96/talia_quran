@@ -20,6 +20,7 @@ import '../../../../core/constants/speech_constants.dart';
 import '../../../../core/l10n/cubit_message_codes.dart';
 import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/memorization/v2/hint_usage.dart';
+import '../../../../core/memorization/v2/recitation_word_diff.dart';
 import '../../../../core/memorization/v2/review_effect_outbox_processor.dart';
 import '../../../../core/memorization/v2/review_outcome_committer.dart';
 import '../../../../core/memorization/v2/recitation_evaluator.dart';
@@ -73,6 +74,8 @@ class MSActive extends MemorizationSessionState {
     this.speechIssue,
     this.persistenceIssue,
     this.audioFailed = false,
+    this.lastEvaluation,
+    this.audioLoopMode = V2AudioLoopMode.off,
   });
 
   final V2SessionState sessionState;
@@ -88,6 +91,15 @@ class MSActive extends MemorizationSessionState {
   final String? persistenceIssue;
   final bool audioFailed;
 
+  /// Presentation-only snapshot of the most recent recitation evaluation,
+  /// captured before the engine transition (a pass deliberately clears the
+  /// engine's transient result while moving on). The result sheet and the
+  /// word diff render from this; it never feeds back into domain logic.
+  final V2EvaluationFeedback? lastEvaluation;
+
+  /// Learner-selected repeat mode for the current ayah's audio.
+  final V2AudioLoopMode audioLoopMode;
+
   MSActive copyWith({
     V2SessionState? sessionState,
     bool? isRecording,
@@ -100,6 +112,9 @@ class MSActive extends MemorizationSessionState {
     String? persistenceIssue,
     bool clearPersistenceIssue = false,
     bool? audioFailed,
+    V2EvaluationFeedback? lastEvaluation,
+    bool clearLastEvaluation = false,
+    V2AudioLoopMode? audioLoopMode,
   }) {
     return MSActive(
       sessionState: sessionState ?? this.sessionState,
@@ -114,6 +129,10 @@ class MSActive extends MemorizationSessionState {
           ? null
           : (persistenceIssue ?? this.persistenceIssue),
       audioFailed: audioFailed ?? this.audioFailed,
+      lastEvaluation: clearLastEvaluation
+          ? null
+          : (lastEvaluation ?? this.lastEvaluation),
+      audioLoopMode: audioLoopMode ?? this.audioLoopMode,
     );
   }
 
@@ -127,7 +146,36 @@ class MSActive extends MemorizationSessionState {
     speechIssue,
     persistenceIssue,
     audioFailed,
+    lastEvaluation,
+    audioLoopMode,
   ];
+}
+
+/// Immutable, presentation-only feedback for the most recent recitation
+/// attempt. Carries the engine's [result] plus the word-level diff so the
+/// result sheet can render a colour-coded comparison.
+final class V2EvaluationFeedback extends Equatable {
+  const V2EvaluationFeedback({
+    required this.result,
+    required this.wordDiff,
+  });
+
+  final V2RecitationResult result;
+  final RecitationWordDiffResult wordDiff;
+
+  @override
+  List<Object?> get props => [result, wordDiff];
+}
+
+/// Learner-controlled audio loop mode for the current ayah.
+enum V2AudioLoopMode { off, threeTimes, endless }
+
+extension V2AudioLoopModeX on V2AudioLoopMode {
+  int? get repeatCount => switch (this) {
+    V2AudioLoopMode.off => 1,
+    V2AudioLoopMode.threeTimes => 3,
+    V2AudioLoopMode.endless => null,
+  };
 }
 
 class MSCompleted extends MemorizationSessionState {
@@ -183,7 +231,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     _playerStateSub = _player.playerStateStream.listen((playerState) {
       if (playerState.processingState == ProcessingState.completed) {
         if (state is MSActive) {
-          emit((state as MSActive).copyWith(isPlaying: false));
+          unawaited(_handlePlaybackCompleted());
         }
       }
     });
@@ -249,6 +297,11 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   final AudioPlayer _player;
   final AudioCacheService _audioCache;
   StreamSubscription<PlayerState>? _playerStateSub;
+
+  /// Remaining repeats for the current loop request; null = endless.
+  int? _loopRemaining;
+  int? _loopSurahId;
+  int? _loopAyahNumber;
 
   // ── Session lifecycle ────────────────────────────────────────────────────
 
@@ -423,7 +476,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   Future<void> advanceToMemorizing() async {
     _assertActive();
     _sessionState = _engine.startMemorizing(_sessionState!);
-    _emitActive();
+    _emitActive(clearLastEvaluation: true);
     await _saveProgress(_sessionState!);
   }
 
@@ -434,6 +487,18 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if ((state as MSActive).isPlaying) await stopAudio();
     _sessionState = _engine.startReciting(_sessionState!);
     _emitActive(clearRecognizedText: true);
+    await _saveProgress(_sessionState!);
+  }
+
+  /// Result-sheet "recite again" path: from remediation straight back into
+  /// the reciting phase without a full memorizing detour (already covered by
+  /// [V2SessionEngine.startReciting], which allows remediation → reciting).
+  Future<void> retryRecitationFromRemediation() async {
+    _assertActive();
+    if (_sessionState!.phase != V2SessionPhase.remediation) return;
+    if ((state as MSActive).isPlaying) await stopAudio();
+    _sessionState = _engine.startReciting(_sessionState!);
+    _emitActive(clearRecognizedText: true, clearLastEvaluation: true);
     await _saveProgress(_sessionState!);
   }
 
@@ -559,6 +624,9 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     if (st.isPlaying) await stopAudio();
 
     final ayah = st.sessionState.currentAyah;
+    _loopSurahId = st.sessionState.surahId;
+    _loopAyahNumber = ayah.numberInSurah;
+    _loopRemaining = (st.audioLoopMode.repeatCount ?? 1) - 1;
     try {
       final audioSource = await _audioCache.getAudioSource(
         st.sessionState.surahId,
@@ -574,9 +642,77 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
     }
   }
 
+  /// Cycles the learner's loop preference: off → 3× → endless → off.
+  ///
+  /// Changes apply from the next play request; the current playback finishes
+  /// its pass undisturbed (audio-layer only, no session semantics).
+  Future<void> cycleAudioLoopMode() async {
+    _assertActive();
+    final st = state as MSActive;
+    final next = switch (st.audioLoopMode) {
+      V2AudioLoopMode.off => V2AudioLoopMode.threeTimes,
+      V2AudioLoopMode.threeTimes => V2AudioLoopMode.endless,
+      V2AudioLoopMode.endless => V2AudioLoopMode.off,
+    };
+    emit(st.copyWith(audioLoopMode: next));
+  }
+
+
+  /// Replays the current ayah when a loop mode is active.
+  Future<void> _handlePlaybackCompleted() async {
+    final st = state is MSActive ? state as MSActive : null;
+    if (st == null) {
+      _loopRemaining = null;
+      return;
+    }
+
+    final mode = st.audioLoopMode;
+    final surahId = st.sessionState.surahId;
+    final ayahNumber = st.sessionState.currentAyah.numberInSurah;
+
+    // Ayah changed since the play request — drop pending repeats.
+    if (_loopSurahId != surahId || _loopAyahNumber != ayahNumber) {
+      _loopRemaining = null;
+      emit(st.copyWith(isPlaying: false));
+      return;
+    }
+
+    if (mode == V2AudioLoopMode.off) {
+      _loopRemaining = null;
+      emit(st.copyWith(isPlaying: false));
+      return;
+    }
+
+    if (mode == V2AudioLoopMode.threeTimes) {
+      final remaining = _loopRemaining ?? 0;
+      if (remaining <= 0) {
+        _loopRemaining = null;
+        emit(st.copyWith(isPlaying: false));
+        return;
+      }
+      _loopRemaining = remaining - 1;
+    }
+
+    try {
+      final audioSource = await _audioCache.getAudioSource(surahId, ayahNumber);
+      await AudioCacheService.playFromSource(_player, audioSource);
+      if (state is MSActive) {
+        emit((state as MSActive).copyWith(isPlaying: true));
+      }
+    } catch (e, stack) {
+      TaliaLogger.e('V2: Failed to loop ayah audio', e, stack);
+      _loopRemaining = null;
+      if (state is MSActive) {
+        emit((state as MSActive).copyWith(isPlaying: false, audioFailed: true));
+      }
+    }
+  }
+
+
   /// Stops audio playback.
   Future<void> stopAudio() async {
     await _player.stop();
+    _loopRemaining = null;
     if (state is MSActive) {
       emit((state as MSActive).copyWith(isPlaying: false));
     }
@@ -618,6 +754,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
   void _emitActive({
     bool clearRecognizedText = false,
     bool clearSpeechIssue = false,
+    bool clearLastEvaluation = false,
   }) {
     final st = state as MSActive;
     emit(
@@ -626,6 +763,7 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         clearRecognizedText: clearRecognizedText,
         clearSpeechIssue: clearSpeechIssue,
         clearPersistenceIssue: true,
+        clearLastEvaluation: clearLastEvaluation,
       ),
     );
   }
@@ -693,6 +831,27 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         newState.phase == previousState.phase &&
         newState.lastRecitationResult == previousState.lastRecitationResult;
 
+    // Capture presentation feedback BEFORE the transition: a successful pass
+    // clears the engine's transient result, so the result sheet needs its own
+    // snapshot. Purely presentational — never persisted, never re-evaluated.
+    final V2EvaluationFeedback? feedback;
+    if (newState.lastRecitationResult == previousState.lastRecitationResult &&
+        newState.phase == previousState.phase) {
+      feedback = null; // no-attempt or ignored phase — nothing to show
+    } else if (manualGrade) {
+      feedback = null; // manual/self-grade has no similarity evidence to diff
+    } else if (automaticEvidence != null && !automaticEvidence.isNoAttempt) {
+      feedback = V2EvaluationFeedback(
+        result: automaticEvidence,
+        wordDiff: const RecitationWordDiffer().diff(
+          targetText: previousState.currentAyah.text,
+          spokenText: spokenText,
+        ),
+      );
+    } else {
+      feedback = null;
+    }
+
     // Never expose a progress transition before its review/checkpoint writes
     // succeed. This keeps the currently displayed state retryable after a
     // local-storage or SRS failure.
@@ -721,6 +880,8 @@ class MemorizationSessionCubit extends Cubit<MemorizationSessionState> {
         speechIssue: noSpeech ? V2SpeechIssue.noSpeech : null,
         clearSpeechIssue: manualGrade || !noSpeech,
         clearPersistenceIssue: true,
+        lastEvaluation: feedback,
+        clearLastEvaluation: feedback == null,
       ),
     );
   }

@@ -20,6 +20,7 @@ import '../../../../core/widgets/state_widgets.dart';
 import '../../../certificate/presentation/widgets/certificate_celebration_dialog.dart';
 import '../cubits/memorization_session_cubit.dart';
 import 'v2/v2_block_review_page.dart';
+import 'v2/v2_recitation_result_sheet.dart';
 import 'v2/v2_completion_page.dart';
 import 'v2/v2_learning_page.dart';
 import 'v2/v2_memorizing_page.dart';
@@ -86,6 +87,36 @@ class _V2SessionViewState extends State<_V2SessionView> {
   /// Set after the user confirms leave so [PopScope] allows the route pop.
   var _forceAllowPop = false;
 
+  /// Guards against re-showing the same result sheet while it is open.
+  V2EvaluationFeedback? _presentedFeedback;
+
+  /// Opens the recitation result sheet for a newly arrived evaluation
+  /// feedback. Presentation only — every action maps to an existing Cubit
+  /// call (retry → remediation retry path, review → remediation page).
+  Future<void> _maybeShowResultSheet(
+    BuildContext sheetContext,
+    V2EvaluationFeedback feedback,
+  ) async {
+    if (identical(_presentedFeedback, feedback)) return;
+    _presentedFeedback = feedback;
+
+    final action = await showV2RecitationResultSheet(sheetContext, feedback);
+    if (!mounted) return;
+    final cubit = context.read<MemorizationSessionCubit>();
+    switch (action) {
+      case V2RecitationResultAction.retryNow:
+        // The engine still sits in remediation after a failed attempt —
+        // jump straight back into the reciting phase.
+        await cubit.retryRecitationFromRemediation();
+      case V2RecitationResultAction.reviewAyah:
+      case V2RecitationResultAction.dismiss:
+      case null:
+        // Dismissed (barrier/route pop) or explicit review — the remediation
+        // page (or the next phase, on pass) is already in front.
+        break;
+    }
+  }
+
   Future<void> _onPopInvoked({
     required bool didPop,
     required bool sessionAllowsPop,
@@ -141,6 +172,11 @@ class _V2SessionViewState extends State<_V2SessionView> {
         if (current is MSCompleted && previous is! MSCompleted) return true;
         final prevActive = previous is MSActive ? previous : null;
         final currActive = current is MSActive ? current : null;
+        if (currActive != null &&
+            currActive.lastEvaluation != null &&
+            !identical(currActive.lastEvaluation, prevActive?.lastEvaluation)) {
+          return true;
+        }
         return currActive != null &&
             ((currActive.audioFailed && prevActive?.audioFailed != true) ||
                 (currActive.persistenceIssue != null &&
@@ -166,6 +202,12 @@ class _V2SessionViewState extends State<_V2SessionView> {
           context.showSnackBar(
             context.localizedCubitMessage(state.persistenceIssue!),
             isError: true,
+          );
+          return;
+        }
+        if (state is MSActive && state.lastEvaluation != null) {
+          unawaited(
+            _maybeShowResultSheet(context, state.lastEvaluation!),
           );
           return;
         }

@@ -251,6 +251,14 @@ class TaliaNotificationService {
   static const String prayerMaghribKey = 'notifications_prayer_maghrib';
   static const String prayerIshaKey = 'notifications_prayer_isha';
   static const String prayerAthanKey = 'notifications_prayer_athan';
+
+  /// Selected muezzin for the full adhan playback. Stores the profile id
+  /// (`MuezzinCatalog`); empty string = default clip.
+  static const String prayerMuezzinKey = 'notifications_prayer_muezzin';
+
+  /// Optional Fajr-only muezzin override. Empty string = same as the
+  /// general muezzin.
+  static const String prayerMuezzinFajrKey = 'notifications_prayer_muezzin_fajr';
   static const String quietHoursPreferenceKey = 'notifications_quiet_hours';
   static const String quietHoursStartKey = 'notifications_quiet_start';
   static const String quietHoursEndKey = 'notifications_quiet_end';
@@ -984,13 +992,17 @@ class TaliaNotificationService {
     ),
   );
 
-  /// Athan variant of the prayer channel. The clip comes from the `awqat`
-  /// package (Android `res/raw/adhan.mp3`, iOS bundle `adhan.caf`). It uses a
+  /// Athan variant of the prayer channel. The clip comes from application raw
+  /// resources (Android `res/raw/adhan.mp3`, iOS bundle `adhan.caf`). It uses a
   /// separate channel id because Android freezes a channel's sound at
   /// creation: reusing the legacy id would keep the old sound on
   /// already-installed apps.
-  NotificationDetails _prayerAthanDetails(String prayerKey) {
-    final sound = resolvePrayerSound(athanEnabled: true, prayerKey: prayerKey);
+  NotificationDetails _prayerAthanDetails(String prayerKey, {String soundProfile = MuezzinCatalog.defaultId}) {
+    final sound = resolvePrayerSound(
+      athanEnabled: true,
+      prayerKey: prayerKey,
+      soundProfile: soundProfile,
+    );
     return NotificationDetails(
       android: AndroidNotificationDetails(
         sound.androidChannelId,
@@ -1725,6 +1737,8 @@ class TaliaNotificationService {
   Future<void> schedulePrayerTimesReminders({
     required List<ScheduledPrayerNotification> prayers,
     bool athanEnabled = false,
+    String muezzinId = MuezzinCatalog.defaultId,
+    String fajrMuezzinId = '',
   }) async {
     if (!Platform.isAndroid && !Platform.isIOS) return;
     await cancelPrayerTimesReminders();
@@ -1747,7 +1761,14 @@ class TaliaNotificationService {
         body: prayer.body,
         scheduledDate: tzDate,
         notificationDetails: athanEnabled
-            ? _prayerAthanDetails(prayer.prayerKey)
+            ? _prayerAthanDetails(
+                prayer.prayerKey,
+                soundProfile: soundProfileForPrayer(
+                  prayerKey: prayer.prayerKey,
+                  muezzinId: muezzinId,
+                  fajrMuezzinId: fajrMuezzinId,
+                ),
+              )
             : _prayerNotificationDetails,
         androidScheduleMode: scheduleMode,
         payload: '/',

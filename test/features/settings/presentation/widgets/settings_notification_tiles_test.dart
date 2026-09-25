@@ -38,7 +38,7 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      final testNotification = find.text('Test Interactive Notification');
+      final testNotification = find.text('Try a notification');
       await tester.ensureVisible(testNotification);
       await tester.tap(testNotification);
       await tester.pumpAndSettle();

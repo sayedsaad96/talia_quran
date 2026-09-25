@@ -26,9 +26,21 @@ class KidsGamifiedStagePage extends StatefulWidget {
 
   @override
   State<KidsGamifiedStagePage> createState() => _KidsGamifiedStagePageState();
+}/// Route the stage page navigates to when the child starts this stage's
+/// mission. Carries the resolved mission type (resume for in-progress stages,
+/// otherwise new memorization) so the V2 session restores its correct phase.
+@visibleForTesting
+String kidsNextMissionLocation(KidsJourneyStage stage) {
+  final missionType = stage.completedAyahs.isEmpty
+      ? KidsMissionType.newMemorization
+      : KidsMissionType.resume;
+  return '${AppRoutes.memorizationPlusKids}?surahId=${stage.surahId}'
+      '&ayahNumber=${stage.nextAyahToStart}'
+      '&missionType=${missionType.name}';
 }
 
-class _KidsGamifiedStagePageState extends State<KidsGamifiedStagePage> {
+class _KidsGamifiedStagePageState
+    extends State<KidsGamifiedStagePage> {
   late KidsJourneyStage _stage;
 
   @override
@@ -89,10 +101,9 @@ class _KidsGamifiedStagePageState extends State<KidsGamifiedStagePage> {
       _showLockedStageMessage(context);
       return;
     }
-    final startAyah = stage.nextAyahToStart;
-    context.push(
-      '${AppRoutes.memorizationPlusKids}?surahId=${stage.surahId}&ayahNumber=$startAyah',
-    );
+    // Match the home and completion routes by carrying the mission type,
+    // so resume/review sessions restore their phase instead of resetting.
+    context.push(kidsNextMissionLocation(stage));
   }
 }
 

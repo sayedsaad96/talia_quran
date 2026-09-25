@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/l10n/app_localizations.dart';
 import 'package:talia_quran/core/memorization/v2/session_state.dart';
 import 'package:talia_quran/features/memorization_plus/domain/entities/memorization_entities.dart';
+import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_next_mission_resolver.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_mode_cubit.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_completion_page.dart';
@@ -50,6 +51,39 @@ void main() {
       );
     });
 
+    testWidgets('journey house cards shrink on a 320px map (K7)', (tester) async {
+      // K7: fixed 176px cards left only ~144px of path on a 320px screen;
+      // the responsive segment must keep a real margin on both sides.
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(320, 900);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        tester.view.reset();
+      });
+
+      await tester.pumpWidget(_ArabicTestApp(
+        child: KidsGamifiedJourneyContent(
+          state: _journeyState,
+          onBack: () {},
+          onStageSelected: (_) {},
+        ),
+      ));
+      await tester.pump();
+
+      final finder = find.byWidgetPredicate(
+        (widget) => widget is SizedBox && widget.width != null,
+      );
+      final widths = finder
+          .evaluate()
+          .map((element) => (element.widget as SizedBox).width!)
+          .where((width) => width > 100 && width < 200)
+          .toList();
+
+      expect(widths, isNotEmpty);
+      // Every house card is at most 156px — leaving ≥148px for the path.
+      expect(widths.every((width) => width <= 156), isTrue);
+    });
+
     testWidgets('stage page renders at 320px without layout exceptions', (
       tester,
     ) async {
@@ -60,6 +94,61 @@ void main() {
           surahName: 'سورة الناس',
           onBack: () {},
           onStartMission: () {},
+        ),
+      );
+    });
+
+    testWidgets(
+        'review mission card renders at 320px without layout exceptions', (
+      tester,
+    ) async {
+      await _pumpNarrowArabic(
+        tester,
+        KidsGamifiedHomeContent(
+          state: _journeyState.copyWith(
+            nextMission: const KidsNextMission(
+              type: KidsMissionType.linkedReview,
+              surahId: 114,
+              ayahNumbers: [1, 2],
+            ),
+          ),
+          childName: 'يوسف',
+          onHomeTap: () {},
+          onMushafTap: () {},
+          onJourneyTap: () {},
+          onMissionTap: () {},
+        ),
+      );
+    });
+
+    testWidgets(
+        'completed stage page renders at 320px without layout exceptions', (
+      tester,
+    ) async {
+      await _pumpNarrowArabic(
+        tester,
+        KidsGamifiedStageContent(
+          stage: _completedStage,
+          surahName: 'سورة الناس',
+          onBack: () {},
+          onStartMission: () {},
+        ),
+      );
+    });
+
+    testWidgets(
+        'empty journey map renders at 320px without layout exceptions', (
+      tester,
+    ) async {
+      await _pumpNarrowArabic(
+        tester,
+        KidsGamifiedJourneyContent(
+          state: _journeyState.copyWith(
+            stages: [],
+            clearNextMission: true,
+          ),
+          onBack: () {},
+          onStageSelected: (_) {},
         ),
       );
     });
@@ -130,6 +219,15 @@ const _currentStage = KidsJourneyStage(
   endAyah: 4,
   completedAyahs: [3],
   status: KidsJourneyStageStatus.current,
+);
+
+const _completedStage = KidsJourneyStage(
+  stageNumber: 1,
+  surahId: 114,
+  startAyah: 1,
+  endAyah: 2,
+  completedAyahs: [1, 2],
+  status: KidsJourneyStageStatus.completed,
 );
 
 const _journeyState = KidsJourneyLoaded(

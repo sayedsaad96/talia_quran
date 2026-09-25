@@ -41,6 +41,8 @@ class KidsModeLoaded extends KidsModeState {
     this.recordingSeconds = 0, // seconds elapsed since recording started
     this.recordingError,
     this.sessionStarsEarned = 0,
+    this.sessionPointsEarned = 0,
+    this.leveledUpTo,
   });
 
   final int surahId;
@@ -67,6 +69,12 @@ class KidsModeLoaded extends KidsModeState {
   final String? recordingError;
   final int sessionStarsEarned;
 
+  /// Points earned by this session (K11), surfaced on the completion screen.
+  final int sessionPointsEarned;
+
+  /// New level when this session triggered a level-up (K11); null otherwise.
+  final int? leveledUpTo;
+
   /// True only for technical failures. A textual recitation mismatch is never
   /// eligible for guardian override.
   bool get canUseGuardianFallback =>
@@ -91,6 +99,9 @@ class KidsModeLoaded extends KidsModeState {
     String? recordingError,
     bool clearRecordingError = false,
     int? sessionStarsEarned,
+    int? sessionPointsEarned,
+    int? leveledUpTo,
+    bool clearLevelUpTo = false,
   }) => KidsModeLoaded(
     surahId: surahId,
     ayahNumber: ayahNumber,
@@ -111,6 +122,8 @@ class KidsModeLoaded extends KidsModeState {
         ? null
         : recordingError ?? this.recordingError,
     sessionStarsEarned: sessionStarsEarned ?? this.sessionStarsEarned,
+    sessionPointsEarned: sessionPointsEarned ?? this.sessionPointsEarned,
+    leveledUpTo: clearLevelUpTo ? null : (leveledUpTo ?? this.leveledUpTo),
   );
 
   @override
@@ -130,5 +143,7 @@ class KidsModeLoaded extends KidsModeState {
     recordingSeconds,
     recordingError,
     sessionStarsEarned,
+    sessionPointsEarned,
+    leveledUpTo,
   ];
 }

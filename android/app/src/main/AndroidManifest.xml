@@ -80,6 +80,47 @@
             </intent-filter>
         </service>
 
+        <!-- Prayer V2 native delivery: AlarmManager-scheduled prayer events.
+             Not exported; fires only from Talia's own AlarmManager intents.
+             Dormant until the Dart side migrates to prayer_delivery_version 2. -->
+        <receiver
+            android:name="com.example.talia_quran.prayer.PrayerAlarmReceiver"
+            android:exported="false" />
+
+        <!-- Prayer V2 stage 6: owned adhan audio playback. Foreground media
+             service with a stop action; audio focus managed explicitly. -->
+        <service
+            android:name="com.example.talia_quran.prayer.AdhanPlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <!-- Prayer V2 stage 8: native alarm recovery. Reboots and system
+             time/timezone changes re-arm the persisted absolute-time prayer
+             alarms without starting Flutter or recomputing anything. -->
+        <receiver
+            android:name="com.example.talia_quran.prayer.PrayerRecoveryReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Muezzin adhan preview: exposes cached preview clips to the
+             in-app player (just_audio) as content:// URIs. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="com.example.talia_quran.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <receiver android:name="com.ryanheise.audioservice.MediaButtonReceiver"
             android:exported="true" tools:ignore="Instantiatable">
             <intent-filter>

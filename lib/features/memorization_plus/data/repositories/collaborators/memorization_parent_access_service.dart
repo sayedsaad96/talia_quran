@@ -3,8 +3,10 @@ import 'dart:math';
 
 import 'package:crypto/crypto.dart';
 import 'package:dartz/dartz.dart';
+import 'package:meta/meta.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../../core/error/app_failure.dart';
+import '../../../domain/entities/kids_qr_link_contract.dart';
 import '../../../domain/entities/memorization_entities.dart';
 import '../../datasources/memorization_plus_local_datasource.dart';
 import '../../models/memorization_models.dart';
@@ -58,7 +60,7 @@ class MemorizationParentAccessService {
         final session = PairingSession(
           id: now.microsecondsSinceEpoch.toString(),
           pairingCode: token,
-          qrData: 'talia-kids-link:$token',
+          qrData: KidsQrLinkContract.qrData(token),
           createdAt: now,
           expiresAt: now.add(_pairingSessionLifetime),
           status: PairingSessionStatus.pending,
@@ -412,11 +414,11 @@ class MemorizationParentAccessService {
     }
   }
 
-  String _extractToken(String raw) {
-    const prefix = 'talia-kids-link:';
-    final trimmed = raw.trim();
-    return trimmed.toLowerCase().startsWith(prefix)
-        ? trimmed.substring(prefix.length)
-        : trimmed;
-  }
+  String _extractToken(String raw) => KidsQrLinkContract.extractToken(raw);
+
+  /// Public wrapper so manual code entry shares the exact same payload
+  /// contract as the parent-side QR scanner.
+  @visibleForTesting
+  static String extractLinkToken(String raw) =>
+      KidsQrLinkContract.extractToken(raw);
 }

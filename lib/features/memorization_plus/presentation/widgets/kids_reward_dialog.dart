@@ -9,12 +9,20 @@ class KidsRewardDialog extends StatelessWidget {
   const KidsRewardDialog({
     super.key,
     required this.starsEarned,
+    this.pointsEarned = 0,
+    this.leveledUpTo,
     this.showNextButton = true,
     this.onNext,
     this.onReturnToMap,
   });
 
   final int starsEarned;
+
+  /// K11: session points shown as a second reward pill when positive.
+  final int pointsEarned;
+
+  /// K11: new level when this session triggered a level-up; null otherwise.
+  final int? leveledUpTo;
   final bool showNextButton;
   final VoidCallback? onNext;
   final VoidCallback? onReturnToMap;
@@ -66,6 +74,20 @@ class KidsRewardDialog extends StatelessWidget {
                 label: context.l10n.kidsGamifiedEarnedStars(starsEarned),
                 color: KidsTheme.goldStar,
               ),
+              // K11: real session points next to the stars, when any.
+              if (pointsEarned > 0)
+                _RewardPill(
+                  icon: Icons.diamond_rounded,
+                  label: context.l10n.kidsGamifiedEarnedGems(pointsEarned),
+                  color: KidsTheme.mintGlow,
+                ),
+              // K11: level-up celebration pill on top of the session rewards.
+              if (leveledUpTo != null)
+                _RewardPill(
+                  icon: Icons.military_tech_rounded,
+                  label: context.l10n.kidsLevelValue(leveledUpTo!),
+                  color: KidsTheme.reviewPurple,
+                ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),

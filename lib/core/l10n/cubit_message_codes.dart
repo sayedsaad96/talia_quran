@@ -15,6 +15,10 @@ abstract final class CubitMessageCodes {
   static const kidsJourneyStageLocked = '@kids/journey_stage_locked';
   static const kidsAyahAlreadyCompleted = '@kids/ayah_already_completed';
 
+  /// K15 — daily session-limit gate. Carries the total allowed session count
+  /// after the code: '@kids/daily_limit|4'.
+  static const kidsDailySessionLimitPrefix = '@kids/daily_limit|';
+
   // Generic data-layer failures (emitted by core Failure types).
   static const errorCache = '@error/cache';
   static const errorNetwork = '@error/network';

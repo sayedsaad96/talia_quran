@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../../core/constants/app_spacing.dart';
+import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/services/prayer_times_service.dart';
 import '../../../../core/theme/app_typography.dart';
@@ -116,6 +117,17 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
     };
   }
 
+  /// Localized calculation-method label (mirrors the settings page).
+  static String _prayerMethodLabel(BuildContext context, String method) {
+    return switch (method) {
+      'egyptian' => context.l10n.prayerMethodEgyptian,
+      'umm_al_qura' => context.l10n.prayerMethodUmmAlQura,
+      'karachi' => context.l10n.prayerMethodKarachi,
+      'north_america' => context.l10n.prayerMethodNorthAmerica,
+      _ => context.l10n.prayerMethodMwl,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeSkin =
@@ -126,6 +138,15 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
     final cityName = context.isArabic
         ? widget.snapshot.city.nameAr
         : widget.snapshot.city.nameEn;
+
+    // V2 §34: city • calculation-method transparency. Shows the ACTIVE
+    // method (user's manual choice), not just the city default.
+    final prayerService = getIt.isRegistered<PrayerTimesService>()
+        ? getIt<PrayerTimesService>()
+        : null;
+    final methodLabel = prayerService == null
+        ? null
+        : _prayerMethodLabel(context, prayerService.calculationMethod);
 
     final prayers = [
       _PrayerData(
@@ -277,6 +298,20 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
+                            if (methodLabel != null) ...[
+                              Text(
+                                '•',
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: themeSkin.textSecondary,
+                                ),
+                              ),
+                              Text(
+                                methodLabel,
+                                style: AppTypography.bodySmall.copyWith(
+                                  color: themeSkin.textSecondary,
+                                ),
+                              ),
+                            ],
                             if (summary != null) ...[
                               Text(
                                 '•',
@@ -560,9 +595,13 @@ class _PrayerCard extends StatelessWidget {
                       ),
                     ),
                     if (isPast) ...[
+                      // V2 §33: elapsed time alone never implies completion —
+                      // the dimmed card IS the neutral past state. A
+                      // completion status appears only when the Prayer
+                      // Companion confirms (companionStatus below).
                       const SizedBox(width: AppSpacing.xs),
                       Icon(
-                        Icons.check_circle_outline_rounded,
+                        Icons.history_rounded,
                         size: 16,
                         color: skin.textSecondary.withValues(alpha: 0.7),
                       ),

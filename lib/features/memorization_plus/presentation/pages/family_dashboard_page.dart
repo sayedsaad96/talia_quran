@@ -10,6 +10,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../domain/entities/kids_qr_link_contract.dart';
 import '../../domain/entities/memorization_entities.dart';
 import '../cubits/family_dashboard_cubit.dart';
 
@@ -205,19 +206,10 @@ class _FamilyDashboardViewState extends State<_FamilyDashboardView> {
                     if (sheetContext.mounted) Navigator.pop(sheetContext);
                   },
                 ),
-                SwitchListTile(
-                  title: Text(context.l10n.kidsGuidanceAudioTitle),
-                  subtitle: Text(context.l10n.kidsGuidanceAudioDescription),
-                  value: settings.guidanceAudioEnabled ?? true,
-                  onChanged: (value) async {
-                    await sheetContext
-                        .read<FamilyDashboardCubit>()
-                        .saveSettings(
-                          settings.copyWith(guidanceAudioEnabled: value),
-                        );
-                    if (sheetContext.mounted) Navigator.pop(sheetContext);
-                  },
-                ),
+                // The "guidance audio" switch stays intentionally absent
+                // until the kids session consumes the setting (K10 in
+                // docs/audits/TALIA_KIDS_PATH_REVIEW_REPORT.md). ParentSettings
+                // keeps the stored value so nothing is lost meanwhile.
                 ListTile(
                   title: Text(context.l10n.kidsSessionGoalTitle),
                   trailing: DropdownButton<int>(
@@ -970,11 +962,13 @@ class _QrScannerPageState extends State<_QrScannerPage> {
           final barcodes = capture.barcodes;
           for (final barcode in barcodes) {
             final raw = barcode.rawValue;
-            if (raw != null && raw.startsWith('talia_link:')) {
-              final token = raw.split(':')[1];
-              Navigator.pop(context, token);
-              break;
-            }
+            if (raw == null) continue;
+            // Accept the shared kids-link contract payload (and the legacy
+            // prefix) instead of a hard-coded literal that drifted from the
+            // child-side generator and silently broke QR pairing.
+            if (!KidsQrLinkContract.isLinkPayload(raw)) continue;
+            Navigator.pop(context, KidsQrLinkContract.extractToken(raw));
+            break;
           }
         },
       ),

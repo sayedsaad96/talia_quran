@@ -40,6 +40,7 @@ import '../memorization/memorization_progress_reader.dart';
 import '../memorization/progress_metrics_service.dart';
 import '../memorization/usecases/get_memorization_snapshot_usecase.dart';
 import '../memorization/v2/session_adapters.dart';
+import '../../features/memorization_plus/domain/entities/kids_session_log.dart';
 import '../memorization/v2/review_effect_outbox_processor.dart';
 import '../memorization/v2/review_outcome_committer.dart';
 import '../memorization/v2/session_engine.dart';
@@ -791,6 +792,13 @@ Future<void> configureDependencies({bool background = false}) async {
             .getMemorizationProfile();
         final age = result.fold((_) => 8, (profile) => profile.childAge ?? 8);
         return KidsSessionPolicy.forAge(age >= 5 && age <= 12 ? age : 8);
+      },
+      // K15 — daily-limit gate reads the local kids session log; a read
+      // failure fails open (null ⇒ limit not enforced).
+      () async {
+        final result = await getIt<MemorizationPlusRepository>()
+            .getKidsSessionLogs();
+        return result.getOrElse(() => const <KidsSessionLog>[]);
       },
       V2SessionProgressAdapter(
         datasource: getIt<V2SessionLocalDatasource>(),

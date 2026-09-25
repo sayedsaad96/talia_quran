@@ -8,6 +8,7 @@ import 'package:talia_quran/features/memorization_plus/domain/navigation/kids_ne
 import 'package:talia_quran/features/memorization_plus/presentation/cubits/kids_journey_cubit.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:talia_quran/features/memorization_plus/presentation/pages/kids_gamified_home_page.dart';
+import 'package:talia_quran/features/memorization_plus/presentation/widgets/kids_mission_card.dart';
 
 void main() {
   setUpAll(() {
@@ -116,8 +117,83 @@ void main() {
       expect(location, isNot(AppRoutes.quran));
     });
 
-    testWidgets(
-      'renders correctly with no completed stages (first-time user)',
+    testWidgets('due review mission is titled Ready for review, not Last mission', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+      addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+      final reviewState = _loadedState.copyWith(
+        nextMission: const KidsNextMission(
+          type: KidsMissionType.dueReview,
+          surahId: 114,
+          ayahNumbers: [2],
+        ),
+      );
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedHomeContent(
+            state: reviewState,
+            onHomeTap: () {},
+            onMushafTap: () {},
+            onJourneyTap: () {},
+            onMissionTap: () {},
+          ),
+        ),
+      );
+
+      // The SRS-first resolver surfaced a due review, so the card must not
+      // present it as yesterday's ("last") mission.
+      expect(find.text('Ready for review'), findsOneWidget);
+      expect(find.text('Last mission'), findsNothing);
+    });
+
+    testWidgets('finished journey replaces the mission card with celebration', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+      addTearDown(() async => tester.pumpWidget(const SizedBox()));
+
+      const finishedState = KidsJourneyLoaded(
+        surahId: 114,
+        stages: [],
+        // Real progress proves the journey was actually completed rather
+        // than a first-time child who has not started yet.
+        progress: KidsProgress(
+          totalPoints: 300,
+          currentLevel: 3,
+          currentStreak: 2,
+          starsEarned: 12,
+          ayahsCompleted: 48,
+          lastSessionAt: null,
+        ),
+      );
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedHomeContent(
+            state: finishedState,
+            onHomeTap: () {},
+            onMushafTap: () {},
+            onJourneyTap: () {},
+            onMissionTap: () {},
+          ),
+        ),
+      );
+
+      // No stage and no mission: celebrate instead of a stale CTA.
+      expect(find.byType(KidsMissionCard), findsNothing);
+      expect(find.textContaining('completed the current memorization journey'),
+          findsOneWidget);
+      expect(find.text('Continue now'), findsNothing);
+    });
+
+    testWidgets('renders correctly with no completed stages (first-time user)',
       (tester) async {
         tester.view.devicePixelRatio = 1;
         tester.view.physicalSize = const Size(900, 1200);

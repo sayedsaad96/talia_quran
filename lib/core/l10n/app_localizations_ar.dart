@@ -1371,6 +1371,61 @@ class AppLocalizationsAr extends AppLocalizations {
   String get settingsSectionAboutTalia => 'حول تالية';
 
   @override
+  String get settingsBackgroundPlaybackTitle => 'التشغيل في الخلفية';
+
+  @override
+  String get settingsBackgroundPlaybackSubtitle =>
+      'تستمر التلاوة بعد مغادرة التطبيق، ويمكن التحكم بها من شريط الإشعارات.';
+
+  @override
+  String get settingsHubPractice => 'الممارسة';
+
+  @override
+  String get settingsHubReminders => 'التنبيهات';
+
+  @override
+  String get settingsHubSupport => 'الدعم';
+
+  @override
+  String get settingsRemindersGeneral => 'عام';
+
+  @override
+  String get settingsRemindersMemorization => 'تذكيرات الحفظ';
+
+  @override
+  String get settingsRemindersWorship => 'الأذكار والعبادة';
+
+  @override
+  String get settingsRemindersProgress => 'التقدم';
+
+  @override
+  String get notificationPermissionBlockedTitle =>
+      'إشعارات التطبيق معطلة في إعدادات الهاتف';
+
+  @override
+  String get notificationPermissionBlockedBody =>
+      'لن تصلك تذكيرات المراجعة أو الأذكار حتى يتم السماح بالإشعارات من إعدادات النظام.';
+
+  @override
+  String get notificationOpenSystemSettings => 'فتح إعدادات الهاتف';
+
+  @override
+  String get notificationStatusBlocked =>
+      'أذونات الإشعارات معطلة في إعدادات النظام';
+
+  @override
+  String notificationStatusSummary(int enabled, int total) {
+    return '$enabled من $total تذكيرات مفعّلة';
+  }
+
+  @override
+  String get notificationTestInteractiveTitle => 'تجربة الإشعارات';
+
+  @override
+  String get notificationTestInteractiveSubtitle =>
+      'أرسل إشعارًا تجريبيًا للتأكد أن التنبيهات تعمل';
+
+  @override
   String get settingsGuestStatusTitle => 'تستخدم تالية كضيف';
 
   @override
@@ -2078,6 +2133,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get kidsGamifiedLockedStage => 'هذا البيت مغلق الآن';
+
+  @override
+  String kidsGamifiedDailyLimitReached(int count) {
+    return 'أنجزت مهام اليوم، ما شاء الله! عُد غداً لبيت جديد.';
+  }
 
   @override
   String get kidsGamifiedCurrentStage => 'مهمتك الحالية';
@@ -3458,11 +3518,47 @@ class AppLocalizationsAr extends AppLocalizations {
       'تنبيهات عند حلول أوقات الصلوات الخمس';
 
   @override
-  String get notificationSettingsPrayerAthan => 'صوت الأذان';
+  String get notificationSettingsPrayerAthan => 'الأذان الكامل';
 
   @override
   String get notificationSettingsPrayerAthanSub =>
-      'تشغيل مقطع الأذان المرفق بدل صوت التنبيه الافتراضي';
+      'تشغيل الأذان الكامل عند دخول وقت الصلاة مع إمكانية إيقافه';
+
+  @override
+  String get muezzinPickerTitle => 'اختيار المؤذن';
+
+  @override
+  String get muezzinPickerSubtitle =>
+      'اختر صوت الأذان المفضل لديك، واستمع لمعاينة قبل الحفظ';
+
+  @override
+  String get muezzinDefault => 'الأذان الافتراضي';
+
+  @override
+  String get muezzinPickerSave => 'حفظ';
+
+  @override
+  String get muezzinPreviewPlay => 'معاينة';
+
+  @override
+  String get muezzinPreviewStop => 'إيقاف المعاينة';
+
+  @override
+  String get muezzinFajrSectionTitle => 'أذان الفجر';
+
+  @override
+  String get muezzinFajrSameAsGeneral => 'مثل باقي الصلوات';
+
+  @override
+  String get muezzinFajrBadge => 'فجر';
+
+  @override
+  String muezzinFajrSummary(String general, String fajr) {
+    return '$general للصلوات، و$fajr للفجر';
+  }
+
+  @override
+  String get notificationSettingsPrayerNeedsTimes => 'فعّل مواقيت الصلاة أولًا';
 
   @override
   String get homeTourTitle => 'تحتاج جولة سريعة؟';
@@ -4490,6 +4586,65 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get v2Retries => 'محاولات';
+
+  @override
+  String get v2ResultExcellent => 'أحسنت! تسميع متقن';
+
+  @override
+  String get v2ResultPassed => 'تم اجتياز الآية';
+
+  @override
+  String get v2ResultRetrying => 'اقتربت! حاول مرة أخرى';
+
+  @override
+  String get v2ResultNeedsWork => 'يلزم مراجعة الآية';
+
+  @override
+  String v2ResultSimilarity(int score) {
+    return 'نسبة التطابق: $score%';
+  }
+
+  @override
+  String get v2ResultManualGrade => 'تم تقييم التسميع ذاتيًا';
+
+  @override
+  String get v2ResultContinue => 'متابعة';
+
+  @override
+  String get v2ResultRetryNow => 'أعد التسميع الآن';
+
+  @override
+  String get v2ResultReviewAyah => 'راجع الآية';
+
+  @override
+  String get v2ResultWordsCorrect => 'صحيحة';
+
+  @override
+  String get v2ResultWordsMissing => 'ناقصة';
+
+  @override
+  String get v2ResultWordsWrong => 'خاطئة';
+
+  @override
+  String get v2ResultWordsExtra => 'زيادة';
+
+  @override
+  String get v2LoopOff => 'تكرار: بدون';
+
+  @override
+  String get v2LoopThree => 'تكرار: 3 مرات';
+
+  @override
+  String get v2LoopInfinite => 'تكرار: مستمر';
+
+  @override
+  String get v2MaskedWordsHint => 'إظهار الكلمات مخفية';
+
+  @override
+  String get v2MaskedWordsRevealed => 'الكلمات مخفية — حاول التذكر';
+
+  @override
+  String get v2MaskedWordsFull => 'إخفاء الكلمات';
 
   @override
   String get v2SurahLoadFailed => 'تعذر تحميل بيانات السورة.';
@@ -5547,7 +5702,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get weekdaySunday => 'الأحد';
 
   @override
-  String get notificationExactAlarmRequest => 'تحسين دقة مواقيت الصلاة';
+  String get notificationExactAlarmRequest => 'تفعيل التنبيهات الدقيقة';
+
+  @override
+  String get notificationExactAlarmExplanation =>
+      'تضمن وصول تنبيه الصلاة والأذان في وقتهما بالضبط';
 
   @override
   String get notificationExactAlarmGranted =>
@@ -5555,7 +5714,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationExactAlarmDenied =>
-      'قد تصل التنبيهات متأخرة قليلًا حتى تمنح إذن المنبهات الدقيقة من إعدادات الهاتف.';
+      'ستصلك التنبيهات في وقتها تقريبًا بالوضع العادي، ويمكنك تفعيل الدقة الكاملة لاحقًا من إعدادات الهاتف.';
 
   @override
   String get notificationTestFailed =>
@@ -5580,4 +5739,53 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notificationSmartReminderSub =>
       'يستخدم أوقات فتحك الأخيرة على الجهاز لاختيار وقت التذكير.';
+
+  @override
+  String memorizationHubReviewDueBadge(int count) {
+    return '$count آية مستحقة للمراجعة';
+  }
+
+  @override
+  String get memorizationHubReviewDueNone => 'لا مراجعات مستحقة الآن';
+
+  @override
+  String dailyPlanNextReviewInDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count أيام',
+      one: 'يوم',
+      zero: 'اليوم',
+    );
+    return 'المراجعة القادمة بعد $_temp0';
+  }
+
+  @override
+  String get dailyPlanStrengthWeak => 'حفظ ضعيف';
+
+  @override
+  String get dailyPlanStrengthLearning => 'قيد الترسيت';
+
+  @override
+  String get dailyPlanStrengthStrong => 'حفظ متين';
+
+  @override
+  String get memorizedPageAction => 'حفظ هذه الصفحة';
+
+  @override
+  String get memorizedPageSubtext => 'ابدأ جلسة حفظ لآيات الصفحة الحالية';
+
+  @override
+  String get memorizedPageUnavailable =>
+      'حفظ الصفحة متاح عندما تنتمي كل آياتها لسورة واحدة.';
+
+  @override
+  String customPlanDirectionForward(String from, String to) {
+    return 'اتجاه الحفظ: تصاعدي (من $from إلى $to)';
+  }
+
+  @override
+  String customPlanDirectionBackward(String from, String to) {
+    return 'اتجاه الحفظ: تنازلي (من $from إلى $to)';
+  }
 }

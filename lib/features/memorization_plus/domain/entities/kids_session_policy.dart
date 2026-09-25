@@ -16,6 +16,7 @@ final class KidsSessionPolicy extends Equatable {
     required this.blockReviewRequired,
     required this.linkedReviewAyahs,
     required this.guidanceAudioDefault,
+    this.maxListenRepetitions = 1,
   });
 
   factory KidsSessionPolicy.forAge(int age) {
@@ -30,6 +31,7 @@ final class KidsSessionPolicy extends Equatable {
         blockReviewRequired: false,
         linkedReviewAyahs: 2,
         guidanceAudioDefault: true,
+        maxListenRepetitions: 1,
       );
     }
     return const KidsSessionPolicy(
@@ -41,6 +43,7 @@ final class KidsSessionPolicy extends Equatable {
       blockReviewRequired: true,
       linkedReviewAyahs: 3,
       guidanceAudioDefault: false,
+      maxListenRepetitions: 2,
     );
   }
 
@@ -53,6 +56,11 @@ final class KidsSessionPolicy extends Equatable {
   final int linkedReviewAyahs;
   final bool guidanceAudioDefault;
 
+  /// Required listen repetitions before the child may record a recitation.
+  /// Keeps the "listen → repeat → test" loop real instead of the previous
+  /// hard-coded single listen for every age.
+  final int maxListenRepetitions;
+
   @override
   List<Object?> get props => [
     ageBand,
@@ -63,6 +71,7 @@ final class KidsSessionPolicy extends Equatable {
     blockReviewRequired,
     linkedReviewAyahs,
     guidanceAudioDefault,
+    maxListenRepetitions,
   ];
 }
 

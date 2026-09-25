@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/memorization/learning_launch_context.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/services/app_session_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -403,6 +404,21 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     }
     final ayah = _resolveAyah(surahNumber, verseNumber);
     final audioCubit = context.read<QuranAudioPlayerCubit>();
+
+    // "Memorize this page" is offered only when every ayah on the page
+    // belongs to the same surah (V2 sessions are single-surah).
+    final detail = _currentDetail;
+    AyahReference? pageTarget;
+    if (detail != null && detail.ayahs.isNotEmpty) {
+      final pageSurahs = detail.ayahs.map((a) => a.surahId).toSet();
+      if (pageSurahs.length == 1) {
+        pageTarget = AyahReference(
+          surahId: detail.ayahs.first.surahId,
+          ayahNumber: detail.ayahs.first.numberInSurah,
+        );
+      }
+    }
+
     showModalBottomSheet(
       context: context,
       useRootNavigator: true,
@@ -412,6 +428,7 @@ class _QuranReaderPageState extends State<QuranReaderPage>
         child: AyahOptionsSheet(
           ayah: ayah,
           surahName: qcf.getSurahNameArabic(surahNumber),
+          pageMemorizationTarget: pageTarget,
           onInteraction: () {
             if (_currentPageNumber != null) {
               _registerPageInteraction(_currentPageNumber!, context);

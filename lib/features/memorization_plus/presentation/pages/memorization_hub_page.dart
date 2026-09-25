@@ -4,13 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:flutter_animate/flutter_animate.dart';
+
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/memorization/review_record_audience_scope.dart';
 import '../../../../core/progress/progress_changed_reason.dart';
 import '../../../../core/progress/progress_events_bus.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/state_widgets.dart';
 import '../../domain/repositories/memorization_plus_repository.dart';
@@ -62,7 +66,29 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
     final targets = await MemorizationNavigationResolver(repository).resolve();
     final planResult = await repository.getCachedDailyPlan();
     final plan = planResult.fold((_) => null, (value) => value);
-    return _HubLoadResult(targets: targets, dailyPlan: plan);
+
+    // Count due adult reviews so the review card can show an actionable
+    // badge instead of a static description. Failure-tolerant: the hub is a
+    // launcher, and a review-store error must not block it.
+    var dueReviewCount = 0;
+    try {
+      final recordsResult = await repository.getAllReviewRecords(
+        scope: ReviewRecordReadScope.adult,
+      );
+      final records = recordsResult.fold(
+        (failure) => <AyahReviewRecord>[],
+        (value) => value,
+      );
+      dueReviewCount = records.where((record) => record.isDue).length;
+    } catch (_) {
+      dueReviewCount = 0;
+    }
+
+    return _HubLoadResult(
+      targets: targets,
+      dailyPlan: plan,
+      dueReviewCount: dueReviewCount,
+    );
   }
 
   void _retryTargets() {
@@ -185,19 +211,26 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
                 }
               },
               builder: (context, state) {
-                final isSelectingPath = state is MemorizationIdentityLoading;
-                return FutureBuilder<_HubLoadResult>(
-                  future: _hubFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: LoadingWidget());
-                    }
-                    if (snapshot.hasError) {
-                      return ErrorStateWidget(
-                        message: context.l10n.errorOccurred,
-                        onRetry: _retryTargets,
-                      );
-                    }
+                final isSelectingPath = state is MemorizationIdentityLoading;                    return FutureBuilder<_HubLoadResult>(
+                      future: _hubFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(child: LoadingWidget());
+                        }
+                        if (snapshot.hasError) {
+                          return ErrorStateWidget(
+                            message: context.l10n.errorOccurred,
+                            onRetry: _retryTargets,
+                          );
+                        }
+                    final sections = _sectionsFor(
+                      context,
+                      snapshot.data?.targets,
+                      snapshot.data?.dailyPlan,
+                      snapshot.data?.dueReviewCount ?? 0,
+                      isDark,
+                      isSelectingPath,
+                    );
                     return CustomScrollView(
                       slivers: [
                         _HubAppBar(isDark: isDark),
@@ -210,20 +243,23 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
                           ),
                           sliver: SliverList(
                             delegate: SliverChildListDelegate(
-                              _sectionsFor(
-                                context,
-                                snapshot.data?.targets,
-                                snapshot.data?.dailyPlan,
-                                isDark,
-                                isSelectingPath,
-                              ),
+                              // Staggered entrance (UI/UX Plan §8.2) —
+                              // respects reduced-motion via flutter_animate's
+                              // global switch honouring the platform flag.
+                              [
+                                for (var i = 0; i < sections.length; i++)
+                                  sections[i]
+                                      .animate(delay: (i * 50).ms)
+                                      .fadeIn()
+                                      .slideY(begin: 0.03),
+                              ],
                             ),
                           ),
                         ),
                       ],
                     );
-                  },
-                );
+                      },
+                    );
               },
             ),
       ),
@@ -234,6 +270,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
     BuildContext context,
     MemorizationNavigationTargets? targets,
     DailyPlan? dailyPlan,
+    int dueReviewCount,
     bool isDark,
     bool isSelectingPath,
   ) {
@@ -281,6 +318,7 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           title: context.l10n.memorizationHubPracticeBySurahTitle,
           description: context.l10n.memorizationHubPracticeBySurahDescription,
           route: AppRoutes.hifzPracticeSurah,
+          accentOverride: AppColors.accentBlue,
           isDark: isDark,
         ),
         const SizedBox(height: AppSpacing.lg),
@@ -294,6 +332,10 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           icon: Icons.mic_rounded,
           title: context.l10n.reviewQuizTitle,
           description: context.l10n.memorizationHubReviewCardDescription,
+          badge: dueReviewCount > 0
+              ? context.l10n.memorizationHubReviewDueBadge(dueReviewCount)
+              : context.l10n.memorizationHubReviewDueNone,
+          accentOverride: dueReviewCount > 0 ? AppColors.gold : null,
           onTap: () => _openAdultTarget(isReview: true),
           isDark: isDark,
         ),
@@ -431,17 +473,7 @@ class _HubAppBar extends StatelessWidget {
         collapseMode: CollapseMode.pin,
         background: Container(
           decoration: BoxDecoration(
-            gradient: isDark
-                ? const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF0A2A22), Color(0xFF0D1117)],
-                  )
-                : const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.primaryLight, AppColors.accentBlue],
-                  ),
+            gradient: AppDecorations.memorizationHeader(isDark: isDark),
           ),
           child: SafeArea(
             child: Padding(
@@ -479,10 +511,17 @@ class _HubAppBar extends StatelessWidget {
 }
 
 class _HubLoadResult {
-  const _HubLoadResult({required this.targets, this.dailyPlan});
+  const _HubLoadResult({
+    required this.targets,
+    this.dailyPlan,
+    this.dueReviewCount = 0,
+  });
 
   final MemorizationNavigationTargets targets;
   final DailyPlan? dailyPlan;
+
+  /// Adult review records currently due — drives the review card badge.
+  final int dueReviewCount;
 }
 
 class _HubDailyPlanSummaryCard extends StatelessWidget {
@@ -493,21 +532,54 @@ class _HubDailyPlanSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: isDark ? AppColors.darkCard : AppColors.lightCard,
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.dailyPlanProgressCount(
-                plan.requiredCompletedCount,
-                plan.totalItems,
-              ),
-              style: AppTypography.titleSmall,
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            AppColors.primary.withValues(alpha: 0.08),
+            AppColors.primary.withValues(alpha: 0.03),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            context.l10n.dailyPlanProgressCount(
+              plan.requiredCompletedCount,
+              plan.totalItems,
             ),
-            const SizedBox(height: AppSpacing.sm),
+            style: AppTypography.titleSmall,
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          // Animated per-item dots (UI/UX Plan §8.1) — clearer than a bare
+          // bar for small plan sizes; falls back to the bar when long.
+          if (plan.totalItems <= 12)
+            Row(
+              children: [
+                for (var i = 0; i < plan.totalItems; i++)
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.xs,
+                    ),
+                    width: i < plan.requiredCompletedCount ? 24 : 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: i < plan.requiredCompletedCount
+                          ? AppColors.primary
+                          : AppColors.primary.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(
+                        AppSpacing.radiusFull,
+                      ),
+                    ),
+                  ),
+              ],
+            )
+          else
             ClipRRect(
               borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               child: LinearProgressIndicator(
@@ -515,8 +587,7 @@ class _HubDailyPlanSummaryCard extends StatelessWidget {
                 value: plan.requiredProgress.clamp(0.0, 1.0),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
@@ -570,6 +641,8 @@ class _HubActionCard extends StatelessWidget {
     required this.isDark,
     this.route,
     this.onTap,
+    this.badge,
+    this.accentOverride,
   }) : primary = false,
        assert(route != null || onTap != null, 'route or onTap required');
 
@@ -580,7 +653,9 @@ class _HubActionCard extends StatelessWidget {
     required this.isDark,
     this.route,
     this.onTap,
-  }) : primary = true,
+  }) : badge = null,
+       accentOverride = null,
+       primary = true,
        assert(route != null || onTap != null, 'route or onTap required');
 
   final IconData icon;
@@ -591,9 +666,16 @@ class _HubActionCard extends StatelessWidget {
   final bool isDark;
   final bool primary;
 
+  /// Optional status chip (e.g. "3 آية مستحقة") shown above the description.
+  final String? badge;
+
+  /// Per-card accent (e.g. gold for review) — defaults to the theme primary.
+  final Color? accentOverride;
+
   @override
   Widget build(BuildContext context) {
-    final accent = isDark ? AppColors.primaryLight : AppColors.primary;
+    final accent = accentOverride ??
+        (isDark ? AppColors.primaryLight : AppColors.primary);
     final surface = isDark ? AppColors.darkCard : AppColors.lightCard;
     final textPrimary = isDark
         ? AppColors.darkTextPrimary
@@ -644,6 +726,28 @@ class _HubActionCard extends StatelessWidget {
                       fontWeight: primary ? FontWeight.w800 : FontWeight.w700,
                     ),
                   ),
+                  if (badge != null) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusFull,
+                        ),
+                      ),
+                      child: Text(
+                        badge!,
+                        style: AppTypography.labelMedium.copyWith(
+                          color: accent,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.xs),
                   Text(
                     description,

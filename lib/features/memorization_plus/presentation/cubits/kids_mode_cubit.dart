@@ -35,6 +35,10 @@ part 'kids_mode_state.dart';
 typedef KidsGuardianPinVerifier = Future<bool> Function(String pin);
 typedef KidsSessionPolicyLoader = Future<KidsSessionPolicy> Function();
 
+/// K15 — reads the local kids session log for the daily-limit gate.
+/// Optional: when unavailable (or throwing) the limit fails open.
+typedef KidsSessionLogsLoader = Future<List<KidsSessionLog>?> Function();
+
 class KidsModeCubit extends Cubit<KidsModeState> {
   KidsModeCubit(
     this._getKidsProgress,
@@ -49,12 +53,14 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     AppSessionService? appSessionService,
     KidsGuardianPinVerifier? guardianPinVerifier,
     KidsSessionPolicyLoader? sessionPolicyLoader,
+    KidsSessionLogsLoader? kidsSessionLogsLoader,
     V2SessionProgressAdapter? progressAdapter,
     ActivityEventRecorder? activityRecorder,
   ]) : _activityRecorder = activityRecorder,
        _appSessionService = appSessionService,
        _guardianPinVerifier = guardianPinVerifier,
        _sessionPolicyLoader = sessionPolicyLoader,
+       _kidsSessionLogsLoader = kidsSessionLogsLoader,
        _progressAdapter = progressAdapter,
        super(const KidsModeInitial()) {
     _recitationRecorder = recitationRecorder ?? KidsSpeechRecitationRecorder();
@@ -85,6 +91,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
   final AppSessionService? _appSessionService;
   final KidsGuardianPinVerifier? _guardianPinVerifier;
   final KidsSessionPolicyLoader? _sessionPolicyLoader;
+  final KidsSessionLogsLoader? _kidsSessionLogsLoader;
   final V2SessionProgressAdapter? _progressAdapter;
   final ActivityEventRecorder? _activityRecorder;
   late final KidsRecitationRecorder _recitationRecorder;
@@ -97,7 +104,12 @@ class KidsModeCubit extends Cubit<KidsModeState> {
 
   int _loopCount = 0;
   final Set<String> _completionsInFlight = <String>{};
-  static const int _maxLoops = 1;
+
+  /// Listen-before-recite repetitions, resolved from the age-band policy in
+  /// [load] instead of a hard-coded constant, so younger children get a
+  /// single listen and older children repeat per their session policy.
+  @visibleForTesting
+  int maxLoops = KidsSessionPolicy.forAge(5).maxListenRepetitions;
   DateTime? _sessionStartedAt;
   String? _sessionId;
   KidsMissionType _missionType = KidsMissionType.newMemorization;
@@ -136,6 +148,24 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       return;
     }
 
+    // K15 — daily session-limit gate. Only genuinely new work (new
+    // memorization) counts against maxNewAyahs; resuming an interrupted
+    // session, a due SRS review, or a linked block review must always be
+    // reachable regardless of how many sessions ran earlier today.
+    if (missionType == KidsMissionType.newMemorization) {
+      final policy = await _loadSessionPolicy();
+      final newToday = await _countNewMemorizationSessionsToday();
+      if (newToday >= policy.maxNewAyahs) {
+        emit(
+          KidsModeError(
+            '${CubitMessageCodes.kidsDailySessionLimitPrefix}'
+            '${policy.maxNewAyahs}',
+          ),
+        );
+        return;
+      }
+    }
+
     String resolvedText = ayahText;
     if (resolvedText.isEmpty ||
         resolvedText == '...' ||
@@ -169,16 +199,17 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         ? await _restoreKidsSession(surahId, fallbackAyah)
         : null;
     final resumed = sessionState != null;
-    if (sessionState == null) {
-      final policy = await _loadSessionPolicy();
-      sessionState = _sessionEngine.startLearning(
-        V2SessionState.initial(
-          surahId: surahId,
-          blockAyahs: [fallbackAyah],
-          blockReviewRequired: policy.blockReviewRequired,
-        ),
-      );
-    }
+    final policy = await _loadSessionPolicy();
+    // The listen-repetition gate follows the age-band policy so a 5-year-old
+    // listens once while an 8–12 year-old repeats per policy guidance.
+    maxLoops = policy.maxListenRepetitions;
+    sessionState ??= _sessionEngine.startLearning(
+      V2SessionState.initial(
+        surahId: surahId,
+        blockAyahs: [fallbackAyah],
+        blockReviewRequired: policy.blockReviewRequired,
+      ),
+    );
     await _saveKidsSession(sessionState);
 
     final activeAyah = sessionState.currentAyah;
@@ -197,10 +228,32 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         progress: progress,
         isPlaying: false,
         currentLoop: 0,
-        maxLoops: _maxLoops,
+        maxLoops: maxLoops,
         isCompleted: false,
       ),
     );
+  }
+
+  /// K15 — how many new-memorization ayahs were completed today. The local
+  /// session log is the single source of truth for "what the child did"; any
+  /// read failure fails open (limit not enforced) so a storage glitch never
+  /// locks a child out of learning.
+  Future<int> _countNewMemorizationSessionsToday() async {
+    try {
+      final logsResult = await _kidsSessionLogsLoader?.call();
+      if (logsResult == null) return 0;
+      final now = DateTime.now();
+      final startOfDay = DateTime(now.year, now.month, now.day);
+      return logsResult
+          .where(
+            (log) =>
+                !log.completedAt.isBefore(startOfDay) &&
+                log.missionType == KidsMissionType.newMemorization,
+          )
+          .length;
+    } catch (_) {
+      return 0;
+    }
   }
 
   Future<KidsSessionPolicy> _loadSessionPolicy() async {
@@ -308,14 +361,14 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     final st = state as KidsModeLoaded;
 
     _loopCount++;
-    if (_loopCount < _maxLoops) {
+    if (_loopCount < maxLoops) {
       emit(st.copyWith(currentLoop: _loopCount + 1, clearAudioError: true));
       _playAyah(st.surahId, st.ayahNumber);
     } else {
       emit(
         st.copyWith(
           isPlaying: false,
-          currentLoop: _maxLoops,
+          currentLoop: maxLoops,
           clearAudioError: true,
         ),
       );
@@ -341,7 +394,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     final st = state as KidsModeLoaded;
     if (st.isCompleted) return;
 
-    if (_loopCount < _maxLoops) {
+    if (_loopCount < maxLoops) {
       emit(st.copyWith(mustListenFirst: true));
       Future.delayed(const Duration(seconds: 2), () {
         if (isClosed || state is! KidsModeLoaded) return;
@@ -527,7 +580,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     // BUG-4 FIX: prevent completing without listening the required times.
     // The manual/self-grade route (V1-M8) bypasses this gate so a first-use
     // offline journey can still complete safely.
-    if (!manualGrade && _loopCount < _maxLoops) {
+    if (!manualGrade && _loopCount < maxLoops) {
       // Emit a warning state so the UI can show a message
       emit(st.copyWith(mustListenFirst: true));
       // Clear the flag after 2 seconds
@@ -616,7 +669,7 @@ class KidsModeCubit extends Cubit<KidsModeState> {
         emit(
           st.copyWith(
             progress: completion.progress,
-            isCompleted: true,
+            isCompleted: _sessionReachedCompletion(completedSession),
             sessionState: completedSession,
             sessionStarsEarned: 0,
             clearRecordingError: true,
@@ -644,10 +697,17 @@ class KidsModeCubit extends Cubit<KidsModeState> {
       emit(
         st.copyWith(
           progress: completion.progress,
-          isCompleted: true,
+          // K16: only a terminal V2 session completes the kids screen. A
+          // blockReviewPending session awaits the linked review instead.
+          isCompleted: _sessionReachedCompletion(completedSession),
           sessionState: completedSession,
           newAwards: newAwards,
           sessionStarsEarned: completion.starsEarned,
+          // K11: surface session points and any level-up on completion.
+          sessionPointsEarned: completion.pointsEarned,
+          leveledUpTo: completion.progress.currentLevel > st.progress.currentLevel
+              ? completion.progress.currentLevel
+              : null,
         ),
       );
     } finally {
@@ -716,6 +776,13 @@ class KidsModeCubit extends Cubit<KidsModeState> {
     }
     return current;
   }
+
+  /// K16 — the completion screen (stars, next-mission navigation) must only
+  /// fire when the V2 session actually reached its terminal phase. A session
+  /// parked at `blockReviewPending` awaits the linked block review that the
+  /// age-8–12 policy requires, so it stays retryable instead of completing.
+  bool _sessionReachedCompletion(V2SessionState session) =>
+      session.phase == V2SessionPhase.completed;
 
   @override
   Future<void> close() async {

@@ -1,6 +1,12 @@
+import 'dart:io';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import '../di/injection.dart';
 import '../l10n/app_localizations.dart';
+import '../prayer_delivery/android_prayer_delivery_scheduler.dart';
+import '../prayer_delivery/prayer_delivery_coordinator.dart';
+import '../prayer_delivery/prayer_event_builder.dart';
+import 'prayer_sound.dart';
 import '../services/streak_reader.dart';
 import '../services/streak_risk_evaluator.dart';
 import '../services/streak_service.dart';
@@ -82,6 +88,10 @@ class NotificationScheduler {
   final PrayerCompanionPlanner? _prayerCompanionPlanner;
   final PrayerCompanionPreferences? _prayerCompanionPreferences;
 
+  /// Prayer V2 delivery coordinator. Non-null on Android only (created with
+  /// the MethodChannel-backed native scheduler); injectable for tests.
+  final PrayerDeliveryCoordinator? _prayerDeliveryCoordinator;
+
   NotificationScheduler(
     this._service, {
     KidsSessionDatesLoader? kidsSessionDatesLoader,
@@ -91,13 +101,18 @@ class NotificationScheduler {
     GetActiveKhatmahUsecase? getActiveKhatmah,
     PrayerCompanionPlanner? prayerCompanionPlanner,
     PrayerCompanionPreferences? prayerCompanionPreferences,
+    PrayerDeliveryCoordinator? prayerDeliveryCoordinator,
   }) : _kidsSessionDatesLoader = kidsSessionDatesLoader,
        _getAyahOfDay = getAyahOfDay,
        _streakRiskEvaluator = streakRiskEvaluator,
        _prayerTimesService = prayerTimesService,
        _getActiveKhatmah = getActiveKhatmah,
        _prayerCompanionPlanner = prayerCompanionPlanner,
-       _prayerCompanionPreferences = prayerCompanionPreferences;
+       _prayerCompanionPreferences = prayerCompanionPreferences,
+       _prayerDeliveryCoordinator = prayerDeliveryCoordinator ??
+           (Platform.isAndroid
+               ? PrayerDeliveryCoordinator(AndroidPrayerDeliveryScheduler())
+               : null);
 
   String? _lastRollingDateKey;
 
@@ -564,67 +579,131 @@ class NotificationScheduler {
         prayerTimesEnabled &&
         prayerService != null &&
         prayerService.isReadyForNotificationScheduling;
+
+    // V2 delivery ownership: the coordinator either handles the whole
+    // prayer round natively (AlarmManager) or reports not-handled so the
+    // legacy FLN block runs. The two paths are mutually exclusive
+    // (golden rule: one alarm per occurrence).
+    final prayerDelivery = _prayerDeliveryCoordinator;
+
+    // Golden rule (§3): on the first refresh after enabling V2 — even one
+    // skipped by the rolling-window guard — the native side must already own
+    // the alarms while legacy FLN ids are cancelled, so an occurrence can
+    // never be armed in both paths. This cancel is idempotent.
+    if (canSchedulePrayerNotifications &&
+        prayerDelivery != null &&
+        prayerDelivery.isAndroid &&
+        prayerDelivery.isNativeOwner(prefs)) {
+      try {
+        await _service.cancelPrayerTimesReminders();
+      } catch (e, stack) {
+        TaliaLogger.w(
+          '[PrayerV2] failed to cancel legacy prayer reminders',
+          e,
+          stack,
+        );
+      }
+    }
+
     if (canSchedulePrayerNotifications) {
       if (shouldRefreshRolling) {
-        try {
-          final scheduledPrayers = <ScheduledPrayerNotification>[];
-          final fajrActive =
-              prefs.getBool(TaliaNotificationService.prayerFajrKey) ?? true;
-          final dhuhrActive =
-              prefs.getBool(TaliaNotificationService.prayerDhuhrKey) ?? true;
-          final asrActive =
-              prefs.getBool(TaliaNotificationService.prayerAsrKey) ?? true;
-          final maghribActive =
-              prefs.getBool(TaliaNotificationService.prayerMaghribKey) ?? true;
-          final ishaActive =
-              prefs.getBool(TaliaNotificationService.prayerIshaKey) ?? true;
+        final fajrActive =
+            prefs.getBool(TaliaNotificationService.prayerFajrKey) ?? true;
+        final dhuhrActive =
+            prefs.getBool(TaliaNotificationService.prayerDhuhrKey) ?? true;
+        final asrActive =
+            prefs.getBool(TaliaNotificationService.prayerAsrKey) ?? true;
+        final maghribActive =
+            prefs.getBool(TaliaNotificationService.prayerMaghribKey) ?? true;
+        final ishaActive =
+            prefs.getBool(TaliaNotificationService.prayerIshaKey) ?? true;
+        final prayerFilter = {
+          'fajr': fajrActive,
+          'dhuhr': dhuhrActive,
+          'asr': asrActive,
+          'maghrib': maghribActive,
+          'isha': ishaActive,
+        };
+        final athanEnabled =
+            prefs.getBool(TaliaNotificationService.prayerAthanKey) ?? false;
+        final muezzinId = prefs.getString(
+              TaliaNotificationService.prayerMuezzinKey,
+            ) ??
+            MuezzinCatalog.defaultId;
+        final fajrMuezzinId = prefs.getString(
+              TaliaNotificationService.prayerMuezzinFajrKey,
+            ) ??
+            '';
 
-          final prayerFilter = {
-            'fajr': fajrActive,
-            'dhuhr': dhuhrActive,
-            'asr': asrActive,
-            'maghrib': maghribActive,
-            'isha': ishaActive,
-          };
-
-          var offset = 0;
-          for (var day = 0; day < 7; day++) {
-            final targetDate = now.add(Duration(days: day));
-            final prayers = await prayerService.timesForDate(targetDate);
-            for (final prayer in prayers) {
-              if (prayerFilter[prayer.key] == true) {
-                final prayerName = l10n.localeName.startsWith('ar')
-                    ? prayer.nameAr
-                    : prayer.nameEn;
-                scheduledPrayers.add(
-                  ScheduledPrayerNotification(
-                    idOffset: offset,
-                    prayerKey: prayer.key,
-                    title: l10n.notificationPrayerTitle(prayerName),
-                    body: l10n.notificationPrayerBody,
-                    scheduledDate: prayer.time,
-                  ),
-                );
-              }
-              offset++;
-            }
+        var handledNatively = false;
+        if (prayerDelivery != null && prayerDelivery.isAndroid) {
+          try {
+            final events = await PrayerEventBuilder.build(
+              prayerService: prayerService,
+              now: now,
+              prayerFilter: prayerFilter,
+              adhanEnabled: athanEnabled,
+              muezzinId: muezzinId,
+              fajrMuezzinId: fajrMuezzinId,
+            );
+            handledNatively = await prayerDelivery.refreshNativeDelivery(
+              prefs: prefs,
+              events: events,
+              cancelLegacyReminders: () =>
+                  _service.cancelPrayerTimesReminders(),
+              rebuildLegacyReminders: () => _scheduleLegacyPrayerReminders(
+                l10n: l10n,
+                now: now,
+                prayerService: prayerService,
+                prayerFilter: prayerFilter,
+                athanEnabled: athanEnabled,
+                muezzinId: muezzinId,
+                fajrMuezzinId: fajrMuezzinId,
+              ),
+            );
+          } catch (e, stack) {
+            TaliaLogger.w(
+              '[PrayerV2] native delivery refresh failed',
+              e,
+              stack,
+            );
           }
-          final athanEnabled =
-              prefs.getBool(TaliaNotificationService.prayerAthanKey) ?? false;
-          await _service.schedulePrayerTimesReminders(
-            prayers: scheduledPrayers,
+        }
+        if (!handledNatively) {
+          try {
+          await _scheduleLegacyPrayerReminders(
+            l10n: l10n,
+            now: now,
+            prayerService: prayerService,
+            prayerFilter: prayerFilter,
             athanEnabled: athanEnabled,
+            muezzinId: muezzinId,
+            fajrMuezzinId: fajrMuezzinId,
           );
+          } catch (e, stack) {
+            TaliaLogger.w(
+              'Failed to schedule prayer times notifications',
+              e,
+              stack,
+            );
+          }
+        }
+      }
+    } else {
+      await _service.cancelPrayerTimesReminders();
+      // When V2 owns delivery, prayer notifications being disabled must
+      // also clear native alarms; on V1 this call is a harmless no-op.
+      if (prayerDelivery != null && prayerDelivery.isAndroid) {
+        try {
+          await prayerDelivery.cancelNative();
         } catch (e, stack) {
           TaliaLogger.w(
-            'Failed to schedule prayer times notifications',
+            '[PrayerV2] failed to cancel native prayer alarms',
             e,
             stack,
           );
         }
       }
-    } else {
-      await _service.cancelPrayerTimesReminders();
     }
 
     // Prayer Companion (additive, after the legacy prayer block): shares the
@@ -656,6 +735,49 @@ class NotificationScheduler {
     } else {
       await _service.cancelSmartReminder();
     }
+  }
+
+  /// Legacy (V1) FLN prayer scheduling. Moved verbatim from the previous
+  /// inline block; used when native V2 is not the active owner (§24/§25).
+  /// Kept until V2 is proven stable across releases (cleanup stage 11).
+  Future<void> _scheduleLegacyPrayerReminders({
+    required AppLocalizations l10n,
+    required DateTime now,
+    required PrayerTimesService prayerService,
+    required Map<String, bool> prayerFilter,
+    required bool athanEnabled,
+    String muezzinId = MuezzinCatalog.defaultId,
+    String fajrMuezzinId = '',
+  }) async {
+    final scheduledPrayers = <ScheduledPrayerNotification>[];
+    var offset = 0;
+    for (var day = 0; day < 7; day++) {
+      final targetDate = now.add(Duration(days: day));
+      final prayers = await prayerService.timesForDate(targetDate);
+      for (final prayer in prayers) {
+        if (prayerFilter[prayer.key] == true) {
+          final prayerName = l10n.localeName.startsWith('ar')
+              ? prayer.nameAr
+              : prayer.nameEn;
+          scheduledPrayers.add(
+            ScheduledPrayerNotification(
+              idOffset: offset,
+              prayerKey: prayer.key,
+              title: l10n.notificationPrayerTitle(prayerName),
+              body: l10n.notificationPrayerBody,
+              scheduledDate: prayer.time,
+            ),
+          );
+        }
+        offset++;
+      }
+    }
+    await _service.schedulePrayerTimesReminders(
+      prayers: scheduledPrayers,
+      athanEnabled: athanEnabled,
+      muezzinId: muezzinId,
+      fajrMuezzinId: fajrMuezzinId,
+    );
   }
 
   /// Schedules (or cancels) the opt-in Prayer Companion reminders.

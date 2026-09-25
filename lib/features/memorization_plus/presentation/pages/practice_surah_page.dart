@@ -5,6 +5,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../../core/widgets/section_header.dart';
 import '../../../../core/widgets/state_widgets.dart';
@@ -136,17 +137,7 @@ class _PracticeSurahAppBar extends StatelessWidget {
         collapseMode: CollapseMode.pin,
         background: Container(
           decoration: BoxDecoration(
-            gradient: isDark
-                ? const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [Color(0xFF0A2A22), Color(0xFF0D1117)],
-                  )
-                : const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.primaryLight, AppColors.accentBlue],
-                  ),
+            gradient: AppDecorations.memorizationHeader(isDark: isDark),
           ),
           child: SafeArea(
             child: Padding(

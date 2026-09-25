@@ -423,18 +423,11 @@ class _ChildSetupSheetState extends State<_ChildSetupSheet> {
                   child: Text(_reminderTime.format(context)),
                 ),
               ),
-              SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(context.l10n.kidsGuidanceAudioTitle),
-                subtitle: Text(
-                  context.l10n.kidsGuidanceAudioDescription,
-                ),
-                value: _guidanceAudioEnabled,
-                onChanged: (value) {
-                  setState(() => _guidanceAudioEnabled = value);
-                },
-              ),
-              const SizedBox(height: 12),
+              // The "guidance audio" switch stays intentionally hidden until
+              // the kids session consumes the setting (K10 in
+              // docs/audits/TALIA_KIDS_PATH_REVIEW_REPORT.md). The draft field
+              // still records the age-based default so stored settings stay
+              // consistent.
               TextField(
                 controller: _pinController,
                 obscureText: true,

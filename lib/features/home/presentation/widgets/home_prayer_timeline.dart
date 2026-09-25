@@ -47,6 +47,7 @@ class HomePrayerTimeline extends StatefulWidget {
     this.companionSummary,
     this.companionController,
     this.onCompanionChanged,
+    this.onSnapshotStale,
   });
 
   final PrayerTimesSnapshot snapshot;
@@ -61,6 +62,10 @@ class HomePrayerTimeline extends StatefulWidget {
   final PrayerCompanionController? companionController;
   final VoidCallback? onCompanionChanged;
 
+  /// V2 §32: fired ONCE when the live countdown reaches zero, so the owner
+  /// can reload the snapshot and advance to the next prayer.
+  final VoidCallback? onSnapshotStale;
+
   /// Injectable clock — defaults to [DateTime.now] when null. Used in tests
   /// to pin the current time without depending on the system clock.
   final DateTime Function()? now;
@@ -73,30 +78,82 @@ class HomePrayerTimeline extends StatefulWidget {
 }
 
 class _HomePrayerTimelineState extends State<HomePrayerTimeline>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late final AnimationController _pulse;
+
+  /// V2 §32: presentation-only ticking countdown. One-second animation
+  /// ticker (no Dart Timers, no prayer recalculation) decays the snapshot's
+  /// own [minutesUntil] as time passes; when it reaches zero the snapshot
+  /// owner is notified exactly once via
+  /// [HomePrayerTimeline.onSnapshotStale].
+  late final AnimationController _countdown;
+
+  /// Snapshot anchor: its own minutesUntil value, captured with the clock
+  /// reading at capture time. The live value decays from this base — never
+  /// recomputed from prayer times.
+  int? _baseMinutes;
+  DateTime? _baseNow;
+  int? _liveMinutes;
+  bool _staleNotified = false;
+
+  void _captureSnapshotBase() {
+    _baseMinutes = widget.snapshot.minutesUntil;
+    _baseNow = widget.now?.call() ?? DateTime.now();
+    _liveMinutes = null;
+    _staleNotified = false;
+  }
 
   @override
   void initState() {
     super.initState();
+    _captureSnapshotBase();
     _pulse = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1600),
       lowerBound: 0.0,
       upperBound: 1.0,
     );
+    _countdown = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    )..addListener(_onCountdownTick);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       if (HomePrayerTimeline.enableAnimations &&
           !MediaQuery.disableAnimationsOf(context)) {
         _pulse.repeat(reverse: true);
+        _countdown.repeat();
       }
     });
+  }
+
+  void _onCountdownTick() {
+    if (!mounted || _baseMinutes == null || _baseNow == null) return;
+    final now = widget.now?.call() ?? DateTime.now();
+    final live = _baseMinutes! - now.difference(_baseNow!).inMinutes;
+    final clamped = live < 0 ? 0 : live;
+    if (clamped != _liveMinutes) {
+      setState(() => _liveMinutes = clamped);
+    }
+    if (clamped <= 0 && !_staleNotified) {
+      _staleNotified = true;
+      widget.onSnapshotStale?.call();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant HomePrayerTimeline oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.snapshot != oldWidget.snapshot) {
+      // Fresh snapshot: re-anchor the countdown for the new occurrence.
+      _captureSnapshotBase();
+    }
   }
 
   @override
   void dispose() {
     _pulse.dispose();
+    _countdown.dispose();
     super.dispose();
   }
 
@@ -139,8 +196,9 @@ class _HomePrayerTimelineState extends State<HomePrayerTimeline>
   String _headerText(BuildContext context) {
     final l10n = context.l10n;
     final s = widget.snapshot;
+    // V2 §32: live minutes (ticking) with the snapshot value as fallback.
     final timeRemaining = formatPrayerRemainingTime(
-      s.minutesUntil,
+      _liveMinutes ?? s.minutesUntil,
       isArabic: context.isArabic,
     );
     if (s.nextName == 'sunrise') {

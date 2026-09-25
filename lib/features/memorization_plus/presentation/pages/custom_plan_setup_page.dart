@@ -8,6 +8,7 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/di/injection.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_decorations.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../../quran/domain/repositories/quran_repository.dart';
 import '../../domain/entities/memorization_entities.dart';
@@ -279,7 +280,9 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
 
   void _setStartSurah(int surahId) {
     _startSurahId = surahId;
-    if (_endSurahId < surahId) _endSurahId = surahId;
+    // Entry/exit model (no forced ordering): "من" is where memorization
+    // starts, "إلى" is where it ends — either direction is legal (a Juz Amma
+    // plan runs 114 → 78). The direction hint below makes the flow explicit.
     _clampStartAyahForSurah();
   }
 
@@ -399,11 +402,9 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 flexibleSpace: FlexibleSpaceBar(
                   collapseMode: CollapseMode.pin,
                   background: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [AppColors.primaryLight, AppColors.primaryDark],
+                    decoration: BoxDecoration(
+                      gradient: AppDecorations.memorizationHeader(
+                        isDark: isDark,
                       ),
                     ),
                     child: SafeArea(
@@ -710,6 +711,14 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   // ═══════════════════════════════════════════════════════════════════════════
 
   Widget _buildSurahRangeSelector(bool isDark, Color primary) {
+    final directionForward = _startSurahId <= _endSurahId;
+    final fromName = _startSurahId < _surahNames.length
+        ? _surahNames[_startSurahId]
+        : '${context.l10n.surah} $_startSurahId';
+    final toName = _endSurahId < _surahNames.length
+        ? _surahNames[_endSurahId]
+        : '${context.l10n.surah} $_endSurahId';
+
     return Container(
       padding: const EdgeInsets.all(AppSpacing.md),
       decoration: BoxDecoration(
@@ -752,8 +761,6 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
             onChanged: (v) {
               setState(() {
                 _endSurahId = v;
-                // إذا أصبحت النهاية أصغر من البداية، اضبط البداية لتطابقها
-                if (_startSurahId > v) _startSurahId = v;
                 _clampStartAyahForSurah();
               });
             },
@@ -762,6 +769,41 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
             color: isDark
                 ? Colors.white.withValues(alpha: 0.06)
                 : Colors.black.withValues(alpha: 0.06),
+          ),
+          // Explicit direction hint — resolves the ascending/descending
+          // ambiguity when "من" sits above "إلى" numerically (e.g. Juz Amma).
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.sm),
+            child: Row(
+              children: [
+                Icon(
+                  directionForward
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
+                  color: primary,
+                  size: 18,
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Expanded(
+                  child: Text(
+                    directionForward
+                        ? context.l10n.customPlanDirectionForward(
+                            fromName,
+                            toName,
+                          )
+                        : context.l10n.customPlanDirectionBackward(
+                            fromName,
+                            toName,
+                          ),
+                    style: AppTypography.bodySmall.copyWith(
+                      color: isDark
+                          ? AppColors.darkTextSecondary
+                          : AppColors.lightTextSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
           Row(
             children: [
@@ -1281,9 +1323,19 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
   }
 
   Widget _buildEstimatedDuration(bool isDark) {
-    // rough estimate
-    final totalSurahs = (_endSurahId - _startSurahId).abs() + 1;
-    final totalAyahsEstimate = totalSurahs * 20; // rough avg
+    // Exact ayah totals from the loaded surah table (works in both
+    // directions — a Juz Amma plan 114→78 is measured identically).
+    final lo = _startSurahId <= _endSurahId
+        ? _startSurahId
+        : _endSurahId;
+    final hi = _startSurahId <= _endSurahId
+        ? _endSurahId
+        : _startSurahId;
+    var totalAyahsEstimate = 0;
+    for (var surahId = lo; surahId <= hi; surahId++) {
+      totalAyahsEstimate += _ayahCountForSurah(surahId);
+    }
+    final totalSurahs = hi - lo + 1;
     final sessionsPerWeek = _availableDays;
     final ayahsPerSession = _newAyahsPerDay;
     final totalSessions = (totalAyahsEstimate / ayahsPerSession).ceil();

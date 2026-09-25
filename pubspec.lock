@@ -121,14 +121,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.4"
-  awqat:
-    dependency: "direct main"
-    description:
-      name: awqat
-      sha256: "7c9de3968ce398bc0cdb07fa87fe5c6f9084e9790795d3688953ca38bd2dd19f"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.14"
   barcode:
     dependency: transitive
     description:

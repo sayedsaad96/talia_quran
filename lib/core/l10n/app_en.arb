@@ -460,6 +460,28 @@
   "settingsSectionHelpTutorial": "Help & Tutorial",
   "settingsSectionPrivacySecurity": "Privacy & Security",
   "settingsSectionAboutTalia": "About Talia",
+  "settingsBackgroundPlaybackTitle": "Background playback",
+  "settingsBackgroundPlaybackSubtitle": "Recitation keeps playing after you leave the app, with controls in the notification.",
+  "settingsHubPractice": "Practice",
+  "settingsHubReminders": "Reminders",
+  "settingsHubSupport": "Support",
+  "settingsRemindersGeneral": "General",
+  "settingsRemindersMemorization": "Memorization reminders",
+  "settingsRemindersWorship": "Worship",
+  "settingsRemindersProgress": "Progress",
+  "notificationPermissionBlockedTitle": "App notifications are off in phone settings",
+  "notificationPermissionBlockedBody": "Review and adhkar reminders will not arrive until notifications are allowed in system settings.",
+  "notificationOpenSystemSettings": "Open phone settings",
+  "notificationStatusBlocked": "Notifications are turned off in system settings",
+  "notificationStatusSummary": "{enabled} of {total} reminders on",
+  "@notificationStatusSummary": {
+    "placeholders": {
+      "enabled": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "notificationTestInteractiveTitle": "Try a notification",
+  "notificationTestInteractiveSubtitle": "Send a sample reminder to confirm alerts work",
   "settingsGuestStatusTitle": "Using Talia as guest",
   "settingsGuestStatusSubtitle": "Your local progress remains on this device. Create an account for account management and family features.",
   "settingsSignInCreateAccount": "Sign in / Create account",
@@ -829,6 +851,14 @@
     }
   },
   "kidsGamifiedLockedStage": "This house is locked for now",
+  "kidsGamifiedDailyLimitReached": "You finished today's missions. MashaAllah! Come back tomorrow for a new house.",
+  "@kidsGamifiedDailyLimitReached": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "kidsGamifiedCurrentStage": "Your current mission",
   "kidsGamifiedCompletedStage": "Well done, house completed",
   "kidsGamifiedNeedsReview": "Ready for review",
@@ -1568,8 +1598,25 @@
   "notificationSettingsKhatmahSub": "Daily reminder for your active Khatmah target",
   "notificationSettingsPrayerTimes": "Prayer Times",
   "notificationSettingsPrayerTimesSub": "Reminders at the time of each of the 5 daily prayers",
-  "notificationSettingsPrayerAthan": "Athan sound",
-  "notificationSettingsPrayerAthanSub": "Play the bundled athan clip instead of the default sound",
+  "notificationSettingsPrayerAthan": "Full Adhan",
+  "notificationSettingsPrayerAthanSub": "Plays the full adhan at prayer time with a stop control",
+  "muezzinPickerTitle": "Choose muezzin",
+  "muezzinPickerSubtitle": "Pick your favorite adhan voice and preview it before saving",
+  "muezzinDefault": "Default adhan",
+  "muezzinPickerSave": "Save",
+  "muezzinPreviewPlay": "Preview",
+  "muezzinPreviewStop": "Stop preview",
+  "muezzinFajrSectionTitle": "Fajr adhan",
+  "muezzinFajrSameAsGeneral": "Same as other prayers",
+  "muezzinFajrBadge": "Fajr",
+  "muezzinFajrSummary": "{general} for prayers, {fajr} for Fajr",
+  "@muezzinFajrSummary": {
+    "placeholders": {
+      "general": {"type": "String"},
+      "fajr": {"type": "String"}
+    }
+  },
+  "notificationSettingsPrayerNeedsTimes": "Enable prayer times first",
   "homeActionReadToday": "Read today",
   "homeActionTodaysPlan": "Today's Plan",
   "homeActionContinuePlan": "Continue today's plan",
@@ -2003,6 +2050,26 @@
   "v2ListenToAyah": "Listen to ayah",
   "v2Passed": "Passed",
   "v2Retries": "Retries",
+  "v2ResultExcellent": "Excellent! Flawless recitation",
+  "v2ResultPassed": "Ayah passed",
+  "v2ResultRetrying": "So close! Try again",
+  "v2ResultNeedsWork": "This ayah needs review",
+  "v2ResultSimilarity": "Match: {score}%",
+  "@v2ResultSimilarity": { "placeholders": { "score": { "type": "int" } } },
+  "v2ResultManualGrade": "Self-graded recitation",
+  "v2ResultContinue": "Continue",
+  "v2ResultRetryNow": "Recite again now",
+  "v2ResultReviewAyah": "Review the ayah",
+  "v2ResultWordsCorrect": "correct",
+  "v2ResultWordsMissing": "missing",
+  "v2ResultWordsWrong": "wrong",
+  "v2ResultWordsExtra": "extra",
+  "v2LoopOff": "Repeat: off",
+  "v2LoopThree": "Repeat: 3x",
+  "v2LoopInfinite": "Repeat: endless",
+  "v2MaskedWordsHint": "Show masked words",
+  "v2MaskedWordsRevealed": "Words are hidden — try to recall",
+  "v2MaskedWordsFull": "Hide words",
   "v2SurahLoadFailed": "Could not load surah data.",
   "v2NoAyahsInRange": "No ayahs are available in the selected range.",
   "kidsRecordingUnavailable": "The microphone did not work. Try again or ask a parent for help.",
@@ -2360,9 +2427,10 @@
   "weekdayFriday": "Friday",
   "weekdaySaturday": "Saturday",
   "weekdaySunday": "Sunday",
-  "notificationExactAlarmRequest": "Improve prayer-time precision",
-  "notificationExactAlarmGranted": "Prayer-time notification precision is enabled.",
-  "notificationExactAlarmDenied": "Notifications may arrive slightly late until exact-alarm access is allowed in device settings.",
+  "notificationExactAlarmRequest": "Enable exact alarms",
+  "notificationExactAlarmExplanation": "Ensures prayer reminders and the adhan fire exactly on time",
+  "notificationExactAlarmGranted": "Exact prayer-time alarms are enabled.",
+  "notificationExactAlarmDenied": "Reminders still arrive approximately on time; you can grant exact alarms later in system settings.",
   "notificationTestFailed": "Could not send the notification. Check notification permission in device settings."
   ,"notificationQuietHours": "Quiet hours"
   ,"notificationQuietHoursSub": "Move regular reminders outside the chosen period. Prayer times remain unchanged."
@@ -2370,4 +2438,19 @@
   ,"notificationQuietHoursEnd": "Ends"
   ,"notificationSmartReminder": "Smart reminder"
   ,"notificationSmartReminderSub": "Uses your recent on-device opening times to choose a reminder time."
+  ,"memorizationHubReviewDueBadge": "{count} ayahs due for review"
+  ,"@memorizationHubReviewDueBadge": { "placeholders": { "count": { "type": "int" } } }
+  ,"memorizationHubReviewDueNone": "No reviews due right now"
+  ,"dailyPlanNextReviewInDays": "Next review in {count, plural, =0{today} =1{1 day} other{{count} days}}"
+  ,"@dailyPlanNextReviewInDays": { "placeholders": { "count": { "type": "int" } } }
+  ,"dailyPlanStrengthWeak": "Weak memorization"
+  ,"dailyPlanStrengthLearning": "Still settling"
+  ,"dailyPlanStrengthStrong": "Solid memorization"
+  ,"memorizedPageAction": "Memorize this page"
+  ,"memorizedPageSubtext": "Start a memorization session for the current page's ayahs"
+  ,"memorizedPageUnavailable": "Page memorization is available when all its ayahs belong to one surah."
+  ,"customPlanDirectionForward": "Memorization direction: forward (from {from} to {to})"
+  ,"@customPlanDirectionForward": { "placeholders": { "from": { "type": "String" }, "to": { "type": "String" } } }
+  ,"customPlanDirectionBackward": "Memorization direction: backward (from {from} to {to})"
+  ,"@customPlanDirectionBackward": { "placeholders": { "from": { "type": "String" }, "to": { "type": "String" } } }
 }

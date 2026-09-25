@@ -81,6 +81,43 @@ void main() {
       expect(recorded, isFalse);
     });
 
+    testWidgets('listen-gated mic area shows a persistent hint that plays', (
+      tester,
+    ) async {
+      // K8: with 1 of 3 required listens done, the mic slot must never be a
+      // silent disabled button — it shows the remaining-listens hint instead.
+      tester.view.devicePixelRatio = 1;
+      tester.view.physicalSize = const Size(900, 1200);
+      addTearDown(tester.view.reset);
+
+      var recorded = false;
+      var played = false;
+
+      await tester.pumpWidget(
+        _TestApp(
+          child: KidsGamifiedListenContent(
+            state: _baseState,
+            onBack: () {},
+            onPlayPause: () => played = true,
+            onRecordRecitation: () => recorded = true,
+            onStopRecording: () {},
+          ),
+        ),
+      );
+
+      expect(find.text('Listen to the ayah 2 times before recording your voice.'),
+          findsOneWidget);
+      expect(find.byKey(const ValueKey('kids-gamified-listen-first-hint')),
+          findsOneWidget);
+
+      // Tapping the hint plays the audio (never records).
+      await tester.tap(find.byKey(const ValueKey('kids-gamified-listen-first-hint')));
+      await tester.pump();
+
+      expect(played, isTrue);
+      expect(recorded, isFalse);
+    });
+
     testWidgets('isBuffering=true shows loading spinner on ayah card', (
       tester,
     ) async {
@@ -344,6 +381,18 @@ void main() {
 
       expect(state.progress.starsForLevel, 3);
       expect(state.sessionStarsEarned, 1);
+    });
+
+    test('completion state carries session points and level-up (K11)', () {
+      // The completion route reads these from the cubit state, so points must
+      // survive into the state that navigation serializes to the URL.
+      final state = _baseState.copyWith(
+        sessionPointsEarned: 14,
+        leveledUpTo: 3,
+      );
+
+      expect(state.sessionPointsEarned, 14);
+      expect(state.leveledUpTo, 3);
     });
   });
 }

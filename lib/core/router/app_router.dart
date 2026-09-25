@@ -794,10 +794,24 @@ abstract class AppRouter {
             extra: extra,
             queryParameters: state.uri.queryParameters,
           );
+          // K11: session points and level-up travel with the route.
+          final pointsEarned =
+              extra?['pointsEarned'] as int? ??
+              int.tryParse(
+                state.uri.queryParameters['pointsEarned'] ?? '',
+              ) ??
+              0;
+          final leveledUpTo =
+              extra?['leveledUpTo'] as int? ??
+              int.tryParse(
+                state.uri.queryParameters['leveledUpTo'] ?? '',
+              );
           return KidsGamifiedCompletionPage(
             surahId: surahId!,
             completedAyahNumber: completedAyahNumber,
             starsEarned: starsEarned,
+            pointsEarned: pointsEarned,
+            leveledUpTo: leveledUpTo,
           );
         },
       ),
