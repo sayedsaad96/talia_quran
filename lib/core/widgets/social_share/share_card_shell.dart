@@ -81,15 +81,32 @@ class ShareCardShell extends StatelessWidget {
                       ),
                     ),
                     if (name != null && name.isNotEmpty) ...[
-                      Text(
-                        copy.journeyFor(name),
-                        key: const ValueKey('share-personal-line'),
-                        textAlign: TextAlign.center,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TaliaShareTypography.body(
-                          color: palette.textSecondary,
-                          fontSize: metrics.personalLineSize,
+                      // On the same glass as the signature bar so the line
+                      // stays readable over the mushaf light.
+                      Center(
+                        child: Container(
+                          key: const ValueKey('share-personal-pill'),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: metrics.gap * 1.5,
+                            vertical: metrics.gap / 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: palette.signatureSurface,
+                            borderRadius: BorderRadius.circular(
+                              TaliaShareMetrics.signatureRadius,
+                            ),
+                          ),
+                          child: Text(
+                            copy.journeyFor(name),
+                            key: const ValueKey('share-personal-line'),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TaliaShareTypography.body(
+                              color: palette.signatureText,
+                              fontSize: metrics.personalLineSize,
+                            ),
+                          ),
                         ),
                       ),
                       SizedBox(height: metrics.gap),
@@ -135,17 +152,21 @@ class TaliaCharacterHero extends StatelessWidget {
   final String assetPath;
   final double height;
 
+  /// The exact image painted for a character of [height] logical px; the
+  /// share sheet precaches this same provider (see `logoProvider`).
+  static ImageProvider imageProvider(String assetPath, double height) =>
+      ResizeImage(AssetImage(assetPath), width: (height * 3).round());
+
   @override
   Widget build(BuildContext context) {
     // Both axes are pinned so offscreen exports lay out correctly before
     // the codec reports intrinsic dimensions.
-    return Image.asset(
-      assetPath,
+    return Image(
+      image: imageProvider(assetPath, height),
       key: const ValueKey('share-hero-character'),
       width: height,
       height: height,
       fit: BoxFit.contain,
-      cacheWidth: (height * 3).round(),
       errorBuilder: (_, _, _) => SizedBox.square(dimension: height),
     );
   }

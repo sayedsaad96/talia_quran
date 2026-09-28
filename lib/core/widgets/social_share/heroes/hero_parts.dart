@@ -19,17 +19,23 @@ class HeroNumeral extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      key: const ValueKey('share-hero-numeral'),
-      textDirection: TextDirection.ltr,
-      textAlign: TextAlign.center,
-      maxLines: 1,
-      style: TaliaShareTypography.display(
-        color: color,
-        fontSize: size,
-        fontWeight: FontWeight.w700,
-        height: 1.05,
+    // ShareCardContent only scales for height, so a wide value ("100 / 100")
+    // must shrink here instead of wrapping onto a hidden second line.
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        text,
+        key: const ValueKey('share-hero-numeral'),
+        textDirection: TextDirection.ltr,
+        textAlign: TextAlign.center,
+        maxLines: 1,
+        softWrap: false,
+        style: TaliaShareTypography.display(
+          color: color,
+          fontSize: size,
+          fontWeight: FontWeight.w700,
+          height: 1.05,
+        ),
       ),
     );
   }

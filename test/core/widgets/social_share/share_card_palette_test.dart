@@ -17,6 +17,29 @@ Color _signatureBackdrop(SharePalette p) => Color.alphaBlend(
   Color.lerp(p.skyBase, p.glow, p.glowStrength.clamp(0.0, 1.0))!,
 );
 
+/// Glow opacity at [distance] logical px above the card bottom, mirroring
+/// the backdrop gradient stops (strength, strength*0.35, 0 at 0/0.32/1).
+double _glowAlphaAt(SharePalette p, double distance, double shortSide) {
+  final t = (distance / (p.glowRadius * shortSide)).clamp(0.0, 1.0);
+  if (t <= 0.32) {
+    return p.glowStrength +
+        (p.glowStrength * 0.35 - p.glowStrength) * (t / 0.32);
+  }
+  return p.glowStrength * 0.35 * (1 - (t - 0.32) / 0.68);
+}
+
+/// Sky colour and glow where the lower part of the hero sits on a portrait
+/// card: about 30% of the card height above the bottom edge.
+Color _lowerHeroBackdrop(SharePalette p) {
+  const shortSide = 360.0;
+  const distance = 450 * 0.30;
+  final sky = Color.lerp(p.skyMid, p.skyBase, 0.7)!;
+  return Color.alphaBlend(
+    p.glow.withValues(alpha: _glowAlphaAt(p, distance, shortSide)),
+    sky,
+  );
+}
+
 void main() {
   SocialShareData dataFor(
     SocialShareCategory category, {
@@ -83,6 +106,12 @@ void main() {
       });
       test('${p.id}: accent (numerals, references) is readable', () {
         expect(_contrast(p.textAccent, p.skyMid), greaterThanOrEqualTo(3.0));
+      });
+      test('${p.id}: hero text stays readable where the glow reaches it', () {
+        final bg = _lowerHeroBackdrop(p);
+        expect(_contrast(p.textPrimary, bg), greaterThanOrEqualTo(4.5));
+        expect(_contrast(p.textAccent, bg), greaterThanOrEqualTo(4.5));
+        expect(_contrast(p.textSecondary, bg), greaterThanOrEqualTo(4.5));
       });
       test('${p.id}: signature text survives the brightest glow', () {
         expect(

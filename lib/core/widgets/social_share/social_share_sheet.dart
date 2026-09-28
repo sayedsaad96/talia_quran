@@ -134,13 +134,31 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
     // Offscreen capture must not race the logo decode.
     if (_logoPrecached) return;
     _logoPrecached = true;
-    unawaited(
-      precacheImage(
-        const AssetImage(ShareSignatureBar.logoAsset),
-        context,
-        onError: (_, _) {},
-      ),
-    );
+    // Warm the exact (resized) images the card paints, for every format the
+    // user can switch to; the full-size asset is a different cache entry.
+    for (final format in SocialShareFormat.values) {
+      final metrics = TaliaShareMetrics.of(format);
+      unawaited(
+        precacheImage(
+          ShareSignatureBar.logoProvider(metrics.logoSize),
+          context,
+          onError: (_, _) {},
+        ),
+      );
+      if (widget.data.audience == SocialShareAudience.kids &&
+          widget.data.showCharacter) {
+        unawaited(
+          precacheImage(
+            TaliaCharacterHero.imageProvider(
+              widget.data.effectiveCharacterAssetPath,
+              metrics.characterHeight,
+            ),
+            context,
+            onError: (_, _) {},
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildChoiceChip({

@@ -22,11 +22,11 @@ enum SharePaletteId {
 const _ink = Color(0xFF021210);
 const _emeraldDeep = Color(0xFF042F2E);
 const _emerald = Color(0xFF0D5C53);
-const _emeraldLight = Color(0xFF148275);
 const _mushafGlow = Color(0xFFFFCE6E);
 const _ivoryText = Color(0xFFFFF8EC);
 const _mistText = Color(0xFFD9E6E1);
 const _gold = Color(0xFFF5C45A);
+const _goldBright = Color(0xFFFFD97E);
 const _paper = Color(0xFFF0EDE6);
 const _glass = Color(0xB3021210);
 const _glassBorder = Color(0x73F5C45A);
@@ -66,10 +66,10 @@ class SharePalette {
     required this.skyBase,
     this.glow = _mushafGlow,
     this.glowStrength = 0.92,
-    this.glowRadius = 0.85,
+    this.glowRadius = 0.6,
     this.textPrimary = _ivoryText,
     this.textSecondary = _mistText,
-    this.textAccent = _gold,
+    this.textAccent = _goldBright,
     this.eyebrow = _gold,
   }) : watermark = _whiteWatermark,
        archLine = _archGold,
@@ -119,7 +119,7 @@ abstract final class SharePalettes {
     skyTop: Color(0xFF0B1530),
     skyMid: Color(0xFF062C35),
     skyBase: _emerald,
-    glowStrength: 0.75,
+    glowStrength: 0.8,
   );
 
   /// Evening teal-blue for remembrance.
@@ -128,7 +128,7 @@ abstract final class SharePalettes {
     skyTop: Color(0xFF06202E),
     skyMid: Color(0xFF053338),
     skyBase: _emerald,
-    glowStrength: 0.75,
+    glowStrength: 0.8,
   );
 
   /// Full sunrise for achievements, certificates and khatmah.
@@ -136,26 +136,26 @@ abstract final class SharePalettes {
     id: SharePaletteId.sunrise,
     skyTop: _ink,
     skyMid: Color(0xFF0A3A33),
-    skyBase: _emeraldLight,
+    skyBase: Color(0xFF0D6157),
     glowStrength: 1,
-    glowRadius: 1.15,
+    glowRadius: 0.55,
   );
 
   static const forenoon = SharePalette._dark(
     id: SharePaletteId.forenoon,
     skyTop: _ink,
     skyMid: _emeraldDeep,
-    skyBase: _emeraldLight,
+    skyBase: Color(0xFF0D6157),
   );
 
   static const kidsMorning = SharePalette._dark(
     id: SharePaletteId.kidsMorning,
-    skyTop: _emerald,
-    skyMid: _emeraldLight,
-    skyBase: Color(0xFF1FA08E),
+    skyTop: Color(0xFF0B4F47),
+    skyMid: _emerald,
+    skyBase: Color(0xFF0F6A5E),
     glow: Color(0xFFFFD978),
     glowStrength: 1,
-    glowRadius: 1.1,
+    glowRadius: 0.45,
     textPrimary: Color(0xFFFFFFFF),
     textSecondary: Color(0xFFFFFFFF),
     textAccent: Color(0xFFFFE9A8),

@@ -19,6 +19,18 @@ class ShareSignatureBar extends StatelessWidget {
 
   static const String logoAsset = 'assets/images/logo_new_padded.png';
 
+  /// The padded logo has a transparent margin; scaling it up inside the
+  /// circle lets the emblem, not the padding, fill the mark.
+  static const double emblemScale = 1.35;
+
+  /// The exact image the card paints for a logo of [size] logical px. The
+  /// share sheet precaches this same provider so an offscreen capture never
+  /// races the decode (a different `cacheWidth` is a different cache entry).
+  static ImageProvider logoProvider(double size) => ResizeImage(
+    const AssetImage(logoAsset),
+    width: (size * 3 * emblemScale).round(),
+  );
+
   final SharePalette palette;
   final TaliaShareMetrics metrics;
   final SocialShareCopy copy;
@@ -59,7 +71,7 @@ class ShareSignatureBar extends StatelessWidget {
                 Text(
                   invitation,
                   key: const ValueKey('share-invitation'),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TaliaShareTypography.body(
                     color: palette.signatureText,
@@ -91,19 +103,15 @@ class _ShareLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The padded logo has a transparent margin; scaling inside the circle
-    // lets the emblem, not the padding, fill the mark.
-    const emblemScale = 1.35;
     return SizedBox.square(
       dimension: size,
       child: ClipOval(
         child: Transform.scale(
-          scale: emblemScale,
-          child: Image.asset(
-            ShareSignatureBar.logoAsset,
+          scale: ShareSignatureBar.emblemScale,
+          child: Image(
+            image: ShareSignatureBar.logoProvider(size),
             key: const ValueKey('share-logo'),
             fit: BoxFit.cover,
-            cacheWidth: (size * 3 * emblemScale).round(),
             errorBuilder: (_, _, _) =>
                 Icon(Icons.auto_awesome_rounded, color: fallbackColor),
           ),

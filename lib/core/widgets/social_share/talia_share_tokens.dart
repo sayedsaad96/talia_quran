@@ -88,9 +88,9 @@ class TaliaShareMetrics {
   static const square = TaliaShareMetrics._(
     padding: EdgeInsets.all(16),
     eyebrowSize: 10,
-    signatureHeight: 52,
-    logoSize: 36,
-    qrSize: 46,
+    signatureHeight: 54,
+    logoSize: 38,
+    qrSize: 49,
     wordmarkSize: 11,
     invitationSize: 9,
     referenceSize: 11,

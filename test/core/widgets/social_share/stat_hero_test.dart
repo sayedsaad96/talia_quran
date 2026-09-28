@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:talia_quran/core/widgets/social_share/heroes/stat_hero.dart';
 import 'package:talia_quran/core/widgets/social_share/share_card_palette.dart';
@@ -119,6 +120,50 @@ void main() {
     expect(find.text('12 / 15'), findsOneWidget);
     expect(find.text('أذكار أتممتُها'), findsOneWidget);
     expect(progressLine, findsOneWidget);
+  });
+
+  RenderParagraph numeralParagraph(WidgetTester tester) =>
+      tester.renderObject<RenderParagraph>(
+        find.byKey(const ValueKey('share-hero-numeral')).first,
+      );
+
+  testWidgets('a wide wird numeral scales down instead of wrapping', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      shareHarness(
+        StatHero(
+          data: SocialShareData.azkarWird(
+            categoryTitle: 'أذكار',
+            completedCount: 100,
+            totalCount: 100,
+          ),
+          palette: SharePalettes.forenoon,
+          metrics: TaliaShareMetrics.story,
+        ),
+        size: const Size(174, 400),
+      ),
+    );
+    expect(numeralParagraph(tester).didExceedMaxLines, isFalse);
+    expect(find.text('100 / 100'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a three-digit streak scales down in a narrow kids column', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      shareHarness(
+        StatHero(
+          data: SocialShareData.streak(streakDays: 100),
+          palette: SharePalettes.kidsMorning,
+          metrics: TaliaShareMetrics.story,
+        ),
+        size: const Size(174, 400),
+      ),
+    );
+    expect(numeralParagraph(tester).didExceedMaxLines, isFalse);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('azkar wird with zero total shows the count only', (

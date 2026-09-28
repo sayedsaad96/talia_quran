@@ -121,6 +121,17 @@ void main() {
     },
   );
 
+  testWidgets('the personal line sits on the signature glass', (tester) async {
+    await pumpCard(tester, _ayah(userName: 'سيد'), mood: SocialShareMood.night);
+    expect(
+      find.ancestor(
+        of: find.byKey(const ValueKey('share-personal-line')),
+        matching: find.byKey(const ValueKey('share-personal-pill')),
+      ),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('hideUserName removes the personal line', (tester) async {
     await pumpCard(tester, _ayah(userName: 'سيد'), hideUserName: true);
     expect(find.byKey(const ValueKey('share-personal-line')), findsNothing);

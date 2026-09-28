@@ -41,6 +41,11 @@ void main() {
       (logo.image as ResizeImage).imageProvider,
       const AssetImage(ShareSignatureBar.logoAsset),
     );
+    expect(
+      logo.image,
+      ShareSignatureBar.logoProvider(TaliaShareMetrics.portrait.logoSize),
+      reason: 'precaching must warm exactly the image the card paints',
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -61,7 +66,7 @@ void main() {
     final text = tester.widget<Text>(
       find.byKey(const ValueKey('share-invitation')),
     );
-    expect(text.maxLines, 1);
+    expect(text.maxLines, 2);
     expect(text.overflow, TextOverflow.ellipsis);
     expect(tester.takeException(), isNull);
   });
