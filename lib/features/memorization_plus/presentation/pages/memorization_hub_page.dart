@@ -311,6 +311,14 @@ class _MemorizationHubPageState extends State<MemorizationHubPage> {
           accentOverride: AppColors.accentBlue,
           isDark: isDark,
         ),
+        const SizedBox(height: AppSpacing.sm),
+        _HubActionCard(
+          icon: Icons.hearing_rounded,
+          title: context.l10n.listeningReviewTitle,
+          description: context.l10n.listeningReviewHubDescription,
+          route: AppRoutes.listeningReview,
+          isDark: isDark,
+        ),
         const SizedBox(height: AppSpacing.lg),
         _HubSectionHeader(
           title: context.l10n.memorizationHubReviewSectionTitle,

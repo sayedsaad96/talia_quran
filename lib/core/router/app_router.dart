@@ -31,6 +31,7 @@ import '../../features/khatmah/presentation/pages/khatmah_dashboard_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_history_page.dart';
 import '../../features/khatmah/presentation/pages/khatmah_setup_page.dart';
 import '../../features/memorization_plus/presentation/pages/practice_surah_page.dart';
+import '../../features/memorization_plus/presentation/pages/listening_review_page.dart';
 import '../../features/azkar/presentation/pages/azkar_page.dart';
 import '../../features/azkar/presentation/pages/azkar_category_page.dart';
 import '../../features/azkar/presentation/pages/general_azkar_page.dart';
@@ -76,6 +77,7 @@ abstract class AppRoutes {
 
   /// Surah picker for adult "Practice by Surah" (replaces bare `/hifz` browse).
   static const String hifzPracticeSurah = '/memorization/practice-surah';
+  static const String listeningReview = '/memorization/listening-review';
   static const String memorizationHub = '/memorization';
   static const String azkar = '/azkar';
   static const String progress = '/progress';
@@ -149,6 +151,7 @@ final _publicRoutes = <String>[
   AppRoutes.quranBookmarks,
   AppRoutes.hifz,
   AppRoutes.hifzPracticeSurah,
+  AppRoutes.listeningReview,
   AppRoutes.memorizationHub,
   AppRoutes.azkar,
   AppRoutes.progress,
@@ -845,6 +848,13 @@ abstract class AppRouter {
           if (child == null) return const FamilyDashboardPage();
           return ChildDetailPage(child: child);
         },
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: AppRoutes.listeningReview,
+        redirect: (context, state) =>
+            MemorizationRouteGuard.adultOnlyRedirect(),
+        builder: (context, state) => const ListeningReviewPage(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

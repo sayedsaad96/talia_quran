@@ -6,7 +6,6 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/memorization/listening/listening_question.dart';
 import '../../../../core/memorization/listening/listening_round_result.dart';
-import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/memorization_ayah_display.dart';
 import '../../../quran/domain/entities/quran_entities.dart';
 import '../../data/listening/listening_review_stats_store.dart';
@@ -307,18 +306,15 @@ class _AyahCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = context.isDark;
+    final tokens = context.tokens;
     return V2PhaseCard(
       child: MemorizationAyahDisplay(
         text: text,
         surahId: ref.surahId,
         ayahNumber: ref.ayahNumber,
-        textColor: isDark
-            ? AppColors.darkTextPrimary
-            : AppColors.lightTextPrimary,
-        decorationColor: (isDark ? AppColors.primaryLight : AppColors.primary)
-            .withValues(alpha: 0.5),
-        referenceColor: isDark ? AppColors.primaryLight : AppColors.primary,
+        textColor: tokens.textPrimary,
+        decorationColor: tokens.accent.withValues(alpha: 0.5),
+        referenceColor: tokens.accent,
         isCompleted: false,
       ),
     );
@@ -345,7 +341,7 @@ class _Reveal extends StatelessWidget {
           ok ? l10n.listeningReviewCorrect : l10n.listeningReviewWrong,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: ok ? AppColors.primary : Theme.of(context).colorScheme.error,
+            color: ok ? context.tokens.success : context.tokens.error,
           ),
         ),
         const SizedBox(height: AppSpacing.sm),

@@ -71,6 +71,11 @@ import '../../features/hifz/data/datasources/isar_hifz_local_datasource_impl.dar
 import '../../features/hifz/data/repositories/hifz_repository_impl.dart';
 import '../../features/hifz/domain/repositories/hifz_repository.dart';
 import '../../features/memorization_plus/presentation/cubits/practice_surah_cubit.dart';
+import '../../features/memorization_plus/data/listening/listening_audio.dart';
+import '../../features/memorization_plus/data/listening/listening_quiz_source.dart';
+import '../../features/memorization_plus/data/listening/listening_recitation_capture.dart';
+import '../../features/memorization_plus/data/listening/listening_review_stats_store.dart';
+import '../../features/memorization_plus/presentation/cubits/listening_review_cubit.dart';
 import '../../features/azkar/data/datasources/azkar_local_datasource.dart';
 import '../../features/azkar/data/datasources/azkar_completion_store.dart';
 import '../../features/azkar/data/datasources/azkar_preferences_store.dart';
@@ -767,6 +772,26 @@ Future<void> configureDependencies({bool background = false}) async {
     () => PracticeSurahCubit(
       getIt<GetSurahsUsecase>(),
       getIt<MemorizationPlusRepository>(),
+    ),
+  );
+  getIt.registerLazySingleton<ListeningQuizSource>(
+    () => ListeningQuizSource(
+      getIt<MemorizationPlusRepository>(),
+      getIt<QuranRepository>(),
+    ),
+  );
+  getIt.registerLazySingleton<ListeningReviewStatsStore>(
+    () => ListeningReviewStatsStore(
+      getIt<SharedPreferences>(),
+      getIt<RecordOwnerProvider>(),
+    ),
+  );
+  getIt.registerFactory<ListeningReviewCubit>(
+    () => ListeningReviewCubit(
+      source: getIt<ListeningQuizSource>(),
+      audio: JustAudioListeningAudio(getIt<AudioCacheService>()),
+      capture: SpeechToTextListeningCapture(),
+      stats: getIt<ListeningReviewStatsStore>(),
     ),
   );
   getIt.registerFactory<AzkarCubit>(
