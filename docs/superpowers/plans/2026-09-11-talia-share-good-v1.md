@@ -2,13 +2,24 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a privacy-first, guest-capable worship invitation loop for eligible Quran and Azkar activities, with exact activity targeting, reusable branded sharing, aggregate Good Chain impact, and no social-network or religious-reward mechanics.
+**Goal:** Build a privacy-first worship invitation loop in which signed-in users create invitations and guests can resolve, open, start, and complete eligible Quran and Azkar activities without registration, with exact activity targeting, reusable branded sharing, aggregate Good Chain impact, and no social-network or religious-reward mechanics.
 
 **Architecture:** Add one feature-first `lib/features/share_good/` subsystem using the repository's existing domain/data/presentation, Cubit, GetIt, GoRouter, Supabase RPC, SharedPreferences, and secure-storage conventions. Existing Quran, Azkar, and Khatmah logic remains authoritative; thin presentation callbacks report only already-committed completion boundaries into Share Good. Existing `SocialShareSheet`, `SocialShareData`, renderer, image capture, and native share dependencies are extended rather than duplicated.
 
-**Tech Stack:** Flutter/Dart 3.11, `flutter_bloc`, `get_it`, `go_router`, `dartz`, `equatable`, Supabase/Postgres with RLS and `SECURITY DEFINER` RPCs, `shared_preferences`, `flutter_secure_storage`, `share_plus`, `screenshot`, `flutter_local_notifications`, and `app_links: ^7.2.1` for installed-app links only.
+**Tech Stack:** installed Flutter 3.47.1 / Dart 3.12.2, `flutter_bloc`, `get_it`, `go_router`, `dartz`, `equatable`, Supabase/Postgres with RLS, public `SECURITY INVOKER` RPC wrappers, non-exposed `private`-schema `SECURITY DEFINER` helpers, `shared_preferences`, `flutter_secure_storage`, `share_plus`, `screenshot`, `flutter_local_notifications`, and direct `app_links: ^7.2.1` for installed-app links only. The lock already resolves `app_links 7.2.1` through `supabase_flutter 2.16.0`, but the project still declares Dart `^3.11.4` while `app_links 7.2.1` requires Dart 3.12. Task 8 promotes the package to direct and raises the truthful project floor to Dart `^3.12.0` after a dependency/test gate.
 
-**Spec:** Requested source: `docs/superpowers/specs/2026-09-11-talia-share-good-design.md`. Repository finding: that path does not exist; the approved content was found untracked at `docs/superpowers/plans/2026-09-11-talia-share-good-design.md`. This plan treats that content as the approved product source of truth and does not move or modify it.
+**Spec:** Requested source: `docs/superpowers/specs/2026-09-11-talia-share-good-design.md`. Repository finding: that path does not exist; the approved tracked document is `docs/superpowers/plans/2026-09-11-talia-share-good-design.md` (introduced at `754088c`). This plan treats that content as the approved product source of truth and does not move or modify it.
+
+**Reconciliation baseline (2026-09-28):** reviewed at Git `3f2b9ad` plus the current uncommitted working tree. Commit `7998eda` landed the design-system foundations and `3f2b9ad` added the approved, not-yet-implemented Dawn social-share redesign specification. The working tree currently contains unrelated localization, typography, auth, onboarding, splash, and tutorial edits; implementation must begin from that stabilized baseline and preserve them. Re-run the repository-delta checks if HEAD or those files change before execution.
+
+## Review Focus
+
+- Creation and Good Impact authorization, anonymous recipient privacy, and the account-deletion behavior of the full `A -> B -> C` chain.
+- Cold/warm link arbitration across `TaliaApp`, `LaunchDestination`, `AppRouter`, password recovery, onboarding, and `PrayerCompanionController`.
+- Exact reuse of current Quran/Azkar/Khatmah completion authority without duplicate progress or duplicate confirmation UI.
+- Current notification settings/scheduler, quiet-hours, route guards, and iOS notification-budget behavior.
+- Supabase migration order, grants/RLS, fixed empty `search_path`, deployment verifier coverage, and fail-closed old-backend compatibility.
+- Current tracked theme primitives (`TaliaTokens`, `TaliaAppBar`, `PureBlackCubit`) and framework text scaling, while preserving the separate dirty typography/onboarding work.
 
 ## Global Constraints
 
@@ -18,15 +29,19 @@
 - Privacy is default. No name is returned or displayed unless the inviter selected it or the recipient explicitly consented after completion.
 - Do not add friends, contacts, search, feeds, chat, leaderboards, rankings, profile photos, live rooms, or public identity graphs.
 - Guests can resolve, open, start, and complete an invited activity without registration.
-- Authentication is required for creating an attributed invite, continuing a Good Chain as an identified link, and account-level Good Impact history.
+- Authentication is required for creating every invite, continuing a Good Chain, named completion disclosure, and account-level Good Impact history. V1 has no anonymous invite-creation path.
 - Existing Quran text, parser validation, `QuranPageCubit.confirmRead`, `QuranReadConfirmationGate`, `AzkarCubit`, `AzkarCompletionStore`, `KhatmahCubit.recordDigitalPage`, and Khatmah repository/use cases remain authoritative.
+- Invite links, notification payloads, analytics, and the Share Good invitation template contain activity identifiers/labels only—never Quran ayah text or Azkar content. Existing approved social-share sacred-text templates remain unchanged.
 - General Azkar and Duas are not eligible in V1 because their current library screens do not have the counted collection-completion contract used by morning/evening Azkar.
+- Smart Wird is not eligible in V1 because its time-sensitive composed item set is not represented by the locked target schema; do not snapshot or reconstruct its religious content in this feature.
 - Public-share destination is never inferred from the OS share sheet. The user chooses personal/public before it opens.
 - Invite expiration is calculated once by the backend creation RPC and returned as `expiresAt`; screens must not hard-code their own durations.
 - Product participation metrics are not worship points, piety measures, or religious-value metrics.
 - No push provider is introduced in V1. The only notification added is one optional local incomplete-invite reminder on the recipient device.
+- Account deletion removes identity/disclosure but must not erase aggregate invitation lineage or downstream participation.
+- A new app against an undeployed/older Share Good backend fails closed with a localized unavailable state; it never attempts direct table access or fabricates local success.
 - Automatic deferred restoration after App Store/Play Store installation is not advertised in this V1. Installed-app App/Universal Links are implemented; an uninstalled recipient gets a minimal install/reopen-link fallback.
-- All new user-visible copy is generated from `app_ar.arb` and `app_en.arb`, supports RTL/LTR, text scaling, screen readers, reduced motion, and 48dp touch targets.
+- All new user-visible copy is generated from `app_ar.arb` and `app_en.arb`, supports RTL/LTR, framework text scaling without a new app-wide cap, screen readers, reduced motion, and 48dp touch targets.
 
 ---
 
@@ -36,20 +51,22 @@
 |---|---|---|
 | Feature layout | Substantial features use `data/domain/presentation` under `lib/features`; cross-cutting code is under `lib/core`. | Create `lib/features/share_good/`; keep only link ingress in that feature's application layer and modify core startup/router narrowly. |
 | State management | Cubits are injected through `lib/core/di/injection.dart`; app-wide Cubits use `BlocProvider.value`, page Cubits use factories. | Use factory `InviteCreateCubit`, `InviteParticipationCubit`, and `GoodImpactCubit`; no new state-management library. |
-| Sharing | `lib/core/widgets/social_share/` already owns `SocialShareData`, `SocialShareSheet.show`, `captureSocialShareCardImage`, themes, templates, PNG export, gallery saving, and `SharePlus`. | Add an invite category/template and an optional text payload to the existing sheet; do not create another capture/export/native-share stack. |
-| Guest model | Guests are local users. Supabase anonymous sign-in is disabled and current database objects revoke `anon`. | Guest invite RPCs are narrowly granted to the API `anon` role and protected by high-entropy invite/participation keys, validation, expiry, and idempotency; do not create anonymous Auth users. |
+| Sharing | `lib/core/widgets/social_share/` owns `SocialShareData`, `SocialShareSheet.show`, capture/export, and `SharePlus`; its current name toggle defaults to visible. HEAD now also contains the approved Dawn redesign spec at `docs/superpowers/specs/2026-09-28-social-share-card-redesign-design.md`, which replaces themes with moods/palettes, adds a signature bar/QR, and deletes `social_share_theme.dart`, but that redesign is not implemented yet. | Do not extend the soon-to-be-deleted theme stack. Task 7 is gated on Dawn landing, then adds Share Good through the Dawn palette/signature/template extension points. Share Good bypasses the legacy/default name toggle and uses only the explicitly selected identity. |
+| Guest model | Supabase anonymous Auth sign-in is disabled. Signed-out API calls use the Postgres `anon` role, and current database objects revoke its access by default. | Grant `anon` only resolve/open/start/private-complete/event RPC execution; never grant table DML and never create anonymous Auth users. Invite creation is authenticated-only. |
 | Account safety | `RecordOwnerProvider`, `AccountDataBarrier`, `AccountDataReset`, and `CloudSyncQueue` prevent cross-account ownership errors. `CloudSyncQueue` explicitly refuses guest work. | Invite sessions stay installation/invite scoped in secure storage and never auto-bind on auth changes. Do not put guest invite mutations into account-owned `CloudSyncQueue`. |
 | Quran page | `QuranPageCubit.confirmRead` commits ordinary page progress, streak, reading log, and activity event after `QuranReadConfirmationGate`. | Call Share Good only after `confirmRead` succeeds. Add a separate explicit invited-target confirmation at the target boundary; do not change ordinary completion semantics. |
 | Surah | `/quran/surah/:surahId` resolves `SurahDetail`; pages and exact text come from bundled local Quran assets. | Serialize only `surah_id`; resolve start/end pages locally through `QuranRepository.getSurahDetail`. Never serialize Quran text in invite metadata. |
-| Daily wird | `GetDailyWirdUsecase` returns one page; active Khatmah exposes `KhatmahPlan.dailyTargetFor()` with a page range. | Support a one-page ordinary daily-wird target and a Khatmah daily range. Recipient reading is ordinary invite reading and must not mutate the recipient's Khatmah unless they independently opened Khatmah mode. |
-| Azkar | Only morning/evening use `AzkarCubit` + day-scoped `AzkarCompletionStore` and reach `AzkarLoaded.allDone`. General/Duas are libraries. | Observe the existing `allDone` transition in `AzkarCategoryPage`; do not reproduce counts or change day rollover/serialized tap behavior. |
+| Daily wird / Smart Wird | `GetDailyWirdUsecase` returns one Quran page; active Khatmah exposes `KhatmahPlan.dailyTargetFor()` with a page range. The new `SmartWirdPage` dynamically composes a separate time-sensitive Azkar session from approved records and owns its own progress/share flow. | Support the ordinary one-page daily wird and a generic Khatmah range only. Explicitly skip Smart Wird in V1; snapshotting its composed item set/provenance is a separate design. Recipient invite reading never mutates recipient Khatmah state. |
+| Azkar | Only morning/evening use `AzkarCubit` + day-scoped `AzkarCompletionStore` and reach `AzkarLoaded.allDone`; load can begin already completed. General/Duas are libraries. | Observe a fresh `false -> true` transition at a stable page owner, ignore an initially restored `allDone == true`, and do not reproduce counts or change day rollover/serialized tap behavior. |
 | Identity | `UserProfile` has local `name`; `AppUser` has Supabase `displayName` and `avatarUrl`; no sharing identity preferences exist. | Add Share Good identity preferences and an explicit resolver. Ignore avatar URLs. Treat fallback strings such as `مستخدم`/`مستخدم تالية` as absence, never as disclosed identity. |
 | Achievements | `AchievementService` and `XpService` track worship/certificate systems. | Good Impact milestones are a separate pure read-model policy with no XP, certificates, points, or unlock calls. |
-| Notifications | Only local scheduled notifications exist; there is no FCM/APNs server push. | Add at most one local incomplete-invite reminder and a preference. Named acknowledgements and milestones appear in Good Impact refresh, not push. |
-| Analytics | No product analytics SDK or consent pipeline exists. | Record a small sanitized Share Good event ledger through its own RPC; keep it inaccessible to Good Impact UI and never expose analytics identifiers. Do not claim OS share completion or install attribution. |
-| Startup | `TaliaApp` swaps from a splash-only router after `AppInitializer`; `LaunchDestination` currently sends first-time users to onboarding before notification routes. | Buffer links early, then give a valid pending invite priority over normal onboarding so a guest reaches Invite Preview first. Password recovery remains higher priority. |
+| Notifications | A mature local stack now spans `NotificationSettingsCubit`, `NotificationSettingsState`, `NotificationSettingTile`, `TaliaNotificationService`, `NotificationScheduler`, quiet hours, route guards, prayer-companion actions, timezone resolution, and notification-budget helpers. There is still no FCM/APNs server push. | Add at most one opt-in local incomplete-invite reminder through those extension points. Preserve quiet hours, prayer-companion semantics, route validity, permission handling, and platform notification budgets. |
+| Analytics | No product analytics SDK or consent pipeline exists. Existing `ActivityEventRecorder` is a local Home activity feed, not product analytics. | Keep a separate allow-listed Share Good event ledger behind an RPC; never route it through `ActivityEventRecorder`, expose analytics identifiers, or claim OS share completion/install attribution. |
+| Startup | `AppInitializer` initializes services; `TaliaApp._applyLaunchNavigation` consumes notification launches, prioritizes onboarding for first-time users, and delegates prayer-companion payloads. `LaunchDestination` and the top-level redirect on `AppRouter.router` apply additional routing rules. | Integrate pending invites across all three decision points. Preserve password recovery and prayer-companion handling, let a validated invite bypass onboarding, and prove cold/warm delivery occurs exactly once. |
 | Links | Android/iOS only register `taliaquran://auth/update-password`; no App Links, Associated Domains, association files, or deferred-link SDK exists. Android is `com.example.talia_quran`, iOS is `com.example.taliaQuran`, and Android release uses debug signing. | Installed HTTPS links require new platform configuration and production identity/signing inputs. Pure App/Universal Links do not guarantee post-install restoration. |
-| Backend | Supabase migrations are the database source of truth; sensitive mutations use fixed-search-path RPCs, RLS, explicit revokes/grants, and contract verification scripts. | Add one append-only migration, no direct client DML, exact RPC grants, SQL contract tests, indexes, and verifier updates. |
+| Backend | Supabase migrations are the database source of truth. Modern migrations such as the ayah-review ledger use RLS, direct-DML revocation, explicit grants, empty `search_path`, strict JSON/idempotency, SQL tests, and contract verification. `supabase/config.toml` exposes only `public` and `graphql_public`; no Supabase file changed since the original plan. | Generate a new current timestamp migration, not the stale `20260911120000` filename. Keep public RPC wrappers invoker-safe and move privileged helpers into non-exposed `private`; add no direct client DML, schema-qualify all helper references, and update verifier checks/query count. |
+| Account deletion | `public.delete_current_user()` deletes the current `auth.users` row; local cleanup preserves usable progress as guest and clears owner-scoped metadata/preferences. Existing account-owned server rows commonly cascade. | Share Good lineage must be deliberately different: `creator_user_id ON DELETE SET NULL`, identity/disclosure rows disappear, and invite/participation descendants survive so `A -> B -> C` aggregate reach remains coherent. |
+| UI system | HEAD provides `TaliaTokens`, `TaliaAppBar`, `PureBlackCubit`, and `context.tokens`; settings are organized through `SettingsHubBody` and subpages. | Reuse these current primitives and the notification subpage/Cubit. Do not duplicate colors, app bars, pure-black behavior, or add settings directly to the legacy page body. |
 
 ### Recent history that constrains the plan
 
@@ -57,6 +74,14 @@
 - Azkar work at `98eebf5`, `e4ddf99`, `acc18d8`, and `768f011` recently changed recitation UX, auto-advance, and preferences. Share Good observes `AzkarLoaded.allDone` instead of duplicating these behaviors.
 - Social sharing began at `3c894ec`; `2613dda` added specialized templates and `19c63b4` added Khatmah sharing. Those commits confirm that `lib/core/widgets/social_share/` is the extension point.
 - Backend hardening at `7ef2b25` and `1f54308` established the current migration, event, privilege, and verification patterns. The Share Good migration follows those patterns instead of introducing a second backend access style.
+- Changes after the original plan added Prayer Companion, notification quiet-hours/budget/route safety, Smart Wird, settings subpages, account-deletion cleanup, the Talia design-token work, and broad Quran/memorization tests. Tasks 8–16 below are reconciled to those extension points.
+- `7998eda` made `TaliaTokens`, `TaliaAppBar`, and `PureBlackCubit` tracked production primitives. `3f2b9ad` then approved Dawn as the next social-share architecture; Share Good must sequence after it instead of editing `social_share_theme.dart` that Dawn removes.
+
+### External freshness checks completed 2026-09-28
+
+- [Supabase Database Functions](https://supabase.com/docs/guides/database/functions) and [Row Level Security](https://supabase.com/docs/guides/database/postgres/row-level-security) require explicit function grants, empty `search_path` for definer functions, schema-qualified references, and keeping privileged definer helpers out of exposed schemas. The public-wrapper/private-helper contract below follows that guidance.
+- [Supabase Database Migrations](https://supabase.com/docs/guides/deployment/database-migrations) uses `supabase migration new`, timestamp ordering, and fresh reset/testing; this is why the old fixed migration timestamp is removed.
+- [`app_links 7.2.1`](https://pub.dev/packages/app_links) remains current and recommends early instantiation for cold-start links; its [version table](https://pub.dev/packages/app_links/versions) declares Dart 3.12, so Task 8 aligns the project SDK floor instead of hiding the mismatch.
 
 ### Deliberately unchanged production files
 
@@ -70,6 +95,9 @@
 - `lib/features/azkar/data/models/zikr_model.dart`
 - `lib/features/azkar/data/datasources/azkar_completion_store.dart`
 - `lib/features/azkar/presentation/cubits/azkar_cubit.dart`
+- `lib/features/azkar/presentation/pages/smart_wird_page.dart`
+- `lib/features/azkar/domain/usecases/compose_smart_wird_usecase.dart`
+- `lib/features/azkar/data/datasources/smart_wird_progress_store.dart`
 - `lib/features/khatmah/domain/entities/khatmah_plan.dart`
 - `lib/features/khatmah/domain/usecases/record_khatmah_reading_usecase.dart`
 - `lib/features/khatmah/presentation/cubits/khatmah_cubit.dart`
@@ -237,7 +265,7 @@ final class ShareGoodAnalyticsEvent {
 
 `InviterIdentity`, `InviteLifecycleStatus`, `InviteParticipationStatus`, `InviteImpactSummary`, `NamedAcknowledgement`, `GoodImpactMilestone`, and `ShareGoodAnalyticsEventKind` are immutable `Equatable` value types/enums defined in the Task 1 files below. No public domain type contains a Supabase client, auth object, raw participant key, avatar URL, or localized display text.
 
-For an authenticated creator, personal defaults to the saved personal identity preference when a real name is available; otherwise anonymous. Public always defaults to anonymous and requires an explicit tap to reveal a name. A guest may create a standalone personal/public invite only as anonymous; choosing a visible identity offers optional sign-in, while worship and anonymous sharing remain available. The stored invite is an immutable identity snapshot.
+For an authenticated creator, personal defaults to the saved personal identity preference when a real name is available; otherwise anonymous. Public always defaults to anonymous and requires an explicit tap to reveal a name. A signed-out user who chooses Share Good is offered sign-in with a safe return path; worship and existing non-invite social sharing remain available. The stored inviter identity is an immutable, separately deletable snapshot.
 
 ### Invite and participation state machine
 
@@ -266,7 +294,7 @@ The client adds `completionAwaitingConsent` as a local presentation phase betwee
 
 ### Central expiration rules
 
-`public.share_good_expires_at_v1(target JSONB, created_at TIMESTAMPTZ, timezone TEXT)` is the sole creation authority:
+`private.share_good_expires_at_v1(target JSONB, created_at TIMESTAMPTZ, timezone TEXT)` is the sole creation authority and is not a Data API RPC:
 
 - Morning Azkar: the first 15:30 local boundary strictly after creation (same day when created before 15:30, otherwise next day), matching `AzkarTimeContext`'s morning-end boundary.
 - Evening Azkar: the first 04:00 local boundary strictly after creation (same day when created before 04:00, otherwise next day), matching `AzkarTimeContext`'s evening-end boundary.
@@ -278,28 +306,34 @@ Clients display the returned `expiresAt` and compare against an injected clock f
 
 ### Backend data and privacy boundary
 
-Migration `supabase/migrations/20260911120000_share_good_v1.sql` adds:
+Run `supabase migration new share_good_v1` during Task 3 and use the generated current filename `supabase/migrations/<generated_timestamp>_share_good_v1.sql`. Never backdate the migration to `20260911120000`. It adds:
 
-- `share_good_invites`: nullable creator (null only for standalone anonymous guest invites), creator-installation-key hash for guest abuse limits, token hash, mode/moment, validated target JSON, identity mode/visible-name snapshot, parent/root lineage IDs, creation/expiry/revocation timestamps.
-- `share_good_participations`: invite, participant-key hash, `opened_as_guest`, monotonic status/timestamps, optional authenticated account reference, and child invite reference. Unique `(invite_id, participant_key_hash)`.
+- `share_good_invites`: authenticated creator at insert, stored as nullable `creator_user_id REFERENCES auth.users(id) ON DELETE SET NULL`, token hash, mode/moment/identity mode, validated target JSON, stable parent/root lineage IDs, creation/expiry/revocation timestamps. Revocation is a timestamp transition, not row deletion.
+- `share_good_invite_identities`: optional one-to-one creator identity snapshot linked to both invite and creator account; it is absent for anonymous identity mode and cascades away on account deletion while the invite remains.
+- `share_good_participations`: invite, participant-key hash, `opened_as_guest`, and monotonic status/timestamps. It stores no automatically inferred participant account identity. Unique `(invite_id, participant_key_hash)`.
 - `share_good_completion_disclosures`: one-to-one participation disclosure with authenticated `user_id` and visible-name snapshot; `ON DELETE CASCADE` removes the name if the account is deleted while participation remains aggregate.
-- `share_good_analytics_events`: allow-listed event kind, invite/participation references when applicable, installation-key hash, and timestamp. It contains no visible names, target content text, email, phone, or religious-value field.
+- `share_good_analytics_events`: allow-listed event kind, server-resolved invite/participation references when applicable, installation-key hash, and timestamp. It contains no visible names, raw invite/participant IDs supplied for attribution, target content text, email, phone, or religious-value field.
+- `share_good_rate_limits`: hashed scope, action, fixed window, attempt count, and expiry for transactional RPC throttling. It stores no raw token/key and is pruned opportunistically.
 
-All tables enable RLS and revoke all direct access from `PUBLIC`, `anon`, and `authenticated`. Only fixed-search-path RPCs receive grants:
+All tables enable RLS and revoke all direct access from `PUBLIC`, `anon`, and `authenticated`. Public RPC wrappers are `SECURITY INVOKER SET search_path = ''`; privileged operations live in narrowly scoped `private.*` `SECURITY DEFINER SET search_path = ''` helpers, and `private` is not added to `supabase/config.toml` exposed schemas. Only the public wrappers receive Data API execution grants:
 
 ```sql
-create_share_good_invite_v1(jsonb, text, text, text, text, uuid, text, text) -> jsonb -- anon, authenticated
-resolve_share_good_invite_v1(text) -> jsonb                                        -- anon, authenticated
+create_share_good_invite_v1(jsonb, text, text, text, text, text) -> jsonb             -- authenticated only
+resolve_share_good_invite_v1(text, text) -> jsonb                                  -- anon, authenticated
 open_share_good_invite_v1(text, text, boolean) -> jsonb                             -- anon, authenticated
 start_share_good_participation_v1(text, text) -> jsonb                              -- anon, authenticated
 complete_share_good_participation_v1(text, text) -> jsonb                           -- anon, authenticated; always private first
 disclose_share_good_completion_v1(text, text, text, text) -> jsonb                   -- authenticated only
 create_share_good_chain_invite_v1(text, text, jsonb, text, text, text, text, text) -> jsonb -- authenticated
 get_share_good_impact_v1() -> jsonb                                                 -- authenticated
-record_share_good_client_event_v1(text, uuid, uuid, text) -> void                    -- anon, authenticated
+record_share_good_client_event_v1(text, text, text, text) -> void                     -- anon, authenticated
 ```
 
-The creation arguments are target, moment, mode, identity mode, visible-name snapshot, optional parent participation ID, IANA timezone, and installation key. For `anon`, the RPC accepts only anonymous identity with a null parent and stores a null creator, so the standalone invite has no account history; authenticated callers may choose an identity and receive account-level impact. The backend hashes the installation key and enforces a rolling maximum of 5 guest creations per 24 hours and 10 active guest invites per installation; authenticated accounts are limited to 30 creations per 24 hours. Open/start/complete receive the raw invite token and installation-scoped participant key over TLS and hash both inside the fixed-search-path function. Disclosure receives token, participant key, identity mode, and visible-name snapshot; it requires an already completed participation and the current `auth.uid()`. Chain creation receives parent token, participant key, child target/moment/mode/identity/name/timezone and verifies the completed parent before deriving parent/root IDs. Analytics receives event kind, optional invite ID, optional participation ID, and installation key; its timestamp is server-generated.
+The standalone creation arguments are target, moment, mode, identity mode, visible-name snapshot, and IANA timezone. It rejects a null `auth.uid()` and any attempt to smuggle lineage into target JSON; parent/root lineage is accepted only through the separate chain RPC. Standalone and chain creation share a rolling maximum of 30 creations per authenticated account per 24 hours. Resolve receives raw token plus installation key; open/start/complete receive the raw token and installation-scoped participant key. The private helpers hash secrets before lookup/storage and enforce these transactional caps: resolve 60/hour and 200/day per installation; open 30/hour per invite/participant; start and complete 20/day per invite/participant; client events 200/day per installation. These are defense in depth against accidental/low-effort abuse, not trusted attribution. Disclosure requires an already completed participation and current `auth.uid()`. Chain creation verifies the completed parent before deriving stable parent/root IDs. Analytics accepts an allow-listed event plus raw token/participant key where attribution is needed, resolves references server-side, and uses a server timestamp; the client cannot submit arbitrary invite/participation UUID attribution.
+
+All public RPC wrappers and private helpers explicitly revoke `PUBLIC` execution; wrappers grant only the roles shown, while exact `private` schema usage/helper execution is limited to the roles needed by those wrappers. No app role receives table DML and no private helper is exposed through PostgREST. Old app clients remain unaffected because the migration is additive; a new app talking to a backend without these RPCs must map missing-function/schema-cache errors to `featureUnavailable` and hide/disable create/mutate actions rather than falling back to direct DML.
+
+Rollout order is backend first: apply the generated migration through the normal Supabase migration pipeline in staging, run SQL/static/deployed contract verification, then deploy the app with fail-closed unavailable handling. Deploy production migration and verify grants before enabling/advertising external invitations. Existing app versions continue unchanged because no existing table or RPC contract is removed.
 
 Raw invite and participant keys are never stored; PostgreSQL stores lowercase SHA-256 hex. Invite tokens are 32 random bytes encoded base64url without padding and returned once. Resolver responses expose only target, activity-safe labels/metadata, invite mode/moment, permitted inviter identity, status, and expiry. Good Impact returns named acknowledgements only for direct invites created by `auth.uid()`; downstream lineage is aggregate-only.
 
@@ -335,7 +369,7 @@ The current repository still uses `com.example.talia_quran`, `com.example.taliaQ
 | App process death during consent | Restore `completionAwaitingConsent`; no identity or aggregate completion is inferred until a choice. |
 | Invite expires mid-session | Existing personal progress remains; invite completion is rejected and not counted. |
 | Share-sheet cancel | Invite remains active in Good Impact; analytics records sheet opened, not “shared/sent.” |
-| Account deletion | Creator's invites cascade away; recipient disclosure row cascades away while anonymous aggregate participation may remain. |
+| Account deletion | The account's inviter-identity and completion-disclosure rows disappear. Its authored invite rows are anonymized with `creator_user_id = NULL`; participations and descendants remain. SQL tests must prove `A -> B -> C`: deleting B hides B, preserves B's invite and C's branch, keeps A's downstream aggregate, and reveals nothing to an unrelated user. |
 
 ## File Map
 
@@ -344,6 +378,7 @@ The current repository still uses `com.example.talia_quran`, `com.example.taliaQ
 ```text
 lib/features/share_good/
   application/incoming_invite_link_service.dart
+  application/share_good_notification_intent.dart
   data/datasources/share_good_local_datasource.dart
   data/datasources/share_good_remote_datasource.dart
   data/models/share_good_models.dart
@@ -372,10 +407,12 @@ lib/features/share_good/
   presentation/widgets/share_good_notification_setting_tile.dart
 lib/core/widgets/social_share/social_share_payload.dart
 lib/core/widgets/social_share/templates/share_good_template.dart
-supabase/migrations/20260911120000_share_good_v1.sql
-supabase/tests/20260911120000_share_good_v1_test.sql
+lib/core/services/device_timezone_resolver.dart
+supabase/migrations/<generated_timestamp>_share_good_v1.sql
+supabase/tests/share_good_v1_test.sql
 supabase/functions/share-good-link/index.ts
 test/features/share_good/application/incoming_invite_link_service_test.dart
+test/features/share_good/application/share_good_notification_intent_test.dart
 test/features/share_good/data/share_good_local_datasource_test.dart
 test/features/share_good/data/share_good_models_test.dart
 test/features/share_good/data/share_good_remote_datasource_test.dart
@@ -402,6 +439,8 @@ test/features/share_good/platform_link_contract_test.dart
 test/features/share_good/share_good_analytics_test.dart
 test/features/share_good/share_good_localization_test.dart
 test/core/di/share_good_injection_test.dart
+test/app_launch_navigation_test.dart
+test/core/services/device_timezone_resolver_test.dart
 test/core/services/notification_scheduler_share_good_test.dart
 test/supabase/share_good_contract_test.dart
 test/integration/share_good_guest_flow_test.dart
@@ -435,7 +474,8 @@ lib/core/widgets/social_share/social_share_model.dart
 lib/core/widgets/social_share/social_share_copy.dart
 lib/core/widgets/social_share/social_share_presentation.dart
 lib/core/widgets/social_share/social_share_sheet.dart
-lib/core/widgets/social_share/social_share_theme.dart
+lib/core/widgets/social_share/social_share_card.dart
+lib/core/widgets/social_share/talia_share_tokens.dart
 lib/core/widgets/social_share/share_card_shell.dart
 lib/core/widgets/social_share/share_card_template_resolver.dart
 lib/features/auth/presentation/pages/login_page.dart
@@ -444,7 +484,10 @@ lib/features/quran/presentation/widgets/reader_overflow_sheet.dart
 lib/features/azkar/presentation/pages/azkar_category_page.dart
 lib/features/khatmah/presentation/pages/khatmah_dashboard_page.dart
 lib/features/home/presentation/widgets/daily_wird_card.dart
-lib/features/settings/presentation/pages/settings_page.dart
+lib/features/settings/presentation/widgets/settings_hub_body.dart
+lib/features/settings/presentation/pages/subpages/notification_settings_page.dart
+lib/features/settings/presentation/cubits/notification_settings_cubit.dart
+lib/features/settings/presentation/cubits/notification_settings_state.dart
 lib/features/settings/presentation/widgets/settings_notification_tiles.dart
 android/app/src/main/AndroidManifest.xml
 android/app/build.gradle.kts
@@ -454,12 +497,27 @@ scripts/verify_supabase_contract.ps1
 test/scripts/verify_supabase_contract_security_test.ps1
 test/core/router/app_router_route_policy_test.dart
 test/core/router/launch_destination_test.dart
+test/core/router/notification_payload_route_guard_test.dart
 test/core/widgets/social_share_test.dart
 test/core/widgets/social_share_export_test.dart
 test/features/quran/presentation/pages/quran_reader_page_mode_test.dart
 test/features/azkar/presentation/azkar_category_page_test.dart
 test/features/khatmah/presentation/pages/khatmah_dashboard_page_test.dart
 test/features/settings/settings_page_test.dart
+test/features/settings/presentation/cubits/notification_settings_cubit_test.dart
+test/features/settings/presentation/widgets/settings_notification_tiles_test.dart
+```
+
+### Dawn prerequisite files consumed by Task 7 after that redesign lands
+
+These paths are specified by the approved Dawn design but do not exist at the reconciliation baseline. They are not Share Good-owned scaffolding and must come from the Dawn implementation first:
+
+```text
+lib/core/widgets/social_share/share_card_palette.dart
+lib/core/widgets/social_share/share_card_links.dart
+lib/core/widgets/social_share/share_signature_bar.dart
+test/core/widgets/share_card_palette_test.dart
+test/core/widgets/share_card_links_test.dart
 ```
 
 ---
@@ -534,7 +592,8 @@ abstract interface class ShareGoodLocalDataSource {
   Future<String> installationKey();
   Future<String> participantKeyFor(String inviteId);
   Future<void> savePendingToken(String token);
-  Future<String?> takePendingToken();
+  Future<String?> readPendingToken();
+  Future<bool> acknowledgePendingToken(String expectedToken);
   Future<void> saveResolvedSnapshot(ResolvedInviteSnapshot snapshot);
   Future<ResolvedInviteSnapshot?> readResolvedSnapshot(String token);
   Future<void> saveSession(InviteLocalSession session);
@@ -549,9 +608,9 @@ abstract interface class ShareGoodLocalDataSource {
 }
 ```
 
-- [ ] **Step 1: Write failing tests for stable keys, token take semantics, encrypted session JSON, ordered outbox replay, and preference defaults**
+- [ ] **Step 1: Write failing tests for stable keys, non-destructive pending-token semantics, encrypted session JSON, ordered outbox replay, and preference defaults**
 
-Tests must prove participant keys are stable per invite, different between invites, not written to SharedPreferences, pending token survives restart until consumed, snapshots reject unsupported target versions, outbox preserves `opened -> started -> completion`, public identity defaults anonymous, and prompt state survives reload.
+Tests must prove participant keys are stable per invite, different between invites, and not written to SharedPreferences. A pending token must survive restart and repeated reads; `acknowledgePendingToken(expectedToken)` removes only the exact current token after successful route handoff, while a stale/mismatched acknowledgement leaves a newer token intact. Snapshots reject unsupported target versions, outbox preserves `opened -> started -> completion`, public identity defaults anonymous, and prompt state survives reload.
 
 - [ ] **Step 2: Run the local data tests and observe missing implementations**
 
@@ -576,31 +635,40 @@ git add lib/features/share_good/data/datasources/share_good_local_datasource.dar
 git commit -m "feat(share-good): persist private invite sessions"
 ```
 
-### Task 3: Add Supabase schema, privacy-safe RPCs, indexes, and contract verification
+### Task 3: Add Supabase schema, privacy-safe RPCs, deletion-safe lineage, indexes, and contract verification
 
 **Files:**
-- Create: `supabase/migrations/20260911120000_share_good_v1.sql`
-- Create: `supabase/tests/20260911120000_share_good_v1_test.sql`
+- Generate: `supabase/migrations/<generated_timestamp>_share_good_v1.sql` via `supabase migration new share_good_v1`
+- Create: `supabase/tests/share_good_v1_test.sql`
 - Create: `test/supabase/share_good_contract_test.dart`
 - Modify: `scripts/verify_supabase_contract.ps1`
 - Modify: `test/scripts/verify_supabase_contract_security_test.ps1`
 
 **Interfaces:**
 - Consumes: Task 1 JSON/status contracts and the repository's migration/RPC security conventions.
-- Produces: the four tables, indexes, `share_good_expires_at_v1`, validation helpers, and the nine locked RPCs listed above.
+- Produces: the six tables, indexes, private `share_good_expires_at_v1`, validation/rate-limit helpers, and the nine locked public RPCs listed above.
 
 - [ ] **Step 1: Write failing static contract tests**
 
 ```dart
+final normalizedSql = sql.replaceAll(RegExp(r'\s+'), ' ').toLowerCase();
 expect(sql, contains('enable row level security'));
 expect(sql, contains('unique (invite_id, participant_key_hash)'));
-expect(sql, contains("grant execute on function public.resolve_share_good_invite_v1(text) to anon, authenticated"));
+expect(sql, contains("grant execute on function public.resolve_share_good_invite_v1(text, text) to anon, authenticated"));
 expect(sql, contains("grant execute on function public.disclose_share_good_completion_v1(text, text, text, text) to authenticated"));
+expect(
+  normalizedSql,
+  contains('grant execute on function public.create_share_good_invite_v1(jsonb, text, text, text, text, text) to authenticated'),
+);
+expect(
+  normalizedSql,
+  isNot(contains('grant execute on function public.create_share_good_invite_v1(jsonb, text, text, text, text, text) to anon')),
+);
 expect(sql, contains("revoke all on table public.share_good_invites from public, anon, authenticated"));
 expect(sql, isNot(contains('religious_reward')));
 ```
 
-Also assert fixed empty `search_path`, SHA-256 storage, strict target validation, no direct DML grants, no `anon` disclosure/chain/impact grants, anonymous-only standalone creation and exact guest/auth creation caps, direct-only disclosure query, aggregate-only downstream query, auth requirement for attributed creation/named disclosure/chain/impact, idempotent completion, and indexes on token hash, creator/created time, creator-installation hash/created time, root lineage, invite/status, and event time.
+Also assert public wrappers are `SECURITY INVOKER`, privileged helpers are in non-exposed `private` with `SECURITY DEFINER SET search_path = ''`, all helper relations/functions are schema-qualified, SHA-256 storage is used, target validation is strict, no direct DML grants exist, and no `anon` create/disclosure/chain/impact grant exists. Cover the authenticated creation cap and exact lifecycle/event caps above, direct-only disclosure query, aggregate-only downstream query, auth requirement for creation/named disclosure/chain/impact, idempotent completion, `creator_user_id ON DELETE SET NULL`, deletable identity/disclosure rows, non-cascading lineage, and indexes on token hash, creator/created time, root lineage, invite/status, rate-limit windows, and event time.
 
 - [ ] **Step 2: Run the contract tests and confirm the migration is absent**
 
@@ -610,11 +678,11 @@ Expected: failure because the migration/RPC text is missing.
 
 - [ ] **Step 3: Implement the migration and database tests**
 
-The SQL test must execute with role changes for `anon`, two authenticated users, and a third unrelated user. It must prove: anonymous standalone guest creation, guest rejection for named/parented creation, guest/auth creation-cap enforcement, token resolution projection, private guest completion, named completion denial to anon, authenticated creator-only impact, duplicate open/completion idempotency, expiry rejection, no identity in downstream aggregates, account-delete disclosure cleanup, and invalid target/timezone rejection.
+First generate the migration with `supabase migration new share_good_v1`; never rename it to the old plan date. The SQL test must execute with role changes for `anon`, authenticated users A/B/C, and a fourth unrelated user. It must prove: anon creation denial, authenticated creation/cap enforcement, token resolution projection, rate-limited private guest lifecycle, named completion denial to anon, authenticated creator-only impact, duplicate open/completion idempotency, expiry rejection, no identity in downstream aggregates, and invalid target/timezone rejection. It must then create `A -> B -> C`, delete B through the current account-deletion path, and prove B's identity/disclosure are gone while B's invite, C's participation/descendants, A's aggregate reach, and unrelated-user privacy remain intact.
 
 - [ ] **Step 4: Extend the deployment verifier**
 
-Add table/RLS checks, exact RPC signatures/grants, forbidden direct privileges, fixed search paths, and required indexes to `verify_supabase_contract.ps1`. Update the fake-verifier expected query count in `verify_supabase_contract_security_test.ps1` by the exact number of checks added.
+Add all six tables to the verifier's table list and add exact wrapper/helper security modes, RPC signatures/grants, non-exposed-private-schema assertion, forbidden direct privileges, empty search paths, foreign-key deletion actions, and required indexes to `verify_supabase_contract.ps1`. The current script test starts from a hard-coded expected contract-query count of 54; update it by the exact number of checks added rather than replacing it with a loose assertion.
 
 - [ ] **Step 5: Run static and script contract tests**
 
@@ -628,12 +696,12 @@ Expected: Dart and PowerShell contract suites pass.
 
 Run: `pwsh -NoProfile -File scripts/verify_supabase_migrations.ps1`
 
-Expected: every migration applies in lexical order; `20260911120000_share_good_v1_test.sql` passes; the contract verifier reports all Share Good tables, indexes, RLS, grants, and RPC signatures as PASS. This step requires `TALIA_SUPABASE_FRESH_DB_URL` and PostgreSQL client tools.
+Expected: every migration applies in lexical order; `supabase/tests/share_good_v1_test.sql` passes; the contract verifier reports all Share Good tables, deletion actions, indexes, RLS, grants, search paths, and RPC signatures as PASS. This step requires `TALIA_SUPABASE_FRESH_DB_URL` and PostgreSQL client tools.
 
 - [ ] **Step 7: Commit the backend contract**
 
 ```powershell
-git add supabase/migrations/20260911120000_share_good_v1.sql supabase/tests/20260911120000_share_good_v1_test.sql test/supabase/share_good_contract_test.dart scripts/verify_supabase_contract.ps1 test/scripts/verify_supabase_contract_security_test.ps1
+git add 'supabase/migrations/*_share_good_v1.sql' supabase/tests/share_good_v1_test.sql test/supabase/share_good_contract_test.dart scripts/verify_supabase_contract.ps1 test/scripts/verify_supabase_contract_security_test.ps1
 git commit -m "feat(share-good): add secure invitation backend"
 ```
 
@@ -645,10 +713,13 @@ git commit -m "feat(share-good): add secure invitation backend"
 - Create: `lib/features/share_good/domain/repositories/share_good_repository.dart`
 - Create: `lib/features/share_good/domain/usecases/share_good_usecases.dart`
 - Modify: `lib/core/di/injection.dart`
+- Modify: `lib/core/l10n/cubit_message_codes.dart`
 - Create: `test/features/share_good/data/share_good_remote_datasource_test.dart`
 - Create: `test/features/share_good/data/share_good_repository_impl_test.dart`
 - Create: `test/features/share_good/domain/share_good_usecases_test.dart`
 - Create: `test/core/di/share_good_injection_test.dart`
+- Create: `lib/core/services/device_timezone_resolver.dart`
+- Create: `test/core/services/device_timezone_resolver_test.dart`
 
 **Interfaces:**
 - Consumes: Tasks 1–3; lazy `Supabase.instance.client` convention; `Failure` from `lib/core/error/app_failure.dart`.
@@ -675,17 +746,17 @@ abstract interface class ShareGoodRepository {
 
 - [ ] **Step 1: Write failing RPC-mapping and repository tests**
 
-Cover exact RPC names/parameter maps, stable participant key reuse, private-completion-before-disclosure ordering, strict response parsing, sanitized failures, offline cached resolution, ordered mutation enqueue/replay, server idempotent responses, expired mutation retention, disclosure never queued without an authenticated session, and absence of automatic account binding.
+Cover exact RPC names/parameter maps, rejection of `createInvite` when `parentParticipationId` is present, chain-only lineage mapping through `continueChain`, stable participant key reuse, private-completion-before-disclosure ordering, strict response parsing, sanitized failures, offline cached resolution, ordered mutation enqueue/replay, server idempotent responses, expired mutation retention, disclosure never queued without an authenticated session, and absence of automatic account binding. Missing RPC/schema-cache errors must map to `featureUnavailable`; no code path attempts table DML.
 
 - [ ] **Step 2: Run tests and observe missing layers**
 
-Run: `flutter test test/features/share_good/data test/features/share_good/domain/share_good_usecases_test.dart test/core/di/share_good_injection_test.dart`
+Run: `flutter test test/features/share_good/data test/features/share_good/domain/share_good_usecases_test.dart test/core/di/share_good_injection_test.dart test/core/services/device_timezone_resolver_test.dart`
 
 Expected: compilation failures for datasource/repository/use cases.
 
 - [ ] **Step 3: Implement datasource and repository minimally**
 
-Remote datasource accepts an injectable `SupabaseClient` in tests and uses a lazy provider in production so missing Supabase configuration returns `NetworkFailure`. Repository writes a safe resolved snapshot after online resolution and queues only monotonic participation mutations on network failure. Invalid/expired/server-validation failures are never queued.
+Remote datasource accepts an injectable `SupabaseClient` in tests and uses a lazy provider in production. Add stable `CubitMessageCodes.shareGoodUnavailable`; map missing Supabase configuration and PostgREST missing-function/schema-cache failures to `ServerFailure(CubitMessageCodes.shareGoodUnavailable)`. `createInvite` accepts only `InviteContext.parentParticipationId == null`; `continueChain` is the sole client path to the chain RPC. Repository writes a safe resolved snapshot after online resolution and queues only monotonic participation mutations on network failure. Invalid/expired/server-validation/unavailable failures are never queued. Extract the existing `FlutterTimezone`/IANA/last-known-zone resolution from `TaliaNotificationService.configureLocalTimezone` into `DeviceTimezoneResolver`: notifications retain their final UTC safety fallback, while invite creation requires a valid IANA name and fails closed with localized guidance when none is available. Do not add another timezone package or a Riyadh fallback.
 
 - [ ] **Step 4: Register dependencies**
 
@@ -693,14 +764,14 @@ Register secure/local and remote datasources, repository, use cases, policies, r
 
 - [ ] **Step 5: Verify all layer tests**
 
-Run: `flutter test test/features/share_good/data test/features/share_good/domain/share_good_usecases_test.dart test/core/di/share_good_injection_test.dart`
+Run: `flutter test test/features/share_good/data test/features/share_good/domain/share_good_usecases_test.dart test/core/di/share_good_injection_test.dart test/core/services/device_timezone_resolver_test.dart`
 
 Expected: all pass with Supabase uninitialized, online, offline-cache, and replay cases covered.
 
 - [ ] **Step 6: Commit repository wiring**
 
 ```powershell
-git add lib/features/share_good/data lib/features/share_good/domain/repositories lib/features/share_good/domain/usecases lib/core/di/injection.dart test/features/share_good test/core/di/share_good_injection_test.dart
+git add lib/features/share_good/data lib/features/share_good/domain/repositories lib/features/share_good/domain/usecases lib/core/di/injection.dart lib/core/l10n/cubit_message_codes.dart lib/core/services/device_timezone_resolver.dart test/features/share_good test/core/di/share_good_injection_test.dart test/core/services/device_timezone_resolver_test.dart
 git commit -m "feat(share-good): connect invite repository and offline replay"
 ```
 
@@ -724,7 +795,7 @@ git commit -m "feat(share-good): connect invite repository and offline replay"
 
 - [ ] **Step 1: Write failing Cubit tests**
 
-Test personal/public defaults, anonymous standalone guest creation, guest named/parented creation rejection, resolve/open/start, cached-offline resolve, invalid/expired/unavailable states, interrupted restore, completion pending consent, private completion, shared completion auth requirement, account switch no-auto-bind, repeat completion, authenticated chain continuation, impact loading/refresh/error, and closed-Cubit async safety.
+Test personal/public defaults, signed-out creation returning `requiresAuthentication` without invoking the repository, authenticated anonymous/named creation, resolve/open/start, cached-offline resolve, invalid/expired/unavailable/feature-unavailable states, interrupted restore, completion pending consent, private completion, shared completion auth requirement, account switch no-auto-bind, repeat completion, authenticated chain continuation, impact loading/refresh/error, and closed-Cubit async safety.
 
 - [ ] **Step 2: Run Cubit tests and confirm missing implementations**
 
@@ -801,6 +872,8 @@ git commit -m "feat(share-good): localize privacy-first invite copy"
 
 ### Task 7: Extend the existing social-share sheet and build personal/public invite creation
 
+**Prerequisite gate:** the approved Dawn redesign in `docs/superpowers/specs/2026-09-28-social-share-card-redesign-design.md` must be implemented, tested, and merged first. Stop this task if `SocialShareMood`, `SharePalette`, `ShareSignatureBar`, and `ShareCardLinks` do not exist or if `social_share_theme.dart` is still the active customization path. Do not implement Share Good against code Dawn is specified to delete. The Dawn font assets also retain their separate owner-approval gate. Tasks 8 onward that do not touch the share renderer may proceed while this gate is unresolved, but Phase 2 cannot exit without Task 7.
+
 **Files:**
 - Create: `lib/core/widgets/social_share/social_share_payload.dart`
 - Create: `lib/core/widgets/social_share/templates/share_good_template.dart`
@@ -810,11 +883,18 @@ git commit -m "feat(share-good): localize privacy-first invite copy"
 - Modify: `lib/core/widgets/social_share/social_share_copy.dart`
 - Modify: `lib/core/widgets/social_share/social_share_presentation.dart`
 - Modify: `lib/core/widgets/social_share/social_share_sheet.dart`
-- Modify: `lib/core/widgets/social_share/social_share_theme.dart`
+- Modify after Dawn lands: `lib/core/widgets/social_share/social_share_card.dart`
+- Modify after Dawn lands: `lib/core/widgets/social_share/share_card_palette.dart`
+- Modify after Dawn lands: `lib/core/widgets/social_share/share_card_links.dart`
+- Modify after Dawn lands: `lib/core/widgets/social_share/share_signature_bar.dart`
+- Modify: `lib/core/widgets/social_share/talia_share_tokens.dart`
 - Modify: `lib/core/widgets/social_share/share_card_shell.dart`
 - Modify: `lib/core/widgets/social_share/share_card_template_resolver.dart`
 - Modify: `test/core/widgets/social_share_test.dart`
 - Modify: `test/core/widgets/social_share_export_test.dart`
+- Modify after Dawn lands: `test/core/widgets/share_card_palette_test.dart`
+- Modify after Dawn lands: `test/core/widgets/share_card_links_test.dart`
+- Modify: `test/design_system/design_token_guard_test.dart`
 - Create: `test/features/share_good/presentation/widgets/invite_mode_sheet_test.dart`
 - Create: `test/features/share_good/presentation/widgets/share_good_action_test.dart`
 
@@ -827,19 +907,31 @@ class SocialSharePayload {
   const SocialSharePayload({
     required this.initialEditableBody,
     required this.immutableSuffix,
+    required this.qrUri,
     this.allowBodyEditing = false,
     this.allowNameToggle = true,
     this.initialShowName = true,
   });
-  String compose(String editedBody);
+
+  final String initialEditableBody;
+  final String immutableSuffix;
+  final Uri qrUri;
+  final bool allowBodyEditing;
+  final bool allowNameToggle;
+  final bool initialShowName;
+
+  String compose(String editedBody) {
+    final body = (allowBodyEditing ? editedBody : initialEditableBody).trim();
+    return body.isEmpty ? immutableSuffix : '$body\n$immutableSuffix';
+  }
 }
 ```
 
-Change the public API compatibly to `SocialShareSheet.show(BuildContext context, SocialShareData data, {SocialSharePayload? payload})`. Existing callers pass no payload and retain current behavior.
+Change the public API compatibly to `SocialShareSheet.show(BuildContext context, SocialShareData data, {SocialSharePayload? payload})`. Existing callers pass no payload and retain Dawn's mood/palette, signature-bar, static category link, and exact-content behavior. Share Good passes the same immutable invite URI as both `qrUri` and the immutable text suffix; no editable content can replace either.
 
 - [ ] **Step 1: Write failing compatibility, privacy, editing, export, and mode-selection tests**
 
-Prove existing categories/export dimensions remain unchanged; invite card renders activity/CTA; edited body cannot remove/change the immutable invite link; personal/public selection happens before `SharePlus`; public defaults anonymous; a guest can share either mode anonymously without registration but cannot select a name; OS target is not inferred/stored; card and plain text use the same explicit identity choice; cancelling leaves worship/navigation usable.
+Prove every existing Dawn category/mood/export dimension remains unchanged; existing cards keep their static category QR URLs; the invite card renders activity/CTA without sacred text and its QR decodes to the exact immutable invite URI; edited body cannot remove/change that link; personal/public selection happens before `SharePlus`; public defaults anonymous; a signed-out Share Good action offers authentication and never creates an invite or opens `SharePlus`; existing non-invite sharing and worship remain usable; OS target is not inferred/stored; card and plain text use the same explicit identity choice; cancelling leaves worship/navigation usable. The design-token guard may only stay equal or improve outside the two new Share Good files.
 
 - [ ] **Step 2: Run focused tests and observe missing APIs**
 
@@ -849,18 +941,18 @@ Expected: failure for missing payload/category/widgets.
 
 - [ ] **Step 3: Implement the minimal extension**
 
-Add `SocialShareCategory.shareGood`, `SocialShareData.shareGood`, resolver/template/theme/copy branches, an optional editable text field in the current sheet, and immutable suffix composition for both image and text shares. Update every exhaustive category switch in `social_share_model.dart`, `social_share_copy.dart`, `social_share_theme.dart`, `share_card_template_resolver.dart`, `share_card_shell.dart`, and `social_share_presentation.dart`; Share Good is invitation content, not Quran/Azkar sacred-text layout. For invitation payloads disable the legacy name toggle because identity was explicitly selected in `InviteModeSheet`.
+Add `SocialShareCategory.shareGood`, `SocialShareData.shareGood`, Dawn palette/link/signature/template/copy branches, an optional editable text field in the current sheet, and immutable suffix composition for image and text shares. Update every exhaustive category switch in `social_share_model.dart`, `social_share_copy.dart`, `share_card_palette.dart`, `share_card_links.dart`, `share_card_template_resolver.dart`, `share_card_shell.dart`, and `social_share_presentation.dart`. `ShareSignatureBar` uses `payload.qrUri` only for Share Good and retains `ShareCardLinks.forCategory` for existing cards. Share Good is invitation marketing content, not Quran/Azkar sacred-text layout. Disable the name toggle for invitation payloads because identity was explicitly selected in `InviteModeSheet`; pass the selected value directly so Dawn's default cannot expose a name.
 
 - [ ] **Step 4: Run renderer/export tests**
 
-Run: `flutter test test/core/widgets/social_share_test.dart test/core/widgets/social_share_quran_exactness_test.dart test/core/widgets/social_share_export_test.dart test/features/share_good/presentation/widgets`
+Run: `flutter test test/core/widgets/social_share_test.dart test/core/widgets/social_share_quran_exactness_test.dart test/core/widgets/social_share_export_test.dart test/core/widgets/share_card_palette_test.dart test/core/widgets/share_card_links_test.dart test/design_system/design_token_guard_test.dart test/features/share_good/presentation/widgets`
 
-Expected: all existing share tests pass; new Arabic/English invite exports are exactly 1080px wide in portrait/square/story; Quran exactness remains unchanged.
+Expected: all Dawn and existing share tests pass; existing category QR links are unchanged; the Share Good QR contains only the invite URI; new Arabic/English invite exports are exactly 1080px wide in portrait/square/story; Quran exactness remains unchanged.
 
 - [ ] **Step 5: Commit reuse-first sharing**
 
 ```powershell
-git add lib/core/widgets/social_share lib/features/share_good/presentation/widgets test/core/widgets test/features/share_good/presentation/widgets
+git add lib/core/widgets/social_share lib/features/share_good/presentation/widgets test/core/widgets test/design_system test/features/share_good/presentation/widgets
 git commit -m "feat(share-good): extend existing share cards for invites"
 ```
 
@@ -881,16 +973,17 @@ git commit -m "feat(share-good): extend existing share cards for invites"
 - Create: `test/features/share_good/application/incoming_invite_link_service_test.dart`
 - Create: `test/features/share_good/domain/invite_activity_resolver_test.dart`
 - Create: `test/features/share_good/presentation/pages/invite_preview_page_test.dart`
+- Create: `test/app_launch_navigation_test.dart`
 - Modify: `test/core/router/app_router_route_policy_test.dart`
 - Modify: `test/core/router/launch_destination_test.dart`
 
 **Interfaces:**
-- Consumes: Tasks 1–7, existing `QuranRepository`, `AzkarRepository`, `AppRouter`, `LaunchDestination`.
+- Consumes: Tasks 1–6, existing `QuranRepository`, `AzkarRepository`, `AppRouter`, `LaunchDestination`; it is independent of the blocked Dawn renderer work in Task 7.
 - Produces: external URI parser/service; public `/invite/:token` and `/invite/:token/activity`; protected `/good-impact` route constant; exact target-to-page resolution.
 
-- [ ] **Step 1: Add `app_links: ^7.2.1` and write failing URI/startup/route tests**
+- [ ] **Step 1: Align the SDK floor, promote `app_links: ^7.2.1` to direct, and write failing URI/startup/route tests**
 
-Accept only `https://taliaapp.com/i/<43-char-base64url-token>` and `taliaquran://invite/<token>`. Reject other hosts, schemes, paths, query-token variants, fragments, oversized values, and decoded separators. Test valid pending invite precedence over first-time onboarding and notifications; password recovery state still wins through the existing Auth listener. Test invite routes public and Good Impact protected.
+Change `environment.sdk` from `^3.11.4` to `^3.12.0`, matching the installed Dart 3.12.2 and the already-locked transitive package; then add direct `app_links: ^7.2.1`. Do not downgrade the copy used by `supabase_flutter`. Accept only `https://taliaapp.com/i/<43-char-base64url-token>` and `taliaquran://invite/<token>`. Reject other hosts, schemes, paths, query-token variants, fragments, oversized values, and decoded separators. Test password recovery first, then a valid pending invite ahead of first-time onboarding and ordinary notification fallback, while prayer-companion payloads still use `PrayerCompanionController` when no invite wins. Test exact-prefix public matching for `/invite/:token` and `/invite/:token/activity`; test a dedicated authenticated guard for `/good-impact` because the current router protects only its explicit remote-protected set.
 
 - [ ] **Step 2: Run focused tests and verify failure**
 
@@ -898,11 +991,11 @@ Run: `flutter pub get`
 
 Run: `flutter test test/features/share_good/application test/features/share_good/domain/invite_activity_resolver_test.dart test/core/router`
 
-Expected: dependencies resolve; tests fail for missing service/routes/priority.
+Expected: `flutter pub get` resolves `app_links 7.2.1` without changing `supabase_flutter`; tests fail only for missing service/routes/priority. If any supported build environment cannot provide Dart 3.12, stop and align the project toolchain instead of silently pinning a second link-handler version.
 
 - [ ] **Step 3: Implement early buffering and launch arbitration**
 
-Call `IncomingInviteLinkService.instance.start()` before `runApp`; it instantiates `AppLinks`, subscribes once, strictly parses URIs, and holds valid tokens only in an in-memory FIFO until dependencies are ready. Register that same singleton in GetIt. After `configureDependencies`, call `attachLocalDataSource(ShareGoodLocalDataSource)` to persist the newest buffered token and replay foreground events. Update `_applyLaunchNavigation` so a pending invite routes to `/invite/<token>` before onboarding/notification fallback. Never save invite routes through `AppSessionService`.
+Call `IncomingInviteLinkService.instance.start()` before `runApp`; it instantiates `AppLinks`, subscribes once, strictly parses URIs, and holds valid tokens in memory until dependencies are ready. Register that same singleton in GetIt. After `configureDependencies`, attach `ShareGoodLocalDataSource` and persist only the newest validated token. Integrate arbitration in `TaliaApp._applyLaunchNavigation`, `LaunchDestination`, and the top-level redirect on `AppRouter.router`: password recovery remains highest priority; `readPendingToken()` may navigate a valid invite ahead of onboarding/legacy notification fallback; acknowledge that exact token only after the router accepts `/invite/<token>`. Preserve a mismatched/newer token, existing raw notification response handling, and `PrayerCompanionController`. Never save invite routes through `AppSessionService`.
 
 - [ ] **Step 4: Implement resolver and preview/activity shells**
 
@@ -912,7 +1005,7 @@ Call `IncomingInviteLinkService.instance.start()` before `runApp`; it instantiat
 
 Run: `flutter test test/features/share_good/application test/features/share_good/domain/invite_activity_resolver_test.dart test/features/share_good/presentation/pages/invite_preview_page_test.dart test/core/router`
 
-Expected: valid cold/foreground links reach preview, first-time invite bypasses onboarding, invalid/offline/expired/unavailable states never route Home, and Good Impact remains auth-protected.
+Expected: valid cold/foreground links reach preview exactly once, first-time invite bypasses onboarding, password recovery and prayer-companion regressions pass, invalid/offline/expired/unavailable states never route Home, and only Good Impact remains auth-protected.
 
 - [ ] **Step 6: Commit link and preview foundation**
 
@@ -941,7 +1034,7 @@ git commit -m "feat(share-good): route guest invite links to preview"
 
 - [ ] **Step 1: Write failing reader-adapter tests**
 
-Prove the invite callback is unavailable before existing page confirmation, appears only at the exact target end page, requires an explicit tap, fires once, does not fire on persistence failure, survives rereading without duplicate completion, and does not alter Khatmah mode or ordinary page confirmation tests.
+Prove the invite action is unavailable before the existing automatic read confirmation succeeds, appears only at the exact target end page, requires one explicit invited-target tap, fires once per invite session, does not fire on persistence failure, survives rereading without duplicate completion, and does not alter Khatmah mode or ordinary page confirmation tests. There must be no second visible generic “confirm page read” step.
 
 - [ ] **Step 2: Run focused reader tests and observe failure**
 
@@ -951,7 +1044,7 @@ Expected: failure because invite completion hooks do not exist.
 
 - [ ] **Step 3: Add the narrow reader hook**
 
-After `_quranPageCubit.confirmRead(pageNumber)` returns true, preserve current streak/log/Khatmah behavior. When `pageNumber == invitedTargetEndPage`, render a localized, semantic “I completed the reading” action in the existing bottom-bar area. The action calls `onInvitedTargetConfirmed` once. Add a non-prominent before/after `ShareGoodAction` to `ReaderOverflowSheet`; it receives context from `QuranReaderPage` and never reconstructs Quran models.
+Keep `_confirmThenRecordKhatmah` as the only ordinary progress authority. After `_quranPageCubit.confirmRead(pageNumber)` succeeds and the loaded state is confirmed, preserve current streak/log/daily-wird/Khatmah behavior. When `pageNumber == invitedTargetEndPage`, render a localized semantic “I completed the invited reading” action in the existing footer/bottom area; its once-only state is owned by the invite session, not inferred from `confirmRead` returning true on an already-confirmed page. The tap calls `onInvitedTargetConfirmed` once. Add a non-prominent before/after `ShareGoodAction` to the existing `ReaderOverflowSheet`; keep the ayah-specific `AyahOptionsSheet` share behavior unchanged and never reconstruct Quran models or text.
 
 - [ ] **Step 4: Verify Quran and Khatmah regression boundaries**
 
@@ -981,7 +1074,7 @@ git commit -m "feat(share-good): connect Quran completion boundaries"
 
 - [ ] **Step 1: Write failing integration tests around the real Cubit/page**
 
-Prove empty/general/duas categories cannot become invite-complete; morning/evening callback fires only on the first false-to-true `allDone` transition; rapid taps, undo, midnight rollover, restored completed state, reset, and auto-advance preserve existing behavior; reopened completed participation does not increment aggregate again.
+Prove empty/general/duas categories cannot become invite-complete; morning/evening callback fires only on the first fresh false-to-true `allDone` transition; rapid taps, undo, midnight rollover, restored completed state, explicit replay/reset, and auto-advance preserve existing behavior; reopened completed participation does not increment aggregate again.
 
 - [ ] **Step 2: Run focused tests and observe missing callback**
 
@@ -991,7 +1084,7 @@ Expected: failure because `AzkarCategoryPage` has no completion callback.
 
 - [ ] **Step 3: Add a `BlocListener`-based adapter**
 
-Observe `AzkarLoaded.allDone` without changing `AzkarCubit` or `AzkarCompletionStore`. Fire once per page instance on the transition to done, then let `InviteActivityPage` move to completion consent. Add before activity and completion-screen `ShareGoodAction` entries with morning/evening target only.
+Observe `AzkarLoaded.allDone` from a stable owner without changing `AzkarCubit` or `AzkarCompletionStore`. Seed the observer from the first loaded state, ignore an initially restored `allDone == true`, and fire once only after a later `false -> true` transition. If the collection was already completed today, show an explicit “repeat for this invitation” action that calls the existing reset path; never auto-count the restored completion. Then let `InviteActivityPage` move to completion consent. Add before-activity and completion-screen `ShareGoodAction` entries with morning/evening target only.
 
 - [ ] **Step 4: Verify all Azkar regression tests**
 
@@ -1024,7 +1117,7 @@ git commit -m "feat(share-good): connect Azkar collection completion"
 
 - [ ] **Step 1: Write failing target and regression tests**
 
-Assert `/quran/daily` preserves `origin=daily_wird`; the home card shares exactly the resolved page; Khatmah dashboard shares exactly `wirdStartPage..wirdEndPage`; paused/completed/invalid plans do not expose a start invite; recipient completion never calls the recipient's `KhatmahCubit`; the last target page enables explicit invite completion.
+Assert `/quran/daily` preserves `origin=daily_wird`; the home card shares exactly its already-resolved page; Khatmah dashboard shares exactly `dailyTargetFor(date).startPage..endPage`; paused/completed/invalid plans do not expose a start invite; recipient completion never calls the recipient's `KhatmahCubit`; the last target page enables explicit invite completion. Assert `/azkar/smart` and `SmartWirdPage` expose no Share Good entry in V1.
 
 - [ ] **Step 2: Run tests and observe missing context/entry points**
 
@@ -1034,7 +1127,7 @@ Expected: new expectations fail while existing wird/Khatmah tests remain green.
 
 - [ ] **Step 3: Add target-preserving entry points**
 
-Retain the current daily-wird resolution priority. Add the origin query during redirect, use the already-loaded home page detail, and build Khatmah range context from the state-provided start/end. Recipient `InviteActivityPage` opens `QuranReaderPage` in `QuranReaderMode.free`; this records the recipient's own ordinary reading only.
+Retain the current `AppRoutes.quranDaily` resolution priority. Preserve `origin=daily_wird` when redirecting, use `HomeLoaded.dailyWirdPageDetail`, and build Khatmah range context from `KhatmahPlan.dailyTargetFor(date)`. Recipient `InviteActivityPage` opens `QuranReaderPage` in `QuranReaderMode.free`; this records the recipient's ordinary reading only. Smart Wird remains explicitly out of scope because its time-sensitive generated session is not represented by the locked target schema.
 
 - [ ] **Step 4: Verify wird/Khatmah behavior**
 
@@ -1057,10 +1150,11 @@ git commit -m "feat(share-good): preserve daily wird invite targets"
 - Modify: `lib/features/share_good/presentation/pages/invite_activity_page.dart`
 - Modify: `lib/features/share_good/presentation/pages/invite_preview_page.dart`
 - Modify: `lib/features/auth/presentation/pages/login_page.dart`
-- Modify: `lib/features/settings/presentation/pages/settings_page.dart`
+- Modify: `lib/features/settings/presentation/widgets/settings_hub_body.dart`
 - Create: `test/features/share_good/presentation/widgets/invite_completion_consent_sheet_test.dart`
 - Create: `test/features/share_good/presentation/widgets/share_good_identity_settings_tile_test.dart`
 - Modify: `test/features/auth/presentation/pages/login_page_test.dart`
+- Modify: `test/features/settings/settings_page_test.dart`
 - Create: `test/integration/share_good_guest_flow_test.dart`
 - Create: `test/integration/share_good_account_switch_test.dart`
 
@@ -1074,7 +1168,7 @@ Prove no identity is sent before a choice; dismiss/process death preserves pendi
 
 - [ ] **Step 2: Run tests and observe missing UI/return behavior**
 
-Run: `flutter test test/features/share_good/presentation/widgets test/features/auth/presentation/pages/login_page_test.dart test/integration/share_good_guest_flow_test.dart test/integration/share_good_account_switch_test.dart`
+Run: `flutter test test/features/share_good/presentation/widgets test/features/auth/presentation/pages/login_page_test.dart test/features/settings/settings_page_test.dart test/integration/share_good_guest_flow_test.dart test/integration/share_good_account_switch_test.dart`
 
 Expected: failures for missing consent/settings and safe return-to support.
 
@@ -1084,18 +1178,18 @@ Resolve full name from real `UserProfile.name`, first name from its first Unicod
 
 - [ ] **Step 4: Implement safe account conversion and continuation**
 
-Add optional `returnTo` to `LoginPage`; accept only a strictly parsed internal `/invite/<43-character-token>` or `/good-impact` destination and fall back to the current memorization-aware post-login route otherwise. After value delivery, show dismissible “continue the chain/save your impact” CTA. A child invite uses the same activity target and new personal/public/identity selection; backend derives root lineage.
+Add optional `returnTo` to `LoginPage`; accept only a strictly parsed internal `/invite/<43-character-token>` or `/good-impact` destination and fall back to the current memorization-aware post-login route otherwise. Signed-out creators do not persist or auto-resume a create request across authentication; after sign-in they may invoke the persistent Share Good action again. After recipient value delivery, show a dismissible “continue the chain/save your impact” CTA. A child invite uses the same activity target and a new personal/public/identity selection; backend derives root lineage.
 
 - [ ] **Step 5: Verify guest, privacy, and account-switch flows**
 
-Run: `flutter test test/features/share_good test/features/auth/presentation/pages/login_page_test.dart test/integration/share_good_guest_flow_test.dart test/integration/share_good_account_switch_test.dart`
+Run: `flutter test test/features/share_good test/features/auth/presentation/pages/login_page_test.dart test/features/settings/settings_page_test.dart test/integration/share_good_guest_flow_test.dart test/integration/share_good_account_switch_test.dart`
 
 Expected: guests complete without registration; identity is disclosed only after explicit authenticated confirmation; account changes never reattribute prior participation.
 
 - [ ] **Step 6: Commit consent and conversion**
 
 ```powershell
-git add lib/features/share_good lib/features/auth/presentation/pages/login_page.dart lib/features/settings/presentation/pages/settings_page.dart test/features/share_good test/features/auth/presentation/pages/login_page_test.dart test/integration/share_good_guest_flow_test.dart test/integration/share_good_account_switch_test.dart
+git add lib/features/share_good lib/features/auth/presentation/pages/login_page.dart lib/features/settings/presentation/widgets/settings_hub_body.dart test/features/share_good test/features/auth/presentation/pages/login_page_test.dart test/features/settings/settings_page_test.dart test/integration/share_good_guest_flow_test.dart test/integration/share_good_account_switch_test.dart
 git commit -m "feat(share-good): require consent for completion identity"
 ```
 
@@ -1108,9 +1202,11 @@ git commit -m "feat(share-good): require consent for completion identity"
 **Files:**
 - Create: `lib/features/share_good/presentation/pages/good_impact_page.dart`
 - Modify: `lib/core/router/app_router.dart`
+- Modify: `lib/features/settings/presentation/widgets/settings_hub_body.dart`
 - Create: `test/features/share_good/presentation/pages/good_impact_page_test.dart`
 - Modify: `test/features/share_good/domain/good_impact_milestone_policy_test.dart`
 - Modify: `test/core/router/app_router_route_policy_test.dart`
+- Modify: `test/features/settings/settings_page_test.dart`
 
 **Interfaces:**
 - Consumes: `GoodImpactCubit`, `GoodImpact`, `GoodImpactMilestonePolicy`, protected route from Task 8.
@@ -1118,28 +1214,28 @@ git commit -m "feat(share-good): require consent for completion identity"
 
 - [ ] **Step 1: Write failing dashboard/privacy tests**
 
-Test loading/error/empty/content states; active and last-30-day expired invites; direct response/completion counts; downstream aggregate reach; named acknowledgements only when returned as direct consented items; no participant tree; no ranking; no XP/points/reward language; milestone rendering separate from `AchievementService`.
+Test loading/error/empty/content states; active and last-30-day expired invites; direct response/completion counts; downstream aggregate reach; named acknowledgements only when returned as direct consented items; no participant tree; no ranking; no XP/points/reward language; milestone rendering separate from `AchievementService`. Route tests must prove `/good-impact` redirects signed-out users safely while `/invite/:token` and `/invite/:token/activity` remain public.
 
 - [ ] **Step 2: Run tests and confirm page is absent**
 
-Run: `flutter test test/features/share_good/presentation/pages/good_impact_page_test.dart test/core/router/app_router_route_policy_test.dart`
+Run: `flutter test test/features/share_good/presentation/pages/good_impact_page_test.dart test/core/router/app_router_route_policy_test.dart test/features/settings/settings_page_test.dart`
 
 Expected: failures for missing page/route behavior.
 
 - [ ] **Step 3: Implement the page with existing theme/layout primitives**
 
-Use Talia colors/typography/spacing, directional padding, semantic headings, pull-to-refresh, and a clear distinction between product counts and symbolic milestones. Do not make it a shell tab or social feed; navigate from a restrained Share Good/Impact entry in settings or post-completion.
+Use `TaliaAppBar`, `context.tokens`/`TaliaTokens`, existing typography/spacing, directional padding, semantic headings, pull-to-refresh, and a clear distinction between product counts and symbolic milestones. Verify light, dark, and `PureBlackCubit` OLED states. Do not make it a shell tab or social feed; add a restrained destination in `SettingsHubBody` and post-completion. Add `/good-impact` to a dedicated authenticated route set instead of relying on the current remote-protected route list.
 
 - [ ] **Step 4: Verify dashboard and reward isolation**
 
-Run: `flutter test test/features/share_good/presentation/pages/good_impact_page_test.dart test/features/share_good/domain/good_impact_milestone_policy_test.dart test/core/services/achievement_service_test.dart test/core/router/app_router_route_policy_test.dart`
+Run: `flutter test test/features/share_good/presentation/pages/good_impact_page_test.dart test/features/share_good/domain/good_impact_milestone_policy_test.dart test/core/services/achievement_service_test.dart test/core/router/app_router_route_policy_test.dart test/features/settings/settings_page_test.dart`
 
 Expected: all pass; achievement service tests are unchanged and no Good Impact code imports XP/achievement services.
 
 - [ ] **Step 5: Commit Good Impact**
 
 ```powershell
-git add lib/features/share_good/presentation/pages/good_impact_page.dart lib/core/router/app_router.dart test/features/share_good/presentation/pages/good_impact_page_test.dart test/features/share_good/domain/good_impact_milestone_policy_test.dart test/core/router/app_router_route_policy_test.dart
+git add lib/features/share_good/presentation/pages/good_impact_page.dart lib/core/router/app_router.dart lib/features/settings/presentation/widgets/settings_hub_body.dart test/features/share_good/presentation/pages/good_impact_page_test.dart test/features/share_good/domain/good_impact_milestone_policy_test.dart test/core/router/app_router_route_policy_test.dart test/features/settings/settings_page_test.dart
 git commit -m "feat(share-good): add aggregate Good Impact dashboard"
 ```
 
@@ -1147,19 +1243,28 @@ git commit -m "feat(share-good): add aggregate Good Impact dashboard"
 
 **Files:**
 - Create: `lib/features/share_good/domain/services/share_prompt_policy.dart`
+- Create: `lib/features/share_good/application/share_good_notification_intent.dart`
 - Create: `lib/features/share_good/presentation/widgets/share_good_notification_setting_tile.dart`
 - Modify: `lib/core/services/notification_service.dart`
 - Modify: `lib/core/services/notification_scheduler.dart`
-- Modify: `lib/features/settings/presentation/pages/settings_page.dart`
+- Modify: `lib/app.dart`
+- Modify: `lib/core/router/launch_destination.dart`
+- Modify: `lib/features/settings/presentation/pages/subpages/notification_settings_page.dart`
+- Modify: `lib/features/settings/presentation/cubits/notification_settings_cubit.dart`
+- Modify: `lib/features/settings/presentation/cubits/notification_settings_state.dart`
 - Modify: `lib/features/settings/presentation/widgets/settings_notification_tiles.dart`
 - Create: `test/features/share_good/domain/share_prompt_policy_test.dart`
+- Create: `test/features/share_good/application/share_good_notification_intent_test.dart`
 - Create: `test/features/share_good/share_good_analytics_test.dart`
 - Create: `test/core/services/notification_scheduler_share_good_test.dart`
+- Modify: `test/core/router/notification_payload_route_guard_test.dart`
+- Modify: `test/core/router/launch_destination_test.dart`
+- Modify: `test/features/settings/presentation/cubits/notification_settings_cubit_test.dart`
 - Modify: `test/features/settings/presentation/widgets/settings_notification_tiles_test.dart`
 
 **Interfaces:**
 - Consumes: Task 2 prompt/outbox data, Task 4 analytics repository method, existing local notification service/scheduler.
-- Produces: deterministic `SharePromptDecision`, invite notification preference, one reminder ID per participation, sanitized event calls.
+- Produces: deterministic `SharePromptDecision`, invite notification preference/state, one reminder ID per participation, opaque `sgi1|<local-session-id>` notification intent, sanitized event calls.
 
 Exact prompt policy:
 
@@ -1174,23 +1279,24 @@ Notification policy:
 
 - Preference key: `notifications_share_good`, default false.
 - Schedule at most one local reminder after opened/started and before expiry; choose `min(startedAt + 6 hours, expiresAt - 30 minutes)` and skip if that time is not in the future.
+- Pass the candidate through the existing local-timezone and quiet-hours policy. If adjustment lands at/after expiry, skip it. Respect the existing pending-notification budget instead of evicting prayer-companion or higher-priority worship notifications.
 - Cancel on completion, expiry, start-fresh, or opt-out.
-- Notification payload contains only an opaque local session ID. The tap handler resolves that ID to the raw token from `FlutterSecureStorage` and then constructs `/invite/<token>` in memory; neither notification text nor plugin payload contains the bearer token. The backend never sends “invite received”.
+- Notification payload contains only `sgi1|<opaque-local-session-id>`. It is not a GoRouter path. The raw-response handler recognizes it before legacy routing, resolves the session ID to the raw token from `FlutterSecureStorage`, constructs `/invite/<token>` only in memory, and marks the raw event handled exactly once. `LaunchDestination` and its route guard treat `sgi1` like `pc1`: never navigate it as a route and never double-handle it. Neither notification text nor plugin payload contains the bearer token. The backend never sends “invite received”.
 - Do not add milestone or named-completion push behavior in V1 because no push delivery stack exists.
 
 - [ ] **Step 1: Write failing clock-driven prompt, reminder, and analytics tests**
 
-Test every cap/cooldown, DST-independent UTC storage, no prompt before worship, stable reminder replacement/cancellation, permission denial, opt-out, no anonymous-open inviter notifications, and analytics payload rejection when it contains a name/email/content text/reward field.
+Test every cap/cooldown, UTC prompt-state storage, no prompt before worship, stable reminder replacement/cancellation, timezone/quiet-hours adjustment, expiry skip, notification-budget behavior, permission denial, opt-out, `sgi1` raw-response handling, prayer-companion and legacy-route non-regression, no anonymous-open inviter notifications, and analytics payload rejection when it contains a name/email/content text/reward field or client-supplied UUID attribution.
 
 - [ ] **Step 2: Run focused tests and observe failures**
 
-Run: `flutter test test/features/share_good/domain/share_prompt_policy_test.dart test/features/share_good/share_good_analytics_test.dart test/core/services/notification_scheduler_share_good_test.dart test/features/settings/presentation/widgets/settings_notification_tiles_test.dart`
+Run: `flutter test test/features/share_good/domain/share_prompt_policy_test.dart test/features/share_good/application/share_good_notification_intent_test.dart test/features/share_good/share_good_analytics_test.dart test/core/services/notification_scheduler_share_good_test.dart test/core/router/notification_payload_route_guard_test.dart test/features/settings/presentation/cubits/notification_settings_cubit_test.dart test/features/settings/presentation/widgets/settings_notification_tiles_test.dart`
 
 Expected: missing policy/service branches fail.
 
 - [ ] **Step 3: Implement prompt and notification policies**
 
-Inject clocks in policy tests. Add a dedicated notification channel/category and schedule/cancel methods without changing existing daily Quran/Azkar/kids schedules. Refresh respects the new preference. Prompt UI is inline in existing completion surfaces, never a blocking pre-worship modal.
+Inject clocks in policy tests. Add `shareGoodReminder` to `NotificationSettingsState` and load/toggle it through `NotificationSettingsCubit`; update enabled/total counts and render it inside the existing notification subpage. Add a dedicated channel/category and schedule/cancel methods without changing daily Quran/Azkar/kids/prayer-companion schedules. Reuse the extracted timezone resolver, quiet-hours helper, pending-notification budget, raw-response callback, and existing scheduler refresh path. Prompt UI is inline in existing completion surfaces, never a blocking pre-worship modal.
 
 - [ ] **Step 4: Implement sanitized event recording**
 
@@ -1198,14 +1304,14 @@ Allow only `education_shown`, `prompt_shown`, `prompt_dismissed`, `share_sheet_o
 
 - [ ] **Step 5: Verify policy integration**
 
-Run: `flutter test test/features/share_good test/core/services/notification_scheduler_share_good_test.dart test/core/services/notification_scheduler_kids_test.dart test/features/settings/presentation/widgets/settings_notification_tiles_test.dart`
+Run: `flutter test test/features/share_good test/core/services/notification_scheduler_share_good_test.dart test/core/services/notification_scheduler_kids_test.dart test/core/services/notification_service_companion_test.dart test/core/router/notification_payload_route_guard_test.dart test/core/router/launch_destination_test.dart test/features/settings/presentation/cubits/notification_settings_cubit_test.dart test/features/settings/presentation/widgets/settings_notification_tiles_test.dart`
 
 Expected: all Share Good policy tests and pre-existing notification tests pass; only one optional recipient reminder is scheduled.
 
 - [ ] **Step 6: Commit prompts, reminder, and analytics**
 
 ```powershell
-git add lib/features/share_good lib/core/services/notification_service.dart lib/core/services/notification_scheduler.dart lib/features/settings test/features/share_good test/core/services test/features/settings/presentation/widgets/settings_notification_tiles_test.dart
+git add lib/features/share_good lib/app.dart lib/core/router/launch_destination.dart lib/core/services/notification_service.dart lib/core/services/notification_scheduler.dart lib/features/settings test/features/share_good test/core/services test/core/router/notification_payload_route_guard_test.dart test/core/router/launch_destination_test.dart test/features/settings
 git commit -m "feat(share-good): cap prompts and invitation reminders"
 ```
 
@@ -1302,7 +1408,7 @@ git commit -m "feat(share-good): verify mobile invitation links"
 
 - [ ] **Step 1: Complete the failing end-to-end test matrix before fixes**
 
-Cover personal/public before/after share; exact page/Surah/wird/Azkar target; installed link; guest preview/start/completion; private and named completion; continuation; aggregate-only lineage; invalid/expired/offline/unavailable; repeat completion; account switch; process interruption; prompt caps; notification opt-out; Arabic RTL/English LTR; text scale 200%; TalkBack/VoiceOver labels; reduced motion; and no excluded social features.
+Cover authenticated personal/public before/after creation; signed-out creation refusal without blocking ordinary share/worship; exact page/Surah/wird/Azkar target; installed link; guest preview/start/completion; private and named completion; continuation; deletion-safe `A -> B -> C` aggregate lineage; invalid/expired/offline/old-backend-unavailable; repeat completion; account switch; process interruption; prompt caps; notification opt-out/quiet-hours/budget; Arabic RTL/English LTR; framework text scaling at 200% on Share Good surfaces while preserving Quran's existing local layout constraints; TalkBack/VoiceOver labels; pure-black theme; reduced motion; and no excluded social features.
 
 - [ ] **Step 2: Run all automated tests**
 
@@ -1334,7 +1440,7 @@ Follow `qa/share_good_runtime_qa.md` on production-signed Android and iOS builds
 
 - [ ] **Step 7: Perform the final scope/privacy audit**
 
-Run: `rg -n -i "friend|leaderboard|ranking|chat|live room|profile photo|religious reward|ثواب|حسنات" lib/features/share_good supabase/migrations/20260911120000_share_good_v1.sql`
+Run: `rg -n -i "friend|leaderboard|ranking|chat|live room|profile photo|religious reward|ثواب|حسنات" lib/features/share_good supabase/migrations/*_share_good_v1.sql`
 
 Expected: only explicit prohibition/test text or carefully reviewed devotional copy; no friends/feed/chat/ranking/photo/live/reward implementation. Confirm Good Impact does not import `AchievementService` or `XpService` and no web reader files changed.
 
@@ -1352,7 +1458,7 @@ git commit -m "test(share-good): verify guest privacy and worship regressions"
 | Design requirement | Repository-grounded implementation task(s) |
 |---|---|
 | Worship-first, no reward claims, no social pressure | Global constraints; Tasks 6, 13, 14, 16 |
-| Quran page, Surah, supported wird | Tasks 1, 8, 9, 11 |
+| Quran page, Surah, supported ordinary daily wird/Khatmah range | Tasks 1, 8, 9, 11; Smart Wird explicitly skipped in V1 |
 | Morning/evening and fitting Azkar collections | Tasks 1, 10; general/duas deliberately excluded because current flows lack collection completion |
 | Before/after entry points | Tasks 7, 9, 10, 11 |
 | Personal/public selection before OS sheet | Task 7 |
@@ -1361,7 +1467,7 @@ git commit -m "test(share-good): verify guest privacy and worship regressions"
 | Installed recipient preview and exact activity | Tasks 8, 15 |
 | Uninstalled recipient/mobile-only fallback | Task 15; no reader or general web app |
 | Deferred restoration | Explicitly unsupported/not advertised with `app_links`; Task 15 records fallback and evidence gate |
-| Guest completion without onboarding/auth | Tasks 5, 8–12, 16 |
+| Authenticated creation plus guest completion without onboarding/auth | Tasks 3, 5, 7, 8–12, 16 |
 | Inviter identity modes/no photos | Tasks 1, 2, 7, 12 |
 | Recipient identity consent | Tasks 3, 5, 12 |
 | Completion-specific semantics | Quran Task 9; Azkar Task 10; wird Task 11; Khatmah source logic deliberately unchanged |
@@ -1383,7 +1489,7 @@ git commit -m "test(share-good): verify guest privacy and worship regressions"
 ## Phase Exit Gates
 
 1. **Phase 1:** pure domain/local/backend/repository tests pass; no UI or worship code changed.
-2. **Phase 2:** a valid installed/internal link reaches guest Preview and native sharing uses the existing card/sheet stack; ordinary app startup still works.
+2. **Phase 2:** Dawn prerequisite tests pass; a valid installed/internal link reaches guest Preview; native sharing uses Dawn's card/sheet/signature stack with the immutable invite QR; ordinary app startup still works.
 3. **Phase 3:** all four supported completion paths report through existing worship boundaries and privacy consent; Quran/Azkar/Khatmah regression suites pass.
 4. **Phase 4:** Good Impact, milestones, prompts, reminder, and analytics are testable and non-competitive; no push or reward coupling exists.
 5. **Phase 5:** production identities/domain artifacts and signed-device evidence pass; otherwise the feature remains non-advertised/disabled for external HTTPS links.
@@ -1393,28 +1499,30 @@ git commit -m "test(share-good): verify guest privacy and worship regressions"
 - **Full spec coverage:** every V1 section maps to a task above. General/Duas are explicitly excluded from invite eligibility because repository behavior does not provide the required counted completion. Automatic deferred installation is explicitly not advertised because the selected installed-link package cannot guarantee it.
 - **Duplicate architecture:** no second card renderer, screenshot exporter, gallery saver, OS share wrapper, Quran progress engine, Azkar counter, Khatmah progress engine, auth system, achievement system, or account-owned cloud queue is created.
 - **Existing vs new APIs:** every claimed existing path/class was verified in the repository. Every Share Good type/file/RPC is labeled Create or introduced with an exact signature before consumption.
-- **Privacy leaks:** token/participant keys are hashed server-side and stored securely client-side; public defaults anonymous; names are immutable snapshots; named completions require explicit authenticated consent; downstream lineage is aggregate-only; analytics is isolated from UI.
-- **Guest regressions:** invite routes are public, first-time invite takes precedence over onboarding, private completion does not require Supabase Auth, and auth changes do not auto-bind participation.
-- **Quran/Azkar regressions:** completion adapters observe successful existing boundaries; sacred text, parsers, Cubits/stores, and Khatmah use cases remain unchanged.
+- **Privacy leaks:** token/participant keys are hashed server-side and stored securely client-side; creation requires authentication; public defaults anonymous; names live in separately deletable snapshots; named completions require explicit authenticated consent; downstream lineage is aggregate-only; analytics is isolated from UI and cannot accept arbitrary client UUID attribution.
+- **Guest regressions:** invite routes are public, a validated first-time invite takes precedence over onboarding after password recovery, private completion does not require Supabase Auth, and auth changes do not auto-bind participation. Guests cannot create invitations.
+- **Quran/Azkar regressions:** completion adapters observe successful existing boundaries; restored Azkar completion does not auto-count; sacred text, parsers, Cubits/stores, Smart Wird, and Khatmah use cases remain unchanged.
 - **Deferred-link assumptions:** App/Universal Links are described only for installed apps. Store fallback requires reopening the original link. Production association and physical-device verification are release blockers.
 - **Type consistency:** Task 1 entity names, Task 4 repository signatures, Task 5 Cubit methods, Tasks 7–12 consumers, SQL target/status strings, and JSON keys use the same spelling throughout.
-- **V1 scope:** no friend graph, feed, chat, leaderboard, profile photo, live session, web reader, push stack, deferred-link provider, or worship-point integration is planned.
+- **V1 scope:** no guest invite creation, Smart Wird invitation, friend graph, feed, chat, leaderboard, profile photo, live session, web reader, push stack, deferred-link provider, or worship-point integration is planned.
 
 ## Risks and External Blockers
 
-1. The approved spec is stored at a different, untracked path than requested; preserve it and resolve ownership/location before committing documentation.
+1. The approved spec is stored at a different tracked path than requested; preserve that path or resolve a separate documentation move before implementation.
 2. Production Android/iOS identifiers and signing are absent; current `com.example.talia_quran`/`com.example.taliaQuran` and debug-signing configuration cannot support release-verified links.
 3. Android `assetlinks.json`, iOS AASA, `taliaapp.com/i/*`, store listings, DNS/CDN, and domain deployment are outside this repository and require owners/access.
 4. App/Universal Link behavior and the share sheet must be verified on signed physical devices; simulator/debug success is insufficient.
 5. Pure installed-link handling provides no reliable post-install token restoration. V1 must not advertise deferred restoration.
 6. No push provider exists; named acknowledgement and milestone push are not implementable without a separately approved backend/device-token privacy design.
-7. Guest keys and the Task 3 creation caps reduce accidental duplicate/spam inflation but cannot prevent a determined attacker from reinstalling or rotating installation state. Deployed anomaly monitoring is still required; counts are participation metrics, not trusted religious facts.
+7. Authenticated creation caps and installation/token-scoped guest lifecycle limits reduce accidental duplicate/spam inflation but cannot prevent a determined attacker from rotating installation state. Deployed anomaly monitoring is still required; counts are participation metrics, not trusted religious facts.
 8. Supabase fresh-database and deployed-role verification require a safe empty/staging database and PostgreSQL tooling.
+9. The current worktree contains uncommitted localization and `LoginPage` changes that directly overlap Tasks 6 and 12, plus unrelated typography/onboarding/splash/tutorial work. Stabilize or deliberately carry them forward before implementation; never overwrite them from this plan.
+10. Dawn is approved but not implemented. Task 7 remains blocked until its renderer/mood/palette/signature/QR contract and tests land; implementing Share Good on the old theme stack would create immediate rework and conflicting file ownership.
 
 ## Ordered Implementation Phases
 
 1. Domain contracts, secure local state, backend/RLS, repository/use cases.
-2. Cubits, localization, reuse-first share package, startup/link preview, guest start.
+2. Cubits and localization; startup/link preview and guest start may proceed while Dawn lands; then complete authenticated reuse-first invite creation on Dawn before the phase exit.
 3. Quran page/Surah, Azkar, daily-wird/Khatmah-range adapters, identity consent, account conversion, chain continuation.
 4. Good Impact, symbolic milestones, prompt policy, one local reminder, sanitized analytics.
 5. Production platform links, minimal install/reopen fallback, full automated and real-device acceptance.
