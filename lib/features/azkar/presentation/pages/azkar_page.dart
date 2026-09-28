@@ -394,7 +394,7 @@ class _ContextualHeroCard extends StatelessWidget {
       label: '$title، $countText',
       child: InkWell(
         onTap: () => context.push('/azkar/$route'),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -402,7 +402,7 @@ class _ContextualHeroCard extends StatelessWidget {
               end: Alignment.bottomRight,
               colors: gradientColors,
             ),
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.25),
               width: 1.5,
@@ -479,7 +479,7 @@ class _ContextualHeroCard extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.18),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
                           ),
                           child: Text(
                             countText,
@@ -556,13 +556,13 @@ class _BentoGridCard extends StatelessWidget {
 
     return InkWell(
       onTap: onTap ?? () => context.push('/azkar/$route'),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
       child: Container(
         height: 125,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: surfaceColor,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
           border: Border.all(color: borderColor, width: 0.5),
           boxShadow: [
             BoxShadow(

@@ -329,6 +329,60 @@ Landed:
     in the onboarding previews. They are localized but bypass the ARB
     files; move them in a later copy pass.
 
+### Phases 2–6 — implementation notes
+
+- **Phase 2 (progress, certificates), `2c4a000`.**
+  - Tokens replace the isDark branches, and the header uses the shared hero
+    gradient.
+  - The achievement tier colors move to `achievement_tier_palette.dart`,
+    and the certificate styles move to `certificate_palette.dart`.
+  - The `countOfTotal` l10n key fixes RTL fractions ("604 / 0" became
+    "0 من 604").
+  - The XP card no longer repeats "XP".
+  - Empty heatmap cells are now visible.
+- **Phase 3 (home, bottom nav), `fb71c9d`.**
+  - `HomeSkin.of(context)` follows the OLED tokens.
+  - The bottom bar surface and border come from tokens (it was a
+    hardcoded green that ignored OLED).
+- **Phase 4 (khatmah, settings, quran, azkar), `fe3c91d`.**
+  - About 350 color branches now come from tokens.
+  - Text with a custom font family (ayah and dhikr text) is never resized.
+- **Phase 5 (memorization), `47e44b6`.**
+  - About 113 color branches now come from tokens.
+  - `KidsTheme` and `HomeSkin` are exempt from the guard as scoped palettes
+    (D9), and the repeated kids stage-status colors are named.
+- **Phase 6 (cleanup).**
+  - Deleted the 7 unused `AppDecorations` members and the `AppColors.amber`
+    and `AppSpacing.radiusHero` aliases.
+  - Snapped every remaining numeric `BorderRadius.circular` outside
+    exported images to the radius tokens (D4, nearest step).
+  - The mini player background moved to `tokens.surface`; it was the
+    off-palette `#14241D`.
+
+**Guard totals, start → end of phase 6.** The phase-6 numbers are refreshed
+from the baseline file at commit.
+
+| Metric | Start | After phase 5 |
+|---|---|---|
+| `isDarkBranch` | 639 | 157 |
+| `fontSizeLiteral` | 114 | 39 |
+| `hexColor` | 305 | 149 (96 of these are the exported share-card palette) |
+| `radiusLiteral` | 93 | 80 |
+
+**Remaining by design:**
+- The exported share cards and certificate images.
+- The kids illustration colors.
+- Non-color `isDark` tweaks, such as alpha and shadow strength.
+- Ayah and dhikr text sizes.
+
+**Open owner decisions:**
+- CONTENT-1: hardcoded verses in the onboarding previews.
+- TEST-1: whether to gitignore `**/failures/`.
+- A sans Latin font for the English UI. The Naskh and Amiri fonts ship
+  serif Latin glyphs by design.
+- The two long-standing `quran_reader_sacred_text_test` failures (P0 per
+  policy).
+
 ## 8. Out of scope
 
 Quran text, ayah numbering, tafsir, azkar/dua wording, Mushaf page

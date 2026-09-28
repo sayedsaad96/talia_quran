@@ -635,7 +635,7 @@ class _MuezzinPickerSheetState extends State<_MuezzinPickerSheet> {
                 height: 4,
                 decoration: BoxDecoration(
                   color: subtext?.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
               ),
             ),
@@ -773,7 +773,7 @@ class _MuezzinPickerSheetState extends State<_MuezzinPickerSheet> {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
                 color: widget.primary.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
               ),
               child: Text(
                 context.l10n.muezzinFajrBadge,

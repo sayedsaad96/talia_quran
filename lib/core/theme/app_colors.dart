@@ -14,9 +14,6 @@ abstract class AppColors {
   static const Color goldLight = Color(0xFFFBBF24);
   static const Color goldDark = Color(0xFFD97706);
 
-  /// Warm amber — @deprecated: identical to [gold]; kept for backwards compatibility
-  static const Color amber = gold;
-
   // ─── Feature Accent Colors ──────────────────────────────────────────────────
   /// Streak / activity orange — used for streak counters and activity tiles
   static const Color streakOrange = Color(0xFFFF8C42);

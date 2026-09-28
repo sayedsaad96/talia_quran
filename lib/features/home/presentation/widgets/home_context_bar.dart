@@ -50,7 +50,7 @@ class HomeContextBar extends StatelessWidget {
     final overlay = _overlay();
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(
-        bottom: Radius.circular(AppSpacing.radiusHero),
+        bottom: Radius.circular(AppSpacing.radiusXxl),
       ),
       child: ColoredBox(
         color: overlay,

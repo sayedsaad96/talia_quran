@@ -371,7 +371,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 backgroundColor: AppColors.primary,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
               ),
             );
@@ -489,7 +489,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                                 color: const Color(
                                   0xFF0D5C53,
                                 ).withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                                 border: Border.all(
                                   color: const Color(
                                     0xFF0D5C53,
@@ -834,7 +834,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                       vertical: 8,
                     ),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
                   ),
                   onChanged: (v) {
@@ -940,7 +940,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 ),
                 child: Icon(icon, color: color, size: 20),
               ),
@@ -959,7 +959,7 @@ class _CustomPlanSetupViewState extends State<_CustomPlanSetupView> {
                 ),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
                 ),
                 child: Text(
                   '$value $suffix',

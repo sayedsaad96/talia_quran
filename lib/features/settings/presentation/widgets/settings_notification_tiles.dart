@@ -772,7 +772,7 @@ class _NotificationSettingTileState extends State<NotificationSettingTile>
                   ListTile(
                     leading: const Icon(
                       Icons.local_fire_department_rounded,
-                      color: AppColors.amber,
+                      color: AppColors.gold,
                     ),
                     title: Text(
                       bottomSheetContext.l10n.notificationTestStreakTitle,

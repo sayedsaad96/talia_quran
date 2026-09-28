@@ -119,7 +119,7 @@ class _QuickNavigationSheetState extends State<QuickNavigationSheet> {
                     margin: const EdgeInsets.only(bottom: AppSpacing.md),
                     decoration: BoxDecoration(
                       color: Colors.grey.withValues(alpha: 0.3),
-                      borderRadius: BorderRadius.circular(2),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                     ),
                   ),
                 ),

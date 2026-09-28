@@ -51,7 +51,7 @@ class ReaderOverflowSheet extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: AppSpacing.md),
               decoration: BoxDecoration(
                 color: Colors.grey.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
               ),
             ),
             ValueListenableBuilder<QuranReciter>(

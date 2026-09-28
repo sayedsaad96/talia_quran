@@ -367,7 +367,7 @@ class _TaliaNavItem extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isSelected ? capsuleBg : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                   border: Border.all(
                     color: isSelected ? capsuleBorder : Colors.transparent,
                     width: 1,

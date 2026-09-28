@@ -404,7 +404,7 @@ class _AccountSectionState extends State<AccountSection> {
                               ),
                               decoration: BoxDecoration(
                                 color: AppColors.success.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(999),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                                 border: Border.all(
                                   color: AppColors.success.withValues(alpha: 0.22),
                                 ),

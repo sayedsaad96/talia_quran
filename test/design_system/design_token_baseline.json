@@ -1,7 +1,4 @@
 {
-  "lib/core/widgets/activity_heatmap.dart": {
-    "radiusLiteral": 2
-  },
   "lib/core/widgets/app_button.dart": {
     "isDarkBranch": 2
   },
@@ -9,14 +6,12 @@
     "isDarkBranch": 5
   },
   "lib/core/widgets/app_shell.dart": {
-    "radiusLiteral": 1,
     "isDarkBranch": 10
   },
   "lib/core/widgets/app_text_field.dart": {
     "isDarkBranch": 4
   },
   "lib/core/widgets/ayah_listen_button.dart": {
-    "radiusLiteral": 1,
     "isDarkBranch": 4
   },
   "lib/core/widgets/celebration_overlay.dart": {
@@ -70,33 +65,27 @@
   "lib/features/azkar/presentation/pages/azkar_category_page.dart": {
     "hexColor": 1,
     "fontSizeLiteral": 3,
-    "radiusLiteral": 5,
     "isDarkBranch": 7
   },
   "lib/features/azkar/presentation/pages/azkar_page.dart": {
     "hexColor": 4,
     "fontSizeLiteral": 1,
-    "radiusLiteral": 5,
     "isDarkBranch": 2
   },
   "lib/features/azkar/presentation/pages/general_azkar_page.dart": {
     "fontSizeLiteral": 1,
-    "radiusLiteral": 3,
     "isDarkBranch": 5
   },
   "lib/features/azkar/presentation/pages/smart_wird_page.dart": {
     "hexColor": 1,
     "fontSizeLiteral": 2,
-    "radiusLiteral": 3,
     "isDarkBranch": 1
   },
   "lib/features/azkar/presentation/widgets/font_scale_selector_sheet.dart": {
     "fontSizeLiteral": 1,
-    "radiusLiteral": 4,
     "isDarkBranch": 1
   },
   "lib/features/azkar/presentation/widgets/free_tasbeeh_sheet.dart": {
-    "radiusLiteral": 1,
     "isDarkBranch": 2
   },
   "lib/features/certificate/presentation/widgets/certificate_celebration_dialog.dart": {
@@ -137,11 +126,9 @@
   },
   "lib/features/memorization_plus/presentation/pages/child_detail_page.dart": {
     "hexColor": 1,
-    "radiusLiteral": 5,
     "isDarkBranch": 1
   },
   "lib/features/memorization_plus/presentation/pages/custom_plan_setup_page.dart": {
-    "radiusLiteral": 5,
     "isDarkBranch": 13
   },
   "lib/features/memorization_plus/presentation/pages/daily_plan_page.dart": {
@@ -149,21 +136,16 @@
   },
   "lib/features/memorization_plus/presentation/pages/family_dashboard_page.dart": {
     "hexColor": 1,
-    "radiusLiteral": 7,
     "isDarkBranch": 1
   },
   "lib/features/memorization_plus/presentation/pages/kids_gamified_journey_page.dart": {
     "hexColor": 1
-  },
-  "lib/features/memorization_plus/presentation/pages/kids_gamified_listen_page.dart": {
-    "radiusLiteral": 1
   },
   "lib/features/memorization_plus/presentation/pages/qcf_rendering_poc_page.dart": {
     "fontSizeLiteral": 1,
     "isDarkBranch": 1
   },
   "lib/features/memorization_plus/presentation/pages/v2/v2_recitation_result_sheet.dart": {
-    "radiusLiteral": 1,
     "isDarkBranch": 1
   },
   "lib/features/memorization_plus/presentation/pages/v2_session_page.dart": {
@@ -191,7 +173,6 @@
     "fontSizeLiteral": 1
   },
   "lib/features/progress/presentation/widgets/progress_achievements.dart": {
-    "radiusLiteral": 1,
     "isDarkBranch": 3
   },
   "lib/features/progress/presentation/widgets/progress_certificates.dart": {
@@ -207,29 +188,21 @@
   "lib/features/quran/presentation/pages/quran_reader_page.dart": {
     "isDarkBranch": 1
   },
-  "lib/features/quran/presentation/widgets/ayah_options_sheet.dart": {
-    "radiusLiteral": 1
-  },
   "lib/features/quran/presentation/widgets/continue_reading_card.dart": {
     "isDarkBranch": 1
   },
   "lib/features/quran/presentation/widgets/long_press_hint_banner.dart": {
     "fontSizeLiteral": 1
   },
-  "lib/features/quran/presentation/widgets/quick_navigation_sheet.dart": {
-    "radiusLiteral": 1
-  },
   "lib/features/quran/presentation/widgets/quran_background_exit_dialog.dart": {
     "isDarkBranch": 3
   },
   "lib/features/quran/presentation/widgets/quran_mini_player_bar.dart": {
-    "hexColor": 6,
+    "hexColor": 5,
     "fontSizeLiteral": 2,
-    "radiusLiteral": 3,
-    "isDarkBranch": 17
+    "isDarkBranch": 16
   },
   "lib/features/quran/presentation/widgets/quran_page_font_guard.dart": {
-    "radiusLiteral": 1,
     "isDarkBranch": 3
   },
   "lib/features/quran/presentation/widgets/reader_docked_audio_bar.dart": {
@@ -239,17 +212,10 @@
   "lib/features/quran/presentation/widgets/reader_footer.dart": {
     "fontSizeLiteral": 1
   },
-  "lib/features/quran/presentation/widgets/reader_overflow_sheet.dart": {
-    "radiusLiteral": 1
-  },
-  "lib/features/quran/presentation/widgets/reciter_selector_sheet.dart": {
-    "radiusLiteral": 2
-  },
   "lib/features/settings/presentation/pages/privacy_policy_page.dart": {
     "isDarkBranch": 1
   },
   "lib/features/settings/presentation/widgets/settings_account_tiles.dart": {
-    "radiusLiteral": 1,
     "isDarkBranch": 1
   },
   "lib/features/settings/presentation/widgets/settings_appearance_tiles.dart": {
@@ -261,14 +227,10 @@
   "lib/features/settings/presentation/widgets/settings_info_tiles.dart": {
     "isDarkBranch": 1
   },
-  "lib/features/settings/presentation/widgets/settings_nav_tile.dart": {
-    "radiusLiteral": 1
-  },
   "lib/features/settings/presentation/widgets/settings_notification_tiles.dart": {
     "isDarkBranch": 2
   },
   "lib/features/settings/presentation/widgets/settings_prayer_notification_tiles.dart": {
-    "radiusLiteral": 2,
     "isDarkBranch": 1
   },
   "lib/features/settings/presentation/widgets/settings_section.dart": {

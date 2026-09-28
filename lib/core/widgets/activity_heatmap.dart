@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../extensions/context_extensions.dart';
+import '../constants/app_spacing.dart';
 
 class ActivityHeatmap extends StatelessWidget {
   const ActivityHeatmap({
@@ -68,7 +69,7 @@ class ActivityHeatmap extends StatelessWidget {
                 height: 10,
                 decoration: BoxDecoration(
                   color: _getColor(count, cs),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
               ),
             );
@@ -94,7 +95,7 @@ class ActivityHeatmap extends StatelessWidget {
                 margin: const EdgeInsetsDirectional.only(end: 3),
                 decoration: BoxDecoration(
                   color: _getColor([0, 3, 10, 20, 35][i], cs),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
               ),
             ),

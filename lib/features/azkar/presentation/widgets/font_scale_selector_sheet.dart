@@ -5,6 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/datasources/azkar_preferences_store.dart';
 import '../../../../core/extensions/context_extensions.dart';
+import '../../../../core/constants/app_spacing.dart';
 
 class FontScaleSelectorSheet extends StatelessWidget {
   const FontScaleSelectorSheet({
@@ -86,7 +87,7 @@ class FontScaleSelectorSheet extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: context.tokens.textHint
                       .withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(99),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 ),
               ),
               const SizedBox(height: 18),
@@ -122,7 +123,7 @@ class FontScaleSelectorSheet extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: context.tokens.card,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                   border: Border.all(
                     color: context.tokens.divider,
                   ),
@@ -151,7 +152,7 @@ class FontScaleSelectorSheet extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: InkWell(
                         onTap: () => onScaleSelected(item.scale),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -159,7 +160,7 @@ class FontScaleSelectorSheet extends StatelessWidget {
                             color: isSelected
                                 ? AppColors.primary
                                 : context.tokens.surfaceVariant,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                             border: Border.all(
                               color: isSelected
                                   ? AppColors.primary

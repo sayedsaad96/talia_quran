@@ -309,7 +309,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
                       color:
                           context.tokens.textHint
                               .withValues(alpha: 0.4),
-                      borderRadius: BorderRadius.circular(99),
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                     ),
                   ),
                   Padding(
@@ -546,7 +546,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 child: LinearProgressIndicator(
                   value: completedPercent,
                   backgroundColor: context.tokens.divider,
@@ -654,7 +654,7 @@ class _ZikrReaderPage extends StatelessWidget {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: cardColor,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
                   border: Border.all(color: borderColor),
                 ),
                 child: Column(
@@ -731,7 +731,7 @@ class _ZikrReaderPage extends StatelessWidget {
                                           ? Colors.white
                                           : AppColors.primary)
                                       .withValues(alpha: 0.05),
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                                   border: Border.all(
                                     color: (isDark
                                             ? Colors.white
@@ -966,7 +966,7 @@ class _ZikrReaderPage extends StatelessWidget {
                           vertical: 8,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
                         ),
                       ),
                       icon: const Icon(Icons.undo_rounded, size: 20),

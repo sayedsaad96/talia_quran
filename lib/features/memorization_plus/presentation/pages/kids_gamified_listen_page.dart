@@ -751,7 +751,7 @@ class _RecordingActivePanelState extends State<_RecordingActivePanel>
                         color: KidsTheme.forestGreen.withValues(
                           alpha: 0.6 + 0.4 * ((v + i * 0.1) % 1.0),
                         ),
-                        borderRadius: BorderRadius.circular(3),
+                        borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                       ),
                     ),
                     if (i < heights.length - 1) const SizedBox(width: 4),

@@ -243,7 +243,7 @@ class _AchievementTile extends StatelessWidget {
                 height: 4,
                 decoration: BoxDecoration(
                   color: context.tokens.divider,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),

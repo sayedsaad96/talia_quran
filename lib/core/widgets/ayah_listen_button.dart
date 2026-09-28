@@ -8,6 +8,7 @@ import '../services/audio_lifecycle_manager.dart';
 import '../extensions/context_extensions.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
+import '../constants/app_spacing.dart';
 
 /// A self-contained listen button that plays a single Quran ayah.
 ///
@@ -144,7 +145,7 @@ class _AyahListenButtonState extends State<AyahListenButton> {
       label: _isPlaying ? context.l10n.stop : context.l10n.v2ListenToAyah,
       child: InkWell(
         onTap: _isLoading ? null : _toggle,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           child: Center(

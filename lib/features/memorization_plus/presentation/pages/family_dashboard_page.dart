@@ -400,7 +400,7 @@ class _FamilySummaryBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         boxShadow: [
           BoxShadow(
             color: AppColors.primary.withValues(alpha: 0.3),
@@ -464,12 +464,12 @@ class _ChildCard extends StatelessWidget {
           '${child.displayName}${isActive ? ' — ${context.l10n.familyDashboardChildActiveToday(child.todayPoints)}' : ''}',
       button: true,
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
         onTap: () => context.push('/family-dashboard/child', extra: child),
         child: Container(
           decoration: BoxDecoration(
             color: cardColor,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
             border: Border.all(
               color: isActive
                   ? AppColors.primary.withValues(alpha: 0.4)
@@ -535,7 +535,7 @@ class _ChildCard extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                   ),
                   child: Text(
                     context.l10n.familyDashboardLocalBadge,
@@ -571,7 +571,7 @@ class _ChildCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                     child: LinearProgressIndicator(
                       value: child.levelProgress.clamp(0.0, 1.0),
                       minHeight: 6,
@@ -612,12 +612,12 @@ class _AddChildCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
       onTap: () => _showAddChildOptions(context),
       child: Container(
         decoration: BoxDecoration(
           color: context.tokens.card,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
           border: Border.all(
             color: AppColors.primary.withValues(alpha: 0.3),
             width: 1.5,

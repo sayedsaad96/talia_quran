@@ -147,7 +147,7 @@ class QuranPageSkeletonLoader extends StatelessWidget {
                         width: constraints.maxWidth * widthFactor,
                         decoration: BoxDecoration(
                           color: baseColor,
-                          borderRadius: BorderRadius.circular(4),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                         ),
                       );
                     }),

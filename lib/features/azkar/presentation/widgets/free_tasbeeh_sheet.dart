@@ -8,6 +8,7 @@ import '../../../../core/extensions/context_extensions.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_typography.dart';
 import '../../data/datasources/azkar_preferences_store.dart';
+import '../../../../core/constants/app_spacing.dart';
 
 class FreeTasbeehSheet extends StatefulWidget {
   const FreeTasbeehSheet({
@@ -157,7 +158,7 @@ class _FreeTasbeehSheetState extends State<FreeTasbeehSheet> {
                 decoration: BoxDecoration(
                   color: context.tokens.textHint
                       .withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(99),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                 ),
               ),
               const SizedBox(height: 16),

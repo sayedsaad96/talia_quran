@@ -32,7 +32,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
 
         final isDark = context.isDark;
         final primary = isDark ? AppColors.goldLight : AppColors.primary;
-        final bg = isDark ? const Color(0xFF14241D) : Colors.white;
+        final bg = context.tokens.surface;
         final borderColor = isDark
             ? AppColors.goldLight.withValues(alpha: 0.32)
             : AppColors.primary.withValues(alpha: 0.22);
@@ -167,7 +167,7 @@ class QuranMiniPlayerBar extends StatelessWidget {
                                         ),
                                         decoration: BoxDecoration(
                                           color: primary.withValues(alpha: isDark ? 0.16 : 0.1),
-                                          borderRadius: BorderRadius.circular(6),
+                                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                                         ),
                                         child: Text(
                                           context.isArabic
@@ -319,7 +319,7 @@ class _MushafArtworkBadge extends StatelessWidget {
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
         gradient: LinearGradient(
           colors: isDark
               ? [const Color(0xFF1E3A2D), const Color(0xFF0F1F17)]
@@ -358,7 +358,7 @@ class _MushafArtworkBadge extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0.5),
                 decoration: BoxDecoration(
                   color: (isDark ? Colors.black : Colors.white).withValues(alpha: 0.6),
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
                 child: Text(
                   '$surahId',

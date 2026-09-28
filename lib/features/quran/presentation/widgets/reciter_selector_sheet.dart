@@ -45,7 +45,7 @@ class ReciterSelectorSheet extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: AppSpacing.md),
                 decoration: BoxDecoration(
                   color: Colors.grey.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
                 ),
               ),
             ),
@@ -149,7 +149,7 @@ class ReciterSelectorSheet extends StatelessWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     color: primary.withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                                   ),
                                   child: Text(
                                     context.l10n.reciterActiveChip,

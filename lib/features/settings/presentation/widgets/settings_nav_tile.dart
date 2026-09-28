@@ -60,7 +60,7 @@ class SettingsNavTile extends StatelessWidget {
                 height: 38,
                 decoration: BoxDecoration(
                   color: effectiveIconBg,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
                 alignment: Alignment.center,
                 child: Icon(

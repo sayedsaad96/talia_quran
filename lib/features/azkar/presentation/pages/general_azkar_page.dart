@@ -232,19 +232,19 @@ class _GeneralAzkarViewState extends State<_GeneralAzkarView> {
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             borderSide: BorderSide(
               color: context.tokens.divider,
             ),
           ),
           enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             borderSide: BorderSide(
               color: context.tokens.divider,
             ),
           ),
           focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
             borderSide: const BorderSide(
               color: AppColors.primary,
               width: 1.5,

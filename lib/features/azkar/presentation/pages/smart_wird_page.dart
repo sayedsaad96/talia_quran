@@ -285,7 +285,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
                   decoration: BoxDecoration(
                     color: context.tokens.textHint
                         .withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(99),
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusFull),
                   ),
                 ),
                 Padding(
@@ -438,7 +438,7 @@ class _SmartWirdPageState extends State<SmartWirdPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
             child: LinearProgressIndicator(
               value: totalItems == 0 ? 0 : completed / totalItems,
               backgroundColor:
@@ -527,7 +527,7 @@ class _SmartWirdCard extends StatelessWidget {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: card,
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
                   border: Border.all(color: border),
                 ),
                 child: Column(
