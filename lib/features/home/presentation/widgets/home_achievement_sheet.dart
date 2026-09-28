@@ -27,7 +27,7 @@ class HomeAchievementSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeSkin =
-        skin ?? HomeSkin.forBrightness(Theme.of(context).brightness);
+        skin ?? HomeSkin.of(context);
     final xpService = getIt<XpService>();
     final level = xpService.getCurrentLevel(totalXp);
     final progressRatio = xpService.progressToNextLevel(totalXp);

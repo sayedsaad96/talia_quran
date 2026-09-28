@@ -110,9 +110,7 @@ class AppShell extends StatelessWidget {
                 VerticalDivider(
                   width: 1,
                   thickness: 1,
-                  color: isDark
-                      ? AppColors.darkDivider
-                      : AppColors.lightDivider,
+                  color: context.tokens.divider,
                 ),
                 Expanded(
                   child: Stack(
@@ -191,15 +189,13 @@ class _TaliaNavRail extends StatelessWidget {
   Widget build(BuildContext context) {
     final labels = _labels(context);
     final selectedColor = isDark ? AppColors.goldLight : AppColors.primary;
-    final unselectedColor = isDark
-        ? AppColors.darkTextHint
-        : AppColors.lightTextHint;
+    final unselectedColor = context.tokens.textHint;
 
     return NavigationRail(
       selectedIndex: currentIndex,
       onDestinationSelected: onTap,
       labelType: NavigationRailLabelType.all,
-      backgroundColor: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+      backgroundColor: context.tokens.surface,
       selectedIconTheme: IconThemeData(color: selectedColor, size: 24),
       unselectedIconTheme: IconThemeData(color: unselectedColor, size: 24),
       selectedLabelTextStyle: AppTypography.labelMedium.copyWith(
@@ -258,10 +254,12 @@ class _TaliaBottomNav extends StatelessWidget {
         ),
         child: Container(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(26),
-            color: isDark ? const Color(0xEB041D1A) : const Color(0xF2FFFFFF),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            color: context.tokens.surface.withValues(
+              alpha: isDark ? 0.92 : 0.95,
+            ),
             border: Border.all(
-              color: isDark ? const Color(0x26FFFFFF) : const Color(0x1F0D5C53),
+              color: context.tokens.glassBorder,
               width: 1,
             ),
             boxShadow: [
@@ -281,7 +279,7 @@ class _TaliaBottomNav extends StatelessWidget {
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(26),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Padding(
@@ -334,9 +332,7 @@ class _TaliaNavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activeColor = isDark ? AppColors.goldLight : AppColors.primary;
-    final inactiveColor = isDark
-        ? AppColors.darkTextHint
-        : AppColors.lightTextHint;
+    final inactiveColor = context.tokens.textHint;
 
     final capsuleBg = isDark
         ? AppColors.gold.withValues(alpha: 0.14)
@@ -395,7 +391,6 @@ class _TaliaNavItem extends StatelessWidget {
                 style: AppTypography.labelSmall.copyWith(
                   color: isSelected ? activeColor : inactiveColor,
                   fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  fontSize: 10.5,
                   height: 1.2,
                 ),
                 maxLines: 1,

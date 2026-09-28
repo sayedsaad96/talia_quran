@@ -393,7 +393,7 @@ class _AxisConnector extends StatelessWidget {
             color: (leftPast && rightPast)
                 ? skin.textOnHeroMuted.withValues(alpha: 0.25)
                 : skin.textOnHero.withValues(alpha: 0.30),
-            borderRadius: BorderRadius.circular(1),
+            borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
           ),
         ),
       ),
@@ -479,7 +479,6 @@ class _StationNode extends StatelessWidget {
               style: AppTypography.labelSmall.copyWith(
                 color: isNext ? skin.gold : skin.textOnHero,
                 fontWeight: isNext ? FontWeight.w700 : FontWeight.w500,
-                fontSize: 10,
               ),
             ),
             if (timeText != null) ...[
@@ -491,7 +490,6 @@ class _StationNode extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: AppTypography.labelSmall.copyWith(
                   color: skin.textOnHeroMuted,
-                  fontSize: 9,
                 ),
               ),
             ],

@@ -30,9 +30,7 @@ class DailyWirdCard extends StatelessWidget {
       );
     }
 
-    final primaryText = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final primaryText = context.tokens.textPrimary;
 
     return Semantics(
       button: true,

@@ -119,7 +119,6 @@ class HomeContinueCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppTypography.displaySmall.copyWith(
-                            fontSize: 30,
                             fontWeight: FontWeight.w700,
                             color: skin.textOnHero,
                             height: 1.3,

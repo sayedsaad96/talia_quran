@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/talia_tokens.dart';
 
 /// Visual tokens for the Home surface. Light and dark share layout; only
 /// materials, scrims, and type colors change.
@@ -105,15 +106,29 @@ class HomeSkin {
     stops: const [0.0, 0.45, 1.0],
   );
 
-  factory HomeSkin.forBrightness(Brightness brightness) {
+  /// The skin for the active theme, including the pure-black OLED variant.
+  /// Prefer this over [HomeSkin.forBrightness] in widgets.
+  factory HomeSkin.of(BuildContext context) {
+    final theme = Theme.of(context);
+    return HomeSkin.forBrightness(
+      theme.brightness,
+      tokens: theme.extension<TaliaTokens>(),
+    );
+  }
+
+  /// [tokens] lets page surfaces follow the active theme variant (OLED);
+  /// without it the default light/dark values are used, which is what
+  /// goldens pin.
+  factory HomeSkin.forBrightness(Brightness brightness, {TaliaTokens? tokens}) {
     final isDark = brightness == Brightness.dark;
     if (isDark) {
+      final isOled = tokens?.background == AppColors.oledBackground;
       return HomeSkin(
         isDark: true,
-        scaffold: AppColors.darkBackground,
+        scaffold: tokens?.background ?? AppColors.darkBackground,
         ambientGlow: AppColors.gold.withValues(alpha: 0.16),
         heroVeil: _veil,
-        glassFill: const Color(0xF00A2925),
+        glassFill: isOled ? AppColors.oledCard : const Color(0xF00A2925),
         glassBorder: Colors.white.withValues(alpha: 0.10),
         glassHighlight: Colors.white.withValues(alpha: 0.06),
         textPrimary: AppColors.darkTextPrimary,

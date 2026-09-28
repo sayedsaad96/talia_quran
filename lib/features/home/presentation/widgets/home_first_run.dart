@@ -38,7 +38,6 @@ class HomeFirstRun extends StatelessWidget {
                   context.l10n.homeFirstRunTitle,
                   style: AppTypography.displaySmall.copyWith(
                     color: skin.textOnHero,
-                    fontSize: 28,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),

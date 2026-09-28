@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_colors.dart';
 import '../theme/home_skin.dart';
 
 /// Page canvas for Home: the theme surface plus a soft gold halo behind the
@@ -67,7 +68,8 @@ class HomeHeroBanner extends StatelessWidget {
     return ClipRRect(
       borderRadius: radius,
       child: DecoratedBox(
-        decoration: const BoxDecoration(color: Color(0xFF021210)),
+        // The banner is dark in every theme (see HomeSkin).
+        decoration: const BoxDecoration(color: AppColors.darkBackground),
         child: Stack(
           children: [
             Positioned.fill(

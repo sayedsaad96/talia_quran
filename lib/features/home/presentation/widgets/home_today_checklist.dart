@@ -19,16 +19,14 @@ class HomeTodayChecklist extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
+    final primary = context.tokens.accent;
+    final textColor = context.tokens.textPrimary;
     return Semantics(
       label: context.l10n.homeTodayTitle,
       child: Container(
         padding: const EdgeInsets.all(AppSpacing.md),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.darkCard : AppColors.lightCard,
+          color: context.tokens.card,
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
         ),
         child: Column(
@@ -124,9 +122,7 @@ class _TodayRow extends StatelessWidget {
                   label,
                   maxLines: 2,
                   style: AppTypography.bodyMedium.copyWith(
-                    color: isDark
-                        ? AppColors.darkTextPrimary
-                        : AppColors.lightTextPrimary,
+                    color: context.tokens.textPrimary,
                     decoration: task.isComplete
                         ? TextDecoration.lineThrough
                         : null,

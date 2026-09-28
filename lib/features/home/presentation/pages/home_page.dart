@@ -15,6 +15,7 @@ import '../../../../core/widgets/skeleton_loader.dart';
 import '../../../../core/widgets/social_share/social_share_model.dart';
 import '../../../../core/widgets/social_share/social_share_sheet.dart';
 import '../../../../core/widgets/state_widgets.dart';
+import '../../../../core/theme/app_typography.dart';
 import '../../../streak/presentation/cubits/streak_cubit.dart';
 import '../cubits/home_cubit.dart';
 import '../../domain/services/home_primary_action_resolver.dart';
@@ -155,7 +156,7 @@ class _HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final skin = HomeSkin.forBrightness(Theme.of(context).brightness);
+    final skin = HomeSkin.of(context);
 
     return Scaffold(
       backgroundColor: skin.scaffold,
@@ -411,9 +412,8 @@ class _HomeLoadedViewState extends State<HomeLoadedView> {
               child: Text(
                 context.l10n.homeFooterTagline,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: AppTypography.bodyMedium.copyWith(
                   fontFamily: 'Amiri',
-                  fontSize: 14,
                   color: widget.skin.textSecondary,
                 ),
               ),

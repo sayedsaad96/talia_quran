@@ -19,13 +19,9 @@ class UnifiedHeroActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = isDark ? AppColors.primaryLight : AppColors.primary;
-    final textColor = isDark
-        ? AppColors.darkTextPrimary
-        : AppColors.lightTextPrimary;
-    final subTextColor = isDark
-        ? AppColors.darkTextSecondary
-        : AppColors.lightTextSecondary;
+    final primary = context.tokens.accent;
+    final textColor = context.tokens.textPrimary;
+    final subTextColor = context.tokens.textSecondary;
 
     return Semantics(
       button: true,

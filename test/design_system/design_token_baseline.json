@@ -9,10 +9,8 @@
     "isDarkBranch": 5
   },
   "lib/core/widgets/app_shell.dart": {
-    "hexColor": 4,
-    "fontSizeLiteral": 1,
-    "radiusLiteral": 3,
-    "isDarkBranch": 15
+    "radiusLiteral": 1,
+    "isDarkBranch": 10
   },
   "lib/core/widgets/app_text_field.dart": {
     "isDarkBranch": 4
@@ -108,20 +106,11 @@
     "fontSizeLiteral": 10,
     "radiusLiteral": 4
   },
-  "lib/features/home/presentation/pages/home_page.dart": {
-    "fontSizeLiteral": 1
-  },
   "lib/features/home/presentation/theme/home_skin.dart": {
     "hexColor": 14
   },
-  "lib/features/home/presentation/widgets/daily_wird_card.dart": {
-    "isDarkBranch": 1
-  },
   "lib/features/home/presentation/widgets/home_achievement_sheet.dart": {
     "fontSizeLiteral": 1
-  },
-  "lib/features/home/presentation/widgets/home_background.dart": {
-    "hexColor": 1
   },
   "lib/features/home/presentation/widgets/home_context_bar.dart": {
     "hexColor": 4
@@ -129,21 +118,8 @@
   "lib/features/home/presentation/widgets/home_contextual_slot.dart": {
     "isDarkBranch": 1
   },
-  "lib/features/home/presentation/widgets/home_continue_card.dart": {
-    "fontSizeLiteral": 1
-  },
-  "lib/features/home/presentation/widgets/home_first_run.dart": {
-    "fontSizeLiteral": 1
-  },
-  "lib/features/home/presentation/widgets/home_prayer_timeline.dart": {
-    "fontSizeLiteral": 2,
-    "radiusLiteral": 1
-  },
-  "lib/features/home/presentation/widgets/home_today_checklist.dart": {
-    "isDarkBranch": 4
-  },
   "lib/features/home/presentation/widgets/unified_hero_action_card.dart": {
-    "isDarkBranch": 5
+    "isDarkBranch": 2
   },
   "lib/features/khatmah/presentation/pages/khatm_dua_page.dart": {
     "fontSizeLiteral": 2,

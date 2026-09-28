@@ -25,7 +25,7 @@ Future<void> showHomePrayerTimesSheet(
   VoidCallback? onCompanionChanged,
 }) {
   final themeSkin =
-      skin ?? HomeSkin.forBrightness(Theme.of(context).brightness);
+      skin ?? HomeSkin.of(context);
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -131,7 +131,7 @@ class _HomePrayerTimesSheetState extends State<HomePrayerTimesSheet>
   @override
   Widget build(BuildContext context) {
     final themeSkin =
-        widget.skin ?? HomeSkin.forBrightness(Theme.of(context).brightness);
+        widget.skin ?? HomeSkin.of(context);
     final l10n = context.l10n;
     final currentTime = widget.now?.call() ?? DateTime.now();
     final weekday = _weekdayName(context, currentTime.weekday);
