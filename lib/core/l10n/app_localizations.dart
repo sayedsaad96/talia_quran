@@ -4856,6 +4856,192 @@ abstract class AppLocalizations {
   /// **'تسميع صوتي واضح: اختر سورة وابدأ جلسة الحفظ.'**
   String get memorizationHubPracticeBySurahDescription;
 
+  /// No description provided for @listeningReviewTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'مراجعة بالسماع'**
+  String get listeningReviewTitle;
+
+  /// No description provided for @listeningReviewHubDescription.
+  ///
+  /// In ar, this message translates to:
+  /// **'اسمع آية من محفوظك: حدّد سورتها أو أكمل ما بعدها.'**
+  String get listeningReviewHubDescription;
+
+  /// No description provided for @listeningReviewStartPrompt.
+  ///
+  /// In ar, this message translates to:
+  /// **'اختر نوع الجولة'**
+  String get listeningReviewStartPrompt;
+
+  /// No description provided for @listeningReviewModeWhichSurah.
+  ///
+  /// In ar, this message translates to:
+  /// **'من أي سورة؟'**
+  String get listeningReviewModeWhichSurah;
+
+  /// No description provided for @listeningReviewModeNextAyah.
+  ///
+  /// In ar, this message translates to:
+  /// **'أكمل التالية'**
+  String get listeningReviewModeNextAyah;
+
+  /// No description provided for @listeningReviewModeMixed.
+  ///
+  /// In ar, this message translates to:
+  /// **'مختلط'**
+  String get listeningReviewModeMixed;
+
+  /// No description provided for @listeningReviewLastScore.
+  ///
+  /// In ar, this message translates to:
+  /// **'آخر جولة: {correct} من {total}'**
+  String listeningReviewLastScore(int correct, int total);
+
+  /// No description provided for @listeningReviewNotEnoughTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'احفظ بضع آيات أولًا'**
+  String get listeningReviewNotEnoughTitle;
+
+  /// No description provided for @listeningReviewNotEnoughBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تحتاج المراجعة بالسماع إلى 5 آيات محفوظة على الأقل يمكن تشغيلها.'**
+  String get listeningReviewNotEnoughBody;
+
+  /// No description provided for @listeningReviewErrorBody.
+  ///
+  /// In ar, this message translates to:
+  /// **'تعذّر تحضير الجولة. حاول مرة أخرى.'**
+  String get listeningReviewErrorBody;
+
+  /// No description provided for @listeningReviewRetry.
+  ///
+  /// In ar, this message translates to:
+  /// **'إعادة المحاولة'**
+  String get listeningReviewRetry;
+
+  /// No description provided for @listeningReviewQuestionProgress.
+  ///
+  /// In ar, this message translates to:
+  /// **'السؤال {current} من {total}'**
+  String listeningReviewQuestionProgress(int current, int total);
+
+  /// No description provided for @listeningReviewReplay.
+  ///
+  /// In ar, this message translates to:
+  /// **'أعد الاستماع ({remaining})'**
+  String listeningReviewReplay(int remaining);
+
+  /// No description provided for @listeningReviewWhichSurahPrompt.
+  ///
+  /// In ar, this message translates to:
+  /// **'من أي سورة هذه الآية؟'**
+  String get listeningReviewWhichSurahPrompt;
+
+  /// No description provided for @listeningReviewNextAyahPrompt.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surah}: اتلُ الآية التالية'**
+  String listeningReviewNextAyahPrompt(String surah);
+
+  /// No description provided for @listeningReviewRecord.
+  ///
+  /// In ar, this message translates to:
+  /// **'ابدأ التسميع'**
+  String get listeningReviewRecord;
+
+  /// No description provided for @listeningReviewStopRecord.
+  ///
+  /// In ar, this message translates to:
+  /// **'إنهاء التسميع'**
+  String get listeningReviewStopRecord;
+
+  /// No description provided for @listeningReviewCantRecord.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا أستطيع التسجيل'**
+  String get listeningReviewCantRecord;
+
+  /// No description provided for @listeningReviewReveal.
+  ///
+  /// In ar, this message translates to:
+  /// **'أظهر الآية'**
+  String get listeningReviewReveal;
+
+  /// No description provided for @listeningReviewGradeMastered.
+  ///
+  /// In ar, this message translates to:
+  /// **'أتقنت'**
+  String get listeningReviewGradeMastered;
+
+  /// No description provided for @listeningReviewGradeHesitant.
+  ///
+  /// In ar, this message translates to:
+  /// **'ترددت'**
+  String get listeningReviewGradeHesitant;
+
+  /// No description provided for @listeningReviewGradeForgot.
+  ///
+  /// In ar, this message translates to:
+  /// **'نسيت'**
+  String get listeningReviewGradeForgot;
+
+  /// No description provided for @listeningReviewCorrect.
+  ///
+  /// In ar, this message translates to:
+  /// **'إجابة صحيحة'**
+  String get listeningReviewCorrect;
+
+  /// No description provided for @listeningReviewWrong.
+  ///
+  /// In ar, this message translates to:
+  /// **'ليست هذه'**
+  String get listeningReviewWrong;
+
+  /// No description provided for @listeningReviewNext.
+  ///
+  /// In ar, this message translates to:
+  /// **'التالي'**
+  String get listeningReviewNext;
+
+  /// No description provided for @listeningReviewResultTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'انتهت الجولة'**
+  String get listeningReviewResultTitle;
+
+  /// No description provided for @listeningReviewResultScore.
+  ///
+  /// In ar, this message translates to:
+  /// **'{correct} من {total}'**
+  String listeningReviewResultScore(int correct, int total);
+
+  /// No description provided for @listeningReviewWeakLinksTitle.
+  ///
+  /// In ar, this message translates to:
+  /// **'روابط تحتاج مراجعة'**
+  String get listeningReviewWeakLinksTitle;
+
+  /// No description provided for @listeningReviewNoWeakLinks.
+  ///
+  /// In ar, this message translates to:
+  /// **'لا توجد روابط ضعيفة في هذه الجولة'**
+  String get listeningReviewNoWeakLinks;
+
+  /// No description provided for @listeningReviewAyahRef.
+  ///
+  /// In ar, this message translates to:
+  /// **'سورة {surah} · الآية {ayah}'**
+  String listeningReviewAyahRef(String surah, int ayah);
+
+  /// No description provided for @listeningReviewNewRound.
+  ///
+  /// In ar, this message translates to:
+  /// **'جولة جديدة'**
+  String get listeningReviewNewRound;
+
   /// No description provided for @memorizationHubSettingsSectionSubtitle.
   ///
   /// In ar, this message translates to:

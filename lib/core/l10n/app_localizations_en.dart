@@ -2654,6 +2654,115 @@ class AppLocalizationsEn extends AppLocalizations {
       'Recite Practice: choose a surah and start a speech-to-text session.';
 
   @override
+  String get listeningReviewTitle => 'Listening Review';
+
+  @override
+  String get listeningReviewHubDescription =>
+      'Hear an ayah you memorized: name its surah or recite what comes next.';
+
+  @override
+  String get listeningReviewStartPrompt => 'Choose a round type';
+
+  @override
+  String get listeningReviewModeWhichSurah => 'Which surah?';
+
+  @override
+  String get listeningReviewModeNextAyah => 'Continue the next ayah';
+
+  @override
+  String get listeningReviewModeMixed => 'Mixed';
+
+  @override
+  String listeningReviewLastScore(int correct, int total) {
+    return 'Last round: $correct of $total';
+  }
+
+  @override
+  String get listeningReviewNotEnoughTitle => 'Memorize a few ayahs first';
+
+  @override
+  String get listeningReviewNotEnoughBody =>
+      'Listening review needs at least 5 memorized ayahs that can be played.';
+
+  @override
+  String get listeningReviewErrorBody =>
+      'Couldn\'t prepare the round. Please try again.';
+
+  @override
+  String get listeningReviewRetry => 'Try again';
+
+  @override
+  String listeningReviewQuestionProgress(int current, int total) {
+    return 'Question $current of $total';
+  }
+
+  @override
+  String listeningReviewReplay(int remaining) {
+    return 'Replay ($remaining)';
+  }
+
+  @override
+  String get listeningReviewWhichSurahPrompt =>
+      'Which surah is this ayah from?';
+
+  @override
+  String listeningReviewNextAyahPrompt(String surah) {
+    return 'Surah $surah: recite the next ayah';
+  }
+
+  @override
+  String get listeningReviewRecord => 'Start reciting';
+
+  @override
+  String get listeningReviewStopRecord => 'Stop';
+
+  @override
+  String get listeningReviewCantRecord => 'I can\'t record';
+
+  @override
+  String get listeningReviewReveal => 'Reveal the ayah';
+
+  @override
+  String get listeningReviewGradeMastered => 'Got it';
+
+  @override
+  String get listeningReviewGradeHesitant => 'Hesitated';
+
+  @override
+  String get listeningReviewGradeForgot => 'Forgot';
+
+  @override
+  String get listeningReviewCorrect => 'Correct';
+
+  @override
+  String get listeningReviewWrong => 'Not quite';
+
+  @override
+  String get listeningReviewNext => 'Next';
+
+  @override
+  String get listeningReviewResultTitle => 'Round complete';
+
+  @override
+  String listeningReviewResultScore(int correct, int total) {
+    return '$correct of $total';
+  }
+
+  @override
+  String get listeningReviewWeakLinksTitle => 'Links to review';
+
+  @override
+  String get listeningReviewNoWeakLinks => 'No weak links this round';
+
+  @override
+  String listeningReviewAyahRef(String surah, int ayah) {
+    return 'Surah $surah · Ayah $ayah';
+  }
+
+  @override
+  String get listeningReviewNewRound => 'New round';
+
+  @override
   String get memorizationHubSettingsSectionSubtitle =>
       'Adjust the plan without changing memorization systems.';
 

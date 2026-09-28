@@ -440,6 +440,20 @@ class MemorizationNavigationResolver {
         : KidsJourneyCursor.initial.activeSurahId,
   );
 
+  /// Review session for one ayah (Listening Review weak links). Recall work
+  /// on known material, so always a review — never re-teaching.
+  static String reviewAyahLocation(int surahId, int ayahNumber) {
+    final launchContext = LearningLaunchContext(
+      ayah: AyahReference(surahId: surahId, ayahNumber: ayahNumber),
+      intent: LearningIntent.review,
+      origin: LearningOrigin.review,
+    );
+    return Uri(
+      path: AppRoutes.memorizationV2Session,
+      queryParameters: launchContext.toRouteQuery(),
+    ).toString();
+  }
+
   static String dailyPlanAyahLocation(DailyPlanAyah ayah, {int? blockSize}) {
     // Plan items with an existing record are recall work — launching them
     // as "memorize" would force the learner through listen/hint stages and

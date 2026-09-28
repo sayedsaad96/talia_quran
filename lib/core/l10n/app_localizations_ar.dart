@@ -2631,6 +2631,113 @@ class AppLocalizationsAr extends AppLocalizations {
       'تسميع صوتي واضح: اختر سورة وابدأ جلسة الحفظ.';
 
   @override
+  String get listeningReviewTitle => 'مراجعة بالسماع';
+
+  @override
+  String get listeningReviewHubDescription =>
+      'اسمع آية من محفوظك: حدّد سورتها أو أكمل ما بعدها.';
+
+  @override
+  String get listeningReviewStartPrompt => 'اختر نوع الجولة';
+
+  @override
+  String get listeningReviewModeWhichSurah => 'من أي سورة؟';
+
+  @override
+  String get listeningReviewModeNextAyah => 'أكمل التالية';
+
+  @override
+  String get listeningReviewModeMixed => 'مختلط';
+
+  @override
+  String listeningReviewLastScore(int correct, int total) {
+    return 'آخر جولة: $correct من $total';
+  }
+
+  @override
+  String get listeningReviewNotEnoughTitle => 'احفظ بضع آيات أولًا';
+
+  @override
+  String get listeningReviewNotEnoughBody =>
+      'تحتاج المراجعة بالسماع إلى 5 آيات محفوظة على الأقل يمكن تشغيلها.';
+
+  @override
+  String get listeningReviewErrorBody => 'تعذّر تحضير الجولة. حاول مرة أخرى.';
+
+  @override
+  String get listeningReviewRetry => 'إعادة المحاولة';
+
+  @override
+  String listeningReviewQuestionProgress(int current, int total) {
+    return 'السؤال $current من $total';
+  }
+
+  @override
+  String listeningReviewReplay(int remaining) {
+    return 'أعد الاستماع ($remaining)';
+  }
+
+  @override
+  String get listeningReviewWhichSurahPrompt => 'من أي سورة هذه الآية؟';
+
+  @override
+  String listeningReviewNextAyahPrompt(String surah) {
+    return 'سورة $surah: اتلُ الآية التالية';
+  }
+
+  @override
+  String get listeningReviewRecord => 'ابدأ التسميع';
+
+  @override
+  String get listeningReviewStopRecord => 'إنهاء التسميع';
+
+  @override
+  String get listeningReviewCantRecord => 'لا أستطيع التسجيل';
+
+  @override
+  String get listeningReviewReveal => 'أظهر الآية';
+
+  @override
+  String get listeningReviewGradeMastered => 'أتقنت';
+
+  @override
+  String get listeningReviewGradeHesitant => 'ترددت';
+
+  @override
+  String get listeningReviewGradeForgot => 'نسيت';
+
+  @override
+  String get listeningReviewCorrect => 'إجابة صحيحة';
+
+  @override
+  String get listeningReviewWrong => 'ليست هذه';
+
+  @override
+  String get listeningReviewNext => 'التالي';
+
+  @override
+  String get listeningReviewResultTitle => 'انتهت الجولة';
+
+  @override
+  String listeningReviewResultScore(int correct, int total) {
+    return '$correct من $total';
+  }
+
+  @override
+  String get listeningReviewWeakLinksTitle => 'روابط تحتاج مراجعة';
+
+  @override
+  String get listeningReviewNoWeakLinks => 'لا توجد روابط ضعيفة في هذه الجولة';
+
+  @override
+  String listeningReviewAyahRef(String surah, int ayah) {
+    return 'سورة $surah · الآية $ayah';
+  }
+
+  @override
+  String get listeningReviewNewRound => 'جولة جديدة';
+
+  @override
   String get memorizationHubSettingsSectionSubtitle =>
       'اضبط خطة الحفظ بدون تغيير المسار.';
 
