@@ -200,7 +200,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
 
   Future<void> _copyZikr(BuildContext context, ZikrSession session) async {
     final text = _shareableText(context, session);
-    await HapticFeedback.lightImpact();
+    unawaited(HapticFeedback.lightImpact());
     await Clipboard.setData(ClipboardData(text: text));
     if (!context.mounted) return;
     ScaffoldMessenger.of(
@@ -254,7 +254,7 @@ class _ActiveAzkarScreenState extends State<_ActiveAzkarScreen> {
     final cubit = context.read<AzkarCubit>();
     cubit.goTo(index);
     await cubit.decrementCurrent();
-    await HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
     _undoTimer?.cancel();
     if (mounted) {
       setState(() => _showUndo = false);

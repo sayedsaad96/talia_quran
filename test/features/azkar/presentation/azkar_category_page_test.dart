@@ -1,5 +1,8 @@
 import 'package:dartz/dartz.dart';
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -182,6 +185,68 @@ void main() {
       expect(prefsStore.getFontScale(), 1.25);
     },
   );
+
+  group('haptic feedback never blocks the action', () {
+    // A platform haptic that never replies (slow device / engine hiccup,
+    // and the default under test) must not hold up copy or undo.
+    String? copied;
+
+    setUp(() {
+      copied = null;
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, (call) {
+            if (call.method == 'HapticFeedback.vibrate') {
+              return Completer<Object?>().future;
+            }
+            if (call.method == 'Clipboard.setData') {
+              copied = (call.arguments as Map)['text'] as String?;
+            }
+            return Future<Object?>.value();
+          });
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null);
+    });
+
+    testWidgets('copy writes the zikr and confirms', (tester) async {
+      registerCubitWith([testZikr1]);
+      await tester.pumpWidget(
+        buildApp(const AzkarCategoryPage(category: 'morning')),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byIcon(Icons.copy_rounded));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(copied, contains('الذكر الأول المعتمد'));
+      expect(find.text('تم نسخ الذكر'), findsOneWidget);
+    });
+
+    testWidgets('undo restores the count and hides the undo button', (
+      tester,
+    ) async {
+      registerCubitWith([testZikr1, testZikr2]);
+      await tester.pumpWidget(
+        buildApp(const AzkarCategoryPage(category: 'morning')),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('الذكر الأول المعتمد'));
+      await tester.pump();
+      expect(find.text('1'), findsOneWidget);
+      expect(find.byIcon(Icons.undo_rounded), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.undo_rounded));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('0'), findsOneWidget);
+      expect(find.byIcon(Icons.undo_rounded), findsNothing);
+    });
+  });
 }
 
 class _FakeRepo implements AzkarRepository {
