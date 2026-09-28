@@ -1,53 +1,43 @@
 import 'social_share_model.dart';
 
-/// Chooses how the official companion participates in a card composition.
-///
-/// This belongs to the share presentation layer so domain share data remains
-/// unchanged while every template receives the same branding treatment.
-enum SocialShareCharacterTreatment { none, subtle, prominent }
+/// Whether the official companion appears on a card. Only kids cards show
+/// it, and only when the text leaves room so it never overlaps content.
+enum SocialShareCharacterTreatment { none, prominent }
 
 abstract final class SocialSharePresentation {
   static SocialShareCharacterTreatment characterTreatmentFor(
     SocialShareData data, [
     SocialShareFormat format = SocialShareFormat.portrait,
   ]) {
-    if (!data.showCharacter || _prioritizesContent(data, format)) {
+    if (!data.showCharacter ||
+        data.audience != SocialShareAudience.kids ||
+        _prioritizesContent(data, format)) {
       return SocialShareCharacterTreatment.none;
     }
-    if (data.audience == SocialShareAudience.kids) {
-      return SocialShareCharacterTreatment.prominent;
-    }
-    return SocialShareCharacterTreatment.subtle;
+    return SocialShareCharacterTreatment.prominent;
   }
 
   static bool _prioritizesContent(
     SocialShareData data,
     SocialShareFormat format,
   ) {
-    final primaryTextLength = data.content.length;
-    final supportingTextLength =
+    final textLoad =
+        data.content.length +
         (data.title?.length ?? 0) +
         (data.subtitle?.length ?? 0) +
         (data.translation?.length ?? 0);
-    final textLoad = primaryTextLength + supportingTextLength;
     final isTextHero =
         data.category == SocialShareCategory.quranAyah ||
         data.category == SocialShareCategory.dua ||
-        data.category == SocialShareCategory.azkar;
-
-    final threshold = switch ((data.audience, format, isTextHero)) {
-      (SocialShareAudience.kids, SocialShareFormat.square, true) => 70,
-      (SocialShareAudience.kids, SocialShareFormat.portrait, true) => 105,
-      (SocialShareAudience.kids, SocialShareFormat.story, true) => 135,
-      (SocialShareAudience.kids, SocialShareFormat.square, false) => 90,
-      (SocialShareAudience.kids, SocialShareFormat.portrait, false) => 135,
-      (SocialShareAudience.kids, SocialShareFormat.story, false) => 165,
-      (SocialShareAudience.adult, SocialShareFormat.square, true) => 140,
-      (SocialShareAudience.adult, SocialShareFormat.portrait, true) => 180,
-      (SocialShareAudience.adult, SocialShareFormat.story, true) => 220,
-      (SocialShareAudience.adult, SocialShareFormat.square, false) => 120,
-      (SocialShareAudience.adult, SocialShareFormat.portrait, false) => 140,
-      (SocialShareAudience.adult, SocialShareFormat.story, false) => 160,
+        (data.category == SocialShareCategory.azkar &&
+            !data.isAzkarWirdProgress);
+    final threshold = switch ((format, isTextHero)) {
+      (SocialShareFormat.square, true) => 70,
+      (SocialShareFormat.portrait, true) => 105,
+      (SocialShareFormat.story, true) => 135,
+      (SocialShareFormat.square, false) => 90,
+      (SocialShareFormat.portrait, false) => 135,
+      (SocialShareFormat.story, false) => 165,
     };
     return textLoad > threshold;
   }

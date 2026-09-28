@@ -30,6 +30,7 @@ void main() {
   Future<void> primeAssets() async {
     for (final path in [
       'assets/images/logo_new.png',
+      'assets/images/logo_new_padded.png',
       'assets/images/character/talia_hero.png',
     ]) {
       final file = File(path);
@@ -70,7 +71,7 @@ void main() {
     WidgetTester tester, {
     required String caseName,
     required SocialShareData data,
-    required SocialShareTheme theme,
+    required SocialShareMood mood,
     required SocialShareFormat format,
     Locale locale = const Locale('ar'),
     bool hideUserName = false,
@@ -99,7 +100,7 @@ void main() {
       () => captureSocialShareCardImage(
         context: captureContext,
         data: data,
-        theme: theme,
+        mood: mood,
         format: format,
         hideUserName: hideUserName,
       ),
@@ -182,7 +183,7 @@ void main() {
         achievement: achievementAr,
         userName: 'سيد سعد',
       ),
-      theme: SocialShareTheme.emeraldDark,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -201,7 +202,7 @@ void main() {
         userName: 'Sayed',
         category: SocialShareCategory.achievement,
       ),
-      theme: SocialShareTheme.emeraldDark,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -219,7 +220,7 @@ void main() {
         ),
         surahName: 'الإسراء',
       ),
-      theme: SocialShareTheme.parchmentGold,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -239,7 +240,7 @@ void main() {
         translation:
             'Indeed, this Quran guides to that which is most suitable.',
       ),
-      theme: SocialShareTheme.dawnLight,
+      mood: SocialShareMood.day,
       format: SocialShareFormat.square,
     );
 
@@ -261,7 +262,7 @@ void main() {
         categoryTitle: 'دعاء قرآني',
         isDua: true,
       ),
-      theme: SocialShareTheme.dawnLight,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -274,7 +275,7 @@ void main() {
         surahsCount: 12,
         userName: 'سيد سعد',
       ),
-      theme: SocialShareTheme.emeraldDark,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -287,7 +288,7 @@ void main() {
         longestStreak: 45,
         userName: 'سيد سعد',
       ),
-      theme: SocialShareTheme.midnightGold,
+      mood: SocialShareMood.night,
       format: SocialShareFormat.portrait,
     );
 
@@ -299,7 +300,7 @@ void main() {
         progress: progressStats,
         userName: 'سيد سعد',
       ),
-      theme: SocialShareTheme.dawnLight,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -311,7 +312,7 @@ void main() {
         achievement: achievementAr,
         userName: 'أحمد',
       ).copyWith(audience: SocialShareAudience.kids, showCharacter: true),
-      theme: SocialShareTheme.parchmentGold,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -323,7 +324,7 @@ void main() {
         achievement: achievementAr,
         userName: 'سيد سعد',
       ),
-      theme: SocialShareTheme.emeraldDark,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -340,7 +341,7 @@ void main() {
         ),
         surahName: 'البقرة',
       ),
-      theme: SocialShareTheme.parchmentGold,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -363,7 +364,7 @@ void main() {
         ),
         userName: 'سيد سعد',
       ),
-      theme: SocialShareTheme.emeraldDark,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -376,7 +377,7 @@ void main() {
         longestStreak: 21,
         userName: 'عبد الرحمن بن خالد المهدي القرشي الهاشمي الطالبي',
       ),
-      theme: SocialShareTheme.tealTwilight,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -393,7 +394,7 @@ void main() {
         ),
         surahName: 'البقرة',
       ),
-      theme: SocialShareTheme.emeraldDark,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.square,
     );
 
@@ -413,7 +414,7 @@ void main() {
         ),
         isDua: false,
       ),
-      theme: SocialShareTheme.dawnLight,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -425,7 +426,7 @@ void main() {
         progress: progressStats,
         userName: 'سيد سعد',
       ),
-      theme: SocialShareTheme.tealTwilight,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.story,
     );
 
@@ -443,7 +444,7 @@ void main() {
         ),
         userName: 'سيد سعد',
       ),
-      theme: SocialShareTheme.parchmentGold,
+      mood: SocialShareMood.day,
       format: SocialShareFormat.portrait,
     );
 
@@ -461,7 +462,7 @@ void main() {
         ),
         userName: 'Sayed',
       ),
-      theme: SocialShareTheme.parchmentGold,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -474,7 +475,7 @@ void main() {
         surahsCount: 2,
         userName: 'أحمد',
       ).copyWith(audience: SocialShareAudience.kids, showCharacter: true),
-      theme: SocialShareTheme.parchmentGold,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -488,7 +489,7 @@ void main() {
         longestStreak: 30,
         userName: 'Sayed',
       ),
-      theme: SocialShareTheme.midnightGold,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.story,
     );
 
@@ -506,7 +507,7 @@ void main() {
         ),
         surahName: 'البقرة',
       ),
-      theme: SocialShareTheme.emeraldDark,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.story,
     );
 
@@ -518,7 +519,7 @@ void main() {
         achievement: achievementAr,
         userName: 'سيد سعد',
       ),
-      theme: SocialShareTheme.emeraldDark,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.square,
     );
 
@@ -540,7 +541,7 @@ void main() {
         categoryTitle: 'Quranic dua',
         isDua: true,
       ),
-      theme: SocialShareTheme.dawnLight,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -552,7 +553,7 @@ void main() {
         progress: progressStats,
         userName: 'أحمد',
       ).copyWith(audience: SocialShareAudience.kids, showCharacter: true),
-      theme: SocialShareTheme.parchmentGold,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -586,7 +587,7 @@ void main() {
         ),
         userName: 'أحمد',
       ),
-      theme: SocialShareTheme.emeraldDark,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
     );
 
@@ -597,7 +598,7 @@ void main() {
         achievement: achievementAr,
         userName: 'أحمد',
       ).copyWith(audience: SocialShareAudience.kids),
-      theme: SocialShareTheme.parchmentGold,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.square,
     );
 
@@ -614,7 +615,7 @@ void main() {
         surahName: 'الفاتحة',
         userName: 'مريم',
       ).copyWith(audience: SocialShareAudience.kids),
-      theme: SocialShareTheme.parchmentGold,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.story,
     );
 
@@ -628,8 +629,49 @@ void main() {
         showCharacter: false,
       ),
       hideUserName: true,
-      theme: SocialShareTheme.midnightGold,
+      mood: SocialShareMood.auto,
       format: SocialShareFormat.portrait,
+    );
+
+    await captureAndVerify(
+      tester,
+      caseName: '29_quran_day_story',
+      data: SocialShareData.quranAyah(
+        ayah: const Ayah(
+          number: 9,
+          surahId: 17,
+          text: 'إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ',
+          numberInSurah: 9,
+        ),
+        surahName: 'الإسراء',
+        userName: 'سيد',
+      ),
+      mood: SocialShareMood.day,
+      format: SocialShareFormat.story,
+    );
+
+    await captureAndVerify(
+      tester,
+      caseName: '30_azkar_wird_night',
+      data: SocialShareData.azkarWird(
+        categoryTitle: 'أذكار الصباح',
+        completedCount: 12,
+        totalCount: 15,
+      ),
+      mood: SocialShareMood.night,
+      format: SocialShareFormat.portrait,
+    );
+
+    await captureAndVerify(
+      tester,
+      caseName: '31_long_verse_square_night',
+      data: SocialShareData.quranVerse(
+        ayahText: ayatAlKursi,
+        surahName: 'البقرة',
+        ayahNumber: 255,
+      ),
+      mood: SocialShareMood.night,
+      format: SocialShareFormat.square,
     );
   });
 }
@@ -658,6 +700,7 @@ Future<void> _loadRealFonts() async {
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Regular.ttf',
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Bold.ttf',
   ]);
+  await load('Reem_Kufi', ['assets/fonts/Reem_Kufi/ReemKufi-Variable.ttf']);
 
   // Icon glyphs (badge icons, medallion icons, footer glyphs) come from the
   // framework's MaterialIcons font. Without it the rasterized PNGs show

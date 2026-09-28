@@ -1,57 +1,64 @@
 import 'package:flutter/material.dart';
+
+import 'share_card_palette.dart';
 import 'share_card_shell.dart';
 import 'share_card_template_resolver.dart';
-import 'social_share_model.dart';
 import 'social_share_copy.dart';
-import 'social_share_theme.dart';
+import 'social_share_model.dart';
 import 'talia_share_tokens.dart';
 
+export 'heroes/award_hero.dart';
+export 'heroes/stat_hero.dart';
+export 'heroes/text_hero.dart';
+export 'share_card_backdrop.dart';
 export 'share_card_content.dart';
+export 'share_card_links.dart';
+export 'share_card_palette.dart';
 export 'share_card_shell.dart';
 export 'share_card_template_resolver.dart';
-export 'share_card_widgets.dart';
+export 'share_medal.dart';
+export 'share_signature_bar.dart';
 export 'social_share_model.dart';
 export 'social_share_presentation.dart';
-export 'social_share_theme.dart';
 export 'talia_share_tokens.dart';
 
-/// Talia Premium Dynamic Social Share Card
-/// Renders specialized, content-driven layouts inside an authentic Islamic brand shell.
+/// Talia "Dawn" share card: the shared content as hero on the brand sky,
+/// signed once with the official logo.
 class SocialShareCard extends StatelessWidget {
-  final SocialShareData data;
-  final SocialShareTheme theme;
-  final double width;
-  final SocialShareFormat format;
-
-  /// When true, the user's name is hidden from the parchment footer.
-  /// Useful for privacy-conscious sharing or when the user opts out.
-  final bool hideUserName;
-
   const SocialShareCard({
     super.key,
     required this.data,
-    required this.theme,
+    this.mood = SocialShareMood.auto,
     this.width = TaliaShareDimensions.baseWidth,
     this.format = SocialShareFormat.portrait,
     this.hideUserName = false,
   });
 
+  final SocialShareData data;
+  final SocialShareMood mood;
+  final double width;
+  final SocialShareFormat format;
+
+  /// Hides the "رحلة [الاسم] مع القرآن" line for privacy.
+  final bool hideUserName;
+
   @override
   Widget build(BuildContext context) {
     final copy = SocialShareCopy.of(context);
-    // Apply the name toggle: when hidden, pass null to suppress the
-    // "رحلة [الاسم] مع القرآن" line without mutating the source data object.
     final effectiveData = hideUserName ? data.copyWith(userName: null) : data;
-    return ShareCardShell(
-      data: effectiveData,
-      theme: theme,
-      format: format,
+    final palette = SharePalettes.resolve(effectiveData, mood);
+    return SizedBox(
       width: width,
-      copy: copy,
-      child: ShareCardTemplateResolver.resolve(
+      child: ShareCardShell(
         data: effectiveData,
-        theme: theme,
+        palette: palette,
         format: format,
+        copy: copy,
+        child: ShareCardTemplateResolver.resolve(
+          data: effectiveData,
+          palette: palette,
+          format: format,
+        ),
       ),
     );
   }

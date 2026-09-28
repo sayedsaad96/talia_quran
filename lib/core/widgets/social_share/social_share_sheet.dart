@@ -30,7 +30,7 @@ Widget buildSocialShareCaptureTree({
 Widget buildSocialShareCardCanvas({
   Key? key,
   required SocialShareData data,
-  required SocialShareTheme theme,
+  SocialShareMood mood = SocialShareMood.auto,
   required SocialShareFormat format,
   bool hideUserName = false,
 }) {
@@ -41,7 +41,7 @@ Widget buildSocialShareCardCanvas({
     height: size.height,
     child: SocialShareCard(
       data: data,
-      theme: theme,
+      mood: mood,
       format: format,
       width: size.width,
       hideUserName: hideUserName,
@@ -53,7 +53,7 @@ Widget buildSocialShareCardCanvas({
 Future<Uint8List> captureSocialShareCardImage({
   required BuildContext context,
   required SocialShareData data,
-  required SocialShareTheme theme,
+  SocialShareMood mood = SocialShareMood.auto,
   required SocialShareFormat format,
   bool hideUserName = false,
   ScreenshotController? controller,
@@ -61,7 +61,7 @@ Future<Uint8List> captureSocialShareCardImage({
   final size = format.exportLogicalSize;
   final canvas = buildSocialShareCardCanvas(
     data: data,
-    theme: theme,
+    mood: mood,
     format: format,
     hideUserName: hideUserName,
   );
@@ -119,33 +119,71 @@ class SocialShareSheet extends StatefulWidget {
 
 class _SocialShareSheetState extends State<SocialShareSheet> {
   final ScreenshotController _screenshotController = ScreenshotController();
-  late SocialShareThemeType _selectedThemeType;
+  // Auto follows the content type (and audience); night/day force one look.
+  SocialShareMood _selectedMood = SocialShareMood.auto;
   SocialShareFormat _selectedFormat = SocialShareFormat.portrait;
   bool _isExporting = false;
+  bool _logoPrecached = false;
   // Name toggle: shown by default since personalization is a core marketing
   // hook — "رحلة [اسم المستخدم] مع القرآن" differentiates each share.
   bool _showUserName = true;
 
   @override
-  void initState() {
-    super.initState();
-    // Content-driven default: the share type (and audience) picks the
-    // opening style; the user can still switch to any palette.
-    _selectedThemeType = SocialShareThemeType.defaultFor(
-      widget.data.category,
-      audience: widget.data.audience,
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Offscreen capture must not race the logo decode.
+    if (_logoPrecached) return;
+    _logoPrecached = true;
+    unawaited(
+      precacheImage(
+        const AssetImage(ShareSignatureBar.logoAsset),
+        context,
+        onError: (_, _) {},
+      ),
     );
   }
 
-  SocialShareTheme get _currentTheme =>
-      SocialShareTheme.get(_selectedThemeType);
+  Widget _buildChoiceChip({
+    Key? key,
+    required Widget avatar,
+    required String label,
+    required bool selected,
+    required bool isDark,
+    required VoidCallback onSelected,
+  }) {
+    return ChoiceChip(
+      key: key,
+      avatar: avatar,
+      label: Text(label),
+      selected: selected,
+      onSelected: (value) {
+        if (!value) return;
+        unawaited(HapticFeedback.selectionClick());
+        onSelected();
+      },
+      selectedColor: AppColors.primary.withValues(alpha: 0.18),
+      backgroundColor: isDark
+          ? AppColors.darkSurfaceVariant
+          : AppColors.lightSurfaceVariant,
+      labelStyle: TextStyle(
+        color: selected
+            ? AppColors.primary
+            : (isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
+        fontSize: 11,
+        fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+      ),
+      side: BorderSide(
+        color: selected ? AppColors.primary : Colors.transparent,
+      ),
+    );
+  }
 
   Future<Uint8List?> _captureCardImage() async {
     try {
       return await captureSocialShareCardImage(
         context: context,
         data: widget.data,
-        theme: _currentTheme,
+        mood: _selectedMood,
         format: _selectedFormat,
         hideUserName: !_showUserName,
         controller: _screenshotController,
@@ -358,7 +396,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                       duration: const Duration(milliseconds: 300),
                       child: SizedBox(
                         key: ValueKey(
-                          '$_selectedThemeType-$_selectedFormat-$_showUserName',
+                          '$_selectedMood-$_selectedFormat-$_showUserName',
                         ),
                         width: cardWidth,
                         height: previewHeight,
@@ -366,7 +404,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                           fit: BoxFit.contain,
                           child: buildSocialShareCardCanvas(
                             data: widget.data,
-                            theme: _currentTheme,
+                            mood: _selectedMood,
                             format: _selectedFormat,
                             hideUserName: !_showUserName,
                           ),
@@ -389,7 +427,7 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                     final isSelected = fmt == _selectedFormat;
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: ChoiceChip(
+                      child: _buildChoiceChip(
                         avatar: Icon(
                           fmt.icon,
                           size: 14,
@@ -399,36 +437,10 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
                                     ? AppColors.darkTextSecondary
                                     : AppColors.lightTextSecondary),
                         ),
-                        label: Text(copy.formatName(fmt)),
+                        label: copy.formatName(fmt),
                         selected: isSelected,
-                        onSelected: (selected) {
-                          if (selected) {
-                            unawaited(HapticFeedback.selectionClick());
-                            setState(() => _selectedFormat = fmt);
-                          }
-                        },
-                        selectedColor: AppColors.primary.withValues(
-                          alpha: 0.18,
-                        ),
-                        backgroundColor: isDark
-                            ? AppColors.darkSurfaceVariant
-                            : AppColors.lightSurfaceVariant,
-                        labelStyle: TextStyle(
-                          color: isSelected
-                              ? AppColors.primary
-                              : (isDark
-                                    ? AppColors.darkTextPrimary
-                                    : AppColors.lightTextPrimary),
-                          fontSize: 11,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.normal,
-                        ),
-                        side: BorderSide(
-                          color: isSelected
-                              ? AppColors.primary
-                              : Colors.transparent,
-                        ),
+                        isDark: isDark,
+                        onSelected: () => setState(() => _selectedFormat = fmt),
                       ),
                     );
                   }).toList(),
@@ -456,32 +468,25 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
 
               const SizedBox(height: AppSpacing.xs),
 
-              SizedBox(
-                height: 48,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                  ),
-                  itemCount: SocialShareThemeType.values.length,
-                  separatorBuilder: (_, _) =>
-                      const SizedBox(width: AppSpacing.xs),
-                  itemBuilder: (context, index) {
-                    final themeType = SocialShareThemeType.values[index];
-                    final isSelected = themeType == _selectedThemeType;
-                    final themeObj = SocialShareTheme.get(themeType);
-
-                    return _ThemePreviewTile(
-                      theme: themeObj,
-                      displayName: copy.themeName(themeType),
-                      isSelected: isSelected,
-                      isDark: isDark,
-                      onTap: () {
-                        unawaited(HapticFeedback.selectionClick());
-                        setState(() => _selectedThemeType = themeType);
-                      },
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                child: Row(
+                  children: SocialShareMood.values.map((mood) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: _buildChoiceChip(
+                        key: ValueKey('share-mood-${mood.name}'),
+                        avatar: _MoodSwatch(
+                          palette: SharePalettes.resolve(widget.data, mood),
+                        ),
+                        label: copy.moodName(mood),
+                        selected: mood == _selectedMood,
+                        isDark: isDark,
+                        onSelected: () => setState(() => _selectedMood = mood),
+                      ),
                     );
-                  },
+                  }).toList(),
                 ),
               ),
 
@@ -621,71 +626,25 @@ class _SocialShareSheetState extends State<SocialShareSheet> {
   }
 }
 
-/// Rich theme preview tile widget showing mini gradient + accent border
-class _ThemePreviewTile extends StatelessWidget {
-  final SocialShareTheme theme;
-  final String displayName;
-  final bool isSelected;
-  final bool isDark;
-  final VoidCallback onTap;
+/// Tiny sky swatch previewing a mood's palette.
+class _MoodSwatch extends StatelessWidget {
+  const _MoodSwatch({required this.palette});
 
-  const _ThemePreviewTile({
-    required this.theme,
-    required this.displayName,
-    required this.isSelected,
-    required this.isDark,
-    required this.onTap,
-  });
+  final SharePalette palette;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      borderRadius: BorderRadius.circular(12),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(colors: theme.backgroundGradient),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected
-                ? theme.accentColor
-                : (isDark ? Colors.white12 : Colors.black12),
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: theme.accentColor.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
+    return Container(
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [palette.skyTop, palette.skyBase, palette.glow],
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 12,
-              height: 12,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: theme.accentColor,
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              displayName,
-              style: TextStyle(
-                color: theme.textPrimary,
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
+        border: Border.all(color: palette.archLine),
       ),
     );
   }

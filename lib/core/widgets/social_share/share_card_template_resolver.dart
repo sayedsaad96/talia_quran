@@ -1,44 +1,36 @@
 import 'package:flutter/material.dart';
-import 'social_share_model.dart';
-import 'social_share_theme.dart';
-import 'templates/achievement_template.dart';
-import 'templates/certificate_template.dart';
-import 'templates/dua_zikr_template.dart';
-import 'templates/memorization_template.dart';
-import 'templates/progress_template.dart';
-import 'templates/quran_verse_template.dart';
-import 'templates/streak_template.dart';
 
-/// Resolves and builds the appropriate specialized template widget
-abstract class ShareCardTemplateResolver {
+import 'heroes/award_hero.dart';
+import 'heroes/stat_hero.dart';
+import 'heroes/text_hero.dart';
+import 'share_card_palette.dart';
+import 'social_share_model.dart';
+import 'talia_share_tokens.dart';
+
+/// Picks the hero for a share category.
+abstract final class ShareCardTemplateResolver {
   static Widget resolve({
     required SocialShareData data,
-    required SocialShareTheme theme,
+    required SharePalette palette,
     required SocialShareFormat format,
   }) {
+    final metrics = TaliaShareMetrics.of(format);
     switch (data.category) {
       case SocialShareCategory.quranAyah:
-        return QuranVerseTemplate(data: data, theme: theme, format: format);
-
-      case SocialShareCategory.achievement:
-      case SocialShareCategory.khatmah:
-        return AchievementTemplate(data: data, theme: theme, format: format);
-
       case SocialShareCategory.dua:
+        return TextHero(data: data, palette: palette, metrics: metrics);
       case SocialShareCategory.azkar:
-        return DuaZikrTemplate(data: data, theme: theme, format: format);
-
+        return data.isAzkarWirdProgress
+            ? StatHero(data: data, palette: palette, metrics: metrics)
+            : TextHero(data: data, palette: palette, metrics: metrics);
       case SocialShareCategory.memorization:
-        return MemorizationTemplate(data: data, theme: theme, format: format);
-
       case SocialShareCategory.streak:
-        return StreakTemplate(data: data, theme: theme, format: format);
-
       case SocialShareCategory.progress:
-        return ProgressTemplate(data: data, theme: theme, format: format);
-
+        return StatHero(data: data, palette: palette, metrics: metrics);
+      case SocialShareCategory.achievement:
       case SocialShareCategory.certificate:
-        return CertificateTemplate(data: data, theme: theme, format: format);
+      case SocialShareCategory.khatmah:
+        return AwardHero(data: data, palette: palette, metrics: metrics);
     }
   }
 }
