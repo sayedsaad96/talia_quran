@@ -166,6 +166,11 @@ flutter:
         - asset: assets/fonts/Noto_Sans/NotoSans-Regular.ttf
         - asset: assets/fonts/Noto_Sans/NotoSans-Bold.ttf
           weight: 700
+    # Display Kufi for share-card eyebrows, wordmark and numerals only.
+    # OFL: assets/fonts/Reem_Kufi/OFL.txt
+    - family: Reem_Kufi
+      fonts:
+        - asset: assets/fonts/Reem_Kufi/ReemKufi-Variable.ttf
     - family: MrsSaintDelafield
       fonts:
         - asset: assets/fonts/Mrs_Saint_Delafield/MrsSaintDelafield-Regular.ttf
