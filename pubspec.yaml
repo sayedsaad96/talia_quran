@@ -159,6 +159,13 @@ flutter:
         - asset: assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Regular.ttf
         - asset: assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Bold.ttf
           weight: 700
+    # Latin/digits companion to Noto Naskh Arabic (primary UI family; Arabic
+    # glyphs fall back to Naskh). OFL: assets/fonts/Noto_Sans/OFL.txt
+    - family: Noto_Sans
+      fonts:
+        - asset: assets/fonts/Noto_Sans/NotoSans-Regular.ttf
+        - asset: assets/fonts/Noto_Sans/NotoSans-Bold.ttf
+          weight: 700
     - family: MrsSaintDelafield
       fonts:
         - asset: assets/fonts/Mrs_Saint_Delafield/MrsSaintDelafield-Regular.ttf

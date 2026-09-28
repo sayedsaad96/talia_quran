@@ -134,6 +134,10 @@ Future<void> _loadRealFonts() async {
     'assets/fonts/Amiri/Amiri-Regular.ttf',
     'assets/fonts/Amiri/Amiri-Bold.ttf',
   ]);
+  await load('Noto_Sans', [
+    'assets/fonts/Noto_Sans/NotoSans-Regular.ttf',
+    'assets/fonts/Noto_Sans/NotoSans-Bold.ttf',
+  ]);
   await load('Noto_Naskh_Arabic', [
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Regular.ttf',
     'assets/fonts/Noto_Naskh_Arabic/NotoNaskhArabic-Bold.ttf',

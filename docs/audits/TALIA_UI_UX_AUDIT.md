@@ -385,8 +385,9 @@ from the baseline file at commit.
 **Open owner decisions:**
 - CONTENT-1: hardcoded verses in the onboarding previews.
 - TEST-1: whether to gitignore `**/failures/`.
-- A sans Latin font for the English UI. The Naskh and Amiri fonts ship
-  serif Latin glyphs by design.
+- ~~A sans Latin font for the English UI~~ — done: Noto Sans (OFL, bundled)
+  is the primary UI family, with Noto Naskh Arabic as the glyph fallback.
+  Amiri (Quran/azkar) is unchanged.
 - The two long-standing `quran_reader_sacred_text_test` failures (P0 per
   policy).
 

@@ -4,6 +4,13 @@ import 'package:flutter/material.dart';
 /// Arabic (Display): Amiri
 /// Arabic (Body): Noto Naskh Arabic
 abstract class AppTypography {
+  /// UI text: Noto Sans draws Latin letters and digits (sans-serif, so
+  /// "XP" and "604" no longer render in Naskh's serif Latin); Arabic
+  /// glyphs, which Noto Sans doesn't contain, fall back to Noto Naskh
+  /// Arabic. Quran/azkar styles below keep Amiri unchanged.
+  static const _uiFamily = 'Noto_Sans';
+  static const _uiFallback = ['Noto_Naskh_Arabic'];
+
   // ─── Display Fonts (Amiri) ──────────────────────────────────────────────────
   static TextStyle get displayLarge => const TextStyle(
     fontFamily: 'Amiri',
@@ -31,7 +38,8 @@ abstract class AppTypography {
 
   // ─── Body Fonts (Noto Naskh Arabic) ─────────────────────────────────────────
   static TextStyle get headlineLarge => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 24,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.3,
@@ -39,7 +47,8 @@ abstract class AppTypography {
   );
 
   static TextStyle get headlineMedium => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 20,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.2,
@@ -47,7 +56,8 @@ abstract class AppTypography {
   );
 
   static TextStyle get headlineSmall => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 18,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.1,
@@ -55,7 +65,8 @@ abstract class AppTypography {
   );
 
   static TextStyle get titleLarge => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 16,
     fontWeight: FontWeight.w700,
     letterSpacing: -0.1,
@@ -63,7 +74,8 @@ abstract class AppTypography {
   );
 
   static TextStyle get titleMedium => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 14,
     fontWeight: FontWeight.w600,
     letterSpacing: 0,
@@ -71,7 +83,8 @@ abstract class AppTypography {
   );
 
   static TextStyle get titleSmall => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 12,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.1,
@@ -79,7 +92,8 @@ abstract class AppTypography {
   );
 
   static TextStyle get bodyLarge => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 16,
     fontWeight: FontWeight.w400,
     letterSpacing: 0,
@@ -87,7 +101,8 @@ abstract class AppTypography {
   );
 
   static TextStyle get bodyMedium => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 14,
     fontWeight: FontWeight.w400,
     letterSpacing: 0,
@@ -95,7 +110,8 @@ abstract class AppTypography {
   );
 
   static TextStyle get bodySmall => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 12,
     fontWeight: FontWeight.w400,
     letterSpacing: 0.1,
@@ -103,7 +119,8 @@ abstract class AppTypography {
   );
 
   static TextStyle get labelLarge => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 14,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.1,
@@ -111,7 +128,8 @@ abstract class AppTypography {
   );
 
   static TextStyle get labelMedium => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 12,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.3,
@@ -119,7 +137,8 @@ abstract class AppTypography {
   );
 
   static TextStyle get labelSmall => const TextStyle(
-    fontFamily: 'Noto_Naskh_Arabic',
+    fontFamily: _uiFamily,
+    fontFamilyFallback: _uiFallback,
     fontSize: 11,
     fontWeight: FontWeight.w600,
     letterSpacing: 0.5,
