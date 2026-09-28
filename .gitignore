@@ -57,3 +57,6 @@ test_builder.jar
 # Widget Preview related
 .widget_preview/
 android/.kotlin/
+
+# Golden-test failure artifacts (written by flutter_test on image mismatch)
+**/failures/
