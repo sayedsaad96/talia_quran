@@ -461,7 +461,9 @@ class _QuranReaderPageState extends State<QuranReaderPage>
     }
     final audioCubit = context.read<QuranAudioPlayerCubit>();
 
-    await HapticFeedback.lightImpact();
+    // Fire-and-forget: opening the sheet must not wait on the platform
+    // haptic channel (it may reply late, or never under test).
+    unawaited(HapticFeedback.lightImpact());
     final ayah = await _resolveAyah(surahNumber, verseNumber);
     if (!mounted || !context.mounted || ayah == null) return;
 
