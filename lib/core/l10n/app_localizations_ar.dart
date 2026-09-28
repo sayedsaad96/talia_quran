@@ -1911,10 +1911,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboardingBentoMushafSurah => 'سورة الفاتحة';
 
   @override
-  String get onboardingBentoMushafAyah =>
-      'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ';
-
-  @override
   String get onboardingBentoListeningTitle => 'تلاوات متقنة';
 
   @override

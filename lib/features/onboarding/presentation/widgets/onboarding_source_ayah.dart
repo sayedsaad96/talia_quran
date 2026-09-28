@@ -59,7 +59,12 @@ class OnboardingSourceAyah extends StatelessWidget {
       builder: (context, snapshot) {
         final text = snapshot.data;
         if (text == null || text.isEmpty) return const SizedBox.shrink();
-        return builder(context, text);
+        // Quran text is right-to-left in every UI locale; otherwise the
+        // end-of-ayah marker lands on the wrong side in English.
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: Builder(builder: (context) => builder(context, text)),
+        );
       },
     );
   }

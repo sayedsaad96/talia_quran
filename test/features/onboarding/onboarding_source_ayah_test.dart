@@ -68,6 +68,34 @@ void main() {
     expect(find.text('[نص المصدر]'), findsOneWidget);
   });
 
+  testWidgets('renders the ayah right-to-left even in an LTR locale', (
+    tester,
+  ) async {
+    getIt.registerSingleton<QuranRepository>(
+      _Repo(const [Ayah(number: 1, surahId: 1, text: 'نص', numberInSurah: 1)]),
+    );
+    late TextDirection seen;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.ltr,
+          child: OnboardingSourceAyah(
+            surah: 1,
+            ayah: 1,
+            builder: (context, text) {
+              seen = Directionality.of(context);
+              return Text(text);
+            },
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(seen, TextDirection.rtl);
+  });
+
   testWidgets('renders nothing when the Quran source is unavailable', (
     tester,
   ) async {

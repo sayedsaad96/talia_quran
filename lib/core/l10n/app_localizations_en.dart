@@ -1923,10 +1923,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboardingBentoMushafSurah => 'Surat Al-Fatihah';
 
   @override
-  String get onboardingBentoMushafAyah =>
-      'All praise is for Allah—Lord of all worlds';
-
-  @override
   String get onboardingBentoListeningTitle => 'Masterful Recitation';
 
   @override

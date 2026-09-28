@@ -202,31 +202,19 @@ class OnboardingMushafBentoView extends StatelessWidget {
                         AppSpacing.radiusFull,
                       ),
                     ),
-                    // Arabic shows the ayah itself, so it comes from the
-                    // source; English shows the (localized) translation.
-                    child: context.isArabic
-                        ? OnboardingSourceAyah(
-                            surah: 1,
-                            ayah: 2,
-                            builder: (context, text) => Text(
-                              text,
-                              textAlign: TextAlign.center,
-                              style: AppTypography.labelSmall.copyWith(
-                                color: AppColors.inkDeep.withValues(
-                                  alpha: 0.75,
-                                ),
-                                fontStyle: FontStyle.normal,
-                              ),
-                            ),
-                          )
-                        : Text(
-                            l10n.onboardingBentoMushafAyah,
-                            textAlign: TextAlign.center,
-                            style: AppTypography.labelSmall.copyWith(
-                              color: AppColors.inkDeep.withValues(alpha: 0.75),
-                              fontStyle: FontStyle.italic,
-                            ),
-                          ),
+                    // The ayah in Arabic for every locale, verbatim from
+                    // the source (no unsourced translation — owner decision).
+                    child: OnboardingSourceAyah(
+                      surah: 1,
+                      ayah: 2,
+                      builder: (context, text) => Text(
+                        text,
+                        textAlign: TextAlign.center,
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.inkDeep.withValues(alpha: 0.75),
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),

@@ -3585,12 +3585,6 @@ abstract class AppLocalizations {
   /// **'سورة الفاتحة'**
   String get onboardingBentoMushafSurah;
 
-  /// No description provided for @onboardingBentoMushafAyah.
-  ///
-  /// In ar, this message translates to:
-  /// **'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَٰلَمِينَ'**
-  String get onboardingBentoMushafAyah;
-
   /// No description provided for @onboardingBentoListeningTitle.
   ///
   /// In ar, this message translates to:
